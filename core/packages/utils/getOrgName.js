@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join} from 'node:path';
+import {getRootPath} from "./path.js";
 
 // Regex to extract the organization name between '@' and the first '/'
 const ORG_REGEX = /^@([^/]+)\//;
@@ -21,9 +21,7 @@ export async function getOrgName() {
     } else {
         // Fallback to reading root package.json
         try {
-            const __filename = fileURLToPath(import.meta.url);
-            const __dirname = dirname(__filename);
-            const rootPackagePath = join(__dirname, '../../../package.json');
+            const rootPackagePath = join(getRootPath(), './package.json');
             const rootPackage = JSON.parse(await readFile(rootPackagePath, 'utf8'));
             rootName = rootPackage.name;
         } catch (error) {

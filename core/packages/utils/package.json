@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "exports": {
-    ".": "./getOrgName.js"
+    ".": "./index.js"
   },
-  "main": "getOrgName.js"
+  "main": "index.js"
 }
