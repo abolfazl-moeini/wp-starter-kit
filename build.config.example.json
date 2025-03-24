@@ -1,0 +1,15 @@
+{
+  "assetMappings": [
+    {
+      "source": "node_modules/some-library/dist/css",
+      "destination": "assets/libraries/some-library/css",
+      "options": {
+        "overwrite": true
+      }
+    },
+    {
+      "source": "node_modules/another-lib/js",
+      "destination": "assets/libraries/another-lib/js"
+    }
+  ]
+}
