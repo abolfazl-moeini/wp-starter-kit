@@ -1,0 +1,11 @@
+{
+  "name": "@core/dependency-extraction-esbuild-plugin",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Moeini",
+  "type": "module",
+  "dependencies": {
+    "json2php": "^0.0.12",
+    "@core/utils": "^0.1.0"
+  }
+}

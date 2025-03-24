@@ -1,0 +1,9 @@
+{
+  "name": "@core/utils",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./getOrgName.js"
+  },
+  "main": "getOrgName.js"
+}
