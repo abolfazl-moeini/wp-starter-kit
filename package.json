@@ -31,10 +31,13 @@
     "packages/*"
   ],
   "devDependencies": {
+    "@babel/core": "^7.26.10",
+    "@babel/preset-env": "^7.26.9",
     "@core/build": "^0.1.0",
     "@core/dependency-extraction-esbuild-plugin": "^1.0.0",
     "@core/utils": "^0.1.0",
     "@jest/globals": "^29.7.0",
+    "babel-jest": "^29.7.0",
     "cross-env": "^7.0.3",
     "esbuild-jest": "^0.5.0",
     "jest": "^29.7.0",

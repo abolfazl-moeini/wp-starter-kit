@@ -1,4 +1,4 @@
-import {expect, jest, test, beforeEach} from '@jest/globals';
+import {expect, jest, test, beforeEach, describe} from '@jest/globals';
 import {validateConfig} from "@core/build"
 
 jest.unstable_mockModule('node:fs/promises', () => ({
