@@ -1,9 +1,14 @@
 import {fileURLToPath} from 'node:url';
-import {dirname as nodeDirname, join} from 'node:path';
+import {dirname as nodeDirname} from 'node:path';
+
+export function getMetaUrl() {
+
+    return import.meta.url;
+}
 
 /**
  * Gets the directory name of a path, with an optional number of levels to go up.
- * Mimics PHP's dirname() with a levels argument.
+ * Mimics PHP's dirname() with a  argument.
  * @param {string} path - The input path.
  * @param {number} [levels=1] - Number of parent directories to go up (default: 1).
  * @returns {string} The resulting directory path.
@@ -30,12 +35,12 @@ export function dirname(path, levels = 1) {
 
 /**
  * Gets the absolute path to the monorepo root.
- * @param {ImportMeta} importMeta - The import.meta object from the caller.
  * @returns {string} The root directory path.
  */
 export function getRootPath() {
 
-    const __filename = fileURLToPath(import.meta.url);
+    const __filename = fileURLToPath(getMetaUrl());
 
     return dirname(__filename, 4);
 }
+
