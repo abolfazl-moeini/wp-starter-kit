@@ -22,9 +22,11 @@
   "homepage": "https://github.com/abolfazl-moeini/wp-plugin-starter-kit#readme",
   "scripts": {
     "build": "npm run build --workspaces --if-present",
+    "build:assets": "node build/build-assets.js",
     "test": "jest",
     "lint": "npm run lint --workspaces --if-present",
-    "dev": "npm run dev --workspaces --if-present"
+    "dev": "npm run dev --workspaces --if-present",
+    "check": "node core/packages/utils/check.js"
   },
   "workspaces": [
     "core/packages/*",
@@ -38,11 +40,13 @@
     "@core/utils": "^0.1.0",
     "@jest/globals": "^29.7.0",
     "babel-jest": "^29.7.0",
+    "chalk": "^5.4.1",
     "cross-env": "^7.0.3",
     "esbuild-jest": "^0.5.0",
     "jest": "^29.7.0",
     "mock-fs": "^5.5.0",
-    "npm-run-all": "^4.1.5"
+    "npm-run-all": "^4.1.5",
+    "yargs": "^17.7.2"
   },
   "engines": {
     "node": ">=18.0.0",

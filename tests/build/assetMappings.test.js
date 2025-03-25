@@ -5,6 +5,7 @@ jest.unstable_mockModule('node:fs/promises', () => ({
     cp: jest.fn(),
 }));
 beforeEach(() => {
+    jest.resetModules();
     jest.clearAllMocks();
 });
 
