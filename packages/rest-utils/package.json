@@ -1,0 +1,14 @@
+{
+  "name": "@wpsk/rest-utils",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "index.js",
+  "private": true,
+  "dependencies": {
+    "@core/utils": "^0.1.0",
+    "@wpsk/hooks": "^0.1.0",
+    "@wpsk/utils": "^0.1.0",
+    "@wordpress/api-fetch": "^6.51.0",
+    "@wordpress/url": "^3.55.0"
+  }
+}

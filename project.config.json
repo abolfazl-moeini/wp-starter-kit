@@ -1,0 +1,11 @@
+{
+  "slug": "wpsk-starter",
+  "globalName": "WPSK",
+  "localizeVar": "WPSKLoc",
+  "textDomain": "wpsk-starter",
+  "hookPrefix": "wpsk",
+  "npmScope": "@wpsk",
+  "depsBundle": "wpsk-starter-deps.js",
+  "phpFunctionPrefix": "wpsk_",
+  "uiFramework": "preact"
+}

@@ -109,7 +109,10 @@ export function generateInternalScriptHandles(buildResponse) {
   }
 
   for (const input in buildResponse.metafile.inputs) {
-    const match = input.match(/inernal-libraries:(.+)/);
+    // Note: This function appears largely unused (internal packages are collected
+    // via the `internalItems` array passed to importAsGlobals + filterInternalRootPackages).
+    // Matcher typo from source has been corrected for safety.
+    const match = input.match(/internal-libraries:(.+)/);
 
     if (!match) {
       continue;
@@ -123,6 +126,11 @@ export function generateInternalScriptHandles(buildResponse) {
   return results.filter(onlyUnique);
 }
 
+/**
+ * @param {import('esbuild').BuildResult} buildResponse
+ * @param {string[]} forceAssets
+ * @param {string[]} internalItems
+ */
 export function assetFileInfo(
   buildResponse,
   forceAssets = [],
@@ -140,9 +148,14 @@ export function assetFileInfo(
   };
 }
 
+/**
+ * @param {import('esbuild').BuildResult} buildResponse
+ * @param {string[]} forceAssets
+ * @param {string[]} internalItems
+ */
 export async function saveAssetFile(
   buildResponse,
-  forceAssets = {},
+  forceAssets = [],
   internalItems = [],
 ) {
   if (!buildResponse?.metafile?.outputs) {
@@ -171,3 +184,6 @@ export function bundleFilePath(buildResponse) {
 }
 
 export * from "./utils.js";
+
+// Re-export for convenience (INTERNAL_NAMESPACE is computed in utils at module load)
+export { INTERNAL_NAMESPACE } from "./utils.js";

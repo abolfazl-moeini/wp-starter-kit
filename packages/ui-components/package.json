@@ -1,0 +1,17 @@
+{
+  "name": "@wpsk/ui-components",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./MLForm/MLForm.js": "./MLForm/MLForm.js"
+  },
+  "dependencies": {
+    "@preact/signals": "^1.2.3",
+    "classnames": "^2.5.1",
+    "lodash.isempty": "^4.4.0",
+    "preact": "^10.0.0"
+  }
+}

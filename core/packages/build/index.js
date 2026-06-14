@@ -18,6 +18,28 @@ export function validateConfig(config) {
             throw new Error('options must be an object if present');
         }
     }
+
+    if (config.globalMappings !== undefined) {
+        if (typeof config.globalMappings !== 'object' || config.globalMappings === null || Array.isArray(config.globalMappings)) {
+            throw new Error('globalMappings must be an object');
+        }
+        for (const [key, value] of Object.entries(config.globalMappings)) {
+            if (typeof value !== 'string') {
+                throw new Error(`globalMappings["${key}"] must be a string`);
+            }
+        }
+    }
+
+    if (config.styleEntryPoints !== undefined) {
+        if (!Array.isArray(config.styleEntryPoints)) {
+            throw new Error('styleEntryPoints must be an array');
+        }
+        for (const entry of config.styleEntryPoints) {
+            if (typeof entry !== 'string') {
+                throw new Error('Each styleEntryPoint must be a string');
+            }
+        }
+    }
 }
 
 export async function readBuildConfig() {

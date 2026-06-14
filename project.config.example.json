@@ -1,0 +1,11 @@
+{
+  "slug": "my-project",
+  "globalName": "MyProject",
+  "localizeVar": "MyProjectLoc",
+  "textDomain": "my-project",
+  "hookPrefix": "my-project",
+  "npmScope": "@my-org",
+  "depsBundle": "my-project-deps.js",
+  "phpFunctionPrefix": "wpsk_",
+  "uiFramework": "preact"
+}

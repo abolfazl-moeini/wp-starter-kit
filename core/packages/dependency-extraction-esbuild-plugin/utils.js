@@ -2,12 +2,42 @@ import fs from "node:fs";
 import path from "node:path";
 import { readFileSync } from "node:fs";
 import crypto from "node:crypto";
-import { getOrgName } from '@core/utils';
+import { getOrgNameSync, readProjectConfig } from '@core/utils';
 
 // @copyright https://raw.githubusercontent.com/WordPress/gutenberg/trunk/packages/dependency-extraction-webpack-plugin/lib/util.js
 
 const WORDPRESS_NAMESPACE = "@wordpress/";
-const INTERNAL_NAMESPACE = `@${getOrgName()}/`;
+
+// Resolve INTERNAL_NAMESPACE synchronously at load time.
+// Precedence:
+//   1. project.config.json → npmScope (if file exists and field is set)
+//   2. ROOT_NAME env var or root package.json name
+//   3. Fallback: @wpsk/
+// Build scripts should set `cross-env ROOT_NAME=$npm_package_name ...` (or equivalent) before importing.
+export const INTERNAL_NAMESPACE = (() => {
+  // Try project.config.json first (config-driven override)
+  try {
+    const config = readProjectConfig();
+    if (config?.npmScope) {
+      const scope = config.npmScope.startsWith('@') ? config.npmScope : `@${config.npmScope}`;
+      return `${scope}/`;
+    }
+  } catch {
+    // Config file doesn't exist or is invalid — fall through
+  }
+
+  // Fallback to org name from env or package.json
+  try {
+    return `@${getOrgNameSync()}/`;
+  } catch (err) {
+    // Safe fallback for development / placeholder package names.
+    // Real builds must provide correct ROOT_NAME to get proper internal package filtering.
+    if (process.env.NODE_ENV !== 'test') {
+      console.warn('[dependency-extraction-esbuild-plugin] INTERNAL_NAMESPACE fallback used (@wpsk/). Set ROOT_NAME env for correct org.');
+    }
+    return '@wpsk/';
+  }
+})();
 
 // !!
 // This list must be kept in sync with the same list in tools/webpack/packages.js
@@ -141,12 +171,18 @@ export function internalRequestToHandle(request) {
 }
 
 export function filterInternalRootPackages(packages) {
+  const org = INTERNAL_NAMESPACE.replace(/^@/, '').replace(/\/$/, '');
+
+  // Escape special regex chars in org name
+  const escaped = org.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`@${escaped}/([^/]+)`);
+
   return packages
     .map((packageName) => {
-      const matched = packageName.match(/@moeini\/([^\/]+)/);
-
-      return matched[1] ?? "";
+      const matched = packageName.match(re);
+      return matched ? matched[1] : null;
     })
+    .filter(Boolean)
     .filter(onlyUnique);
 }
 

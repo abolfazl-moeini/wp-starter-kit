@@ -1,16 +1,17 @@
 {
-  "name": "@company/project",
-  "version": "{Project Version}",
-  "description": "{Project Description}",
-  "license": "{Project License}",
+  "name": "@wpsk/starter",
+  "version": "0.1.0",
+  "description": "WordPress Theme/Plugin Starter Kit",
+  "license": "MIT",
   "author": {
-    "name": "{AuthorName}",
-    "email": "{AuthorEmail}",
-    "url": "{AuthorURL}"
+    "name": "Developer",
+    "email": "dev@example.com",
+    "url": "https://example.com"
   },
+  "private": true,
   "type": "module",
   "keywords": [
-    "{keyword}"
+    "wordpress-starter"
   ],
   "repository": {
     "type": "git",
@@ -21,17 +22,29 @@
   },
   "homepage": "https://github.com/abolfazl-moeini/wp-plugin-starter-kit#readme",
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
+    "build": "npm-run-all --parallel build:dependencies build:components build:styles build:assets",
+    "build:all": "node core/packages/build/build-all.js",
     "build:assets": "node build/build-assets.js",
+    "build:components": "node core/packages/build/esbuild-components-cli.js",
+    "build:dependencies": "node core/packages/build/esbuild-dependencies-cli.js",
+    "build:styles": "node core/packages/build/esbuild-styles-cli.js",
+    "prepare": "npm run build:assets",
+    "prepare:assets": "node build/build-assets.js",
+    "release": "npm run build:dependencies && npm run build:components && npm run build:styles && npm run build:assets",
     "test": "jest",
     "lint": "npm run lint --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
-    "check": "node core/packages/utils/check.js"
+    "check": "node core/packages/utils/check-cli.js"
   },
   "workspaces": [
     "core/packages/*",
     "packages/*"
   ],
+  "//": "react / react-dom are aliased to @preact/compat so that any third-party library that imports 'react' resolves to Preact at install time. See docs/react-preact.md.",
+  "dependencies": {
+    "react": "npm:@preact/compat@^18.3.2",
+    "react-dom": "npm:@preact/compat@^18.3.2"
+  },
   "devDependencies": {
     "@babel/core": "^7.26.10",
     "@babel/preset-env": "^7.26.9",
@@ -39,13 +52,19 @@
     "@core/dependency-extraction-esbuild-plugin": "^1.0.0",
     "@core/utils": "^0.1.0",
     "@jest/globals": "^29.7.0",
+    "@preact/compat": "^18.3.2",
+    "@preact/signals": "^2.9.1",
     "babel-jest": "^29.7.0",
     "chalk": "^5.4.1",
     "cross-env": "^7.0.3",
+    "esbuild": "^0.20.2",
     "esbuild-jest": "^0.5.0",
+    "glob": "^10.3.10",
     "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.4.1",
     "mock-fs": "^5.5.0",
     "npm-run-all": "^4.1.5",
+    "preact": "^10.29.2",
     "yargs": "^17.7.2"
   },
   "engines": {

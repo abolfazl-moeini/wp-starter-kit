@@ -1,6 +1,33 @@
-node_modules
-vendor
+# Dependencies
+node_modules/
+vendor/
+
+# OS / IDE noise
 .DS_Store
-.idea
-.vscode
-.dist
+.idea/
+.vscode/
+.opencode/
+
+# Build output
+.dist/
+assets/bundles/
+assets/libraries/
+assets/translations/
+assets/map/
+
+# Test artifacts
+.phpunit.result.cache
+coverage/
+.mavis/
+.mavis/plans/
+
+# Local config (each project starts with .example)
+.env
+.env.local
+build.config.local.json
+project.config.local.json
+
+# Editor temp
+*.swp
+*~
+.DS_Store

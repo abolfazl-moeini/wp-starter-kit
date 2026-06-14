@@ -1,0 +1,68 @@
+{
+  "name": "wpsk/starter",
+  "description": "WordPress Theme/Plugin Starter Kit",
+  "type": "project",
+  "license": "MIT",
+  "require": {
+    "php": ">=7.4",
+    "composer/installers": "^2.2"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.6",
+    "wp-coding-standards/wpcs": "^3.0",
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+    "php-stubs/wordpress-stubs": "^6.4",
+    "szepeviktor/phpstan-wordpress": "^1.3",
+    "phpstan/extension-installer": "^1.3",
+    "phpcompatibility/php-compatibility": "^9.3",
+    "symfony/process": "^5.4",
+    "rector/rector": "^1.0"
+  },
+  "autoload": {
+    "files": ["includes/asset-functions.php"],
+    "classmap": ["includes/"],
+    "psr-4": {
+      "WPSK\\TestTools\\": "packages/php-test-tools/src/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "validate:cs": "@php ./vendor/bin/phpcs -p . --standard=phpcs.xml",
+    "format": "@php ./vendor/bin/phpcbf -p -v . --standard=phpcs.xml --parallel=10",
+    "validate:phpstan": "@php ./vendor/bin/phpstan analyse --configuration=phpstan.neon",
+    "rector:upgrade": "@php ./vendor/bin/rector process -c dev/rector-upgrade.php --clear-cache",
+    "rector:prefix": "@php ./vendor/bin/rector process -c dev/rector-prefix.php --clear-cache",
+    "rector:build": "@php ./vendor/bin/rector process -c dev/rector-build.php --clear-cache",
+    "release": [
+      "@rector:prefix",
+      "@php ./dev/fix-autoloader.php"
+    ],
+    "test:pre": "@php ./tests/patch/apply-patches.php",
+    "translation:generate:php": "@php dev/translation/generate-php.php",
+    "translation:generate:script": "@php dev/translation/generate-script.php",
+    "translation:generate": [
+      "@translation:generate:script",
+      "@translation:generate:php"
+    ],
+    "translation:build:php": "@php dev/translation/build-php.php",
+    "translation:build:script": "@php dev/translation/build-script.php",
+    "translation:build": [
+      "@translation:build:php",
+      "@translation:build:script"
+    ],
+    "translation": [
+      "@translation:build",
+      "@translation:generate"
+    ]
+  },
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true,
+      "phpstan/extension-installer": true,
+      "composer/installers": true
+    },
+    "platform": {
+      "php": "7.4"
+    }
+  }
+}
