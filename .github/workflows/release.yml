@@ -1,0 +1,113 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # ============================================================
+  # Build the release artifacts and attach them to the GitHub Release
+  # ============================================================
+  build:
+    name: Build Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, intl, mysqli
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build all assets
+        run: npm run release
+
+      - name: Run translation pipeline
+        run: composer translation
+
+      - name: Vendor prefix (optional, controlled by tag suffix)
+        id: prefix
+        if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref, '-prefixed')
+        run: composer rector:prefix
+
+      - name: Create source archive
+        run: |
+          mkdir -p release-archive
+          cp -r dist assets project.config.json composer.json package.json phpunit.xml.dist phpcs.xml.dist phpstan.neon.dist core dev packages tests docs README.md CHANGELOG.md release-archive/
+          tar -czf wpsk-starter-${{ github.ref_name }}.tar.gz release-archive/
+
+      - name: Create zip archive
+        run: |
+          zip -r wpsk-starter-${{ github.ref_name }}.zip release-archive/ -x "*/node_modules/*" "*/vendor/*"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ github.ref_name }}
+          path: |
+            wpsk-starter-${{ github.ref_name }}.tar.gz
+            wpsk-starter-${{ github.ref_name }}.zip
+
+  # ============================================================
+  # Create the GitHub Release and attach the artifacts
+  # ============================================================
+  release:
+    name: GitHub Release
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-${{ github.ref_name }}
+          path: artifacts
+
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          VERSION=${{ github.ref_name }}
+          VERSION=${VERSION#v}
+          # Extract the section for this version from CHANGELOG.md
+          awk -v ver="$VERSION" '
+            /^## / {
+              if (found) exit
+              if ($0 ~ ver) { found = 1 }
+            }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "No changelog entry for $VERSION; using commit log"
+            git log -20 --pretty=format:"%h %s" > release-notes.md
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            artifacts/wpsk-starter-${{ github.ref_name }}.tar.gz
+            artifacts/wpsk-starter-${{ github.ref_name }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

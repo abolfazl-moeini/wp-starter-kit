@@ -1,0 +1,193 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs for the same branch / PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================
+  # Job 1: JS unit tests (Jest) on Node 20 + Node 22
+  # ============================================================
+  js-test:
+    name: JS Tests (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Jest
+        run: npx jest --maxWorkers=2 --forceExit --ci
+
+      - name: Upload coverage to Codecov
+        if: matrix.node == 20 && github.event_name == 'push'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/lcov.info
+          flags: js
+          fail_ci_if_error: false
+
+  # ============================================================
+  # Job 2: PHP unit tests (PHPUnit) on PHP 7.4, 8.0, 8.1, 8.2, 8.3
+  # ============================================================
+  php-test:
+    name: PHP Tests (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ["7.4", "8.0", "8.1", "8.2", "8.3"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, intl, mysqli
+          coverage: pcov
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-php-${{ matrix.php }}-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-php-${{ matrix.php }}-
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run PHPUnit
+        run: composer test
+
+      - name: Upload coverage to Codecov
+        if: matrix.php == '8.2' && github.event_name == 'push'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/clover.xml
+          flags: php
+          fail_ci_if_error: false
+
+  # ============================================================
+  # Job 3: Lint (PHPCS + PHPStan + Prettier on push only)
+  # ============================================================
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, intl, mysqli
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Run PHPCS
+        run: composer validate:cs
+
+      - name: Run PHPStan
+        run: composer validate:phpstan
+
+      - name: Run Prettier check
+        run: npx prettier --check '**/*.{js,json,md,yml,yaml}'
+
+  # ============================================================
+  # Job 4: Build (esbuild + assets + translation)
+  # ============================================================
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [js-test, php-test, lint]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, intl, mysqli
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build all assets
+        run: npm run release
+
+      - name: Run translation pipeline
+        run: composer translation
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            dist
+            assets/translations
+            assets/styles
+          retention-days: 7
+
+  # ============================================================
+  # Job 5: Status check (fails if any required job failed)
+  # ============================================================
+  ci-pass:
+    name: CI Status
+    runs-on: ubuntu-latest
+    needs: [js-test, php-test, lint, build]
+    if: always()
+    steps:
+      - name: Check all required jobs passed
+        run: |
+          if [ "${{ needs.js-test.result }}" != "success" ]; then
+            echo "JS tests failed"; exit 1
+          fi
+          if [ "${{ needs.php-test.result }}" != "success" ]; then
+            echo "PHP tests failed"; exit 1
+          fi
+          if [ "${{ needs.lint.result }}" != "success" ]; then
+            echo "Lint failed"; exit 1
+          fi
+          if [ "${{ needs.build.result }}" != "success" ]; then
+            echo "Build failed"; exit 1
+          fi
+          echo "All required jobs passed."

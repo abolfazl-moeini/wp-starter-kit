@@ -1,0 +1,134 @@
+name: Nightly
+
+on:
+  schedule:
+    # Run at 02:00 UTC every day
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+# Don't cancel nightly runs (they're already scheduled, not concurrent).
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  # ============================================================
+  # Smoke test: install the starter in a fresh WP environment
+  # and verify the scaffold CLI produces a working project.
+  # ============================================================
+  scaffold-smoke:
+    name: Scaffold Smoke Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run scaffold CLI in a temp dir
+        run: |
+          TMP=$(mktemp -d)
+          WPSK_TARGET="$TMP/my-project" \
+            WPSK_ANSWERS_JSON='{
+              "slug": "my-project",
+              "npmScope": "myorg",
+              "globalName": "MyProject",
+              "localizeVar": "MyProjectLoc",
+              "textDomain": "my-project",
+              "hookPrefix": "my-project",
+              "phpFunctionPrefix": "myprj_",
+              "uiFramework": "preact"
+            }' \
+            node packages/create-wp-project/src/index.js
+          echo "---"
+          ls -la "$TMP/my-project"
+          echo "---"
+          cat "$TMP/my-project/project.config.json"
+
+  # ============================================================
+  # Translation pipeline: full E2E run on the real source tree
+  # ============================================================
+  translation-e2e:
+    name: Translation E2E
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, intl, mysqli
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build all assets
+        run: npm run build
+
+      - name: Run full translation pipeline
+        run: composer translation
+
+      - name: Verify translation outputs
+        run: |
+          test -f assets/translations/my-project.pot || (
+            echo "Master .pot missing"; exit 1
+          )
+          test -d assets/translations || (
+            echo "translations dir missing"; exit 1
+          )
+          echo "Translation outputs OK"
+
+  # ============================================================
+  # Coverage report: run all tests with coverage and report
+  # ============================================================
+  coverage-report:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, intl, mysqli, xdebug
+          coverage: xdebug
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: |
+          composer install --prefer-dist --no-progress
+          npm ci
+
+      - name: Run PHPUnit with coverage
+        run: vendor/bin/phpunit --coverage-clover coverage/clover.xml
+
+      - name: Run Jest with coverage
+        run: npx jest --coverage --coverageReporters=lcov --coverageReporters=text
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage/clover.xml,./coverage/lcov.info
+          fail_ci_if_error: false
