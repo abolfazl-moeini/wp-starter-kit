@@ -283,10 +283,20 @@ if (!function_exists('is_wp_error')) {
 if (!class_exists('WP_Error')) {
     class WP_Error
     {
+        public $code;
         public string $message;
         public function __construct($code = '', $message = '')
         {
+            $this->code = $code;
             $this->message = (string) $message;
+        }
+        public function get_error_code()
+        {
+            return $this->code;
+        }
+        public function get_error_message()
+        {
+            return $this->message;
         }
     }
 }

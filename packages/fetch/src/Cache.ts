@@ -7,6 +7,7 @@ export interface CacheStore<T> {
   set(key: string, value: CacheEntry<T>): void;
   has(key: string): boolean;
   isPending(key: string): boolean;
+  delete(key: string): void;
 }
 
 class MemoryCache<T> implements CacheStore<T> {
@@ -27,6 +28,10 @@ class MemoryCache<T> implements CacheStore<T> {
   isPending(key: string): boolean {
     const entry = this.store.get(key);
     return entry instanceof Promise;
+  }
+
+  delete(key: string): void {
+    this.store.delete(key);
   }
 }
 

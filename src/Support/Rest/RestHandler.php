@@ -43,12 +43,13 @@ abstract class RestHandler
         try {
             return $this->rest_handler($request);
         } catch (\Throwable $e) {
-            $code = $e->getCode() > 0 ? $e->getCode() : 500;
+            $code   = $e->getCode();
+            $status = ( is_int( $code ) && $code >= 100 && $code < 600 ) ? $code : 500;
             return new WP_REST_Response([
                 'success' => false,
-                'code'    => $code,
+                'code'    => $status,
                 'message' => $e->getMessage(),
-            ], $code);
+            ], $status);
         }
     }
 }

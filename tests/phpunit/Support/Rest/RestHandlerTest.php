@@ -66,4 +66,33 @@ class RestHandlerTest extends TestCase
         $this->assertSame('boom', $response->data['message']);
         $this->assertSame(403, $response->status);
     }
+
+    public function test_rest_response_defaults_to_500_for_out_of_range_exception_codes(): void
+    {
+        $handler = new class extends RestHandler {
+            public function rest_handler(\WP_REST_Request $request): \WP_REST_Response
+            {
+                throw new \Exception('string-code-exception', 0);
+            }
+
+            public function rest_permission(): bool
+            {
+                return true;
+            }
+
+            public function rest_end_point(): string
+            {
+                return 'demo';
+            }
+
+            public function methods(): string
+            {
+                return 'GET';
+            }
+        };
+
+        $response = $handler->rest_response(new \WP_REST_Request());
+        $this->assertSame(500, $response->status);
+        $this->assertSame(500, $response->data['code']);
+    }
 }

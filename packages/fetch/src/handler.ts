@@ -60,6 +60,7 @@ export function createBatchRequest<
   };
 
   const fail = (key: string, error: Error): void => {
+    cache.delete(key);
     const entry = deferred.get(key);
     if (entry) {
       entry.reject(error);

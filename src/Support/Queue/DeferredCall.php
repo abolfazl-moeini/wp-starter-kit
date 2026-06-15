@@ -62,7 +62,7 @@ final class DeferredCall
         self::$stack[$hook][] = $data;
     }
 
-    public static function run_queue(string $hook = ''): void
+    public static function run_queue(...$args): void
     {
         $current = current_filter();
         $items   = self::get_stack($current);
@@ -72,7 +72,7 @@ final class DeferredCall
             $params = $item['params'] ?? [];
 
             if (!empty($item['merge_hook_params'])) {
-                $params = array_merge($params, func_get_args());
+                $params = array_merge($params, $args);
             }
 
             call_user_func_array($cb, $params);

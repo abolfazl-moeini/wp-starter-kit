@@ -111,4 +111,35 @@ describe("createBatchRequest cache behavior", () => {
 
     await expect(pending).rejects.toThrow(/extra\.cacheKey/);
   });
+
+  test("failed requests are cleared from cache to allow retries", async () => {
+    mockedApiFetch.mockRejectedValueOnce(new Error("network error"));
+    mockedApiFetch.mockResolvedValueOnce({
+      responses: [
+        { body: { data: { ok: true }, extra: { cacheKey: "retry-key" } } },
+      ],
+    });
+
+    const batch = createBatchRequest<Req, Res>({
+      uniqueKey: "cacheKey",
+      cacheDriver: "memory",
+      requestChunk: 10,
+      requestDelay: 10,
+      method: "POST",
+      path: "/wpsk/v1/items",
+      batchEndpoint: "/batch/v1",
+    });
+
+    const first = batch({ cacheKey: "retry-key" });
+    jest.advanceTimersByTime(10);
+    await expect(first).rejects.toThrow("network error");
+
+    // Second call should trigger another network request because the first was cleared on failure
+    const second = batch({ cacheKey: "retry-key" });
+    jest.advanceTimersByTime(10);
+    const result = await second;
+    expect(result.fresh).toBe(true);
+    expect(result.response.ok).toBe(true);
+    expect(mockedApiFetch).toHaveBeenCalledTimes(2);
+  });
 });

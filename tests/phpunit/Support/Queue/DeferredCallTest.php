@@ -52,4 +52,34 @@ class DeferredCallTest extends TestCase
         do_action('custom_hook');
         $this->assertTrue($ran);
     }
+
+    public function test_run_queue_merges_hook_params(): void
+    {
+        $passedArgs = [];
+        DeferredCall::queue('param_hook', [
+            'callback' => static function (...$args) use (&$passedArgs): void {
+                $passedArgs = $args;
+            },
+            'params' => ['initial'],
+            'merge_hook_params' => true,
+        ]);
+
+        do_action('param_hook', 'second', 'third');
+        $this->assertSame(['initial', 'second', 'third'], $passedArgs);
+    }
+
+    public function test_run_queue_handles_non_string_action_arguments(): void
+    {
+        $passedObj = null;
+        DeferredCall::queue('obj_hook', [
+            'callback' => static function ($obj) use (&$passedObj): void {
+                $passedObj = $obj;
+            },
+            'merge_hook_params' => true,
+        ]);
+
+        $dummyObj = new \stdClass();
+        do_action('obj_hook', $dummyObj);
+        $this->assertSame($dummyObj, $passedObj);
+    }
 }

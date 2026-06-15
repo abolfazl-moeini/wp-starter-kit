@@ -12,9 +12,13 @@ class HttpPoolTest extends TestCase
     {
         $responses = HttpPool::http_pool([
             ['url' => 'http://127.0.0.1/internal'],
+            ['url' => 'http://169.254.169.254/latest/meta-data'],
         ]);
 
         $this->assertInstanceOf(\WP_Error::class, $responses[0]);
+        $this->assertSame('ssrf_blocked', $responses[0]->get_error_code());
+        $this->assertInstanceOf(\WP_Error::class, $responses[1]);
+        $this->assertSame('ssrf_blocked', $responses[1]->get_error_code());
     }
 
     public function test_global_http_pool_function_exists(): void
