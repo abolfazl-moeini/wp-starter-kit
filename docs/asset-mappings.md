@@ -9,7 +9,8 @@
 
 ### `<slug>-deps.js` (one per project)
 
-Source entry: `assets/dependencies.js` (created by the scaffold).
+Source entry: `assets/dependencies.ts` (created by the scaffold;
+renamed from `assets/dependencies.js` in Phase 12).
 Modules bundled in: **all** of `core/packages/*/src/index.js`.
 
 Why one bundle?
