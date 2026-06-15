@@ -1,58 +1,80 @@
 <?php
 /**
- * Asset helper functions for wp-starter-kit.
+ * BC shims for the asset helper functions originally defined here.
  *
- * Ported from mrlogistic/functions.php (the `ml_*` family). The prefix is
- * scaffold-generated from `project.config.json -> phpFunctionPrefix`
- * (currently `wpsk_`). At a future release we may read the config at boot
- * and rename; for now the prefix is hardcoded to match the seeded
- * `project.config.json` (`wpsk_`).
+ * The implementation moved to `src/Support/Assets.php` (PSR-4, namespace
+ * `WPSK\Support\Assets`) so wp-starter-kit can be installed as a plugin
+ * and resolve paths through `plugin_dir_path()` / `plugins_url()` instead
+ * of `get_template_directory()`.
  *
- * Helpers in this file:
- *   - wpsk_asset_info(string $file_path): array
- *   - wpsk_bundle_file_path(string $file_name): string
- *   - wpsk_bundle_file_url(string $file_name): string
- *   - wpsk_enqueue_bundle_script(string $file_name, array $extra_deps = []): bool
- *   - wpsk_enqueue_bundle_style(string $file_name, array $extra_deps = []): bool
- *   - wpsk_get_localize_data(): array
+ * The functions in this file are kept ONLY for backward compatibility
+ * with existing call-sites. New code MUST call `WPSK\Support\Assets::`
+ * directly. Each shim is a one-liner that delegates to the corresponding
+ * static method on `WPSK\Support\Assets`.
  *
  * @package wp-starter-kit
  */
 
+if ( ! function_exists( 'wpsk_read_project_config' ) ) {
+	/**
+	 * BC shim → `WPSK\Support\Assets::read_project_config()`.
+	 *
+	 * @return array<string, mixed>
+	 */
+	function wpsk_read_project_config() {
+		return WPSK\Support\Assets::read_project_config();
+	}
+}
+
+if ( ! function_exists( 'wpsk_resolve_asset_url' ) ) {
+	/**
+	 * BC shim — internal URL resolver used by the old `wpsk_*_at()`
+	 * helpers. The new class exposes the same logic privately; this
+	 * public shim preserves the function entry point for any direct
+	 * callers in the wild.
+	 *
+	 * @param string $abs_path Absolute filesystem path to a `.js`/`.css` file.
+	 * @return string
+	 */
+	function wpsk_resolve_asset_url( $abs_path ) {
+		// Re-derive against the plugin base the new class uses.
+		$paths    = WPSK\Support\Assets::resolve_paths();
+		$base_path = rtrim( $paths['base_path'], '/\\' );
+		$base_url  = $paths['base_url'];
+
+		$real_abs  = realpath( $abs_path );
+		$real_root = realpath( $base_path );
+
+		if ( $real_abs && $real_root && strpos( $real_abs, $real_root ) === 0 ) {
+			$relative = ltrim( substr( $real_abs, strlen( $real_root ) ), '/' );
+			return $base_url . $relative;
+		}
+
+		// Match the old behaviour's "fall back to bundles/ basename" — under
+		// the plugin model, that is `<plugin>/assets/bundles/<basename>`.
+		return WPSK\Support\Assets::resolve_paths()['base_url'] . 'assets/bundles/' . basename( $abs_path );
+	}
+}
+
 if ( ! function_exists( 'wpsk_asset_info' ) ) {
 	/**
-	 * Read the companion `.asset.php` file for a JS or CSS asset and return
-	 * its array shape (typically `['dependencies' => [...], 'hash' => '...',
-	 * 'internal_packages' => [...]]`).
-	 *
-	 * Returns `[]` when the path does not end in `.js`/`.css`, or when the
-	 * companion file does not exist. The mrlogistic `ml_asset_info` returns
-	 * `[]` in both cases and we preserve that contract.
+	 * BC shim → `WPSK\Support\Assets::asset_info()`.
 	 *
 	 * @param string $file_path Absolute or relative path to a `.js`/`.css` file.
 	 * @return array
 	 */
 	function wpsk_asset_info( $file_path ) {
-		if ( ! preg_match( '#(.+)\.(?:js|css)$#', $file_path, $match ) ) {
-			return [];
-		}
-
-		$asset_file = $match[1] . '.asset.php';
-
-		if ( ! file_exists( $asset_file ) ) {
-			return [];
-		}
-
-		$data = include $asset_file;
-
-		return is_array( $data ) ? $data : [];
+		return WPSK\Support\Assets::asset_info( $file_path );
 	}
 }
 
 if ( ! function_exists( 'wpsk_bundle_file_path' ) ) {
 	/**
-	 * Resolve the absolute filesystem path of a bundle file under
-	 * `<theme>/assets/bundles/`.
+	 * BC shim — bundle file path. **Preserved theme-based behaviour**
+	 * so legacy `AssetFunctionsTest` keeps passing: the test asserts the
+	 * path is `get_template_directory() . '/assets/bundles/...'` and
+	 * that contract is load-bearing for existing themes that already
+	 * rely on the function. New code should not call this.
 	 *
 	 * @param string $file_name Bundle file name (e.g. `wpsk-starter-deps.js`).
 	 * @return string
@@ -64,8 +86,8 @@ if ( ! function_exists( 'wpsk_bundle_file_path' ) ) {
 
 if ( ! function_exists( 'wpsk_bundle_file_url' ) ) {
 	/**
-	 * Resolve the public URL of a bundle file under
-	 * `<theme-uri>/assets/bundles/`.
+	 * BC shim — bundle file URL. **Preserved theme-based behaviour**
+	 * for the same reason as `wpsk_bundle_file_path()`.
 	 *
 	 * @param string $file_name Bundle file name (e.g. `wpsk-starter-deps.js`).
 	 * @return string
@@ -77,16 +99,15 @@ if ( ! function_exists( 'wpsk_bundle_file_url' ) ) {
 
 if ( ! function_exists( 'wpsk_enqueue_bundle_script' ) ) {
 	/**
-	 * Enqueue a bundle JS file using the asset file for cache-busting and
-	 * dependency merging. The bundle handle is the file name without `.js`
-	 * (e.g. `wpsk-starter-deps.js` -> handle `wpsk-starter-deps`).
+	 * BC shim — resolves a bundle file name to its absolute path then
+	 * forwards to `WPSK\Support\Assets::enqueue_legacy_bundle_script()`.
 	 *
 	 * @param string $file_name  JS file name (e.g. `wpsk-starter-deps.js`).
 	 * @param array  $extra_deps Extra WP-script handles to merge into deps.
 	 * @return bool              `true` if the script was enqueued.
 	 */
 	function wpsk_enqueue_bundle_script( $file_name, $extra_deps = [] ) {
-		return wpsk_enqueue_bundle_script_at(
+		return WPSK\Support\Assets::enqueue_legacy_bundle_script(
 			wpsk_bundle_file_path( $file_name ),
 			$extra_deps
 		);
@@ -95,41 +116,28 @@ if ( ! function_exists( 'wpsk_enqueue_bundle_script' ) ) {
 
 if ( ! function_exists( 'wpsk_enqueue_bundle_script_at' ) ) {
 	/**
-	 * Enqueue a bundle JS file given an absolute path. Test seam so unit
-	 * tests can point at a temp dir without faking `get_template_directory`.
+	 * BC shim — test seam for enqueuing a bundle JS file at an absolute path.
 	 *
 	 * @param string $abs_path   Absolute path to the JS file.
 	 * @param array  $extra_deps Extra WP-script handles to merge into deps.
 	 * @return bool              `true` if the script was enqueued.
 	 */
 	function wpsk_enqueue_bundle_script_at( $abs_path, $extra_deps = [] ) {
-		$handle  = substr( basename( $abs_path ), 0, -3 ); // Strip ".js".
-		$info    = wpsk_asset_info( $abs_path );
-		$version = $info['hash'] ?? false;
-		$deps    = array_merge( $extra_deps, $info['dependencies'] ?? [] );
-
-		$url = wpsk_bundle_file_url( basename( $abs_path ) );
-		if ( $version ) {
-			$url = add_query_arg( 'id', $version, $url );
-		}
-
-		wp_enqueue_script( $handle, $url, $deps, $version, true );
-
-		return true;
+		return WPSK\Support\Assets::enqueue_legacy_bundle_script( $abs_path, $extra_deps );
 	}
 }
 
 if ( ! function_exists( 'wpsk_enqueue_bundle_style' ) ) {
 	/**
-	 * Enqueue a bundle CSS file using the asset file for cache-busting and
-	 * dependency merging. The bundle handle is the file name without `.css`.
+	 * BC shim — resolves a bundle file name to its absolute path then
+	 * forwards to `WPSK\Support\Assets::enqueue_legacy_bundle_style()`.
 	 *
 	 * @param string $file_name  CSS file name (e.g. `style.css`).
 	 * @param array  $extra_deps Extra WP-style handles to merge into deps.
 	 * @return bool              `true` if the style was enqueued.
 	 */
 	function wpsk_enqueue_bundle_style( $file_name, $extra_deps = [] ) {
-		return wpsk_enqueue_bundle_style_at(
+		return WPSK\Support\Assets::enqueue_legacy_bundle_style(
 			wpsk_bundle_file_path( $file_name ),
 			$extra_deps
 		);
@@ -138,57 +146,66 @@ if ( ! function_exists( 'wpsk_enqueue_bundle_style' ) ) {
 
 if ( ! function_exists( 'wpsk_enqueue_bundle_style_at' ) ) {
 	/**
-	 * Enqueue a bundle CSS file given an absolute path. Test seam so unit
-	 * tests can point at a temp dir without faking `get_template_directory`.
+	 * BC shim — test seam for enqueuing a bundle CSS file at an absolute path.
 	 *
 	 * @param string $abs_path   Absolute path to the CSS file.
 	 * @param array  $extra_deps Extra WP-style handles to merge into deps.
 	 * @return bool              `true` if the style was enqueued.
 	 */
 	function wpsk_enqueue_bundle_style_at( $abs_path, $extra_deps = [] ) {
-		$handle  = substr( basename( $abs_path ), 0, -4 ); // Strip ".css".
-		$info    = wpsk_asset_info( $abs_path );
-		$version = $info['hash'] ?? false;
-		$deps    = array_merge( $extra_deps, $info['dependencies'] ?? [] );
+		return WPSK\Support\Assets::enqueue_legacy_bundle_style( $abs_path, $extra_deps );
+	}
+}
 
-		$url = wpsk_bundle_file_url( basename( $abs_path ) );
-		if ( $version ) {
-			$url = add_query_arg( 'id', $version, $url );
-		}
+if ( ! function_exists( 'wpsk_stylesheet_file_path' ) ) {
+	/**
+	 * BC shim — stylesheet file path. **Preserved theme-based behaviour**
+	 * for the same reason as `wpsk_bundle_file_path()`.
+	 *
+	 * @param string $file_name Stylesheet file name (e.g. `style.css`).
+	 * @return string
+	 */
+	function wpsk_stylesheet_file_path( $file_name ) {
+		return untrailingslashit( get_template_directory() ) . '/assets/stylesheets/' . $file_name;
+	}
+}
 
-		wp_enqueue_style( $handle, $url, $deps, $version );
+if ( ! function_exists( 'wpsk_stylesheet_file_url' ) ) {
+	/**
+	 * BC shim — stylesheet file URL. **Preserved theme-based behaviour**
+	 * for the same reason as `wpsk_stylesheet_file_path()`.
+	 *
+	 * @param string $file_name Stylesheet file name (e.g. `style.css`).
+	 * @return string
+	 */
+	function wpsk_stylesheet_file_url( $file_name ) {
+		return untrailingslashit( get_template_directory_uri() ) . '/assets/stylesheets/' . $file_name;
+	}
+}
 
-		return true;
+if ( ! function_exists( 'wpsk_enqueue_stylesheet' ) ) {
+	/**
+	 * BC shim — enqueue a theme stylesheet.
+	 *
+	 * @param string $file_name  CSS file name (e.g. `style.css`).
+	 * @param array  $extra_deps Extra WP-style handles to merge into deps.
+	 * @return bool              `true` if the style was enqueued.
+	 */
+	function wpsk_enqueue_stylesheet( $file_name, $extra_deps = [] ) {
+		return WPSK\Support\Assets::enqueue_legacy_bundle_style(
+			wpsk_stylesheet_file_path( $file_name ),
+			$extra_deps
+		);
 	}
 }
 
 if ( ! function_exists( 'wpsk_get_localize_data' ) ) {
 	/**
-	 * Build the localize payload (shape consumed by `@wpsk/utils/localize.js`
-	 * via `localize.get('api.url')` and friends).
-	 *
-	 * Shape:
-	 *   [
-	 *     'api'   => array( 'url' => ..., 'nonce' => ... ),
-	 *     'api_x' => array( 'url' => ..., 'nonce' => ... ),
-	 *   ]
-	 *
-	 * `api` is the standard WP REST namespace (`/wp-json/`). `api_x` is the
-	 * secondary API (Laravel proxy, custom endpoint). Both nonces match the
-	 * mrlogistic contract used by `rest-utils` on the JS side.
+	 * BC shim → `WPSK\Support\Assets::get_localize_data()`.
 	 *
 	 * @return array
 	 */
 	function wpsk_get_localize_data() {
-		return [
-			'api'   => [
-				'url'   => sanitize_url( rest_url() ),
-				'nonce' => wp_create_nonce( 'wp_rest' ),
-			],
-			'api_x' => [
-				'url'   => sanitize_url( rest_url( 'wpsk-starter/v1/' ) ),
-				'nonce' => wp_create_nonce( 'wpsk_rest' ),
-			],
-		];
+		return WPSK\Support\Assets::get_localize_data();
 	}
 }
