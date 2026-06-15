@@ -108,6 +108,16 @@ export function answersToProjectConfig(a) {
     phpFunctionPrefix: a.phpFunctionPrefix || 'wpsk_',
     uiFramework: a.uiFramework,
     projectType: a.projectType || 'plugin',
+    // Phase 11 v2 defaults — present in every scaffolded
+    // project.config.json so consumers (readProjectConfig, REST
+    // router, JS bundles) can rely on the keys without a follow-up
+    // migration step. Override per-project by passing a non-default
+    // value through answers (the renderer will use it).
+    restNamespace: a.restNamespace || 'wpsk/v1',
+    vendorPrefix: a.vendorPrefix || 'WpskVendor',
+    phpMinVersion: a.phpMinVersion || '7.4',
+    phpSourceVersion: a.phpSourceVersion || '8.1',
+    batchEndpoint: a.batchEndpoint || '/batch/v1',
   };
   return cfg;
 }
@@ -141,7 +151,12 @@ const TEMPLATE_PROJECT_CONFIG = `{
   "depsBundle": "{{depsBundle}}",
   "phpFunctionPrefix": "{{phpFunctionPrefix}}",
   "uiFramework": "{{uiFramework}}",
-  "projectType": "{{projectType}}"
+  "projectType": "{{projectType}}",
+  "restNamespace": "{{restNamespace}}",
+  "vendorPrefix": "{{vendorPrefix}}",
+  "phpMinVersion": "{{phpMinVersion}}",
+  "phpSourceVersion": "{{phpSourceVersion}}",
+  "batchEndpoint": "{{batchEndpoint}}"
 }
 `;
 
@@ -276,6 +291,11 @@ function tplVars(answers, cfg) {
     author: 'wp-starter-kit scaffold',
     authorUri: 'https://github.com/abolfazl-moeini/wp-plugin-starter-kit',
     pluginUri: 'https://github.com/abolfazl-moeini/wp-plugin-starter-kit',
+    // {{vendor}} — the PSR-4 root namespace used in the example
+    // feature module. Default to the kit's own WPSK namespace so the
+    // stub compiles out of the box; consumers are expected to
+    // override this via answers.vendor (e.g. MyOrg) in real projects.
+    vendor: answers.vendor || 'WPSK',
   };
 }
 
@@ -401,27 +421,508 @@ See the parent starter docs in \`node_modules/wp-starter-kit/README.md\` (if lin
 `;
 
 /* -------------------------------------------------------------------- */
+/* Phase 11 — Core, Modules, tsconfig, readme.txt                       */
+/* -------------------------------------------------------------------- */
+//
+// The PHP templates below are the canonical wp-starter-kit core
+// classes (Plugin, ModuleInterface, ModuleLoader). They are kept as
+// inline template strings (instead of being read from the kit's
+// filesystem at runtime) so the package is self-contained and does
+// not require the kit to be physically installed alongside the
+// consumer's project. The .tpl loading machinery is only used for
+// the plugin bootstrap (which needs `{{token}}` substitution);
+// the kit's own classes are static and do not need templating.
+
+const TEMPLATE_CORE_PLUGIN_PHP = `<?php
+declare(strict_types=1);
+
+namespace WPSK\\Core;
+
+/**
+ * Static facade for the wp-starter-kit plugin.
+ *
+ * Responsibilities:
+ *  - Locate and cache the project configuration JSON
+ *    (\`project.config.json\` in the plugin root).
+ *  - Hold a single {@see ModuleLoader} instance for the lifetime of
+ *    the request / CLI run / unit test.
+ *  - Hook into WordPress at \`plugins_loaded\` (or \`init\` if the
+ *    earlier hook is unavailable) at priority 10.
+ *  - Fire the \`{\$hookPrefix}_plugin_loaded\` action so feature
+ *    modules and third-party code can run after the plugin is up.
+ *
+ * The class is intentionally theme-agnostic: every path it
+ * resolves is anchored to the *plugin* root (the directory that
+ * contains this file's parent's parent), never to the active
+ * theme directory.
+ */
+final class Plugin
+{
+    /**
+     * Singleton instance. \`null\` until {@see Plugin::boot()} runs.
+     */
+    private static ?self \$instance = null;
+
+    /**
+     * Module loader that owns every registered feature module.
+     */
+    private static ?ModuleLoader \$loader = null;
+
+    /**
+     * Override path for \`project.config.json\`. Resolved at boot
+     * time and cached for the rest of the request.
+     */
+    private static ?string \$configPath = null;
+
+    /**
+     * Parsed contents of \`project.config.json\`.
+     *
+     * @var array<string,mixed>|null
+     */
+    private static ?array \$configCache = null;
+
+    /**
+     * The hook name fired by {@see Plugin::boot()}. Stored on the
+     * instance so tests can observe what would have been passed to
+     * \`do_action()\` without having to spy on the global WordPress
+     * function (which is a no-op in the project's test bootstrap).
+     */
+    private static ?string \$lastHook = null;
+
+    /**
+     * Whether {@see Plugin::boot()} has run in this process.
+     */
+    private static bool \$booted = false;
+
+    /**
+     * Disable instantiation — the class is used statically.
+     */
+    private function __construct()
+    {
+    }
+
+    /**
+     * Boot the plugin.
+     *
+     * Idempotent: a second call is a no-op. When the test bootstrap
+     * provides \`add_action()\` and \`do_action()\` shims, the loader
+     * is wired into WordPress; otherwise the loader is initialised
+     * and the \`plugin_loaded\` hook is recorded for later inspection.
+     *
+     * @param string|null \$configPath Optional override for the
+     *                                project.config.json location.
+     *                                Production code lets this be
+     *                                null and the file is resolved
+     *                                from the plugin root.
+     *
+     * @throws \\RuntimeException when project.config.json cannot be
+     *                           located or read.
+     */
+    public static function boot(?string \$configPath = null): void
+    {
+        if (self::\$booted) {
+            return;
+        }
+
+        \$config = self::config(\$configPath);
+        \$hookPrefix = isset(\$config['hookPrefix']) && is_string(\$config['hookPrefix'])
+            ? \$config['hookPrefix']
+            : 'wpsk';
+
+        if (\$configPath !== null) {
+            self::\$configCache = \$config;
+        }
+
+        self::\$loader = new ModuleLoader(\$hookPrefix);
+        self::\$instance = new self();
+        self::\$booted = true;
+        self::\$lastHook = \$hookPrefix . '_plugin_loaded';
+
+        if (function_exists('add_action')) {
+            \\add_action('plugins_loaded', [self::class, 'on_plugins_loaded'], 10, 0);
+            \\add_action('init', [self::class, 'on_plugins_loaded'], 10, 0);
+        }
+
+        if (function_exists('do_action')) {
+            \\do_action(self::\$lastHook);
+        }
+    }
+
+    public static function on_plugins_loaded(): void
+    {
+        if (self::\$loader === null) {
+            return;
+        }
+        self::\$loader->boot_all();
+    }
+
+    public static function loader(): ModuleLoader
+    {
+        if (self::\$loader === null) {
+            self::\$loader = new ModuleLoader('wpsk');
+        }
+        return self::\$loader;
+    }
+
+    public static function config(?string \$overridePath = null): array
+    {
+        if (self::\$configCache !== null && \$overridePath === null) {
+            return self::\$configCache;
+        }
+
+        \$path = \$overridePath ?? self::resolveDefaultConfigPath();
+
+        if (!is_file(\$path) || !is_readable(\$path)) {
+            throw new \\RuntimeException(
+                sprintf('project.config.json not found at %s', \$path)
+            );
+        }
+
+        \$raw = file_get_contents(\$path);
+        if (\$raw === false) {
+            throw new \\RuntimeException(
+                sprintf('Failed to read project.config.json at %s', \$path)
+            );
+        }
+
+        \$decoded = json_decode(\$raw, true);
+        if (!is_array(\$decoded)) {
+            throw new \\RuntimeException(
+                sprintf('project.config.json at %s did not decode as an object/array', \$path)
+            );
+        }
+
+        if (\$overridePath === null) {
+            self::\$configCache = \$decoded;
+        }
+        return \$decoded;
+    }
+
+    public static function is_booted(): bool
+    {
+        return self::\$booted;
+    }
+
+    public static function last_loaded_hook(): ?string
+    {
+        return self::\$lastHook;
+    }
+
+    public static function loaded_config(): array
+    {
+        return self::\$configCache ?? [];
+    }
+
+    public static function reset_for_tests(): void
+    {
+        self::\$instance = null;
+        self::\$loader = null;
+        self::\$configPath = null;
+        self::\$configCache = null;
+        self::\$lastHook = null;
+        self::\$booted = false;
+    }
+
+    private static function resolveDefaultConfigPath(): string
+    {
+        if (self::\$configPath !== null) {
+            return self::\$configPath;
+        }
+        \$pluginRoot = dirname(__DIR__, 2);
+        return \$pluginRoot . '/project.config.json';
+    }
+}
+`;
+
+const TEMPLATE_CORE_MODULE_INTERFACE_PHP = `<?php
+declare(strict_types=1);
+
+namespace WPSK\\Core;
+
+/**
+ * Contract every pluggable feature module must implement.
+ *
+ * The wp-starter-kit is structured around small, isolated feature
+ * modules (e.g. an "example-feature", a "rest-api" module, a
+ * "frontend-bundle" module). Each module decides its own slug
+ * (used as the lookup key inside {@see ModuleLoader}) and a single
+ * {@see ModuleInterface::boot()} entry point that the loader calls
+ * exactly once after registration.
+ *
+ * The interface intentionally has no dependencies on WordPress so a
+ * module can be unit-tested in isolation. WordPress integration
+ * (action / filter registration) happens *inside* boot(), not on
+ * the contract.
+ */
+interface ModuleInterface
+{
+    /**
+     * Run the module's startup logic.
+     *
+     * Called by {@see ModuleLoader::boot_all()} after the module has
+     * been registered. Implementations should be idempotent at the
+     * call-site level — the loader does not promise to invoke
+     * boot() only once if the caller calls boot_all() more than
+     * once.
+     */
+    public function boot(): void;
+
+    /**
+     * Return the unique slug used to register and look up the module
+     * inside the {@see ModuleLoader}. Slugs must be stable across
+     * versions because they are part of the public contract.
+     */
+    public function get_slug(): string;
+}
+`;
+
+const TEMPLATE_CORE_MODULE_LOADER_PHP = `<?php
+declare(strict_types=1);
+
+namespace WPSK\\Core;
+
+/**
+ * In-memory registry and boot orchestrator for {@see ModuleInterface}
+ * implementations.
+ *
+ * Modules are registered by slug with {@see ModuleLoader::register()};
+ * nothing happens until {@see ModuleLoader::boot_all()} is invoked,
+ * keeping module side effects out of the autoloader / files-load
+ * phase. Boot order is the order of registration — no priority system
+ * is needed at the module level because the loader only knows about
+ * a single phase.
+ *
+ * Extensibility hooks (filter / action) follow the project's
+ * \`{\$hookPrefix}_*\` naming convention. The \`hookPrefix\` is supplied
+ * at construction time and is typically read from
+ * \`project.config.json\` (e.g. \`wpsk_module_loader\` for \`wpsk\`).
+ */
+final class ModuleLoader
+{
+    /**
+     * Registered modules keyed by slug, in registration order.
+     *
+     * @var array<string, ModuleInterface>
+     */
+    private array \$modules = [];
+
+    private string \$hookPrefix;
+
+    public function __construct(string \$hookPrefix)
+    {
+        \$this->hookPrefix = \$hookPrefix;
+    }
+
+    public function register(ModuleInterface \$module): void
+    {
+        \$slug = \$module->get_slug();
+        if (\$slug === '') {
+            throw new \\InvalidArgumentException(
+                'Module slug must be a non-empty string'
+            );
+        }
+        if (isset(\$this->modules[\$slug])) {
+            throw new \\InvalidArgumentException(
+                sprintf(
+                    "Module with slug '%s' is already registered",
+                    \$slug
+                )
+            );
+        }
+
+        \$this->modules[\$slug] = \$module;
+    }
+
+    public function boot_all(): void
+    {
+        \$this->modules = \$this->filter_modules(\$this->modules);
+
+        foreach (\$this->modules as \$module) {
+            \$module->boot();
+        }
+
+        \$this->fire_loaded_action();
+    }
+
+    public function get(string \$slug): ?ModuleInterface
+    {
+        return \$this->modules[\$slug] ?? null;
+    }
+
+    public function has(string \$slug): bool
+    {
+        return isset(\$this->modules[\$slug]);
+    }
+
+    /**
+     * @return array<string, ModuleInterface>
+     */
+    public function all(): array
+    {
+        return \$this->modules;
+    }
+
+    private function filter_modules(array \$modules): array
+    {
+        if (!function_exists('apply_filters')) {
+            return \$modules;
+        }
+
+        \$filtered = \\apply_filters(
+            \$this->hookPrefix . '_module_loader',
+            \$this
+        );
+
+        if (\$filtered instanceof self) {
+            return \$filtered->modules;
+        }
+
+        return \$modules;
+    }
+
+    private function fire_loaded_action(): void
+    {
+        if (!function_exists('do_action')) {
+            return;
+        }
+
+        \\do_action(\$this->hookPrefix . '_modules_loaded');
+    }
+}
+`;
+
+const TEMPLATE_EXAMPLE_FEATURE_MODULE_PHP = `<?php
+/**
+ * Example feature module — illustrates the wp-starter-kit ModuleInterface.
+ *
+ * Delete this directory once you have wired your first real feature;
+ * it is only here so the scaffolded project has a working
+ * src/Modules/ tree on day one.
+ *
+ * The module is registered with the loader in the {slug} plugin
+ * file via WPSK\\Core\\Plugin::loader()->register(new ExampleFeature()).
+ */
+declare(strict_types=1);
+
+namespace {{vendor}}\\Modules\\ExampleFeature;
+
+use WPSK\\Core\\ModuleInterface;
+
+final class Module implements ModuleInterface
+{
+    public function get_slug(): string
+    {
+        return 'example-feature';
+    }
+
+    public function boot(): void
+    {
+        // Register your action/filter callbacks here. Keep the body
+        // idempotent — the loader may call boot_all() more than once
+        // in long-lived processes.
+    }
+}
+`;
+
+const TEMPLATE_TSCONFIG_JSON = `{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["assets/**/*", "core/**/*", "packages/**/*"],
+  "exclude": ["node_modules", "vendor", "build", "dist"]
+}
+`;
+
+const TEMPLATE_README_TXT = `=== {{name}} ===
+Contributors:      {{author}}
+Tags:              wp-starter-kit, wpsk, framework
+Requires at least: 6.4
+Tested up to:      6.5
+Requires PHP:      {{phpMinVersion}}
+Stable tag:        0.1.0
+License:           GPL-2.0-or-later
+License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+Plugin URI:        {{pluginUri}}
+
+{{description}}
+
+== Description ==
+
+{{name}} is a WordPress plugin scaffolded from
+[wp-starter-kit](https://github.com/abolfazl-moeini/wp-plugin-starter-kit).
+
+Branding (from project.config.json):
+
+* npm scope: {{npmScope}}
+* Global JS name: {{globalName}}
+* Localize var: {{localizeVar}}
+* Text domain: {{textDomain}}
+* Hook prefix: {{hookPrefix}}
+* PHP function prefix: {{phpFunctionPrefix}}
+* UI framework: {{uiFramework}}
+* REST namespace: {{restNamespace}}
+* Batch endpoint: {{batchEndpoint}}
+
+== Installation ==
+
+1. Upload the plugin folder to \`/wp-content/plugins/{{slug}}/\`.
+2. Activate the plugin through the *Plugins* menu in WordPress.
+3. Run \`composer install\` in the plugin directory.
+4. Run \`npm install && npm run build\` to produce the JS/CSS bundles.
+
+== Changelog ==
+
+= 0.1.0 =
+* Initial scaffold from wp-starter-kit.
+`;
+
+/* -------------------------------------------------------------------- */
 /* scaffoldProject                                                     */
 /* -------------------------------------------------------------------- */
 
 /**
  * @param {string} targetDir  absolute path where the project will be created.
  * @param {ScaffoldAnswers} answers
+ * @param {Object} [options]
+ * @param {boolean} [options.force=false]  overwrite existing project
+ *                                        files (project.config.json,
+ *                                        src/Core/Plugin.php, etc.).
+ *                                        Without --force the scaffold
+ *                                        refuses to touch an existing
+ *                                        project.
  * @returns {Promise<{ok: boolean, written?: string[], reason?: string}>}
  */
-export async function scaffoldProject(targetDir, answers) {
+export async function scaffoldProject(targetDir, answers, options = {}) {
   // 1. Validate
   const v = validateAnswers(answers);
   if (!v.ok) {
     return { ok: false, reason: 'invalid answers: ' + JSON.stringify(v.errors) };
   }
 
-  // 2. Refuse to clobber an existing project
-  try {
-    await fs.access(path.join(targetDir, 'project.config.json'));
-    return { ok: false, reason: `project.config.json already exists at ${targetDir}` };
-  } catch {
-    /* good — does not exist */
+  // 2. Refuse to clobber an existing project unless --force is set.
+  //    The sentinel is project.config.json — if it exists, the directory
+  //    is treated as an existing project. Any other file the scaffold
+  //    emits (src/Core/Plugin.php, etc.) is treated as a derivative of
+  //    that sentinel and is protected by the same rule.
+  if (!options.force) {
+    try {
+      await fs.access(path.join(targetDir, 'project.config.json'));
+      return { ok: false, reason: `project.config.json already exists at ${targetDir} — pass { force: true } to overwrite` };
+    } catch {
+      /* good — does not exist */
+    }
   }
 
   // 3. Build cfg + vars
@@ -434,6 +935,8 @@ export async function scaffoldProject(targetDir, answers) {
   await fs.mkdir(path.join(targetDir, 'assets'), { recursive: true });
   await fs.mkdir(path.join(targetDir, 'assets/stylesheets'), { recursive: true });
   await fs.mkdir(path.join(targetDir, 'components'), { recursive: true });
+  await fs.mkdir(path.join(targetDir, 'src/Core'), { recursive: true });
+  await fs.mkdir(path.join(targetDir, 'src/Modules/ExampleFeature'), { recursive: true });
 
   // Phase 11: choose primary PHP bootstrap based on projectType.
   //   projectType === 'theme' (legacy) → emit functions.php
@@ -452,7 +955,14 @@ export async function scaffoldProject(targetDir, answers) {
   const files = {
     'project.config.json':         renderTemplate(TEMPLATE_PROJECT_CONFIG, vars),
     'build.config.json':           renderTemplate(TEMPLATE_BUILD_CONFIG, vars),
+    'tsconfig.json':               TEMPLATE_TSCONFIG_JSON,
+    'readme.txt':                  renderTemplate(TEMPLATE_README_TXT, vars),
     [phpBootstrapRel]:             phpBootstrapContent,
+    'src/Core/Plugin.php':         TEMPLATE_CORE_PLUGIN_PHP,
+    'src/Core/ModuleInterface.php': TEMPLATE_CORE_MODULE_INTERFACE_PHP,
+    'src/Core/ModuleLoader.php':   TEMPLATE_CORE_MODULE_LOADER_PHP,
+    'src/Modules/ExampleFeature/.gitkeep': '',
+    'src/Modules/ExampleFeature/Module.php': renderTemplate(TEMPLATE_EXAMPLE_FEATURE_MODULE_PHP, vars),
     'assets/dependencies.js':      renderTemplate(TEMPLATE_DEPENDENCIES_JS, vars),
     'assets/stylesheets/style.css': renderTemplate(TEMPLATE_STYLESHEET, vars),
     'package.json':                JSON.stringify(packageJsonForAnswers(answers), null, 2) + '\n',

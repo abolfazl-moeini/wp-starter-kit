@@ -118,6 +118,11 @@ describe('@wpsk/create-wp-project', () => {
         phpFunctionPrefix: 'myprj_',
         uiFramework: 'preact',
         projectType: 'plugin',
+        restNamespace: 'wpsk/v1',
+        vendorPrefix: 'WpskVendor',
+        phpMinVersion: '7.4',
+        phpSourceVersion: '8.1',
+        batchEndpoint: '/batch/v1',
       });
     });
 
@@ -209,6 +214,11 @@ describe('@wpsk/create-wp-project', () => {
         phpFunctionPrefix: 'myprj_',
         uiFramework: 'preact',
         projectType: 'plugin',
+        restNamespace: 'wpsk/v1',
+        vendorPrefix: 'WpskVendor',
+        phpMinVersion: '7.4',
+        phpSourceVersion: '8.1',
+        batchEndpoint: '/batch/v1',
       });
     });
 
@@ -373,4 +383,259 @@ describe('@wpsk/create-wp-project', () => {
       );
     });
   });
+
+  /* -------------------------------------------------------------------- */
+  /* p11-scaffold-update: Core / Modules / dependencies / configs         */
+  /* -------------------------------------------------------------------- */
+
+  describe('scaffoldProject (Phase 11 Core+Modules+assets+configs)', () => {
+    // Same canonical answers as the rest of the suite, so the new
+    // assertions don't have to rebuild the fixture.
+    const goodAnswers = {
+      slug: 'my-project',
+      npmScope: 'myorg',
+      globalName: 'MyProject',
+      localizeVar: 'MyProjectLoc',
+      textDomain: 'my-project',
+      hookPrefix: 'my-project',
+      depsBundle: 'my-project-deps.js',
+      phpFunctionPrefix: 'myprj_',
+      uiFramework: 'preact',
+    };
+
+    /* ----- src/Core/ emission ----------------------------------------- */
+
+    test('scaffolds src/Core/Plugin.php (kit core facade)', async () => {
+      const res = await scaffoldProject(tmp, goodAnswers);
+      expect(res.ok).toBe(true);
+      const pluginPhp = await fs.readFile(
+        path.join(tmp, 'src', 'Core', 'Plugin.php'),
+        'utf8',
+      );
+      // Must be a real PHP class, not a placeholder, declaring the
+      // WPSK\Core\Plugin facade the bootstrap template relies on.
+      expect(pluginPhp).toMatch(/namespace\s+WPSK\\Core\b/);
+      expect(pluginPhp).toMatch(/class\s+Plugin\b/);
+      expect(pluginPhp).toMatch(/public\s+static\s+function\s+boot\b/);
+    });
+
+    test('scaffolds src/Core/ModuleInterface.php (module contract)', async () => {
+      const res = await scaffoldProject(tmp, goodAnswers);
+      expect(res.ok).toBe(true);
+      const iface = await fs.readFile(
+        path.join(tmp, 'src', 'Core', 'ModuleInterface.php'),
+        'utf8',
+      );
+      expect(iface).toMatch(/namespace\s+WPSK\\Core\b/);
+      expect(iface).toMatch(/interface\s+ModuleInterface\b/);
+      expect(iface).toMatch(/function\s+boot\b/);
+      expect(iface).toMatch(/function\s+get_slug\b/);
+    });
+
+    test('scaffolds src/Core/ModuleLoader.php (registry + boot orchestrator)', async () => {
+      const res = await scaffoldProject(tmp, goodAnswers);
+      expect(res.ok).toBe(true);
+      const loader = await fs.readFile(
+        path.join(tmp, 'src', 'Core', 'ModuleLoader.php'),
+        'utf8',
+      );
+      expect(loader).toMatch(/namespace\s+WPSK\\Core\b/);
+      expect(loader).toMatch(/class\s+ModuleLoader\b/);
+      expect(loader).toMatch(/function\s+register\b/);
+      expect(loader).toMatch(/function\s+boot_all\b/);
+    });
+
+    /* ----- src/Modules/ emission ------------------------------------- */
+
+    test('scaffolds src/Modules/ExampleFeature/ as a directory (stub)', async () => {
+      const res = await scaffoldProject(tmp, goodAnswers);
+      expect(res.ok).toBe(true);
+      // The scaffold must create a directory for the example module.
+      // The directory must contain at least a .gitkeep or a Module.php
+      // stub so the project commits it.
+      const moduleDir = path.join(tmp, 'src', 'Modules', 'ExampleFeature');
+      const stat = await fs.stat(moduleDir);
+      expect(stat.isDirectory()).toBe(true);
+      const entries = await fs.readdir(moduleDir);
+      // Some kind of content file must be present (.gitkeep, Module.php,
+      // or any placeholder).
+      expect(entries.length).toBeGreaterThan(0);
+    });
+
+    /* ----- assets/dependencies.{js,ts} generation -------------------- */
+
+    test('scaffolds assets/dependencies.js (or .ts) with globalName substituted', async () => {
+      const res = await scaffoldProject(tmp, goodAnswers);
+      expect(res.ok).toBe(true);
+      // Phase 11: dependencies lives at assets/dependencies.{js,ts}.
+      // TS is not yet a hard requirement, so .js is acceptable. Either
+      // extension must exist.
+      const jsPath = path.join(tmp, 'assets', 'dependencies.js');
+      const tsPath = path.join(tmp, 'assets', 'dependencies.ts');
+      const hasJs = existsSyncSync(jsPath);
+      const hasTs = existsSyncSync(tsPath);
+      expect(hasJs || hasTs).toBe(true);
+      const dep = await fs.readFile(
+        hasTs ? tsPath : jsPath,
+        'utf8',
+      );
+      // globalName must appear in the template so the IIFE wrap can
+      // resolve at build time.
+      expect(dep).toMatch(/MyProject/);
+      // hookPrefix must appear in the action names.
+      expect(dep).toMatch(/my-project-/);
+    });
+
+    /* ----- build.config.json + project.config.json shape ------------- */
+
+    test('scaffolds build.config.json with styleEntryPoints', async () => {
+      const res = await scaffoldProject(tmp, goodAnswers);
+      expect(res.ok).toBe(true);
+      const buildConfig = JSON.parse(
+        await fs.readFile(path.join(tmp, 'build.config.json'), 'utf8'),
+      );
+      expect(Array.isArray(buildConfig.styleEntryPoints)).toBe(true);
+      // Default entrypoint points at the style.css that the scaffold
+      // also emits under assets/stylesheets/.
+      expect(buildConfig.styleEntryPoints).toEqual(
+        expect.arrayContaining(['assets/stylesheets/style.css']),
+      );
+    });
+
+    test('scaffolds project.config.json with Phase 11 v2 default fields', async () => {
+      const res = await scaffoldProject(tmp, goodAnswers);
+      expect(res.ok).toBe(true);
+      const cfg = JSON.parse(
+        await fs.readFile(path.join(tmp, 'project.config.json'), 'utf8'),
+      );
+      // v2 defaults must be present in the scaffold output so that
+      // consumers (e.g. readProjectConfig) can rely on them without
+      // a follow-up migration step.
+      expect(cfg.restNamespace).toBe('wpsk/v1');
+      expect(cfg.vendorPrefix).toBe('WpskVendor');
+      expect(cfg.phpMinVersion).toBe('7.4');
+      expect(cfg.phpSourceVersion).toBe('8.1');
+      expect(cfg.batchEndpoint).toBe('/batch/v1');
+    });
+
+    /* ----- tsconfig.json (only if not present) ----------------------- */
+
+    test('scaffolds tsconfig.json when absent', async () => {
+      const res = await scaffoldProject(tmp, goodAnswers);
+      expect(res.ok).toBe(true);
+      const tsconfigPath = path.join(tmp, 'tsconfig.json');
+      // TS support is opt-in; the scaffold must emit tsconfig.json
+      // (a baseline config) so consumers can `tsc` their assets.
+      const stat = await fs.stat(tsconfigPath);
+      expect(stat.isFile()).toBe(true);
+      const tsconfig = JSON.parse(
+        await fs.readFile(tsconfigPath, 'utf8'),
+      );
+      // Baseline TS config — at minimum a compilerOptions block.
+      expect(tsconfig).toBeDefined();
+      expect(typeof tsconfig).toBe('object');
+    });
+
+    /* ----- readme.txt (WordPress.org format) ------------------------- */
+
+    test('scaffolds readme.txt in WordPress.org plugin format', async () => {
+      const res = await scaffoldProject(tmp, goodAnswers);
+      expect(res.ok).toBe(true);
+      const readme = await fs.readFile(
+        path.join(tmp, 'readme.txt'),
+        'utf8',
+      );
+      // WP.org plugin readme.txt uses a fixed set of section markers.
+      expect(readme).toMatch(/===\s*[^=\n]+\s*===/); // plugin title
+      expect(readme).toMatch(/Contributors:/);
+      expect(readme).toMatch(/Tags:/);
+      expect(readme).toMatch(/Requires at least:/);
+      expect(readme).toMatch(/Tested up to:/);
+      expect(readme).toMatch(/Stable tag:/);
+      expect(readme).toMatch(/License:/);
+    });
+
+    /* ----- refuse to clobber ---------------------------------------- */
+
+    test('refuses to clobber existing project.config.json without --force', async () => {
+      // Pre-populate a sentinel project.config.json AND a sentinel
+      // src/Core/Plugin.php so we can prove neither was overwritten.
+      await fs.mkdir(path.join(tmp, 'src', 'Core'), { recursive: true });
+      await fs.writeFile(
+        path.join(tmp, 'project.config.json'),
+        '{"sentinel": true}',
+      );
+      await fs.writeFile(
+        path.join(tmp, 'src', 'Core', 'Plugin.php'),
+        '<?php // sentinel',
+      );
+      const res = await scaffoldProject(tmp, goodAnswers);
+      expect(res.ok).toBe(false);
+      expect(res.reason).toMatch(/already exists|clobber|exists/i);
+      // Both sentinels must still be intact.
+      const cfg = await fs.readFile(
+        path.join(tmp, 'project.config.json'),
+        'utf8',
+      );
+      expect(cfg).toContain('sentinel');
+      const plugin = await fs.readFile(
+        path.join(tmp, 'src', 'Core', 'Plugin.php'),
+        'utf8',
+      );
+      expect(plugin).toContain('sentinel');
+    });
+
+    test('overwrites with --force: refreshes project.config.json + src/Core/Plugin.php', async () => {
+      await fs.mkdir(path.join(tmp, 'src', 'Core'), { recursive: true });
+      await fs.writeFile(
+        path.join(tmp, 'project.config.json'),
+        '{"sentinel": true}',
+      );
+      await fs.writeFile(
+        path.join(tmp, 'src', 'Core', 'Plugin.php'),
+        '<?php // sentinel',
+      );
+      const res = await scaffoldProject(tmp, goodAnswers, { force: true });
+      expect(res.ok).toBe(true);
+      // The new project.config.json must NOT contain the sentinel.
+      const cfg = JSON.parse(
+        await fs.readFile(path.join(tmp, 'project.config.json'), 'utf8'),
+      );
+      expect(cfg.sentinel).toBeUndefined();
+      expect(cfg.slug).toBe('my-project');
+      // The Plugin.php must be the real WPSK\Core\Plugin facade, not
+      // the sentinel comment.
+      const plugin = await fs.readFile(
+        path.join(tmp, 'src', 'Core', 'Plugin.php'),
+        'utf8',
+      );
+      expect(plugin).toMatch(/namespace\s+WPSK\\Core\b/);
+      expect(plugin).not.toMatch(/sentinel/);
+    });
+
+    /* ----- plugin mode: no functions.php ---------------------------- */
+
+    test('plugin mode: does not emit functions.php as a side effect', async () => {
+      const res = await scaffoldProject(tmp, {
+        ...goodAnswers,
+        projectType: 'plugin',
+      });
+      expect(res.ok).toBe(true);
+      const written = res.written || [];
+      expect(written).not.toContain('functions.php');
+    });
+  });
 });
+
+/**
+ * Local existsSync — avoid pulling in the whole `fs` module just for
+ * a synchronous stat in the test that probes for .js/.ts presence.
+ */
+function existsSyncSync(p) {
+  try {
+    // eslint-disable-next-line global-require
+    return require('node:fs').existsSync(p);
+  } catch {
+    return false;
+  }
+}
