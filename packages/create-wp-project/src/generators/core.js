@@ -218,16 +218,42 @@ function spdxForLicense(licenseVariant) {
 
 /**
  * Generator descriptor registered with the registry. `feature` is
- * null for the always-on core. `owns` is empty in Phase 21; Phase 22
- * wires the additive-safety check (a generator in additive mode may
- * only touch files matched by its `owns` globs).
+ * null for the always-on core. `owns` is the canonical list of
+ * paths / globs the core generator may create or overwrite —
+ * Phase 22's `addFeature` / `removeFeature` use this list as the
+ * additive-safety boundary (a generator in additive mode may
+ * only touch files matched by its own `owns` globs).
+ *
+ * Notes on the globs:
+ *  - `*.php` at the project root covers the plugin bootstrap
+ *    (`{slug}.php`) and the legacy theme bootstrap (`functions.php`).
+ *    The generator writes ONE of them at runtime based on
+ *    `cfg.projectType`; the glob covers both because the engine
+ *    does not know the slug ahead of time.
+ *  - `src/Core/**` covers the kit's framework copies. The
+ *    `restBatch` / `exampleFeature` / `blocks` generators own
+ *    their own subtrees of `src/Modules/**` and never touch
+ *    `src/Core/**`.
+ *  - `tsconfig.json` and `package.json` are emitted by core
+ *    (the latter is gated on `js !== "none"`). No other generator
+ *    claims these — `js:typescript` only writes `assets/dependencies.ts`.
  */
 export const descriptor = {
   id: "core",
   feature: null,
-  // Phase 22 will fill this in with the canonical list of paths
-  // core may overwrite. For Phase 21 we keep it empty — the
-  // `addFeature` safety net is wired in Phase 22.
-  owns: [],
+  owns: [
+    "project.config.json",
+    "composer.json",
+    "readme.txt",
+    "build.config.json",
+    "README.md",
+    ".gitignore",
+    ".editorconfig",
+    "tsconfig.json",
+    "package.json",
+    "src/Core/**",
+    "assets/stylesheets/**",
+    "*.php", // the plugin or theme bootstrap at the project root
+  ],
   run,
 };

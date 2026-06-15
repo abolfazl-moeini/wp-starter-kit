@@ -42,6 +42,11 @@ export const descriptor = {
   id: "js:typescript",
   feature: "js",
   variant: "typescript",
-  owns: ["assets/dependencies.ts", "tsconfig.json"],
+  // Phase 22: `tsconfig.json` is owned by core (it gates the
+  // file on `js !== "none"`). This descriptor only owns the
+  // TypeScript-flavored dependencies entry. The previous claim
+  // of `tsconfig.json` was vestigial and would have flagged as
+  // an overlap in the static ownership test.
+  owns: ["assets/dependencies.ts"],
   run,
 };
