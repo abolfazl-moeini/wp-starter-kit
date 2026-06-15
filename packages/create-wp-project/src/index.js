@@ -845,48 +845,35 @@ const TEMPLATE_TSCONFIG_JSON = `{
 }
 `;
 
-const TEMPLATE_README_TXT = `=== {{name}} ===
-Contributors:      {{author}}
-Tags:              wp-starter-kit, wpsk, framework
-Requires at least: 6.4
-Tested up to:      6.5
-Requires PHP:      {{phpMinVersion}}
-Stable tag:        0.1.0
-License:           GPL-2.0-or-later
-License URI:       https://www.gnu.org/licenses/gpl-2.0.html
-Plugin URI:        {{pluginUri}}
-
-{{description}}
-
-== Description ==
-
-{{name}} is a WordPress plugin scaffolded from
-[wp-starter-kit](https://github.com/abolfazl-moeini/wp-plugin-starter-kit).
-
-Branding (from project.config.json):
-
-* npm scope: {{npmScope}}
-* Global JS name: {{globalName}}
-* Localize var: {{localizeVar}}
-* Text domain: {{textDomain}}
-* Hook prefix: {{hookPrefix}}
-* PHP function prefix: {{phpFunctionPrefix}}
-* UI framework: {{uiFramework}}
-* REST namespace: {{restNamespace}}
-* Batch endpoint: {{batchEndpoint}}
-
-== Installation ==
-
-1. Upload the plugin folder to \`/wp-content/plugins/{{slug}}/\`.
-2. Activate the plugin through the *Plugins* menu in WordPress.
-3. Run \`composer install\` in the plugin directory.
-4. Run \`npm install && npm run build\` to produce the JS/CSS bundles.
-
-== Changelog ==
-
-= 0.1.0 =
-* Initial scaffold from wp-starter-kit.
-`;
+/**
+ * Read the WordPress.org readme.txt template. The file lives alongside
+ * the other plugin templates at
+ * `packages/create-wp-project/src/templates/plugin/readme.txt.tpl`
+ * and follows the same lazy-load + cache pattern as the plugin-file
+ * bootstrap template (see `loadPluginFileTemplate`).
+ *
+ * The template is rendered with `{{token}}` substitution; the `vars`
+ * passed in by `scaffoldProject` carry every placeholder the WP.org
+ * format requires (`name`, `author`, `phpMinVersion`, `description`,
+ * `pluginUri`, etc.).
+ */
+let README_TXT_TEMPLATE = null;
+let README_TXT_TEMPLATE_LOADED = false;
+function loadReadmeTxtTemplate() {
+  if (README_TXT_TEMPLATE_LOADED) {
+    return README_TXT_TEMPLATE;
+  }
+  const tplPath = modulePath('templates/plugin/readme.txt.tpl');
+  if (!existsSync(tplPath)) {
+    throw new Error(
+      'readme.txt template missing at ' + tplPath +
+      ' — expected at packages/create-wp-project/src/templates/plugin/readme.txt.tpl'
+    );
+  }
+  README_TXT_TEMPLATE = readFileSync(tplPath, 'utf8');
+  README_TXT_TEMPLATE_LOADED = true;
+  return README_TXT_TEMPLATE;
+}
 
 /* -------------------------------------------------------------------- */
 /* scaffoldProject                                                     */
@@ -956,7 +943,7 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
     'project.config.json':         renderTemplate(TEMPLATE_PROJECT_CONFIG, vars),
     'build.config.json':           renderTemplate(TEMPLATE_BUILD_CONFIG, vars),
     'tsconfig.json':               TEMPLATE_TSCONFIG_JSON,
-    'readme.txt':                  renderTemplate(TEMPLATE_README_TXT, vars),
+    'readme.txt':                  renderTemplate(loadReadmeTxtTemplate(), vars),
     [phpBootstrapRel]:             phpBootstrapContent,
     'src/Core/Plugin.php':         TEMPLATE_CORE_PLUGIN_PHP,
     'src/Core/ModuleInterface.php': TEMPLATE_CORE_MODULE_INTERFACE_PHP,

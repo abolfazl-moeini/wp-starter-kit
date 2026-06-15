@@ -555,6 +555,110 @@ describe('@wpsk/create-wp-project', () => {
       expect(readme).toMatch(/License:/);
     });
 
+    /**
+     * Phase 11 readme.txt hardening — lock the full WP.org header
+     * contract that the verifier inspects. Each assertion maps to a
+     * header the WP.org plugin directory reads, plus a short
+     * description block (the text that follows the metadata block
+     * and is shown under the plugin name in the directory listing).
+     */
+    test('readme.txt: emits the full WP.org header set (Plugin Name, Contributors, Tags, Requires at least, Tested up to, Requires PHP, Stable tag, License, Short Description)', async () => {
+      const res = await scaffoldProject(tmp, goodAnswers);
+      expect(res.ok).toBe(true);
+      const readme = await fs.readFile(
+        path.join(tmp, 'readme.txt'),
+        'utf8',
+      );
+
+      // 1. === Plugin Name === — first header line. WP.org parses
+      //    the first `=== ... ===` line as the plugin title.
+      const titleMatch = readme.match(/^===\s*([^\n=]+?)\s*===\s*$/m);
+      expect(titleMatch).not.toBeNull();
+      // The title must echo the project's globalName (default: 'MyProject')
+      // so the WP.org listing matches the plugin's display name.
+      expect(titleMatch[1].trim()).toBe('MyProject');
+
+      // 2. Contributors:  — comma-separated list of WP.org user slugs.
+      //    The scaffold defaults to the kit's own author slug.
+      expect(readme).toMatch(/^Contributors:\s+\S+/m);
+
+      // 3. Tags:  — comma-separated plugin tags. wp-starter-kit
+      //    ships a sensible default.
+      expect(readme).toMatch(/^Tags:\s+\S+/m);
+
+      // 4. Requires at least:  — minimum WP version (major.minor).
+      expect(readme).toMatch(/^Requires at least:\s+\d+\.\d+/m);
+
+      // 5. Tested up to:  — latest WP version the author has
+      //    smoke-tested against.
+      expect(readme).toMatch(/^Tested up to:\s+\d+\.\d+/m);
+
+      // 6. Requires PHP:  — minimum PHP version. Must be rendered
+      //    from project.config.json's phpMinVersion field.
+      const phpMinMatch = readme.match(/^Requires PHP:\s+(\S+)/m);
+      expect(phpMinMatch).not.toBeNull();
+      // The default phpMinVersion in answersToProjectConfig is '7.4'.
+      expect(phpMinMatch[1]).toBe('7.4');
+
+      // 7. Stable tag:  — the version of the current release.
+      //    SemVer-ish (X.Y.Z).
+      expect(readme).toMatch(/^Stable tag:\s+\d+\.\d+\.\d+/m);
+
+      // 8. License:  — SPDX license identifier. wp-starter-kit
+      //    defaults to GPL-2.0-or-later.
+      expect(readme).toMatch(/^License:\s+GPL-2\.0-or-later/m);
+
+      // 9. Short Description — the free-form paragraph that
+      //    appears immediately after the metadata block and
+      //    before the first `== Section ==` heading. WP.org
+      //    requires it; without it the directory shows an empty
+      //    description. The scaffold populates it from
+      //    project.config.json (or, by default, from
+      //    tplVars.description).
+      //    Locate the short description as the first non-empty,
+      //    non-comment line after the metadata block.
+      const afterMeta = readme.split(/\r?\n\r?\n/);
+      // The metadata block + short description sit in the first
+      // 2 paragraphs of the file (WP.org standard). The first
+      // paragraph is the metadata block (the `=== Title ===`
+      // section); the second paragraph is the short description.
+      expect(afterMeta.length).toBeGreaterThanOrEqual(2);
+      const shortDesc = afterMeta[1].trim();
+      // The short description must be non-empty.
+      expect(shortDesc.length).toBeGreaterThan(0);
+      // It must NOT be a WP.org section heading (== Title ==).
+      expect(shortDesc).not.toMatch(/^==/);
+      // And it must reflect the kit-derived description (slug + kit
+      // identifier) so consumers see something useful in the
+      // directory listing.
+      expect(shortDesc).toMatch(/my-project/);
+      expect(shortDesc).toMatch(/wp-starter-kit|WPSK|wp plugin starter kit/i);
+    });
+
+    test('readme.txt: preserves plugin mode contract — scaffold does not write functions.php', async () => {
+      // The p11-bootstrap-template task moved the primary bootstrap
+      // to {slug}.php; the p11-scaffold-update task confirmed the
+      // scaffold never lists functions.php in the written set when
+      // projectType === 'plugin' (the default). This test re-asserts
+      // the same invariant in the readme context: a plugin-mode
+      // readme.txt must describe a plugin (Plugin URI present),
+      // not a theme, and the scaffold's `written` list must not
+      // include functions.php.
+      const res = await scaffoldProject(tmp, goodAnswers);
+      expect(res.ok).toBe(true);
+      const readme = await fs.readFile(
+        path.join(tmp, 'readme.txt'),
+        'utf8',
+      );
+      // readme.txt for a plugin must include a Plugin URI line —
+      // themes get a Theme URI instead. The scaffold always
+      // emits Plugin URI for plugin-mode scaffolds.
+      expect(readme).toMatch(/^Plugin URI:\s+\S+/m);
+      // The scaffold's written list must not include functions.php
+      // (we are in plugin mode by default).
+      expect(res.written || []).not.toContain('functions.php');
+    });
+
     /* ----- refuse to clobber ---------------------------------------- */
 
     test('refuses to clobber existing project.config.json without --force', async () => {
