@@ -142,13 +142,23 @@ describe("runMigrations() — idempotency (Phase 24.5, 24.6)", () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  test("a second call with the same to is a no-op (alreadyCurrent)", async () => {
-    // Seed a 0.2.0 manifest directly (the project is "already
-    // at" the target). The runner should detect that and skip
-    // every migration.
+  test("a second call with the SAME args is a no-op (alreadyCurrent)", async () => {
+    // Spec: "A second call with the same args is a no-op
+    // (manifest already at 0.2.0)." This is the actual
+    // idempotency contract: run with the same {from,to} twice
+    // and the second call must NOT re-run the migration.
+    //
+    // Set up:
+    //   - Seed a 0.1.0 manifest.
+    //   - Wrap the 0.2.0 run to count invocations.
+    //   - First call: { from:"0.1.0", to:"0.2.0" } → runs 0.2.0,
+    //     bumps manifest to 0.2.0.
+    //   - Second call: SAME args, { from:"0.1.0", to:"0.2.0" }
+    //     → detects the manifest is already at 0.2.0, returns
+    //     alreadyCurrent:true, runs the migration zero times.
     const manifest = {
       schema: 1,
-      kitVersion: "0.2.0",
+      kitVersion: "0.1.0",
       distMode: "vendored",
       generatedAt: "2026-01-01T00:00:00.000Z",
       features: {},
@@ -159,7 +169,6 @@ describe("runMigrations() — idempotency (Phase 24.5, 24.6)", () => {
       "utf8",
     );
 
-    // Wrap the 0.2.0 run to count invocations — should be 0.
     const { getMigrations } = migrationsModule;
     const baseline = getMigrations().find((m) => m.version === "0.2.0");
     const originalRun = baseline.run;
@@ -170,17 +179,38 @@ describe("runMigrations() — idempotency (Phase 24.5, 24.6)", () => {
     };
 
     try {
-      const res = await runMigrations(tmpDir, { from: "0.2.0", to: "0.2.0" });
-      expect(res.ok).toBe(true);
-      expect(res.alreadyCurrent).toBe(true);
-      expect(res.ran).toEqual([]);
-      expect(calls).toBe(0);
-
-      // Manifest is unchanged.
-      const after = JSON.parse(
+      // First call — actually applies the 0.2.0 migration.
+      const first = await runMigrations(tmpDir, {
+        from: "0.1.0",
+        to: "0.2.0",
+      });
+      expect(first.ok).toBe(true);
+      expect(first.alreadyCurrent).toBeUndefined();
+      expect(calls).toBe(1);
+      const afterFirst = JSON.parse(
         await fs.readFile(path.join(tmpDir, "wpsk-kit.json"), "utf8"),
       );
-      expect(after.kitVersion).toBe("0.2.0");
+      expect(afterFirst.kitVersion).toBe("0.2.0");
+
+      // Second call — SAME args. The manifest is now at 0.2.0,
+      // so the runner must short-circuit and NOT re-run the
+      // migration. The runner still passes `from: "0.1.0"`
+      // (the caller's intent), but the manifest check
+      // (kitVersion >= to) is what triggers the no-op.
+      const second = await runMigrations(tmpDir, {
+        from: "0.1.0",
+        to: "0.2.0",
+      });
+      expect(second.ok).toBe(true);
+      expect(second.alreadyCurrent).toBe(true);
+      expect(second.ran).toEqual([]);
+      expect(calls).toBe(1); // unchanged — no second invocation
+
+      // Manifest is still 0.2.0 (no double-bump).
+      const afterSecond = JSON.parse(
+        await fs.readFile(path.join(tmpDir, "wpsk-kit.json"), "utf8"),
+      );
+      expect(afterSecond.kitVersion).toBe("0.2.0");
     } finally {
       baseline.run = originalRun;
     }

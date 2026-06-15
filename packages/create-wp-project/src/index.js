@@ -64,17 +64,18 @@ import { tplVars as tplVarsFromGenerators } from "./generators/_templates.js";
 // safety contract the scaffold path uses.
 import { addFeature } from "./addFeature.js";
 import { removeFeature } from "./removeFeature.js";
-// Phase 24 — update / migration mechanism. The installer's
-// `wpsk update` command will call `runMigrations(dir, ...)`.
-// The selector + registry are also exported so the CLI's
-// `wpsk update --dry-run` (Phase 24.7/24.8) and `wpsk info`
-// (Phase 24.12) can compose with the same primitives.
-import {
-  getMigrations,
-  selectMigrations,
-  runMigrations,
-  compareSemver,
-} from "./migrations/index.js";
+//
+// Phase 24 (24.1–24.6) — migrations registry, selector, and
+// runner live under `./migrations/index.js`. They are NOT
+// re-exported from this file in 24.1–24.6; the public-API
+// surface for the new symbols is added by the next sibling
+// task (24.7–24.10, 24.12–24.13 — `engine-phase24-tools`),
+// which composes on top of these primitives together with
+// `planUpdate`, `doctorProject`, and `getKitStatus`. Keeping
+// the re-export boundary tight here avoids landing a partial
+// engine surface that the CLI would then have to discover
+// twice (once via the engine, once via the next task's
+// composed re-export).
 
 /* -------------------------------------------------------------------- */
 /* Types                                                                */
@@ -1329,9 +1330,4 @@ export {
   applyPreset,
   addFeature,
   removeFeature,
-  // Phase 24 — migrations (24.1–24.6).
-  getMigrations,
-  selectMigrations,
-  runMigrations,
-  compareSemver,
 };

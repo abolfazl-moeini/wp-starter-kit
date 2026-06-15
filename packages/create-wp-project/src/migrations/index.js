@@ -222,30 +222,47 @@ export async function runMigrations(dir, { from, to } = {}) {
       reason: "no manifest",
     };
   }
-
-  // 2. Effective `from` defaults to the manifest's current version.
-  //    If the caller passed `from` explicitly, prefer it (lets the
-  //    installer dry-run a hypothetical range).
-  const effectiveFrom = from || manifest.kitVersion;
-  if (typeof effectiveFrom !== "string") {
+  if (typeof manifest.kitVersion !== "string") {
     return {
       ok: false,
       reason: `manifest at ${dir} has no kitVersion; cannot determine starting point`,
     };
   }
 
-  // 3. Already at or past the target — no-op.
-  if (compareSemver(effectiveFrom, to) >= 0) {
+  // 2. Idempotency check — anchored to the MANIFEST, not to
+  //    the caller's `from`. The spec is "if the project's
+  //    kitVersion is already >= to, return alreadyCurrent".
+  //    The manifest is the source of truth for the project's
+  //    current state. The caller's `from` is informational
+  //    (e.g. the installer might pass the user's stated
+  //    starting version for logging); trusting it instead
+  //    would cause a second call with the same {from,to} to
+  //    re-run migrations even after the manifest was bumped.
+  //    That broke the idempotency contract in the
+  //    migrations.run.test.js "second call with the SAME
+  //    args is a no-op" case.
+  if (compareSemver(manifest.kitVersion, to) >= 0) {
     return {
       ok: true,
       ran: [],
-      from: effectiveFrom,
+      from: from || manifest.kitVersion,
       to,
       alreadyCurrent: true,
     };
   }
 
-  // 4. Validate the range.
+  // 3. Effective `from` for the migration chain. If the caller
+  //    passed `from` explicitly, prefer it (lets the installer
+  //    log a dry-run range against the user's stated start);
+  //    otherwise default to the manifest's current version.
+  const effectiveFrom = from || manifest.kitVersion;
+
+  // 4. Range sanity — to must be strictly newer than the start.
+  //    A downgrade attempt is a caller bug, not a no-op; the
+  //    caller almost certainly meant a no-op but typed the
+  //    versions backwards. Surface the error so the installer's
+  //    CLI can show "you asked to downgrade from X to Y" instead
+  //    of silently doing nothing.
   if (compareSemver(to, effectiveFrom) < 0) {
     return {
       ok: false,
