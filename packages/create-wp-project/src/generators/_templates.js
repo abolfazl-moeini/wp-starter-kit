@@ -122,12 +122,17 @@ export function packageJsonForAnswers(answers) {
 
 /**
  * Resolve the absolute path of a file that ships next to this module.
- * Mirrors the helper that used to live in src/index.js.
+ * Mirrors the helper that used to live in src/index.js — except that
+ * the templates/ directory is the parent of generators/, so the
+ * base path is the parent of __dirname (or, in CLI / jest contexts,
+ * the cwd-relative `packages/create-wp-project/src`).
  */
 function modulePath(relPath) {
   let here;
   if (typeof __dirname !== "undefined" && __dirname) {
-    here = __dirname;
+    // __dirname = .../packages/create-wp-project/src/generators
+    // we want .../packages/create-wp-project/src
+    here = path.dirname(__dirname);
   } else if (
     process.argv[1] &&
     process.argv[1].endsWith("create-wp-project/src/index.js")
