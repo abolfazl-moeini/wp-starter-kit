@@ -62,14 +62,16 @@ class PluginTest extends TestCase
         // any internal state between tests by reflecting on the class.
         // We use the public test seam when available, and fall back to
         // reflection for the rest. Each property's default value must
-        // match the declared type in Plugin.php.
+        // match the declared type in Plugin.php. Property names follow
+        // the WPCS snake_case convention (see Plugin.php).
         $reflection = new ReflectionClass(Plugin::class);
         $defaults = [
-            'instance'    => null,
-            'configPath'  => null,
-            'configCache' => null,
-            'lastHook'    => null,
-            'booted'      => false,
+            'instance'     => null,
+            'loader'       => null,
+            'config_path'  => null,
+            'config_cache' => null,
+            'last_hook'    => null,
+            'booted'       => false,
         ];
         // PHP 7.x needs setAccessible(true) on private static props;
         // PHP 8.1+ ignores it and emits a deprecation. Guard the call

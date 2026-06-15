@@ -3,6 +3,15 @@ declare(strict_types=1);
 
 namespace WPSK\Core;
 
+// phpcs:disable WordPress.Files.FileName.NotHyphenatedLowercase
+// phpcs:disable WordPress.Files.FileName.InvalidClassFileName
+// PSR-4 autoload (`WPSK\\` => `src/`) maps `WPSK\Core\ModuleLoader`
+// to `ModuleLoader.php` exactly. The WPCS FileName rules would
+// require `class-module-loader.php` (PSR-4 cannot resolve that),
+// so they are disabled locally for this one file. The other WPCS
+// rules still apply — see the rest of this file for snake_case /
+// yoda / escaping / docblock compliance.
+
 /**
  * In-memory registry and boot orchestrator for {@see ModuleInterface}
  * implementations.
@@ -15,137 +24,151 @@ namespace WPSK\Core;
  * a single phase.
  *
  * Extensibility hooks (filter / action) follow the project's
- * `{$hookPrefix}_*` naming convention. The `hookPrefix` is supplied
+ * `{$hook_prefix}_*` naming convention. The `hook_prefix` is supplied
  * at construction time and is typically read from
  * `project.config.json` (e.g. `wpsk_module_loader` for `wpsk`).
  */
-final class ModuleLoader
-{
-    /**
-     * Registered modules keyed by slug, in registration order.
-     *
-     * @var array<string, ModuleInterface>
-     */
-    private array $modules = [];
+final class ModuleLoader {
 
-    private string $hookPrefix;
+	/**
+	 * Registered modules keyed by slug, in registration order.
+	 *
+	 * @var array<string, ModuleInterface>
+	 */
+	private array $modules = array();
 
-    public function __construct(string $hookPrefix)
-    {
-        $this->hookPrefix = $hookPrefix;
-    }
+	/**
+	 * The hook prefix used to namespace the filter and action
+	 * callbacks (e.g. `wpsk` → `wpsk_module_loader`,
+	 * `wpsk_modules_loaded`).
+	 *
+	 * @var string
+	 */
+	private string $hook_prefix;
 
-    /**
-     * Register a module under its slug.
-     *
-     * @throws \InvalidArgumentException when a module with the same
-     *                                   slug has already been
-     *                                   registered on this loader.
-     */
-    public function register(ModuleInterface $module): void
-    {
-        $slug = $module->get_slug();
-        if ($slug === '') {
-            throw new \InvalidArgumentException(
-                'Module slug must be a non-empty string'
-            );
-        }
-        if (isset($this->modules[$slug])) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    "Module with slug '%s' is already registered",
-                    $slug
-                )
-            );
-        }
+	/**
+	 * @param string $hook_prefix Project hook prefix used to
+	 *                            namespace filter / action names.
+	 */
+	public function __construct( string $hook_prefix ) {
+		$this->hook_prefix = $hook_prefix;
+	}
 
-        $this->modules[$slug] = $module;
-    }
+	/**
+	 * Register a module under its slug.
+	 *
+	 * @param ModuleInterface $module The module to register.
+	 *
+	 * @throws \InvalidArgumentException When a module with the same
+	 *                                   slug has already been
+	 *                                   registered on this loader,
+	 *                                   or when the slug is empty.
+	 */
+	public function register( ModuleInterface $module ): void {
+		$slug = $module->get_slug();
+		if ( '' === $slug ) {
+			throw new \InvalidArgumentException(
+				'Module slug must be a non-empty string'
+			);
+		}
+		if ( isset( $this->modules[ $slug ] ) ) {
+			throw new \InvalidArgumentException(
+				// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+				sprintf( "Module with slug '%s' is already registered", $slug )
+			);
+		}
 
-    /**
-     * Iterate every registered module and call boot() on it.
-     *
-     * Lazy by design: nothing boots at register() time. Calling this
-     * method more than once is allowed and will boot every module
-     * each time — modules are responsible for their own idempotency.
-     */
-    public function boot_all(): void
-    {
-        // Allow third-party code to swap / decorate the loader
-        // before modules are booted.
-        $this->modules = $this->filter_modules($this->modules);
+		$this->modules[ $slug ] = $module;
+	}
 
-        foreach ($this->modules as $module) {
-            $module->boot();
-        }
+	/**
+	 * Iterate every registered module and call boot() on it.
+	 *
+	 * Lazy by design: nothing boots at register() time. Calling this
+	 * method more than once is allowed and will boot every module
+	 * each time — modules are responsible for their own idempotency.
+	 */
+	public function boot_all(): void {
+		// Allow third-party code to swap / decorate the loader
+		// before modules are booted.
+		$this->modules = $this->filter_modules( $this->modules );
 
-        $this->fire_loaded_action();
-    }
+		foreach ( $this->modules as $module ) {
+			$module->boot();
+		}
 
-    /**
-     * Look up a registered module by slug, or null if unknown.
-     */
-    public function get(string $slug): ?ModuleInterface
-    {
-        return $this->modules[$slug] ?? null;
-    }
+		$this->fire_loaded_action();
+	}
 
-    /**
-     * Whether a module with the given slug has been registered.
-     */
-    public function has(string $slug): bool
-    {
-        return isset($this->modules[$slug]);
-    }
+	/**
+	 * Look up a registered module by slug, or null if unknown.
+	 *
+	 * @param string $slug The module slug.
+	 *
+	 * @return ModuleInterface|null
+	 */
+	public function get( string $slug ): ?ModuleInterface {
+		return $this->modules[ $slug ] ?? null;
+	}
 
-    /**
-     * The full module map keyed by slug, in registration order.
-     *
-     * @return array<string, ModuleInterface>
-     */
-    public function all(): array
-    {
-        return $this->modules;
-    }
+	/**
+	 * Whether a module with the given slug has been registered.
+	 *
+	 * @param string $slug The module slug.
+	 *
+	 * @return bool
+	 */
+	public function has( string $slug ): bool {
+		return isset( $this->modules[ $slug ] );
+	}
 
-    /**
-     * Apply the `{$hookPrefix}_module_loader` filter if the WordPress
-     * `apply_filters()` shim is available. Allows other code to swap
-     * the loader implementation before boot. Falls through silently
-     * in non-WordPress environments (CLI, unit tests).
-     *
-     * @param array<string, ModuleInterface> $modules
-     * @return array<string, ModuleInterface>
-     */
-    private function filter_modules(array $modules): array
-    {
-        if (!function_exists('apply_filters')) {
-            return $modules;
-        }
+	/**
+	 * The full module map keyed by slug, in registration order.
+	 *
+	 * @return array<string, ModuleInterface>
+	 */
+	public function all(): array {
+		return $this->modules;
+	}
 
-        $filtered = \apply_filters(
-            $this->hookPrefix . '_module_loader',
-            $this
-        );
+	/**
+	 * Apply the `{$hook_prefix}_module_loader` filter if the WordPress
+	 * `apply_filters()` shim is available. Allows other code to swap
+	 * the loader implementation before boot. Falls through silently
+	 * in non-WordPress environments (CLI, unit tests).
+	 *
+	 * @param array<string, ModuleInterface> $modules The currently
+	 *                                                 registered modules.
+	 *
+	 * @return array<string, ModuleInterface>
+	 */
+	private function filter_modules( array $modules ): array {
+		if ( ! function_exists( 'apply_filters' ) ) {
+			return $modules;
+		}
 
-        if ($filtered instanceof self) {
-            return $filtered->modules;
-        }
+		$filtered = \apply_filters(
+			$this->hook_prefix . '_module_loader',
+			$this
+		);
 
-        return $modules;
-    }
+		if ( $filtered instanceof self ) {
+			return $filtered->modules;
+		}
 
-    /**
-     * Fire the `{$hookPrefix}_modules_loaded` action so third-party
-     * code can run after every module has booted. Falls through
-     * silently in non-WordPress environments.
-     */
-    private function fire_loaded_action(): void
-    {
-        if (!function_exists('do_action')) {
-            return;
-        }
+		return $modules;
+	}
 
-        \do_action($this->hookPrefix . '_modules_loaded');
-    }
+	/**
+	 * Fire the `{$hook_prefix}_modules_loaded` action so third-party
+	 * code can run after every module has booted. Falls through
+	 * silently in non-WordPress environments.
+	 */
+	private function fire_loaded_action(): void {
+		if ( ! function_exists( 'do_action' ) ) {
+			return;
+		}
+
+		\do_action( $this->hook_prefix . '_modules_loaded' );
+	}
 }
