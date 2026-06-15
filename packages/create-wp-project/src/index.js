@@ -64,6 +64,17 @@ import { tplVars as tplVarsFromGenerators } from "./generators/_templates.js";
 // safety contract the scaffold path uses.
 import { addFeature } from "./addFeature.js";
 import { removeFeature } from "./removeFeature.js";
+// Phase 24 — update / migration mechanism. The installer's
+// `wpsk update` command will call `runMigrations(dir, ...)`.
+// The selector + registry are also exported so the CLI's
+// `wpsk update --dry-run` (Phase 24.7/24.8) and `wpsk info`
+// (Phase 24.12) can compose with the same primitives.
+import {
+  getMigrations,
+  selectMigrations,
+  runMigrations,
+  compareSemver,
+} from "./migrations/index.js";
 
 /* -------------------------------------------------------------------- */
 /* Types                                                                */
@@ -1318,4 +1329,9 @@ export {
   applyPreset,
   addFeature,
   removeFeature,
+  // Phase 24 — migrations (24.1–24.6).
+  getMigrations,
+  selectMigrations,
+  runMigrations,
+  compareSemver,
 };
