@@ -209,3 +209,80 @@ export async function gitInit(dir, runOpts = {}, deps) {
     deps,
   );
 }
+
+/* -------------------------------------------------------------------- */
+/* lookupLatestKit — `npm view @wpsk/cli version` shim                    */
+/* -------------------------------------------------------------------- */
+
+/**
+ * Look up the latest version of `@wpsk/cli` on the npm
+ * registry. Returns the trimmed stdout on success, or `null`
+ * on ANY failure (no `npm` on PATH, non-zero exit, empty
+ * output, spawn error, registry timeout). This function
+ * NEVER throws — the engine's `getKitStatus` treats a
+ * throwing `lookupLatest` as "no data" anyway, but a
+ * throwing helper would also surface in unhandled-rejection
+ * warnings and the bin layer's `parseAsync` catch. Returning
+ * `null` is the load-bearing contract.
+ *
+ * Used by `wpsk info` (Phase I5) as the production
+ * `lookupLatest` argument. The bin layer wires the real
+ * `npm view`; tests inject a fake.
+ *
+ * Implementation choice: we use `execa` (already a CLI dep
+ * for `npm install` / `composer install` / `git init`) so
+ * the same code path handles a missing tool (we return
+ * `null` rather than `{ok:false, skipped:true}` — the
+ * engine's contract is "string|null", not a structured
+ * result, so the surface here is the simpler one).
+ *
+ * The `cwd` is the user's project dir, NOT a temp dir —
+ * `npm view` does not depend on the cwd, but it does
+ * respect `.npmrc` files, and the user's project may
+ * have a registry override we want to honor.
+ *
+ * @param {string} _currentVersion  the project's kitVersion
+ *   (informational — included in the signature for parity
+ *   with the engine's `lookupLatest(currentVersion)`
+ *   contract; not used by this implementation).
+ * @param {{execa?: Function, commandExists?: Function}} [deps]
+ * @returns {Promise<string|null>}
+ */
+export async function lookupLatestKit(_currentVersion, deps = {}) {
+  // The currentVersion arg is intentionally ignored — the
+  // `npm view @wpsk/cli version` query returns the
+  // registry's latest regardless of what we already have.
+  // We keep it in the signature so this helper is a
+  // drop-in for the engine's `lookupLatest`.
+  void _currentVersion;
+  const execa = deps.execa || (await getDefaultExeca());
+  const present =
+    typeof deps.commandExists === "function"
+      ? deps.commandExists
+      : commandExists;
+  let onPath = false;
+  try {
+    onPath = await present("npm", deps);
+  } catch {
+    onPath = false;
+  }
+  if (!onPath) {
+    return null;
+  }
+  let res;
+  try {
+    res = await execa("npm", ["view", "@wpsk/cli", "version"], {
+      // `cwd` not set on purpose — `npm view` is registry-bound,
+      // and a project-local `.npmrc` is what the user wants.
+      stdio: "pipe",
+      reject: false,
+    });
+  } catch {
+    return null;
+  }
+  if (!res || res.exitCode !== 0) {
+    return null;
+  }
+  const out = typeof res.stdout === "string" ? res.stdout.trim() : "";
+  return out.length > 0 ? out : null;
+}

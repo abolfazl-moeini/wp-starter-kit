@@ -282,13 +282,26 @@ export function buildProgram() {
 
   allowPassthrough(
     program
-      .command("info")
+      .command("info [dir]")
       .description(
         "show kit version, feature states, and available updates for the current project",
-      ),
-  ).action(async () => {
+      )
+      .option("--json", "emit machine-readable JSON instead of the info panel"),
+  ).action(async (dir) => {
     const sub = program.commands.find((c) => c.name() === "info");
-    return runInfo({ argv: tailAfterSubcommand(sub) });
+    const argv = tailAfterSubcommand(sub);
+    const result = await runInfo(
+      {
+        dir: dir || process.cwd(),
+        runOptions: { json: argv.indexOf("--json") !== -1 },
+        argv,
+      },
+      { engine, ui, lookupLatestKit: runners.lookupLatestKit },
+    );
+    if (!result.ok) {
+      process.stderr.write("wpsk info: " + (result.reason || "unknown") + "\n");
+      process.exit(1);
+    }
   });
 
   return program;

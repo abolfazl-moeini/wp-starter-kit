@@ -94,4 +94,18 @@ describe("subcommand --help text (Phase I4 smoke)", () => {
     const help = helpFor("list");
     expect(help).toMatch(/--json/);
   });
+
+  test("wpsk info --help mentions --json (machine output flag, Phase I5)", () => {
+    const help = helpFor("info");
+    expect(help).toMatch(/--json/);
+  });
+
+  test("wpsk info --help mentions the [dir] positional argument (Phase I5)", () => {
+    // The user can run `wpsk info` (cwd) or `wpsk info /abs/proj`
+    // (explicit target). commander renders positional arg names
+    // in brackets, so we look for the bare 'dir' in the usage
+    // line.
+    const help = helpFor("info");
+    expect(help).toMatch(/\[dir\]/);
+  });
 });
