@@ -22,6 +22,7 @@
     "files": ["includes/asset-functions.php"],
     "classmap": ["includes/"],
     "psr-4": {
+      "WPSK\\": "src/",
       "WPSK\\TestTools\\": "packages/php-test-tools/src/"
     }
   },
