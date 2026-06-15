@@ -29,6 +29,7 @@
 
 import { promises as fs, readFileSync, existsSync } from "node:fs";
 import * as path from "node:path";
+import { updateJsonFile } from "./json-utils.js";
 
 /* -------------------------------------------------------------------- */
 /* Constants                                                             */
@@ -174,4 +175,101 @@ export function readManifest(dir) {
       `${file}: malformed JSON in ${MANIFEST_FILENAME} (${error.message})`,
     );
   }
+}
+
+/* -------------------------------------------------------------------- */
+/* syncFeaturesToConfig                                                  */
+/* -------------------------------------------------------------------- */
+
+const PROJECT_CONFIG_FILENAME = "project.config.json";
+
+/**
+ * Minimal v2 branding defaults used when project.config.json
+ * does not exist yet. Mirrors the v2 default set in
+ * `answersToProjectConfig()` (kit's `index.js`) and the
+ * `OPTIONAL_DEFAULTS` in `core/packages/utils/readProjectConfig.js`
+ * so a freshly-scaffolded project — or a hand-written minimal
+ * project — sees the same shape.
+ *
+ * The values are deliberately generic: a real scaffold will
+ * overwrite them with the user's answers-based branding. The
+ * sync helper's job is just to make a valid skeleton that won't
+ * break readProjectConfig on the first read.
+ */
+const MINIMAL_V2_BRANDING = {
+  slug: "wpsk-project",
+  globalName: "WpskProject",
+  localizeVar: "WpskProjectLoc",
+  textDomain: "wpsk-project",
+  hookPrefix: "wpsk-project",
+  npmScope: "@wpsk",
+  phpFunctionPrefix: "wpsk_",
+  uiFramework: "preact",
+  projectType: "plugin",
+  restNamespace: "wpsk/v1",
+  vendorPrefix: "WpskVendor",
+  phpMinVersion: "7.4",
+  phpSourceVersion: "8.1",
+  batchEndpoint: "/batch/v1",
+};
+
+/**
+ * Write the same `features` object to BOTH `wpsk-kit.json` and
+ * a `features` key in `project.config.json`.
+ *
+ * This helper does ONLY the project.config.json half — the
+ * manifest half is `writeManifest`. The scaffold (Phase 21)
+ * calls them in sequence:
+ *
+ *   1. writeManifest(dir, buildManifest({ kitVersion, features }))
+ *   2. syncFeaturesToConfig(dir, features)
+ *
+ * Why duplicate? `wpsk-kit.json` is the durable kit state
+ * (kitVersion, distMode, generatedAt, features). Putting
+ * `features` ALSO in `project.config.json` means:
+ *
+ *  - Pre-Phase 20 readers of project.config.json (the kit's
+ *    PHP classes, the JS asset bundle) can answer
+ *    "which features are on?" without discovering
+ *    wpsk-kit.json.
+ *  - The kit's own state is self-contained — `wpsk-kit.json`
+ *    can be read in isolation.
+ *
+ * project.config.json is updated via `updateJsonFile`, so the
+ * existing file's indentation and trailing-newline state are
+ * preserved. If the file does not exist, a minimal v2-valid
+ * config is created (so the sync never throws ENOENT) and
+ * populated with the v2 defaults + the `features` key.
+ *
+ * @param {string} dir
+ * @param {Record<string,string>} features
+ * @returns {Promise<void>}
+ */
+export async function syncFeaturesToConfig(dir, features) {
+  if (!dir || typeof dir !== "string") {
+    throw new Error("syncFeaturesToConfig: dir is required (string)");
+  }
+  if (!features || typeof features !== "object") {
+    throw new Error("syncFeaturesToConfig: features is required (object)");
+  }
+
+  await fs.mkdir(dir, { recursive: true });
+  const cfgPath = path.join(dir, PROJECT_CONFIG_FILENAME);
+
+  if (!existsSync(cfgPath)) {
+    // Bootstrap path — create a minimal v2-valid config + features.
+    const minimal = { ...MINIMAL_V2_BRANDING, features: { ...features } };
+    await fs.writeFile(
+      cfgPath,
+      JSON.stringify(minimal, null, 2) + "\n",
+      "utf8",
+    );
+    return;
+  }
+
+  // Update path — preserve existing shape, set/replace `features`.
+  await updateJsonFile(cfgPath, (cfg) => {
+    cfg.features = { ...features };
+    return cfg;
+  });
 }
