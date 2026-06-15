@@ -202,6 +202,11 @@ describe("@wpsk/create-wp-project", () => {
       const cfg = JSON.parse(
         await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
       );
+      // Phase 21+22: `features` is now synced from the catalog's defaults
+      // via syncFeaturesToConfig(). The test deliberately enumerates the
+      // full default set (rather than `toMatchObject` partial) so any
+      // future addition/removal of a default feature id is caught here
+      // as a snapshot of the catalog's first variant for every id.
       expect(cfg).toEqual({
         slug: "my-project",
         globalName: "MyProject",
@@ -218,6 +223,24 @@ describe("@wpsk/create-wp-project", () => {
         phpMinVersion: "7.4",
         phpSourceVersion: "8.1",
         batchEndpoint: "/batch/v1",
+        features: {
+          js: "typescript",
+          jsLib: "none",
+          jsTest: "jest",
+          phpMinVersion: "7.4",
+          phpFramework: "none",
+          phpTest: "phpunit",
+          restBatch: "off",
+          faultTolerance: "off",
+          vendorScoping: "on",
+          husky: "on",
+          css: "none",
+          blocks: "off",
+          license: "gpl2",
+          wpMinVersion: "6.0",
+          exampleFeature: "on",
+          i18n: "on",
+        },
       });
     });
 
