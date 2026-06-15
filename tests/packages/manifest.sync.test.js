@@ -5,6 +5,8 @@ import * as os from "node:os";
 
 import { syncFeaturesToConfig } from "../../packages/create-wp-project/src/manifest.js";
 import { defaultFeatures } from "../../packages/create-wp-project/src/features.js";
+import { addFeature } from "../../packages/create-wp-project/src/addFeature.js";
+import { removeFeature } from "../../packages/create-wp-project/src/removeFeature.js";
 
 /**
  * Phase 20.14 / 20.15 — syncFeaturesToConfig(dir, features).
@@ -213,5 +215,140 @@ describe("syncFeaturesToConfig() — project.config.json sync (Phase 20.15)", ()
     expect(after.textDomain).toBeDefined();
     expect(after.hookPrefix).toBeDefined();
     expect(after.npmScope).toBeDefined();
+  });
+});
+
+/**
+ * Phase 22.12 / 22.13 — addFeature + removeFeature sync.
+ *
+ * Per plan.v3.md §22.13, the installer's `wpsk add` and `wpsk remove`
+ * commands go through `addFeature()` and `removeFeature()` — and
+ * BOTH must keep `wpsk-kit.json` AND `project.config.json`'s
+ * `features` key in sync (the same contract `scaffoldProject`
+ * honors via `syncFeaturesToConfig`).
+ *
+ * The test asserts:
+ *  1. addFeature(husky, on) when husky was off → both files
+ *     now have `features.husky === "on"`.
+ *  2. removeFeature(husky) when husky was on → both files
+ *     now have `features.husky === "off"`.
+ *
+ * Without 22.13 (i.e. if addFeature/removeFeature forgot to call
+ * `syncFeaturesToConfig`), the `project.config.json` half of these
+ * tests would fail — the wpsk-kit.json half is updated by
+ * `writeManifest`, but project.config.json is the one the kit's
+ * runtime reads, so it's the one that must NOT drift.
+ */
+describe("addFeature() / removeFeature() — keep manifest + project.config.json in sync (Phase 22.12, 22.13)", () => {
+  let tmp;
+  beforeEach(async () => {
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-sync-mut-"));
+  });
+  afterEach(async () => {
+    await fs.rm(tmp, { recursive: true, force: true });
+  });
+
+  /**
+   * Seed a project whose husky feature starts OFF and whose
+   * `wpsk-kit.json` + `project.config.json` features are
+   * consistent. addFeature / removeFeature both rely on this
+   * pre-condition.
+   */
+  async function seedHuskyOff() {
+    const features = { ...defaultFeatures(), husky: "off" };
+    const cfg = {
+      slug: "my-project",
+      globalName: "MyProject",
+      localizeVar: "MyProjectLoc",
+      textDomain: "my-project",
+      hookPrefix: "my-project",
+      npmScope: "@myorg",
+    };
+    await fs.writeFile(
+      path.join(tmp, "project.config.json"),
+      JSON.stringify({ ...cfg, features: { ...features } }, null, 2) + "\n",
+      "utf8",
+    );
+    const { buildManifest, writeManifest } =
+      await import("../../packages/create-wp-project/src/manifest.js");
+    const manifest = buildManifest({
+      kitVersion: "0.1.0",
+      features,
+      generatedAt: "2026-06-15T00:00:00.000Z",
+    });
+    await writeManifest(tmp, manifest);
+  }
+
+  test("addFeature(husky, on) updates BOTH wpsk-kit.json and project.config.json", async () => {
+    await seedHuskyOff();
+
+    const res = await addFeature(tmp, "husky", "on");
+    expect(res.ok).toBe(true);
+
+    // wpsk-kit.json side
+    const manifest = JSON.parse(
+      await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8"),
+    );
+    expect(manifest.features.husky).toBe("on");
+
+    // project.config.json side — the side addFeature would
+    // FORGET to update if 22.13 was missing. The test fails
+    // here without the syncFeaturesToConfig call.
+    const cfg = JSON.parse(
+      await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+    );
+    expect(cfg.features.husky).toBe("on");
+  });
+
+  test("removeFeature(husky) updates BOTH wpsk-kit.json and project.config.json", async () => {
+    // Seed: husky:on (default) + the husky artifact on disk.
+    const features = { ...defaultFeatures(), husky: "on" };
+    const cfg = {
+      slug: "my-project",
+      globalName: "MyProject",
+      localizeVar: "MyProjectLoc",
+      textDomain: "my-project",
+      hookPrefix: "my-project",
+      npmScope: "@myorg",
+    };
+    await fs.writeFile(
+      path.join(tmp, "project.config.json"),
+      JSON.stringify({ ...cfg, features: { ...features } }, null, 2) + "\n",
+      "utf8",
+    );
+    const { buildManifest, writeManifest } =
+      await import("../../packages/create-wp-project/src/manifest.js");
+    await writeManifest(
+      tmp,
+      buildManifest({
+        kitVersion: "0.1.0",
+        features,
+        generatedAt: "2026-06-15T00:00:00.000Z",
+      }),
+    );
+    // Lay down the husky artifact so removeFeature has something
+    // to delete.
+    await fs.mkdir(path.join(tmp, ".husky"), { recursive: true });
+    await fs.writeFile(
+      path.join(tmp, ".husky", "pre-commit"),
+      "#!/usr/bin/env sh\nnpx lint-staged\n",
+      "utf8",
+    );
+
+    const res = await removeFeature(tmp, "husky");
+    expect(res.ok).toBe(true);
+    expect(res.removed).toContain(".husky/pre-commit");
+
+    // wpsk-kit.json side
+    const manifest = JSON.parse(
+      await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8"),
+    );
+    expect(manifest.features.husky).toBe("off");
+
+    // project.config.json side — same drift check as above.
+    const cfgAfter = JSON.parse(
+      await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+    );
+    expect(cfgAfter.features.husky).toBe("off");
   });
 });
