@@ -2,10 +2,10 @@ export default {
   setupFiles: ['<rootDir>/tests/jest.setup.js'],
   testEnvironment: 'node',
   transform: {
-    "^.+\\.[jt]sx?$": "babel-jest"
+    '^.+\\.[jt]sx?$': ['babel-jest', { presets: ['@babel/preset-env', '@babel/preset-typescript'] }],
   },
   testMatch: ['**/tests/**/*.test.js'],
-  moduleFileExtensions: ['js', 'json'],
+  moduleFileExtensions: ['js', 'json', 'ts', 'tsx'],
   injectGlobals: false,
   transformIgnorePatterns: ['node_modules/(?!(chalk|preact|@preact))'],
 
