@@ -145,5 +145,16 @@ export function readProjectConfig(options = {}) {
     }
   }
 
+  // Phase 20.10: v3 tolerance. Unknown top-level keys (e.g. the
+  // v3 `features` object, or any field a future kit version
+  // introduces) are intentionally kept on the merged result.
+  // The validator's v2 field loop is a closed set, so anything
+  // outside that set is silently tolerated — never thrown on.
+  // plan.v3.md §0.1 rule 7: "A missing field must never crash.
+  // Old projects without the field must keep working." The
+  // symmetric forward-compat rule is "unknown fields must not
+  // crash either" — the installer will write new fields, and
+  // an older reader must accept them. Locked by
+  // tests/utils/readProjectConfig.v3.test.js.
   return merged;
 }
