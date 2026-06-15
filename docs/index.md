@@ -7,6 +7,8 @@
 | Doc | One-line summary | Read it when… |
 |---|---|---|
 | [architecture.md](architecture.md) | Bird's-eye view of the starter | You just joined the project and want the 30,000-ft view. |
+| [plugin-bootstrap.md](plugin-bootstrap.md) | The `{slug}.php` plugin file | You're scaffolding a new project, migrating from `functions.php`, or wiring lifecycle hooks. |
+| [modules.md](modules.md) | `ModuleInterface` + `ModuleLoader` | You're adding a new feature module or extending the plugin from a third-party plugin. |
 | [build-system.md](build-system.md) | The four-stage esbuild pipeline | You're adding a new build step or debugging a build failure. |
 | [build-outputs.md](build-outputs.md) | What's in `dist/` and `assets/` | You need to know which file the browser will request. |
 | [hooks.md](hooks.md) | WordPress hook prefix convention | You're registering a hook or filter and need the right namespace. |
