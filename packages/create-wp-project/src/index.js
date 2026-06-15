@@ -17,11 +17,40 @@
  * When called without args, the script reads answers from `WPSK_ANSWERS_JSON`
  * env var. When called from PHPUnit or another test, import the named
  * exports and drive `scaffoldProject()` directly.
+ *
+ * -----------------------------------------------------------------------
+ * Phase 20 — Engine public API (Appendix C of plan.v3.md)
+ * -----------------------------------------------------------------------
+ * The CLI (plan.installer.md) and kit scripts depend on these named
+ * exports. They are the *engine* surface; the rest of this file is
+ * the legacy `scaffoldProject` and its answers-based template engine,
+ * preserved verbatim for BC. The Phase 21+ work wires the
+ * `scaffoldProject` body to the feature-aware generators — but the
+ * Phase 20 work is purely additive: every new export lives in its
+ * own module and is re-exported from this file via the block at
+ * the bottom.
  */
 
 import { promises as fs } from "node:fs";
 import { readFileSync, existsSync } from "node:fs";
 import * as path from "node:path";
+
+// Phase 20 — feature model + manifest + validation + presets.
+// Each lives in its own module so the boundary is testable in
+// isolation; this file re-exports the public API.
+import {
+  getFeatureCatalog,
+  defaultFeatures,
+  validateFeatureSet,
+} from "./features.js";
+import {
+  buildManifest,
+  readManifest,
+  writeManifest,
+  syncFeaturesToConfig,
+} from "./manifest.js";
+import { updateJsonFile } from "./json-utils.js";
+import { getPresets, applyPreset } from "./presets.js";
 
 /* -------------------------------------------------------------------- */
 /* Types                                                                */
@@ -1176,3 +1205,40 @@ if (
     process.exit(1);
   });
 }
+
+/* -------------------------------------------------------------------- */
+/* Phase 20 — Engine public API (Appendix C of plan.v3.md)             */
+/* -------------------------------------------------------------------- */
+//
+// Re-export the feature-model, manifest, and preset surface from
+// their dedicated modules. The legacy `scaffoldProject` /
+// `validateAnswers` / `answersToProjectConfig` exports above
+// remain unchanged (BC — pre-Phase 20 callers keep working).
+//
+// Locked by the engine-api surface area:
+//   - getFeatureCatalog      features.js
+//   - defaultFeatures        features.js
+//   - validateFeatureSet     features.js
+//   - getPresets             presets.js
+//   - applyPreset            presets.js
+//   - buildManifest          manifest.js
+//   - readManifest           manifest.js
+//   - writeManifest          manifest.js
+//   - syncFeaturesToConfig   manifest.js
+//   - updateJsonFile         json-utils.js
+//
+// Phase 21+ exports (addFeature, removeFeature, runMigrations, etc.)
+// will be added in their own commits.
+
+export {
+  getFeatureCatalog,
+  defaultFeatures,
+  validateFeatureSet,
+  buildManifest,
+  readManifest,
+  writeManifest,
+  syncFeaturesToConfig,
+  updateJsonFile,
+  getPresets,
+  applyPreset,
+};
