@@ -1,0 +1,25 @@
+{
+  "name": "@wpsk/cli",
+  "version": "0.1.0",
+  "description": "wpsk command-line installer for the wp-starter-kit framework (plan.installer.md Phases I1–I8). Thin front-end: prompts + flags, delegates all generation to @wpsk/create-wp-project.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "bin": {
+    "wpsk": "bin/wpsk.js"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.7.0",
+    "commander": "^12.0.0",
+    "execa": "^9.0.0",
+    "picocolors": "^1.0.0",
+    "@wpsk/create-wp-project": "^0.1.0"
+  }
+}

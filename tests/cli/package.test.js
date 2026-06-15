@@ -1,0 +1,60 @@
+import { describe, test, expect } from "@jest/globals";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+
+describe("@wpsk/cli package contract", () => {
+  const pkgPath = join(process.cwd(), "packages/cli/package.json");
+
+  test("package.json exists at packages/cli/package.json", () => {
+    expect(existsSync(pkgPath)).toBe(true);
+  });
+
+  test("package name is @wpsk/cli with version 0.1.0", () => {
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+    expect(pkg.name).toBe("@wpsk/cli");
+    expect(pkg.version).toBe("0.1.0");
+  });
+
+  test("package is ESM with engines.node >= 18", () => {
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+    expect(pkg.type).toBe("module");
+    expect(pkg.engines).toBeDefined();
+    expect(pkg.engines.node).toMatch(/>=\s*18/);
+  });
+
+  test("bin.wpsk points at bin/wpsk.js", () => {
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+    expect(pkg.bin).toBeDefined();
+    expect(pkg.bin.wpsk).toBe("bin/wpsk.js");
+  });
+
+  test("files whitelist includes bin and src", () => {
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+    expect(Array.isArray(pkg.files)).toBe(true);
+    expect(pkg.files).toContain("bin");
+    expect(pkg.files).toContain("src");
+  });
+
+  test("declares required runtime dependencies", () => {
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+    const deps = pkg.dependencies || {};
+    expect(deps["@clack/prompts"]).toBeDefined();
+    expect(deps.commander).toBeDefined();
+    expect(deps.execa).toBeDefined();
+    expect(deps.picocolors).toBeDefined();
+    expect(deps["@wpsk/create-wp-project"]).toBeDefined();
+  });
+});
+
+describe("@wpsk/cli bin entry", () => {
+  const binPath = join(process.cwd(), "packages/cli/bin/wpsk.js");
+
+  test("bin/wpsk.js exists", () => {
+    expect(existsSync(binPath)).toBe(true);
+  });
+
+  test("bin/wpsk.js starts with the node shebang", () => {
+    const head = readFileSync(binPath, "utf8");
+    expect(head.startsWith("#!/usr/bin/env node")).toBe(true);
+  });
+});
