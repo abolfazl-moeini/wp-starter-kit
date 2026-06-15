@@ -20,6 +20,7 @@
  */
 
 import { promises as fs } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import * as path from 'node:path';
 
 /* -------------------------------------------------------------------- */
@@ -37,6 +38,11 @@ import * as path from 'node:path';
  * @property {string} [depsBundle]   e.g. 'my-project-deps.js' (inferred from slug)
  * @property {string} phpFunctionPrefix e.g. 'myprj_'
  * @property {'preact'|'react'} uiFramework
+ * @property {'plugin'|'theme'} [projectType]  Phase 11: 'plugin' (default) emits
+ *                                             `{slug}.php` as the primary
+ *                                             bootstrap; 'theme' (legacy)
+ *                                             emits `functions.php` and is
+ *                                             kept for BC only.
  */
 
 /* -------------------------------------------------------------------- */
@@ -79,6 +85,10 @@ export function validateAnswers(a) {
   if (a.uiFramework !== 'preact' && a.uiFramework !== 'react') {
     errors.uiFramework = 'uiFramework must be "preact" or "react"';
   }
+  if (a.projectType !== undefined && a.projectType !== '' &&
+      a.projectType !== 'plugin' && a.projectType !== 'theme') {
+    errors.projectType = 'projectType must be "plugin" or "theme" (default: "plugin")';
+  }
   return { ok: Object.keys(errors).length === 0, errors };
 }
 
@@ -97,6 +107,7 @@ export function answersToProjectConfig(a) {
     depsBundle: a.depsBundle || `${a.slug}-deps.js`,
     phpFunctionPrefix: a.phpFunctionPrefix || 'wpsk_',
     uiFramework: a.uiFramework,
+    projectType: a.projectType || 'plugin',
   };
   return cfg;
 }
@@ -129,7 +140,8 @@ const TEMPLATE_PROJECT_CONFIG = `{
   "npmScope": "{{npmScope}}",
   "depsBundle": "{{depsBundle}}",
   "phpFunctionPrefix": "{{phpFunctionPrefix}}",
-  "uiFramework": "{{uiFramework}}"
+  "uiFramework": "{{uiFramework}}",
+  "projectType": "{{projectType}}"
 }
 `;
 
@@ -137,10 +149,31 @@ const TEMPLATE_FUNCTIONS_PHP = `<?php
 /**
  * Theme bootstrap for the {{slug}} WordPress theme.
  *
- * Scaffolded from wp-starter-kit. Prefix: {{phpFunctionPrefix}} (read from
- * project.config.json — the function prefix is intentionally hardcoded to
- * match the seeded value because PHP namespaces/function names cannot be
- * resolved at runtime like JS global names can).
+ * Scaffolded from wp-starter-kit. The project's own functions use the
+ * {{phpFunctionPrefix}} (from project.config.json). Calls to the asset
+ * helpers (enqueue, get_localize_data, asset_info, etc.) use the stable
+ * framework names (wpsk_*) because wp-starter-kit ships a single
+ * implementation of the PHP asset layer (in includes/asset-functions.php
+ * or via the kit's Composer autoload). The helpers are intentionally not
+ * re-prefixed per project to avoid code duplication and maintenance drift.
+ *
+ * --------------------------------------------------------------------------
+ * DEPRECATION NOTICE (wp-starter-kit Phase 11)
+ * --------------------------------------------------------------------------
+ * This \`functions.php\` file is the legacy *theme* bootstrap. As of
+ * Phase 11 every scaffolded project is plugin-first:
+ *
+ *   1. The primary bootstrap is \`{{slug}}.php\` (a real WordPress
+ *      plugin file with Plugin Name/Version/Requires PHP/Text Domain
+ *      headers, ABSPATH guard, vendor/autoload.php, and lifecycle
+ *      hooks).
+ *   2. \`functions.php\` is kept ONLY for projects that explicitly
+ *      opt-in via \`projectType: 'theme'\` in project.config.json.
+ *   3. New projects should NOT ship a \`functions.php\`. The file
+ *      will be removed in the next major release.
+ *
+ * If you are reading this comment in a freshly-scaffolded plugin
+ * project, please delete this file and rely on \`{{slug}}.php\`.
  */
 
 if (!defined('{{slug_underscore}}_VERSION')) {
@@ -156,16 +189,77 @@ function {{slug_underscore}}_setup(): void
 add_action('wp_enqueue_scripts', '{{slug_underscore}}_enqueue_assets');
 function {{slug_underscore}}_enqueue_assets(): void
 {
-    {{phpFunctionPrefix}}enqueue_bundle_script('{{depsBundle}}');
-    {{phpFunctionPrefix}}enqueue_bundle_style('{{slug}}.css');
+    // Framework-provided asset helpers (always wpsk_* names). The
+    // project's phpFunctionPrefix is used only for its own glue code.
+    wpsk_enqueue_bundle_script('{{depsBundle}}');
+    wpsk_enqueue_stylesheet('style.css');
     wp_localize_script(
         '{{depsHandle}}',
         '{{localizeVar}}',
-        {{phpFunctionPrefix}}get_localize_data()
+        wpsk_get_localize_data()
     );
     wp_set_script_translations('{{depsHandle}}', '{{textDomain}}', get_template_directory() . '/assets/translations');
 }
 `;
+
+/**
+ * Resolve the absolute path of a file that ships next to this module.
+ *
+ * Resolution order:
+ *   1. `__dirname` (Babel-injected when Jest runs this file as CJS).
+ *   2. `process.argv[1]` is the actual `index.js` file path. This is
+ *      the case for `node packages/create-wp-project/src/index.js`
+ *      (CLI invocation) and also for `node test-plugin-render.mjs`
+ *      where the test script imports the module — argv[1] is the
+ *      script that *was* invoked, not the imported module, so this
+ *      branch may not apply. In that case we fall through to (3).
+ *   3. `process.cwd()` plus the canonical `packages/create-wp-project/src/`
+ *      suffix. This works for any environment where the user runs
+ *      the script from the wp-starter-kit project root — which is
+ *      the case for jest (working dir is project root) and for CLI
+ *      users who follow the documented `node packages/...` recipe.
+ *
+ * @param {string} relPath  path relative to packages/create-wp-project/src/
+ */
+function modulePath(relPath) {
+  let here;
+  if (typeof __dirname !== 'undefined' && __dirname) {
+    here = __dirname;
+  } else if (process.argv[1] && process.argv[1].endsWith('create-wp-project/src/index.js')) {
+    here = path.dirname(process.argv[1]);
+  } else {
+    // cwd-relative fallback. Works for jest (cwd=project root) and
+    // for ad-hoc node scripts that the user runs from the project root.
+    here = path.join(process.cwd(), 'packages/create-wp-project/src');
+  }
+  return path.join(here, relPath);
+}
+
+/**
+ * Read the plugin-file template. The file lives alongside this script
+ * under
+ * `packages/create-wp-project/src/templates/plugin/plugin-file.php.tpl`
+ * and is rendered with the same `{{token}}` substitution rules as
+ * the inline templates. We read it lazily (on first scaffold) and
+ * cache the result so subsequent scaffolds are O(1).
+ */
+let PLUGIN_FILE_TEMPLATE = null;
+let PLUGIN_FILE_TEMPLATE_LOADED = false;
+function loadPluginFileTemplate() {
+  if (PLUGIN_FILE_TEMPLATE_LOADED) {
+    return PLUGIN_FILE_TEMPLATE;
+  }
+  const tplPath = modulePath('templates/plugin/plugin-file.php.tpl');
+  if (!existsSync(tplPath)) {
+    throw new Error(
+      'Plugin bootstrap template missing at ' + tplPath +
+      ' — expected at packages/create-wp-project/src/templates/plugin/plugin-file.php.tpl'
+    );
+  }
+  PLUGIN_FILE_TEMPLATE = readFileSync(tplPath, 'utf8');
+  PLUGIN_FILE_TEMPLATE_LOADED = true;
+  return PLUGIN_FILE_TEMPLATE;
+}
 
 // Aliases for template token → answer key
 function tplVars(answers, cfg) {
@@ -175,6 +269,13 @@ function tplVars(answers, cfg) {
     // {{slug_underscore}} for the PHP-side function names
     slug_underscore: answers.slug.replace(/-/g, '_'),
     depsHandle: answers.depsBundle || cfg.depsBundle.replace(/\.js$/, ''),
+    // {{name}} / {{description}} / {{author}} / {{authorUri}} / {{pluginUri}}
+    // — sensible defaults so the WP plugin header is always populated.
+    name: cfg.globalName || answers.slug,
+    description: `${answers.slug} — built on wp-starter-kit (WPSK) framework`,
+    author: 'wp-starter-kit scaffold',
+    authorUri: 'https://github.com/abolfazl-moeini/wp-plugin-starter-kit',
+    pluginUri: 'https://github.com/abolfazl-moeini/wp-plugin-starter-kit',
   };
 }
 
@@ -216,10 +317,14 @@ domReady(() => {
 
 function packageJsonForAnswers(answers) {
   const preactAliases = answers.uiFramework === 'preact';
+  const projectType = answers.projectType || 'plugin';
+  const description = projectType === 'theme'
+    ? `${answers.slug} — WordPress theme built on wp-starter-kit`
+    : `${answers.slug} — WordPress plugin built on wp-starter-kit`;
   return {
     name: '@' + answers.npmScope + '/' + answers.slug,
     version: '0.1.0',
-    description: `${answers.slug} — WordPress theme built on wp-starter-kit`,
+    description,
     private: true,
     type: 'module',
     scripts: {
@@ -251,6 +356,24 @@ function packageJsonForAnswers(answers) {
         },
   };
 }
+
+const TEMPLATE_BUILD_CONFIG = `{
+  "assetMappings": [],
+  "globalMappings": {},
+  "styleEntryPoints": [
+    "assets/stylesheets/style.css"
+  ]
+}
+`;
+
+const TEMPLATE_STYLESHEET = `/**
+ * Default theme stylesheet for {{slug}}.
+ * Hashed via \`npm run build:styles\` → style.asset.php companion.
+ */
+body {
+  margin: 0;
+}
+`;
 
 const TEMPLATE_README = `# {{slug}}
 
@@ -309,12 +432,29 @@ export async function scaffoldProject(targetDir, answers) {
   const written = [];
 
   await fs.mkdir(path.join(targetDir, 'assets'), { recursive: true });
+  await fs.mkdir(path.join(targetDir, 'assets/stylesheets'), { recursive: true });
   await fs.mkdir(path.join(targetDir, 'components'), { recursive: true });
+
+  // Phase 11: choose primary PHP bootstrap based on projectType.
+  //   projectType === 'theme' (legacy) → emit functions.php
+  //   projectType === 'plugin' (default) → emit {slug}.php
+  //   backwards compat: if no projectType is given, the default is
+  //   'plugin' (per answersToProjectConfig), and we emit {slug}.php.
+  const projectType = cfg.projectType;
+  const isPlugin = projectType === 'plugin';
+  const phpBootstrapRel = isPlugin
+    ? `${answers.slug}.php`
+    : 'functions.php';
+  const phpBootstrapContent = isPlugin
+    ? renderTemplate(loadPluginFileTemplate(), vars)
+    : renderTemplate(TEMPLATE_FUNCTIONS_PHP, vars);
 
   const files = {
     'project.config.json':         renderTemplate(TEMPLATE_PROJECT_CONFIG, vars),
-    'functions.php':               renderTemplate(TEMPLATE_FUNCTIONS_PHP, vars),
+    'build.config.json':           renderTemplate(TEMPLATE_BUILD_CONFIG, vars),
+    [phpBootstrapRel]:             phpBootstrapContent,
     'assets/dependencies.js':      renderTemplate(TEMPLATE_DEPENDENCIES_JS, vars),
+    'assets/stylesheets/style.css': renderTemplate(TEMPLATE_STYLESHEET, vars),
     'package.json':                JSON.stringify(packageJsonForAnswers(answers), null, 2) + '\n',
     'README.md':                   renderTemplate(TEMPLATE_README, vars),
   };
@@ -354,6 +494,7 @@ function parseAnswersFromArgs(argv) {
     else if (arg.startsWith('--hook='))        a.hookPrefix   = arg.slice('--hook='.length);
     else if (arg.startsWith('--php='))         a.phpFunctionPrefix = arg.slice('--php='.length);
     else if (arg.startsWith('--ui='))          a.uiFramework  = arg.slice('--ui='.length);
+    else if (arg.startsWith('--type='))        a.projectType  = arg.slice('--type='.length);
   }
   return { answers: a, target };
 }
@@ -368,7 +509,7 @@ async function main() {
   if (!answers || Object.keys(answers).length === 0) {
     process.stdout.write(
       'Usage: node packages/create-wp-project/src/index.js ' +
-      '[--target=<dir>] [--slug=<s> --scope=<s> --global=<s> --domain=<s> --hook=<s> --php=<s> --ui=preact|react]\n' +
+      '[--target=<dir>] [--slug=<s> --scope=<s> --global=<s> --domain=<s> --hook=<s> --php=<s> --ui=preact|react --type=plugin|theme]\n' +
       '   or: WPSK_ANSWERS_JSON=<json> node packages/create-wp-project/src/index.js\n'
     );
     process.exit(2);

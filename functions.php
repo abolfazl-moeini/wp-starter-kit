@@ -20,6 +20,32 @@
  * NOTE: This file is loaded by WordPress inside the active theme. The
  * `defined('ABSPATH')` guard prevents direct browser access.
  *
+ * --------------------------------------------------------------------------
+ * DEPRECATION NOTICE (wp-starter-kit Phase 11)
+ * --------------------------------------------------------------------------
+ * As of Phase 11, wp-starter-kit is **plugin-first**. New projects should
+ * scaffold with `projectType: 'plugin'` (the default) and rely on
+ * `{slug}.php` as the primary bootstrap. The `{slug}.php` file:
+ *
+ *   - declares the WordPress.org plugin headers (Plugin Name, Version,
+ *     Requires PHP, Text Domain, ...),
+ *   - pulls in `vendor/autoload.php`,
+ *   - wires `WPSK\Core\Plugin::boot()` so the WPSK namespace owns the
+ *     boot sequence,
+ *   - registers activation / deactivation / uninstall hooks,
+ *   - calls `load_plugin_textdomain` against the *plugin* languages
+ *     directory (not the theme).
+ *
+ * `functions.php` is kept for two reasons:
+ *   1. Backward compatibility: existing projects that were scaffolded
+ *      before Phase 11 continue to work.
+ *   2. Theme mode: projects that explicitly set `projectType: 'theme'`
+ *      in `project.config.json` still get a `functions.php` bootstrap
+ *      from the scaffold.
+ *
+ * This file will be removed in the next major release. New projects
+ * should delete it after scaffolding and rely on `{slug}.php`.
+ *
  * @package wp-starter-kit
  */
 
@@ -44,7 +70,9 @@ if ( ! function_exists( 'wpsk_starter_setup_theme' )) {
 	 * `<theme>/languages/`.
 	 */
 	function wpsk_starter_setup_theme(): void {
-		load_theme_textdomain( 'wpsk-starter', get_template_directory() . '/languages' );
+		$cfg         = wpsk_read_project_config();
+		$text_domain = $cfg['textDomain'] ?? 'wpsk-starter';
+		load_theme_textdomain( $text_domain, get_template_directory() . '/languages' );
 	}
 }
 
@@ -55,20 +83,27 @@ if ( ! function_exists( 'wpsk_starter_enqueue_assets' )) {
 	 * enqueued by their own bootstrap modules via the same helpers.
 	 */
 	function wpsk_starter_enqueue_assets(): void {
-		// Deps bundle: `project.config.json → depsBundle` (e.g.
-		// `wpsk-starter-deps.js`). The handle is derived from the
-		// filename (`.js` stripped).
-		wpsk_enqueue_bundle_script( 'wpsk-starter-deps.js' );
+		// Read branding from project.config.json so that simply editing
+		// the config + rebuild is enough to re-brand the kit (localize
+		// global name, bundle filename for the deps handle, etc.).
+		$cfg         = wpsk_read_project_config();
+		$deps_bundle = $cfg['depsBundle'] ?? 'wpsk-starter-deps.js';
+		$loc_var     = $cfg['localizeVar'] ?? 'WPSKLoc';
+		// Strip .js suffix to derive the WP script handle.
+		$handle = substr( $deps_bundle, 0, -3 );
 
-		// Localize the deps handle so `@wpsk/utils/localize.js` can read
-		// `api.url` / `api.nonce` / `api_x.url` / `api_x.nonce`.
+		wpsk_enqueue_bundle_script( $deps_bundle );
+
+		// Localize using the configured var name so that
+		// @wpsk/utils/localize (which may have the name define-injected
+		// or fallback) can find the payload under the right global.
 		wp_localize_script(
-			'wpsk-starter-deps',
-			'WPSKLoc',
+			$handle,
+			$loc_var,
 			wpsk_get_localize_data()
 		);
 
 		// Default stylesheet (hashed cache-bust via the .asset.php).
-		wpsk_enqueue_bundle_style( 'style.css' );
+		wpsk_enqueue_stylesheet( 'style.css' );
 	}
 }

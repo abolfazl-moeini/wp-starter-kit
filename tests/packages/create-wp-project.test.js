@@ -117,6 +117,7 @@ describe('@wpsk/create-wp-project', () => {
         depsBundle: 'my-project-deps.js',
         phpFunctionPrefix: 'myprj_',
         uiFramework: 'preact',
+        projectType: 'plugin',
       });
     });
 
@@ -207,17 +208,34 @@ describe('@wpsk/create-wp-project', () => {
         depsBundle: 'my-project-deps.js',
         phpFunctionPrefix: 'myprj_',
         uiFramework: 'preact',
+        projectType: 'plugin',
       });
     });
 
-    test('writes functions.php with wpsk_ prefix replaced by phpFunctionPrefix', async () => {
-      const res = await scaffoldProject(tmp, goodAnswers);
+    test('writes functions.php using stable wpsk_* framework asset helpers + slug-derived names for own glue', async () => {
+      // Phase 11: theme bootstrap is opt-in via projectType: 'theme'.
+      // The default is now 'plugin' which emits {slug}.php; this
+      // test covers the legacy theme path.
+      const themeAnswers = { ...goodAnswers, projectType: 'theme' };
+      const res = await scaffoldProject(tmp, themeAnswers);
       expect(res.ok).toBe(true);
       const fn = await fs.readFile(path.join(tmp, 'functions.php'), 'utf8');
-      // No leftover wpsk_ from the template (the function prefix is myprj_).
-      expect(fn).not.toMatch(/\bwpsk_/);
-      // The scaffolded file uses the new prefix.
-      expect(fn).toMatch(/\bmyprj_enqueue_bundle_script\b/);
+      // Framework asset helpers are always the stable wpsk_* names (shipped
+      // once by the kit in includes/asset-functions.php or via composer).
+      expect(fn).toMatch(/\bwpsk_enqueue_bundle_script\b/);
+      expect(fn).toMatch(/\bwpsk_enqueue_stylesheet\b/);
+      expect(fn).toMatch(/\bwpsk_get_localize_data\b/);
+      // The project's own bootstrap functions are derived from slug (with _ not -)
+      // and the phpFunctionPrefix is carried in project.config but the bootstrap
+      // template prefers the descriptive slug_ form for the action callbacks.
+      expect(fn).toMatch(/\bmy_project_setup\b/);
+      expect(fn).toMatch(/\bmy_project_enqueue_assets\b/);
+      // The localize var and text domain etc. are still rendered from answers.
+      expect(fn).toMatch(/MyProjectLoc/);
+      expect(fn).toMatch(/my-project/);
+      // Phase 11 deprecation comment is present even in the legacy
+      // theme-mode template.
+      expect(fn).toMatch(/DEPRECATION NOTICE/i);
     });
 
     test('writes assets/dependencies.js with hook prefix substituted', async () => {
@@ -248,6 +266,20 @@ describe('@wpsk/create-wp-project', () => {
       expect(readme).toContain('MyProject');
     });
 
+    test('writes build.config.json and default stylesheet for style hashing', async () => {
+      const res = await scaffoldProject(tmp, goodAnswers);
+      expect(res.ok).toBe(true);
+      const buildConfig = JSON.parse(
+        await fs.readFile(path.join(tmp, 'build.config.json'), 'utf8'),
+      );
+      expect(buildConfig.styleEntryPoints).toEqual(['assets/stylesheets/style.css']);
+      const css = await fs.readFile(
+        path.join(tmp, 'assets', 'stylesheets', 'style.css'),
+        'utf8',
+      );
+      expect(css).toMatch(/body\s*\{/);
+    });
+
     test('returns ok=false (does not throw) when target dir already has project.config.json', async () => {
       // Pre-populate a sentinel project.config.json
       await fs.writeFile(
@@ -269,6 +301,76 @@ describe('@wpsk/create-wp-project', () => {
       const pkg = JSON.parse(await fs.readFile(path.join(tmp, 'package.json'), 'utf8'));
       // Real react path: no @preact/compat alias.
       expect(pkg.dependencies?.react).not.toBe('npm:@preact/compat');
+    });
+
+    /* ------------------------------------------------------------------ */
+    /* plugin mode — {slug}.php primary bootstrap (Phase 11)              */
+    /* ------------------------------------------------------------------ */
+
+    const pluginAnswers = {
+      ...goodAnswers,
+      projectType: 'plugin',
+    };
+
+    test('plugin mode: writes {slug}.php with WP plugin headers + Plugin::boot wiring', async () => {
+      const res = await scaffoldProject(tmp, pluginAnswers);
+      expect(res.ok).toBe(true);
+      const pluginFile = path.join(tmp, 'my-project.php');
+      const src = await fs.readFile(pluginFile, 'utf8');
+      // WordPress.org plugin file headers.
+      expect(src).toMatch(/Plugin Name:/);
+      expect(src).toMatch(/Version:/);
+      expect(src).toMatch(/Requires PHP:/);
+      expect(src).toMatch(/Text Domain:/);
+      // Guard + autoload + Plugin::boot.
+      expect(src).toMatch(/defined\s*\(\s*['"]ABSPATH['"]\s*\)/);
+      expect(src).toMatch(/require_once.*vendor\/autoload\.php/);
+      // WPSK\Core\Plugin::boot can be either an add_action callback
+      // (a string) or a direct call site. Either form proves the
+      // plugin knows about the kit's facade.
+      expect(src).toMatch(/WPSK\\Core\\Plugin::boot/);
+    });
+
+    test('plugin mode: {slug}.php includes register_(activation|deactivation|uninstall)_hook', async () => {
+      const res = await scaffoldProject(tmp, pluginAnswers);
+      expect(res.ok).toBe(true);
+      const src = await fs.readFile(path.join(tmp, 'my-project.php'), 'utf8');
+      expect(src).toMatch(/register_activation_hook\(/);
+      expect(src).toMatch(/register_deactivation_hook\(/);
+      expect(src).toMatch(/register_uninstall_hook\(/);
+    });
+
+    test('plugin mode: {slug}.php does NOT use get_template_directory or after_setup_theme', async () => {
+      const res = await scaffoldProject(tmp, pluginAnswers);
+      expect(res.ok).toBe(true);
+      const src = await fs.readFile(path.join(tmp, 'my-project.php'), 'utf8');
+      expect(src).not.toMatch(/get_template_directory/);
+      expect(src).not.toMatch(/after_setup_theme/);
+    });
+
+    test('plugin mode: scaffold does not write functions.php as the primary bootstrap', async () => {
+      const res = await scaffoldProject(tmp, pluginAnswers);
+      expect(res.ok).toBe(true);
+      // functions.php may or may not be written in plugin mode (it's
+      // theme bootstrap and is deprecated), but it must NOT be the
+      // primary plugin bootstrap — i.e. the scaffolded project must
+      // contain a {slug}.php that WordPress will pick up as the
+      // plugin entry, not functions.php.
+      const pluginFile = path.join(tmp, 'my-project.php');
+      const stat = await fs.stat(pluginFile);
+      expect(stat.isFile()).toBe(true);
+      const writtenList = res.written || [];
+      expect(writtenList).toContain('my-project.php');
+    });
+
+    test('plugin mode: scaffoldProject written list reports {slug}.php', async () => {
+      const res = await scaffoldProject(tmp, pluginAnswers);
+      expect(res.ok).toBe(true);
+      // Document the contract for the scaffold output.
+      const written = res.written || [];
+      expect(written).toEqual(
+        expect.arrayContaining(['my-project.php'])
+      );
     });
   });
 });
