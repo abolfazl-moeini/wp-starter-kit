@@ -5,11 +5,11 @@
 
 ## What's here
 
-| File                  | Trigger                          | What it does                                     |
-|-----------------------|----------------------------------|--------------------------------------------------|
-| `ci.yml`              | Push / PR to `main`              | Test matrix (Node 20/22, PHP 7.4-8.3), lint, build |
-| `nightly.yml`         | Cron 02:00 UTC + manual dispatch | Scaffold smoke test, translation E2E, coverage    |
-| `release.yml`         | Tag push (`v*.*.*`)              | Build release artifacts, create GitHub Release    |
+| File          | Trigger                          | What it does                                       |
+| ------------- | -------------------------------- | -------------------------------------------------- |
+| `ci.yml`      | Push / PR to `main`              | Test matrix (Node 20/22, PHP 7.4-8.3), lint, build |
+| `nightly.yml` | Cron 02:00 UTC + manual dispatch | Scaffold smoke test, translation E2E, coverage     |
+| `release.yml` | Tag push (`v*.*.*`)              | Build release artifacts, create GitHub Release     |
 
 ## CI (`ci.yml`)
 
@@ -24,6 +24,8 @@ you don't queue up duplicate runs.
 - **Lint (PHP 8.2 only):** `composer validate:cs`,
   `composer validate:phpstan`, `npx prettier --check`.
 - **Build (after tests pass):** `npm run release` + `composer translation`.
+  Uploads `assets/bundles`, `assets/stylesheets`, `assets/translations`,
+  and `assets/map` as the build artifact.
 
 **Why cancel in-progress:** if you push two commits within a
 minute, only the latest runs.

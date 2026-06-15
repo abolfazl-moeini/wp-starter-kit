@@ -57,17 +57,19 @@ final class Cli
             return;
         }
 
-        try {
-            $git_patch = new GitPatch();
+        $git_patch = new GitPatch();
 
-            foreach ($config as $name => $patch_file) {
-                self::log(sprintf('Apply %s Patch', (string) $name));
+        foreach ($config as $name => $patch_file) {
+            self::log(sprintf('Apply %s Patch', (string) $name));
+            try {
                 $git_patch->apply((string) $patch_file, $root);
+            } catch (Throwable $error) {
+                self::log_error($error->getMessage());
             }
+        }
 
+        if (self::$errors === []) {
             self::log_success('Done');
-        } catch (Throwable $error) {
-            self::log_error($error->getMessage());
         }
     }
 

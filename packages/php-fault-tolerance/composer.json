@@ -1,0 +1,14 @@
+{
+  "name": "wpsk/php-fault-tolerance",
+  "description": "Optional fault-tolerance utilities for wp-starter-kit",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "WPSK\\FaultTolerance\\": "src/"
+    }
+  }
+}

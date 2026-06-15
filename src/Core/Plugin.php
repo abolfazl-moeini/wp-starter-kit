@@ -153,6 +153,15 @@ final class Plugin {
 	 * Plugin::boot()} has not run yet. Useful for code that needs
 	 * to register a module before boot() finishes.
 	 */
+	/**
+	 * Test seam / optional accessor for the booted singleton.
+	 *
+	 * @return self|null
+	 */
+	public static function instance(): ?self {
+		return self::$instance;
+	}
+
 	public static function loader(): ModuleLoader {
 		if ( null === self::$loader ) {
 			self::$loader = new ModuleLoader( 'wpsk' );

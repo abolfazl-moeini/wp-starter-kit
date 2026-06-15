@@ -52,14 +52,14 @@ The whole thing is invoked by `composer translation` (or
 
 `packages/translation/src/index.js` exports six pure functions:
 
-| Function                  | Input                           | Output                          |
-|---------------------------|---------------------------------|---------------------------------|
-| `parseMapFile(pot, bundle)` | `.pot` contents + bundle name  | `Record<sourcePath, bundleName>` |
-| `isTranslationValid(label)`| any value                       | `boolean`                        |
-| `extractTranslation(...)`  | (raw textdomain)                | (parsed translation)             |
-| `updateTranslation(...)`   | (existing, patch)               | (merged translation)             |
-| `extractInternalPackages(config)` | (project.config)         | `string[]` of internal package names |
-| `mergeTranslationFiles(files)` | `string[]` of JSON paths   | merged JSON object                |
+| Function                          | Input                         | Output                               |
+| --------------------------------- | ----------------------------- | ------------------------------------ |
+| `parseMapFile(pot, bundle)`       | `.pot` contents + bundle name | `Record<sourcePath, bundleName>`     |
+| `isTranslationValid(label)`       | any value                     | `boolean`                            |
+| `extractTranslation(...)`         | (raw textdomain)              | (parsed translation)                 |
+| `updateTranslation(...)`          | (existing, patch)             | (merged translation)                 |
+| `extractInternalPackages(config)` | (project.config)              | `string[]` of internal package names |
+| `mergeTranslationFiles(files)`    | `string[]` of JSON paths      | merged JSON object                   |
 
 **All six are pure** (no I/O, no `console.log`, no `process.exit`) and
 are unit-tested in `tests/phpunit/TranslationPipelineTest.php` (8 tests)
@@ -147,7 +147,7 @@ small theme:
 
 - `wp i18n make-pot` → `xgettext` for PHP, `@wordpress/babel-plugin-makepot` for JS.
 - `wp i18n make-json --use-map` → `dev/translation/build-script.php`
-  + `wpsk_build_map_file` helper.
+  - `wpsk_build_map_file` helper.
 
 The remaining 80% (PO file editing, MO compilation) is the translator's
 job, and they have Poedit / Crowdin / Weblate for that.

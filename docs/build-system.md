@@ -235,26 +235,46 @@ Three things to know about how esbuild handles `.ts`:
   [asset-mappings.md](asset-mappings.md#the-two-bundles) for the
   rest of the bundle strategy.
 
-### Component glob: `.ts` is on the Phase 18 roadmap
+### Component glob: `src/Modules/*/assets/entries/*.ts` (Phase 12)
 
-Today, the components stage still discovers entry files with the
-`script.js` glob:
+The components stage discovers **two** kinds of entry files:
 
 ```js
 // core/packages/build/esbuild-components.js
-const jsfiles = await glob("**/script.js", {
-  cwd,
-  ignore: ["node_modules/**", "assets/**", "examples/**", "tests/**"],
-});
+const MODULE_ENTRY_GLOB = 'src/Modules/*/assets/entries/*.ts';
+const LEGACY_SCRIPT_GLOB = '**/script.js';
+
+async function discoverComponentEntries(cwd) {
+  const [moduleEntries, legacyScripts] = await Promise.all([
+    glob(MODULE_ENTRY_GLOB, {
+      cwd,
+      ignore: ['node_modules/**', 'assets/**', 'examples/**', 'tests/**'],
+    }),
+    glob(LEGACY_SCRIPT_GLOB, {
+      cwd,
+      ignore: ['node_modules/**', 'assets/**', 'examples/**', 'tests/**'],
+    }),
+  ]);
+  // de-duplicate by path, module entries win on conflict
+  ...
+}
 ```
 
-`tsconfig.json` already covers the `core/components/**/*.ts` tree
-so authors can write `.ts` component sources today, but the glob
-will not pick them up until the components glob is widened to
-`**/script.{js,ts}`. **Adding `.ts` to the component glob is
-deferred to Phase 18** (the same phase that introduces the wider
-test glob). Until then, the supported component source is `.js`
-even though the rest of the kit is TypeScript.
+The new glob (`src/Modules/*/assets/entries/*.ts`) is the **canonical
+shape** for new feature modules — every module ships its own
+TypeScript entry, and the builder names the resulting bundle after
+`<Module>-<entry>.ts` (for example
+`src/Modules/ExampleFeature/assets/entries/admin.ts` becomes
+`assets/bundles/ExampleFeature-admin.js`). The legacy `**/script.js`
+glob stays in place for projects that have not migrated yet; the
+two lists are merged with a `Set` so a path can never be built
+twice.
+
+If you are starting a fresh feature module, write your entry at
+`src/Modules/<MyModule>/assets/entries/<myEntry>.ts` and skip the
+legacy `script.js` form entirely. The starter repo's
+`src/Modules/ExampleFeature/assets/entries/admin.ts` is the working
+example.
 
 ## Test surface
 

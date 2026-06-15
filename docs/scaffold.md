@@ -52,28 +52,28 @@ node packages/create-wp-project/src/index.js \
 ### 3. From another Node program
 
 ```js
-import { scaffoldProject } from '@wpsk/create-wp-project/src/index.js';
-const res = await scaffoldProject('/path/to/dir', {
-  slug: 'my-project',
-  npmScope: 'myorg',
+import { scaffoldProject } from "@wpsk/create-wp-project/src/index.js";
+const res = await scaffoldProject("/path/to/dir", {
+  slug: "my-project",
+  npmScope: "myorg",
   // …
 });
-if (res.ok) console.log('Wrote', res.written);
+if (res.ok) console.log("Wrote", res.written);
 ```
 
 ## Answer contract (`ScaffoldAnswers`)
 
-| Key                | Required | Pattern               | Example          |
-|--------------------|----------|-----------------------|------------------|
-| `slug`             | yes      | `^[a-z0-9][a-z0-9-]*$`| `my-project`     |
-| `npmScope`         | yes      | `^[a-z0-9][a-z0-9-]*$` (no `@`) | `myorg` |
-| `globalName`       | yes      | JS identifier         | `MyProject`      |
-| `localizeVar`      | no       | JS identifier (inferred: `globalName + 'Loc'`) | `MyProjectLoc` |
-| `textDomain`       | yes      | `^[a-z0-9][a-z0-9-]*$`| `my-project`     |
-| `hookPrefix`       | yes      | `^[a-z0-9][a-z0-9-]*$`| `my-project`     |
-| `depsBundle`       | no       | `*.js` (inferred: `slug + '-deps.js'`) | `my-project-deps.js` |
-| `phpFunctionPrefix`| no       | `^[a-z][a-z0-9_]*_$`  | `myprj_` (default `wpsk_`) |
-| `uiFramework`      | yes      | `preact` \| `react`   | `preact`         |
+| Key                 | Required | Pattern                                        | Example                    |
+| ------------------- | -------- | ---------------------------------------------- | -------------------------- |
+| `slug`              | yes      | `^[a-z0-9][a-z0-9-]*$`                         | `my-project`               |
+| `npmScope`          | yes      | `^[a-z0-9][a-z0-9-]*$` (no `@`)                | `myorg`                    |
+| `globalName`        | yes      | JS identifier                                  | `MyProject`                |
+| `localizeVar`       | no       | JS identifier (inferred: `globalName + 'Loc'`) | `MyProjectLoc`             |
+| `textDomain`        | yes      | `^[a-z0-9][a-z0-9-]*$`                         | `my-project`               |
+| `hookPrefix`        | yes      | `^[a-z0-9][a-z0-9-]*$`                         | `my-project`               |
+| `depsBundle`        | no       | `*.js` (inferred: `slug + '-deps.js'`)         | `my-project-deps.js`       |
+| `phpFunctionPrefix` | no       | `^[a-z][a-z0-9_]*_$`                           | `myprj_` (default `wpsk_`) |
+| `uiFramework`       | yes      | `preact` \| `react`                            | `preact`                   |
 
 ## Output
 

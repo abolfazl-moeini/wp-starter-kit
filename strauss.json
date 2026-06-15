@@ -1,0 +1,16 @@
+{
+  "target_directory": "vendor-prefixed",
+  "namespace_prefix": "WpskVendor",
+  "classmap_prefix": "WpskVendor_",
+  "constant_prefix": "WPSKVENDOR_",
+  "delete_vendor_files": true,
+  "include_modified_files": false,
+  "exclude_from_prefix": {
+    "namespaces": ["WPSK"],
+    "file_patterns": []
+  },
+  "exclude_from_copy": {
+    "namespaces": [],
+    "file_patterns": []
+  }
+}

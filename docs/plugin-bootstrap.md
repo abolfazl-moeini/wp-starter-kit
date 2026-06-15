@@ -74,7 +74,7 @@ Three trees, three ownerships:
    it to). Don't hand-edit; submit changes upstream.
 2. **`src/Modules/*`** — yours. Add one sub-directory per feature
    module (see [modules.md](modules.md)).
-3. **`core/**` and `core/php/**`** — yours-but-versioned. The
+3. **`core/**`and`core/php/**`** — yours-but-versioned. The
    framework code lives here (and is re-emitted on starter
    upgrade); the rest is yours to customise.
 
@@ -196,11 +196,11 @@ register_uninstall_hook(
 
 Three hooks, three different shapes:
 
-| Hook                              | Callable shape             | Why |
-|-----------------------------------|----------------------------|-----|
-| `register_activation_hook`        | `[ 'Class', 'method' ]`    | The autoloader is reachable here — full class callables are fine. |
-| `register_deactivation_hook`      | `[ 'Class', 'method' ]`    | Same as activation. |
-| `register_uninstall_hook`         | `'function_name'` only     | Uninstall may run when the autoloader is **not** reachable (the plugin is being deleted), so WordPress rejects array callables. Use a plain function name or a `Class::method` string. |
+| Hook                         | Callable shape          | Why                                                                                                                                                                                    |
+| ---------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `register_activation_hook`   | `[ 'Class', 'method' ]` | The autoloader is reachable here — full class callables are fine.                                                                                                                      |
+| `register_deactivation_hook` | `[ 'Class', 'method' ]` | Same as activation.                                                                                                                                                                    |
+| `register_uninstall_hook`    | `'function_name'` only  | Uninstall may run when the autoloader is **not** reachable (the plugin is being deleted), so WordPress rejects array callables. Use a plain function name or a `Class::method` string. |
 
 The shape constraint is enforced by
 `PluginBootstrapTest::test_template_registers_*_with_*_callable`.
@@ -246,13 +246,13 @@ where to find `<plugin>/languages/{textDomain}-{locale}.mo`.
 The three arguments are:
 
 - `'my-project'` — the text domain. Must match the `Text
-  Domain:` header and every `__()` call in PHP.
+Domain:` header and every `__()` call in PHP.
 - `false` — the deprecated "absolute path" flag. `false` means
   "let WordPress resolve the path relative to the plugin". WP
   uses the third argument to compute the plugin-relative
   directory.
 - `dirname(plugin_basename(__FILE__)) . '/languages'` — the
-  path *relative to `WP_PLUGIN_DIR`*. The double
+  path _relative to `WP_PLUGIN_DIR`_. The double
   `dirname(plugin_basename(...))` dance is required because
   `plugin_basename` strips the plugin directory from a
   filesystem path, and we want only the directory portion.
@@ -313,17 +313,17 @@ The scaffold (`@wpsk/create-wp-project`) reads it, runs
 `renderTemplate(template, vars)` over it, and writes
 `<target>/<slug>.php`. The `{{token}}` placeholders are:
 
-| Token                  | Source                  | Example          |
-|------------------------|-------------------------|------------------|
-| `{{name}}`             | `name` / derived from `slug` | `My Project`  |
-| `{{slug}}`             | `slug` (kebab-case)     | `my-project`     |
-| `{{slug_underscore}}`  | `slug` → `snake_case` + `_` | `my_project_` |
-| `{{pluginUri}}`        | `pluginUri`             | `https://example.com/my-project` |
-| `{{description}}`      | `description`           | `...`            |
-| `{{author}}`           | `author`                | `Acme`           |
-| `{{authorUri}}`        | `authorUri`             | `https://example.com` |
-| `{{textDomain}}`       | `textDomain`            | `my-project`     |
-| `{{phpMinVersion}}`    | `phpMinVersion`         | `7.4`            |
+| Token                 | Source                       | Example                          |
+| --------------------- | ---------------------------- | -------------------------------- |
+| `{{name}}`            | `name` / derived from `slug` | `My Project`                     |
+| `{{slug}}`            | `slug` (kebab-case)          | `my-project`                     |
+| `{{slug_underscore}}` | `slug` → `snake_case` + `_`  | `my_project_`                    |
+| `{{pluginUri}}`       | `pluginUri`                  | `https://example.com/my-project` |
+| `{{description}}`     | `description`                | `...`                            |
+| `{{author}}`          | `author`                     | `Acme`                           |
+| `{{authorUri}}`       | `authorUri`                  | `https://example.com`            |
+| `{{textDomain}}`      | `textDomain`                 | `my-project`                     |
+| `{{phpMinVersion}}`   | `phpMinVersion`              | `7.4`                            |
 
 The render function leaves unknown tokens verbatim, so a
 missing config field is loud at scaffold time.
@@ -340,10 +340,10 @@ bootstrap, the text domain lived under the theme, and the
 `wp_enqueue_scripts` handler lived in the theme. As of Phase
 11:
 
-| Phase | Bootstrap location            | Status                          |
-|-------|-------------------------------|---------------------------------|
-| 0–10  | `functions.php` in the theme  | Deprecated. Removed next major. |
-| 11+   | `{slug}.php` at the plugin root | Current. The default.         |
+| Phase | Bootstrap location              | Status                          |
+| ----- | ------------------------------- | ------------------------------- |
+| 0–10  | `functions.php` in the theme    | Deprecated. Removed next major. |
+| 11+   | `{slug}.php` at the plugin root | Current. The default.           |
 
 ### What changed in Phase 11
 

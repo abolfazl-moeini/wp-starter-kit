@@ -1,0 +1,7 @@
+/**
+ * Default theme stylesheet for wp-starter-kit.
+ * Hashed via `npm run build:styles` → style.asset.php companion.
+ */
+body {
+  margin: 0;
+}

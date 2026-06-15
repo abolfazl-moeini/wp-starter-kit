@@ -67,7 +67,7 @@ it at `h` from `preact`:
 
 ```js
 /** @jsx h */
-import { h } from 'preact';
+import { h } from "preact";
 
 export function Greeting(props) {
   return <p>hello {props.name}</p>;
@@ -77,9 +77,9 @@ export function Greeting(props) {
 is transformed to:
 
 ```js
-import { h } from 'preact';
+import { h } from "preact";
 export function Greeting(props) {
-  return h('p', null, 'hello ', props.name);
+  return h("p", null, "hello ", props.name);
 }
 ```
 
@@ -101,10 +101,10 @@ that own the JSX surface.
 `project.config.json` carries a `uiFramework` field. It is **informational**
 right now (Phase 5.1); no build script reads it as a switch.
 
-| Value     | Meaning                                                                              |
-|-----------|--------------------------------------------------------------------------------------|
-| `preact`  | Project uses Preact 10 directly, with the `h` pragma and `preact/compat` alias.      |
-| `react`   | Project uses React 17/18 directly. No pragma, no alias, no `@preact/compat` shim.    |
+| Value    | Meaning                                                                           |
+| -------- | --------------------------------------------------------------------------------- |
+| `preact` | Project uses Preact 10 directly, with the `h` pragma and `preact/compat` alias.   |
+| `react`  | Project uses React 17/18 directly. No pragma, no alias, no `@preact/compat` shim. |
 
 Default when omitted: `"preact"` (set by `readProjectConfig` →
 `OPTIONAL_DEFAULTS`). This matches the seeded `project.config.json` shipped
@@ -122,7 +122,7 @@ Why include it if no code reads it? Three reasons:
 
 A follow-up phase can wire the field to the build (e.g. conditionally
 emitting the `/** @jsx h */` directive or swapping the `react` alias on a
-per-config basis). For now, treat it as a *contract* — change it when you
+per-config basis). For now, treat it as a _contract_ — change it when you
 change the framework, not as a switch.
 
 ## 4. Switching to React (full walkthrough)
@@ -172,8 +172,8 @@ the hood. For React you'll need a thin shim:
 
 ```js
 // React variant
-import { createElement as h } from 'react';
-import { createRoot } from 'react-dom/client';
+import { createElement as h } from "react";
+import { createRoot } from "react-dom/client";
 
 export function mountComponent(elementId, Component, extraProps = {}) {
   const element = document.getElementById(elementId);

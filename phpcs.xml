@@ -13,6 +13,9 @@
     <config name="testVersion" value="7.4-"/>
     <exclude-pattern>*/node_modules/*</exclude-pattern>
     <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>dist/*</exclude-pattern>
+    <exclude-pattern>wpsk-starter.php</exclude-pattern>
+    <exclude-pattern>packages/php-fault-tolerance/*</exclude-pattern>
     <exclude-pattern>assets/*</exclude-pattern>
     <!--
         Dev tooling (rector configs, dev scripts, php-test-tools), tests,

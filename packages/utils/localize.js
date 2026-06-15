@@ -1,4 +1,10 @@
-const LOCALIZE_VAR = 'WPSKLoc';
+// __WPSK_LOCALIZE_VAR__ is injected by esbuild (buildDepsConfig / build for
+// components) from project.config.json → localizeVar. Fallback keeps the
+// kit itself working even if a particular bundle config omits the define.
+const LOCALIZE_VAR =
+  typeof __WPSK_LOCALIZE_VAR__ !== "undefined"
+    ? __WPSK_LOCALIZE_VAR__
+    : "WPSKLoc";
 
 function getLocalizeRoot() {
   return globalThis[LOCALIZE_VAR];
@@ -15,11 +21,11 @@ export const localize = {
       return;
     }
 
-    if (index.indexOf('.') === -1) {
+    if (index.indexOf(".") === -1) {
       return root[index];
     }
 
-    let parts = index.split('.');
+    let parts = index.split(".");
     let current = root[parts[0]];
 
     if (!current) {
@@ -31,7 +37,7 @@ export const localize = {
     const len = parts.length - 1;
 
     for (let i = 0; i <= len; i++) {
-      if (typeof current[parts[i]] !== 'object' && i !== len) {
+      if (typeof current[parts[i]] !== "object" && i !== len) {
         return;
       }
 
@@ -42,6 +48,6 @@ export const localize = {
   },
 
   translate(index) {
-    return this.get('translate.' + index);
+    return this.get("translate." + index);
   },
 };

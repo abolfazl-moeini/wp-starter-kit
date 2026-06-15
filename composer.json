@@ -16,14 +16,23 @@
     "phpstan/extension-installer": "^1.3",
     "phpcompatibility/php-compatibility": "^9.3",
     "symfony/process": "^5.4",
-    "rector/rector": "^1.0"
+    "rector/rector": "^1.0",
+    "brianhenryie/strauss": "^0.11",
+    "wp-cli/wp-cli-bundle": "^2.11",
+    "laminas/laminas-code": "^4.7"
   },
   "autoload": {
-    "files": ["includes/asset-functions.php"],
-    "classmap": ["includes/"],
+    "files": [
+      "includes/asset-functions.php",
+      "packages/php-fault-tolerance/src/functions.php"
+    ],
+    "classmap": [
+      "includes/"
+    ],
     "psr-4": {
       "WPSK\\": "src/",
-      "WPSK\\TestTools\\": "packages/php-test-tools/src/"
+      "WPSK\\TestTools\\": "packages/php-test-tools/src/",
+      "WPSK\\FaultTolerance\\": "packages/php-fault-tolerance/src/"
     }
   },
   "scripts": {
@@ -38,6 +47,8 @@
       "@rector:prefix",
       "@php ./dev/fix-autoloader.php"
     ],
+    "scope:vendor": "@php vendor/bin/strauss",
+    "release:dist": "@php dev/release/build-dist.php",
     "test:pre": "@php ./tests/patch/apply-patches.php",
     "translation:generate:php": "@php dev/translation/generate-php.php",
     "translation:generate:script": "@php dev/translation/generate-script.php",

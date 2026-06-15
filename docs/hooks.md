@@ -45,12 +45,12 @@ the `hooks` package) and the same pattern that `wp-feature-api` /
 
 ## Files that read the prefix
 
-| File                                         | What it does                              |
-|----------------------------------------------|-------------------------------------------|
-| `core/packages/hooks/src/index.js`           | Re-exports `@wordpress/hooks` with the prefix pre-bound (`createNamespacedHooks(prefix)`). |
-| `core/packages/hooks/__tests__/namespaced.test.js` | Asserts `addAction('my-project/...')` flows through. |
-| `core/php/functions.php` (scaffolded)        | Defines `apply_filters( 'my-project/...', ... )` constants if any. |
-| `dev/translation/cli.php`                    | Logs the prefix on each translation run.  |
+| File                                               | What it does                                                                               |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `core/packages/hooks/src/index.js`                 | Re-exports `@wordpress/hooks` with the prefix pre-bound (`createNamespacedHooks(prefix)`). |
+| `core/packages/hooks/__tests__/namespaced.test.js` | Asserts `addAction('my-project/...')` flows through.                                       |
+| `core/php/functions.php` (scaffolded)              | Defines `apply_filters( 'my-project/...', ... )` constants if any.                         |
+| `dev/translation/cli.php`                          | Logs the prefix on each translation run.                                                   |
 
 ## Renaming a prefix mid-project
 

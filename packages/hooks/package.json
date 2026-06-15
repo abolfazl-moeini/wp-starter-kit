@@ -4,7 +4,5 @@
   "type": "module",
   "main": "index.js",
   "private": true,
-  "dependencies": {
-    "@core/utils": "^0.1.0"
-  }
+  "dependencies": {}
 }

@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Phase 13 pragmatic pre-commit per plan.v2.md
+# Run lint-staged first (auto-fixes + prettier on staged files)
+npx lint-staged
+
+# Run related JS tests for staged .ts/.js files when possible; fall back to full suite for safety (weak-agent friendly)
+STAGED_JS=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx)$' | tr '\n' ' ' || true)
+if [ -n "$STAGED_JS" ]; then
+  npm test -- --bail --findRelatedTests --passWithNoTests $STAGED_JS || npm test -- --bail
+else
+  npm test -- --bail
+fi
+
+# For staged PHP test files, run composer test with filter when practical
+STAGED_PHP_TESTS=$(git diff --cached --name-only --diff-filter=ACM | grep -E 'Test\.php$' | sed 's/.*\///;s/Test\.php$//' | tr '\n' '|' | sed 's/|$//' || true)
+if [ -n "$STAGED_PHP_TESTS" ]; then
+  composer test -- --filter "$STAGED_PHP_TESTS" || composer test
+fi

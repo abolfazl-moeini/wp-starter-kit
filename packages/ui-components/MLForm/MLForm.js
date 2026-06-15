@@ -16,10 +16,10 @@
  * original from their own theme/plugin — the starter kit only ships
  * the version-agnostic scaffolding.
  */
-import { h } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
-import classNames from 'classnames';
-import isEmpty from 'lodash.isempty';
+import { h } from "preact";
+import { useEffect, useRef, useState } from "preact/hooks";
+import classNames from "classnames";
+import isEmpty from "lodash.isempty";
 
 import {
   formStore,
@@ -30,7 +30,7 @@ import {
   batchSetFormData,
   resetFormData,
   updateFormState,
-} from '../index.js';
+} from "../index.js";
 
 export function MLForm(props) {
   const wrapperRef = useRef(null);
@@ -57,16 +57,16 @@ export function MLForm(props) {
   return (
     <div
       ref={wrapperRef}
-      className={classNames('wpsk-form', props.wrapperClassName, {
-        'invalid-ajax-data':
+      className={classNames("wpsk-form", props.wrapperClassName, {
+        "invalid-ajax-data":
           props.fetchInitialValues && isEmpty(dynamicInitialValues),
       })}
     >
       <form
         onSubmit={handleSubmit}
-        className={classNames('the-form', props.className)}
+        className={classNames("the-form", props.className)}
       >
-        {props.children ?? ''}
+        {props.children ?? ""}
       </form>
     </div>
   );

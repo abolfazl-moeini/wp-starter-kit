@@ -10,7 +10,9 @@ vendor/
 
 # Build output
 .dist/
+dist/
 assets/bundles/
+assets/stylesheets/*.asset.php
 assets/libraries/
 assets/translations/
 assets/map/

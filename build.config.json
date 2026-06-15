@@ -1,5 +1,5 @@
 {
   "assetMappings": [],
   "globalMappings": {},
-  "styleEntryPoints": []
+  "styleEntryPoints": ["assets/stylesheets/style.css"]
 }

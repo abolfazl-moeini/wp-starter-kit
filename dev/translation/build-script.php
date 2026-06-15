@@ -31,16 +31,14 @@ foreach (wpsk_list_components() as $component) {
         continue;
     }
 
+    // wpsk_run_wp_i18n() prepends ['wp', 'i18n']; do not pass 'i18n' again.
     $r = wpsk_run_wp_i18n([
-        'i18n',
         'make-json',
         SOURCE_ROOT . '/components/' . $component . '/languages',
         SOURCE_ROOT . '/assets/translations',
         "--use-map=$map_file",
         '--no-purge',
     ]);
-    // `wp i18n make-json` (without the `i18n` subcommand) is the canonical
-    // form. We send the full argv above to keep both shapes discoverable.
 
     if (!$r['ok']) {
         wpsk_color_log("    wp i18n make-json: SKIP (" . trim($r['stderr']) . ")", 'w');

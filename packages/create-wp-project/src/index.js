@@ -19,9 +19,9 @@
  * exports and drive `scaffoldProject()` directly.
  */
 
-import { promises as fs } from 'node:fs';
-import { readFileSync, existsSync } from 'node:fs';
-import * as path from 'node:path';
+import { promises as fs } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
+import * as path from "node:path";
 
 /* -------------------------------------------------------------------- */
 /* Types                                                                */
@@ -50,44 +50,57 @@ import * as path from 'node:path';
 /* -------------------------------------------------------------------- */
 
 const SLUG_RE = /^[a-z0-9][a-z0-9-]*$/;
-const SCOPE_RE = /^[a-z0-9][a-z0-9-]*$/;     // npmScope is the part after '@'
-const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;     // JS identifier
-const DOMAIN_RE = /^[a-z0-9][a-z0-9-]*$/;       // text-domain / hook-prefix slug
+const SCOPE_RE = /^[a-z0-9][a-z0-9-]*$/; // npmScope is the part after '@'
+const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]*$/; // JS identifier
+const DOMAIN_RE = /^[a-z0-9][a-z0-9-]*$/; // text-domain / hook-prefix slug
 
 export function validateAnswers(a) {
   const errors = {};
 
-  if (!a || typeof a !== 'object') {
-    return { ok: false, errors: { _root: 'answers must be an object' } };
+  if (!a || typeof a !== "object") {
+    return { ok: false, errors: { _root: "answers must be an object" } };
   }
   if (!a.slug || !SLUG_RE.test(a.slug)) {
-    errors.slug = 'slug must be lowercase kebab-case (a-z, 0-9, dashes)';
+    errors.slug = "slug must be lowercase kebab-case (a-z, 0-9, dashes)";
   }
   if (!a.npmScope || !SCOPE_RE.test(a.npmScope)) {
-    errors.npmScope = 'npmScope must be lowercase kebab-case (no @)';
+    errors.npmScope = "npmScope must be lowercase kebab-case (no @)";
   }
   if (!a.globalName || !IDENT_RE.test(a.globalName)) {
-    errors.globalName = 'globalName must be a valid JS identifier';
+    errors.globalName = "globalName must be a valid JS identifier";
   }
-  if (a.localizeVar !== undefined && a.localizeVar !== '' && !IDENT_RE.test(a.localizeVar)) {
-    errors.localizeVar = 'localizeVar must be a valid JS identifier';
+  if (
+    a.localizeVar !== undefined &&
+    a.localizeVar !== "" &&
+    !IDENT_RE.test(a.localizeVar)
+  ) {
+    errors.localizeVar = "localizeVar must be a valid JS identifier";
   }
   if (!a.textDomain || !DOMAIN_RE.test(a.textDomain)) {
-    errors.textDomain = 'textDomain must be lowercase kebab-case';
+    errors.textDomain = "textDomain must be lowercase kebab-case";
   }
   if (!a.hookPrefix || !DOMAIN_RE.test(a.hookPrefix)) {
-    errors.hookPrefix = 'hookPrefix must be lowercase kebab-case';
+    errors.hookPrefix = "hookPrefix must be lowercase kebab-case";
   }
-  if (a.phpFunctionPrefix !== undefined && a.phpFunctionPrefix !== '' &&
-      !/^[a-z][a-z0-9_]*_$/.test(a.phpFunctionPrefix)) {
-    errors.phpFunctionPrefix = 'phpFunctionPrefix must be lowercase letters/digits/underscores, ending with underscore';
+  if (
+    a.phpFunctionPrefix !== undefined &&
+    a.phpFunctionPrefix !== "" &&
+    !/^[a-z][a-z0-9_]*_$/.test(a.phpFunctionPrefix)
+  ) {
+    errors.phpFunctionPrefix =
+      "phpFunctionPrefix must be lowercase letters/digits/underscores, ending with underscore";
   }
-  if (a.uiFramework !== 'preact' && a.uiFramework !== 'react') {
+  if (a.uiFramework !== "preact" && a.uiFramework !== "react") {
     errors.uiFramework = 'uiFramework must be "preact" or "react"';
   }
-  if (a.projectType !== undefined && a.projectType !== '' &&
-      a.projectType !== 'plugin' && a.projectType !== 'theme') {
-    errors.projectType = 'projectType must be "plugin" or "theme" (default: "plugin")';
+  if (
+    a.projectType !== undefined &&
+    a.projectType !== "" &&
+    a.projectType !== "plugin" &&
+    a.projectType !== "theme"
+  ) {
+    errors.projectType =
+      'projectType must be "plugin" or "theme" (default: "plugin")';
   }
   return { ok: Object.keys(errors).length === 0, errors };
 }
@@ -100,24 +113,24 @@ export function answersToProjectConfig(a) {
   const cfg = {
     slug: a.slug,
     globalName: a.globalName,
-    localizeVar: a.localizeVar || a.globalName + 'Loc',
+    localizeVar: a.localizeVar || a.globalName + "Loc",
     textDomain: a.textDomain,
     hookPrefix: a.hookPrefix,
-    npmScope: '@' + a.npmScope,
+    npmScope: "@" + a.npmScope,
     depsBundle: a.depsBundle || `${a.slug}-deps.js`,
-    phpFunctionPrefix: a.phpFunctionPrefix || 'wpsk_',
+    phpFunctionPrefix: a.phpFunctionPrefix || "wpsk_",
     uiFramework: a.uiFramework,
-    projectType: a.projectType || 'plugin',
+    projectType: a.projectType || "plugin",
     // Phase 11 v2 defaults — present in every scaffolded
     // project.config.json so consumers (readProjectConfig, REST
     // router, JS bundles) can rely on the keys without a follow-up
     // migration step. Override per-project by passing a non-default
     // value through answers (the renderer will use it).
-    restNamespace: a.restNamespace || 'wpsk/v1',
-    vendorPrefix: a.vendorPrefix || 'WpskVendor',
-    phpMinVersion: a.phpMinVersion || '7.4',
-    phpSourceVersion: a.phpSourceVersion || '8.1',
-    batchEndpoint: a.batchEndpoint || '/batch/v1',
+    restNamespace: a.restNamespace || "wpsk/v1",
+    vendorPrefix: a.vendorPrefix || "WpskVendor",
+    phpMinVersion: a.phpMinVersion || "7.4",
+    phpSourceVersion: a.phpSourceVersion || "8.1",
+    batchEndpoint: a.batchEndpoint || "/batch/v1",
   };
   return cfg;
 }
@@ -130,7 +143,11 @@ const TOKEN_RE = /\{\{\s*([a-zA-Z][a-zA-Z0-9_]*)\s*\}\}/g;
 
 export function renderTemplate(tmpl, vars) {
   return tmpl.replace(TOKEN_RE, (full, key) => {
-    if (Object.prototype.hasOwnProperty.call(vars, key) && vars[key] !== undefined && vars[key] !== null) {
+    if (
+      Object.prototype.hasOwnProperty.call(vars, key) &&
+      vars[key] !== undefined &&
+      vars[key] !== null
+    ) {
       return String(vars[key]);
     }
     return full; // leave unknown tokens verbatim so missing config is loud
@@ -238,14 +255,17 @@ function {{slug_underscore}}_enqueue_assets(): void
  */
 function modulePath(relPath) {
   let here;
-  if (typeof __dirname !== 'undefined' && __dirname) {
+  if (typeof __dirname !== "undefined" && __dirname) {
     here = __dirname;
-  } else if (process.argv[1] && process.argv[1].endsWith('create-wp-project/src/index.js')) {
+  } else if (
+    process.argv[1] &&
+    process.argv[1].endsWith("create-wp-project/src/index.js")
+  ) {
     here = path.dirname(process.argv[1]);
   } else {
     // cwd-relative fallback. Works for jest (cwd=project root) and
     // for ad-hoc node scripts that the user runs from the project root.
-    here = path.join(process.cwd(), 'packages/create-wp-project/src');
+    here = path.join(process.cwd(), "packages/create-wp-project/src");
   }
   return path.join(here, relPath);
 }
@@ -264,14 +284,15 @@ function loadPluginFileTemplate() {
   if (PLUGIN_FILE_TEMPLATE_LOADED) {
     return PLUGIN_FILE_TEMPLATE;
   }
-  const tplPath = modulePath('templates/plugin/plugin-file.php.tpl');
+  const tplPath = modulePath("templates/plugin/plugin-file.php.tpl");
   if (!existsSync(tplPath)) {
     throw new Error(
-      'Plugin bootstrap template missing at ' + tplPath +
-      ' — expected at packages/create-wp-project/src/templates/plugin/plugin-file.php.tpl'
+      "Plugin bootstrap template missing at " +
+        tplPath +
+        " — expected at packages/create-wp-project/src/templates/plugin/plugin-file.php.tpl",
     );
   }
-  PLUGIN_FILE_TEMPLATE = readFileSync(tplPath, 'utf8');
+  PLUGIN_FILE_TEMPLATE = readFileSync(tplPath, "utf8");
   PLUGIN_FILE_TEMPLATE_LOADED = true;
   return PLUGIN_FILE_TEMPLATE;
 }
@@ -282,28 +303,26 @@ function tplVars(answers, cfg) {
     ...answers,
     ...cfg,
     // {{slug_underscore}} for the PHP-side function names
-    slug_underscore: answers.slug.replace(/-/g, '_'),
-    depsHandle: answers.depsBundle || cfg.depsBundle.replace(/\.js$/, ''),
+    slug_underscore: answers.slug.replace(/-/g, "_"),
+    depsHandle: answers.depsBundle || cfg.depsBundle.replace(/\.js$/, ""),
     // {{name}} / {{description}} / {{author}} / {{authorUri}} / {{pluginUri}}
     // — sensible defaults so the WP plugin header is always populated.
     name: cfg.globalName || answers.slug,
     description: `${answers.slug} — built on wp-starter-kit (WPSK) framework`,
-    author: 'wp-starter-kit scaffold',
-    authorUri: 'https://github.com/abolfazl-moeini/wp-plugin-starter-kit',
-    pluginUri: 'https://github.com/abolfazl-moeini/wp-plugin-starter-kit',
+    author: "wp-starter-kit scaffold",
+    authorUri: "https://github.com/abolfazl-moeini/wp-plugin-starter-kit",
+    pluginUri: "https://github.com/abolfazl-moeini/wp-plugin-starter-kit",
     // {{vendor}} — the PSR-4 root namespace used in the example
     // feature module. Default to the kit's own WPSK namespace so the
     // stub compiles out of the box; consumers are expected to
     // override this via answers.vendor (e.g. MyOrg) in real projects.
-    vendor: answers.vendor || 'WPSK',
+    vendor: answers.vendor || "WPSK",
+    vendorPrefixUpper: (cfg.vendorPrefix || "WpskVendor").toUpperCase(),
   };
 }
 
-const TEMPLATE_DEPENDENCIES_JS = `/**
- * {{globalName}} — dependencies bundle entry.
- *
- * Exports become properties on the {{globalName}} global at runtime (the
- * IIFE wrapping is added by esbuild with globalName: '{{globalName}}').
+const TEMPLATE_DEPENDENCIES_TS = `/**
+ * {{globalName}} — dependencies bundle entry (TypeScript).
  */
 
 import { createHooks } from '@wordpress/hooks';
@@ -311,13 +330,13 @@ import domReady from '@wordpress/dom-ready';
 
 export const hooks = createHooks();
 
-export const table = { Tabulator: window.Tabulator };
+export const table = { Tabulator: (window as Window & { Tabulator?: unknown }).Tabulator };
 
 domReady(() => {
   hooks.addAction(
     '{{hookPrefix}}-request-ajax-start',
     'theme',
-    (endpoint, options = {}) => {
+    (_endpoint: string, options: { disableLoading?: boolean } = {}) => {
       if (!options?.disableLoading) {
         document.body.classList.add('is-loading');
       }
@@ -326,7 +345,7 @@ domReady(() => {
   hooks.addAction(
     '{{hookPrefix}}-request-ajax-done',
     'theme',
-    (endpoint, options = {}) => {
+    (_endpoint: string, options: { disableLoading?: boolean } = {}) => {
       if (!options?.disableLoading) {
         document.body.classList.remove('is-loading');
       }
@@ -335,44 +354,123 @@ domReady(() => {
 });
 `;
 
+const TEMPLATE_STRAUSS_JSON = `{
+  "target_directory": "vendor-prefixed",
+  "namespace_prefix": "{{vendorPrefix}}",
+  "classmap_prefix": "{{vendorPrefix}}_",
+  "constant_prefix": "{{vendorPrefixUpper}}_",
+  "delete_vendor_files": true,
+  "exclude_from_prefix": {
+    "namespaces": ["WPSK"],
+    "file_patterns": []
+  }
+}
+`;
+
+const TEMPLATE_HUSKY_PRE_COMMIT = `#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+npx lint-staged
+`;
+
+const TEMPLATE_EXAMPLE_FEATURE_ITEMS_CONTROLLER = `<?php
+declare(strict_types=1);
+
+namespace {{vendor}}\\Modules\\ExampleFeature\\Rest;
+
+use {{vendor}}\\Support\\Auth\\CapabilityPolicy;
+use {{vendor}}\\Support\\Rest\\AllowBatch;
+use {{vendor}}\\Support\\Rest\\BatchResponse;
+use {{vendor}}\\Support\\Rest\\RestHandler;
+use WP_REST_Request;
+use WP_REST_Response;
+
+final class ItemsController extends RestHandler implements AllowBatch
+{
+    public function rest_handler(WP_REST_Request $request): WP_REST_Response
+    {
+        $cacheKey = (string) ($request->get_param('cacheKey') ?? 'default');
+        return BatchResponse::wrap(['items' => []], $cacheKey);
+    }
+
+    public function rest_permission(): bool
+    {
+        return CapabilityPolicy::can('read');
+    }
+
+    public function rest_end_point(): string
+    {
+        return 'items';
+    }
+
+    public function methods(): string
+    {
+        return 'POST';
+    }
+
+    public function allow_batch(): array
+    {
+        return ['v1' => true];
+    }
+}
+`;
+
+const TEMPLATE_EXAMPLE_FEATURE_ADMIN_TS = `import domReady from '@wordpress/dom-ready';
+
+domReady(() => {
+  const root = document.getElementById('{{slug}}-example-feature-admin');
+  if (root) {
+    root.textContent = 'ExampleFeature admin bundle loaded';
+  }
+});
+`;
+
 function packageJsonForAnswers(answers) {
-  const preactAliases = answers.uiFramework === 'preact';
-  const projectType = answers.projectType || 'plugin';
-  const description = projectType === 'theme'
-    ? `${answers.slug} — WordPress theme built on wp-starter-kit`
-    : `${answers.slug} — WordPress plugin built on wp-starter-kit`;
+  const preactAliases = answers.uiFramework === "preact";
+  const projectType = answers.projectType || "plugin";
+  const description =
+    projectType === "theme"
+      ? `${answers.slug} — WordPress theme built on wp-starter-kit`
+      : `${answers.slug} — WordPress plugin built on wp-starter-kit`;
   return {
-    name: '@' + answers.npmScope + '/' + answers.slug,
-    version: '0.1.0',
+    name: "@" + answers.npmScope + "/" + answers.slug,
+    version: "0.1.0",
     description,
     private: true,
-    type: 'module',
+    type: "module",
     scripts: {
-      build: 'npm-run-all --parallel build:dependencies build:components build:styles build:assets',
-      'build:dependencies': 'node core/packages/build/esbuild-dependencies-cli.js',
-      'build:components':  'node core/packages/build/esbuild-components-cli.js',
-      'build:styles':      'node core/packages/build/esbuild-styles-cli.js',
-      'build:assets':      'node build/build-assets.js',
-      test: 'jest',
-      check: 'node core/packages/utils/check-cli.js',
+      build:
+        "npm-run-all --parallel build:dependencies build:components build:styles build:assets",
+      "build:dependencies":
+        "node core/packages/build/esbuild-dependencies-cli.js",
+      "build:components": "node core/packages/build/esbuild-components-cli.js",
+      "build:styles": "node core/packages/build/esbuild-styles-cli.js",
+      "build:assets": "node build/build-assets.js",
+      prepare: "husky install",
+      test: "jest",
+      typecheck: "tsc --noEmit",
+      "lint:js": "eslint . --ext .js,.jsx,.ts,.tsx",
+      "format:check":
+        'prettier --check "**/*.{js,jsx,ts,tsx,json,md,yml,yaml,css}"',
+      check: "node core/packages/utils/check-cli.js",
     },
-    workspaces: ['core/packages/*', 'packages/*'],
+    workspaces: ["core/packages/*", "packages/*"],
     dependencies: preactAliases
       ? {
-          preact: '^10.19.3',
-          '@preact/compat': '^18.3.2',
-          '@preact/signals': '^2.9.1',
-          '@wordpress/hooks': '^3.50.0',
-          '@wordpress/dom-ready': '^3.50.0',
+          preact: "^10.19.3",
+          "@preact/compat": "^18.3.2",
+          "@preact/signals": "^2.9.1",
+          "@wordpress/hooks": "^3.50.0",
+          "@wordpress/dom-ready": "^3.50.0",
           // Aliases: code uses `react`/`react-dom` but Preact is installed.
-          react: 'npm:@preact/compat',
-          'react-dom': 'npm:@preact/compat',
+          react: "npm:@preact/compat",
+          "react-dom": "npm:@preact/compat",
         }
       : {
-          react: '^18.3.0',
-          'react-dom': '^18.3.0',
-          '@wordpress/hooks': '^3.50.0',
-          '@wordpress/dom-ready': '^3.50.0',
+          react: "^18.3.0",
+          "react-dom": "^18.3.0",
+          "@wordpress/hooks": "^3.50.0",
+          "@wordpress/dom-ready": "^3.50.0",
         },
   };
 }
@@ -792,21 +890,15 @@ final class ModuleLoader
 `;
 
 const TEMPLATE_EXAMPLE_FEATURE_MODULE_PHP = `<?php
-/**
- * Example feature module — illustrates the wp-starter-kit ModuleInterface.
- *
- * Delete this directory once you have wired your first real feature;
- * it is only here so the scaffolded project has a working
- * src/Modules/ tree on day one.
- *
- * The module is registered with the loader in the {slug} plugin
- * file via WPSK\\Core\\Plugin::loader()->register(new ExampleFeature()).
- */
 declare(strict_types=1);
 
 namespace {{vendor}}\\Modules\\ExampleFeature;
 
-use WPSK\\Core\\ModuleInterface;
+use {{vendor}}\\Core\\ModuleInterface;
+use {{vendor}}\\Core\\Plugin;
+use {{vendor}}\\Modules\\ExampleFeature\\Rest\\ItemsController;
+use {{vendor}}\\Support\\Assets;
+use {{vendor}}\\Support\\Rest\\RestSetup;
 
 final class Module implements ModuleInterface
 {
@@ -817,9 +909,19 @@ final class Module implements ModuleInterface
 
     public function boot(): void
     {
-        // Register your action/filter callbacks here. Keep the body
-        // idempotent — the loader may call boot_all() more than once
-        // in long-lived processes.
+        RestSetup::register(ItemsController::class);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
+    }
+
+    public function enqueue_admin_assets(): void
+    {
+        if (!function_exists('is_admin') || !is_admin()) {
+            return;
+        }
+        Assets::enqueue_bundle_script(
+            'example-feature-admin',
+            'assets/bundles/ExampleFeature-admin.js'
+        );
     }
 }
 `;
@@ -863,14 +965,15 @@ function loadReadmeTxtTemplate() {
   if (README_TXT_TEMPLATE_LOADED) {
     return README_TXT_TEMPLATE;
   }
-  const tplPath = modulePath('templates/plugin/readme.txt.tpl');
+  const tplPath = modulePath("templates/plugin/readme.txt.tpl");
   if (!existsSync(tplPath)) {
     throw new Error(
-      'readme.txt template missing at ' + tplPath +
-      ' — expected at packages/create-wp-project/src/templates/plugin/readme.txt.tpl'
+      "readme.txt template missing at " +
+        tplPath +
+        " — expected at packages/create-wp-project/src/templates/plugin/readme.txt.tpl",
     );
   }
-  README_TXT_TEMPLATE = readFileSync(tplPath, 'utf8');
+  README_TXT_TEMPLATE = readFileSync(tplPath, "utf8");
   README_TXT_TEMPLATE_LOADED = true;
   return README_TXT_TEMPLATE;
 }
@@ -895,7 +998,10 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   // 1. Validate
   const v = validateAnswers(answers);
   if (!v.ok) {
-    return { ok: false, reason: 'invalid answers: ' + JSON.stringify(v.errors) };
+    return {
+      ok: false,
+      reason: "invalid answers: " + JSON.stringify(v.errors),
+    };
   }
 
   // 2. Refuse to clobber an existing project unless --force is set.
@@ -905,8 +1011,11 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   //    that sentinel and is protected by the same rule.
   if (!options.force) {
     try {
-      await fs.access(path.join(targetDir, 'project.config.json'));
-      return { ok: false, reason: `project.config.json already exists at ${targetDir} — pass { force: true } to overwrite` };
+      await fs.access(path.join(targetDir, "project.config.json"));
+      return {
+        ok: false,
+        reason: `project.config.json already exists at ${targetDir} — pass { force: true } to overwrite`,
+      };
     } catch {
       /* good — does not exist */
     }
@@ -919,11 +1028,20 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   // 4. Render + write
   const written = [];
 
-  await fs.mkdir(path.join(targetDir, 'assets'), { recursive: true });
-  await fs.mkdir(path.join(targetDir, 'assets/stylesheets'), { recursive: true });
-  await fs.mkdir(path.join(targetDir, 'components'), { recursive: true });
-  await fs.mkdir(path.join(targetDir, 'src/Core'), { recursive: true });
-  await fs.mkdir(path.join(targetDir, 'src/Modules/ExampleFeature'), { recursive: true });
+  await fs.mkdir(path.join(targetDir, "assets"), { recursive: true });
+  await fs.mkdir(path.join(targetDir, "assets/stylesheets"), {
+    recursive: true,
+  });
+  await fs.mkdir(path.join(targetDir, "components"), { recursive: true });
+  await fs.mkdir(path.join(targetDir, "src/Core"), { recursive: true });
+  await fs.mkdir(path.join(targetDir, "src/Modules/ExampleFeature/Rest"), {
+    recursive: true,
+  });
+  await fs.mkdir(
+    path.join(targetDir, "src/Modules/ExampleFeature/assets/entries"),
+    { recursive: true },
+  );
+  await fs.mkdir(path.join(targetDir, ".husky"), { recursive: true });
 
   // Phase 11: choose primary PHP bootstrap based on projectType.
   //   projectType === 'theme' (legacy) → emit functions.php
@@ -931,35 +1049,46 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   //   backwards compat: if no projectType is given, the default is
   //   'plugin' (per answersToProjectConfig), and we emit {slug}.php.
   const projectType = cfg.projectType;
-  const isPlugin = projectType === 'plugin';
-  const phpBootstrapRel = isPlugin
-    ? `${answers.slug}.php`
-    : 'functions.php';
+  const isPlugin = projectType === "plugin";
+  const phpBootstrapRel = isPlugin ? `${answers.slug}.php` : "functions.php";
   const phpBootstrapContent = isPlugin
     ? renderTemplate(loadPluginFileTemplate(), vars)
     : renderTemplate(TEMPLATE_FUNCTIONS_PHP, vars);
 
   const files = {
-    'project.config.json':         renderTemplate(TEMPLATE_PROJECT_CONFIG, vars),
-    'build.config.json':           renderTemplate(TEMPLATE_BUILD_CONFIG, vars),
-    'tsconfig.json':               TEMPLATE_TSCONFIG_JSON,
-    'readme.txt':                  renderTemplate(loadReadmeTxtTemplate(), vars),
-    [phpBootstrapRel]:             phpBootstrapContent,
-    'src/Core/Plugin.php':         TEMPLATE_CORE_PLUGIN_PHP,
-    'src/Core/ModuleInterface.php': TEMPLATE_CORE_MODULE_INTERFACE_PHP,
-    'src/Core/ModuleLoader.php':   TEMPLATE_CORE_MODULE_LOADER_PHP,
-    'src/Modules/ExampleFeature/.gitkeep': '',
-    'src/Modules/ExampleFeature/Module.php': renderTemplate(TEMPLATE_EXAMPLE_FEATURE_MODULE_PHP, vars),
-    'assets/dependencies.js':      renderTemplate(TEMPLATE_DEPENDENCIES_JS, vars),
-    'assets/stylesheets/style.css': renderTemplate(TEMPLATE_STYLESHEET, vars),
-    'package.json':                JSON.stringify(packageJsonForAnswers(answers), null, 2) + '\n',
-    'README.md':                   renderTemplate(TEMPLATE_README, vars),
+    "project.config.json": renderTemplate(TEMPLATE_PROJECT_CONFIG, vars),
+    "build.config.json": renderTemplate(TEMPLATE_BUILD_CONFIG, vars),
+    "tsconfig.json": TEMPLATE_TSCONFIG_JSON,
+    "readme.txt": renderTemplate(loadReadmeTxtTemplate(), vars),
+    [phpBootstrapRel]: phpBootstrapContent,
+    "src/Core/Plugin.php": TEMPLATE_CORE_PLUGIN_PHP,
+    "src/Core/ModuleInterface.php": TEMPLATE_CORE_MODULE_INTERFACE_PHP,
+    "src/Core/ModuleLoader.php": TEMPLATE_CORE_MODULE_LOADER_PHP,
+    "src/Modules/ExampleFeature/Module.php": renderTemplate(
+      TEMPLATE_EXAMPLE_FEATURE_MODULE_PHP,
+      vars,
+    ),
+    "src/Modules/ExampleFeature/Rest/ItemsController.php": renderTemplate(
+      TEMPLATE_EXAMPLE_FEATURE_ITEMS_CONTROLLER,
+      vars,
+    ),
+    "src/Modules/ExampleFeature/assets/entries/admin.ts": renderTemplate(
+      TEMPLATE_EXAMPLE_FEATURE_ADMIN_TS,
+      vars,
+    ),
+    "strauss.json": renderTemplate(TEMPLATE_STRAUSS_JSON, vars),
+    ".husky/pre-commit": TEMPLATE_HUSKY_PRE_COMMIT,
+    "assets/dependencies.ts": renderTemplate(TEMPLATE_DEPENDENCIES_TS, vars),
+    "assets/stylesheets/style.css": renderTemplate(TEMPLATE_STYLESHEET, vars),
+    "package.json":
+      JSON.stringify(packageJsonForAnswers(answers), null, 2) + "\n",
+    "README.md": renderTemplate(TEMPLATE_README, vars),
   };
 
   for (const [rel, content] of Object.entries(files)) {
     const abs = path.join(targetDir, rel);
     await fs.mkdir(path.dirname(abs), { recursive: true });
-    await fs.writeFile(abs, content, 'utf8');
+    await fs.writeFile(abs, content, "utf8");
     written.push(rel);
   }
 
@@ -973,7 +1102,11 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
 function parseAnswersFromEnv() {
   const raw = process.env.WPSK_ANSWERS_JSON;
   if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
 
 function parseAnswersFromArgs(argv) {
@@ -982,16 +1115,22 @@ function parseAnswersFromArgs(argv) {
   const a = {};
   let target = null;
   for (const arg of argv) {
-    if (arg.startsWith('--target=')) {
-      target = arg.slice('--target='.length);
-    } else if (arg.startsWith('--slug='))       a.slug         = arg.slice('--slug='.length);
-    else if (arg.startsWith('--scope='))      a.npmScope     = arg.slice('--scope='.length);
-    else if (arg.startsWith('--global='))     a.globalName   = arg.slice('--global='.length);
-    else if (arg.startsWith('--domain='))     a.textDomain   = arg.slice('--domain='.length);
-    else if (arg.startsWith('--hook='))        a.hookPrefix   = arg.slice('--hook='.length);
-    else if (arg.startsWith('--php='))         a.phpFunctionPrefix = arg.slice('--php='.length);
-    else if (arg.startsWith('--ui='))          a.uiFramework  = arg.slice('--ui='.length);
-    else if (arg.startsWith('--type='))        a.projectType  = arg.slice('--type='.length);
+    if (arg.startsWith("--target=")) {
+      target = arg.slice("--target=".length);
+    } else if (arg.startsWith("--slug=")) a.slug = arg.slice("--slug=".length);
+    else if (arg.startsWith("--scope="))
+      a.npmScope = arg.slice("--scope=".length);
+    else if (arg.startsWith("--global="))
+      a.globalName = arg.slice("--global=".length);
+    else if (arg.startsWith("--domain="))
+      a.textDomain = arg.slice("--domain=".length);
+    else if (arg.startsWith("--hook="))
+      a.hookPrefix = arg.slice("--hook=".length);
+    else if (arg.startsWith("--php="))
+      a.phpFunctionPrefix = arg.slice("--php=".length);
+    else if (arg.startsWith("--ui=")) a.uiFramework = arg.slice("--ui=".length);
+    else if (arg.startsWith("--type="))
+      a.projectType = arg.slice("--type=".length);
   }
   return { answers: a, target };
 }
@@ -1005,28 +1144,35 @@ async function main() {
 
   if (!answers || Object.keys(answers).length === 0) {
     process.stdout.write(
-      'Usage: node packages/create-wp-project/src/index.js ' +
-      '[--target=<dir>] [--slug=<s> --scope=<s> --global=<s> --domain=<s> --hook=<s> --php=<s> --ui=preact|react --type=plugin|theme]\n' +
-      '   or: WPSK_ANSWERS_JSON=<json> node packages/create-wp-project/src/index.js\n'
+      "Usage: node packages/create-wp-project/src/index.js " +
+        "[--target=<dir>] [--slug=<s> --scope=<s> --global=<s> --domain=<s> --hook=<s> --php=<s> --ui=preact|react --type=plugin|theme]\n" +
+        "   or: WPSK_ANSWERS_JSON=<json> node packages/create-wp-project/src/index.js\n",
     );
     process.exit(2);
   }
 
   const res = await scaffoldProject(path.resolve(target), answers);
   if (!res.ok) {
-    process.stderr.write('Scaffold failed: ' + (res.reason || 'unknown') + '\n');
+    process.stderr.write(
+      "Scaffold failed: " + (res.reason || "unknown") + "\n",
+    );
     process.exit(1);
   }
-  process.stdout.write('Scaffold OK. Wrote: ' + (res.written || []).join(', ') + '\n');
+  process.stdout.write(
+    "Scaffold OK. Wrote: " + (res.written || []).join(", ") + "\n",
+  );
 }
 
 // CLI detection: if this script was invoked directly (argv[1] is our file
 // or our bin), run main(). jest passes the test file as argv[1], so the
 // equality check is `endsWith` not `===`.
-if (process.argv[1] && process.argv[1].endsWith('create-wp-project') ||
-    process.argv[1] && process.argv[1].includes('create-wp-project/src/index.js')) {
+if (
+  (process.argv[1] && process.argv[1].endsWith("create-wp-project")) ||
+  (process.argv[1] &&
+    process.argv[1].includes("create-wp-project/src/index.js"))
+) {
   main().catch((e) => {
-    process.stderr.write('Scaffold error: ' + (e && e.message) + '\n');
+    process.stderr.write("Scaffold error: " + (e && e.message) + "\n");
     process.exit(1);
   });
 }

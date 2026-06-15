@@ -95,4 +95,11 @@ final class TranslationBootstrapTest extends TestCase
         $this->assertTrue($decoded['ok']);
         $this->assertFalse($decoded['result']);
     }
+
+    public function test_build_php_does_not_duplicate_wp_i18n_subcommand(): void
+    {
+        $src = (string) file_get_contents(__DIR__ . '/../../dev/translation/build-php.php');
+        $this->assertStringContainsString("'make-php'", $src);
+        $this->assertStringNotContainsString("'i18n',\n        'make-php'", $src);
+    }
 }

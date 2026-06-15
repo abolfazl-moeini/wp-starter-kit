@@ -143,12 +143,12 @@ final class Plugin
 
 - **`loader()`** — return the singleton `ModuleLoader`,
   constructing it on demand if `boot()` has not run. Useful
-  for code that needs to register a module *before* `boot()`
+  for code that needs to register a module _before_ `boot()`
   finishes.
 
 - **`config()`** — read and return `project.config.json` as an
   associative array. The file is resolved relative to the
-  *plugin* root, never the active theme. This is the function
+  _plugin_ root, never the active theme. This is the function
   to call when a module needs the project's branding (slug,
   hook prefix, text domain).
 
@@ -387,7 +387,7 @@ The loader fires two WordPress hooks, both named after the
 
 ### `{$hookPrefix}_module_loader` (filter)
 
-Fired by `boot_all()` *before* iterating the modules:
+Fired by `boot_all()` _before_ iterating the modules:
 
 ```php
 $filtered = \apply_filters(
@@ -414,7 +414,7 @@ makes the loader testable without a real WP runtime.
 
 ### `{$hookPrefix}_modules_loaded` (action)
 
-Fired by `boot_all()` *after* iterating the modules:
+Fired by `boot_all()` _after_ iterating the modules:
 
 ```php
 \do_action( $this->hookPrefix . '_modules_loaded' );
@@ -441,7 +441,7 @@ If you need a hook the loader doesn't already fire:
 
 A typical project will have 3–10 modules. The convention is:
 
-- One module per *feature*, not per file. A "newsletter"
+- One module per _feature_, not per file. A "newsletter"
   feature may register a CPT, a taxonomy, a REST endpoint,
   and a block — all in one module.
 - Cross-cutting code (helpers, REST plumbing) goes in

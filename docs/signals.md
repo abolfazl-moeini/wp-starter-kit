@@ -22,20 +22,20 @@ upstream signal's output.
 ## The API (`@wpsk/rule-engine`)
 
 ```js
-import { createEngine } from '@wpsk/rule-engine';
+import { createEngine } from "@wpsk/rule-engine";
 
 const engine = createEngine();
 
 engine.add({
-  name: 'maybeAddAdminNotice',
-  condition: (ctx) => ctx.user?.role === 'subscriber',
+  name: "maybeAddAdminNotice",
+  condition: (ctx) => ctx.user?.role === "subscriber",
   transform: (ctx) => ({
     ...ctx,
-    notices: [...(ctx.notices ?? []), 'Welcome, subscriber!'],
+    notices: [...(ctx.notices ?? []), "Welcome, subscriber!"],
   }),
 });
 
-const result = engine.run({ user: { role: 'subscriber' } });
+const result = engine.run({ user: { role: "subscriber" } });
 // result.notices === ['Welcome, subscriber!']
 ```
 
@@ -65,9 +65,9 @@ are explicit regressions).
 
 ```ts
 type Signal<I, O> = {
-  name: string;                           // for logging / debug
-  condition?: (input: I) => boolean;      // optional; defaults to truthy
-  transform: (input: I) => O;             // required
+  name: string; // for logging / debug
+  condition?: (input: I) => boolean; // optional; defaults to truthy
+  transform: (input: I) => O; // required
 };
 ```
 
@@ -81,10 +81,10 @@ should spread the input: `transform: (i) => ({ ...i, newField: 42 })`.
 
 ```js
 engine.add({
-  name: 'enqueueAdminStyles',
+  name: "enqueueAdminStyles",
   condition: (ctx) => ctx.isAdmin,
   transform: (ctx) => {
-    ctx.enqueueStyle('my-project/admin.css');
+    ctx.enqueueStyle("my-project/admin.css");
     return ctx;
   },
 });
@@ -93,16 +93,16 @@ engine.add({
 ### Hook a WordPress filter (via `@wpsk/hooks`)
 
 ```js
-import { createNamespacedHooks } from '@wpsk/hooks';
+import { createNamespacedHooks } from "@wpsk/hooks";
 
-const hooks = createNamespacedHooks('my-project');
+const hooks = createNamespacedHooks("my-project");
 
 engine.add({
-  name: 'filterRestResponse',
+  name: "filterRestResponse",
   transform: (ctx) => {
-    hooks.addFilter('rest/response', (response) => ({
+    hooks.addFilter("rest/response", (response) => ({
       ...response,
-      headers: { ...response.headers, 'X-Powered-By': 'my-project' },
+      headers: { ...response.headers, "X-Powered-By": "my-project" },
     }));
     return ctx;
   },
@@ -113,7 +113,7 @@ engine.add({
 
 ```js
 engine.add({
-  name: 'applyPhpFunctionPrefix',
+  name: "applyPhpFunctionPrefix",
   condition: (ctx) => ctx.phpFunctionPrefix,
   transform: (ctx) => ({
     ...ctx,

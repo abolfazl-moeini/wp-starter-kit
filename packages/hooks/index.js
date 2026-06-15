@@ -7,9 +7,9 @@
  * global, otherwise the dispatch/registration halves of the hook system
  * would diverge.
  *
- * `globalName` is read from `project.config.json` (via `@core/utils`).
- * Consumers can also call `getHooks(globalName)` directly to override
- * per-call (useful in tests and for cross-project re-use).
+ * `globalName` is injected by esbuild `define` at build time
+ * (__WPSK_GLOBAL_NAME__).  Fallback keeps the kit working in dev/test when
+ * the define is absent.
  *
  * Both the default export (a getter function) and the named `getHooks`
  * accessor are provided for ergonomics:
@@ -19,22 +19,13 @@
  *
  *   import { getHooks } from '@wpsk/hooks';
  *   getHooks('MyApp').addAction(...);
- *
- * Resolving `globalName` lazily on every call is intentional: the deps
- * bundle may load AFTER consumers are imported (script-handle ordering),
- * and the config file may be in flux during tests.
  */
-import { readProjectConfig } from '@core/utils';
+
+const FALLBACK_GLOBAL =
+  typeof __WPSK_GLOBAL_NAME__ !== "undefined" ? __WPSK_GLOBAL_NAME__ : "WPSK";
 
 function resolveGlobalName(override) {
-  if (override) return override;
-  try {
-    const config = readProjectConfig();
-    return config?.globalName ?? null;
-  } catch {
-    // No project.config.json — caller will get undefined.
-    return null;
-  }
+  return override || FALLBACK_GLOBAL;
 }
 
 /**
@@ -55,7 +46,7 @@ export function getHooks(globalName) {
 
 /**
  * Default export is a getter function — re-reads the global on every call.
- * Mirrors `getHooks()` with no argument, deferring to `project.config.json`.
+ * Mirrors `getHooks()` with no argument.
  */
 const defaultExport = function defaultHooks() {
   return getHooks();

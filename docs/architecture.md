@@ -109,15 +109,15 @@ JS receives, updates state, re-renders
 
 ## The PHP↔JS contract (one slide)
 
-| Concept        | JS side                                | PHP side                                  |
-|----------------|----------------------------------------|-------------------------------------------|
-| Hooks          | `addAction('my-project/...', cb)`      | `do_action('my-project/...', $data)`      |
-| Filters        | `addFilter('my-project/...', cb)`      | `apply_filters('my-project/...', $data)`  |
-| Data           | `window.MyProjectLoc = {...}`          | `wp_localize_script('my-project-deps', 'MyProjectLoc', $data)` |
-| REST           | `fetch(restUrl + 'items')`             | `register_rest_route('my-project/v1', '/items', [...])`         |
-| i18n           | `__('Hello', 'my-project')`            | `__('Hello', 'my-project')`               |
-| Components     | `core/components/<slug>/script.js`     | `get_template_part('components/<slug>')`  |
-| Styles         | `dist/components/<slug>.css`           | `wp_enqueue_style('my-project-<slug>')`   |
+| Concept    | JS side                            | PHP side                                                       |
+| ---------- | ---------------------------------- | -------------------------------------------------------------- |
+| Hooks      | `addAction('my-project/...', cb)`  | `do_action('my-project/...', $data)`                           |
+| Filters    | `addFilter('my-project/...', cb)`  | `apply_filters('my-project/...', $data)`                       |
+| Data       | `window.MyProjectLoc = {...}`      | `wp_localize_script('my-project-deps', 'MyProjectLoc', $data)` |
+| REST       | `fetch(restUrl + 'items')`         | `register_rest_route('my-project/v1', '/items', [...])`        |
+| i18n       | `__('Hello', 'my-project')`        | `__('Hello', 'my-project')`                                    |
+| Components | `core/components/<slug>/script.js` | `get_template_part('components/<slug>')`                       |
+| Styles     | `dist/components/<slug>.css`       | `wp_enqueue_style('my-project-<slug>')`                        |
 
 The hook prefix (`my-project`) is the namespace that ties both
 sides together. See `hooks.md`.
@@ -129,7 +129,7 @@ sides together. See `hooks.md`.
 The "import everything from a single name" entry point:
 
 ```js
-import { useState, createElement, hooks, ui } from '@wpsk/starter';
+import { useState, createElement, hooks, ui } from "@wpsk/starter";
 ```
 
 Re-exports from `@wpsk/hooks`, `@wpsk/ui-components`, `@wpsk/utils`,
@@ -199,18 +199,18 @@ core/php/                   →  tests/phpunit/
 
 ## What goes where (decision tree)
 
-| I want to … | Where it goes |
-|---|---|
-| Add a new shared JS module that multiple components use | `core/packages/<name>/src/index.js` |
-| Add a new component | `core/components/<slug>/script.js` + `style.scss` |
-| Add a new global SCSS file | `core/styles/<name>.scss` |
-| Add a new PHP function/class | `core/php/<name>.php` |
-| Add a new REST endpoint | `core/php/REST/<Name>Controller.php` |
-| Add a new test | mirror the source path under `tests/` |
-| Add a new doc | `docs/<name>.md` |
-| Add a new translation string | wrap with `__()` in JS or PHP |
-| Add a new environment-specific config | `dev/<env>/<name>.php` (not `core/php/`) |
-| Add a new dev tool (CLI, generator) | `packages/<name>/` (not `core/packages/`) |
+| I want to …                                             | Where it goes                                     |
+| ------------------------------------------------------- | ------------------------------------------------- |
+| Add a new shared JS module that multiple components use | `core/packages/<name>/src/index.js`               |
+| Add a new component                                     | `core/components/<slug>/script.js` + `style.scss` |
+| Add a new global SCSS file                              | `core/styles/<name>.scss`                         |
+| Add a new PHP function/class                            | `core/php/<name>.php`                             |
+| Add a new REST endpoint                                 | `core/php/REST/<Name>Controller.php`              |
+| Add a new test                                          | mirror the source path under `tests/`             |
+| Add a new doc                                           | `docs/<name>.md`                                  |
+| Add a new translation string                            | wrap with `__()` in JS or PHP                     |
+| Add a new environment-specific config                   | `dev/<env>/<name>.php` (not `core/php/`)          |
+| Add a new dev tool (CLI, generator)                     | `packages/<name>/` (not `core/packages/`)         |
 
 If you're unsure, ask: "Will this be consumed at runtime in
 the consumer's bundle?" If yes, `core/`. If no, `packages/` or `dev/`.

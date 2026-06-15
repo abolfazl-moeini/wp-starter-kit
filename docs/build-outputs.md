@@ -6,14 +6,14 @@ and the `project.config.json` schema.
 
 > **TL;DR**
 >
-> | Script | Produces | Format |
-> |---|---|---|
-> | `build:dependencies` | `assets/bundles/<depsBundle>` + `.asset.php` | IIFE wrapped in `<globalName>` |
-> | `build:components` | `assets/bundles/<dirname>.js` + `.asset.php` (one per `components/*/script.js`) | ESM bundle |
-> | `build:styles` | `<file>.asset.php` next to each `styleEntryPoints` entry | PHP array |
-> | `build:assets` | copied `node_modules/<lib>` → `assets/libraries/<lib>` | file system copy |
-> | `build` (root) | runs all four in parallel via `npm-run-all` | — |
-> | `release` | runs all four sequentially | — |
+> | Script               | Produces                                                                        | Format                         |
+> | -------------------- | ------------------------------------------------------------------------------- | ------------------------------ |
+> | `build:dependencies` | `assets/bundles/<depsBundle>` + `.asset.php`                                    | IIFE wrapped in `<globalName>` |
+> | `build:components`   | `assets/bundles/<dirname>.js` + `.asset.php` (one per `components/*/script.js`) | ESM bundle                     |
+> | `build:styles`       | `<file>.asset.php` next to each `styleEntryPoints` entry                        | PHP array                      |
+> | `build:assets`       | copied `node_modules/<lib>` → `assets/libraries/<lib>`                          | file system copy               |
+> | `build` (root)       | runs all four in parallel via `npm-run-all`                                     | —                              |
+> | `release`            | runs all four sequentially                                                      | —                              |
 
 ---
 
@@ -56,6 +56,7 @@ Where `<depsBundle>` comes from `project.config.json → depsBundle`
 ```
 
 PHP uses this to:
+
 - Enqueue the bundle with the right WordPress script dependencies (`wp-i18n`,
   `wp-hooks`, …).
 - Bust caches with `?ver=<hash>`.
@@ -67,6 +68,7 @@ PHP uses this to:
 ### Plugin
 
 `importAsGlobals(globalMappings, internalItems)` is wired with:
+
 - `globalMappings` from `build.config.json` (e.g. `{ "tabulator-tables": "WPSK.table" }`)
 - The internal `<npmScope>/utils` mapping: `${globalName}.utils`.
 
@@ -169,12 +171,12 @@ Source: `build.config.json → assetMappings`.
 
 ### Modes
 
-| Flag | Effect |
-|---|---|
-| _(none)_ | Copy every `assetMapping.source` → `assetMapping.destination`. |
-| `--validate` | Validate `build.config.json` shape; print success; no copy. |
-| `--dry-run` | Log every planned copy (with `[dry-run]` prefix); no I/O. Returns `{ mode: 'dry-run', planned: N }`. |
-| _(no config)_ | Exits 1 with a clear error. |
+| Flag          | Effect                                                                                               |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| _(none)_      | Copy every `assetMapping.source` → `assetMapping.destination`.                                       |
+| `--validate`  | Validate `build.config.json` shape; print success; no copy.                                          |
+| `--dry-run`   | Log every planned copy (with `[dry-run]` prefix); no I/O. Returns `{ mode: 'dry-run', planned: N }`. |
+| _(no config)_ | Exits 1 with a clear error.                                                                          |
 
 ### Output
 
@@ -217,6 +219,7 @@ build:assets
 ```
 
 Why parallel? None of the four reads from a file produced by another:
+
 - `build:dependencies` writes to `assets/bundles/<depsBundle>`.
 - `build:components` writes to `assets/bundles/<dirname>.js`.
 - `build:styles` writes to `<cssFile>.asset.php` next to each entry.
@@ -252,14 +255,14 @@ but since this package is `private: true`, the hook is dormant in normal use.
 
 ## 6. Where to find each artifact
 
-| Artifact | Path | When produced |
-|---|---|---|
-| Deps bundle JS | `assets/bundles/<depsBundle>` | every `build:dependencies` |
-| Deps sidecar | `assets/bundles/<depsBundle>.asset.php` | every `build:dependencies` |
-| Component JS | `assets/bundles/<dirname>.js` | every `build:components` |
-| Component sidecar | `assets/bundles/<dirname>.asset.php` | every `build:components` |
-| Style sidecar | `<cssFile>.asset.php` (next to source) | every `build:styles` |
-| Library mirror | `assets/libraries/<lib>/...` | every `build:assets` (default mode) |
+| Artifact          | Path                                    | When produced                       |
+| ----------------- | --------------------------------------- | ----------------------------------- |
+| Deps bundle JS    | `assets/bundles/<depsBundle>`           | every `build:dependencies`          |
+| Deps sidecar      | `assets/bundles/<depsBundle>.asset.php` | every `build:dependencies`          |
+| Component JS      | `assets/bundles/<dirname>.js`           | every `build:components`            |
+| Component sidecar | `assets/bundles/<dirname>.asset.php`    | every `build:components`            |
+| Style sidecar     | `<cssFile>.asset.php` (next to source)  | every `build:styles`                |
+| Library mirror    | `assets/libraries/<lib>/...`            | every `build:assets` (default mode) |
 
 ## 7. globalMappings usage
 

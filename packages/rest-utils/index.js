@@ -2,114 +2,114 @@
  * @wpsk/rest-utils — config-driven REST + AJAX helpers.
  *
  * Ports the source `mrlogistic/assets/packages/rest-utils/index.js` with
- * every brand-specific token (`mrlogistic-*`, hardcoded paths) replaced by
- * values read from `project.config.json` via `@core/utils`:
+ * every brand-specific token replaced by build-time injected values:
  *
- *   hookPrefix  → '<hookPrefix>-request-ajax-{start,done,error}'
- *   slug        → '<slug>/v1/<endpoint>'
- *   localize    → api.url / api.nonce (WP REST) and api_x.url (laravel-style)
+ *   hookPrefix (__WPSK_HOOK_PREFIX__) → '<prefix>-request-ajax-{start,done,error}'
+ *   slug       (__WPSK_SLUG__)        → '<slug>/v1/<endpoint>'
+ *   localize                         → api.url / api.nonce / api_x.url/api_x.nonce
  *
  * Dependency injection:
  *   The package's defaults pull `getHooks()` and `localize` from the real
  *   `@wpsk/hooks` and `@wpsk/utils` packages. Tests can override by passing
  *   an options object: `createRestUtils({ hooks, localize, apiFetch })`.
- *   The standalone `restRequest` / `restXRequest` wrappers use the defaults.
  */
-import { addQueryArgs } from '@wordpress/url';
-import { readProjectConfig } from '@core/utils';
-import { localize } from '@wpsk/utils';
-import getHooks from '@wpsk/hooks';
+import { addQueryArgs } from "@wordpress/url";
+import { localize } from "@wpsk/utils";
+import getHooks from "@wpsk/hooks";
 
-let cachedHookActions = null;
+const FALLBACK_HOOK_PREFIX =
+  typeof __WPSK_HOOK_PREFIX__ !== "undefined" ? __WPSK_HOOK_PREFIX__ : "wpsk";
+const FALLBACK_SLUG =
+  typeof __WPSK_SLUG__ !== "undefined" ? __WPSK_SLUG__ : "wpsk-starter";
 
-function hookActions(prefix) {
-  if (prefix) {
-    return {
-      start: `${prefix}-request-ajax-start`,
-      done: `${prefix}-request-ajax-done`,
-      error: `${prefix}-request-ajax-error`,
-    };
-  }
-  if (cachedHookActions) return cachedHookActions;
-  const { hookPrefix } = readProjectConfig();
-  cachedHookActions = {
-    start: `${hookPrefix}-request-ajax-start`,
-    done: `${hookPrefix}-request-ajax-done`,
-    error: `${hookPrefix}-request-ajax-error`,
+const ACTIONS = {
+  start: `${FALLBACK_HOOK_PREFIX}-request-ajax-start`,
+  done: `${FALLBACK_HOOK_PREFIX}-request-ajax-done`,
+  error: `${FALLBACK_HOOK_PREFIX}-request-ajax-error`,
+};
+
+function resolveActions(prefix) {
+  if (!prefix) return ACTIONS;
+  return {
+    start: `${prefix}-request-ajax-start`,
+    done: `${prefix}-request-ajax-done`,
+    error: `${prefix}-request-ajax-error`,
   };
-  return cachedHookActions;
-}
-
-function restNamespace() {
-  const { slug } = readProjectConfig();
-  return `${slug}/v1`;
 }
 
 /**
  * Build a `restUtils` namespace bound to a specific set of dependencies.
- * Lets tests inject custom `hooks`, `localize`, `apiFetch`, and `fetch`.
  *
  * @param {object} [deps]
  * @param {object} [deps.hooks]        Object exposing `doAction` (defaults to @wpsk/hooks() result).
  * @param {object} [deps.localize]     Object exposing `get(key)` (defaults to @wpsk/utils localize).
- * @param {Function} [deps.apiFetch]   WP apiFetch implementation (defaults to @wordpress/api-fetch).
+ * @param {Function} [deps.apiFetch]   WP apiFetch implementation.
  * @param {Function} [deps.fetch]      Browser fetch (defaults to globalThis.fetch).
  * @param {string} [deps.hookPrefix]   Override the config-driven hook prefix.
+ * @param {string} [deps.slug]         Override the config-driven slug.
  * @returns {object} Rest utils bound to the given deps.
  */
 export function createRestUtils(deps = {}) {
   const hooks = deps.hooks ?? getHooks();
   const loc = deps.localize ?? localize;
   const apiFetch = deps.apiFetch;
-  const fetchImpl = deps.fetch ?? (typeof fetch !== 'undefined' ? fetch : null);
-  const actions = hookActions(deps.hookPrefix);
-  const ns = deps.slug ? `${deps.slug}/v1` : restNamespace();
+  const fetchImpl = deps.fetch ?? (typeof fetch !== "undefined" ? fetch : null);
+  const actions = resolveActions(deps.hookPrefix);
+  const ns = deps.slug ? `${deps.slug}/v1` : `${FALLBACK_SLUG}/v1`;
 
   function restRootUrl() {
-    return loc.get('api.url');
+    return loc.get("api.url");
   }
   function restXRootUrl() {
-    return loc.get('api_x.url');
+    return loc.get("api_x.url");
   }
   function restNonce() {
-    return loc.get('api.nonce');
+    return loc.get("api.nonce");
   }
   function restXNonce() {
-    return loc.get('api_x.nonce');
+    return loc.get("api_x.nonce");
   }
+
   function restHeaders() {
     return {
-      'Content-type': 'application/json; charset=utf-8',
-      'X-WP-Nonce': restNonce(),
+      "Content-type": "application/json; charset=utf-8",
+      "X-WP-Nonce": restNonce(),
     };
   }
   function restXHeaders() {
     return {
-      'Content-type': 'application/json; charset=utf-8',
-      'X-WP-Nonce': restXNonce(),
+      "Content-type": "application/json; charset=utf-8",
+      "X-WP-Nonce": restXNonce(),
     };
   }
   function restUrl(endpoint) {
-    endpoint = String(endpoint ?? '').replace(/^\//, '').replace(/\/$/, '');
+    endpoint = String(endpoint ?? "")
+      .replace(/^\//, "")
+      .replace(/\/$/, "");
     return restRootUrl() + `${ns}/${endpoint}`;
   }
   function restXUrl(endpoint) {
-    endpoint = String(endpoint ?? '').replace(/^\//, '').replace(/\/$/, '');
-    const root = String(restXRootUrl() ?? '').replace(/\/$/, '');
-    return root + '/' + endpoint;
+    endpoint = String(endpoint ?? "")
+      .replace(/^\//, "")
+      .replace(/\/$/, "");
+    const root = String(restXRootUrl() ?? "").replace(/\/$/, "");
+    return root + "/" + endpoint;
   }
 
-  function restRequest(endPoint, isLaravel = false, options = {}) {
-    if (isLaravel) {
-      return restXRequest(endPoint, options);
-    }
+  async function defaultApiFetch() {
+    const mod = await import("@wordpress/api-fetch");
+    return mod.default;
+  }
+
+  async function restRequest(endPoint, isLaravel = false, options = {}) {
+    if (isLaravel) return restXRequest(endPoint, options);
     hooks.doAction(actions.start, endPoint, options);
     let path = addQueryArgs(`/${ns}/${endPoint}`, { _lang: currentLanguage() });
-    if (options?.method?.toUpperCase() === 'GET') {
+    if (options?.method?.toUpperCase() === "GET") {
       path = addQueryArgs(path, options.data || {});
       delete options.data;
     }
-    const fetchFn = apiFetch ?? defaultApiFetch();
+    const fetchFn = apiFetch ?? (await defaultApiFetch());
     return fetchFn({ path, ...options })
       .catch((error) => {
         hooks.doAction(actions.error, error, endPoint, options);
@@ -124,14 +124,16 @@ export function createRestUtils(deps = {}) {
     hooks.doAction(actions.start, endPoint, options);
     let url = restXUrl(endPoint);
     options.headers = { ...(options.headers || {}), ...restXHeaders() };
-    if (options?.method?.toUpperCase() === 'GET') {
+    if (options?.method?.toUpperCase() === "GET") {
       url = addQueryArgs(url, options.data || {});
     } else {
       options.body = JSON.stringify(options.data);
     }
     delete options.data;
     if (!fetchImpl) {
-      throw new Error('restXRequest requires a `fetch` implementation in this environment');
+      throw new Error(
+        "restXRequest requires a `fetch` implementation in this environment",
+      );
     }
     return fetchImpl(url, options)
       .then((response) => response.json())
@@ -160,16 +162,9 @@ export function createRestUtils(deps = {}) {
   };
 }
 
-function defaultApiFetch() {
-  // Lazy require so the file remains importable in environments without
-  // the @wordpress/api-fetch module installed (some test setups).
-  // eslint-disable-next-line global-require
-  return require('@wordpress/api-fetch').default;
-}
-
 function currentLanguage() {
-  if (typeof document === 'undefined') return '';
-  const lang = document.documentElement?.getAttribute('lang') || '';
+  if (typeof document === "undefined") return "";
+  const lang = document.documentElement?.getAttribute("lang") || "";
   return lang.slice(0, 2).toLocaleLowerCase();
 }
 
@@ -178,7 +173,7 @@ export function getRequestedQueryVar(name) {
 }
 
 export function requestedQueryVars(raw = false) {
-  if (typeof document === 'undefined') {
+  if (typeof document === "undefined") {
     return raw ? new URLSearchParams() : {};
   }
   const params = new URL(document.location).searchParams;
@@ -186,10 +181,7 @@ export function requestedQueryVars(raw = false) {
 }
 
 // Default-flavor exports (use the live hooks / localize / apiFetch).
-// These call the underlying packages directly so consumers can `import
-// { restRequest } from '@wpsk/rest-utils'` without ceremony.
 const defaultUtils = createRestUtils();
-
 export const restRequest = defaultUtils.restRequest;
 export const restXRequest = defaultUtils.restXRequest;
 export const restRootUrl = defaultUtils.restRootUrl;

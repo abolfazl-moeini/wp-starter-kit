@@ -1,11 +1,11 @@
-import { fileURLToPath } from 'node:url';
-import { buildStyles } from './esbuild-styles.js';
+import { fileURLToPath } from "node:url";
+import { buildStyles } from "./esbuild-styles.js";
 
 async function runStylesCli() {
   try {
     await buildStyles();
   } catch (error) {
-    console.error('Style hash build failed:', error.message);
+    console.error("Style hash build failed:", error.message);
     process.exit(1);
   }
 }

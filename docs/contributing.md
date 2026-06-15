@@ -24,6 +24,7 @@ We use a lightweight Git Flow:
 - `docs/<short-slug>` — doc-only change.
 
 Examples:
+
 - `feat/wpsk-rule-engine-advance-fix`
 - `fix/translation-clean-stale-files`
 - `docs/build-system-overview`
@@ -52,6 +53,7 @@ Types:
 - `perf` — performance improvement
 
 Examples:
+
 ```
 feat(rule-engine): treat undefined condition as truthy
 
@@ -136,12 +138,12 @@ auto-rejected.
 
 **Test types:**
 
-| Type | Where | Tools | When |
-|---|---|---|---|
-| Unit | `tests/packages/`, `tests/phpunit/` | Jest, PHPUnit | All PRs |
-| Integration | `tests/integration/` | Jest (with mocked WP) | All PRs |
-| E2E | `tests/e2e/` | Playwright | Optional, runs nightly |
-| Visual regression | `tests/visual/` | Percy | Optional, runs on demand |
+| Type              | Where                               | Tools                 | When                     |
+| ----------------- | ----------------------------------- | --------------------- | ------------------------ |
+| Unit              | `tests/packages/`, `tests/phpunit/` | Jest, PHPUnit         | All PRs                  |
+| Integration       | `tests/integration/`                | Jest (with mocked WP) | All PRs                  |
+| E2E               | `tests/e2e/`                        | Playwright            | Optional, runs nightly   |
+| Visual regression | `tests/visual/`                     | Percy                 | Optional, runs on demand |
 
 ## Reviewing PRs
 

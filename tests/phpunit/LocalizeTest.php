@@ -29,16 +29,19 @@ class LocalizeTest extends TestCase
         $this->assertSame(wp_create_nonce('wp_rest'), $data['api']['nonce']);
     }
 
-    public function test_get_localize_data_returns_secondary_api(): void
+    public function test_get_localize_data_returns_secondary_api_from_project_config(): void
     {
-        $data = wpsk_get_localize_data();
+        $config = wpsk_read_project_config();
+        $slug   = $config['slug'] ?? 'wpsk-starter';
+        $prefix = $config['hookPrefix'] ?? 'wpsk';
+        $data   = wpsk_get_localize_data();
 
         $this->assertArrayHasKey('api_x', $data);
         $this->assertArrayHasKey('url', $data['api_x']);
         $this->assertArrayHasKey('nonce', $data['api_x']);
 
-        $this->assertNotEmpty($data['api_x']['url']);
-        $this->assertNotEmpty($data['api_x']['nonce']);
+        $this->assertSame(rest_url($slug . '/v1/'), $data['api_x']['url']);
+        $this->assertSame(wp_create_nonce($prefix . '_rest'), $data['api_x']['nonce']);
     }
 
     public function test_get_localize_data_shape_matches_localize_js_consumer(): void

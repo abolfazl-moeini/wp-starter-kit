@@ -132,4 +132,20 @@ class AssetFunctionsTest extends TestCase
             wpsk_bundle_file_url('wpsk-starter-deps.js')
         );
     }
+
+    public function test_stylesheet_file_path_resolves_under_assets_stylesheets(): void
+    {
+        $this->assertSame(
+            get_template_directory() . '/assets/stylesheets/style.css',
+            wpsk_stylesheet_file_path('style.css')
+        );
+    }
+
+    public function test_stylesheet_file_url_resolves_under_assets_stylesheets(): void
+    {
+        $this->assertSame(
+            get_template_directory_uri() . '/assets/stylesheets/style.css',
+            wpsk_stylesheet_file_url('style.css')
+        );
+    }
 }

@@ -9,27 +9,29 @@
  *   <div id="counter-mount" data-start="0"></div>
  *   <script type="module" src="./script.js"></script>
  */
-import { h, Fragment } from 'preact';
-import { useState } from 'preact/hooks';
+import { h, Fragment } from "preact";
+import { useState } from "preact/hooks";
 
 export function Counter(props) {
-  const [count, setCount] = useState(typeof props.start === 'number' ? props.start : 0);
+  const [count, setCount] = useState(
+    typeof props.start === "number" ? props.start : 0,
+  );
   const increment = () => setCount(count + 1);
   const reset = () => setCount(0);
   return h(
     Fragment,
     null,
-    h('p', { 'data-role': 'count' }, `Count: ${count}`),
+    h("p", { "data-role": "count" }, `Count: ${count}`),
     h(
-      'button',
-      { type: 'button', onClick: increment, 'data-role': 'increment' },
-      '+1'
+      "button",
+      { type: "button", onClick: increment, "data-role": "increment" },
+      "+1",
     ),
     h(
-      'button',
-      { type: 'button', onClick: reset, 'data-role': 'reset' },
-      'Reset'
-    )
+      "button",
+      { type: "button", onClick: reset, "data-role": "reset" },
+      "Reset",
+    ),
   );
 }
 

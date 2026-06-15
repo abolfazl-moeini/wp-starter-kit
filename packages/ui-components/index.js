@@ -21,7 +21,7 @@
  * consumes the store via these helpers. It is NOT exported here — the test
  * suite asserts the store API, not the component rendering.
  */
-import { signal } from '@preact/signals';
+import { signal } from "@preact/signals";
 
 /* ---------- The flat signal store -------------------------------------- */
 
@@ -52,7 +52,7 @@ export function getFormData(name) {
  * @param {Record<string, *>} values
  */
 export function batchSetFormData(values = {}) {
-  if (!values || typeof values !== 'object') return;
+  if (!values || typeof values !== "object") return;
   formStore.value = { ...formStore.value, ...values };
 }
 
@@ -100,7 +100,7 @@ export function resetFormData(defaults = {}) {
     } else if (key in initial) {
       next[key] = initial[key];
     } else {
-      next[key] = '';
+      next[key] = "";
     }
   }
   formStore.value = next;

@@ -18,8 +18,8 @@ wpsk_color_log('Building PHP translation files...');
 
 foreach (wpsk_list_components() as $component) {
     wpsk_color_log("  Component: $component");
+    // wpsk_run_wp_i18n() prepends ['wp', 'i18n']; do not pass 'i18n' again.
     $r = wpsk_run_wp_i18n([
-        'i18n',
         'make-php',
         SOURCE_ROOT . '/components/' . $component . '/languages',
         SOURCE_ROOT . '/components/' . $component . '/languages',

@@ -55,8 +55,9 @@ export function importAsGlobals(mapping, collectInternalScripts) {
         },
         async (args) => {
           const global = defaultRequestToExternal(args.path);
+          const ext = Array.isArray(global) ? global.join(".") : global;
           return {
-            contents: `module.exports = ${global.join(".")};`,
+            contents: `module.exports = ${ext};`,
             loader: "js",
           };
         },
@@ -177,7 +178,6 @@ export function phpFileContent(theObject) {
 }
 
 export function bundleFilePath(buildResponse) {
-
   return Object.keys(buildResponse.metafile.outputs).find(
     (file) => !!file.match(/.jsx?$/i),
   );

@@ -1,0 +1,9 @@
+node_modules
+vendor
+dist
+coverage
+assets/libraries
+assets/bundles/*.js
+.phpunit.result.cache
+composer.lock
+package-lock.json

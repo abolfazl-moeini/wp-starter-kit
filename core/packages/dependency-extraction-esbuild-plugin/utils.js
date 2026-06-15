@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { readFileSync } from "node:fs";
 import crypto from "node:crypto";
-import { getOrgNameSync, readProjectConfig } from '@core/utils';
+import { getOrgNameSync, readProjectConfig } from "@core/utils";
 
 // @copyright https://raw.githubusercontent.com/WordPress/gutenberg/trunk/packages/dependency-extraction-webpack-plugin/lib/util.js
 
@@ -19,7 +19,9 @@ export const INTERNAL_NAMESPACE = (() => {
   try {
     const config = readProjectConfig();
     if (config?.npmScope) {
-      const scope = config.npmScope.startsWith('@') ? config.npmScope : `@${config.npmScope}`;
+      const scope = config.npmScope.startsWith("@")
+        ? config.npmScope
+        : `@${config.npmScope}`;
       return `${scope}/`;
     }
   } catch {
@@ -32,10 +34,12 @@ export const INTERNAL_NAMESPACE = (() => {
   } catch (err) {
     // Safe fallback for development / placeholder package names.
     // Real builds must provide correct ROOT_NAME to get proper internal package filtering.
-    if (process.env.NODE_ENV !== 'test') {
-      console.warn('[dependency-extraction-esbuild-plugin] INTERNAL_NAMESPACE fallback used (@wpsk/). Set ROOT_NAME env for correct org.');
+    if (process.env.NODE_ENV !== "test") {
+      console.warn(
+        "[dependency-extraction-esbuild-plugin] INTERNAL_NAMESPACE fallback used (@wpsk/). Set ROOT_NAME env for correct org.",
+      );
     }
-    return '@wpsk/';
+    return "@wpsk/";
   }
 })();
 
@@ -43,14 +47,14 @@ export const INTERNAL_NAMESPACE = (() => {
 // This list must be kept in sync with the same list in tools/webpack/packages.js
 // !!
 const BUNDLED_PACKAGES = [
-  '@wordpress/dataviews',
-  '@wordpress/dataviews/wp',
-  '@wordpress/icons',
-  '@wordpress/interface',
-  '@wordpress/sync',
-  '@wordpress/undo-manager',
-  '@wordpress/upload-media',
-  '@wordpress/fields',
+  "@wordpress/dataviews",
+  "@wordpress/dataviews/wp",
+  "@wordpress/icons",
+  "@wordpress/interface",
+  "@wordpress/sync",
+  "@wordpress/undo-manager",
+  "@wordpress/upload-media",
+  "@wordpress/fields",
 ];
 
 /**
@@ -85,9 +89,9 @@ export function defaultRequestToExternal(request) {
     case "react-dom":
       return "ReactDOM";
 
-    case 'react/jsx-runtime':
-    case 'react/jsx-dev-runtime':
-      return 'ReactJSXRuntime';
+    case "react/jsx-runtime":
+    case "react/jsx-dev-runtime":
+      return "ReactJSXRuntime";
   }
 
   if (request.includes("react-refresh/runtime")) {
@@ -171,10 +175,10 @@ export function internalRequestToHandle(request) {
 }
 
 export function filterInternalRootPackages(packages) {
-  const org = INTERNAL_NAMESPACE.replace(/^@/, '').replace(/\/$/, '');
+  const org = INTERNAL_NAMESPACE.replace(/^@/, "").replace(/\/$/, "");
 
   // Escape special regex chars in org name
-  const escaped = org.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escaped = org.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const re = new RegExp(`@${escaped}/([^/]+)`);
 
   return packages

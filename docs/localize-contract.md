@@ -40,10 +40,10 @@ function myprj_get_localize_data(): array
 **JS side** (any component):
 
 ```js
-import { getLocalize } from '@wpsk/localize';
+import { getLocalize } from "@wpsk/localize";
 
-const data = getLocalize();   // type: LocalizeData (auto-inferred)
-console.log(data.restUrl);    // → 'https://example.test/?rest_route=/my-project/v1/'
+const data = getLocalize(); // type: LocalizeData (auto-inferred)
+console.log(data.restUrl); // → 'https://example.test/?rest_route=/my-project/v1/'
 ```
 
 ## The `localizeVar` key
@@ -71,11 +71,11 @@ If `localizeVar` is not set, the scaffold defaults to
 
 ```ts
 export interface LocalizeData {
-  restUrl:  string;
-  nonce:    string;
-  siteUrl:  string;
-  locale:   string;
-  version:  string;
+  restUrl: string;
+  nonce: string;
+  siteUrl: string;
+  locale: string;
+  version: string;
   // …add new fields here when you add them in PHP
 }
 ```
@@ -105,12 +105,12 @@ copy) needs to change — every consumer still calls `getLocalize()`.
 
 ## Common pitfalls
 
-| Symptom | Cause | Fix |
-|---|---|---|
-| `getLocalize()` returns `undefined` | The `wp_localize_script` call hasn't run yet (script enqueued too late) | Move the `add_action('wp_enqueue_scripts', ...)` registration to `functions.php` top level. |
-| `restUrl` is `null` | `rest_url()` is being called before `rest_api_init` fires | Hook the `getLocalizeData` function on `rest_api_init` (it already runs after init, so this is rare in practice). |
-| TypeScript says `data.nonce` is `string` but runtime says `0` | PHP returns `int` and `wp_localize_script` coerces to `string` (good) — this only bites if the field is a number-like string and the JS side parses it. | Stick to strings; the `LocalizeData` interface uses `string` everywhere. |
-| `data.version` is stale after a release | Browser cached the old `dist/my-project-deps.js` and skipped the new localize call | Bump the asset version (`filemtime` or a `MY_PROJECT_VERSION` constant) so the new bundle is fetched. |
+| Symptom                                                       | Cause                                                                                                                                                   | Fix                                                                                                               |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `getLocalize()` returns `undefined`                           | The `wp_localize_script` call hasn't run yet (script enqueued too late)                                                                                 | Move the `add_action('wp_enqueue_scripts', ...)` registration to `functions.php` top level.                       |
+| `restUrl` is `null`                                           | `rest_url()` is being called before `rest_api_init` fires                                                                                               | Hook the `getLocalizeData` function on `rest_api_init` (it already runs after init, so this is rare in practice). |
+| TypeScript says `data.nonce` is `string` but runtime says `0` | PHP returns `int` and `wp_localize_script` coerces to `string` (good) — this only bites if the field is a number-like string and the JS side parses it. | Stick to strings; the `LocalizeData` interface uses `string` everywhere.                                          |
+| `data.version` is stale after a release                       | Browser cached the old `dist/my-project-deps.js` and skipped the new localize call                                                                      | Bump the asset version (`filemtime` or a `MY_PROJECT_VERSION` constant) so the new bundle is fetched.             |
 
 ## Test surface (Phase 1, 4 tests)
 

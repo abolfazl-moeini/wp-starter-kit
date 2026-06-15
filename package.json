@@ -24,14 +24,18 @@
   "scripts": {
     "build": "npm-run-all --parallel build:dependencies build:components build:styles build:assets",
     "build:all": "node core/packages/build/build-all.js",
-    "build:assets": "node build/build-assets.js",
+    "build:assets": "node build/build-assets-cli.js",
     "build:components": "node core/packages/build/esbuild-components-cli.js",
     "build:dependencies": "node core/packages/build/esbuild-dependencies-cli.js",
     "build:styles": "node core/packages/build/esbuild-styles-cli.js",
-    "prepare": "npm run build:assets",
-    "prepare:assets": "node build/build-assets.js",
+    "prepare": "husky install && npm run build:assets",
+    "lint:js": "npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=20",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml,css}\"",
+    "format:write": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml,css}\"",
+    "prepare:assets": "node build/build-assets-cli.js",
     "release": "npm run build:dependencies && npm run build:components && npm run build:styles && npm run build:assets",
     "test": "jest",
+    "typecheck": "tsc --noEmit",
     "lint": "npm run lint --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
     "check": "node core/packages/utils/check-cli.js"
@@ -40,6 +44,18 @@
     "core/packages/*",
     "packages/*"
   ],
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,css}": [
+      "prettier --write"
+    ],
+    "*.php": [
+      "vendor/bin/phpcbf -q --standard=phpcs.xml --"
+    ]
+  },
   "//": "react / react-dom are aliased to @preact/compat so that any third-party library that imports 'react' resolves to Preact at install time. See docs/react-preact.md.",
   "dependencies": {
     "react": "npm:@preact/compat@^18.3.2",
@@ -48,23 +64,36 @@
   "devDependencies": {
     "@babel/core": "^7.26.10",
     "@babel/preset-env": "^7.26.9",
+    "@babel/preset-typescript": "^7.26.0",
     "@core/build": "^0.1.0",
     "@core/dependency-extraction-esbuild-plugin": "^1.0.0",
     "@core/utils": "^0.1.0",
     "@jest/globals": "^29.7.0",
     "@preact/compat": "^18.3.2",
     "@preact/signals": "^2.9.1",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^22.0.0",
+    "@types/wordpress__dom-ready": "^2.3.0",
+    "@types/wordpress__hooks": "^2.4.1",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "@typescript-eslint/parser": "^7.2.0",
+    "@wordpress/api-fetch": "^7.48.0",
     "babel-jest": "^29.7.0",
     "chalk": "^5.4.1",
     "cross-env": "^7.0.3",
     "esbuild": "^0.20.2",
     "esbuild-jest": "^0.5.0",
+    "eslint": "^8.57.0",
     "glob": "^10.3.10",
+    "husky": "^9.0.11",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^30.4.1",
+    "lint-staged": "^15.2.2",
     "mock-fs": "^5.5.0",
     "npm-run-all": "^4.1.5",
     "preact": "^10.29.2",
+    "prettier": "^3.2.5",
+    "typescript": "^5.6.0",
     "yargs": "^17.7.2"
   },
   "engines": {

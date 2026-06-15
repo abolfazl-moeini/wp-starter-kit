@@ -10,7 +10,7 @@
 
 ```json
 {
-  "uiFramework": "preact"   // or "react"
+  "uiFramework": "preact" // or "react"
 }
 ```
 
@@ -22,7 +22,7 @@ This single key:
    `package.json` (only when `preact`, not when `react`).
 3. **Picks the right `window.wp.element` shim** in
    `dependency-extraction.esbuild.js` so the bundle works against
-   WP's React global *or* a Preact shim.
+   WP's React global _or_ a Preact shim.
 
 ## What's the same
 
@@ -33,19 +33,19 @@ This single key:
   `useState` / etc. surface.
 - **All tests pass in both modes** — `core/packages/ui-components/`
   tests run against whichever alias is in effect. The CI matrix
-  runs `uiFramework: react` *and* `uiFramework: preact` and verifies
+  runs `uiFramework: react` _and_ `uiFramework: preact` and verifies
   both pass.
 
 ## What's different
 
-| Axis             | `react`                          | `preact`                                       |
-|------------------|----------------------------------|------------------------------------------------|
-| Bundle size (gz) | ~45 KB (React + ReactDOM)        | ~10 KB (Preact)                                |
-| Startup          | Slower (larger parse)            | Faster                                         |
-| `React.memo`     | Reference equality               | Same (works via `preact/compat`)               |
-| `Suspense`       | Full                             | Limited (`lazy()` works, `Suspense` partial)   |
-| Concurrent mode  | Yes                              | Limited                                        |
-| Server components | No (yet)                         | No                                             |
+| Axis              | `react`                   | `preact`                                     |
+| ----------------- | ------------------------- | -------------------------------------------- |
+| Bundle size (gz)  | ~45 KB (React + ReactDOM) | ~10 KB (Preact)                              |
+| Startup           | Slower (larger parse)     | Faster                                       |
+| `React.memo`      | Reference equality        | Same (works via `preact/compat`)             |
+| `Suspense`        | Full                      | Limited (`lazy()` works, `Suspense` partial) |
+| Concurrent mode   | Yes                       | Limited                                      |
+| Server components | No (yet)                  | No                                           |
 
 For most WordPress admin pages, the perf delta is dramatic enough to
 make `preact` the default for non-editorial pages.
@@ -56,15 +56,16 @@ make `preact` the default for non-editorial pages.
 detection in `dependency-extraction-esbuild-plugin`):
 
 ```js
-const alias = config.uiFramework === 'preact'
-  ? { react: 'preact/compat', 'react-dom': 'preact/compat' }
-  : {};
+const alias =
+  config.uiFramework === "preact"
+    ? { react: "preact/compat", "react-dom": "preact/compat" }
+    : {};
 
 esbuild.build({
   // ...
   alias,
   define: {
-    'process.env.WPSK_UI_FRAMEWORK': JSON.stringify(config.uiFramework),
+    "process.env.WPSK_UI_FRAMEWORK": JSON.stringify(config.uiFramework),
   },
 });
 ```
@@ -76,11 +77,13 @@ default:
 
 ```jsx
 // core/components/hello-world/script.js
-import { useState } from 'react';
+import { useState } from "react";
 
 export default function HelloWorld() {
   const [count, setCount] = useState(0);
-  return <button onClick={() => setCount(c => c + 1)}>Clicked {count}</button>;
+  return (
+    <button onClick={() => setCount((c) => c + 1)}>Clicked {count}</button>
+  );
 }
 ```
 

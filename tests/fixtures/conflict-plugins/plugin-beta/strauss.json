@@ -1,0 +1,6 @@
+{
+  "target_directory": "vendor-prefixed",
+  "namespace_prefix": "BetaVendor",
+  "classmap_prefix": "BetaVendor_",
+  "constant_prefix": "BETAVENDOR_"
+}

@@ -19,9 +19,9 @@
  *   - `SwitchableFocusElement(ctx, name)`  Focus switcher
  *
  * DOM-rendering helpers (mountComponent, FreezeUI) require a real DOM —
- * tests must run with `/** @jest-environment jsdom *​/` or in a browser.
+ * tests must run with jsdom or in a browser.
  */
-import { h, render } from 'preact';
+import { h, render } from "preact";
 
 /* ---------- Preact mount helpers --------------------------------------- */
 
@@ -44,10 +44,10 @@ export function elementProps(element) {
   if (!element || !element.attributes) return {};
   const out = {};
   for (const attr of Array.from(element.attributes)) {
-    if (!attr.name.startsWith('data-')) continue;
+    if (!attr.name.startsWith("data-")) continue;
     // data-foo-bar → fooBar
     const key = attr.name
-      .slice('data-'.length)
+      .slice("data-".length)
       .replace(/-([a-z])/g, (_, c) => c.toUpperCase());
     // Try JSON parse so booleans/numbers/objects come through typed.
     let value = attr.value;
@@ -76,7 +76,7 @@ export function elementProps(element) {
  * @returns {Element|null} the rendered root, or null if the element was missing
  */
 export function mountComponent(elementId, Component, extraProps = {}) {
-  if (typeof document === 'undefined') return null;
+  if (typeof document === "undefined") return null;
   const element = document.getElementById(elementId);
   if (!element) return null;
   const props = { ...elementProps(element), ...extraProps };
@@ -85,15 +85,15 @@ export function mountComponent(elementId, Component, extraProps = {}) {
 
 /* ---------- Loading overlay ------------------------------------------- */
 
-const LOADING_ID = 'wpsk-loading';
+const LOADING_ID = "wpsk-loading";
 
 export function FreezeUI() {
-  if (typeof document === 'undefined') return;
+  if (typeof document === "undefined") return;
   if (document.getElementById(LOADING_ID)) {
     return;
   }
-  const loading = document.createElement('div');
-  loading.setAttribute('id', LOADING_ID);
+  const loading = document.createElement("div");
+  loading.setAttribute("id", LOADING_ID);
   loading.innerHTML = `
   <div class="spinner">
     <div></div>
@@ -108,7 +108,7 @@ export function FreezeUI() {
 }
 
 export function UnFreezeUI() {
-  if (typeof document === 'undefined') return;
+  if (typeof document === "undefined") return;
   const loading = document.getElementById(LOADING_ID);
   loading && loading.remove();
 }
@@ -116,15 +116,15 @@ export function UnFreezeUI() {
 /* ---------- Language / direction -------------------------------------- */
 
 export function currentLanguage() {
-  if (typeof document === 'undefined') return '';
-  const lang = document.documentElement?.getAttribute('lang') || '';
+  if (typeof document === "undefined") return "";
+  const lang = document.documentElement?.getAttribute("lang") || "";
   return lang.slice(0, 2).toLocaleLowerCase();
 }
 
 export function isRTL() {
-  if (typeof document === 'undefined') return false;
-  const dir = document.documentElement?.getAttribute('dir');
-  return dir === 'rtl' || document.body?.classList?.contains('rtl');
+  if (typeof document === "undefined") return false;
+  const dir = document.documentElement?.getAttribute("dir");
+  return dir === "rtl" || document.body?.classList?.contains("rtl");
 }
 
 /* ---------- Form helpers ---------------------------------------------- */
@@ -137,13 +137,13 @@ export function extractFormData(formHtmlElement) {
 export function findFormElement(wrapper) {
   if (!wrapper) return undefined;
   return (
-    wrapper.querySelector?.('form.the-form') || wrapper.querySelector?.('form')
+    wrapper.querySelector?.("form.the-form") || wrapper.querySelector?.("form")
   );
 }
 
 export function elementDispatchChangeEvent(element) {
-  if (typeof Event === 'undefined') return;
-  const event = new Event('change', { bubbles: true });
+  if (typeof Event === "undefined") return;
+  const event = new Event("change", { bubbles: true });
   element instanceof EventTarget && element.dispatchEvent(event);
 }
 
@@ -157,15 +157,15 @@ export function SwitchableFocusElement(context, switchableName) {
   }
   const changedElement = context.querySelector?.(`[name="${switchableName}"]`);
   if (
-    !changedElement?.classList?.contains('switchable-trigger') ||
+    !changedElement?.classList?.contains("switchable-trigger") ||
     !changedElement?.checked
   ) {
     return;
   }
   const targetElement = changedElement
-    .closest('.switchable-input')
-    ?.querySelector('.conditional-field')
-    ?.querySelector('input,selector');
+    .closest(".switchable-input")
+    ?.querySelector(".conditional-field")
+    ?.querySelector("input,selector");
   targetElement && targetElement.focus();
 }
 
@@ -177,10 +177,10 @@ export function formatDropDownOptions(options) {
 }
 
 export function formatOptionValue(option) {
-  if (typeof option === 'object' && option !== null) {
+  if (typeof option === "object" && option !== null) {
     return option;
   }
-  if (typeof option === 'string') {
+  if (typeof option === "string") {
     return { key: option, value: option };
   }
   return undefined;

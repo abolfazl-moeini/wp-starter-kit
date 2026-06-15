@@ -20,6 +20,7 @@
     "assets/**/*.ts",
     "packages/**/*.ts",
     "tests/**/*.ts",
-    "core/**/*.ts"
+    "core/**/*.ts",
+    "types/**/*.d.ts"
   ]
 }

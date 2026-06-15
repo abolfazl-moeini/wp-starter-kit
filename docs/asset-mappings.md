@@ -42,7 +42,7 @@ Why one bundle per component?
 an esbuild plugin that rewrites bare imports:
 
 ```js
-import { useState } from 'react';
+import { useState } from "react";
 // ↓ at build time ↓
 const { useState } = window.wp.element;
 ```
@@ -80,7 +80,7 @@ So when `@wpsk/utils` ships in the deps bundle as
 `window.<globalName>.utils`, every component can use it as:
 
 ```js
-import { deepClone } from '@wpsk/utils';
+import { deepClone } from "@wpsk/utils";
 // → compiled to: window.MyProject.utils.deepClone(...)
 ```
 

@@ -1,15 +1,17 @@
 {
   "assetMappings": [
     {
-      "source": "node_modules/some-library/dist/css",
-      "destination": "assets/libraries/some-library/css",
-      "options": {
-        "overwrite": true
-      }
+      "source": "node_modules/tabulator-tables/dist",
+      "destination": "assets/libraries/tabulator",
+      "options": { "overwrite": true }
     },
     {
-      "source": "node_modules/another-lib/js",
-      "destination": "assets/libraries/another-lib/js"
+      "source": "node_modules/vanillajs-datepicker/dist/css",
+      "destination": "assets/libraries/vanillajs-datepicker/css"
     }
-  ]
+  ],
+  "globalMappings": {
+    "tabulator-tables": "WPSK.table"
+  },
+  "styleEntryPoints": ["assets/stylesheets/style.css"]
 }

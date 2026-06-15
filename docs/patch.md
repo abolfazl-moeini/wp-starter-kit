@@ -8,10 +8,10 @@
 The starter ships as a **git-mergeable** framework, not as a
 `vendor/` copy. This is a deliberate choice:
 
-| Model | Pros | Cons |
-|---|---|---|
-| `vendor/` copy (Composer's `cweagans/composer-patches`) | Truly isolated, no surprise changes | Hard to upgrade, no PR diff to consumer |
-| git merge (current) | One `git pull` to upgrade, PR-able | Conflicts possible, must test after merge |
+| Model                                                   | Pros                                | Cons                                      |
+| ------------------------------------------------------- | ----------------------------------- | ----------------------------------------- |
+| `vendor/` copy (Composer's `cweagans/composer-patches`) | Truly isolated, no surprise changes | Hard to upgrade, no PR diff to consumer   |
+| git merge (current)                                     | One `git pull` to upgrade, PR-able  | Conflicts possible, must test after merge |
 
 The git-merge model is the right one for a starter because the
 overlap between starter and consumer is small (most files are
@@ -98,15 +98,15 @@ forked from, so upgrades are traceable.
 
 ## Conflict resolution cookbook
 
-| Conflict location | Resolution |
-|---|---|
-| `project.config.json` | Consumer's value wins. The starter never changes consumer-only fields (slug, globalName, etc.). |
-| `core/components/<slug>/script.js` (consumer-added) | Keep the consumer's version. |
-| `core/components/<slug>/script.js` (consumer-renamed starter component) | Manual — ask the consumer what to do. |
-| `core/packages/<name>/src/index.js` | Starter's version wins. Consumer shouldn't be editing this. If they have, they've forked the package and need to upstream the change. |
-| `composer.json` | Both — starter's `require` and `scripts` blocks are appended to the consumer's, not replaced. |
-| `package.json` | Same as composer.json. |
-| `tests/phpunit/*` | Consumer's tests win, but starter's may have been added. Run all and merge. |
+| Conflict location                                                       | Resolution                                                                                                                            |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `project.config.json`                                                   | Consumer's value wins. The starter never changes consumer-only fields (slug, globalName, etc.).                                       |
+| `core/components/<slug>/script.js` (consumer-added)                     | Keep the consumer's version.                                                                                                          |
+| `core/components/<slug>/script.js` (consumer-renamed starter component) | Manual — ask the consumer what to do.                                                                                                 |
+| `core/packages/<name>/src/index.js`                                     | Starter's version wins. Consumer shouldn't be editing this. If they have, they've forked the package and need to upstream the change. |
+| `composer.json`                                                         | Both — starter's `require` and `scripts` blocks are appended to the consumer's, not replaced.                                         |
+| `package.json`                                                          | Same as composer.json.                                                                                                                |
+| `tests/phpunit/*`                                                       | Consumer's tests win, but starter's may have been added. Run all and merge.                                                           |
 
 ## When to NOT use this model
 

@@ -1,9 +1,8 @@
-import {fileURLToPath} from 'node:url';
-import {dirname as nodeDirname} from 'node:path';
+import { fileURLToPath } from "node:url";
+import { dirname as nodeDirname } from "node:path";
 
 export function getMetaUrl() {
-
-    return import.meta.url;
+  return import.meta.url;
 }
 
 /**
@@ -15,22 +14,22 @@ export function getMetaUrl() {
  * @throws {TypeError} If path is not a string or levels is not a positive integer.
  */
 export function dirname(path, levels = 1) {
-    if (typeof path !== 'string') {
-        throw new TypeError('Path must be a string');
-    }
-    if (!Number.isInteger(levels) || levels < 0) {
-        throw new TypeError('Levels must be a non-negative integer');
-    }
+  if (typeof path !== "string") {
+    throw new TypeError("Path must be a string");
+  }
+  if (!Number.isInteger(levels) || levels < 0) {
+    throw new TypeError("Levels must be a non-negative integer");
+  }
 
-    let result = path;
-    for (let i = 0; i < levels; i++) {
-        result = nodeDirname(result);
-        // If we reach the root (e.g., '/' or 'C:'), stop
-        if (result === '/' || /^[A-Za-z]:\\?$/.test(result)) {
-            break;
-        }
+  let result = path;
+  for (let i = 0; i < levels; i++) {
+    result = nodeDirname(result);
+    // If we reach the root (e.g., '/' or 'C:'), stop
+    if (result === "/" || /^[A-Za-z]:\\?$/.test(result)) {
+      break;
     }
-    return result;
+  }
+  return result;
 }
 
 /**
@@ -38,9 +37,7 @@ export function dirname(path, levels = 1) {
  * @returns {string} The root directory path.
  */
 export function getRootPath() {
+  const __filename = fileURLToPath(getMetaUrl());
 
-    const __filename = fileURLToPath(getMetaUrl());
-
-    return dirname(__filename, 4);
+  return dirname(__filename, 4);
 }
-

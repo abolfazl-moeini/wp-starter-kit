@@ -1,1 +1,1 @@
-export { localize } from './localize.js';
+export { localize } from "./localize.js";

@@ -1,0 +1,97 @@
+<?php
+declare(strict_types=1);
+
+namespace WPSK\Tests\Support\Rest;
+
+use PHPUnit\Framework\TestCase;
+use WPSK\Core\Plugin;
+use WPSK\Support\Rest\AllowBatch;
+use WPSK\Support\Rest\RestHandler;
+use WPSK\Support\Rest\RestSetup;
+
+class RestSetupTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        parent::setUp();
+        wpsk_test_reset_wp_state();
+        RestSetup::flush();
+        Plugin::reset_for_tests();
+    }
+
+    public function test_register_prevents_duplicate_handlers(): void
+    {
+        $handler = TestRestHandler::class;
+
+        $this->assertTrue(RestSetup::register($handler));
+        $this->assertFalse(RestSetup::register($handler));
+        $this->assertCount(1, RestSetup::routes());
+    }
+
+    public function test_rest_init_uses_dynamic_namespace_from_config(): void
+    {
+        $configPath = $this->writeTempConfig(['restNamespace' => 'custom/v2']);
+        Plugin::boot($configPath);
+
+        RestSetup::register(TestRestHandler::class);
+        RestSetup::rest_init();
+
+        $this->assertCount(1, $GLOBALS['wpsk_wp_rest_routes']);
+        $this->assertSame('custom/v2', $GLOBALS['wpsk_wp_rest_routes'][0]['namespace']);
+        $this->assertSame('test-items', $GLOBALS['wpsk_wp_rest_routes'][0]['route']);
+    }
+
+    public function test_allow_batch_is_passed_through(): void
+    {
+        Plugin::boot(dirname(__DIR__, 4) . '/project.config.json');
+        RestSetup::register(BatchRestHandler::class);
+        RestSetup::rest_init();
+
+        $args = $GLOBALS['wpsk_wp_rest_routes'][0]['args'];
+        $this->assertArrayHasKey('allow_batch', $args);
+        $this->assertSame(['v1' => true], $args['allow_batch']);
+    }
+
+    private function writeTempConfig(array $overrides): string
+    {
+        $base = json_decode(
+            (string) file_get_contents(dirname(__DIR__, 4) . '/project.config.json'),
+            true
+        );
+        $merged = array_merge($base, $overrides);
+        $path = sys_get_temp_dir() . '/wpsk-rest-config-' . uniqid('', true) . '.json';
+        file_put_contents($path, json_encode($merged, JSON_THROW_ON_ERROR));
+        return $path;
+    }
+}
+
+class TestRestHandler extends RestHandler
+{
+    public function rest_handler(\WP_REST_Request $request): \WP_REST_Response
+    {
+        return new \WP_REST_Response(['ok' => true]);
+    }
+
+    public function rest_permission(): bool
+    {
+        return true;
+    }
+
+    public function rest_end_point(): string
+    {
+        return 'test-items';
+    }
+
+    public function methods(): string
+    {
+        return 'GET';
+    }
+}
+
+class BatchRestHandler extends TestRestHandler implements AllowBatch
+{
+    public function allow_batch(): array
+    {
+        return ['v1' => true];
+    }
+}

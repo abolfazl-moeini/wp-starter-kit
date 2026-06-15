@@ -53,8 +53,12 @@ jobs:
       - name: Create source archive
         run: |
           mkdir -p release-archive
-          cp -r dist assets project.config.json composer.json package.json phpunit.xml.dist phpcs.xml.dist phpstan.neon.dist core dev packages tests docs README.md CHANGELOG.md release-archive/
-          tar -czf wpsk-starter-${{ github.ref_name }}.tar.gz release-archive/
+          cp -r core dev packages tests docs includes assets build release-archive/
+          cp project.config.json build.config.json composer.json package.json release-archive/
+          cp phpunit.xml phpcs.xml phpstan.neon release-archive/
+          if [ -f README.md ]; then cp README.md release-archive/; fi
+          if [ -f CHANGELOG.md ]; then cp CHANGELOG.md release-archive/; fi
+          tar -czf wpsk-starter-${{ github.ref_name }}.tar.gz -C release-archive .
 
       - name: Create zip archive
         run: |
@@ -76,6 +80,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: actions/download-artifact@v4
         with:
           name: release-${{ github.ref_name }}
@@ -87,13 +95,17 @@ jobs:
           VERSION=${{ github.ref_name }}
           VERSION=${VERSION#v}
           # Extract the section for this version from CHANGELOG.md
-          awk -v ver="$VERSION" '
-            /^## / {
-              if (found) exit
-              if ($0 ~ ver) { found = 1 }
-            }
-            found { print }
-          ' CHANGELOG.md > release-notes.md
+          if [ -f CHANGELOG.md ]; then
+            awk -v ver="$VERSION" '
+              /^## / {
+                if (found) exit
+                if ($0 ~ ver) { found = 1 }
+              }
+              found { print }
+            ' CHANGELOG.md > release-notes.md
+          else
+            : > release-notes.md
+          fi
           if [ ! -s release-notes.md ]; then
             echo "No changelog entry for $VERSION; using commit log"
             git log -20 --pretty=format:"%h %s" > release-notes.md

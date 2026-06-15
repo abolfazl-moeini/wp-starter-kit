@@ -1,11 +1,11 @@
-import { existsSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { existsSync } from "node:fs";
+import { dirname } from "node:path";
 import {
   fileCheckSum,
   phpFileContent,
   writeFile,
-} from '@core/dependency-extraction-esbuild-plugin';
-import { readBuildConfig } from './index.js';
+} from "@core/dependency-extraction-esbuild-plugin";
+import { readBuildConfig } from "./index.js";
 
 /**
  * Compute the hash of a CSS source file and write a `<file>.asset.php`
@@ -20,20 +20,24 @@ import { readBuildConfig } from './index.js';
  * @returns {Promise<string>}   Path to the written `.asset.php` file.
  */
 export function buildStyleAssetFile(cssFilePath) {
-  if (typeof cssFilePath !== 'string' || !cssFilePath) {
-    return Promise.reject(new Error('buildStyleAssetFile: cssFilePath must be a non-empty string'));
+  if (typeof cssFilePath !== "string" || !cssFilePath) {
+    return Promise.reject(
+      new Error("buildStyleAssetFile: cssFilePath must be a non-empty string"),
+    );
   }
 
   if (!existsSync(cssFilePath)) {
     return Promise.reject(
-      new Error(`buildStyleAssetFile: source CSS file not found at ${cssFilePath}`),
+      new Error(
+        `buildStyleAssetFile: source CSS file not found at ${cssFilePath}`,
+      ),
     );
   }
 
   const hash = fileCheckSum(cssFilePath);
   const fileContent = phpFileContent({ hash });
 
-  const baseName = cssFilePath.replace(/\.css$/, '');
+  const baseName = cssFilePath.replace(/\.css$/i, "");
   const assetPath = `${baseName}.asset.php`;
 
   return writeFile(assetPath, fileContent).then(() => assetPath);
@@ -53,7 +57,7 @@ export function buildStyleAssetFile(cssFilePath) {
  * @returns {Promise<string[]>}           Asset file paths.
  */
 export async function buildStyles(options = {}) {
-  const buildConfig = options.buildConfig ?? await readBuildConfig();
+  const buildConfig = options.buildConfig ?? (await readBuildConfig());
   const entries = buildConfig?.styleEntryPoints ?? [];
 
   const results = [];

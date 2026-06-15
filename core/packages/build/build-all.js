@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawn } from "node:child_process";
 
 /**
  * List of npm script names that constitute the full build pipeline.
@@ -9,10 +9,10 @@ import { spawn } from 'node:child_process';
  * do not share intermediate state at the file-system level.
  */
 export const SUB_BUILDERS = Object.freeze([
-  'build:dependencies',
-  'build:components',
-  'build:styles',
-  'build:assets',
+  "build:dependencies",
+  "build:components",
+  "build:styles",
+  "build:assets",
 ]);
 
 /**
@@ -28,28 +28,28 @@ export const SUB_BUILDERS = Object.freeze([
  */
 export function _runScript(scriptName, options = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn('npm', ['run', scriptName], {
+    const child = spawn("npm", ["run", scriptName], {
       cwd: options.cwd ?? process.cwd(),
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: ["ignore", "pipe", "pipe"],
     });
 
-    let stdout = '';
-    let stderr = '';
-    child.stdout?.on('data', (chunk) => {
+    let stdout = "";
+    let stderr = "";
+    child.stdout?.on("data", (chunk) => {
       const s = chunk.toString();
       stdout += s;
       if (!options.captureStdout) {
         process.stdout.write(s);
       }
     });
-    child.stderr?.on('data', (chunk) => {
+    child.stderr?.on("data", (chunk) => {
       const s = chunk.toString();
       stderr += s;
       process.stderr.write(s);
     });
 
-    child.on('error', (err) => reject(err));
-    child.on('close', (code) => {
+    child.on("error", (err) => reject(err));
+    child.on("close", (code) => {
       if (code === 0) {
         resolve({ status: 0, stdout, stderr });
       } else {
@@ -80,7 +80,7 @@ export async function runBuildAll(options = {}) {
   const failures = [];
   settled.forEach((s, i) => {
     const name = builders[i];
-    if (s.status === 'fulfilled') {
+    if (s.status === "fulfilled") {
       results.push({ name, ...s.value });
     } else {
       failures.push(name);
@@ -89,7 +89,7 @@ export async function runBuildAll(options = {}) {
 
   if (failures.length > 0) {
     const err = new Error(
-      `build-all: ${failures.length} sub-builder(s) failed: ${failures.join(', ')}`,
+      `build-all: ${failures.length} sub-builder(s) failed: ${failures.join(", ")}`,
     );
     err.failures = failures;
     err.results = results;
@@ -106,7 +106,8 @@ export async function runBuildAll(options = {}) {
 // `import.meta` so we cannot use the standard fileURLToPath(import.meta.url)
 // check inside the test environment.
 if (!process.env.JEST_WORKER_ID) {
-  const invokedDirectly = process.argv[1] && process.argv[1].endsWith('build-all.js');
+  const invokedDirectly =
+    process.argv[1] && process.argv[1].endsWith("build-all.js");
   if (invokedDirectly) {
     runBuildAll().catch((err) => {
       console.error(err.message);

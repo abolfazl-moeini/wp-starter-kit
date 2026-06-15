@@ -26,7 +26,7 @@
  */
 
 function deepClone(value) {
-  if (typeof structuredClone === 'function') return structuredClone(value);
+  if (typeof structuredClone === "function") return structuredClone(value);
   return JSON.parse(JSON.stringify(value));
 }
 
@@ -59,14 +59,14 @@ export class RuleEngine {
   register(rules) {
     if (Array.isArray(rules)) {
       for (const r of rules) this._addRule(r);
-    } else if (rules && typeof rules === 'object') {
+    } else if (rules && typeof rules === "object") {
       this._addRule(rules);
     }
     this.sync();
   }
 
   _addRule(rule) {
-    if (typeof rule.on === 'undefined') rule.on = true;
+    if (typeof rule.on === "undefined") rule.on = true;
     this.rules.push(rule);
   }
 
@@ -93,7 +93,10 @@ export class RuleEngine {
     const rules = this.activeRules;
     const matchPath = [];
     const ignore = this.ignoreFactChanges;
-    const next = (fn) => (typeof setImmediate !== 'undefined' ? setImmediate(fn) : setTimeout(fn, 0));
+    const next = (fn) =>
+      typeof setImmediate !== "undefined"
+        ? setImmediate(fn)
+        : setTimeout(fn, 0);
     let lastSession = deepClone(session);
     let complete = false;
     let pending = 0;
@@ -161,7 +164,7 @@ export class RuleEngine {
         } catch (_) {
           outcome = rule.condition.call(session, api, session);
         }
-        if (typeof outcome === 'undefined') {
+        if (typeof outcome === "undefined") {
           // Bare `() => true` — treat as truthy.
           api.when(true);
         } else {
@@ -176,15 +179,17 @@ export class RuleEngine {
   }
 
   findRules(query) {
-    if (typeof query === 'undefined') return this.rules;
-    Object.keys(query).forEach((k) => query[k] === undefined && delete query[k]);
+    if (typeof query === "undefined") return this.rules;
+    Object.keys(query).forEach(
+      (k) => query[k] === undefined && delete query[k],
+    );
     return this.rules.filter((rule) =>
       Object.keys(query).some((k) => query[k] === rule[k]),
     );
   }
 
   turn(state, filter) {
-    const on = String(state).toLowerCase() === 'on';
+    const on = String(state).toLowerCase() === "on";
     const rules = this.findRules(filter);
     for (const r of rules) r.on = on;
     this.sync();

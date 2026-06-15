@@ -7,5 +7,10 @@
   "npmScope": "@wpsk",
   "depsBundle": "wpsk-starter-deps.js",
   "phpFunctionPrefix": "wpsk_",
-  "uiFramework": "preact"
+  "uiFramework": "preact",
+  "restNamespace": "wpsk/v1",
+  "vendorPrefix": "WpskVendor",
+  "phpMinVersion": "7.4",
+  "phpSourceVersion": "8.1",
+  "batchEndpoint": "/batch/v1"
 }
