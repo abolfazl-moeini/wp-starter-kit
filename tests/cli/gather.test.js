@@ -1,0 +1,113 @@
+import { describe, test, expect } from "@jest/globals";
+
+import { gatherInputs } from "../../packages/cli/src/gather.js";
+import * as engineStub from "../../packages/cli/src/engine-stub.js";
+import { defaultFeatures } from "../../packages/cli/src/engine-stub.js";
+
+/**
+ * Recording fake UI. Same shape as the one in gather.test.js but
+ * kept inline so this test file is self-contained.
+ */
+function makeRecordingUi() {
+  const calls = [];
+  const ui = {
+    text: async (opts) => {
+      calls.push({ kind: "text", opts });
+      return "fake-text";
+    },
+    select: async (opts) => {
+      calls.push({ kind: "select", opts });
+      return opts.initialValue || (opts.options[0] && opts.options[0].value);
+    },
+    confirm: async (opts) => {
+      calls.push({ kind: "confirm", opts });
+      return false;
+    },
+    spinner: async (opts) => {
+      calls.push({ kind: "spinner", opts });
+      return { start: () => {}, stop: () => {}, message: () => {} };
+    },
+    log: async (msg) => {
+      calls.push({ kind: "log", msg });
+    },
+    renderSummary: async () => {},
+    renderError: async () => {},
+  };
+  ui.calls = calls;
+  return ui;
+}
+
+describe("--yes / -y non-interactive (I2.10, I2.11)", () => {
+  test("--yes: no prompt function is ever called", async () => {
+    const ui = makeRecordingUi();
+    await gatherInputs({
+      argv: ["my-plugin", "--yes"],
+      interactive: true, // --yes must override
+      engine: engineStub,
+      ui,
+    });
+    const promptCalls = ui.calls.filter(
+      (c) => c.kind === "text" || c.kind === "select" || c.kind === "confirm",
+    );
+    expect(promptCalls).toEqual([]);
+  });
+
+  test("-y: short form also skips prompts", async () => {
+    const ui = makeRecordingUi();
+    await gatherInputs({
+      argv: ["my-plugin", "-y"],
+      interactive: true,
+      engine: engineStub,
+      ui,
+    });
+    const promptCalls = ui.calls.filter(
+      (c) => c.kind === "text" || c.kind === "select" || c.kind === "confirm",
+    );
+    expect(promptCalls).toEqual([]);
+  });
+
+  test("--yes: all unspecified features come from the engine's defaults", async () => {
+    const ui = makeRecordingUi();
+    const out = await gatherInputs({
+      argv: ["my-plugin", "--yes"],
+      interactive: true,
+      engine: engineStub,
+      ui,
+    });
+    const defaults = defaultFeatures();
+    // Every key in defaults is present in the resolved features.
+    for (const k of Object.keys(defaults)) {
+      expect(out.features[k]).toBe(defaults[k]);
+    }
+  });
+
+  test("--yes: feature validation still runs on the merged set", async () => {
+    // The flag combo is valid; gather must not throw, and the
+    // validation.ok flag must be true.
+    const ui = makeRecordingUi();
+    const out = await gatherInputs({
+      argv: ["my-plugin", "--yes", "--scope=acme"],
+      interactive: true,
+      engine: engineStub,
+      ui,
+    });
+    expect(out.validation.ok).toBe(true);
+  });
+
+  test("explicit `interactive: false` also skips prompts (no --yes needed)", async () => {
+    const ui = makeRecordingUi();
+    const out = await gatherInputs({
+      argv: ["my-plugin"],
+      interactive: false,
+      engine: engineStub,
+      ui,
+    });
+    const promptCalls = ui.calls.filter(
+      (c) => c.kind === "text" || c.kind === "select" || c.kind === "confirm",
+    );
+    expect(promptCalls).toEqual([]);
+    // Defaults still applied.
+    const defaults = defaultFeatures();
+    expect(out.features.js).toBe(defaults.js);
+  });
+});

@@ -34,16 +34,22 @@ describe("wpsk --version and --help", () => {
     }
   });
 
-  test("--help output mentions the global --verbose flag", () => {
-    const program = buildProgram();
-    const help = program.helpInformation();
-    expect(help).toMatch(/--verbose/);
-  });
-
   test("--help output mentions the --version flag", () => {
     const program = buildProgram();
     const help = program.helpInformation();
     expect(help).toMatch(/--version/);
+  });
+
+  test("--help output is honest about which flags it owns (--verbose is gather.js, not commander)", () => {
+    // We intentionally do NOT register --verbose / --yes at the
+    // commander level; gather.js owns them via parseFlags. The
+    // top-level --help therefore only shows the version/help flags.
+    // Users who pass `wpsk create foo --yes` see no commander error
+    // because the action forwards the raw argv to gather.js, which
+    // does its own parsing.
+    const program = buildProgram();
+    const help = program.helpInformation();
+    expect(help).not.toMatch(/--verbose/);
   });
 
   test("each subcommand has a non-empty description (so --help is useful)", () => {

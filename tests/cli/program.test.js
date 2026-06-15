@@ -36,8 +36,11 @@ describe("buildProgram()", () => {
     expect(program.version()).toMatch(/^\d+\.\d+\.\d+/);
   });
 
-  test("exposes a global --verbose flag", () => {
+  test("does NOT register --verbose globally (gather.js owns it via parseFlags)", () => {
+    // The 30+ Appendix A flags (including --verbose and --yes) are
+    // owned by `parseFlags()` so we don't re-declare them on every
+    // subcommand. The program only owns commander-level options.
     const opts = program.options.filter((o) => o.long === "--verbose");
-    expect(opts).toHaveLength(1);
+    expect(opts).toHaveLength(0);
   });
 });
