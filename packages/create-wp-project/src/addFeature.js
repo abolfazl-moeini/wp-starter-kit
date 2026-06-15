@@ -168,6 +168,104 @@ function findGeneratorForVariant(id, variant) {
 }
 
 /**
+ * Find the generator descriptor for a feature in its CURRENT
+ * variant (the variant currently recorded in the manifest).
+ * Used by the variant-switch path to compute the delete-set.
+ *
+ * @param {string} id
+ * @param {string} currentVariant
+ * @returns {Object|null}
+ */
+function findGeneratorForCurrentVariant(id, currentVariant) {
+  return findGeneratorForVariant(id, currentVariant);
+}
+
+/**
+ * Recursively walk a directory and yield every regular file's
+ * path relative to `root`. Symlinks and special files are
+ * skipped (the engine only deletes files it can verify). The
+ * walker is bounded by `MAX_DEPTH` to avoid runaway recursion
+ * on pathological project shapes.
+ *
+ * @param {string} root   the project root (paths are relative to this)
+ * @param {string} [dir]  internal — the current directory being walked
+ * @param {number} [depth=0]
+ * @returns {AsyncGenerator<{rel: string, abs: string}>}
+ */
+async function* walkFiles(root, dir = root, depth = 0) {
+  const MAX_DEPTH = 10;
+  if (depth > MAX_DEPTH) return;
+  let entries;
+  try {
+    entries = await fs.readdir(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const ent of entries) {
+    const abs = path.join(dir, ent.name);
+    if (ent.isDirectory()) {
+      // Skip node_modules / vendor / dist / build / .git — the
+      // engine never touches those even if a generator's owns
+      // somehow matched them.
+      if (
+        ent.name === "node_modules" ||
+        ent.name === "vendor" ||
+        ent.name === "dist" ||
+        ent.name === "build" ||
+        ent.name === ".git"
+      ) {
+        continue;
+      }
+      yield* walkFiles(root, abs, depth + 1);
+    } else if (ent.isFile()) {
+      const rel = path.relative(root, abs);
+      // Normalize to forward slashes for glob matching
+      const relNorm = rel.split(path.sep).join("/");
+      yield { rel: relNorm, abs };
+    }
+  }
+}
+
+/**
+ * Compute the set of files to delete when switching from one
+ * variant to another. The delete-set is:
+ *
+ *   delete = { f on disk | f matches OLD owns AND f doesn't match NEW owns }
+ *
+ * Files in BOTH owns lists are kept (and overwritten by the new
+ * variant if it writes to them). Files in NEITHER list are
+ * untouched.
+ *
+ * @param {string} dir
+ * @param {string[]} oldOwns
+ * @param {string[]} newOwns
+ * @returns {Promise<string[]>}  list of relative paths to delete
+ */
+async function computeDeleteSet(dir, oldOwns, newOwns) {
+  const out = [];
+  for await (const { rel, abs } of walkFiles(dir)) {
+    if (isMatchedByAny(rel, oldOwns) && !isMatchedByAny(rel, newOwns)) {
+      out.push(abs);
+    }
+  }
+  return out;
+}
+
+/**
+ * Check whether a path is matched by ANY glob in the list.
+ *
+ * @param {string} filePath
+ * @param {string[]} globs
+ * @returns {boolean}
+ */
+function isMatchedByAny(filePath, globs) {
+  for (const glob of globs) {
+    if (minimatch(filePath, glob, { dot: true })) return true;
+  }
+  return false;
+}
+
+/**
  * Filter a generator's `files` output to only those matched by
  * the generator's `owns` globs. A file outside `owns` is a
  * hard error — the generator is misbehaving and the engine
@@ -358,6 +456,34 @@ export async function addFeature(dir, id, variant, opts = {}) {
     };
   }
 
+  // 8b. Variant switch: the feature is on with a DIFFERENT
+  //     variant. We must (a) delete the OLD variant's owned
+  //     files that the NEW variant doesn't also claim, and
+  //     (b) write the NEW variant's files. The delete-set is
+  //     computed by walking the project tree and matching
+  //     each file against the OLD / NEW owns lists.
+  //     Files matching BOTH lists are kept (the NEW variant
+  //     will overwrite them via the normal write path below).
+  let deleted = [];
+  const currentVariant = currentFeatures[id];
+  if (currentVariant !== undefined) {
+    const oldGen = findGeneratorForCurrentVariant(id, currentVariant);
+    if (oldGen) {
+      const toDelete = await computeDeleteSet(dir, oldGen.owns, gen.owns);
+      for (const abs of toDelete) {
+        try {
+          await fs.unlink(abs);
+          deleted.push(path.relative(dir, abs));
+        } catch (error) {
+          // A file that disappeared between the walk and the
+          // unlink is not a failure (someone else cleaned it
+          // up). Re-throw on real I/O errors.
+          if (error.code !== "ENOENT") throw error;
+        }
+      }
+    }
+  }
+
   // 9. Write the owned files. Directories are created on demand.
   const written = [];
   for (const [filePath, content] of Object.entries(filesToWrite)) {
@@ -385,6 +511,7 @@ export async function addFeature(dir, id, variant, opts = {}) {
   return {
     ok: true,
     written,
+    deleted,
     deps: contribution.deps || {},
     devDeps: contribution.devDeps || {},
     manifest: nextManifest,
