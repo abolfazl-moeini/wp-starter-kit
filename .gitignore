@@ -33,3 +33,6 @@ project.config.local.json
 *.swp
 *~
 .DS_Store
+
+# CLI smoke-test scratch project (do not commit)
+tmp-wpsk-smoke-*/
