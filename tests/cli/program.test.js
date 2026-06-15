@@ -44,3 +44,54 @@ describe("buildProgram()", () => {
     expect(opts).toHaveLength(0);
   });
 });
+
+/* -------------------------------------------------------------------- */
+/* Per-subcommand help text (Phase I4 smoke)                              */
+/* -------------------------------------------------------------------- */
+
+describe("subcommand --help text (Phase I4 smoke)", () => {
+  // The 30+ feature/answer/runOptions flags live in parseFlags, so
+  // commander does not auto-list them. To make `wpsk <sub> --help`
+  // discoverable, every subcommand includes a "Flags" block via
+  // .addHelpText("after", ...). These tests lock that contract:
+  // a user reading --help should see the flags they can pass for
+  // that subcommand.
+
+  function helpFor(name) {
+    const program = buildProgram();
+    const sub = program.commands.find((c) => c.name() === name);
+    return sub.helpInformation();
+  }
+
+  test("wpsk add --help lists the add-relevant flags", () => {
+    const help = helpFor("add");
+    for (const flag of [
+      "--variant",
+      "--yes",
+      "--force",
+      "--verbose",
+      "--install",
+    ]) {
+      expect(help).toMatch(flag);
+    }
+  });
+
+  test("wpsk remove --help lists the remove-relevant flags (no --variant, no --install)", () => {
+    const help = helpFor("remove");
+    for (const flag of ["--yes", "--force", "--verbose"]) {
+      expect(help).toMatch(flag);
+    }
+    // remove intentionally has neither --variant nor --install —
+    // it cannot pick a variant and does not need to re-run an
+    // installer (the engine's own sync handles any package.json
+    // changes). Lock this so a future "add remove's flags for
+    // symmetry" patch is caught in review.
+    expect(help).not.toMatch(/--variant/);
+    expect(help).not.toMatch(/--install/);
+  });
+
+  test("wpsk list --help mentions --json (machine output flag)", () => {
+    const help = helpFor("list");
+    expect(help).toMatch(/--json/);
+  });
+});

@@ -228,6 +228,64 @@ const ui = {
     // a structured {ok:false, reason} and the bin layer writes
     // a single line to stderr.
   },
+
+  /**
+   * Phase I4 — `wpsk list` table renderer. Prints a 3-column
+   * table (FEATURE | STATE | VARIANT) with a header row and an
+   * aligned body. The function is intentionally ANSI-color aware
+   * (we tint the `state` column green for "on" and dim grey for
+   * "off"); picocolors is already a dep, so we use it. Falls
+   * back to a plain, uncolored string when stdout is not a TTY
+   * (e.g. when the user pipes to `less` or to `wpsk list --json`).
+   *
+   * The function is async for API symmetry with the other
+   * ui.render* helpers, but the work is synchronous; tests can
+   * `await` it without consequence.
+   *
+   * @param {Array<{id: string, state: string, variant: string}>} rows
+   * @returns {Promise<void>}
+   */
+  async renderFeatureTable(rows) {
+    if (!Array.isArray(rows) || rows.length === 0) {
+      process.stdout.write("(no features)\n");
+      return;
+    }
+    let pc;
+    try {
+      pc = (await import("picocolors")).default;
+    } catch {
+      pc = null; // picocolors missing — fall back to plain
+    }
+    const tint = (color, str) => (pc ? pc[color](str) : String(str));
+
+    const header = ["FEATURE", "STATE", "VARIANT"];
+    const body = rows.map((r) => [
+      r.id,
+      r.state,
+      typeof r.variant === "string" ? r.variant : String(r.variant),
+    ]);
+    const all = [header, ...body];
+    const widths = [0, 0, 0];
+    for (const row of all) {
+      for (let i = 0; i < row.length; i++) {
+        if (row[i].length > widths[i]) widths[i] = row[i].length;
+      }
+    }
+    const fmt = (cols) =>
+      cols.map((c, i) => c.padEnd(widths[i], " ")).join("  ");
+    process.stdout.write(fmt(header) + "\n");
+    process.stdout.write(widths.map((w) => "-".repeat(w)).join("  ") + "\n");
+    for (let r = 0; r < body.length; r++) {
+      const row = body[r];
+      // The "state" column gets tinted (row index 1).
+      const colored = [
+        row[0],
+        tint(row[1] === "on" ? "green" : "gray", row[1]),
+        row[2],
+      ];
+      process.stdout.write(fmt(colored) + "\n");
+    }
+  },
 };
 
 export default ui;

@@ -225,7 +225,12 @@ export function buildProgram() {
   allowPassthrough(
     program
       .command("add <feature>")
-      .description("add a feature to an existing wp-starter-kit project"),
+      .description("add a feature to an existing wp-starter-kit project")
+      .option("--variant <variant>", "feature variant to add")
+      .option("-y, --yes", "skip confirmation prompts")
+      .option("--install", "run npm install / composer install after adding")
+      .option("-f, --force", "force overwrite of existing files")
+      .option("-v, --verbose", "verbose runner output"),
   ).action(async (feature) => {
     const sub = program.commands.find((c) => c.name() === "add");
     return runAdd({ feature, argv: tailAfterSubcommand(sub) });
@@ -234,7 +239,10 @@ export function buildProgram() {
   allowPassthrough(
     program
       .command("remove <feature>")
-      .description("remove a feature from an existing wp-starter-kit project"),
+      .description("remove a feature from an existing wp-starter-kit project")
+      .option("-y, --yes", "skip confirmation prompts")
+      .option("-f, --force", "force removal")
+      .option("-v, --verbose", "verbose runner output"),
   ).action(async (feature) => {
     const sub = program.commands.find((c) => c.name() === "remove");
     return runRemove({ feature, argv: tailAfterSubcommand(sub) });
@@ -243,7 +251,8 @@ export function buildProgram() {
   allowPassthrough(
     program
       .command("list")
-      .description("list the features in the current project's wpsk-kit.json"),
+      .description("list the features in the current project's wpsk-kit.json")
+      .option("--json", "emit machine-readable JSON instead of a table"),
   ).action(async () => {
     const sub = program.commands.find((c) => c.name() === "list");
     return runList({ argv: tailAfterSubcommand(sub) });
