@@ -21,322 +21,322 @@ namespace WPSK\Support;
  *
  * @package wp-starter-kit
  */
-final class Assets
-{
-    /**
-     * Plugin-side base paths for asset files.
-     *
-     * Returned shape:
-     *   base_path : filesystem root of the plugin (trailing slash, from
-     *               `plugin_dir_path()`).
-     *   base_url  : public URL prefix of the plugin (trailing slash, from
-     *               `plugins_url('')`).
-     *
-     * @return array{base_path: string, base_url: string}
-     */
-    public static function resolve_paths(): array
-    {
-        // __FILE__ resolves to src/Support/Assets.php inside the plugin;
-        // plugin_dir_path() strips the file path and returns the plugin
-        // root with a trailing slash — that is what we want for base_path.
-        $base_path = plugin_dir_path(__FILE__);
+final class Assets {
 
-        // plugins_url('') returns the plugin's public URL prefix with a
-        // trailing slash, e.g. http://example.test/wp-content/plugins/wp-starter-kit/
-        $base_url = plugins_url('');
+	/**
+	 * Plugin-side base paths for asset files.
+	 *
+	 * Returned shape:
+	 *   base_path : filesystem root of the plugin (trailing slash, from
+	 *               `plugin_dir_path()`).
+	 *   base_url  : public URL prefix of the plugin (trailing slash, from
+	 *               `plugins_url('')`).
+	 *
+	 * @return array{base_path: string, base_url: string}
+	 */
+	public static function resolve_paths(): array {
+		// __FILE__ resolves to src/Support/Assets.php inside the plugin;
+		// plugin_dir_path() strips the file path and returns the plugin
+		// root with a trailing slash — that is what we want for base_path.
+		$base_path = plugin_dir_path( __FILE__ );
 
-        return [
-            'base_path' => $base_path,
-            'base_url'  => $base_url,
-        ];
-    }
+		// plugins_url('') returns the plugin's public URL prefix with a
+		// trailing slash, e.g. http://example.test/wp-content/plugins/wp-starter-kit/.
+		$base_url = plugins_url( '' );
 
-    /**
-     * Read the companion `.asset.php` sidecar for a `.js`/`.css` file and
-     * return its array shape. Mirrors the legacy `wpsk_asset_info()`
-     * contract: returns `[]` when the path is not `.js`/`.css` or when
-     * the sidecar does not exist.
-     *
-     * @param string $rel_path Absolute or plugin-relative path to a `.js`/`.css` file.
-     * @return array<string, mixed>
-     */
-    public static function asset_info(string $rel_path): array
-    {
-        if (!preg_match('#(.+)\.(?:js|css)$#', $rel_path, $match)) {
-            return [];
-        }
+		return [
+			'base_path' => $base_path,
+			'base_url'  => $base_url,
+		];
+	}
 
-        $asset_file = $match[1] . '.asset.php';
+	/**
+	 * Read the companion `.asset.php` sidecar for a `.js`/`.css` file and
+	 * return its array shape. Mirrors the legacy `wpsk_asset_info()`
+	 * contract: returns `[]` when the path is not `.js`/`.css` or when
+	 * the sidecar does not exist.
+	 *
+	 * @param string $rel_path Absolute or plugin-relative path to a `.js`/`.css` file.
+	 * @return array<string, mixed>
+	 */
+	public static function asset_info( string $rel_path ): array {
+		if ( ! preg_match( '#(.+)\.(?:js|css)$#', $rel_path, $match )) {
+			return [];
+		}
 
-        if (!file_exists($asset_file)) {
-            return [];
-        }
+		$asset_file = $match[1] . '.asset.php';
 
-        $data = include $asset_file;
+		if ( ! file_exists( $asset_file )) {
+			return [];
+		}
 
-        return is_array($data) ? $data : [];
-    }
+		$data = include $asset_file;
 
-    /**
-     * Enqueue a bundle JS file using the asset sidecar for cache-busting,
-     * dependency merging, and (new) translation loading.
-     *
-     * The signature is `(handle, rel_path, extra_deps)` so callers can use
-     * a stable WP handle independently of the file name — unlike the
-     * legacy `wpsk_enqueue_bundle_script` which derived the handle from
-     * the file basename. The new contract is required to align with
-     * `wp_register_script()` + `wp_enqueue_script()` + the
-     * `wp_set_script_translations()` gap fix.
-     *
-     * @param string $handle     WP script handle.
-     * @param string $rel_path   Path to the `.js` file (absolute or
-     *                           plugin-relative).
-     * @param array  $extra_deps Extra WP-script handles to merge with the
-     *                           sidecar's `dependencies`.
-     * @return bool              `true` once the script is registered and
-     *                           enqueued.
-     */
-    public static function enqueue_bundle_script(
-        string $handle,
-        string $rel_path,
-        array $extra_deps = []
-    ): bool {
-        $info    = self::asset_info($rel_path);
-        $version = $info['hash'] ?? false;
-        $deps    = array_merge($extra_deps, $info['dependencies'] ?? []);
+		return is_array( $data ) ? $data : [];
+	}
 
-        $url = self::resolve_asset_url($rel_path);
-        if ($version) {
-            $url = add_query_arg('id', $version, $url);
-        }
+	/**
+	 * Enqueue a bundle JS file using the asset sidecar for cache-busting,
+	 * dependency merging, and (new) translation loading.
+	 *
+	 * The signature is `(handle, rel_path, extra_deps)` so callers can use
+	 * a stable WP handle independently of the file name — unlike the
+	 * legacy `wpsk_enqueue_bundle_script` which derived the handle from
+	 * the file basename. The new contract is required to align with
+	 * `wp_register_script()` + `wp_enqueue_script()` + the
+	 * `wp_set_script_translations()` gap fix.
+	 *
+	 * @param string $handle     WP script handle.
+	 * @param string $rel_path   Path to the `.js` file (absolute or
+	 *                           plugin-relative).
+	 * @param array  $extra_deps Extra WP-script handles to merge with the
+	 *                           sidecar's `dependencies`.
+	 * @return bool              `true` once the script is registered and
+	 *                           enqueued.
+	 */
+	public static function enqueue_bundle_script(
+		string $handle,
+		string $rel_path,
+		array $extra_deps = []
+	): bool {
+		$info    = self::asset_info( $rel_path );
+		$version = $info['hash'] ?? false;
+		$deps    = array_merge( $extra_deps, $info['dependencies'] ?? [] );
 
-        wp_register_script($handle, $url, $deps, $version, true);
-        wp_enqueue_script($handle);
+		$url = self::resolve_asset_url( $rel_path );
+		if ($version) {
+			$url = add_query_arg( 'id', $version, $url );
+		}
 
-        // Wire translations: this is the plan.v2.md gap the legacy helpers
-        // never closed. We always call wp_set_script_translations, even
-        // when no .asset.php sidecar exists, so localization keeps
-        // working for hand-written bundles.
-        $config = self::read_project_config();
-        $domain = $config['textDomain'] ?? 'default';
+		wp_register_script( $handle, $url, $deps, $version, true );
+		wp_enqueue_script( $handle );
 
-        $paths     = self::resolve_paths();
-        $asset_dir = self::guess_translations_dir_for($rel_path, $paths['base_path']);
-        $translations_path = $asset_dir !== ''
-            ? $asset_dir
-            : rtrim($paths['base_path'], '/\\') . '/languages';
+		// Wire translations: this is the plan.v2.md gap the legacy helpers
+		// never closed. We always call wp_set_script_translations, even
+		// when no .asset.php sidecar exists, so localization keeps
+		// working for hand-written bundles.
+		$config = self::read_project_config();
+		$domain = $config['textDomain'] ?? 'default';
 
-        wp_set_script_translations($handle, $domain, $translations_path);
+		$paths             = self::resolve_paths();
+		$asset_dir         = self::guess_translations_dir_for( $rel_path, $paths['base_path'] );
+		$translations_path = '' !== $asset_dir
+			? $asset_dir
+			: rtrim( $paths['base_path'], '/\\' ) . '/languages';
 
-        return true;
-    }
+		wp_set_script_translations( $handle, $domain, $translations_path );
 
-    /**
-     * Enqueue a bundle CSS file using the asset sidecar for cache-busting
-     * and dependency merging.
-     *
-     * @param string $handle     WP style handle.
-     * @param string $rel_path   Path to the `.css` file.
-     * @param array  $extra_deps Extra WP-style handles to merge with the
-     *                           sidecar's `dependencies`.
-     * @return bool              `true` once the style is registered and
-     *                           enqueued.
-     */
-    public static function enqueue_bundle_style(
-        string $handle,
-        string $rel_path,
-        array $extra_deps = []
-    ): bool {
-        $info    = self::asset_info($rel_path);
-        $version = $info['hash'] ?? false;
-        $deps    = array_merge($extra_deps, $info['dependencies'] ?? []);
+		return true;
+	}
 
-        $url = self::resolve_asset_url($rel_path);
-        if ($version) {
-            $url = add_query_arg('id', $version, $url);
-        }
+	/**
+	 * Enqueue a bundle CSS file using the asset sidecar for cache-busting
+	 * and dependency merging.
+	 *
+	 * @param string $handle     WP style handle.
+	 * @param string $rel_path   Path to the `.css` file.
+	 * @param array  $extra_deps Extra WP-style handles to merge with the
+	 *                           sidecar's `dependencies`.
+	 * @return bool              `true` once the style is registered and
+	 *                           enqueued.
+	 */
+	public static function enqueue_bundle_style(
+		string $handle,
+		string $rel_path,
+		array $extra_deps = []
+	): bool {
+		$info    = self::asset_info( $rel_path );
+		$version = $info['hash'] ?? false;
+		$deps    = array_merge( $extra_deps, $info['dependencies'] ?? [] );
 
-        wp_register_style($handle, $url, $deps, $version);
-        wp_enqueue_style($handle);
+		$url = self::resolve_asset_url( $rel_path );
+		if ($version) {
+			$url = add_query_arg( 'id', $version, $url );
+		}
 
-        return true;
-    }
+		wp_register_style( $handle, $url, $deps, $version );
+		wp_enqueue_style( $handle );
 
-    /**
-     * Build the localize payload (shape consumed by `@wpsk/utils/localize.js`).
-     *
-     * Shape:
-     *   api   => ['url' => ..., 'nonce' => ...]   standard WP REST namespace
-     *   api_x => ['url' => ..., 'nonce' => ...]   secondary API (Laravel proxy)
-     *
-     * @return array<string, array{url: string, nonce: string}>
-     */
-    public static function get_localize_data(): array
-    {
-        $config      = self::read_project_config();
-        $slug        = $config['slug'] ?? 'wpsk-starter';
-        $hook_prefix = $config['hookPrefix'] ?? 'wpsk';
+		return true;
+	}
 
-        return [
-            'api'   => [
-                'url'   => sanitize_url(rest_url()),
-                'nonce' => wp_create_nonce('wp_rest'),
-            ],
-            'api_x' => [
-                'url'   => sanitize_url(rest_url($slug . '/v1/')),
-                'nonce' => wp_create_nonce($hook_prefix . '_rest'),
-            ],
-        ];
-    }
+	/**
+	 * Build the localize payload (shape consumed by `@wpsk/utils/localize.js`).
+	 *
+	 * Shape:
+	 *   api   => ['url' => ..., 'nonce' => ...]   standard WP REST namespace
+	 *   api_x => ['url' => ..., 'nonce' => ...]   secondary API (Laravel proxy)
+	 *
+	 * @return array<string, array{url: string, nonce: string}>
+	 */
+	public static function get_localize_data(): array {
+		$config      = self::read_project_config();
+		$slug        = $config['slug'] ?? 'wpsk-starter';
+		$hook_prefix = $config['hookPrefix'] ?? 'wpsk';
 
-    /**
-     * Load `project.config.json` from the plugin root (cached per request).
-     *
-     * Reads the file that lives next to `wp-starter-kit.php` (i.e. the
-     * plugin's own root), NOT a theme directory. This is the plugin
-     * equivalent of the legacy `wpsk_read_project_config()` and must
-     * read from the plugin root so the localize data and translation
-     * domain stay in sync with the project.
-     *
-     * @return array<string, mixed>
-     */
-    public static function read_project_config(): array
-    {
-        static $cache = null;
+		return [
+			'api'   => [
+				'url'   => sanitize_url( rest_url() ),
+				'nonce' => wp_create_nonce( 'wp_rest' ),
+			],
+			'api_x' => [
+				'url'   => sanitize_url( rest_url( $slug . '/v1/' ) ),
+				'nonce' => wp_create_nonce( $hook_prefix . '_rest' ),
+			],
+		];
+	}
 
-        if (null !== $cache) {
-            return $cache;
-        }
+	/**
+	 * Load `project.config.json` from the plugin root (cached per request).
+	 *
+	 * Reads the file that lives next to `wp-starter-kit.php` (i.e. the
+	 * plugin's own root), NOT a theme directory. This is the plugin
+	 * equivalent of the legacy `wpsk_read_project_config()` and must
+	 * read from the plugin root so the localize data and translation
+	 * domain stay in sync with the project.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function read_project_config(): array {
+		static $cache = null;
 
-        $paths      = self::resolve_paths();
-        $config_path = rtrim($paths['base_path'], '/\\') . '/project.config.json';
+		if (null !== $cache) {
+			return $cache;
+		}
 
-        if (!is_readable($config_path)) {
-            $cache = [];
-            return $cache;
-        }
+		$paths       = self::resolve_paths();
+		$config_path = rtrim( $paths['base_path'], '/\\' ) . '/project.config.json';
+
+		if ( ! is_readable( $config_path )) {
+			$cache = [];
+			return $cache;
+		}
 
         // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- reading a local JSON config, not a remote URL.
-        $decoded = json_decode((string) file_get_contents($config_path), true);
-        $cache   = is_array($decoded) ? $decoded : [];
+		$decoded = json_decode( (string) file_get_contents( $config_path ), true );
+		$cache   = is_array( $decoded ) ? $decoded : [];
 
-        return $cache;
-    }
+		return $cache;
+	}
 
-    // ------------------------------------------------------------------
-    // Legacy shims — preserve the original wpsk_* function contracts so
-    // existing call-sites (and the legacy AssetFunctionsTest, EnqueueTest,
-    // LocalizeTest suites) keep working unchanged. The new front door is
-    // `enqueue_bundle_script()` / `enqueue_bundle_style()` above.
-    // ------------------------------------------------------------------
+	// ------------------------------------------------------------------
+	// Legacy shims — preserve the original wpsk_* function contracts so
+	// existing call-sites (and the legacy AssetFunctionsTest, EnqueueTest,
+	// LocalizeTest suites) keep working unchanged. The new front door is
+	// `enqueue_bundle_script()` / `enqueue_bundle_style()` above.
+	// ------------------------------------------------------------------
 
-    /**
-     * Legacy shim for `wpsk_enqueue_bundle_script_at()` — the test seam
-     * the old `wpsk_*` functions used. Derives the handle from the file
-     * basename and calls `wp_enqueue_script()` directly (no `register`,
-     * no `wp_set_script_translations()`).
-     *
-     * @param string $abs_path   Absolute path to the JS file.
-     * @param array  $extra_deps Extra WP-script handles to merge into deps.
-     * @return bool              `true` once the script is enqueued.
-     */
-    public static function enqueue_legacy_bundle_script(string $abs_path, array $extra_deps = []): bool
-    {
-        $handle  = substr(basename($abs_path), 0, -3); // strip ".js"
-        $info    = self::asset_info($abs_path);
-        $version = $info['hash'] ?? false;
-        $deps    = array_merge($extra_deps, $info['dependencies'] ?? []);
+	/**
+	 * Legacy shim for `wpsk_enqueue_bundle_script_at()` — the test seam
+	 * the old `wpsk_*` functions used. Derives the handle from the file
+	 * basename and calls `wp_enqueue_script()` directly (no `register`,
+	 * no `wp_set_script_translations()`).
+	 *
+	 * @param string $abs_path   Absolute path to the JS file.
+	 * @param array  $extra_deps Extra WP-script handles to merge into deps.
+	 * @return bool              `true` once the script is enqueued.
+	 */
+	public static function enqueue_legacy_bundle_script( string $abs_path, array $extra_deps = [] ): bool {
+		$handle  = substr( basename( $abs_path ), 0, -3 ); // strip ".js".
+		$info    = self::asset_info( $abs_path );
+		$version = $info['hash'] ?? false;
+		$deps    = array_merge( $extra_deps, $info['dependencies'] ?? [] );
 
-        $url = self::resolve_asset_url($abs_path);
-        if ($version) {
-            $url = add_query_arg('id', $version, $url);
-        }
+		$url = self::resolve_asset_url( $abs_path );
+		if ($version) {
+			$url = add_query_arg( 'id', $version, $url );
+		}
 
-        wp_enqueue_script($handle, $url, $deps, $version, true);
+		wp_enqueue_script( $handle, $url, $deps, $version, true );
 
-        return true;
-    }
+		return true;
+	}
 
-    /**
-     * Legacy shim for `wpsk_enqueue_bundle_style_at()` — the test seam
-     * the old `wpsk_*` functions used. Derives the handle from the file
-     * basename and calls `wp_enqueue_style()` directly.
-     *
-     * @param string $abs_path   Absolute path to the CSS file.
-     * @param array  $extra_deps Extra WP-style handles to merge into deps.
-     * @return bool              `true` once the style is enqueued.
-     */
-    public static function enqueue_legacy_bundle_style(string $abs_path, array $extra_deps = []): bool
-    {
-        $handle  = substr(basename($abs_path), 0, -4); // strip ".css"
-        $info    = self::asset_info($abs_path);
-        $version = $info['hash'] ?? false;
-        $deps    = array_merge($extra_deps, $info['dependencies'] ?? []);
+	/**
+	 * Legacy shim for `wpsk_enqueue_bundle_style_at()` — the test seam
+	 * the old `wpsk_*` functions used. Derives the handle from the file
+	 * basename and calls `wp_enqueue_style()` directly.
+	 *
+	 * @param string $abs_path   Absolute path to the CSS file.
+	 * @param array  $extra_deps Extra WP-style handles to merge into deps.
+	 * @return bool              `true` once the style is enqueued.
+	 */
+	public static function enqueue_legacy_bundle_style( string $abs_path, array $extra_deps = [] ): bool {
+		$handle  = substr( basename( $abs_path ), 0, -4 ); // strip ".css".
+		$info    = self::asset_info( $abs_path );
+		$version = $info['hash'] ?? false;
+		$deps    = array_merge( $extra_deps, $info['dependencies'] ?? [] );
 
-        $url = self::resolve_asset_url($abs_path);
-        if ($version) {
-            $url = add_query_arg('id', $version, $url);
-        }
+		$url = self::resolve_asset_url( $abs_path );
+		if ($version) {
+			$url = add_query_arg( 'id', $version, $url );
+		}
 
-        wp_enqueue_style($handle, $url, $deps, $version);
+		wp_enqueue_style( $handle, $url, $deps, $version );
 
-        return true;
-    }
+		return true;
+	}
 
-    // ------------------------------------------------------------------
-    // Internals
-    // ------------------------------------------------------------------
+	// ------------------------------------------------------------------
+	// Internals
+	// ------------------------------------------------------------------
 
-    /**
-     * Map an absolute filesystem path to a public URL relative to the
-     * plugin root. Mirrors the legacy `wpsk_resolve_asset_url()` shape:
-     * if the file lives inside the plugin root, the relative subpath is
-     * preserved; otherwise fall back to a basename URL through
-     * `plugins_url()`.
-     */
-    private static function resolve_asset_url(string $abs_path): string
-    {
-        $paths    = self::resolve_paths();
-        $base_path = rtrim($paths['base_path'], '/\\');
-        $base_url  = $paths['base_url'];
+	/**
+	 * Map an absolute filesystem path to a public URL relative to the
+	 * plugin root. Mirrors the legacy `wpsk_resolve_asset_url()` shape:
+	 * if the file lives inside the plugin root, the relative subpath is
+	 * preserved; otherwise fall back to a basename URL through
+	 * `plugins_url()`.
+	 *
+	 * @param string $abs_path Absolute filesystem path to a `.js`/`.css` file.
+	 * @return string
+	 */
+	private static function resolve_asset_url( string $abs_path ): string {
+		$paths     = self::resolve_paths();
+		$base_path = rtrim( $paths['base_path'], '/\\' );
+		$base_url  = $paths['base_url'];
 
-        $real_abs  = realpath($abs_path);
-        $real_root = realpath($base_path);
+		$real_abs  = realpath( $abs_path );
+		$real_root = realpath( $base_path );
 
-        if ($real_abs && $real_root && strpos($real_abs, $real_root) === 0) {
-            $relative = ltrim(substr($real_abs, strlen($real_root)), '/');
-            return $base_url . $relative;
-        }
+		if ($real_abs && $real_root && strpos( $real_abs, $real_root ) === 0) {
+			$relative = ltrim( substr( $real_abs, strlen( $real_root ) ), '/' );
+			return $base_url . $relative;
+		}
 
-        return plugins_url('assets/bundles/' . basename($abs_path));
-    }
+		return plugins_url( 'assets/bundles/' . basename( $abs_path ) );
+	}
 
-    /**
-     * Best-effort guess at a `wp_set_script_translations()`-compatible
-     * path for a bundle file. Looks for a sibling `languages/` directory
-     * next to the file; falls back to the plugin-root `languages/`
-     * directory when the file is outside the plugin (e.g. inside a
-     * test temp dir).
-     */
-    private static function guess_translations_dir_for(
-        string $abs_path,
-        string $base_path
-    ): string {
-        $dir = dirname($abs_path);
-        if (is_dir($dir . '/languages')) {
-            return $dir . '/languages';
-        }
+	/**
+	 * Best-effort guess at a `wp_set_script_translations()`-compatible
+	 * path for a bundle file. Looks for a sibling `languages/` directory
+	 * next to the file; falls back to the plugin-root `languages/`
+	 * directory when the file is outside the plugin (e.g. inside a
+	 * test temp dir).
+	 *
+	 * @param string $abs_path  Absolute path to the bundle file.
+	 * @param string $base_path Plugin root filesystem path (trailing slash optional).
+	 * @return string Absolute path to a translations directory, or '' when none found.
+	 */
+	private static function guess_translations_dir_for(
+		string $abs_path,
+		string $base_path
+	): string {
+		$dir = dirname( $abs_path );
+		if (is_dir( $dir . '/languages' )) {
+			return $dir . '/languages';
+		}
 
-        $real_dir  = realpath($dir);
-        $real_root = realpath(rtrim($base_path, '/\\'));
-        if ($real_dir && $real_root && strpos($real_dir, $real_root) === 0) {
-            // Walk up until we find a `languages` directory inside the plugin.
-            $candidate = $real_root . '/languages';
-            if (is_dir($candidate)) {
-                return $candidate;
-            }
-        }
+		$real_dir  = realpath( $dir );
+		$real_root = realpath( rtrim( $base_path, '/\\' ) );
+		if ($real_dir && $real_root && strpos( $real_dir, $real_root ) === 0) {
+			// Walk up until we find a `languages` directory inside the plugin.
+			$candidate = $real_root . '/languages';
+			if (is_dir( $candidate )) {
+				return $candidate;
+			}
+		}
 
-        return '';
-    }
+		return '';
+	}
 }

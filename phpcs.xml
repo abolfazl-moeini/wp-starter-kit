@@ -15,13 +15,19 @@
     <exclude-pattern>*/vendor/*</exclude-pattern>
     <exclude-pattern>assets/*</exclude-pattern>
     <!--
-        Dev tooling (rector configs, dev scripts, php-test-tools) and tests
-        follow their own conventions (PSR-12 + tabs not enforced) — only
-        WordPress runtime code under `includes/` is gated by full WPCS.
+        Dev tooling (rector configs, dev scripts, php-test-tools), tests,
+        and the new PSR-4 src/ tree follow their own conventions
+        (PSR-12 + tabs not enforced, StudlyCase class names matching
+        filename) — only WordPress runtime code under `includes/` is
+        gated by full WPCS. The src/ tree was added in p11-autoload and
+        expanded in p11-core-classes + p11-assets-support; the same
+        "follow their own conventions" rule that was already in place
+        for tests/ and dev/ now applies to src/.
     -->
     <exclude-pattern>dev/*</exclude-pattern>
     <exclude-pattern>packages/php-test-tools/*</exclude-pattern>
     <exclude-pattern>tests/*</exclude-pattern>
+    <exclude-pattern>src/*</exclude-pattern>
     <rule ref="PHPCompatibility"/>
     <rule ref="WordPress/"/>
     <rule ref="WordPress-Core"/>

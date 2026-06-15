@@ -38,7 +38,7 @@ if ( ! function_exists( 'wpsk_resolve_asset_url' ) ) {
 	 */
 	function wpsk_resolve_asset_url( $abs_path ) {
 		// Re-derive against the plugin base the new class uses.
-		$paths    = WPSK\Support\Assets::resolve_paths();
+		$paths     = WPSK\Support\Assets::resolve_paths();
 		$base_path = rtrim( $paths['base_path'], '/\\' );
 		$base_url  = $paths['base_url'];
 
