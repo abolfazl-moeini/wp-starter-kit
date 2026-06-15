@@ -186,9 +186,18 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
   });
 
   test("scaffoldProject(dir, answers, { features }) uses the supplied features verbatim", async () => {
+    // js=none means no JS toolchain. The features set must be
+    // self-consistent (jsTest:jest requires js != none) — so
+    // when we turn js off we also reset the JS-dependent
+    // features to their "off" values.
     const features = {
       ...defaultFeatures(),
-      js: "none", // turn JS off
+      js: "none",
+      jsTest: "none",
+      jsLib: "none",
+      css: "none",
+      blocks: "off",
+      restBatch: "off",
     };
     const res = await scaffoldProject(tmp, goodAnswers, { features });
     expect(res.ok).toBe(true);

@@ -48,9 +48,16 @@ import {
   readManifest,
   writeManifest,
   syncFeaturesToConfig,
+  DEFAULT_DIST_MODE,
 } from "./manifest.js";
 import { updateJsonFile } from "./json-utils.js";
 import { getPresets, applyPreset } from "./presets.js";
+// Phase 21 — generator registry. The scaffold runs the
+// enabled generators and merges their contributions into the
+// final write set. See src/generators/index.js for the
+// dispatch table.
+import { getGenerators } from "./generators/index.js";
+import { tplVars as tplVarsFromGenerators } from "./generators/_templates.js";
 
 /* -------------------------------------------------------------------- */
 /* Types                                                                */
@@ -169,6 +176,43 @@ export function answersToProjectConfig(a) {
 /* -------------------------------------------------------------------- */
 
 const TOKEN_RE = /\{\{\s*([a-zA-Z][a-zA-Z0-9_]*)\s*\}\}/g;
+
+/**
+ * Kit version that the scaffold stamps into the manifest's
+ * `kitVersion` field. The Phase 20+ manifest uses this to
+ * detect when a project needs a migration. Read at module
+ * load time from the package's own package.json so a release
+ * of @wpsk/create-wp-project automatically advances the
+ * version. Falls back to "0.0.0" if the package.json is
+ * missing (e.g. when the test runner inlines the module).
+ */
+function readKitVersion() {
+  try {
+    const pkgPath = modulePath2("..", "package.json");
+    if (!existsSync(pkgPath)) return "0.0.0";
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+    return typeof pkg.version === "string" ? pkg.version : "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+}
+
+/**
+ * Resolve a path relative to this module's directory. Mirrors
+ * the helper in src/generators/_templates.js — duplicated here
+ * to avoid a circular import (the templates module re-uses
+ * helpers from this file).
+ */
+function modulePath2(...parts) {
+  let here;
+  if (typeof __dirname !== "undefined" && __dirname) {
+    here = __dirname;
+  } else {
+    here = path.join(process.cwd(), "packages/create-wp-project/src");
+  }
+  return path.join(here, ...parts);
+}
+const KIT_VERSION = readKitVersion();
 
 export function renderTemplate(tmpl, vars) {
   return tmpl.replace(TOKEN_RE, (full, key) => {
@@ -1015,16 +1059,19 @@ function loadReadmeTxtTemplate() {
  * @param {string} targetDir  absolute path where the project will be created.
  * @param {ScaffoldAnswers} answers
  * @param {Object} [options]
+ * @param {Record<string,string>} [options.features]  Validated feature
+ *    set; when absent, `defaultFeatures()` is used. Pre-Phase 21
+ *    callers pass NO `options` at all — the answer-only call still
+ *    works (BC: the default feature set produces the same file list
+ *    the legacy scaffold produced).
  * @param {boolean} [options.force=false]  overwrite existing project
- *                                        files (project.config.json,
- *                                        src/Core/Plugin.php, etc.).
- *                                        Without --force the scaffold
- *                                        refuses to touch an existing
- *                                        project.
+ *    files (project.config.json, src/Core/Plugin.php, etc.).
+ *    Without --force the scaffold refuses to touch an existing
+ *    project.
  * @returns {Promise<{ok: boolean, written?: string[], reason?: string}>}
  */
 export async function scaffoldProject(targetDir, answers, options = {}) {
-  // 1. Validate
+  // 1. Validate answers.
   const v = validateAnswers(answers);
   if (!v.ok) {
     return {
@@ -1033,11 +1080,26 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
     };
   }
 
-  // 2. Refuse to clobber an existing project unless --force is set.
-  //    The sentinel is project.config.json — if it exists, the directory
-  //    is treated as an existing project. Any other file the scaffold
-  //    emits (src/Core/Plugin.php, etc.) is treated as a derivative of
-  //    that sentinel and is protected by the same rule.
+  // 2. Compute features. BC: absent options.features → defaults.
+  const features = options.features || defaultFeatures();
+
+  // 3. Validate the feature set. A violation must NOT write
+  //    anything to disk (per the generator migration test).
+  const fv = validateFeatureSet(features);
+  if (!fv.ok) {
+    const first = Object.entries(fv.errors)[0];
+    return {
+      ok: false,
+      reason: `invalid feature set: ${first[0]}=${JSON.stringify(first[1])}`,
+    };
+  }
+
+  // 4. Refuse to clobber an existing project unless --force is set.
+  //    The sentinel is project.config.json — if it exists, the
+  //    directory is treated as an existing project. Any other file
+  //    the scaffold emits (src/Core/Plugin.php, etc.) is treated as
+  //    a derivative of that sentinel and is protected by the same
+  //    rule.
   if (!options.force) {
     try {
       await fs.access(path.join(targetDir, "project.config.json"));
@@ -1050,76 +1112,80 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
     }
   }
 
-  // 3. Build cfg + vars
+  // 5. Build cfg + vars (the same way the legacy body did).
   const cfg = answersToProjectConfig(answers);
-  const vars = tplVars(answers, cfg);
+  const vars = tplVarsFromGenerators(answers, cfg);
 
-  // 4. Render + write
+  // 6. Run the registry. Each enabled generator contributes
+  //    `files` (and optionally `dirs`, `deps`, `devDeps`). The
+  //    core generator owns every always-on file; toggle
+  //    generators contribute only when their gate is open. The
+  //    final write set is the merge of all contributions, with
+  //    later generators overwriting earlier ones on key
+  //    collision (e.g. vendorScoping overrides core's
+  //    strauss.json).
+  const gens = getGenerators(features);
+  const ctx = { answers, cfg, features, vars };
+  const merged = { files: {}, dirs: [], deps: {}, devDeps: {} };
+  for (const g of gens) {
+    const out = g.run(ctx);
+    if (out.files) Object.assign(merged.files, out.files);
+    if (out.dirs) merged.dirs.push(...out.dirs);
+    if (out.deps) Object.assign(merged.deps, out.deps);
+    if (out.devDeps) Object.assign(merged.devDeps, out.devDeps);
+  }
+
+  // 7. Phase 21.13 — package.json is omitted ONLY when
+  //    js === "none" AND husky === "off" (no Node toolchain
+  //    to drive). The core generator already gates the file
+  //    on `js !== "none"`; this is the extra husky-gate.
+  if (
+    features.js === "none" &&
+    features.husky === "off" &&
+    "package.json" in merged.files
+  ) {
+    delete merged.files["package.json"];
+  }
+
+  // 8. Write files. The order is the merge order (registry
+  //    order) so two runs with the same feature set produce
+  //    the same byte sequence (idempotency, Phase 21.9/10).
   const written = [];
-
-  await fs.mkdir(path.join(targetDir, "assets"), { recursive: true });
-  await fs.mkdir(path.join(targetDir, "assets/stylesheets"), {
-    recursive: true,
-  });
-  await fs.mkdir(path.join(targetDir, "components"), { recursive: true });
-  await fs.mkdir(path.join(targetDir, "src/Core"), { recursive: true });
-  await fs.mkdir(path.join(targetDir, "src/Modules/ExampleFeature/Rest"), {
-    recursive: true,
-  });
-  await fs.mkdir(
-    path.join(targetDir, "src/Modules/ExampleFeature/assets/entries"),
-    { recursive: true },
-  );
-  await fs.mkdir(path.join(targetDir, ".husky"), { recursive: true });
-
-  // Phase 11: choose primary PHP bootstrap based on projectType.
-  //   projectType === 'theme' (legacy) → emit functions.php
-  //   projectType === 'plugin' (default) → emit {slug}.php
-  //   backwards compat: if no projectType is given, the default is
-  //   'plugin' (per answersToProjectConfig), and we emit {slug}.php.
-  const projectType = cfg.projectType;
-  const isPlugin = projectType === "plugin";
-  const phpBootstrapRel = isPlugin ? `${answers.slug}.php` : "functions.php";
-  const phpBootstrapContent = isPlugin
-    ? renderTemplate(loadPluginFileTemplate(), vars)
-    : renderTemplate(TEMPLATE_FUNCTIONS_PHP, vars);
-
-  const files = {
-    "project.config.json": renderTemplate(TEMPLATE_PROJECT_CONFIG, vars),
-    "build.config.json": renderTemplate(TEMPLATE_BUILD_CONFIG, vars),
-    "tsconfig.json": TEMPLATE_TSCONFIG_JSON,
-    "readme.txt": renderTemplate(loadReadmeTxtTemplate(), vars),
-    [phpBootstrapRel]: phpBootstrapContent,
-    "src/Core/Plugin.php": TEMPLATE_CORE_PLUGIN_PHP,
-    "src/Core/ModuleInterface.php": TEMPLATE_CORE_MODULE_INTERFACE_PHP,
-    "src/Core/ModuleLoader.php": TEMPLATE_CORE_MODULE_LOADER_PHP,
-    "src/Modules/ExampleFeature/Module.php": renderTemplate(
-      TEMPLATE_EXAMPLE_FEATURE_MODULE_PHP,
-      vars,
-    ),
-    "src/Modules/ExampleFeature/Rest/ItemsController.php": renderTemplate(
-      TEMPLATE_EXAMPLE_FEATURE_ITEMS_CONTROLLER,
-      vars,
-    ),
-    "src/Modules/ExampleFeature/assets/entries/admin.ts": renderTemplate(
-      TEMPLATE_EXAMPLE_FEATURE_ADMIN_TS,
-      vars,
-    ),
-    "strauss.json": renderTemplate(TEMPLATE_STRAUSS_JSON, vars),
-    ".husky/pre-commit": TEMPLATE_HUSKY_PRE_COMMIT,
-    "assets/dependencies.ts": renderTemplate(TEMPLATE_DEPENDENCIES_TS, vars),
-    "assets/stylesheets/style.css": renderTemplate(TEMPLATE_STYLESHEET, vars),
-    "package.json":
-      JSON.stringify(packageJsonForAnswers(answers), null, 2) + "\n",
-    "README.md": renderTemplate(TEMPLATE_README, vars),
-  };
-
-  for (const [rel, content] of Object.entries(files)) {
+  // Ensure every directory touched exists. The merged.dirs list
+  // is defensive (we mkdir parents on each write anyway), but a
+  // pre-pass keeps the file set tidy.
+  for (const d of merged.dirs) {
+    await fs.mkdir(path.join(targetDir, d), { recursive: true });
+  }
+  for (const [rel, content] of Object.entries(merged.files)) {
     const abs = path.join(targetDir, rel);
     await fs.mkdir(path.dirname(abs), { recursive: true });
     await fs.writeFile(abs, content, "utf8");
     written.push(rel);
   }
+
+  // 9. Write the manifest. The manifest's `features` object
+  //    is the validated feature set; `kitVersion` is the kit's
+  //    own version; `distMode` is "vendored" until Phase 23
+  //    flips the default to "deps".
+  const manifest = buildManifest({
+    kitVersion: KIT_VERSION,
+    features,
+    distMode: DEFAULT_DIST_MODE,
+  });
+  await writeManifest(targetDir, manifest);
+  // The manifest is part of the consumer's durable state — add
+  // it to the `written` list so callers can assert the full
+  // file set returned by scaffoldProject.
+  if (!written.includes("wpsk-kit.json")) {
+    written.push("wpsk-kit.json");
+  }
+
+  // 10. Dual-write `features` into project.config.json so
+  //    pre-Phase 20 readers (the kit's PHP classes, the JS
+  //    asset bundle) can answer "which features are on?"
+  //    without discovering wpsk-kit.json.
+  await syncFeaturesToConfig(targetDir, features);
 
   return { ok: true, written };
 }
