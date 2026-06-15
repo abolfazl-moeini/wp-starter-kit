@@ -341,48 +341,21 @@ export async function addFeature(dir, id, variant, opts = {}) {
   //    silently touch user code.
   const filesToWrite = filterToOwned(gen.id, contribution, gen.owns);
 
-  // 8. Idempotency check: if the feature is already on with the
-  //    same variant AND the files already exist with the same
-  //    body, the call is a no-op. We compare the current
-  //    manifest's feature entry AND a byte-for-byte match of
-  //    every owned file.
+  // 8. Idempotency check: if the manifest already records the
+  //    feature as on with the same variant, the call is a no-op.
+  //    We do NOT byte-compare the files — that's the job of
+  //    migrations / `update` (Phase 24). addFeature's contract
+  //    is "make the manifest match the requested state"; if the
+  //    manifest is already there, nothing to do.
   if (currentFeatures[id] === variant) {
-    let allMatch = true;
-    for (const [filePath, content] of Object.entries(filesToWrite)) {
-      const abs = path.join(dir, filePath);
-      let existing;
-      try {
-        existing = await fs.readFile(abs, "utf8");
-      } catch {
-        allMatch = false;
-        break;
-      }
-      if (existing !== content) {
-        allMatch = false;
-        break;
-      }
-    }
-    if (allMatch && Object.keys(filesToWrite).length > 0) {
-      return {
-        ok: true,
-        noop: true,
-        written: [],
-        deps: contribution.deps || {},
-        devDeps: contribution.devDeps || {},
-        manifest,
-      };
-    }
-    if (allMatch && Object.keys(filesToWrite).length === 0) {
-      // No files emitted (e.g. restBatch) — also a noop.
-      return {
-        ok: true,
-        noop: true,
-        written: [],
-        deps: contribution.deps || {},
-        devDeps: contribution.devDeps || {},
-        manifest,
-      };
-    }
+    return {
+      ok: true,
+      noop: true,
+      written: [],
+      deps: contribution.deps || {},
+      devDeps: contribution.devDeps || {},
+      manifest,
+    };
   }
 
   // 9. Write the owned files. Directories are created on demand.
