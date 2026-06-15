@@ -66,16 +66,30 @@ import { addFeature } from "./addFeature.js";
 import { removeFeature } from "./removeFeature.js";
 //
 // Phase 24 (24.1–24.6) — migrations registry, selector, and
-// runner live under `./migrations/index.js`. They are NOT
-// re-exported from this file in 24.1–24.6; the public-API
-// surface for the new symbols is added by the next sibling
-// task (24.7–24.10, 24.12–24.13 — `engine-phase24-tools`),
-// which composes on top of these primitives together with
-// `planUpdate`, `doctorProject`, and `getKitStatus`. Keeping
-// the re-export boundary tight here avoids landing a partial
-// engine surface that the CLI would then have to discover
-// twice (once via the engine, once via the next task's
-// composed re-export).
+// runner live under `./migrations/index.js`. Re-exported
+// here by the 24.13 follow-up (this commit) so the CLI
+// imports them from the engine surface (`@wpsk/create-wp-project`)
+// rather than deep-importing the file path.
+import {
+  getMigrations,
+  selectMigrations,
+  runMigrations,
+  compareSemver,
+} from "./migrations/index.js";
+//
+// Phase 24.7–24.10 — planUpdate, doctor, getDepVersions.
+// The dry-run planner, the project's health check, and the
+// dep-version registry the planner diffs against.
+import { planUpdate } from "./plan-update.js";
+import { doctorProject } from "./doctor.js";
+import { getDepVersions } from "./dep-versions.js";
+//
+// Phase 24.12–24.13 — getKitStatus. The installer's `wpsk
+// info` command runs this to surface kitVersion, distMode,
+// features, and an optional `updateAvailable` signal (driven
+// by an injected `lookupLatest` that the CLI wires to the
+// npm registry).
+import { getKitStatus } from "./kit-status.js";
 
 /* -------------------------------------------------------------------- */
 /* Types                                                                */
@@ -1330,4 +1344,15 @@ export {
   applyPreset,
   addFeature,
   removeFeature,
+  // Phase 24.1–24.6 — migrations registry, selector, runner.
+  getMigrations,
+  selectMigrations,
+  runMigrations,
+  compareSemver,
+  // Phase 24.7–24.10 — plan, doctor, dep registry.
+  planUpdate,
+  doctorProject,
+  getDepVersions,
+  // Phase 24.12–24.13 — kit status (CLI wpsk info).
+  getKitStatus,
 };
