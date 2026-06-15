@@ -1,8 +1,8 @@
 import { describe, test, expect } from "@jest/globals";
 
 import { gatherInputs } from "../../packages/cli/src/gather.js";
-import * as engineStub from "../../packages/cli/src/engine-stub.js";
-import { defaultFeatures } from "../../packages/cli/src/engine-stub.js";
+import * as engineStub from "@wpsk/create-wp-project";
+import { defaultFeatures } from "@wpsk/create-wp-project";
 
 /**
  * Recording fake UI. Same shape as the one in gather.test.js but

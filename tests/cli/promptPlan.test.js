@@ -1,7 +1,7 @@
 import { describe, test, expect } from "@jest/globals";
 
 import { buildPromptPlan } from "../../packages/cli/src/prompts.js";
-import { defaultFeatures } from "../../packages/cli/src/engine-stub.js";
+import { defaultFeatures } from "@wpsk/create-wp-project";
 
 /**
  * Helper: extract the ids from a plan. Branding questions have ids

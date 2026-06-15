@@ -20,7 +20,7 @@
  *    so we can react to choices made earlier in the plan.
  */
 
-import { getFeatureCatalog } from "./engine-stub.js";
+import { getFeatureCatalog } from "@wpsk/create-wp-project";
 
 /* -------------------------------------------------------------------- */
 /* Branding questions (always first; asked before features)              */

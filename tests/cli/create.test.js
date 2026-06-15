@@ -105,7 +105,7 @@ describe("runCreate — engine wiring (I3.1)", () => {
     expect(deps.engine.scaffoldProject).toHaveBeenCalledTimes(1);
     expect(deps.engine.scaffoldProject).toHaveBeenCalledWith(
       "/tmp/wpsk",
-      { slug: "my-plugin", npmScope: "acme" },
+      { slug: "my-plugin", npmScope: "acme", uiFramework: "preact" },
       { features: { js: "typescript", phpMinVersion: "8.1" }, force: true },
     );
     expect(out.ok).toBe(true);
@@ -167,8 +167,44 @@ describe("runCreate — engine wiring (I3.1)", () => {
     );
     const callArgs = deps.engine.scaffoldProject.mock.calls[0];
     expect(callArgs[0]).toBe("/tmp/x");
-    expect(callArgs[1]).toEqual({ slug: "x" });
+    // answers is forwarded with the sanitized slug and the
+    // derived `uiFramework` (mapped from features.jsLib). The
+    // engine requires uiFramework to be 'preact' or 'react',
+    // so we always inject it.
+    expect(callArgs[1]).toEqual({ slug: "x", uiFramework: "react" });
     expect(callArgs[2]).toEqual({ features, force: undefined });
+  });
+
+  test("derives answers.uiFramework from features.jsLib (preact default when none)", async () => {
+    const deps = defaultDeps();
+    const features = { js: "typescript", jsLib: "preact" };
+    await runCreate(
+      {
+        dir: "/tmp/x",
+        answers: { slug: "x" },
+        features,
+        runOptions: {},
+      },
+      deps,
+    );
+    const answers = deps.engine.scaffoldProject.mock.calls[0][1];
+    expect(answers.uiFramework).toBe("preact");
+  });
+
+  test("derives answers.uiFramework='preact' as the safe default when jsLib:none", async () => {
+    const deps = defaultDeps();
+    const features = { js: "none", jsLib: "none" };
+    await runCreate(
+      {
+        dir: "/tmp/x",
+        answers: { slug: "x" },
+        features,
+        runOptions: {},
+      },
+      deps,
+    );
+    const answers = deps.engine.scaffoldProject.mock.calls[0][1];
+    expect(answers.uiFramework).toBe("preact");
   });
 });
 

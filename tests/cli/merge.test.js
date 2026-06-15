@@ -1,7 +1,7 @@
 import { describe, test, expect } from "@jest/globals";
 
 import { mergeInputs } from "../../packages/cli/src/gather.js";
-import { defaultFeatures } from "../../packages/cli/src/engine-stub.js";
+import { defaultFeatures } from "@wpsk/create-wp-project";
 
 describe("mergeInputs(flags, prompted)", () => {
   // The defaults are pulled from the engine stub's `defaultFeatures()`

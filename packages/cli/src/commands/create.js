@@ -185,15 +185,28 @@ export async function runCreate(input, deps) {
 
   // 4. Engine call. We pass the answers with the sanitized slug
   //    overriding the raw input (so the engine never sees
-  //    'My Plugin!' — it sees 'my-plugin'). Features go inside
-  //    the options object per the plan.v3.md Appendix C
-  //    signature. `force` is forwarded as-is (true / false /
-  //    undefined) so tests can assert the call args literally.
-  //    The pre-scaffold dir check above already consulted
-  //    `force` for its own gating decision.
-  const answersWithSlug = { ...(i.answers || {}), slug };
+  //    'My Plugin!' — it sees 'my-plugin'). We also derive
+  //    `uiFramework` from `features.jsLib` (the engine's
+  //    pre-Phase-21 `validateAnswers` requires it; the kit
+  //    treats the same value as the renderer token).
+  //    Features go inside the options object per the
+  //    plan.v3.md Appendix C signature. `force` is forwarded
+  //    as-is (true / false / undefined) so tests can assert
+  //    the call args literally. The pre-scaffold dir check
+  //    above already consulted `force` for its own gating
+  //    decision.
+  const features = i.features || {};
+  const uiFramework =
+    features.jsLib === "preact" || features.jsLib === "react"
+      ? features.jsLib
+      : "preact";
+  const answersWithSlug = {
+    ...(i.answers || {}),
+    slug,
+    uiFramework,
+  };
   const forceValue = i.runOptions?.force;
-  const engineOpts = { features: i.features || {} };
+  const engineOpts = { features };
   if (forceValue !== undefined) {
     engineOpts.force = forceValue;
   }

@@ -31,6 +31,13 @@ import { runList } from "./commands/list.js";
 import { runUpdate } from "./commands/update.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runInfo } from "./commands/info.js";
+import { gatherInputs } from "./gather.js";
+import ui from "./ui.js";
+import * as runners from "./runners.js";
+// The real engine — Phase 20+21 work in `packages/create-wp-project`.
+// We import it directly here (the bin is the only place that
+// should ever need the real engine; unit tests inject fakes).
+import * as engine from "@wpsk/create-wp-project";
 
 /**
  * Resolve the on-disk path of the package.json that declares our
@@ -137,7 +144,82 @@ export function buildProgram() {
       ),
   ).action(async (slug) => {
     const sub = program.commands.find((c) => c.name() === "create");
-    return runCreate({ slug, argv: tailAfterSubcommand(sub) });
+    const argv = tailAfterSubcommand(sub);
+
+    // 1. Gather the resolved { answers, features, runOptions }
+    //    (gatherInputs handles prompts, defaults, flag-merge,
+    //    and validation — including the fail-fast I2.8 gate).
+    const resolved = await gatherInputs({ argv });
+
+    if (!resolved.validation.ok) {
+      // Re-emit a clean error line + exit 1. The gather
+      // pipeline already threw on the same condition in
+      // fail-fast mode (flag-derived combos); this branch is
+      // reached only when the prompt-derived final set is
+      // invalid (the user typed something contradictory at the
+      // terminal). The bin layer shows a single readable
+      // message.
+      process.stderr.write("wpsk create: invalid feature combination:\n");
+      for (const [k, msg] of Object.entries(resolved.validation.errors || {})) {
+        process.stderr.write("  " + k + ": " + msg + "\n");
+      }
+      process.exit(1);
+    }
+
+    // 2. Resolve the target dir: --dir= if set, else the
+    //    positional slug, else the sanitized answers.slug.
+    const targetDir =
+      resolved.runOptions.targetDir || slug || resolved.answers.slug || ".";
+
+    // 3. Drive runCreate. The bin layer wires the real
+    //    engine + runners + ui; runCreate stays pure and
+    //    unit-testable with fakes.
+    const result = await runCreate(
+      {
+        slug: slug || resolved.answers.slug,
+        dir: targetDir,
+        answers: resolved.answers,
+        features: resolved.features,
+        runOptions: resolved.runOptions,
+      },
+      {
+        engine,
+        runners,
+        ui,
+        // readEnginePackageVersion is the default impl in
+        // commands/create.js (it reads the on-disk
+        // packages/create-wp-project/package.json). We don't
+        // override it here; tests can inject a fake.
+      },
+    );
+
+    // 4. Render the summary + next-steps panels, then exit
+    //    0/1 based on the result.
+    if (!result.ok) {
+      process.stderr.write(
+        "wpsk create failed: " + (result.reason || "unknown") + "\n",
+      );
+      process.exit(1);
+    }
+
+    if (result.warnings && result.warnings.length > 0) {
+      process.stderr.write("\nwarnings:\n");
+      for (const w of result.warnings) {
+        process.stderr.write("  - " + w + "\n");
+      }
+    }
+
+    // Print the summary panel + the next-steps panel. The ui
+    // helper handles the stdout writes.
+    await ui.renderSummary({
+      answers: resolved.answers,
+      features: resolved.features,
+      runOptions: { ...resolved.runOptions, targetDir },
+    });
+    await ui.renderNextSteps(resolved.features, {
+      ...resolved.runOptions,
+      targetDir,
+    });
   });
 
   allowPassthrough(

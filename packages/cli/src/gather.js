@@ -14,10 +14,16 @@
  *   3. (if !--yes && missing) runPrompts(plan)  →  prompted values
  *   4. mergeInputs(flags, prompted, defaults) →  final resolved set
  *   5. validateFeatureSet(final) + validateAnswers(final)  →  last gate
+ *
+ * Phase I3: the default engine is the real one
+ * (`@wpsk/create-wp-project`) — the engine-stub used during
+ * I1/I2 has been deleted. Tests inject fakes through the
+ * `engine` option; the bin wires the real engine.
  */
 
 import { parseFlags } from "./flags.js";
 import { buildPromptPlan, runPrompts } from "./prompts.js";
+import * as realEngine from "@wpsk/create-wp-project";
 
 /**
  * Pure merge. Precedence: flags > prompted > defaults.
@@ -56,21 +62,14 @@ export function mergeInputs(flags, prompted, defaults) {
 /**
  * The default engine surface used by `gatherInputs()`. Production
  * callers (Phase I3+) will inject a real engine via the `engine`
- * option. Tests inject a stub. The default below is the temporary
- * `engine-stub.js` until the real engine lands (see the plan's
- * "engine stub" rule in §0.1 / §0.3).
+ * option. Tests inject a stub. The default is the real engine
+ * (`@wpsk/create-wp-project`) — see plan §0.3.
  *
- * IMPORTANT: when the real engine is wired, the import path here
- * is the single line that changes:
- *
- *   return (await import("./engine-stub.js"));
- *   // becomes:
- *   return (await import("@wpsk/create-wp-project"));
- *
- * The function names must match the §0.3 contract.
+ * Phase I3 swapped the engine-stub for the real engine; this
+ * function is the single source of truth for the default.
  */
-async function defaultEngine() {
-  return await import("./engine-stub.js");
+function defaultEngine() {
+  return realEngine;
 }
 
 /**
@@ -112,7 +111,16 @@ export async function gatherInputs(opts) {
   // 2. fail-fast validation of flag-derived features (no prompts yet).
   //    This is the I2.8 contract: an invalid combo (e.g. --fault-
   //    tolerance=on --php-min=7.4) errors before any prompt runs.
-  const flagValidation = engine.validateFeatureSet(flagInput.features);
+  //    The engine's real `validateFeatureSet` requires every
+  //    catalog id to be present; the stub was lax. We layer the
+  //    engine's defaults under the flag-derived set so a
+  //    minimal flag set like `--yes --scope=acme` is still a
+  //    valid (defaults-filled) feature set.
+  const flagFeaturesMerged = {
+    ...engine.defaultFeatures(),
+    ...flagInput.features,
+  };
+  const flagValidation = engine.validateFeatureSet(flagFeaturesMerged);
   if (!flagValidation.ok) {
     const err = new Error(
       "Invalid feature combination from flags: " +
