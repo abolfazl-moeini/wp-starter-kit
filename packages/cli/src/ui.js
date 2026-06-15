@@ -286,6 +286,91 @@ const ui = {
       process.stdout.write(fmt(colored) + "\n");
     }
   },
+
+  /**
+   * Phase I5 — `wpsk info` panel renderer. Prints the
+   * kit-version / dist-mode / path / update / features block
+   * that `engine.getKitStatus` returns. When `opts.json` is
+   * true, prints the raw object as JSON instead (machine
+   * output for `wpsk info --json`).
+   *
+   * Field order is the spec's canonical order:
+   *   Path:           <abs path>
+   *   Kit version:    <manifest.kitVersion>
+   *   Dist mode:      <manifest.distMode>
+   *   Update:         <latest> available     (yellow, only when updateAvailable)
+   *   Features:
+   *     <id>:  <variant>
+   *     ...
+   *
+   * The function is async for API symmetry; the work is
+   * synchronous. A missing picocolors is non-fatal — we
+   * fall back to plain strings (the test harness + non-TTY
+   * output).
+   *
+   * @param {{
+   *   kitVersion: string,
+   *   distMode: string,
+   *   path: string,
+   *   features: Object,
+   *   latestKitVersion?: string,
+   *   updateAvailable?: boolean,
+   * }} status
+   * @param {{json?: boolean}} [opts]
+   * @returns {Promise<void>}
+   */
+  async renderKitStatus(status, opts) {
+    const s = status || {};
+    const o = opts || {};
+
+    // --json takes precedence over the pretty panel. The
+    // contract: a single JSON object on stdout, trailing
+    // newline so the shell prompt starts on its own line.
+    if (o.json === true) {
+      process.stdout.write(JSON.stringify(s, null, 2) + "\n");
+      return;
+    }
+
+    let pc;
+    try {
+      pc = (await import("picocolors")).default;
+    } catch {
+      pc = null;
+    }
+    const tint = (color, str) => (pc ? pc[color](str) : String(str));
+
+    // Label column width: "Kit version:" is the longest
+    // label we emit. 16 chars (with a single trailing
+    // space) gives us a stable gutter that lines up with
+    // the "Features:" header.
+    const LABEL = 16;
+    const label = (k) => k.padEnd(LABEL, " ");
+    const lines = [];
+    lines.push("wpsk info");
+    lines.push("─".repeat("wpsk info".length));
+    lines.push(label("Path:") + (s.path || ""));
+    lines.push(label("Kit version:") + (s.kitVersion || ""));
+    lines.push(label("Dist mode:") + (s.distMode || ""));
+    if (s.updateAvailable === true && s.latestKitVersion) {
+      lines.push(
+        label("Update:") + tint("yellow", s.latestKitVersion + " available"),
+      );
+    }
+    lines.push("Features:");
+    const features =
+      s.features && typeof s.features === "object" ? s.features : {};
+    const featureIds = Object.keys(features);
+    if (featureIds.length === 0) {
+      lines.push("  (none)");
+    } else {
+      for (const id of featureIds) {
+        const v = features[id];
+        const val = typeof v === "string" ? v : String(v);
+        lines.push("  " + (id + ":").padEnd(12, " ") + " " + val);
+      }
+    }
+    process.stdout.write(lines.join("\n") + "\n");
+  },
 };
 
 export default ui;
