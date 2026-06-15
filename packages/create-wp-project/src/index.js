@@ -58,6 +58,12 @@ import { getPresets, applyPreset } from "./presets.js";
 // dispatch table.
 import { getGenerators } from "./generators/index.js";
 import { tplVars as tplVarsFromGenerators } from "./generators/_templates.js";
+// Phase 22 — additive feature mutations. The installer's
+// `wpsk add <feature>` and `wpsk remove <feature>` commands
+// call these directly. Both honor the same in-memory-then-write
+// safety contract the scaffold path uses.
+import { addFeature } from "./addFeature.js";
+import { removeFeature } from "./removeFeature.js";
 
 /* -------------------------------------------------------------------- */
 /* Types                                                                */
@@ -1293,8 +1299,11 @@ if (
 //   - syncFeaturesToConfig   manifest.js
 //   - updateJsonFile         json-utils.js
 //
-// Phase 21+ exports (addFeature, removeFeature, runMigrations, etc.)
-// will be added in their own commits.
+// Phase 22 exports (addFeature, removeFeature) — the installer's
+// `wpsk add <feature>` and `wpsk remove <feature>` entry points.
+// Both go through the same syncFeaturesToConfig contract as the
+// scaffold path, so a consumer that calls them directly sees the
+// same on-disk shape scaffoldProject produces.
 
 export {
   getFeatureCatalog,
@@ -1307,4 +1316,6 @@ export {
   updateJsonFile,
   getPresets,
   applyPreset,
+  addFeature,
+  removeFeature,
 };
