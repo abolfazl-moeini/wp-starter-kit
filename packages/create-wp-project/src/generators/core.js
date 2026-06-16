@@ -37,6 +37,7 @@ import { tplVars as legacyTplVars } from "./_templateVars.js";
 import {
   TEMPLATE_PROJECT_CONFIG,
   TEMPLATE_FUNCTIONS_PHP,
+  TEMPLATE_FUNCTIONS_PHP_NO_JS,
   TEMPLATE_DEPENDENCIES_TS,
   TEMPLATE_STRAUSS_JSON,
   TEMPLATE_HUSKY_PRE_COMMIT,
@@ -94,9 +95,18 @@ export function run(ctx) {
   // 2. {slug}.php (or functions.php for legacy theme mode)
   const isPlugin = (cfg.projectType || "plugin") === "plugin";
   const phpBootstrapRel = isPlugin ? `${answers.slug}.php` : "functions.php";
+  // Phase 25.A2: when the theme is PHP-only (js === "none"), emit a
+  // minimal functions.php that OMITS the JS bundle enqueue
+  // (wpsk_enqueue_bundle_script + wp_localize_script +
+  // wp_set_script_translations) because the consumer has no bundle
+  // to load. The stylesheet enqueue is preserved (CSS is a
+  // separate feature from JS).
+  const isPhpOnlyTheme = !isPlugin && features.js === "none";
   files[phpBootstrapRel] = isPlugin
     ? renderTemplate(loadPluginFileTemplate(), tpl)
-    : renderTemplate(TEMPLATE_FUNCTIONS_PHP, tpl);
+    : isPhpOnlyTheme
+      ? renderTemplate(TEMPLATE_FUNCTIONS_PHP_NO_JS, tpl)
+      : renderTemplate(TEMPLATE_FUNCTIONS_PHP, tpl);
   dirs.push("src/Core");
 
   // 3. src/Core/{Plugin,ModuleInterface,ModuleLoader}.php — moved

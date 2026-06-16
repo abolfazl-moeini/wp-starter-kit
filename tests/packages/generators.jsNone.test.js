@@ -356,3 +356,97 @@ describe("js:none — end-to-end scaffold (Phase 25.A1)", () => {
     expect(res.written).not.toContain(".flowconfig");
   });
 });
+
+/* -------------------------------------------------------------------- */
+/* 25.A2 GREEN — theme-mode enqueue guard                                */
+/* -------------------------------------------------------------------- */
+
+describe("js:none — theme-mode PHP enqueue guard (Phase 25.A2)", () => {
+  let tmp;
+  beforeEach(async () => {
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-jsnone-theme-"));
+  });
+  afterEach(async () => {
+    await fs.rm(tmp, { recursive: true, force: true });
+  });
+
+  const themeAnswers = {
+    slug: "my-php-theme",
+    npmScope: "myorg",
+    globalName: "MyPhpTheme",
+    localizeVar: "MyPhpThemeLoc",
+    textDomain: "my-php-theme",
+    hookPrefix: "my-php-theme",
+    depsBundle: "my-php-theme-deps.js",
+    phpFunctionPrefix: "myth_",
+    uiFramework: "preact",
+    projectType: "theme",
+  };
+
+  const phpOnlyThemeFeatures = {
+    js: "none",
+    jsLib: "none",
+    jsTest: "none",
+    phpMinVersion: "7.4",
+    phpFramework: "none",
+    phpTest: "phpunit",
+    restBatch: "off",
+    faultTolerance: "off",
+    vendorScoping: "on",
+    husky: "off",
+    css: "none",
+    blocks: "off",
+    license: "gpl2",
+    wpMinVersion: "6.0",
+    exampleFeature: "off",
+    i18n: "off",
+  };
+
+  test("functions.php (theme bootstrap) does NOT enqueue the missing JS bundle when js=none", async () => {
+    // Phase 25.A2: a js:none theme has no bundle to enqueue.
+    // The wpsk_enqueue_bundle_script() helper checks file_exists()
+    // at runtime, but emitting the call site is still misleading
+    // for a PHP-only project. The theme bootstrap must either
+    // omit the enqueue OR guard it behind a js !== "none" check.
+    const res = await scaffoldProject(tmp, themeAnswers, {
+      features: phpOnlyThemeFeatures,
+    });
+    expect(res.ok).toBe(true);
+    const fn = await fs.readFile(
+      path.join(tmp, "functions.php"),
+      "utf8",
+    );
+    // The unconditional enqueue line must not be present.
+    // We accept either:
+    //   (a) the line is omitted entirely, OR
+    //   (b) the call is wrapped in a `if (/* js !== "none" */) { ... }` guard.
+    const hasUnconditionalEnqueue = /wpsk_enqueue_bundle_script\(\s*['"]my-php-theme-deps\.js['"]\s*\)/.test(
+      fn,
+    );
+    if (hasUnconditionalEnqueue) {
+      // If the call IS present, it must be inside a conditional
+      // (e.g. `if (...) { wpsk_enqueue_bundle_script(...); }`).
+      // The test fails if the call is at the top level of the
+      // enqueue_assets() function.
+      const unguarded = /function\s+\w+_enqueue_assets[^{]*\{[^}]*wpsk_enqueue_bundle_script\s*\(\s*['"]my-php-theme-deps\.js['"]\s*\)/s.test(
+        fn,
+      );
+      expect(unguarded).toBe(false);
+    }
+  });
+
+  test("functions.php still ships the stylesheet enqueue when js=none (CSS ≠ JS)", async () => {
+    // The stylesheet enqueue is JS-independent — a PHP-only theme
+    // can still ship its style.css. This guards against an
+    // over-eager fix that strips the whole enqueue_assets() body.
+    const res = await scaffoldProject(tmp, themeAnswers, {
+      features: phpOnlyThemeFeatures,
+    });
+    expect(res.ok).toBe(true);
+    const fn = await fs.readFile(
+      path.join(tmp, "functions.php"),
+      "utf8",
+    );
+    expect(fn).toMatch(/wpsk_enqueue_stylesheet\(['"]style\.css['"]\)/);
+  });
+});

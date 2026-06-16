@@ -416,6 +416,72 @@ function {{slug_underscore}}_enqueue_assets(): void
 }
 `;
 
+/**
+ * Phase 25.A2 — PHP-only theme bootstrap (js:none variant).
+ *
+ * Emitted by core.js when `projectType === "theme"` AND
+ * `features.js === "none"`. The body is identical to
+ * TEMPLATE_FUNCTIONS_PHP MINUS the `wpsk_enqueue_bundle_script()`
+ * call and the `wp_localize_script()` / `wp_set_script_translations()`
+ * calls — they reference a bundle that does not exist for a
+ * PHP-only consumer. The stylesheet enqueue is preserved because
+ * CSS is a separate feature from JS (a js:none project may still
+ * want to ship style.css).
+ *
+ * BC: a "real" js variant (typescript/pure/flow) still emits
+ * TEMPLATE_FUNCTIONS_PHP — this template is only used when
+ * js === "none".
+ */
+export const TEMPLATE_FUNCTIONS_PHP_NO_JS = `<?php
+/**
+ * Theme bootstrap for the {{slug}} WordPress theme (PHP-only).
+ *
+ * Scaffolded from wp-starter-kit with js:none. The project is a
+ * pure-PHP WordPress theme: no JS bundle, no esbuild, no Node
+ * toolchain. The stylesheet enqueue is preserved (CSS is a
+ * separate feature from JS), but the bundle-script and the
+ * localize/translations hooks are omitted because they reference
+ * a bundle that does not exist.
+ *
+ * --------------------------------------------------------------------------
+ * DEPRECATION NOTICE (wp-starter-kit Phase 11)
+ * --------------------------------------------------------------------------
+ * This \`functions.php\` file is the legacy *theme* bootstrap. As of
+ * Phase 11 every scaffolded project is plugin-first:
+ *
+ *   1. The primary bootstrap is \`{{slug}}.php\` (a real WordPress
+ *      plugin file with Plugin Name/Version/Requires PHP/Text Domain
+ *      headers, ABSPATH guard, vendor/autoload.php, and lifecycle
+ *      hooks).
+ *   2. \`functions.php\` is kept ONLY for projects that explicitly
+ *      opt-in via \`projectType: 'theme'\` in project.config.json.
+ *   3. New projects should NOT ship a \`functions.php\`. The file
+ *      will be removed in the next major release.
+ *
+ * If you are reading this comment in a freshly-scaffolded plugin
+ * project, please delete this file and rely on \`{{slug}}.php\`.
+ */
+
+if (!defined('{{slug_underscore}}_VERSION')) {
+    define('{{slug_underscore}}_VERSION', '0.1.0');
+}
+
+add_action('after_setup_theme', '{{slug_underscore}}_setup');
+function {{slug_underscore}}_setup(): void
+{
+    load_theme_textdomain('{{textDomain}}', get_template_directory() . '/languages');
+}
+
+add_action('wp_enqueue_scripts', '{{slug_underscore}}_enqueue_assets');
+function {{slug_underscore}}_enqueue_assets(): void
+{
+    // PHP-only theme (js:none) — the stylesheet enqueue is
+    // preserved (CSS ≠ JS), but the bundle enqueue is omitted
+    // because the consumer has no JS bundle to load.
+    wpsk_enqueue_stylesheet('style.css');
+}
+`;
+
 export const TEMPLATE_DEPENDENCIES_TS = `/**
  * {{globalName}} — dependencies bundle entry (TypeScript).
  */
