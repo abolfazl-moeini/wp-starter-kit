@@ -77,8 +77,11 @@ describe("applyPreset() — known presets produce valid feature sets (Phase 20.1
     expect(fids.length).toBeGreaterThan(0);
     // Result must pass validateFeatureSet (proves the preset is
     // self-consistent, not just a non-empty object).
+    // Phase 25.G2: validateFeatureSet now also returns a `warnings`
+    // field (advisory only). Use toMatchObject so the new shape
+    // doesn't break this locked test.
     const v = validateFeatureSet(f);
-    expect(v).toEqual({ ok: true, errors: {} });
+    expect(v).toMatchObject({ ok: true, errors: {} });
   });
 
   test("applyPreset('minimal') matches plan.installer.md §1.5", () => {
@@ -103,7 +106,8 @@ describe("applyPreset() — known presets produce valid feature sets (Phase 20.1
   test("applyPreset('full') returns a complete valid feature set", () => {
     const f = applyPreset("full");
     const v = validateFeatureSet(f);
-    expect(v).toEqual({ ok: true, errors: {} });
+    // Phase 25.G2: validateFeatureSet also returns `warnings`.
+    expect(v).toMatchObject({ ok: true, errors: {} });
   });
 
   test("applyPreset('full') = §1 defaults (every variant[0])", () => {
@@ -137,7 +141,8 @@ describe("applyPreset() — known presets produce valid feature sets (Phase 20.1
   test("applyPreset('woocommerce') returns a complete valid feature set", () => {
     const f = applyPreset("woocommerce");
     const v = validateFeatureSet(f);
-    expect(v).toEqual({ ok: true, errors: {} });
+    // Phase 25.G2: validateFeatureSet also returns `warnings`.
+    expect(v).toMatchObject({ ok: true, errors: {} });
   });
 
   test("applyPreset('woocommerce') = full + blocks:on + exampleFeature:off + wpMinVersion:6.0", () => {

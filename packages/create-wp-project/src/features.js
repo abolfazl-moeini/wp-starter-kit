@@ -197,20 +197,28 @@ function comparePhpVersion(a, b) {
 
 /**
  * Validate a feature set against the rules in plan.v3.md §1.1.
- * Returns `{ ok, errors }` — `errors` is a record of
- * `{ featureId: humanMessage }`. A feature may have multiple
- * violations; the FIRST one is recorded (failing fast is more useful
- * than enumerating every error the installer might want to fix).
+ * Returns `{ ok, errors, warnings }`:
+ *  - `errors` is a record of `{ featureId: humanMessage }` for hard
+ *    violations. A feature may have multiple violations; the FIRST
+ *    one is recorded (failing fast is more useful than enumerating
+ *    every error the installer might want to fix).
+ *  - `warnings` is a record of `{ featureId: humanMessage }` for
+ *    ADVISORY-only issues. The set is still `ok: true` — the
+ *    installer surfaces the warning in the UI but does not block.
+ *    Phase 25.G2 introduces the first warning: `license=mit` on a
+ *    WordPress project (WordPress.org requires GPL compatibility).
  *
  * @param {Record<string, string>|null|undefined} features
- * @returns {{ ok: boolean, errors: Record<string,string> }}
+ * @returns {{ ok: boolean, errors: Record<string,string>, warnings: Record<string,string> }}
  */
 export function validateFeatureSet(features) {
   const errors = {};
+  const warnings = {};
   if (!features || typeof features !== "object") {
     return {
       ok: false,
       errors: { _root: "features must be an object" },
+      warnings: {},
     };
   }
 
@@ -247,7 +255,7 @@ export function validateFeatureSet(features) {
   // confusing "jsLib requires js" errors when the real problem is
   // that the value is just unknown.
   if (Object.keys(errors).length > 0) {
-    return { ok: false, errors };
+    return { ok: false, errors, warnings: {} };
   }
 
   // 1. `jsLib`, `jsTest`, `restBatch`, `css` require `js` ≠ none.
@@ -296,5 +304,25 @@ export function validateFeatureSet(features) {
     }
   }
 
-  return { ok: Object.keys(errors).length === 0, errors };
+  // 4. Warnings (Phase 25.G2) — advisory only, never block.
+  //    `license=mit` is technically a valid SPDX id, but
+  //    WordPress.org's plugin directory requires GPL compatibility
+  //    (https://wordpress.org/plugins/developers/#legal). MIT is
+  //    permissively licensed but not GPL-compatible, so a plugin
+  //    shipped to .org with MIT text may be rejected at review time.
+  //    We do NOT block — the developer may intentionally pick MIT for
+  //    a self-hosted, non-.org-distributed plugin. We SURFACE the
+  //    warning so the CLI can flag it before scaffold.
+  if (features.license === "mit") {
+    warnings.license =
+      `license=mit is not GPL-compatible; WordPress.org plugin ` +
+      `directory requires GPL2/GPL3. The scaffold will still emit ` +
+      `MIT, but the plugin may be rejected at .org review time.`;
+  }
+
+  return {
+    ok: Object.keys(errors).length === 0,
+    errors,
+    warnings,
+  };
 }

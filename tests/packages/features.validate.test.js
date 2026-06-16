@@ -47,7 +47,12 @@ describe("validateFeatureSet — shape (Phase 20.3/20.4)", () => {
 
   test("the all-default feature set is valid", () => {
     const r = validateFeatureSet(defaultFeatures());
-    expect(r).toEqual({ ok: true, errors: {} });
+    // Phase 25.G2: validateFeatureSet also returns `warnings`
+    // (advisory only — license=mit triggers a warning, but the
+    // default `license:gpl2` is GPL-compatible so no warning fires).
+    // Use toMatchObject so the new shape doesn't break this
+    // locked test.
+    expect(r).toMatchObject({ ok: true, errors: {} });
   });
 });
 
