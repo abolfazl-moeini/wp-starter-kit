@@ -108,7 +108,6 @@ export function tplVars(answers, cfg) {
 
 export function packageJsonForAnswers(answers, features) {
   const uiFramework = deriveUiFramework(features, answers);
-  const preactAliases = uiFramework === "preact";
   const huskyOn = !features || features.husky !== "off";
   const restBatchOn = features && features.restBatch === "on";
   const projectType = answers.projectType || "plugin";
