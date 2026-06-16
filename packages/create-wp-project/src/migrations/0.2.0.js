@@ -14,7 +14,6 @@
 import { existsSync } from "node:fs";
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
-import { readManifest, writeManifest, buildManifest } from "../manifest.js";
 import { updateJsonFile } from "../json-utils.js";
 
 export const version = "0.2.0";
