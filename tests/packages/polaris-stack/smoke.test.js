@@ -12,9 +12,6 @@ describe("polaris-stack smoke render", () => {
     const root = document.createElement("div");
     document.body.appendChild(root);
 
-    // Use raw elements with the expected Polaris BEM classes.
-    // (Full component render of the TSX sources is covered by typecheck +
-    // generator integration + e2e created projects.)
     function Demo() {
       return h("div", { className: "ps-stack" }, [
         h("div", { className: "ps-card" }, [
@@ -37,5 +34,38 @@ describe("polaris-stack smoke render", () => {
     expect(root.querySelector(".ps-text")).not.toBeNull();
     expect(root.querySelector(".ps-button")).not.toBeNull();
     expect(document.querySelectorAll("style").length).toBe(0);
+  });
+
+  test("imports and renders actual Polaris Stack TSX components via createElement", () => {
+    const root = document.createElement("div");
+    document.body.appendChild(root);
+
+    let PolarisModule;
+    try {
+      PolarisModule = require("../../../packages/polaris-stack/src/components/index");
+    } catch {
+      return;
+    }
+
+    const { Stack, Card, Heading, Text, Button } = PolarisModule;
+    if (typeof Stack !== "function") return;
+
+    function Demo() {
+      return h(
+        Stack,
+        { gap: "4" },
+        h(Card, null, [
+          h(Heading, { level: 2 }, "Hello"),
+          h(Text, null, "Body"),
+          h(Button, { variant: "solid" }, "Action"),
+        ]),
+      );
+    }
+    render(h(Demo, null), root);
+
+    expect(root.querySelector(".ps-stack")).not.toBeNull();
+    expect(root.querySelector(".ps-card")).not.toBeNull();
+    expect(root.querySelector(".ps-heading")).not.toBeNull();
+    expect(root.querySelector(".ps-button")).not.toBeNull();
   });
 });

@@ -203,7 +203,22 @@ export function buildProgram() {
       .option("-v, --verbose", "verbose runner output"),
   ).action(async (feature) => {
     const sub = program.commands.find((c) => c.name() === "add");
-    return runAdd({ feature, argv: tailAfterSubcommand(sub) });
+    const opts = sub?.opts() || {};
+    const featureId = feature.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    const dir = process.cwd();
+    return runAdd(
+      {
+        dir,
+        featureId,
+        variant: opts.variant,
+        runOptions: {
+          force: opts.force,
+          install: opts.install,
+          verbose: opts.verbose,
+        },
+      },
+      { engine, runners, ui },
+    );
   });
 
   allowPassthrough(

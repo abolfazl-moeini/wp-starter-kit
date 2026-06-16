@@ -35,8 +35,10 @@ function walkDir(dir, base = dir) {
   /** @type {Record<string, string>} */
   const files = {};
   for (const entry of readdirSync(dir)) {
+    if (entry.startsWith(".")) continue;
     const full = path.join(dir, entry);
     if (statSync(full).isDirectory()) {
+      if (entry === "node_modules" || entry === "dist") continue;
       Object.assign(files, walkDir(full, base));
       continue;
     }
