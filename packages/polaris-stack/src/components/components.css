@@ -1,0 +1,95 @@
+.ps-button {
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+  padding-block: var(--ps-space-2);
+  padding-inline: var(--ps-space-4);
+  border-radius: var(--ps-radius-1);
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ps-space-2);
+}
+
+.ps-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ps-button:focus-visible {
+  outline: 2px solid var(--ps-color-primary);
+  outline-offset: 2px;
+}
+
+.ps-button-solid {
+  background-color: var(--ps-color-primary);
+  color: var(--ps-color-primary-fg);
+}
+
+.ps-button-soft {
+  background-color: var(--ps-color-soft);
+  color: var(--ps-color-soft-fg);
+}
+
+.ps-button-ghost {
+  background-color: transparent;
+  color: var(--ps-color-primary);
+  border-color: var(--ps-color-border);
+}
+
+.ps-card {
+  background-color: var(--ps-color-muted);
+  color: var(--ps-color-fg);
+  border: 1px solid var(--ps-color-border);
+  border-radius: var(--ps-radius-2);
+  padding: var(--ps-space-4);
+  box-shadow: var(--ps-shadow-1);
+}
+
+.ps-text {
+  margin: 0;
+  color: var(--ps-color-fg);
+  font-family: var(--ps-font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.ps-heading {
+  margin: 0;
+  color: var(--ps-color-fg);
+  font-family: var(--ps-font-heading);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.ps-heading-1 {
+  font-size: 2rem;
+}
+
+.ps-heading-2 {
+  font-size: 1.5rem;
+}
+
+.ps-heading-3 {
+  font-size: 1.25rem;
+}
+
+.ps-heading-4 {
+  font-size: 1.125rem;
+}
+
+.ps-heading-5 {
+  font-size: 1rem;
+}
+
+.ps-heading-6 {
+  font-size: 0.875rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ps-button {
+    transition: none;
+  }
+}

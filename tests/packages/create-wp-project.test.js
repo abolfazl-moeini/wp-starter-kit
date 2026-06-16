@@ -240,6 +240,7 @@ describe("@wpsk/create-wp-project", () => {
           wpMinVersion: "6.0",
           exampleFeature: "on",
           i18n: "on",
+          frontendStack: "none",
         },
       });
     });

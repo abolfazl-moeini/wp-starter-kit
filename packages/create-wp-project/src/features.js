@@ -132,6 +132,13 @@ const FEATURE_CATALOG = [
     default: "on",
     notes: "Translation pipeline.",
   },
+  {
+    id: "frontendStack",
+    variants: ["none", "polaris"],
+    default: "none",
+    notes:
+      "Design system foundation. `polaris` = Polaris Stack (CSS vars + layout primitives + basic styled components). v1 requires js=typescript and jsLib=react/preact.",
+  },
 ];
 
 /**
@@ -288,6 +295,36 @@ export function validateFeatureSet(features) {
         `faultTolerance=on requires phpMinVersion ≥ 8.1 ` +
         `(currently phpMinVersion=${features.phpMinVersion})`;
     }
+  }
+
+  // 2.5. `frontendStack: polaris` requires TypeScript + React/Preact.
+  if (features["frontendStack"] === "polaris") {
+    const needsTs = features["js"] !== "typescript";
+    const needsLib =
+      features["jsLib"] !== "react" && features["jsLib"] !== "preact";
+    if (needsTs || needsLib) {
+      const msgs = [];
+      if (needsTs) {
+        msgs.push(`js must be typescript (currently js=${features["js"]})`);
+      }
+      if (needsLib) {
+        msgs.push(
+          `jsLib must be react or preact (currently jsLib=${features["jsLib"]})`,
+        );
+      }
+      errors["frontendStack"] =
+        "frontendStack=polaris (v1) requires: " + msgs.join("; ");
+    }
+  }
+
+  // 2.6. Polaris conflicts with Tailwind in v1.
+  if (
+    features["frontendStack"] === "polaris" &&
+    features["css"] === "tailwind"
+  ) {
+    errors["frontendStack"] =
+      "frontendStack=polaris is not compatible with css=tailwind in v1. " +
+      "Polaris uses global BEM CSS + design tokens; Tailwind conflicts with the layout/style separation rule.";
   }
 
   // 3. `blocks: on` requires `js` ≠ none AND `wpMinVersion` ≥ 5.8.

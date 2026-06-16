@@ -124,6 +124,12 @@ describe("parseFlags()", () => {
     expect(parseFlags(["--i18n=on"]).features.i18n).toBe("on");
   });
 
+  test("parses --frontend-stack=polaris → features.frontendStack", () => {
+    expect(
+      parseFlags(["--frontend-stack=polaris"]).features.frontendStack,
+    ).toBe("polaris");
+  });
+
   test("parses --preset=full → runOptions.preset", () => {
     expect(parseFlags(["--preset=full"]).runOptions.preset).toBe("full");
   });
@@ -194,6 +200,7 @@ describe("parseFlags()", () => {
       "--husky=",
       "--example=",
       "--i18n=",
+      "--frontend-stack=",
       "--preset=",
       "--kit-version=",
       "--install",

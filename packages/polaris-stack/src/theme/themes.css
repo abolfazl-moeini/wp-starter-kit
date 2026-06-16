@@ -1,0 +1,11 @@
+[data-theme="dark"] {
+  --ps-color-bg: #09090b;
+  --ps-color-fg: #fafafa;
+  --ps-color-muted: #18181b;
+  --ps-color-border: #27272a;
+  --ps-color-primary: #60a5fa;
+  --ps-color-primary-fg: #020617;
+  --ps-color-soft: #1e3a5f;
+  --ps-color-soft-fg: #bfdbfe;
+  color-scheme: dark;
+}

@@ -206,6 +206,23 @@ export function buildPromptPlan(currentFeatures, engine) {
         return needsJsSubQuestions(s);
       },
     });
+
+    if (id === "jsLib") {
+      plan.push({
+        id: "frontendStack",
+        type: "select",
+        target: "features",
+        message: "Frontend structure?",
+        options: [
+          { label: "None", value: "none" },
+          { label: "Polaris Stack", value: "polaris" },
+        ],
+        initialValue: "none",
+        when: (s) =>
+          s.features.js === "typescript" &&
+          (s.features.jsLib === "react" || s.features.jsLib === "preact"),
+      });
+    }
   }
 
   // 4. PHP features. Order matches plan.installer.md §1.1 UX.

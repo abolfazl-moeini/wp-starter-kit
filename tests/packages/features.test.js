@@ -175,6 +175,7 @@ describe("defaultFeatures() — all-default feature set (Phase 20.2)", () => {
       wpMinVersion: "6.0",
       exampleFeature: "on",
       i18n: "on",
+      frontendStack: "none",
     });
   });
 });

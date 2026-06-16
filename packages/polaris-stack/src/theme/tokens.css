@@ -1,0 +1,33 @@
+:root {
+  --ps-color-bg: #ffffff;
+  --ps-color-fg: #111111;
+  --ps-color-muted: #f4f4f5;
+  --ps-color-border: #d4d4d8;
+  --ps-color-primary: #2563eb;
+  --ps-color-primary-fg: #ffffff;
+  --ps-color-soft: #eff6ff;
+  --ps-color-soft-fg: #1d4ed8;
+  color-scheme: light;
+
+  --ps-font-body: system-ui, sans-serif;
+  --ps-font-heading: var(--ps-font-body);
+
+  --ps-space-0: 0;
+  --ps-space-1: 0.25rem;
+  --ps-space-2: 0.5rem;
+  --ps-space-3: 0.75rem;
+  --ps-space-4: 1rem;
+  --ps-space-6: 1.5rem;
+  --ps-space-8: 2rem;
+
+  --ps-size-content: 60ch;
+  --ps-size-wide: 90rem;
+
+  --ps-radius-1: 0.25rem;
+  --ps-radius-2: 0.5rem;
+
+  --ps-shadow-1: 0 1px 2px rgb(0 0 0 / 0.08);
+  --ps-shadow-2: 0 4px 6px rgb(0 0 0 / 0.08);
+
+  --ps-bp-md: 48rem;
+}

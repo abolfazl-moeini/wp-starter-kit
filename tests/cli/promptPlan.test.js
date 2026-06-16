@@ -51,9 +51,23 @@ describe("buildPromptPlan() — conditional omissions (I2.5)", () => {
       "husky",
       "exampleFeature",
       "i18n",
+      "frontendStack",
     ]) {
       expect(ids).toContain(id);
     }
+  });
+
+  test("frontendStack prompt only when js=typescript and jsLib is react/preact", () => {
+    const plan = buildPromptPlan({ js: "typescript" });
+    const q = plan.find((item) => item.id === "frontendStack");
+    expect(q).toBeDefined();
+    expect(q.when({ features: { js: "typescript", jsLib: "preact" } })).toBe(
+      true,
+    );
+    expect(q.when({ features: { js: "typescript", jsLib: "none" } })).toBe(
+      false,
+    );
+    expect(q.when({ features: { js: "pure", jsLib: "preact" } })).toBe(false);
   });
 
   test("when js=none, omits jsLib, jsTest, css, blocks at plan-time via when()", () => {

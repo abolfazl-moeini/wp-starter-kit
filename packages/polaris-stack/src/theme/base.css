@@ -1,0 +1,9 @@
+html {
+  background-color: var(--ps-color-bg);
+}
+
+body {
+  color: var(--ps-color-fg);
+  font-family: var(--ps-font-body);
+  margin: 0;
+}

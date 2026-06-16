@@ -35,6 +35,7 @@ export const KNOWN_FLAGS = [
   "--domain=",
   "--example=",
   "--fault-tolerance=",
+  "--frontend-stack=",
   "--force",
   "--git",
   "--global=",
@@ -96,6 +97,7 @@ const FLAG_MAP = [
   ["features", "husky", "--husky=", "kv"],
   ["features", "exampleFeature", "--example=", "kv"],
   ["features", "i18n", "--i18n=", "kv"],
+  ["features", "frontendStack", "--frontend-stack=", "kv"],
 
   // runOptions.*
   ["runOptions", "targetDir", "--dir=", "kv"],

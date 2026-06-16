@@ -1,0 +1,39 @@
+{
+  "name": "@wpsk/polaris-stack",
+  "version": "0.1.0",
+  "description": "Polaris Stack — CSS-variable design foundation with separated layout and style.",
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./styles.css": "./dist/styles.css",
+    "./theme-script": {
+      "types": "./dist/theme/script.d.ts",
+      "import": "./dist/theme/script.js"
+    }
+  },
+  "scripts": {
+    "build": "node build.config.mjs && tsc --emitDeclarationOnly --outDir dist",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "license": "MIT"
+}

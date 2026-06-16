@@ -60,6 +60,20 @@ describe("renderSummary()", () => {
     expect(out).toMatch(/preact/i);
   });
 
+  test("includes Polaris Stack in header when frontendStack=polaris", () => {
+    const out = renderSummary({
+      answers: { slug: "my-plugin" },
+      features: {
+        js: "typescript",
+        jsLib: "preact",
+        frontendStack: "polaris",
+      },
+      runOptions: {},
+    });
+    expect(out).toMatch(/Polaris Stack/);
+    expect(out).toMatch(/TS\+Preact/);
+  });
+
   test("includes the CSS framework when set", () => {
     const out = renderSummary({
       answers: { slug: "x" },

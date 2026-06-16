@@ -103,7 +103,17 @@ export function renderSummary(input) {
 
   // Header line.
   const slug = a.slug || "<unset>";
-  lines.push(`Summary: ${slug}`);
+  if (f.frontendStack === "polaris" && f.js !== "none") {
+    const libLabel =
+      f.jsLib === "react"
+        ? "React"
+        : f.jsLib === "preact"
+          ? "Preact"
+          : f.jsLib || "?";
+    lines.push(`Summary: ${slug} · TS+${libLabel} · Polaris Stack`);
+  } else {
+    lines.push(`Summary: ${slug}`);
+  }
 
   // 1. JS row (flavor + lib).
   if (f.js !== undefined) {

@@ -46,6 +46,7 @@ import { descriptor as jsLib } from "./jsLib.js";
 import { descriptor as phpFramework } from "./phpFramework.js";
 import { descriptor as ci } from "./ci.js";
 import { descriptor as faultTolerance } from "./faultTolerance.js";
+import { descriptor as frontendStack } from "./frontendStack.js";
 
 /* -------------------------------------------------------------------- */
 /* Full catalog                                                          */
@@ -76,6 +77,7 @@ const ALL = [
   phpFramework,
   ci,
   faultTolerance,
+  frontendStack,
 ];
 
 /* -------------------------------------------------------------------- */
@@ -178,6 +180,8 @@ export function getGenerators(features) {
     )
       enabled.push(g);
     else if (g.id === "faultTolerance" && f.faultTolerance === "on")
+      enabled.push(g);
+    else if (g.id === "frontendStack" && f["frontendStack"] === "polaris")
       enabled.push(g);
   }
   return enabled;

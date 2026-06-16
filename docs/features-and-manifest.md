@@ -25,24 +25,25 @@ A **feature** is a toggle or variant selection in the catalog
 has a stable `id`, a list of allowed `variants`, and a default
 (the first variant). Examples:
 
-| id               | variants                              | default      | purpose                                                       |
-| ---------------- | ------------------------------------- | ------------ | ------------------------------------------------------------- |
-| `js`             | `typescript`, `pure`, `flow`, `none`  | `typescript` | JavaScript pipeline. `none` = PHP-only plugin.                |
-| `jsLib`          | `none`, `preact`, `react`             | `none`       | UI library. Only meaningful when `js !== "none"`.             |
-| `jsTest`         | `jest`, `vitest`, `none`              | `jest`       | JS unit testing tool. Only when `js !== "none"`.              |
-| `phpMinVersion`  | `7.4`, `8.0`, `8.1`, `8.2`, `8.3`     | `7.4`        | Lowest PHP version to support (drives Rector downgrade).      |
-| `phpFramework`   | `none`, `wpdev`                       | `none`       | Use wpdev-framework? `wpdev` adds an adapter.                 |
-| `phpTest`        | `phpunit`, `none`                     | `phpunit`    | PHP unit testing. PHPUnit on by default.                      |
-| `restBatch`      | `off`, `on`                           | `off`        | REST batch endpoint + `@scope/fetch` JS client.               |
-| `faultTolerance` | `off`, `on`                           | `off`        | PHP fault-tolerance package. Requires PHP ≥ 8.1.              |
-| `vendorScoping`  | `on`, `off`                           | `on`         | Strauss vendor scoping on release.                            |
-| `husky`          | `on`, `off`                           | `on`         | Git pre-commit hooks via husky.                               |
-| `css`            | `none`, `sass`, `tailwind`, `postcss` | `none`       | CSS framework. Requires `js !== "none"`.                      |
-| `blocks`         | `off`, `on`                           | `off`        | Gutenberg block support. Requires `js !== "none"` + WP ≥ 5.8. |
-| `license`        | `gpl2`, `gpl3`, `mit`                 | `gpl2`       | License.                                                      |
-| `wpMinVersion`   | `6.0`, `5.8`, `6.2`, `6.4`, `6.6`     | `6.0`        | Minimum WordPress version.                                    |
-| `exampleFeature` | `on`, `off`                           | `on`         | Include the ExampleFeature demo module.                       |
-| `i18n`           | `on`, `off`                           | `on`         | Translation pipeline.                                         |
+| id               | variants                              | default      | purpose                                                                                       |
+| ---------------- | ------------------------------------- | ------------ | --------------------------------------------------------------------------------------------- |
+| `js`             | `typescript`, `pure`, `flow`, `none`  | `typescript` | JavaScript pipeline. `none` = PHP-only plugin.                                                |
+| `jsLib`          | `none`, `preact`, `react`             | `none`       | UI library. Only meaningful when `js !== "none"`.                                             |
+| `jsTest`         | `jest`, `vitest`, `none`              | `jest`       | JS unit testing tool. Only when `js !== "none"`.                                              |
+| `phpMinVersion`  | `7.4`, `8.0`, `8.1`, `8.2`, `8.3`     | `7.4`        | Lowest PHP version to support (drives Rector downgrade).                                      |
+| `phpFramework`   | `none`, `wpdev`                       | `none`       | Use wpdev-framework? `wpdev` adds an adapter.                                                 |
+| `phpTest`        | `phpunit`, `none`                     | `phpunit`    | PHP unit testing. PHPUnit on by default.                                                      |
+| `restBatch`      | `off`, `on`                           | `off`        | REST batch endpoint + `@scope/fetch` JS client.                                               |
+| `faultTolerance` | `off`, `on`                           | `off`        | PHP fault-tolerance package. Requires PHP ≥ 8.1.                                              |
+| `vendorScoping`  | `on`, `off`                           | `on`         | Strauss vendor scoping on release.                                                            |
+| `husky`          | `on`, `off`                           | `on`         | Git pre-commit hooks via husky.                                                               |
+| `css`            | `none`, `sass`, `tailwind`, `postcss` | `none`       | CSS framework. Requires `js !== "none"`.                                                      |
+| `blocks`         | `off`, `on`                           | `off`        | Gutenberg block support. Requires `js !== "none"` + WP ≥ 5.8.                                 |
+| `license`        | `gpl2`, `gpl3`, `mit`                 | `gpl2`       | License.                                                                                      |
+| `wpMinVersion`   | `6.0`, `5.8`, `6.2`, `6.4`, `6.6`     | `6.0`        | Minimum WordPress version.                                                                    |
+| `exampleFeature` | `on`, `off`                           | `on`         | Include the ExampleFeature demo module.                                                       |
+| `i18n`           | `on`, `off`                           | `on`         | Translation pipeline.                                                                         |
+| `frontendStack`  | `none`, `polaris`                     | `none`       | Optional Polaris Stack design foundation. Requires `js=typescript` and `jsLib=react\|preact`. |
 
 The catalog is the **single source of truth** — adding a new
 feature id here without updating `plan.v3.md §1` is a contract

@@ -173,6 +173,7 @@ describe("license validator (Phase 25.G2 — MIT + WordPress warning)", () => {
       wpMinVersion: "6.0",
       exampleFeature: "on",
       i18n: "on",
+      frontendStack: "none",
     };
     const result = validateFeatureSet(features);
     // The set itself is still valid (no errors); the warning is
@@ -203,6 +204,7 @@ describe("license validator (Phase 25.G2 — MIT + WordPress warning)", () => {
       wpMinVersion: "6.0",
       exampleFeature: "on",
       i18n: "on",
+      frontendStack: "none",
     };
     const result = validateFeatureSet(features);
     expect(result.ok).toBe(true);

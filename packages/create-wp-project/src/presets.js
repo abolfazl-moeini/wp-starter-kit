@@ -65,6 +65,7 @@ function buildMinimal() {
     husky: "off",
     exampleFeature: "off",
     i18n: "off",
+    frontendStack: "none",
     license: "gpl2",
     wpMinVersion: "6.0",
   };
