@@ -118,6 +118,73 @@ function readKitComposerDep(name) {
 }
 
 /**
+ * Map an npm package name to the workspace directory that
+ * contains it. The kit uses npm workspaces with two roots:
+ * `packages/*` (the @wpsk/* lib packages) and `core/packages/*`
+ * (the @wpsk/* build tools, plus the internal @core/utils).
+ *
+ * Only the entries we expect to be `@wpsk/*`-scoped live here —
+ * non-workspace deps are read from the kit's own `package.json`
+ * via `readKitDevDep` (or `readKitComposerDep` for composer).
+ *
+ * The mapping is hard-coded because the kit's workspace layout
+ * is itself hard-coded in the root `package.json`; if a new
+ * workspace package is added, the entry is added here in the
+ * same commit. The depVersions test (and the per-package
+ * `publishable.test.js`) cross-check that all 8 shippable
+ * packages ARE present in the registry.
+ *
+ * @param {string} name
+ * @returns {string|null}  relative path from kit root, or null
+ *                          if the name is not a known workspace
+ *                          package.
+ */
+function workspaceDirFor(name) {
+  // The 6 lib packages + 2 build packages. The basenames match
+  // the npm scope: `@wpsk/<basename>`. The 6 libs live in
+  // `packages/<basename>/` and the 2 build tools in
+  // `core/packages/<basename>/`.
+  const LIBS = ["hooks", "utils", "rest-utils", "html-utils", "fetch", "translation"];
+  const BUILD_TOOLS = ["build", "dependency-extraction-esbuild-plugin"];
+  const m = name.match(/^@wpsk\/(.+)$/);
+  if (!m) return null;
+  const base = m[1];
+  if (LIBS.includes(base)) return path.join("packages", base);
+  if (BUILD_TOOLS.includes(base)) return path.join("core/packages", base);
+  return null;
+}
+
+/**
+ * Read a workspace package's `version` field from its own
+ * `package.json`. Returns the version string (e.g. "0.1.0")
+ * or `null` if the workspace directory or `version` field is
+ * missing. This is how the @wpsk/* entries land in the
+ * registry: the kit's own workspace package files are the
+ * source of truth for the framework's own versions.
+ *
+ * The returned string is the exact `version` from the
+ * package.json — e.g. "0.1.0", not "^0.1.0". The scaffold
+ * wraps it with a caret ("^0.1.0") for the consumer's
+ * `package.json` because that's the npm convention for
+ * accepting future patch/minor versions of the same major.
+ * See `getDepVersions()` consumer code for the wrap.
+ */
+function readKitPackageVersion(name) {
+  const relDir = workspaceDirFor(name);
+  if (!relDir) return null;
+  const pkgPath = modulePath("..", "..", "..", relDir, "package.json");
+  if (!existsSync(pkgPath)) return null;
+  try {
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+    return typeof pkg.version === "string" && pkg.version.length > 0
+      ? pkg.version
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * The registry. Built lazily on first call (not at module
  * load) so the file-system reads don't happen in test
  * environments where the kit's package.json may be missing.
@@ -170,6 +237,27 @@ const REQUIRED_JS_ENTRIES = [
   "@babel/preset-typescript",
 ];
 
+/**
+ * The list of shippable @wpsk/* package names whose versions
+ * are read live from the kit's own workspace package.json
+ * files (see `readKitPackageVersion` above). Adding a package
+ * here without adding it to `publishable.test.js`'s list of
+ * shippable packages (or vice versa) is a contract bug —
+ * `depVersions.test.js` cross-checks that the two lists agree.
+ */
+const REQUIRED_WPSK_PACKAGES = [
+  // Runtime libs (consumer `dependencies`)
+  "@wpsk/hooks",
+  "@wpsk/utils",
+  "@wpsk/rest-utils",
+  "@wpsk/html-utils",
+  "@wpsk/fetch",
+  "@wpsk/translation",
+  // Build tools (consumer `devDependencies`)
+  "@wpsk/build",
+  "@wpsk/dependency-extraction-esbuild-plugin",
+];
+
 const REQUIRED_COMPOSER_ENTRIES = [
   // PHP test + static analysis
   "phpunit/phpunit",
@@ -212,6 +300,10 @@ export function getDepVersions() {
   const m = new Map();
   for (const name of REQUIRED_JS_ENTRIES) {
     const v = readKitDevDep(name);
+    if (v) m.set(name, v);
+  }
+  for (const name of REQUIRED_WPSK_PACKAGES) {
+    const v = readKitPackageVersion(name);
     if (v) m.set(name, v);
   }
   for (const name of REQUIRED_COMPOSER_ENTRIES) {

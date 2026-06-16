@@ -15,6 +15,7 @@
 
 import { readFileSync, existsSync } from "node:fs";
 import * as path from "node:path";
+import { getDepVersions } from "../dep-versions.js";
 
 /* -------------------------------------------------------------------- */
 /* renderTemplate (also re-exported from src/index.js)                   */
@@ -92,6 +93,60 @@ export function packageJsonForAnswers(answers) {
     projectType === "theme"
       ? `${answers.slug} — WordPress theme built on wp-starter-kit`
       : `${answers.slug} — WordPress plugin built on wp-starter-kit`;
+
+  // Phase 23.B4: read the kit's dep-versions registry and
+  // surface the @wpsk/* framework packages to the consumer.
+  // The 6 lib packages go in `dependencies` (runtime) and the
+  // 2 build packages go in `devDependencies` (compile-time
+  // tooling). Versions come from the kit's own workspace
+  // package.json files (see `getDepVersions` /
+  // `readKitPackageVersion` in dep-versions.js), so a single
+  // `npm version patch` in any @wpsk/* package propagates
+  // automatically to the next scaffold.
+  //
+  // The wrap `^X.Y.Z` matches npm's caret-range convention —
+  // accepting future patch/minor versions on the same major.
+  // The `dep-versions` test cross-checks that the registry
+  // value is the right form.
+  const kitVersions = getDepVersions();
+  const versionOf = (name) => {
+    const v = kitVersions.get(name);
+    if (!v) return "*"; // graceful fallback if the dep is missing
+    // If the registry already returns a range (e.g. "^0.1.0"
+    // from the kit's devDeps), use it as-is. If it returns a
+    // bare version (e.g. "0.1.0" from a workspace
+    // package.json), wrap with a caret.
+    return v.startsWith("^") || v === "*" || v.includes("npm:")
+      ? v
+      : `^${v}`;
+  };
+
+  // The 6 @wpsk/* runtime libs (consumed at runtime by the
+  // generated plugin's JS code).
+  const WPSK_RUNTIME_DEPS = [
+    "@wpsk/hooks",
+    "@wpsk/utils",
+    "@wpsk/rest-utils",
+    "@wpsk/html-utils",
+    "@wpsk/fetch",
+    "@wpsk/translation",
+  ];
+  // The 2 @wpsk/* build tools (compile-time only). The
+  // dep-extraction plugin is a transitive dep of
+  // @wpsk/build, so the consumer only needs to declare
+  // @wpsk/build — but we surface it explicitly for
+  // transparency.
+  const WPSK_BUILD_DEPS = [
+    "@wpsk/build",
+    "@wpsk/dependency-extraction-esbuild-plugin",
+  ];
+  const wpskDeps = Object.fromEntries(
+    WPSK_RUNTIME_DEPS.map((name) => [name, versionOf(name)]),
+  );
+  const wpskDevDeps = Object.fromEntries(
+    WPSK_BUILD_DEPS.map((name) => [name, versionOf(name)]),
+  );
+
   return {
     name: "@" + answers.npmScope + "/" + answers.slug,
     version: "0.1.0",
@@ -115,23 +170,37 @@ export function packageJsonForAnswers(answers) {
       check: "node core/packages/utils/check-cli.js",
     },
     workspaces: ["core/packages/*", "packages/*"],
-    dependencies: preactAliases
-      ? {
-          preact: "^10.19.3",
-          "@preact/compat": "^18.3.2",
-          "@preact/signals": "^2.9.1",
-          "@wordpress/hooks": "^3.50.0",
-          "@wordpress/dom-ready": "^3.50.0",
-          // Aliases: code uses `react`/`react-dom` but Preact is installed.
-          react: "npm:@preact/compat",
-          "react-dom": "npm:@preact/compat",
-        }
-      : {
-          react: "^18.3.0",
-          "react-dom": "^18.3.0",
-          "@wordpress/hooks": "^3.50.0",
-          "@wordpress/dom-ready": "^3.50.0",
-        },
+    dependencies: {
+      ...(preactAliases
+        ? {
+            preact: "^10.19.3",
+            "@preact/compat": "^18.3.2",
+            "@preact/signals": "^2.9.1",
+            "@wordpress/hooks": "^3.50.0",
+            "@wordpress/dom-ready": "^3.50.0",
+            // Aliases: code uses `react`/`react-dom` but Preact is installed.
+            react: "npm:@preact/compat",
+            "react-dom": "npm:@preact/compat",
+          }
+        : {
+            react: "^18.3.0",
+            "react-dom": "^18.3.0",
+            "@wordpress/hooks": "^3.50.0",
+            "@wordpress/dom-ready": "^3.50.0",
+          }),
+      // Phase 23.B4: the @wpsk/* framework packages, surfaced
+      // so the consumer can `import { ... } from "@wpsk/hooks"`
+      // at runtime. See header comment.
+      ...wpskDeps,
+    },
+    devDependencies: {
+      // Phase 23.B4: the @wpsk/* build tools. The consumer
+      // uses them at scaffold/build time. `@wpsk/build`
+      // bundles the dependency-extraction plugin as a
+      // transitive dep, but we surface it explicitly so the
+      // version is visible in the consumer's lockfile.
+      ...wpskDevDeps,
+    },
   };
 }
 
