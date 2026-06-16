@@ -214,6 +214,33 @@ if (!function_exists('wp_kses_post')) {
         return is_string($data) ? $data : '';
     }
 }
+if (!function_exists('sanitize_text_field')) {
+    /**
+     * Minimal WordPress-compatible sanitize_text_field() stub for the
+     * test bootstrap. Mirrors the real WP semantics in tests/phpunit:
+     *
+     *   - Strips control characters (\x00-\x08, \x0B, \x0C, \x0E-\x1F, \x7F)
+     *     except \t, \n, \r (those collapse to a single space).
+     *   - Collapses runs of spaces to one.
+     *   - Trims leading / trailing whitespace.
+     *
+     * NOTE: this stub does NOT strip HTML tags (neither does the real
+     * sanitize_text_field() in WordPress — that's wp_strip_all_tags()).
+     * The tests that exercise the real sanitization pass control chars
+     * and whitespace, not raw HTML.
+     */
+    function sanitize_text_field($str)
+    {
+        if (is_object($str) || is_array($str)) {
+            return '';
+        }
+        $str = (string) $str;
+        $str = preg_replace('/[\r\n\t]+/', ' ', $str);
+        $str = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/u', '', $str);
+        $str = preg_replace('/ +/', ' ', $str);
+        return trim($str);
+    }
+}
 if (!function_exists('esc_html')) {
     function esc_html($text)
     {
