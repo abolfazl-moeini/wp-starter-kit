@@ -30,6 +30,7 @@
 import { promises as fs, readFileSync, existsSync } from "node:fs";
 import * as path from "node:path";
 import { updateJsonFile } from "./json-utils.js";
+import { deriveUiFramework } from "./derive-ui-framework.js";
 
 /* -------------------------------------------------------------------- */
 /* Constants                                                             */
@@ -257,6 +258,8 @@ export async function syncFeaturesToConfig(dir, features) {
   if (!existsSync(cfgPath)) {
     // Bootstrap path — create a minimal v2-valid config + features.
     const minimal = { ...MINIMAL_V2_BRANDING, features: { ...features } };
+    const ui = deriveUiFramework(features, minimal);
+    if (ui) minimal.uiFramework = ui;
     await fs.writeFile(
       cfgPath,
       JSON.stringify(minimal, null, 2) + "\n",
@@ -268,6 +271,12 @@ export async function syncFeaturesToConfig(dir, features) {
   // Update path — preserve existing shape, set/replace `features`.
   await updateJsonFile(cfgPath, (cfg) => {
     cfg.features = { ...features };
+    const ui = deriveUiFramework(features, cfg);
+    if (ui) {
+      cfg.uiFramework = ui;
+    } else if ("uiFramework" in cfg) {
+      delete cfg.uiFramework;
+    }
     return cfg;
   });
 }

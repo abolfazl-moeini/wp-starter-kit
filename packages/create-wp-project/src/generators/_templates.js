@@ -16,6 +16,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import * as path from "node:path";
 import { getDepVersions } from "../dep-versions.js";
+import { deriveUiFramework } from "../derive-ui-framework.js";
 
 /* -------------------------------------------------------------------- */
 /* renderTemplate (also re-exported from src/index.js)                   */
@@ -94,7 +95,10 @@ export function tplVars(answers, cfg) {
 /* -------------------------------------------------------------------- */
 
 export function packageJsonForAnswers(answers, features) {
-  const preactAliases = answers.uiFramework === "preact";
+  const uiFramework = deriveUiFramework(features, answers);
+  const preactAliases = uiFramework === "preact";
+  const huskyOn = !features || features.husky !== "off";
+  const restBatchOn = features && features.restBatch === "on";
   const projectType = answers.projectType || "plugin";
   const description =
     projectType === "theme"
@@ -149,7 +153,7 @@ export function packageJsonForAnswers(answers, features) {
     "@wpsk/utils",
     "@wpsk/rest-utils",
     "@wpsk/html-utils",
-    "@wpsk/fetch",
+    ...(restBatchOn ? ["@wpsk/fetch"] : []),
     "@wpsk/translation",
   ];
   // The 2 @wpsk/* build tools (compile-time only). The
@@ -181,7 +185,7 @@ export function packageJsonForAnswers(answers, features) {
       "build:components": "wpsk-build-components",
       "build:styles": "wpsk-build-styles",
       "build:assets": "wpsk-build-dependencies",
-      prepare: "husky install",
+      ...(huskyOn ? { prepare: "husky install" } : {}),
       ...(jsTestVariant === "vitest"
         ? { test: "vitest run" }
         : jsTestVariant === "jest"
@@ -195,7 +199,7 @@ export function packageJsonForAnswers(answers, features) {
     }),
     workspaces: ["core/packages/*", "packages/*"],
     dependencies: {
-      ...(preactAliases
+      ...(uiFramework === "preact"
         ? {
             preact: "^10.19.3",
             "@preact/compat": "^18.3.2",
@@ -206,12 +210,17 @@ export function packageJsonForAnswers(answers, features) {
             react: "npm:@preact/compat",
             "react-dom": "npm:@preact/compat",
           }
-        : {
-            react: "^18.3.0",
-            "react-dom": "^18.3.0",
-            "@wordpress/hooks": "^3.50.0",
-            "@wordpress/dom-ready": "^3.50.0",
-          }),
+        : uiFramework === "react"
+          ? {
+              react: "^18.3.0",
+              "react-dom": "^18.3.0",
+              "@wordpress/hooks": "^3.50.0",
+              "@wordpress/dom-ready": "^3.50.0",
+            }
+          : {
+              "@wordpress/hooks": "^3.50.0",
+              "@wordpress/dom-ready": "^3.50.0",
+            }),
       // Phase 23.B4: the @wpsk/* framework packages, surfaced
       // so the consumer can `import { ... } from "@wpsk/hooks"`
       // at runtime. See header comment.

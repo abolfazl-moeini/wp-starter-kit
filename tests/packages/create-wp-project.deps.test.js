@@ -86,7 +86,6 @@ describe("@wpsk/create-wp-project — consumer package.json deps (Phase 23.B3/B4
     "@wpsk/utils",
     "@wpsk/rest-utils",
     "@wpsk/html-utils",
-    "@wpsk/fetch",
     "@wpsk/translation",
   ])(
     "package.json.dependencies includes %s with a non-empty version",
@@ -97,13 +96,28 @@ describe("@wpsk/create-wp-project — consumer package.json deps (Phase 23.B3/B4
       expect(consumerPkg.dependencies).toBeDefined();
       expect(consumerPkg.dependencies[pkg]).toBeDefined();
       expect(typeof consumerPkg.dependencies[pkg]).toBe("string");
-      // The version must be a non-empty string. It may be "*",
-      // a semver range, or a pinned exact version. The
-      // dep-versions registry is the source of truth — this
-      // test only checks presence, not the exact value.
       expect(consumerPkg.dependencies[pkg].length).toBeGreaterThan(0);
     },
   );
+
+  test("package.json.dependencies includes @wpsk/fetch only when restBatch=on", async () => {
+    const off = await scaffoldProject(tmp, goodAnswers);
+    expect(off.ok).toBe(true);
+    const offPkg = await readPackageJson();
+    expect(offPkg.dependencies["@wpsk/fetch"]).toBeUndefined();
+
+    await fs.rm(tmp, { recursive: true, force: true });
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-scaffold-pkg-"));
+
+    const { defaultFeatures } =
+      await import("../../packages/create-wp-project/src/features.js");
+    const res = await scaffoldProject(tmp, goodAnswers, {
+      features: { ...defaultFeatures(), restBatch: "on" },
+    });
+    expect(res.ok).toBe(true);
+    const onPkg = await readPackageJson();
+    expect(onPkg.dependencies["@wpsk/fetch"]).toBeDefined();
+  });
 
   /* ------------------------------------------------------------------ */
   /* Build-time @wpsk/* deps (2 renamed from @core/* in 23.B2)           */

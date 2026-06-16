@@ -42,6 +42,7 @@ import { descriptor as license } from "./license.js";
 import { descriptor as blocks } from "./blocks.js";
 import { descriptor as css } from "./css.js";
 import { descriptor as jsTest } from "./jsTest.js";
+import { descriptor as jsLib } from "./jsLib.js";
 import { descriptor as phpFramework } from "./phpFramework.js";
 import { descriptor as ci } from "./ci.js";
 import { descriptor as faultTolerance } from "./faultTolerance.js";
@@ -71,6 +72,7 @@ const ALL = [
   blocks,
   css,
   jsTest,
+  jsLib,
   phpFramework,
   ci,
   faultTolerance,
@@ -165,6 +167,8 @@ export function getGenerators(features) {
     else if (g.id === "css" && f.css && f.css !== "none" && jsEnabled)
       enabled.push(g);
     else if (g.id === "jsTest" && f.jsTest && f.jsTest !== "none" && jsEnabled)
+      enabled.push(g);
+    else if (g.id === "jsLib" && jsEnabled && f.jsLib && f.jsLib !== "none")
       enabled.push(g);
     else if (g.id === "phpFramework" && f.phpFramework === "wpdev")
       enabled.push(g);

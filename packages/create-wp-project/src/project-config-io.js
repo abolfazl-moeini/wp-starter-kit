@@ -2,6 +2,8 @@
  * Read consumer project.config.json and map it back to scaffold answers.
  */
 
+import { deriveUiFramework } from "./derive-ui-framework.js";
+
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
 
@@ -42,6 +44,9 @@ export async function readProjectConfigFromDir(dir, label = "engine") {
  */
 export function projectConfigToAnswers(cfg) {
   const slug = cfg.slug;
+  const features = cfg.features || {};
+  const uiFramework =
+    deriveUiFramework(features, cfg) || cfg.uiFramework || undefined;
   return {
     slug,
     npmScope:
@@ -55,7 +60,7 @@ export function projectConfigToAnswers(cfg) {
     hookPrefix: cfg.hookPrefix,
     depsBundle: cfg.depsBundle || (slug ? `${slug}-deps.js` : undefined),
     phpFunctionPrefix: cfg.phpFunctionPrefix || "wpsk_",
-    uiFramework: cfg.uiFramework,
+    uiFramework,
     projectType: cfg.projectType || "plugin",
     vendor: cfg.vendor,
     vendorPrefix: cfg.vendorPrefix || "WpskVendor",

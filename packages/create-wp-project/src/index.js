@@ -90,6 +90,7 @@ import { getDepVersions } from "./dep-versions.js";
 // by an injected `lookupLatest` that the CLI wires to the
 // npm registry).
 import { getKitStatus } from "./kit-status.js";
+import { deriveUiFramework } from "./derive-ui-framework.js";
 
 /* -------------------------------------------------------------------- */
 /* Types                                                                */
@@ -279,17 +280,22 @@ export function renderTemplate(tmpl, vars) {
  * @returns {Promise<{ok: boolean, written?: string[], reason?: string}>}
  */
 export async function scaffoldProject(targetDir, answers, options = {}) {
-  // 1. Validate answers.
-  const v = validateAnswers(answers);
+  // 1. Compute features early so answers can inherit uiFramework.
+  const features = options.features || defaultFeatures();
+  const uiFramework = deriveUiFramework(features, answers);
+  const answersForValidation = {
+    ...answers,
+    ...(uiFramework ? { uiFramework } : { uiFramework: "preact" }),
+  };
+
+  // 2. Validate answers.
+  const v = validateAnswers(answersForValidation);
   if (!v.ok) {
     return {
       ok: false,
       reason: "invalid answers: " + JSON.stringify(v.errors),
     };
   }
-
-  // 2. Compute features. BC: absent options.features → defaults.
-  const features = options.features || defaultFeatures();
 
   // 3. Validate the feature set. A violation must NOT write
   //    anything to disk (per the generator migration test).
@@ -321,8 +327,12 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   }
 
   // 5. Build cfg + vars (the same way the legacy body did).
-  const cfg = answersToProjectConfig(answers);
-  const vars = tplVarsFromGenerators(answers, cfg);
+  const answersWithUi = {
+    ...answers,
+    ...(uiFramework ? { uiFramework } : {}),
+  };
+  const cfg = answersToProjectConfig(answersWithUi);
+  const vars = tplVarsFromGenerators(answersWithUi, cfg);
 
   // 5b. Phase 23.A4: thread the framework path through to the
   //    composer.json template. The default lives in tplVars
@@ -347,7 +357,7 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   //    collision (e.g. vendorScoping overrides core's
   //    strauss.json).
   const gens = getGenerators(features);
-  const ctx = { answers, cfg, features, vars, options };
+  const ctx = { answers: answersWithUi, cfg, features, vars, options };
   const merged = { files: {}, dirs: [], deps: {}, devDeps: {} };
   const composerSuggest = {};
   let composerPatches = null;

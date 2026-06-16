@@ -1,23 +1,18 @@
 /**
  * @wpsk/create-wp-project — restBatch generator (Phase 21).
  *
- * REST batch + `@scope/fetch` JS client. The PHP-side batch
+ * REST batch + `@wpsk/fetch` JS client. The PHP-side batch
  * support ships with the core (RestSetup is in src/Support),
- * so this generator ONLY owns the JS wiring — the `@scope/fetch`
- * package and the import line in `assets/dependencies.*` that
- * the js generator emits.
- *
- * The full JS bundle is added in Phase 25 (the `@scope/fetch`
- * package is real; this Phase 21 generator only registers the
- * `deps` entry the scaffold merges with `package.json`). The
- * consumer's `package.json` will gain a `@myorg/fetch` dep; the
- * full template + usage example lands in Phase 25.
+ * so this generator ONLY owns the JS wiring — the `@wpsk/fetch`
+ * package dep merged into the consumer's `package.json`.
  *
  * Two gates:
  *  - restBatch === "on"
  *  - js !== "none"  (the registry filter applies; we still
  *                   early-return for defence in depth)
  */
+
+import { getDepVersions } from "../dep-versions.js";
 
 export function run(ctx) {
   if (ctx.features.restBatch !== "on") {
@@ -26,15 +21,18 @@ export function run(ctx) {
   if (ctx.features.js === "none") {
     return { files: {}, dirs: [], deps: {}, devDeps: {} };
   }
-  // Phase 21: no files emitted directly. The full JS bundle is
-  // added in Phase 25; for now we report the dep so the scaffold
-  // can add it to the consumer's package.json (Phase 22 reads
-  // `deps` from each generator's contribution; Phase 21 keeps
-  // the merge logic in place but does not act on it).
+  const kitVersions = getDepVersions();
+  const fetchVersion = kitVersions.get("@wpsk/fetch") || "*";
+  const version =
+    fetchVersion.startsWith("^") || fetchVersion === "*"
+      ? fetchVersion
+      : `^${fetchVersion}`;
   return {
     files: {},
     dirs: [],
-    deps: {},
+    deps: {
+      "@wpsk/fetch": version,
+    },
     devDeps: {},
   };
 }
