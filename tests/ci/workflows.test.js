@@ -31,4 +31,14 @@ describe("CI workflow contract", () => {
     expect(nightly).toMatch(/\.php/);
     expect(nightly).not.toMatch(/test -f "\$TMP\/my-project\/functions\.php"/);
   });
+
+  test("ci.yml defines an installer-e2e job", () => {
+    // Job must exist (top-level `installer-e2e:` under `jobs:`), must
+    // run CLI unit tests, must run `wpsk create` with --yes, and must
+    // run `wpsk info` on the generated project.
+    expect(ci).toMatch(/^\s{2}installer-e2e:\s*$/m);
+    expect(ci).toMatch(/npm test\s+--\s+cli/);
+    expect(ci).toMatch(/wpsk create[^\n]*--yes/);
+    expect(ci).toMatch(/wpsk info/);
+  });
 });
