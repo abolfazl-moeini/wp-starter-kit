@@ -21,8 +21,6 @@
  * unknown-flag errors in one place.
  */
 import { Command } from "commander";
-import { readFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
 
 import { runCreate } from "./commands/create.js";
 import { runAdd } from "./commands/add.js";
@@ -34,47 +32,15 @@ import { runInfo } from "./commands/info.js";
 import { gatherInputs } from "./gather.js";
 import ui from "./ui.js";
 import * as runners from "./runners.js";
+// Single source of truth: the engine's `package.json` version.
+// I7.6 wires `wpsk --version` to this so a `npm version patch`
+// in `packages/create-wp-project` automatically propagates to
+// the CLI's reported version (no manual sync step).
+import { getKitVersion } from "./version.js";
 // The real engine — Phase 20+21 work in `packages/create-wp-project`.
 // We import it directly here (the bin is the only place that
 // should ever need the real engine; unit tests inject fakes).
 import * as engine from "@wpsk/create-wp-project";
-
-/**
- * Resolve the on-disk path of the package.json that declares our
- * version. Resolution order:
- *   1. `cwd()/packages/cli/package.json` (kit's local workspace)
- *   2. `cwd()/package.json` (when invoked from inside the
- *      `packages/cli` directory itself — the `node packages/cli/bin/wpsk.js`
- *      recipe bumps cwd to the kit root, but jest or ad-hoc scripts
- *      sometimes don't)
- *   3. As a last resort, return whatever exists. The version reader
- *      is defensive about missing files.
- */
-function resolvePackageJson() {
-  const candidates = [
-    join(process.cwd(), "packages/cli/package.json"),
-    join(process.cwd(), "package.json"),
-  ];
-  for (const c of candidates) {
-    if (existsSync(c)) return c;
-  }
-  return candidates[0];
-}
-
-function readCliVersion() {
-  try {
-    const raw = readFileSync(resolvePackageJson(), "utf8");
-    const pkg = JSON.parse(raw);
-    if (pkg.name === "@wpsk/cli" && typeof pkg.version === "string") {
-      return pkg.version;
-    }
-    // If we accidentally read the root package.json, fall through
-    // to its own version (kit version) — better than "0.0.0".
-    return typeof pkg.version === "string" ? pkg.version : "0.0.0";
-  } catch {
-    return "0.0.0";
-  }
-}
 
 /**
  * Slice the raw argv tail (everything after the subcommand name)
@@ -115,7 +81,11 @@ export function buildProgram() {
         "Scaffolds new projects, adds/removes features, and updates " +
         "existing projects to a newer kit version.",
     )
-    .version(readCliVersion(), "-V, --version", "print wpsk version and exit")
+    .version(
+      getKitVersion(),
+      "-V, --version",
+      "print wpsk version and exit (mirrors the engine's version)",
+    )
     // The 30+ feature/answer/runOptions flags (Appendix A) are
     // parsed by gather.js, not by commander. `allowUnknownOption`
     // tells commander to forward every flag (declared or not) to
