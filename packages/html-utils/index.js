@@ -147,8 +147,18 @@ export function elementDispatchChangeEvent(element) {
   element instanceof EventTarget && element.dispatchEvent(event);
 }
 
+/**
+ * Whitelist check for an `<input name="…">` value: only ASCII letters,
+ * digits, underscore, and dash; non-empty. Anchored + quantifier so the
+ * whole string must be in the whitelist (a single-char pattern would let
+ * `"foo bar"` or `"../etc"` slip through because the regex only checks
+ * that *some* character matches).
+ *
+ * @param {string} inputName
+ * @returns {boolean}
+ */
 export function isInputNameValid(inputName) {
-  return /[A-Za-z0-9_-]/i.test(inputName);
+  return typeof inputName === "string" && /^[A-Za-z0-9_-]+$/.test(inputName);
 }
 
 export function SwitchableFocusElement(context, switchableName) {

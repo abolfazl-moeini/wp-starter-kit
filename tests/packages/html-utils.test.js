@@ -55,6 +55,45 @@ describe("@wpsk/html-utils — elementProps", () => {
   });
 });
 
+describe("@wpsk/html-utils — isInputNameValid (whole-string whitelist)", () => {
+  test("accepts plain ASCII names (alphanumerics, underscores, dashes)", async () => {
+    const { isInputNameValid } =
+      await import("../../packages/html-utils/index.js");
+    expect(isInputNameValid("foo")).toBe(true);
+    expect(isInputNameValid("foo_bar")).toBe(true);
+    expect(isInputNameValid("foo-bar")).toBe(true);
+    expect(isInputNameValid("Foo123")).toBe(true);
+    expect(isInputNameValid("a")).toBe(true);
+  });
+
+  test("rejects names with ANY non-whitelisted character (whitespace, dot, slash, angle bracket, etc.)", async () => {
+    const { isInputNameValid } =
+      await import("../../packages/html-utils/index.js");
+    // Whitespace
+    expect(isInputNameValid("foo bar")).toBe(false);
+    expect(isInputNameValid(" foo")).toBe(false);
+    expect(isInputNameValid("foo ")).toBe(false);
+    // Path-traversal-ish
+    expect(isInputNameValid("../etc/passwd")).toBe(false);
+    expect(isInputNameValid("foo/bar")).toBe(false);
+    expect(isInputNameValid("foo\\bar")).toBe(false);
+    // HTML-injection-ish
+    expect(isInputNameValid("<script>")).toBe(false);
+    expect(isInputNameValid('"foo"')).toBe(false);
+    expect(isInputNameValid("foo'bar")).toBe(false);
+    // Misc
+    expect(isInputNameValid("foo;bar")).toBe(false);
+    expect(isInputNameValid("foo=bar")).toBe(false);
+    expect(isInputNameValid("foo&bar")).toBe(false);
+  });
+
+  test("rejects empty string (no character to validate)", async () => {
+    const { isInputNameValid } =
+      await import("../../packages/html-utils/index.js");
+    expect(isInputNameValid("")).toBe(false);
+  });
+});
+
 describe("@wpsk/html-utils — mountComponent", () => {
   test("mountComponent renders a Preact component into the target div", async () => {
     const { mountComponent } =
