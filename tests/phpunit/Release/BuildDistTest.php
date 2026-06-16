@@ -40,7 +40,22 @@ class BuildDistTest extends TestCase
         $this->assertDirectoryExists($distDir);
         $this->assertFileExists($distDir . '/.dist-built');
         $this->assertFileExists($distDir . '/project.config.json');
-        $this->assertFileExists($distDir . '/src/Core/Plugin.php');
+        // Phase 23.A2 → 23.A6: the framework code (src/Core + src/Support)
+        // moved to the wpsk/framework Composer package. The dist
+        // installs it via `composer install --no-dev` (deps mode)
+        // and Strauss scopes it to vendor-prefixed/. The dist's
+        // own src/ no longer carries a vendored copy of the
+        // framework — the shim files are also excluded as dead
+        // code (they point at packages/framework/ which doesn't
+        // exist in the dist).
+        $this->assertFileExists(
+            $distDir . '/vendor/wpsk/framework/src/Core/Plugin.php',
+            'dist must install wpsk/framework into vendor/ (Phase 23.A6 deps mode)'
+        );
+        $this->assertFileExists(
+            $distDir . '/vendor-prefixed/wpsk/framework/src/Core/Plugin.php',
+            'dist must run strauss and scope the framework into vendor-prefixed/'
+        );
         $this->assertDirectoryDoesNotExist($distDir . '/tests');
         $this->assertDirectoryDoesNotExist($distDir . '/dev');
         $this->assertDirectoryDoesNotExist($distDir . '/node_modules');
