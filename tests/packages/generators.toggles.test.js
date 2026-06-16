@@ -250,9 +250,12 @@ describe("blocks generator (Phase 21.7/21.8)", () => {
     const bj = JSON.parse(out.files["src/Modules/Blocks/block.json"]);
     expect(bj.$schema).toMatch(/wp\.org\/trunk\/block\.json/);
     expect(bj.editorScript).toBe("file:./index.ts");
-    // The Module.php uses the WPSK namespace by default.
+    // namespace uses consumer's vendor (derived from globalName); use imports reference WPSK framework
     expect(out.files["src/Modules/Blocks/Module.php"]).toMatch(
-      /namespace\s+WPSK\\Modules\\Blocks/,
+      /namespace\s+MyProject\\Modules\\Blocks/,
+    );
+    expect(out.files["src/Modules/Blocks/Module.php"]).toMatch(
+      /use\s+WPSK\\Core\\ModuleInterface/,
     );
   });
 

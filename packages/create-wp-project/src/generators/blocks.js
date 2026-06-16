@@ -25,7 +25,8 @@ export function run(ctx) {
     return { files: {}, dirs: [], deps: {}, devDeps: {} };
   }
   const tpl = ctx.vars || { ...ctx.answers, ...(ctx.cfg || {}) };
-  const namespace = tpl.vendor || "WPSK";
+  const vendor = tpl.vendor || ctx.answers?.globalName || "WPSK";
+  const frameworkNs = tpl.frameworkNamespace || "WPSK";
   return {
     files: {
       "src/Modules/Blocks/block.json":
@@ -33,7 +34,7 @@ export function run(ctx) {
           {
             $schema: "https://schemas.wp.org/trunk/block.json",
             apiVersion: 3,
-            name: `${namespace.toLowerCase()}/${tpl.slug}-example-block`,
+            name: `${vendor.toLowerCase()}/${tpl.slug}-example-block`,
             version: "0.1.0",
             title: `${tpl.globalName} Example Block`,
             category: "widgets",
@@ -48,9 +49,9 @@ export function run(ctx) {
       "src/Modules/Blocks/Module.php": `<?php
 declare(strict_types=1);
 
-namespace ${namespace}\\Modules\\Blocks;
+namespace ${vendor}\\Modules\\Blocks;
 
-use ${namespace}\\Core\\ModuleInterface;
+use ${frameworkNs}\\Core\\ModuleInterface;
 
 final class Module implements ModuleInterface
 {

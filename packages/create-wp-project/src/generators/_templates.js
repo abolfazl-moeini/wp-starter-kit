@@ -59,11 +59,17 @@ export function tplVars(answers, cfg) {
     author: "wp-starter-kit scaffold",
     authorUri: "https://github.com/abolfazl-moeini/wp-plugin-starter-kit",
     pluginUri: "https://github.com/abolfazl-moeini/wp-plugin-starter-kit",
-    // {{vendor}} — the PSR-4 root namespace used in the example
-    // feature module. Default to the kit's own WPSK namespace so the
-    // stub compiles out of the box; consumers are expected to
-    // override this via answers.vendor (e.g. MyOrg) in real projects.
-    vendor: answers.vendor || "WPSK",
+    // {{vendor}} — the PSR-4 root namespace used in generated module
+    // namespace declarations (e.g. "namespace MyPlugin\\Modules\\...".
+    // Derived from the consumer's globalName (PascalCase) or an
+    // explicit answers.vendor override. The composer.json PSR-4 mapping
+    // in buildComposerJson uses the same value for autoloading.
+    vendor: answers.vendor || answers.globalName || "WPSK",
+    // {{frameworkNamespace}} — the WPSK framework namespace root, used
+    // in `use` imports for framework classes (e.g.
+    // "use WPSK\\Core\\ModuleInterface"). Always "WPSK" — the consumer's
+    // composer.json resolves this through the wpsk/framework dependency.
+    frameworkNamespace: "WPSK",
     vendorPrefixUpper: (cfg.vendorPrefix || "WpskVendor").toUpperCase(),
     // Phase 23.A4: {{frameworkPath}} is the URL the consumer
     // composer.json's `repositories` entry points at for
@@ -596,10 +602,10 @@ declare(strict_types=1);
 
 namespace {{vendor}}\\Modules\\ExampleFeature\\Rest;
 
-use {{vendor}}\\Support\\Auth\\CapabilityPolicy;
-use {{vendor}}\\Support\\Rest\\AllowBatch;
-use {{vendor}}\\Support\\Rest\\BatchResponse;
-use {{vendor}}\\Support\\Rest\\RestHandler;
+use {{frameworkNamespace}}\\Support\\Auth\\CapabilityPolicy;
+use {{frameworkNamespace}}\\Support\\Rest\\AllowBatch;
+use {{frameworkNamespace}}\\Support\\Rest\\BatchResponse;
+use {{frameworkNamespace}}\\Support\\Rest\\RestHandler;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -1054,11 +1060,11 @@ declare(strict_types=1);
 
 namespace {{vendor}}\\Modules\\ExampleFeature;
 
-use {{vendor}}\\Core\\ModuleInterface;
-use {{vendor}}\\Core\\Plugin;
+use {{frameworkNamespace}}\\Core\\ModuleInterface;
+use {{frameworkNamespace}}\\Core\\Plugin;
 use {{vendor}}\\Modules\\ExampleFeature\\Rest\\ItemsController;
-use {{vendor}}\\Support\\Assets;
-use {{vendor}}\\Support\\Rest\\RestSetup;
+use {{frameworkNamespace}}\\Support\\Assets;
+use {{frameworkNamespace}}\\Support\\Rest\\RestSetup;
 
 final class Module implements ModuleInterface
 {
