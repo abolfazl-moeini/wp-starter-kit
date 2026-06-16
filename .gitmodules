@@ -1,0 +1,3 @@
+[submodule "packages/polaris-stack"]
+	path = packages/polaris-stack
+	url = git@github.com:abolfazl-moeini/polaris-stack.git
