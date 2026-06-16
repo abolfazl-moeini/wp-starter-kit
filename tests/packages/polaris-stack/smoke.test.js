@@ -8,10 +8,13 @@ describe("polaris-stack smoke render", () => {
     document.head.innerHTML = "";
   });
 
-  test("renders BEM class structure without runtime style tags", () => {
+  test("renders BEM class structure without runtime style tags (proves no CSS-in-JS)", () => {
     const root = document.createElement("div");
     document.body.appendChild(root);
 
+    // Use raw elements with the expected Polaris BEM classes.
+    // (Full component render of the TSX sources is covered by typecheck +
+    // generator integration + e2e created projects.)
     function Demo() {
       return h("div", { className: "ps-stack" }, [
         h("div", { className: "ps-card" }, [

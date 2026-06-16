@@ -14,7 +14,12 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "baseUrl": ".",
+    "paths": {
+      "react": ["packages/polaris-stack/react"],
+      "react-dom": ["packages/polaris-stack/react"]
+    }
   },
   "include": [
     "assets/**/*.ts",
