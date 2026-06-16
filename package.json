@@ -42,7 +42,8 @@
   },
   "workspaces": [
     "core/packages/*",
-    "packages/*"
+    "packages/*",
+    "packages/cli/create-plugin"
   ],
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
