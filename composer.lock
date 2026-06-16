@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b0d62ec6f3469b5229c10a6bb5107651",
+    "content-hash": "57038575f2a056f0c9106fbf2be4b9db",
     "packages": [
         {
             "name": "composer/installers",
@@ -8609,11 +8609,39 @@
                 }
             ],
             "time": "2025-11-25T12:08:04+00:00"
+        },
+        {
+            "name": "wpsk/framework",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "packages/framework",
+                "reference": "9d6526de3f5761784527032a121dee92a8a91381"
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "WPSK\\": "src/"
+                }
+            },
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "description": "WordPress Starter Kit framework: PSR-4 plugin core (Plugin / ModuleLoader / ModuleInterface) and the Support namespace (Assets, Auth, Queue, Rest, Shortcodes).",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         }
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "wpsk/framework": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

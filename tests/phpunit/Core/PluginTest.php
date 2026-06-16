@@ -201,7 +201,11 @@ class PluginTest extends TestCase
     public function test_plugin_source_is_theme_agnostic(): void
     {
         $root = dirname(__DIR__, 3);
-        $coreDir = $root . '/src/Core';
+        // Phase 23.A2: framework Core/ moved into the wpsk/framework
+        // package under packages/framework/src/Core/. The framework is
+        // still shipped from the kit and must remain theme-agnostic —
+        // no `get_template_directory` or `load_theme_textdomain`.
+        $coreDir = $root . '/packages/framework/src/Core';
 
         $this->assertDirectoryExists($coreDir);
 
@@ -213,12 +217,12 @@ class PluginTest extends TestCase
         $this->assertStringNotContainsString(
             'get_template_directory',
             $contents,
-            'src/Core/*.php must never call get_template_directory() — Plugin is theme-agnostic'
+            'packages/framework/src/Core/*.php must never call get_template_directory() — Plugin is theme-agnostic'
         );
         $this->assertStringNotContainsString(
             'load_theme_textdomain',
             $contents,
-            'src/Core/*.php must never call load_theme_textdomain() — Plugin is theme-agnostic'
+            'packages/framework/src/Core/*.php must never call load_theme_textdomain() — Plugin is theme-agnostic'
         );
     }
 }

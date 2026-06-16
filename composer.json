@@ -3,6 +3,15 @@
   "description": "WordPress Theme/Plugin Starter Kit",
   "type": "project",
   "license": "MIT",
+  "repositories": [
+    {
+      "type": "path",
+      "url": "packages/framework",
+      "options": {
+        "symlink": true
+      }
+    }
+  ],
   "require": {
     "php": ">=7.4",
     "composer/installers": "^2.2"
@@ -19,7 +28,8 @@
     "rector/rector": "^1.0",
     "brianhenryie/strauss": "^0.11",
     "wp-cli/wp-cli-bundle": "^2.11",
-    "laminas/laminas-code": "^4.7"
+    "laminas/laminas-code": "^4.7",
+    "wpsk/framework": "*@dev"
   },
   "autoload": {
     "files": [

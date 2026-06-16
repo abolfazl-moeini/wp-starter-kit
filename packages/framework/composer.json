@@ -1,0 +1,14 @@
+{
+  "name": "wpsk/framework",
+  "description": "WordPress Starter Kit framework: PSR-4 plugin core (Plugin / ModuleLoader / ModuleInterface) and the Support namespace (Assets, Auth, Queue, Rest, Shortcodes).",
+  "type": "library",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "php": ">=7.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "WPSK\\": "src/"
+    }
+  }
+}

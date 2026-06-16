@@ -88,9 +88,14 @@ class SrcPsr4Test extends TestCase
     public function test_src_core_directory_exists(): void
     {
         $root = dirname(__DIR__, 3);
+        // Phase 23.A2: the framework's `src/Core/` was moved into
+        // `packages/framework/src/Core/` so it can be installed as
+        // the `wpsk/framework` Composer package. The kit still
+        // depends on those classes (and tests rely on them), so
+        // the new location is the load-bearing one.
         $this->assertDirectoryExists(
-            $root . '/src/Core',
-            'src/Core/ directory must exist for the WPSK\\Core\\* namespace'
+            $root . '/packages/framework/src/Core',
+            'packages/framework/src/Core/ directory must exist for the WPSK\\Core\\* namespace (moved in Phase 23.A2)'
         );
     }
 

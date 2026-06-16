@@ -139,6 +139,22 @@ mkdir($distRoot, 0755, true);
 $exclude = wpsk_dist_exclude_patterns();
 wpsk_copy_tree($root, $distRoot, $exclude);
 
+/**
+ * Phase 23.A2: the framework's `src/Core/` and `src/Support/`
+ * moved into the `wpsk/framework` Composer package
+ * (`packages/framework/src/`). For now, build-dist still
+ * vendors the framework into the dist's `src/Core/` and
+ * `src/Support/` so downstream consumers (and existing tests
+ * that assert on `src/Core/Plugin.php`) keep working without
+ * a `composer install` step. Phase 23.A5+A6 will replace this
+ * vendoring with the deps-mode flow (`composer install
+ * --no-dev` + Strauss in the dist).
+ */
+$frameworkSrc = $root . '/packages/framework/src';
+if (is_dir($frameworkSrc)) {
+    wpsk_copy_tree($frameworkSrc, $distRoot . '/src', $exclude);
+}
+
 $marker = $distRoot . '/.dist-built';
 file_put_contents($marker, gmdate('c') . "\n");
 
