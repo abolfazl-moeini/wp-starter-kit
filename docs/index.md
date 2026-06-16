@@ -15,6 +15,7 @@
 | [localize-contract.md](localize-contract.md)     | JS↔PHP localize contract                   | You're adding a new field to `wp_localize_script`.                                           |
 | [react-preact.md](react-preact.md)               | The original Phase 5 notes (pragma-based)  | You're reading the old code that uses `/** @jsx h */`.                                       |
 | [react-preact-switch.md](react-preact-switch.md) | The new `uiFramework` switch (alias-based) | You're picking the framework for a new project.                                              |
+| [js-variants.md](js-variants.md)                 | TS vs pure vs Flow vs none (`js` feature)  | You're picking the JavaScript authoring toolchain or switching between variants.             |
 | [scaffold.md](scaffold.md)                       | `@wpsk/create-wp-project` usage            | You're generating a new project from the starter.                                            |
 | [translation.md](translation.md)                 | The JS+PHP translation pipeline            | You're adding translatable strings or running the pipeline.                                  |
 | [patch.md](patch.md)                             | Patches and upgrades                       | You need to upgrade a consumer project to a newer starter.                                   |
