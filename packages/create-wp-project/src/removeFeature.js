@@ -37,11 +37,13 @@
  * file semantics are the same.
  *
  * Returns:
- *   { ok: true,  written: false, removed: string[], manifest }
+ *   { ok: true,  written: string[]|false, removed: string[], manifest }
  *   { ok: false, reason: string,  removed: [] }    on refuse
  *
- * `written: false` is fixed — removeFeature never emits new
- * files. It's part of the return shape so the caller's
+ * `written` is `false` when glue is unchanged, or a list of
+ * core-owned glue paths refreshed by `refreshGlue` (and
+ * `-"path"` entries when conditional glue was removed).
+ * removeFeature never emits feature-owned files. It's part of the return shape so the caller's
  * "did anything change?" check is uniform across addFeature and
  * removeFeature.
  */
@@ -59,6 +61,7 @@ import {
   syncFeaturesToConfig,
   DEFAULT_DIST_MODE,
 } from "./manifest.js";
+import { refreshGlue } from "./refresh-glue.js";
 
 /* -------------------------------------------------------------------- */
 /* Helpers                                                               */
@@ -309,7 +312,7 @@ async function* walkFiles(root, dir = root, depth = 0) {
  *                                      currently unused.
  * @returns {Promise<{
  *   ok: boolean,
- *   written?: false,
+ *   written?: string[]|false,
  *   removed?: string[],
  *   reason?: string,
  *   manifest?: Object,
@@ -442,9 +445,11 @@ export async function removeFeature(dir, id, _opts = {}) {
   // 9. Update project.config.json's `features` key.
   await syncFeaturesToConfig(dir, newFeatures);
 
+  const glueWritten = await refreshGlue(dir, newFeatures);
+
   return {
     ok: true,
-    written: false,
+    written: glueWritten.length > 0 ? glueWritten : false,
     removed: removedRel,
     manifest: nextManifest,
   };

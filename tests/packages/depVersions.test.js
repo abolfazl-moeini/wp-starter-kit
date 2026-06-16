@@ -84,7 +84,7 @@ describe("getDepVersions() — registry shape (Phase 24.8 part 2)", () => {
 
   test("every value is a non-empty string", () => {
     const m = getDepVersions();
-    for (const [k, v] of m) {
+    for (const [, v] of m) {
       expect(typeof v).toBe("string");
       expect(v.length).toBeGreaterThan(0);
     }

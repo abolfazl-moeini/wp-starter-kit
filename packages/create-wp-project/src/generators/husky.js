@@ -15,7 +15,6 @@
  * generator in isolation).
  */
 
-import { renderTemplate } from "./_templates.js";
 import { TEMPLATE_HUSKY_PRE_COMMIT } from "./_templates.js";
 
 export function run(ctx) {

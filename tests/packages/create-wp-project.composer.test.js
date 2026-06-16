@@ -117,10 +117,12 @@ describe("@wpsk/create-wp-project — consumer composer.json (Phase 23.A3/A4)", 
     expect(res.ok).toBe(true);
     const composer = await readComposer();
     const hasRequire = !!composer.require?.["wpsk/framework"];
-    const hasPathRepo = Array.isArray(composer.repositories)
-      && composer.repositories.some(
-          (r) => r && r.type === "path" && /packages\/framework/.test(r.url || ""),
-        );
+    const hasPathRepo =
+      Array.isArray(composer.repositories) &&
+      composer.repositories.some(
+        (r) =>
+          r && r.type === "path" && /packages\/framework/.test(r.url || ""),
+      );
     expect(hasRequire).toBe(true);
     expect(hasPathRepo).toBe(true);
   });

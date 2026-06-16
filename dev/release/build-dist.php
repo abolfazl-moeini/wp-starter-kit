@@ -212,16 +212,34 @@ function wpsk_build_dist_composer_json(array $config, string $frameworkPath): st
             // repos resolve to). For the published-mode dep
             // (Phase 23.B), the require would be a pinned semver.
             'wpsk/framework' => '*@dev',
-            // Phase 23.A6: the dist uses `vendor/bin/strauss` to
-            // scope the framework. strauss must be a runtime
-            // require of the dist (the kit itself lists it as
-            // require-dev — we promote it for the dist so
-            // `composer install --no-dev` keeps it).
-            'brianhenryie/strauss' => '^0.11',
         ],
         'autoload' => [
             'psr-4' => [
                 "{$globalName}\\" => 'src/',
+            ],
+        ],
+        // Strauss reads config from composer.json extra/strauss
+        // (NOT the standalone strauss.json file). Whitelist only
+        // wpsk/framework so Strauss does not traverse
+        // brianhenryie/strauss's symfony deps (array PSR-4 paths
+        // crash FileEnumerator on strauss 0.11.x).
+        'extra' => [
+            'strauss' => [
+                'target_directory' => 'vendor-prefixed',
+                'namespace_prefix' => (string) ($config['vendorPrefix'] ?? 'WpskVendor'),
+                'classmap_prefix' => ((string) ($config['vendorPrefix'] ?? 'WpskVendor')) . '_',
+                'constant_prefix' => strtoupper((string) ($config['vendorPrefix'] ?? 'WpskVendor')) . '_',
+                'delete_vendor_files' => true,
+                'include_modified_files' => false,
+                'packages' => ['wpsk/framework'],
+                'exclude_from_prefix' => [
+                    'namespaces' => [],
+                    'file_patterns' => [],
+                ],
+                'exclude_from_copy' => [
+                    'namespaces' => [],
+                    'file_patterns' => [],
+                ],
             ],
         ],
         // Path repos resolve to `dev-main`. Accept dev versions
@@ -358,20 +376,20 @@ if ($installExit !== 0) {
 fwrite(STDOUT, "composer install --no-dev completed in dist\n");
 
 /* -------------------------------------------------------------------- */
-/* Step 4: vendor/bin/strauss (scope vendor/)                           */
+/* Step 4: Strauss (scope vendor/) — uses the kit's binary              */
 /* -------------------------------------------------------------------- */
 
-$straussBin = $distRoot . '/vendor/bin/strauss';
+$straussBin = $root . '/vendor/bin/strauss';
 if (!is_file($straussBin)) {
     fwrite(
         STDERR,
-        "vendor/bin/strauss missing after composer install — brianhenryie/strauss must be moved to a runtime require for the dist (currently it is a kit require-dev).\n"
+        "Kit vendor/bin/strauss missing — run `composer install` in the kit root first.\n"
     );
     exit(1);
 }
 
 [$straussExit, $straussOut] = wpsk_run(
-    'php vendor/bin/strauss 2>&1',
+    'php ' . escapeshellarg($straussBin) . ' 2>&1',
     $distRoot
 );
 if ($straussExit !== 0) {

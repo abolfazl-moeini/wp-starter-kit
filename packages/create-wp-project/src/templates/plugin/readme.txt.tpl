@@ -1,7 +1,7 @@
 === {{name}} ===
 Contributors:      {{author}}
 Tags:              wp-starter-kit, wpsk, framework
-Requires at least: 6.4
+Requires at least: {{wpMinVersion}}
 Tested up to:      6.5
 Requires PHP:      {{phpMinVersion}}
 Stable tag:        0.1.0

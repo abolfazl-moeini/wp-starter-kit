@@ -62,8 +62,6 @@ import * as os from "node:os";
 // Capture the original import so a failing-migration test can
 // restore it after mutating the module cache.
 import * as migrationsModule from "../../packages/create-wp-project/src/migrations/index.js";
-import { readManifest } from "../../packages/create-wp-project/src/manifest.js";
-
 const { runMigrations } = migrationsModule;
 
 describe("runMigrations() — happy path (Phase 24.5, 24.6)", () => {

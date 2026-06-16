@@ -13,6 +13,13 @@ const requiredDocs = [
   "plugin-bootstrap.md",
   "modules.md",
   "installer.md",
+  "features-and-manifest.md",
+  "framework-as-dependency.md",
+  "updating-projects.md",
+  "js-variants.md",
+  "wpdev-adapter.md",
+  "blocks.md",
+  "css-variants.md",
 ];
 
 describe("docs index contract", () => {

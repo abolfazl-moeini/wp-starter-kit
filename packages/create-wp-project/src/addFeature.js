@@ -52,87 +52,15 @@ import {
 } from "./manifest.js";
 import { updateJsonFile } from "./json-utils.js";
 import { applyComposerPatches } from "./composer-patches.js";
+import {
+  readProjectConfigFromDir,
+  projectConfigToAnswers,
+} from "./project-config-io.js";
+import { refreshGlue } from "./refresh-glue.js";
 
 /* -------------------------------------------------------------------- */
 /* Helpers                                                               */
 /* -------------------------------------------------------------------- */
-
-/**
- * Read project.config.json and reconstruct a minimal `answers`
- * shape that the generators can consume. The reverse mapping
- * uses the keys `answersToProjectConfig` writes (see
- * src/index.js) so the round-trip is symmetric.
- *
- * @param {string} dir
- * @returns {Object}  { cfg, raw } — cfg is the v2-shape object
- *                    (the same one `answersToProjectConfig` returns);
- *                    raw is the full project.config.json (with `features`).
- */
-async function readProjectConfigForAdd(dir) {
-  const file = path.join(dir, "project.config.json");
-  let raw;
-  try {
-    raw = await fs.readFile(file, "utf8");
-  } catch (error) {
-    if (error.code === "ENOENT") {
-      throw new Error(
-        `addFeature: project.config.json not found at ${file} — ` +
-          "is this a wp-starter-kit project?",
-      );
-    }
-    throw new Error(
-      `addFeature: failed to read project.config.json at ${file}: ${error.message}`,
-    );
-  }
-  let cfg;
-  try {
-    cfg = JSON.parse(raw);
-  } catch (error) {
-    throw new Error(
-      `addFeature: malformed JSON in project.config.json at ${file}: ${error.message}`,
-    );
-  }
-  return { cfg, raw };
-}
-
-/**
- * Convert a v2-shape project.config.json back into a minimal
- * `answers` object the generators can render. The mapping is
- * the inverse of `answersToProjectConfig` (src/index.js). The
- * full v2 fields ARE preserved in `cfg` (so generators that
- * read `ctx.cfg` keep working), and a small `answers` overlay
- * is what `ctx.answers` carries.
- *
- * @param {Object} cfg
- * @returns {Object}
- */
-function projectConfigToAnswers(cfg) {
-  return {
-    slug: cfg.slug,
-    npmScope:
-      typeof cfg.npmScope === "string" && cfg.npmScope.startsWith("@")
-        ? cfg.npmScope.slice(1)
-        : cfg.npmScope,
-    globalName: cfg.globalName,
-    localizeVar: cfg.localizeVar,
-    textDomain: cfg.textDomain,
-    hookPrefix: cfg.hookPrefix,
-    depsBundle: cfg.depsBundle,
-    phpFunctionPrefix: cfg.phpFunctionPrefix,
-    uiFramework: cfg.uiFramework,
-    projectType: cfg.projectType,
-    vendor: cfg.vendor,
-    vendorPrefix: cfg.vendorPrefix,
-    vendorPrefixUpper:
-      cfg.vendorPrefix && cfg.vendorPrefix.toUpperCase
-        ? cfg.vendorPrefix.toUpperCase()
-        : undefined,
-    restNamespace: cfg.restNamespace,
-    phpMinVersion: cfg.phpMinVersion,
-    phpSourceVersion: cfg.phpSourceVersion,
-    batchEndpoint: cfg.batchEndpoint,
-  };
-}
 
 /**
  * Look up the generator descriptor for a (feature, variant) pair.
@@ -375,7 +303,7 @@ export async function addFeature(dir, id, variant, _opts = {}) {
   const currentFeatures = manifest.features || {};
 
   // 2. Read project.config.json + reconstruct answers.
-  const { cfg } = await readProjectConfigForAdd(dir);
+  const { cfg } = await readProjectConfigFromDir(dir, "addFeature");
   const answers = projectConfigToAnswers(cfg);
 
   // 3. Compute the new feature set.
@@ -458,14 +386,17 @@ export async function addFeature(dir, id, variant, _opts = {}) {
     };
   }
 
-  // 8b. Variant switch: the feature is on with a DIFFERENT
-  //     variant. We must (a) delete the OLD variant's owned
-  //     files that the NEW variant doesn't also claim, and
-  //     (b) write the NEW variant's files. The delete-set is
-  //     computed by walking the project tree and matching
-  //     each file against the OLD / NEW owns lists.
-  //     Files matching BOTH lists are kept (the NEW variant
-  //     will overwrite them via the normal write path below).
+  // 8b. Variant switch: write NEW files first, then delete OLD
+  //     variant exclusives so a mid-write failure does not leave
+  //     the project without assets the manifest still claims.
+  const written = [];
+  for (const [filePath, content] of Object.entries(filesToWrite)) {
+    const abs = path.join(dir, filePath);
+    await fs.mkdir(path.dirname(abs), { recursive: true });
+    await fs.writeFile(abs, content, "utf8");
+    written.push(filePath);
+  }
+
   let deleted = [];
   const currentVariant = currentFeatures[id];
   if (currentVariant !== undefined) {
@@ -477,22 +408,10 @@ export async function addFeature(dir, id, variant, _opts = {}) {
           await fs.unlink(abs);
           deleted.push(path.relative(dir, abs));
         } catch (error) {
-          // A file that disappeared between the walk and the
-          // unlink is not a failure (someone else cleaned it
-          // up). Re-throw on real I/O errors.
           if (error.code !== "ENOENT") throw error;
         }
       }
     }
-  }
-
-  // 9. Write the owned files. Directories are created on demand.
-  const written = [];
-  for (const [filePath, content] of Object.entries(filesToWrite)) {
-    const abs = path.join(dir, filePath);
-    await fs.mkdir(path.dirname(abs), { recursive: true });
-    await fs.writeFile(abs, content, "utf8");
-    written.push(filePath);
   }
 
   // 10. Update the manifest. The manifest's `features` is the
@@ -519,6 +438,13 @@ export async function addFeature(dir, id, variant, _opts = {}) {
     );
     if (!written.includes("composer.json")) {
       written.push("composer.json");
+    }
+  }
+
+  const glueWritten = await refreshGlue(dir, newFeatures);
+  for (const p of glueWritten) {
+    if (!written.includes(p) && !p.startsWith("-")) {
+      written.push(p);
     }
   }
 

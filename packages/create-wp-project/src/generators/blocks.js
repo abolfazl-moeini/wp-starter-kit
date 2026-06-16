@@ -61,7 +61,15 @@ final class Module implements ModuleInterface
 
     public function boot(): void
     {
-        // Phase 25 will register the block via register_block_type().
+        add_action('init', [self::class, 'register_blocks']);
+    }
+
+    public static function register_blocks(): void
+    {
+        $dir = __DIR__;
+        if (function_exists('register_block_type_from_metadata')) {
+            register_block_type_from_metadata($dir . '/block.json');
+        }
     }
 }
 `,

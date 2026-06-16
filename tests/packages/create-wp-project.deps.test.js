@@ -109,10 +109,7 @@ describe("@wpsk/create-wp-project — consumer package.json deps (Phase 23.B3/B4
   /* Build-time @wpsk/* deps (2 renamed from @core/* in 23.B2)           */
   /* ------------------------------------------------------------------ */
 
-  test.each([
-    "@wpsk/build",
-    "@wpsk/dependency-extraction-esbuild-plugin",
-  ])(
+  test.each(["@wpsk/build", "@wpsk/dependency-extraction-esbuild-plugin"])(
     "package.json.devDependencies includes %s with a non-empty version",
     async (pkg) => {
       const res = await scaffoldProject(tmp, goodAnswers);
@@ -139,7 +136,9 @@ describe("@wpsk/create-wp-project — consumer package.json deps (Phase 23.B3/B4
       ...(consumerPkg.devDependencies || {}),
     };
     expect(allDeps["@core/build"]).toBeUndefined();
-    expect(allDeps["@core/dependency-extraction-esbuild-plugin"]).toBeUndefined();
+    expect(
+      allDeps["@core/dependency-extraction-esbuild-plugin"],
+    ).toBeUndefined();
   });
 
   test("package.json scripts do not contain a `node core/packages/...` invocation", async () => {

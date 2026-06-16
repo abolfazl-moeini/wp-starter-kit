@@ -58,7 +58,10 @@ describe("@wpsk/create-plugin — package shape (I7.3/I7.4)", () => {
 
   test("package depends on @wpsk/cli (the real dispatcher)", () => {
     const pkg = loadWrapperPkg();
-    const deps = { ...(pkg.dependencies || {}), ...(pkg.peerDependencies || {}) };
+    const deps = {
+      ...(pkg.dependencies || {}),
+      ...(pkg.peerDependencies || {}),
+    };
     expect(deps["@wpsk/cli"]).toBeDefined();
   });
 

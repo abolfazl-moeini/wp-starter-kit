@@ -18,7 +18,8 @@ import { readManifest, writeManifest, buildManifest } from "../manifest.js";
 import { updateJsonFile } from "../json-utils.js";
 
 export const version = "0.2.0";
-export const description = "Remove legacy vendored src/Core framework copies (pre-Phase 23) and ensure distMode=deps";
+export const description =
+  "Remove legacy vendored src/Core framework copies (pre-Phase 23) and ensure distMode=deps";
 
 const LEGACY_CORE_FILES = [
   "src/Core/Plugin.php",
@@ -75,7 +76,11 @@ export async function run(dir) {
       const m = JSON.parse(raw);
       if (m && typeof m === "object") {
         m.distMode = "deps";
-        await fs.writeFile(manifestPath, JSON.stringify(m, null, 2) + "\n", "utf8");
+        await fs.writeFile(
+          manifestPath,
+          JSON.stringify(m, null, 2) + "\n",
+          "utf8",
+        );
       }
     } catch {
       // non-fatal; runner will still bump version

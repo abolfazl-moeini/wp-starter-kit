@@ -25,7 +25,8 @@ describe("validateFeatureSet — shape (Phase 20.3/20.4)", () => {
   });
 
   test("missing required feature → error keyed on that id", () => {
-    const { js, ...rest } = defaultFeatures();
+    const rest = { ...defaultFeatures() };
+    delete rest.js;
     const r = validateFeatureSet(rest);
     expect(r.ok).toBe(false);
     expect(r.errors.js).toBeDefined();

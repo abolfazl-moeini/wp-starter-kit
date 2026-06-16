@@ -23,12 +23,11 @@
  *    scaffold's domain, not the runtime mutation domain.
  *
  * Returns:
- *   { ok: true,  written: false, removed: string[], manifest }
+ *   { ok: true,  written: string[]|false, removed: string[], manifest }
  *   { ok: false, reason: string,  removed: [] }    on refuse
  *
- * `written` is always `false` (no new files emitted; it's there
- * for symmetry with addFeature's return shape and to make the
- * caller's "did the call do work?" check trivial).
+ * `written` is `false` when glue is unchanged, or a list of
+ * core-owned glue paths refreshed after the removal.
  */
 
 import { describe, test, expect, beforeEach, afterEach } from "@jest/globals";
@@ -129,7 +128,9 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
     const res = await removeFeature(tmp, "husky");
     expect(res.ok).toBe(true);
     expect(res.removed).toContain(".husky/pre-commit");
-    expect(res.written).toBe(false);
+    expect(Array.isArray(res.written) ? res.written.length : 0).toBeGreaterThan(
+      0,
+    );
 
     // File is gone from disk.
     await expect(

@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from "@jest/globals";
-import { promises as fs, readFileSync } from "node:fs";
+import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 

@@ -46,7 +46,11 @@ export function tplVars(answers, cfg) {
     ...cfg,
     // {{slug_underscore}} for the PHP-side function names
     slug_underscore: answers.slug.replace(/-/g, "_"),
-    depsHandle: answers.depsBundle || cfg.depsBundle.replace(/\.js$/, ""),
+    depsHandle: (
+      answers.depsBundle ||
+      cfg.depsBundle ||
+      `${answers.slug || cfg.slug}-deps.js`
+    ).replace(/\.js$/, ""),
     // {{name}} / {{description}} / {{author}} / {{authorUri}} / {{pluginUri}}
     // — sensible defaults so the WP plugin header is always populated.
     name: cfg.globalName || answers.slug,

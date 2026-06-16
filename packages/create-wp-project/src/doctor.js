@@ -60,7 +60,7 @@ import { existsSync } from "node:fs";
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
 
-import { readManifest } from "./manifest.js";
+import { readManifest, MANIFEST_SCHEMA } from "./manifest.js";
 import { getFeatureCatalog } from "./features.js";
 import { getDepVersions } from "./dep-versions.js";
 
@@ -183,7 +183,7 @@ export function checkVendoredChecksum(dir) {
     warnings.push(
       "Legacy vendored framework sources found under src/Core/. " +
         "Run `wpsk update` (or delete src/Core/ after confirming " +
-        "your modules only use public WPSK APIs) to migrate to deps mode."
+        "your modules only use public WPSK APIs) to migrate to deps mode.",
     );
   }
   const frameworkDir = path.join(dir, VENDORED_FRAMEWORK_DIR);
@@ -233,6 +233,16 @@ export function doctorProject(dir) {
     result.errors.push("manifest missing");
     result.ok = false;
     return result;
+  }
+
+  // Check 1b: unsupported manifest schema.
+  if (
+    typeof manifest.schema === "number" &&
+    manifest.schema !== MANIFEST_SCHEMA
+  ) {
+    result.errors.push(
+      `unsupported manifest schema ${manifest.schema} — upgrade the kit before updating this project (expected schema ${MANIFEST_SCHEMA})`,
+    );
   }
 
   // Check 2: unknown feature ids.

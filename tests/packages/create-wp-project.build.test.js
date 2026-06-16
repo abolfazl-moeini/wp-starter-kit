@@ -116,7 +116,7 @@ describe("@wpsk/create-wp-project — build scripts use installed @wpsk/* bins (
     expect(res.ok).toBe(true);
     const pkg = await readPackageJson();
     expect(pkg.scripts).toBeDefined();
-    for (const [name, value] of Object.entries(pkg.scripts)) {
+    for (const [, value] of Object.entries(pkg.scripts)) {
       expect(typeof value).toBe("string");
       expect(value.includes("core/packages/")).toBe(false);
       expect(value.includes("node core/")).toBe(false);

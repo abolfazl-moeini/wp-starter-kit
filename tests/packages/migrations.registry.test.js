@@ -24,7 +24,7 @@
  *     run: function).
  *  4. Every entry is an object (no primitive slips in).
  *  5. The registry always has at least one baseline migration
- *     (the 0.2.0 no-op shipped with Phase 24.2).
+ *     (the 0.2.0 vendored->deps cleanup shipped with Phase 23/24).
  *
  * Select / runMigrations contracts are covered in
  * `migrations.select.test.js` and `migrations.run.test.js`.
@@ -40,7 +40,7 @@ describe("getMigrations() — registry shape (Phase 24.1, 24.2)", () => {
     expect(Array.isArray(list)).toBe(true);
   });
 
-  test("returns at least one migration (the 0.2.0 baseline)", () => {
+  test("returns at least one migration (the 0.2.0 vendored->deps cleanup)", () => {
     const list = getMigrations();
     expect(list.length).toBeGreaterThanOrEqual(1);
     const versions = list.map((m) => m.version);
@@ -84,7 +84,7 @@ describe("getMigrations() — registry shape (Phase 24.1, 24.2)", () => {
     // that, lexicographically, would order differently:
     //   "0.2.0" < "0.9.0" < "0.10.0"  (numeric — correct)
     //   "0.10.0" < "0.2.0" < "0.9.0"  (lexicographic — wrong)
-    // The 0.2.0 baseline is the only one currently shipped, so
+    // The 0.2.0 vendored->deps migration is the baseline shipped, so
     // this test is a smoke test against a future registry
     // regression: if a later phase adds 0.9.0 and 0.10.0, the
     // order must remain numeric. We assert that the existing

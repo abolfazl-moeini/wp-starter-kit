@@ -38,7 +38,11 @@
     "typecheck": "tsc --noEmit",
     "lint": "npm run lint --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
-    "check": "node core/packages/utils/check-cli.js"
+    "check": "node core/packages/utils/check-cli.js",
+    "scaffold": "node packages/create-wp-project/src/scaffold-cli.js",
+    "add-feature": "node packages/create-wp-project/src/add-feature-cli.js",
+    "update": "node packages/create-wp-project/src/update-cli.js",
+    "doctor": "node packages/create-wp-project/src/doctor-cli.js"
   },
   "workspaces": [
     "core/packages/*",

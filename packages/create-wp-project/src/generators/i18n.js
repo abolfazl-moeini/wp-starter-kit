@@ -20,6 +20,25 @@ export function run(ctx) {
     files: {
       "languages/.gitkeep":
         "# Translation source files (.pot, .po, .mo) live here.\n",
+      "languages/README.md": `# Translation pipeline
+
+The i18n feature is ON for this project.
+
+## Requirements
+
+- **WP-CLI** with the \`wp i18n\` commands (from \`wp-cli/i18n-command\`
+  or a full WP-CLI bundle). The kit's translation scripts call
+  \`wp i18n make-pot\` and related commands.
+
+Install WP-CLI globally or add it as a dev tool before running
+\`composer translation\` / the kit's i18n npm scripts.
+
+## Output
+
+Generated \`.pot\` / \`.po\` / \`.mo\` files are written under
+\`languages/\` and loaded from \`{slug}.php\` via
+\`load_plugin_textdomain()\`.
+`,
     },
     dirs: ["languages"],
     deps: {},
@@ -30,6 +49,6 @@ export function run(ctx) {
 export const descriptor = {
   id: "i18n",
   feature: "i18n",
-  owns: ["languages/**"],
+  owns: ["languages/**", "languages/README.md"],
   run,
 };

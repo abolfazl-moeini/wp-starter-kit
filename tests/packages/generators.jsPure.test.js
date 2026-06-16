@@ -34,9 +34,7 @@
 
 import { describe, test, expect } from "@jest/globals";
 
-import {
-  run as coreRun,
-} from "../../packages/create-wp-project/src/generators/core.js";
+import { run as coreRun } from "../../packages/create-wp-project/src/generators/core.js";
 import {
   run as pureRun,
   descriptor as pureDescriptor,

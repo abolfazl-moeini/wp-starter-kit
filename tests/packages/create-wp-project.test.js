@@ -443,10 +443,10 @@ describe("@wpsk/create-wp-project", () => {
       const res = await scaffoldProject(tmp, goodAnswers);
       expect(res.ok).toBe(true);
       await expect(
-        fs.access(path.join(tmp, "src", "Core", "Plugin.php"))
+        fs.access(path.join(tmp, "src", "Core", "Plugin.php")),
       ).rejects.toThrow();
       await expect(
-        fs.access(path.join(tmp, "src", "Core", "ModuleInterface.php"))
+        fs.access(path.join(tmp, "src", "Core", "ModuleInterface.php")),
       ).rejects.toThrow();
     });
 
@@ -715,7 +715,9 @@ describe("@wpsk/create-wp-project", () => {
       // In deps mode there is no src/Core/Plugin.php written by scaffold
       // (the WPSK\Core reference in bootstrap resolves from the dep).
       // We only assert that force wrote a fresh project.config.json.
-      expect(await fs.readFile(path.join(tmp, "my-project.php"), "utf8")).toMatch(/my-project/);
+      expect(
+        await fs.readFile(path.join(tmp, "my-project.php"), "utf8"),
+      ).toMatch(/my-project/);
     });
 
     /* ----- plugin mode: no functions.php ---------------------------- */

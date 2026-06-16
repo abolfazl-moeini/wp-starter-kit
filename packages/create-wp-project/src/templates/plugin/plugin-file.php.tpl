@@ -4,8 +4,8 @@
  * Plugin URI:        {{pluginUri}}
  * Description:       {{description}}
  * Version:           0.1.0
- * Requires at least: 6.4
- * Requires PHP:      7.4
+ * Requires at least: {{wpMinVersion}}
+ * Requires PHP:      {{phpMinVersion}}
  * Author:            {{author}}
  * Author URI:        {{authorUri}}
  * License:           GPL-2.0-or-later

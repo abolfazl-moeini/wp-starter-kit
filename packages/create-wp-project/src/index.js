@@ -436,8 +436,8 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
 
   // 9. Write the manifest. The manifest's `features` object
   //    is the validated feature set; `kitVersion` is the kit's
-  //    own version; `distMode` is "vendored" until Phase 23
-  //    flips the default to "deps".
+  //    own version; `distMode` defaults to "deps" (framework via
+  //    wpsk/framework Composer dep; vendored is legacy).
   const manifest = buildManifest({
     kitVersion: KIT_VERSION,
     features,

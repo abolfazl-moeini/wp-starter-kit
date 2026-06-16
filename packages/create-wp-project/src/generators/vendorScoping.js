@@ -13,17 +13,12 @@
  * IMPORTANT: the core generator's `TEMPLATE_STRAUSS_JSON`
  * keeps the WPSK exclusion (the kit's own root config still
  * needs it; Phase 23 lands the deps-mode default for the
- * scaffold). The Phase 21 release mode is `distMode: vendored`,
- * so the consumer scaffold still ships src/Core locally and
- * still excludes WPSK from prefixing to scope correctly. The
- * vendorScoping generator's `run()` overrides that with the
- * exclusion-free version so a consumer who turns vendorScoping
- * ON gets the right config for their build.
- *
- * When vendorScoping is OFF, the consumer relies on the core
- * template (with the WPSK exclusion). That's the BC behaviour:
- * the legacy scaffold always emitted the WPSK-excluding
- * strauss.json.
+ * scaffold). Phase 23+ defaults to `distMode: deps` with
+ * `wpsk/framework` as a Composer dependency. Core writes
+ * `composer.json` `extra/strauss` (the config Strauss reads);
+ * this generator also emits a standalone `strauss.json` mirror
+ * for human reference. refreshGlue keeps both in sync when
+ * vendorScoping toggles.
  */
 
 import { renderTemplate } from "./_templates.js";

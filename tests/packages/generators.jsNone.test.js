@@ -332,7 +332,7 @@ describe("js:none — end-to-end scaffold (Phase 25.A1)", () => {
     expect(pluginPhp).toMatch(/WPSK\\Core\\Plugin::boot/);
     // Phase 23: core framework sources are NOT written (provided by dep).
     await expect(
-      fs.access(path.join(tmp, "src", "Core", "ModuleInterface.php"))
+      fs.access(path.join(tmp, "src", "Core", "ModuleInterface.php")),
     ).rejects.toThrow();
     // The composer.json with the PSR-4 mapping.
     const composer = JSON.parse(

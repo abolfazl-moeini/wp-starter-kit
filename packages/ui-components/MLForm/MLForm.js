@@ -16,25 +16,15 @@
  * original from their own theme/plugin — the starter kit only ships
  * the version-agnostic scaffolding.
  */
-import { h } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import classNames from "classnames";
 import isEmpty from "lodash.isempty";
 
-import {
-  formStore,
-  formState,
-  setFormData,
-  getFormData,
-  batchGetFormData,
-  batchSetFormData,
-  resetFormData,
-  updateFormState,
-} from "../index.js";
+import { batchGetFormData, batchSetFormData } from "../index.js";
 
 export function MLForm(props) {
   const wrapperRef = useRef(null);
-  const [dynamicInitialValues, setDynamicInitialValues] = useState();
+  const [dynamicInitialValues] = useState();
   const firstRender = !wrapperRef.current;
 
   const initialValues = () => ({

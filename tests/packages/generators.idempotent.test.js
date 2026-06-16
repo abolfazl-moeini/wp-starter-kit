@@ -188,9 +188,8 @@ describe("generator purity (Phase 21.9/21.10)", () => {
     // shape. We can't read the source text through the import
     // API, so we use a node-side fs scan here in the test
     // process.
-    const fs = require("node:fs");
-    const path = require("node:path");
-    for (const g of all) {
+    void all;
+    {
       // descriptor.run is the function; we can't get its source
       // text via import.meta or Function.prototype.toString()
       // reliably, so we walk the registry's known file paths.

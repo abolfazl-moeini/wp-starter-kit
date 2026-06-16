@@ -200,7 +200,48 @@ jobs:
           retention-days: 7
 
   # ============================================================
-  # Job 6: Installer e2e (wpsk CLI — create + info)
+  # Job 6: Scaffold feature matrix (v3 variants smoke)
+  # ============================================================
+  scaffold-matrix:
+    name: Scaffold Matrix
+    runs-on: ubuntu-latest
+    needs: [js-test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Scaffold default project
+        run: |
+          node packages/create-wp-project/src/scaffold-cli.js /tmp/wpsk-matrix-default
+
+      - name: Scaffold js:none project
+        run: |
+          node packages/cli/bin/wpsk.js create /tmp/wpsk-matrix-none --yes \
+            --scope=acme --global=Acme --domain=acme --hook=acme --php-fn=acme_ \
+            --js=none --husky=off
+
+      - name: Scaffold js:flow project
+        run: |
+          node packages/cli/bin/wpsk.js create /tmp/wpsk-matrix-flow --yes \
+            --scope=acme --global=Acme --domain=acme --hook=acme --php-fn=acme_ \
+            --js=flow
+
+      - name: Scaffold jsTest:vitest + faultTolerance project
+        run: |
+          node packages/cli/bin/wpsk.js create /tmp/wpsk-matrix-vitest --yes \
+            --scope=acme --global=Acme --domain=acme --hook=acme --php-fn=acme_ \
+            --js-test=vitest --fault-tolerance=on --php-min=8.1
+
+  # ============================================================
+  # Job 7: Installer e2e (wpsk CLI — create + info)
   # ============================================================
   installer-e2e:
     name: Installer E2E
@@ -240,12 +281,21 @@ jobs:
           node packages/cli/bin/wpsk.js info /tmp/wpsk-installer-e2e
 
   # ============================================================
-  # Job 7: Status check (fails if any required job failed)
+  # Job 8: Status check (fails if any required job failed)
   # ============================================================
   ci-pass:
     name: CI Status
     runs-on: ubuntu-latest
-    needs: [js-test, php-test, lint, release-dist, build, installer-e2e]
+    needs:
+      [
+        js-test,
+        php-test,
+        lint,
+        release-dist,
+        build,
+        scaffold-matrix,
+        installer-e2e,
+      ]
     if: always()
     steps:
       - name: Check all required jobs passed
@@ -264,6 +314,9 @@ jobs:
           fi
           if [ "${{ needs.build.result }}" != "success" ]; then
             echo "Build failed"; exit 1
+          fi
+          if [ "${{ needs.scaffold-matrix.result }}" != "success" ]; then
+            echo "Scaffold matrix failed"; exit 1
           fi
           if [ "${{ needs.installer-e2e.result }}" != "success" ]; then
             echo "Installer E2E failed"; exit 1

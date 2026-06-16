@@ -125,6 +125,33 @@ describe("doctorProject() — check 1: manifest present (Phase 24.9)", () => {
   });
 });
 
+describe("doctorProject() — check 1b: unsupported manifest schema", () => {
+  let tmpDir;
+  beforeEach(async () => {
+    tmpDir = await seedHealthy();
+    const manifest = JSON.parse(
+      await fs.readFile(path.join(tmpDir, "wpsk-kit.json"), "utf8"),
+    );
+    manifest.schema = 99;
+    await fs.writeFile(
+      path.join(tmpDir, "wpsk-kit.json"),
+      JSON.stringify(manifest, null, 2) + "\n",
+      "utf8",
+    );
+  });
+  afterEach(async () => {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  test("unsupported schema surfaces as a fatal error", () => {
+    const res = doctorProject(tmpDir);
+    expect(res.ok).toBe(false);
+    expect(
+      res.errors.some((e) => /unsupported manifest schema 99/.test(e)),
+    ).toBe(true);
+  });
+});
+
 describe("doctorProject() — check 2: unknown feature ids (Phase 24.9)", () => {
   let tmpDir;
   beforeEach(async () => {
@@ -207,9 +234,15 @@ describe("doctorProject() — check 4: vendored framework checksum (Phase 24.10)
   test("legacy src/Core/ presence under vendored manifest produces a migration warning (Phase 23/24 fix)", async () => {
     const corePhp = path.join(tmpDir, "src", "Core", "Plugin.php");
     await fs.mkdir(path.join(tmpDir, "src", "Core"), { recursive: true });
-    await fs.writeFile(corePhp, "<?php namespace WPSK\\Core; class Plugin {}", "utf8");
+    await fs.writeFile(
+      corePhp,
+      "<?php namespace WPSK\\Core; class Plugin {}",
+      "utf8",
+    );
     const res = doctorProject(tmpDir);
-    expect(res.warnings.some((w) => /Legacy vendored framework sources/.test(w))).toBe(true);
+    expect(
+      res.warnings.some((w) => /Legacy vendored framework sources/.test(w)),
+    ).toBe(true);
   });
 });
 

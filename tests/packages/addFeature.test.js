@@ -52,7 +52,6 @@ import {
   buildManifest,
   writeManifest,
 } from "../../packages/create-wp-project/src/manifest.js";
-import { syncFeaturesToConfig } from "../../packages/create-wp-project/src/manifest.js";
 
 /**
  * Pre-populate a project directory with a v2-valid
