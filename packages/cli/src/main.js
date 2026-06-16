@@ -260,24 +260,70 @@ export function buildProgram() {
 
   allowPassthrough(
     program
-      .command("update")
+      .command("update [dir]")
       .description(
-        "plan (or apply with --run) a kit upgrade for the current project",
-      ),
-  ).action(async () => {
+        "plan (default) or apply (--run) a kit upgrade for the current project",
+      )
+      .option(
+        "--to <version>",
+        "target kit version (default: registry's _kit entry)",
+      )
+      .option("--run", "apply the plan (default: dry-run only)")
+      .option("--force", "apply even with a dirty git tree")
+      .option("-v, --verbose", "verbose runner output"),
+  ).action(async (dir) => {
     const sub = program.commands.find((c) => c.name() === "update");
-    return runUpdate({ argv: tailAfterSubcommand(sub) });
+    const argv = tailAfterSubcommand(sub);
+    // The runOptions are read from the raw argv tail. We keep
+    // the parsing local (per-command) so we don't need a
+    // global flag registry.
+    const runOptions = parseUpdateRunOptions(argv);
+    const targetDir = dir || process.cwd();
+    const result = await runUpdate(
+      { dir: targetDir, runOptions },
+      { engine, runners, ui },
+    );
+    if (!result.ok) {
+      process.stderr.write(
+        "wpsk update: " + (result.reason || "unknown") + "\n",
+      );
+      process.exit(1);
+    }
+    if (result.warning) {
+      process.stderr.write("wpsk update: " + result.warning + "\n");
+    }
   });
 
   allowPassthrough(
     program
-      .command("doctor")
+      .command("doctor [dir]")
       .description(
         "report system prerequisites and project drift for the current project",
+      )
+      .option(
+        "--json",
+        "emit machine-readable JSON instead of the report panel",
       ),
-  ).action(async () => {
+  ).action(async (dir) => {
     const sub = program.commands.find((c) => c.name() === "doctor");
-    return runDoctor({ argv: tailAfterSubcommand(sub) });
+    const argv = tailAfterSubcommand(sub);
+    const runOptions = { json: argv.indexOf("--json") !== -1 };
+    const targetDir = dir || process.cwd();
+    const result = await runDoctor(
+      { dir: targetDir, runOptions },
+      { engine, ui },
+    );
+    if (!result.ok && !result.report) {
+      process.stderr.write(
+        "wpsk doctor: " + (result.reason || "unknown") + "\n",
+      );
+      process.exit(1);
+    }
+    // The doctor encodes its exit code in the result; honour
+    // it so CI can distinguish "clean" / "warnings" / "errors".
+    if (typeof result.code === "number" && result.code !== 0) {
+      process.exit(result.code);
+    }
   });
 
   allowPassthrough(
@@ -305,6 +351,40 @@ export function buildProgram() {
   });
 
   return program;
+}
+
+/**
+ * Parse the `wpsk update` flags from the raw argv tail. The
+ * `update` subcommand has only four flags (see plan I5.1–I5.4):
+ * `--to`, `--run`, `--force`, `--verbose`. We parse them
+ * locally rather than going through `parseFlags` (which is
+ * scoped to the create-time feature/answer/runOptions
+ * vocabulary).
+ *
+ * The function is defensive: unknown extra args are ignored,
+ * missing values default to the documented defaults. Tests
+ * don't currently exercise it (they call `runUpdate` directly
+ * with the resolved `runOptions`); the function is exercised
+ * by the bin layer's smoke test.
+ *
+ * @param {string[]} argv
+ * @returns {{run?: boolean, to?: string, force?: boolean, verbose?: boolean}}
+ */
+function parseUpdateRunOptions(argv) {
+  const out = {};
+  if (!Array.isArray(argv)) return out;
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a === "--run") out.run = true;
+    else if (a === "--force") out.force = true;
+    else if (a === "--verbose" || a === "-v") out.verbose = true;
+    else if (a === "--to" && i + 1 < argv.length) {
+      out.to = argv[++i];
+    } else if (typeof a === "string" && a.startsWith("--to=")) {
+      out.to = a.slice("--to=".length);
+    }
+  }
+  return out;
 }
 
 /**

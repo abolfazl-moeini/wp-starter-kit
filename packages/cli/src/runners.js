@@ -211,6 +211,116 @@ export async function gitInit(dir, runOpts = {}, deps) {
 }
 
 /* -------------------------------------------------------------------- */
+/* gitStatus — read-only probe for `wpsk update --run` dirty guard        */
+/* -------------------------------------------------------------------- */
+
+/**
+ * Probe `git status --porcelain` inside `dir`. The contract is
+ * different from the other runners: this one is **read-only**
+ * (no `git add` / `git commit` / `git push` — the user is about
+ * to run a migration and we only need to know "is the tree
+ * dirty?"). The shape:
+ *
+ *   { ok: true,  dirty: boolean, files: string[] }
+ *   { ok: false, error: string }            ← when git is not
+ *                                              on PATH, or the
+ *                                              dir isn't a git
+ *                                              working tree, or
+ *                                              the porcelain parse
+ *                                              fails.
+ *   { ok: false, notARepo: true, dirty: false, files: [], reason: "..." }
+ *                                              ← a special "this
+ *                                              is not a git repo"
+ *                                              answer. The `update`
+ *                                              command treats this
+ *                                              as a no-op (skip the
+ *                                              dirty guard) rather
+ *                                              than a hard error —
+ *                                              a project may have
+ *                                              been scaffolded
+ *                                              without `--git`.
+ *
+ * The probe prefers the injected `execa` and `commandExists`
+ * (so unit tests can wire fakes). When absent, the function
+ * uses the real execa + a spawnSync-based commandExists
+ * (same plumbing as the other runners).
+ *
+ * @param {string} dir
+ * @param {{execa?: Function, commandExists?: Function, spawnSync?: Function}} [deps]
+ * @returns {Promise<{
+ *   ok: boolean,
+ *   dirty?: boolean,
+ *   files?: string[],
+ *   notARepo?: boolean,
+ *   reason?: string,
+ *   error?: string,
+ * }>}
+ */
+export async function gitStatus(dir, deps = {}) {
+  if (!dir || typeof dir !== "string") {
+    return { ok: false, error: "gitStatus: dir is required" };
+  }
+
+  // Lazy imports — same pattern as the other runners, so unit
+  // tests that inject `deps.execa` never resolve the real module.
+  const execa = deps.execa || (await getDefaultExeca());
+  const present = deps.commandExists || commandExists;
+  const onPath = await present("git", { spawnSync: deps.spawnSync });
+  if (!onPath) {
+    return { ok: false, error: "git not found on PATH" };
+  }
+
+  // `git status --porcelain` exits 0 with an empty body when
+  // the tree is clean OR when `dir` is not a git working tree.
+  // We differentiate the two by checking the exit code in the
+  // second branch: a "not a git repo" is a 128 with stderr
+  // containing "not a git repository".
+  let res;
+  try {
+    res = await execa("git", ["status", "--porcelain"], {
+      cwd: dir,
+      reject: false,
+    });
+  } catch (e) {
+    return {
+      ok: false,
+      error: "git status failed to start: " + ((e && e.message) || e),
+    };
+  }
+
+  if (res && res.exitCode === 0) {
+    const files = String(res.stdout || "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    return { ok: true, dirty: files.length > 0, files };
+  }
+
+  // Non-zero exit. Distinguish "not a git repo" from a real
+  // failure. The error string is the convention every git
+  // version ships with; relying on the literal keeps the
+  // implementation simple and the contract explicit.
+  const stderr = String((res && res.stderr) || "");
+  if (/not a git repository/i.test(stderr)) {
+    return {
+      ok: false,
+      notARepo: true,
+      dirty: false,
+      files: [],
+      reason: "not a git repository (--git was not passed at create time)",
+    };
+  }
+  return {
+    ok: false,
+    error:
+      "git status failed (exit " +
+      (res ? res.exitCode : "?") +
+      "): " +
+      stderr.trim(),
+  };
+}
+
+/* -------------------------------------------------------------------- */
 /* lookupLatestKit — `npm view @wpsk/cli version` shim                    */
 /* -------------------------------------------------------------------- */
 

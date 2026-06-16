@@ -371,6 +371,257 @@ const ui = {
     }
     process.stdout.write(lines.join("\n") + "\n");
   },
+
+  /**
+   * Phase I5 — `wpsk update` plan renderer. Pretty-prints the
+   * object `engine.planUpdate(dir, to)` returns.
+   *
+   * Layout:
+   *   Update plan: <from> → <to>
+   *   (when noop) Already at <to>. Nothing to do.
+   *   Migrations:
+   *     <version> — <description>
+   *     ...
+   *   Dep changes:
+   *     package:  add {...}  bump {...}  remove {...}
+   *     composer: add {...}  bump {...}  remove {...}
+   *
+   * Each dep bucket is rendered as `name: from → to` (bump),
+   * `name: range` (add), or `name: <old range>` (remove).
+   * Empty buckets render as `(none)`.
+   *
+   * Colors: bumps in yellow, adds in green, removes in gray.
+   * Falls back to plain text when picocolors is missing.
+   *
+   * @param {{
+   *   ok: boolean,
+   *   noop?: boolean,
+   *   from?: string,
+   *   to?: string,
+   *   current?: string,
+   *   migrations?: Array<{version: string, description: string}>,
+   *   depChanges?: {
+   *     package: { add: Object, remove: Object, bump: Object },
+   *     composer: { add: Object, remove: Object, bump: Object }
+   *   }
+   * }} plan
+   * @returns {Promise<void>}
+   */
+  async renderPlan(plan) {
+    const p = plan || {};
+    let pc;
+    try {
+      pc = (await import("picocolors")).default;
+    } catch {
+      pc = null;
+    }
+    const tint = (color, str) => (pc ? pc[color](str) : String(str));
+
+    const lines = [];
+    if (p.noop === true) {
+      lines.push(
+        "Update plan: " +
+          tint(
+            "green",
+            "already at " + (p.current || p.to) + " — nothing to do",
+          ),
+      );
+    } else if (p.from && p.to) {
+      lines.push(
+        "Update plan: " + (p.from || "?") + " → " + tint("green", p.to),
+      );
+    } else {
+      lines.push("Update plan:");
+    }
+
+    // Migrations.
+    const migrations = Array.isArray(p.migrations) ? p.migrations : [];
+    lines.push("Migrations:");
+    if (migrations.length === 0) {
+      lines.push("  (none)");
+    } else {
+      for (const m of migrations) {
+        const ver = m && typeof m.version === "string" ? m.version : "?";
+        const desc =
+          m && typeof m.description === "string" ? m.description : "";
+        lines.push("  " + ver + " — " + desc);
+      }
+    }
+
+    // Dep changes.
+    const dc = p.depChanges || {
+      package: { add: {}, remove: {}, bump: {} },
+      composer: { add: {}, remove: {}, bump: {} },
+    };
+    lines.push("Dep changes:");
+
+    /**
+     * Render a single dep bucket (add/remove/bump) into a list of
+     * "name ..." lines, alphabetized. The color logic:
+     *   - bump  → yellow   (the range changes — draw attention)
+     *   - add   → green    (the dep is new)
+     *   - remove → gray    (the dep is leaving the project)
+     */
+    const renderBucket = (kind, bucket) => {
+      const names = Object.keys(bucket || {}).sort();
+      if (names.length === 0) {
+        return ["    " + tint("gray", "(none)")];
+      }
+      const out = [];
+      for (const name of names) {
+        const v = bucket[name];
+        if (kind === "bump") {
+          const from = (v && v.from) || "?";
+          const to = (v && v.to) || "?";
+          out.push("    " + tint("yellow", name + ": " + from + " → " + to));
+        } else if (kind === "add") {
+          out.push("    " + tint("green", name + ": " + v));
+        } else {
+          // remove
+          out.push("    " + tint("gray", name + ": " + v));
+        }
+      }
+      return out;
+    };
+
+    for (const side of ["package", "composer"]) {
+      const s = dc[side] || { add: {}, remove: {}, bump: {} };
+      const addCount = Object.keys(s.add || {}).length;
+      const bumpCount = Object.keys(s.bump || {}).length;
+      const removeCount = Object.keys(s.remove || {}).length;
+      if (addCount === 0 && bumpCount === 0 && removeCount === 0) {
+        lines.push("  " + side + ": (no changes)");
+        continue;
+      }
+      lines.push("  " + side + ":");
+      lines.push(...renderBucket("add", s.add));
+      lines.push(...renderBucket("bump", s.bump));
+      lines.push(...renderBucket("remove", s.remove));
+    }
+
+    process.stdout.write(lines.join("\n") + "\n");
+  },
+
+  /**
+   * Phase I5 — `wpsk doctor` report renderer. Pretty-prints the
+   * combined `{ system: [...], project: {ok, warnings, errors} }`
+   * report.
+   *
+   * Layout:
+   *   wpsk doctor
+   *   ───────────
+   *   System:
+   *     <name>   <ok/fail>  <version?>  <reason?>
+   *     ...
+   *   Project:
+   *     warnings:
+   *       - <msg>
+   *     errors:
+   *       - <msg>
+   *
+   * The `code` arg, when provided, is rendered as a final
+   * summary line:
+   *   "OK" (green)            when code === 0
+   *   "Warnings: N" (yellow)  when code === 2
+   *   "Errors: N" (red)       when code === 1
+   *
+   * Colors fall back to plain text when picocolors is missing.
+   *
+   * @param {{
+   *   system: Array<{name:string, ok:boolean, found:boolean, version?:string, reason?:string}>,
+   *   project: { ok: boolean, warnings: string[], errors: string[] }
+   * }} report
+   * @param {{code?: number, json?: boolean}} [opts]
+   * @returns {Promise<void>}
+   */
+  async renderDoctor(report, opts) {
+    const r = report || {};
+    const o = opts || {};
+
+    if (o.json === true) {
+      process.stdout.write(JSON.stringify(r, null, 2) + "\n");
+      return;
+    }
+
+    let pc;
+    try {
+      pc = (await import("picocolors")).default;
+    } catch {
+      pc = null;
+    }
+    const tint = (color, str) => (pc ? pc[color](str) : String(str));
+
+    const lines = [];
+    lines.push("wpsk doctor");
+    lines.push("─".repeat("wpsk doctor".length));
+
+    // System block.
+    const system = Array.isArray(r.system) ? r.system : [];
+    lines.push("System:");
+    if (system.length === 0) {
+      lines.push("  (no checks ran)");
+    } else {
+      // The "name" column is the longest label, padded to 10
+      // chars so the second column lines up.
+      const NAME = 10;
+      for (const s of system) {
+        const name = (s && s.name) || "?";
+        const status =
+          s && s.ok === true
+            ? tint("green", "ok")
+            : s && s.found === false
+              ? tint("gray", "missing")
+              : tint("yellow", "warn");
+        const version =
+          s && typeof s.version === "string" ? " " + s.version : "";
+        const reason = s && typeof s.reason === "string" ? "  " + s.reason : "";
+        lines.push(
+          "  " +
+            name.padEnd(NAME, " ") +
+            status.padEnd(7, " ") +
+            version +
+            reason,
+        );
+      }
+    }
+
+    // Project block.
+    const proj = r.project || { ok: true, warnings: [], errors: [] };
+    const warnings = Array.isArray(proj.warnings) ? proj.warnings : [];
+    const errors = Array.isArray(proj.errors) ? proj.errors : [];
+    lines.push("Project:");
+    lines.push("  warnings:");
+    if (warnings.length === 0) {
+      lines.push("    (none)");
+    } else {
+      for (const w of warnings) {
+        lines.push("    " + tint("yellow", "- " + w));
+      }
+    }
+    lines.push("  errors:");
+    if (errors.length === 0) {
+      lines.push("    (none)");
+    } else {
+      for (const e of errors) {
+        lines.push("    " + tint("red", "- " + e));
+      }
+    }
+
+    // Final summary line. The bin layer computes `code`; the ui
+    // is just the printer. The "OK" / "Warnings: N" / "Errors: N"
+    // tri-state mirrors the spec's three exit codes.
+    if (typeof o.code === "number") {
+      if (o.code === 0) {
+        lines.push(tint("green", "OK"));
+      } else if (o.code === 2) {
+        lines.push(tint("yellow", "Warnings: " + warnings.length));
+      } else {
+        lines.push(tint("red", "Errors: " + errors.length));
+      }
+    }
+
+    process.stdout.write(lines.join("\n") + "\n");
+  },
 };
 
 export default ui;

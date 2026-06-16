@@ -95,6 +95,44 @@ describe("subcommand --help text (Phase I4 smoke)", () => {
     expect(help).toMatch(/--json/);
   });
 
+  test("wpsk update --help lists the update-relevant flags", () => {
+    // The plan I5.1–I5.4 contract: --to, --run, --force, --verbose.
+    // Tests lock the surface so a future "add --update-only / etc."
+    // patch is caught in review.
+    const help = helpFor("update");
+    for (const flag of ["--to", "--run", "--force", "--verbose"]) {
+      expect(help).toMatch(flag);
+    }
+  });
+
+  test("wpsk update --help mentions the [dir] positional argument (Phase I5)", () => {
+    // The user can run `wpsk update` (cwd) or `wpsk update /abs/proj`
+    // (explicit target). commander renders positional arg names
+    // in brackets, so we look for the bare 'dir' in the usage
+    // line.
+    const help = helpFor("update");
+    expect(help).toMatch(/\[dir\]/);
+  });
+
+  test("wpsk doctor --help lists --json (machine output flag)", () => {
+    const help = helpFor("doctor");
+    expect(help).toMatch(/--json/);
+  });
+
+  test("wpsk doctor --help mentions the [dir] positional argument (Phase I5)", () => {
+    const help = helpFor("doctor");
+    expect(help).toMatch(/\[dir\]/);
+  });
+
+  test("wpsk doctor --help does NOT list --to/--run/--force (those are update-only)", () => {
+    // Defensive: the doctor subcommand should not inherit the
+    // update flags. Locking this keeps the help text honest.
+    const help = helpFor("doctor");
+    expect(help).not.toMatch(/--to/);
+    expect(help).not.toMatch(/--run/);
+    expect(help).not.toMatch(/--force/);
+  });
+
   test("wpsk info --help mentions --json (machine output flag, Phase I5)", () => {
     const help = helpFor("info");
     expect(help).toMatch(/--json/);
