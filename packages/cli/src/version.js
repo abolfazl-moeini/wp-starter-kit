@@ -31,20 +31,21 @@ import { join } from "node:path";
 export const KIT_VERSION_OVERRIDE_ENV = "WPSK_CLI_KIT_VERSION_OVERRIDE";
 
 /**
- * Resolve the canonical engine package.json path. We probe
- * a small list of candidates so the helper works whether the
- * caller is in the kit root (the common case) or inside
- * `packages/cli/` itself (some test invocations).
+ * Resolve the canonical engine package.json path. The kit
+ * ships a fixed workspace layout — the engine package lives
+ * at `packages/create-wp-project/package.json` from the kit
+ * root — so the helper is a thin `path.join`. We expose it
+ * for the test suite so tests can assert the path shape (or
+ * override the resolution by mocking `process.cwd`).
  *
- * Exported for the test suite so it can assert the same path
- * shape (or override the resolution by mocking `process.cwd`).
+ * @param {string} [cwd=process.cwd()]
+ * @returns {string} the absolute path the helper would read.
+ *   The function does NOT probe the filesystem — callers that
+ *   need a "real-or-default" answer (e.g. the version resolver
+ *   below) use `existsSync` themselves.
  */
 export function resolveEnginePackageJsonPath(cwd = process.cwd()) {
-  const candidates = [join(cwd, "packages/create-wp-project/package.json")];
-  for (const c of candidates) {
-    if (existsSync(c)) return c;
-  }
-  return candidates[0];
+  return join(cwd, "packages/create-wp-project/package.json");
 }
 
 /**

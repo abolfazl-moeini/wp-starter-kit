@@ -64,6 +64,7 @@ import { tplVars as tplVarsFromGenerators } from "./generators/_templates.js";
 // safety contract the scaffold path uses.
 import { addFeature } from "./addFeature.js";
 import { removeFeature } from "./removeFeature.js";
+import { shouldEmitPackageJson } from "./refresh-glue.js";
 //
 // Phase 24 (24.1–24.6) — migrations registry, selector, and
 // runner live under `./migrations/index.js`. Re-exported
@@ -419,11 +420,9 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   //    js === "none" AND husky === "off" (no Node toolchain
   //    to drive). The core generator already gates the file
   //    on `js !== "none"`; this is the extra husky-gate.
-  if (
-    features.js === "none" &&
-    features.husky === "off" &&
-    "package.json" in merged.files
-  ) {
+  //    Centralised in `shouldEmitPackageJson` so scaffold
+  //    and refreshGlue share one source of truth.
+  if (!shouldEmitPackageJson(features) && "package.json" in merged.files) {
     delete merged.files["package.json"];
   }
 

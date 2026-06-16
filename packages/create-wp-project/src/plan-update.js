@@ -75,6 +75,7 @@
  */
 
 import { existsSync, readFileSync } from "node:fs";
+import * as path from "node:path";
 
 import { readManifest } from "./manifest.js";
 import { getDepVersions } from "./dep-versions.js";
@@ -176,7 +177,7 @@ function diffDeps(projectDeps, registry) {
 function computeDepChanges(dir) {
   const registry = getDepVersions();
 
-  const pkg = readJsonOrNull(path_join(dir, PACKAGE_JSON_FILENAME));
+  const pkg = readJsonOrNull(path.join(dir, PACKAGE_JSON_FILENAME));
   // npm's `dependencies` and `devDependencies` are BOTH
   // considered installed deps for the diff — the registry
   // doesn't distinguish. A consumer with a dep in
@@ -192,7 +193,7 @@ function computeDepChanges(dir) {
       }
     : null;
 
-  const composer = readJsonOrNull(path_join(dir, COMPOSER_JSON_FILENAME));
+  const composer = readJsonOrNull(path.join(dir, COMPOSER_JSON_FILENAME));
   // Composer splits require / require-dev. Same flat merge
   // rationale as package.json above.
   const composerDeps = composer
@@ -209,13 +210,8 @@ function computeDepChanges(dir) {
 }
 
 /* -------------------------------------------------------------------- */
-/* path.join shim (avoids the named-import noise in a docstring)          */
+/* planUpdate                                                            */
 /* -------------------------------------------------------------------- */
-
-import * as path from "node:path";
-function path_join(...parts) {
-  return path.join(...parts);
-}
 
 /* -------------------------------------------------------------------- */
 /* planUpdate                                                            */

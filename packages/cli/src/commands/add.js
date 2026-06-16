@@ -49,7 +49,6 @@
  * @typedef {Object} AddDeps
  * @property {Object} engine          { addFeature, getFeatureCatalog }
  * @property {Object} [runners]       { npmInstall, composerInstall, gitInit }
- * @property {Object} [ui]            { log, ... }
  */
 
 /**

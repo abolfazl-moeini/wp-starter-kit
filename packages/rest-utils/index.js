@@ -16,6 +16,7 @@
 import { addQueryArgs } from "@wordpress/url";
 import { localize } from "@wpsk/utils";
 import getHooks from "@wpsk/hooks";
+import { currentLanguage } from "@wpsk/html-utils";
 
 const FALLBACK_HOOK_PREFIX =
   typeof __WPSK_HOOK_PREFIX__ !== "undefined" ? __WPSK_HOOK_PREFIX__ : "wpsk";
@@ -160,12 +161,6 @@ export function createRestUtils(deps = {}) {
     getRequestedQueryVar,
     requestedQueryVars,
   };
-}
-
-function currentLanguage() {
-  if (typeof document === "undefined") return "";
-  const lang = document.documentElement?.getAttribute("lang") || "";
-  return lang.slice(0, 2).toLocaleLowerCase();
 }
 
 export function getRequestedQueryVar(name) {

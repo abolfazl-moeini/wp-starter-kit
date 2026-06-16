@@ -31,6 +31,44 @@ async function getClack() {
 }
 
 /* -------------------------------------------------------------------- */
+/* getTinter — lazy picocolors wrapper used by the render* helpers        */
+/* -------------------------------------------------------------------- */
+
+let _tinterPromise = null;
+
+/**
+ * Resolve a `(color, str) => string` tinter. The first call
+ * dynamic-imports `picocolors` and memoises the resulting
+ * tinter; subsequent calls reuse the cached value. A missing
+ * `picocolors` is non-fatal — the tinter degrades to a plain
+ * `String(...)` so the render* helpers still print readable
+ * text in non-TTY environments and in the test harness
+ * (where picocolors may not be installed).
+ *
+ * Centralised here so `renderFeatureTable`, `renderKitStatus`,
+ * `renderPlan`, and `renderDoctor` all share one dynamic import
+ * path (instead of repeating the try/catch around the import
+ * in every helper — a previous code review flagged that
+ * duplication).
+ *
+ * @returns {Promise<(color: string, str: string) => string>}
+ */
+function getTinter() {
+  if (!_tinterPromise) {
+    _tinterPromise = (async () => {
+      let pc = null;
+      try {
+        pc = (await import("picocolors")).default;
+      } catch {
+        pc = null;
+      }
+      return (color, str) => (pc && pc[color] ? pc[color](str) : String(str));
+    })();
+  }
+  return _tinterPromise;
+}
+
+/* -------------------------------------------------------------------- */
 /* renderError — the "validation failed" panel                            */
 /* -------------------------------------------------------------------- */
 
@@ -305,13 +343,7 @@ const ui = {
       process.stdout.write("(no features)\n");
       return;
     }
-    let pc;
-    try {
-      pc = (await import("picocolors")).default;
-    } catch {
-      pc = null; // picocolors missing — fall back to plain
-    }
-    const tint = (color, str) => (pc ? pc[color](str) : String(str));
+    const tint = await getTinter();
 
     const header = ["FEATURE", "STATE", "VARIANT"];
     const body = rows.map((r) => [
@@ -386,13 +418,7 @@ const ui = {
       return;
     }
 
-    let pc;
-    try {
-      pc = (await import("picocolors")).default;
-    } catch {
-      pc = null;
-    }
-    const tint = (color, str) => (pc ? pc[color](str) : String(str));
+    const tint = await getTinter();
 
     // Label column width: "Kit version:" is the longest
     // label we emit. 16 chars (with a single trailing
@@ -464,13 +490,7 @@ const ui = {
    */
   async renderPlan(plan) {
     const p = plan || {};
-    let pc;
-    try {
-      pc = (await import("picocolors")).default;
-    } catch {
-      pc = null;
-    }
-    const tint = (color, str) => (pc ? pc[color](str) : String(str));
+    const tint = await getTinter();
 
     const lines = [];
     if (p.noop === true) {
@@ -598,13 +618,7 @@ const ui = {
       return;
     }
 
-    let pc;
-    try {
-      pc = (await import("picocolors")).default;
-    } catch {
-      pc = null;
-    }
-    const tint = (color, str) => (pc ? pc[color](str) : String(str));
+    const tint = await getTinter();
 
     const lines = [];
     lines.push("wpsk doctor");

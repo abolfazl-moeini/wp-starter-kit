@@ -24,6 +24,26 @@ import {
 const CONDITIONAL_GLUE = ["tsconfig.json", "package.json"];
 
 /**
+ * `package.json` is omitted when the project has no Node toolchain
+ * to drive — i.e. JS is fully off (`js === "none"`) AND husky is
+ * off (no pre-commit hook runner). Without both, a consumer
+ * expects a package.json (npm scripts, lint-staged config, …).
+ *
+ * Centralised here so `scaffoldProject` (Phase 21.13) and
+ * `refreshGlue` (Phase 22) share one source of truth for the
+ * gate — the two previously inlined the same boolean and a
+ * future "add another no-package.json case" patch would
+ * otherwise need to touch both call sites.
+ *
+ * @param {Record<string,string|undefined>} features
+ * @returns {boolean}
+ */
+export function shouldEmitPackageJson(features) {
+  const f = features || {};
+  return !(f.js === "none" && f.husky === "off");
+}
+
+/**
  * @param {string} rel
  * @returns {boolean}
  */
@@ -88,7 +108,7 @@ export async function refreshGlue(dir, features) {
     files["package.json"] = JSON.stringify(pkg, null, 2) + "\n";
   }
 
-  if (features.js === "none" && features.husky === "off") {
+  if (!shouldEmitPackageJson(features)) {
     delete files["package.json"];
   }
 
@@ -124,10 +144,7 @@ export async function refreshGlue(dir, features) {
   for (const rel of CONDITIONAL_GLUE) {
     if (!isOwnedByCore(rel)) continue;
     if (rel in files) continue;
-    if (
-      rel === "package.json" &&
-      !(features.js === "none" && features.husky === "off")
-    ) {
+    if (rel === "package.json" && shouldEmitPackageJson(features)) {
       continue;
     }
     if (rel === "tsconfig.json" && features.js !== "none") {
