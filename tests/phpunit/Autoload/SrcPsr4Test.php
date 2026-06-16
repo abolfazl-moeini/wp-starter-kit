@@ -106,4 +106,120 @@ class SrcPsr4Test extends TestCase
             'WPSK\\Core\\Plugin must be autoloadable through the PSR-4 entry'
         );
     }
+
+    /* ----------------------------------------------------------------- */
+    /* Phase 23.A2b — compatibility bridge shims                          */
+    /* ----------------------------------------------------------------- */
+
+    /**
+     * Enumerate every class file that ships with the wpsk/framework
+     * package (under packages/framework/src/). Used by the
+     * bridge-shim tests below to assert that EACH of them is
+     * loadable from BOTH the framework package path AND the
+     * legacy src/Core / src/Support shim path.
+     *
+     * @return list<array{class:string,frameworkRel:string,shimRel:string}>
+     */
+    private function bridgeClasses(): array
+    {
+        $root = dirname(__DIR__, 3);
+        $framework = $root . '/packages/framework/src';
+        $this->assertDirectoryExists(
+            $framework,
+            'packages/framework/src/ must exist (Phase 23.A2)'
+        );
+
+        $out = [];
+        $iter = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($framework, FilesystemIterator::SKIP_DOTS)
+        );
+        foreach ($iter as $file) {
+            /** @var SplFileInfo $file */
+            if ($file->getExtension() !== 'php') {
+                continue;
+            }
+            $abs = $file->getPathname();
+            $rel = substr($abs, strlen($framework) + 1); // e.g. "Core/Plugin.php"
+            $relNoExt = substr($rel, 0, -4);              // "Core/Plugin"
+            $class = 'WPSK\\' . str_replace('/', '\\', $relNoExt);
+
+            // Shim lives at src/<rel>, e.g. src/Core/Plugin.php.
+            $shimRel = 'src/' . $rel;
+
+            $out[] = [
+                'class' => $class,
+                'frameworkRel' => 'packages/framework/src/' . $rel,
+                'shimRel' => $shimRel,
+            ];
+        }
+        return $out;
+    }
+
+    public function test_bridge_shim_exists_for_every_framework_class(): void
+    {
+        $root = dirname(__DIR__, 3);
+        $missing = [];
+        foreach ($this->bridgeClasses() as $row) {
+            $shim = $root . '/' . $row['shimRel'];
+            if (!is_file($shim)) {
+                $missing[] = $row['shimRel'] . ' (for ' . $row['class'] . ')';
+            }
+        }
+        $this->assertSame(
+            [],
+            $missing,
+            "Bridge shim missing for these framework classes:\n  - " . implode("\n  - ", $missing)
+        );
+    }
+
+    public function test_every_framework_class_loadable_from_framework_path(): void
+    {
+        foreach ($this->bridgeClasses() as $row) {
+            $this->assertTrue(
+                class_exists($row['class'], true)
+                    || interface_exists($row['class'], true)
+                    || trait_exists($row['class'], true),
+                "Framework class {$row['class']} must be loadable from packages/framework/src/"
+            );
+        }
+    }
+
+    public function test_bridge_shim_requires_framework_file(): void
+    {
+        $root = dirname(__DIR__, 3);
+        foreach ($this->bridgeClasses() as $row) {
+            $shim = $root . '/' . $row['shimRel'];
+            $body = (string) file_get_contents($shim);
+            // The shim is a one-line `require_once __DIR__ . '/../../packages/framework/src/<rel>';`
+            // bridge (the up-traversal count varies with file depth)
+            // that keeps the legacy `src/Core/X.php` path loadable
+            // until every reference to the old path is migrated.
+            // frameworkRel is "packages/framework/src/<rel>"; the require line
+            // ends in "/<rel>" only (the up-traversal lands at the project root).
+            $rel = substr($row['frameworkRel'], strlen('packages/framework/src/'));
+            $this->assertMatchesRegularExpression(
+                '/require(?:_once)?\s+__DIR__\s*\.\s*[\'"]\/(?:\.\.\/)+packages\/framework\/src\/'
+                . preg_quote($rel, '/') . '/',
+                $body,
+                "Bridge shim {$row['shimRel']} must require packages/framework/src/{$rel} (got: " . trim($body) . ")"
+            );
+        }
+    }
+
+    public function test_bridge_shim_does_not_duplicate_class_declaration(): void
+    {
+        // The shim is a forwarder only; it must NOT redeclare the
+        // class/interface/trait itself. Otherwise PSR-4 includes the
+        // shim AND the framework file → redeclaration fatal.
+        $root = dirname(__DIR__, 3);
+        foreach ($this->bridgeClasses() as $row) {
+            $shim = $root . '/' . $row['shimRel'];
+            $body = (string) file_get_contents($shim);
+            $this->assertDoesNotMatchRegularExpression(
+                '/\b(class|interface|trait)\s+/i',
+                $body,
+                "Bridge shim {$row['shimRel']} must not declare class/interface/trait (forwarder only)"
+            );
+        }
+    }
 }
