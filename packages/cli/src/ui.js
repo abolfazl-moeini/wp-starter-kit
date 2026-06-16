@@ -31,6 +31,49 @@ async function getClack() {
 }
 
 /* -------------------------------------------------------------------- */
+/* renderError — the "validation failed" panel                            */
+/* -------------------------------------------------------------------- */
+
+/**
+ * Build a one-line-per-field error panel and return a result the
+ * bin layer can use to `process.exit(code)`. Field order is the
+ * insertion order of `errors` (Object.entries). The function is
+ * pure with respect to inputs (no filesystem / no network), but
+ * does write to stderr as a side effect — that's the contract
+ * the bin layer relies on (it stays tiny: `await
+ * ui.renderError({...}); process.exit(result.code);`).
+ *
+ * Default behavior:
+ *   - `code: 1` for any non-empty input.
+ *   - One title line (`<title>`) on stderr.
+ *   - One field line per entry, formatted as `  <key>: <msg>`.
+ *   - Empty / missing `errors` is tolerated; the title still
+ *     prints and the code is still non-zero.
+ *
+ * Non-string error values are coerced via `String(...)` so the
+ * renderer never throws. A null / undefined `title` is
+ * substituted with a generic heading.
+ *
+ * @param {{title?: string, errors?: object}} [input]
+ * @returns {{code: number, title: string, count: number}}
+ */
+export function renderError(input) {
+  const i = input || {};
+  const title =
+    typeof i.title === "string" && i.title.length > 0 ? i.title : "wpsk: error";
+  const errors = i.errors && typeof i.errors === "object" ? i.errors : {};
+
+  process.stderr.write(title + "\n");
+  let count = 0;
+  for (const [k, v] of Object.entries(errors)) {
+    const msg = v === null || v === undefined ? "" : String(v);
+    process.stderr.write("  " + k + ": " + msg + "\n");
+    count += 1;
+  }
+  return { code: 1, title, count };
+}
+
+/* -------------------------------------------------------------------- */
 /* renderSummary — the "your project" panel                             */
 /* -------------------------------------------------------------------- */
 
@@ -218,15 +261,17 @@ const ui = {
   },
 
   /**
-   * Render a structured error list. One line per error key.
-   * Currently a no-op surface — full implementation lands in
-   * Phase I6 (UX polish). Kept for API symmetry.
+   * Render a structured error list. One line per error key, with
+   * a title line up top. Returns `{code: 1}` so the bin layer can
+   * do `process.exit((await ui.renderError({...})).code)`. The
+   * full implementation landed in Phase I6 (UX polish) — see
+   * `renderError` (the named export) for the contract.
+   *
+   * @param {{title?: string, errors?: object}} [err]
+   * @returns {Promise<{code: number, title: string, count: number}>}
    */
-  async renderError(_err) {
-    // Intentionally a no-op — Phase I6 implements the full
-    // one-error-per-line format. The current `runCreate` returns
-    // a structured {ok:false, reason} and the bin layer writes
-    // a single line to stderr.
+  async renderError(err) {
+    return renderError(err);
   },
 
   /**
