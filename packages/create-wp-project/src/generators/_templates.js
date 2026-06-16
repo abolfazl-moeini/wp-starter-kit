@@ -86,13 +86,28 @@ export function tplVars(answers, cfg) {
 /* packageJsonForAnswers                                                 */
 /* -------------------------------------------------------------------- */
 
-export function packageJsonForAnswers(answers) {
+export function packageJsonForAnswers(answers, features) {
   const preactAliases = answers.uiFramework === "preact";
   const projectType = answers.projectType || "plugin";
   const description =
     projectType === "theme"
       ? `${answers.slug} — WordPress theme built on wp-starter-kit`
       : `${answers.slug} — WordPress plugin built on wp-starter-kit`;
+  // Phase 25.B / 25.C: the `js` feature variant changes which
+  // build / lint / typecheck scripts make sense in package.json.
+  // We pull it from the `features` arg (preferred) and fall back
+  // to a `js` answer key (BC for callers that pass a merged
+  // object) and then "typescript" (the pre-Phase-25 default).
+  // Variants:
+  //   - "typescript" → typecheck: "tsc --noEmit", lint:js includes .ts,.tsx
+  //   - "pure"       → no typecheck (no TS), lint:js drops .ts,.tsx
+  //   - "flow"       → typecheck: "flow", lint:js drops .ts,.tsx
+  //                    (Flow types are stripped at bundle time; the
+  //                    source files are .js with the // @flow pragma)
+  //   - "none"       → no package.json at all (caller must gate on this;
+  //                    this function is only reached when js !== "none")
+  const jsVariant =
+    (features && features.js) || answers.js || "typescript";
 
   // Phase 23.B4: read the kit's dep-versions registry and
   // surface the @wpsk/* framework packages to the consumer.
@@ -151,7 +166,7 @@ export function packageJsonForAnswers(answers) {
     description,
     private: true,
     type: "module",
-    scripts: {
+    scripts: scriptsForVariant(jsVariant, {
       build:
         "npm-run-all --parallel build:dependencies build:components build:styles build:assets",
       "build:dependencies": "wpsk-build-dependencies",
@@ -165,7 +180,7 @@ export function packageJsonForAnswers(answers) {
       "format:check":
         'prettier --check "**/*.{js,jsx,ts,tsx,json,md,yml,yaml,css}"',
       check: "wpsk-check",
-    },
+    }),
     workspaces: ["core/packages/*", "packages/*"],
     dependencies: {
       ...(preactAliases
@@ -194,11 +209,65 @@ export function packageJsonForAnswers(answers) {
       // Phase 23.B4: the @wpsk/* build tools. The consumer
       // uses them at scaffold/build time. `@wpsk/build`
       // bundles the dependency-extraction plugin as a
-      // transitive dep, but we surface it explicitly so the
-      // version is visible in the consumer's lockfile.
+      // transitive dep, but we surface it explicitly so
+      // the version is visible in the consumer's lockfile.
       ...wpskDevDeps,
+      // Phase 25.C: the Flow variant adds `flow-bin` as a
+      // devDep so the consumer can run `npm run typecheck:flow`
+      // without an extra install step. We pin to the same
+      // range the kit's own Flow tooling uses; the consumer
+      // can override in their own package.json.
+      ...(jsVariant === "flow" ? { "flow-bin": "^0.234.0" } : {}),
     },
   };
+}
+
+/**
+ * Adjust the default package.json scripts block for a given
+ * `js` feature variant. The `defaults` parameter is the
+ * typescript-flavored block (the pre-Phase-25 default). The
+ * returned object is the variant-flavored scripts block.
+ *
+ * Variant rules:
+ *   - "typescript" → defaults unchanged (typecheck: "tsc --noEmit",
+ *                    lint:js includes .ts,.tsx).
+ *   - "pure"       → drop `typecheck` (no TS to check), drop
+ *                    .ts,.tsx from lint:js.
+ *   - "flow"       → replace `typecheck` with "flow" (the Flow
+ *                    checker), drop .ts,.tsx from lint:js.
+ *
+ * The build:* scripts and the prepare / test / format:check /
+ * check scripts are variant-agnostic — they live in the
+ * `.ts`-flavored form because esbuild's `loader: { ".js": "jsx" }`
+ * accepts both, and the format:check + check scripts don't
+ * know about TS extensions (the `**\/*.{js,jsx,ts,tsx,...}`
+ * pattern still matches JS-only trees).
+ *
+ * @param {string} variant  one of "typescript" | "pure" | "flow"
+ * @param {Record<string,string>} defaults
+ * @returns {Record<string,string>}
+ */
+function scriptsForVariant(variant, defaults) {
+  if (variant === "typescript") {
+    return { ...defaults };
+  }
+  if (variant === "pure") {
+    // No typechecker at all (plain JS, no Flow, no TS). Lint
+    // ext drops .ts,.tsx.
+    const next = { ...defaults };
+    delete next.typecheck;
+    next["lint:js"] = "eslint . --ext .js,.jsx";
+    return next;
+  }
+  if (variant === "flow") {
+    // Flow typecheck. Lint ext drops .ts,.tsx.
+    const next = { ...defaults };
+    next.typecheck = "flow";
+    next["lint:js"] = "eslint . --ext .js,.jsx";
+    return next;
+  }
+  // Unknown variant → fall back to defaults (defensive).
+  return { ...defaults };
 }
 
 /* -------------------------------------------------------------------- */

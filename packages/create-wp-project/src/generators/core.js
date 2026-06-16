@@ -137,11 +137,15 @@ export function run(ctx) {
   files[".gitignore"] = renderTemplate(TEMPLATE_GITIGNORE, tpl);
   files[".editorconfig"] = renderTemplate(TEMPLATE_EDITORCONFIG, tpl);
 
-  // 9. tsconfig.json — ONLY when js !== "none". The core generator
-  //    owns this file (it lives at the project root) but the registry
-  //    gate makes it conditional. A php-only consumer never sees a
-  //    tsconfig.json.
-  if (features.js && features.js !== "none") {
+  // 9. tsconfig.json — ONLY when js === "typescript". The core
+  //    generator owns this file (it lives at the project root)
+  //    but the registry gate makes it conditional. A php-only
+  //    consumer (js:none) never sees a tsconfig.json. A
+  //    pure-JS consumer (js:pure) also does not — there is no
+  //    TypeScript compiler in play. A Flow consumer (js:flow)
+  //    likewise — Flow replaces TypeScript as the type-checker.
+  //    (Phase 25.B / 25.C narrowing of the gate.)
+  if (features.js === "typescript") {
     files["tsconfig.json"] = TEMPLATE_TSCONFIG_JSON;
   }
 
@@ -151,9 +155,16 @@ export function run(ctx) {
   //     generator's job here is just to render the JSON. (We mark
   //     the contribution as `omittable: true` so the scaffold can
   //     drop it cleanly when both gates are off.)
+  //
+  //     Phase 25.B / 25.C: pass the variant-aware `features` to
+  //     `packageJsonForAnswers` so the typecheck / lint:js scripts
+  //     match the chosen js variant. The default (js:typescript)
+  //     is unchanged from Phase 23 — the `features` arg is the
+  //     same one the engine validated upstream.
   if (features.js && features.js !== "none") {
     files["package.json"] =
-      JSON.stringify(packageJsonForAnswers(answers), null, 2) + "\n";
+      JSON.stringify(packageJsonForAnswers(answers, features), null, 2) +
+      "\n";
   } else if (features.husky === "on") {
     // husky is on but js is none — still emit a minimal package.json
     // (the husky generator needs a `prepare: "husky install"` script).
