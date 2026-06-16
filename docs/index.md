@@ -27,6 +27,7 @@
 | [fetch-batch.md](fetch-batch.md)                 | `@wpsk/fetch` debounced REST batch client  | You're batching high-churn admin lookups.                                                    |
 | [fault-tolerance.md](fault-tolerance.md)         | Optional PHP 8.1 resilience package        | You need circuit breaker / HTTP batch helpers.                                               |
 | [php-core-libs.md](php-core-libs.md)             | Reimplemented PHP support libraries        | You're extending REST, queue, or shortcode helpers.                                          |
+| [installer.md](installer.md)                     | `wpsk` CLI installer guide                 | You're scaffolding a new project, adding/removing features, or upgrading to a newer kit.     |
 | [contributing.md](contributing.md)               | Branching, commits, review                 | You want to open a PR.                                                                       |
 
 ## How docs are organized

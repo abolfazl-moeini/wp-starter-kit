@@ -12,6 +12,7 @@ const requiredDocs = [
   "php-core-libs.md",
   "plugin-bootstrap.md",
   "modules.md",
+  "installer.md",
 ];
 
 describe("docs index contract", () => {
