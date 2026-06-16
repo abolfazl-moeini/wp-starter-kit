@@ -52,6 +52,39 @@ class RestSetupTest extends TestCase
         $this->assertSame(['v1' => true], $args['allow_batch']);
     }
 
+    /**
+     * SECURITY: register() accepts a class-string. Without validation
+     * the error would surface later inside rest_init() as a cryptic
+     * "Class 'X' not found" — or worse, a TypeError deep inside WP
+     * route registration. Validate the class exists AND extends
+     * RestHandler at register() time so misconfigurations fail fast
+     * with a clear message.
+     */
+    public function test_register_rejects_unknown_class_string(): void
+    {
+        $this->assertFalse(
+            RestSetup::register('WPSK\\Tests\\Support\\Rest\\NotARealClass'),
+            'register() must return false (not throw) for an unknown class so callers can fall back gracefully'
+        );
+        $this->assertCount(0, RestSetup::routes(), 'Failed registration must not add to the routes list');
+    }
+
+    public function test_register_rejects_class_that_does_not_extend_RestHandler(): void
+    {
+        $this->assertFalse(
+            RestSetup::register(\stdClass::class),
+            'register() must reject classes that do not implement RestHandler'
+        );
+        $this->assertCount(0, RestSetup::routes(), 'Rejected registration must not add to the routes list');
+    }
+
+    public function test_register_accepts_concrete_RestHandler_instance(): void
+    {
+        $handler = new TestRestHandler();
+        $this->assertTrue(RestSetup::register($handler));
+        $this->assertCount(1, RestSetup::routes());
+    }
+
     private function writeTempConfig(array $overrides): string
     {
         $base = json_decode(

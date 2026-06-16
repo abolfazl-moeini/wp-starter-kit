@@ -16,7 +16,7 @@
  *     to a warning, NOT a hard error.
  */
 import { describe, test, expect, jest } from "@jest/globals";
-import { mkdtempSync, rmSync, writeFileSync, existsSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
 

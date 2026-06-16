@@ -63,7 +63,7 @@ function makeEngine({
 } = {}) {
   return {
     getFeatureCatalog: jest.fn(() => CATALOG),
-    addFeature: jest.fn(async (...args) => {
+    addFeature: jest.fn(async (..._args) => {
       if (!ok) return { ok: false, reason };
       return {
         ok: true,

@@ -35,14 +35,14 @@ import {
 function makeDeps(overrides = {}) {
   return {
     commandExists,
-    execa: (cmd, args, opts) => {
+    execa: (cmd, args, _opts) => {
       // Default mock — not used by most tests (they override
       // `deps.execa` explicitly). Provided so a stray test that
       // forgets to mock execa still surfaces a clear failure
       // rather than firing a real subprocess.
       throw new Error(`execa called unexpectedly: ${cmd} ${args.join(" ")}`);
     },
-    spawnSync: (tool, args) => {
+    spawnSync: (_tool, _args) => {
       // Default mock — 'which' check returns 0 for everything.
       // Individual tests override commandExists directly so the
       // real spawnSync is never invoked.

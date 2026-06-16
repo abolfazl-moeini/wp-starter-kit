@@ -12,7 +12,7 @@
  *     output location, --slug= controls the plugin slug.
  */
 import { describe, test, expect, jest } from "@jest/globals";
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
 

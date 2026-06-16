@@ -22,6 +22,20 @@ final class RestSetup
     {
         $classname = $handler instanceof RestHandler ? get_class($handler) : $handler;
 
+        // Fail fast on misconfigured class strings. Without this check,
+        // the error would surface inside rest_init() as a cryptic
+        // "Class 'X' not found" — or a TypeError when WP's
+        // register_rest_route() tries to invoke a non-RestHandler
+        // instance. Both are hard to diagnose from a stack trace; the
+        // return-false contract here lets the caller log + skip the
+        // bad route without breaking the rest of the registration.
+        if (! is_string( $classname ) || ! class_exists( $classname ) ) {
+            return false;
+        }
+        if ( ! is_subclass_of( $classname, RestHandler::class ) ) {
+            return false;
+        }
+
         if (!in_array($classname, self::$routes, true)) {
             self::$routes[] = $classname;
             return true;
