@@ -29,7 +29,7 @@ describe("esbuild-dependencies", () => {
   // full WP global-mapping logic. We only need a stable importAsGlobals
   // factory, and we need the saveAssetFile / phpFileContent / writeFile API
   // surface that buildDepsConfig touches.
-  jest.unstable_mockModule("@core/dependency-extraction-esbuild-plugin", () => {
+  jest.unstable_mockModule("@wpsk/dependency-extraction-esbuild-plugin", () => {
     const importAsGlobals = jest.fn(() => ({ name: "global-imports" }));
     const saveAssetFile = jest.fn(async () => true);
     const phpFileContent = jest.fn(
@@ -40,7 +40,7 @@ describe("esbuild-dependencies", () => {
   });
 
   // Mock the local build package so we don't need readBuildConfig side effects.
-  jest.unstable_mockModule("@core/build", () => ({
+  jest.unstable_mockModule("@wpsk/build", () => ({
     readBuildConfig: jest.fn(async () => ({
       assetMappings: [],
       globalMappings: { "tabulator-tables": "WPSK.table" },
@@ -48,7 +48,7 @@ describe("esbuild-dependencies", () => {
   }));
 
   test("buildDepsConfig returns esbuild config with globalName from projectConfig", async () => {
-    const mod = await import("@core/build/esbuild-dependencies.js");
+    const mod = await import("@wpsk/build/esbuild-dependencies.js");
     const config = mod.buildDepsConfig({
       globalName: "WPSK",
       depsBundle: "wpsk-starter-deps.js",
@@ -58,7 +58,7 @@ describe("esbuild-dependencies", () => {
   });
 
   test("buildDepsConfig uses outfile = assets/bundles/<depsBundle>", async () => {
-    const mod = await import("@core/build/esbuild-dependencies.js");
+    const mod = await import("@wpsk/build/esbuild-dependencies.js");
     const config = mod.buildDepsConfig(
       {
         globalName: "WPSK",
@@ -74,7 +74,7 @@ describe("esbuild-dependencies", () => {
   });
 
   test("buildDepsConfig format is iife", async () => {
-    const mod = await import("@core/build/esbuild-dependencies.js");
+    const mod = await import("@wpsk/build/esbuild-dependencies.js");
     const config = mod.buildDepsConfig({
       globalName: "WPSK",
       depsBundle: "wpsk-starter-deps.js",
@@ -84,7 +84,7 @@ describe("esbuild-dependencies", () => {
   });
 
   test("buildDepsConfig plugins array is non-empty", async () => {
-    const mod = await import("@core/build/esbuild-dependencies.js");
+    const mod = await import("@wpsk/build/esbuild-dependencies.js");
     const config = mod.buildDepsConfig({
       globalName: "WPSK",
       depsBundle: "wpsk-starter-deps.js",
@@ -95,7 +95,7 @@ describe("esbuild-dependencies", () => {
   });
 
   test("buildDepsConfig sets entryPoint to assets/dependencies.ts", async () => {
-    const mod = await import("@core/build/esbuild-dependencies.js");
+    const mod = await import("@wpsk/build/esbuild-dependencies.js");
     const config = mod.buildDepsConfig(
       {
         globalName: "WPSK",
@@ -116,7 +116,7 @@ describe("esbuild-dependencies", () => {
   });
 
   test("buildDepsConfig uses globalMappings from buildConfig when supplied", async () => {
-    const mod = await import("@core/build/esbuild-dependencies.js");
+    const mod = await import("@wpsk/build/esbuild-dependencies.js");
     const config = mod.buildDepsConfig(
       {
         globalName: "WPSK",

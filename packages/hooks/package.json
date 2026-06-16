@@ -1,8 +1,15 @@
 {
   "name": "@wpsk/hooks",
   "version": "0.1.0",
+  "description": "WordPress hooks helper for wp-starter-kit consumers (typed wrappers around @wordpress/hooks).",
   "type": "module",
   "main": "index.js",
-  "private": true,
-  "dependencies": {}
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "dependencies": {},
+  "license": "MIT"
 }

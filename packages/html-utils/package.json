@@ -1,10 +1,17 @@
 {
   "name": "@wpsk/html-utils",
   "version": "0.1.0",
-  "private": true,
+  "description": "DOM/HTML helpers for wp-starter-kit consumers (Preact-aware).",
   "type": "module",
   "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js"
+  ],
   "peerDependencies": {
     "preact": "^10.0.0"
-  }
+  },
+  "license": "MIT"
 }

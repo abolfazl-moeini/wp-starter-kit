@@ -38,14 +38,14 @@ function setupMocks() {
   }));
   // Mock the dependency-extraction plugin — we only need the surface
   // runBuild touches.
-  jest.doMock("@core/dependency-extraction-esbuild-plugin", () => ({
+  jest.doMock("@wpsk/dependency-extraction-esbuild-plugin", () => ({
     importAsGlobals: jest.fn(() => ({ name: "global-imports" })),
     saveAssetFile: jest.fn(async () => true),
     phpFileContent: jest.fn((o) => `<?php return ${JSON.stringify(o)};\n`),
     writeFile: jest.fn(async (p, c) => `${p}|${c}`),
   }));
   // Mock the local build package so we don't need readBuildConfig side effects.
-  jest.doMock("@core/build", () => ({
+  jest.doMock("@wpsk/build", () => ({
     readBuildConfig: jest.fn(async () => ({
       assetMappings: [],
       globalMappings: { "tabulator-tables": "WPSK.table" },
@@ -61,7 +61,7 @@ describe("esbuild-dependencies — build with .ts entry point (p12 rename)", () 
   });
 
   test("buildDepsConfig accepts a .ts entry point override (no path rewrite)", async () => {
-    const mod = await import("@core/build/esbuild-dependencies.js");
+    const mod = await import("@wpsk/build/esbuild-dependencies.js");
     const config = mod.buildDepsConfig(
       {
         globalName: "WPSK",
@@ -78,7 +78,7 @@ describe("esbuild-dependencies — build with .ts entry point (p12 rename)", () 
   });
 
   test("buildDepsConfig default entryPoint resolves to .ts (not .js)", async () => {
-    const mod = await import("@core/build/esbuild-dependencies.js");
+    const mod = await import("@wpsk/build/esbuild-dependencies.js");
     const config = mod.buildDepsConfig(
       {
         globalName: "WPSK",
@@ -101,7 +101,7 @@ describe("esbuild-dependencies — build with .ts entry point (p12 rename)", () 
     const esbuildMod = await import("esbuild");
     const buildSpy = esbuildMod.build;
 
-    const mod = await import("@core/build/esbuild-dependencies.js");
+    const mod = await import("@wpsk/build/esbuild-dependencies.js");
     await mod.runBuild({
       projectConfig: {
         globalName: "WPSK",

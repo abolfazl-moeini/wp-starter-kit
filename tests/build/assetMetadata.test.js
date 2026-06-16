@@ -5,7 +5,7 @@
  * ---------------------------------------------------------------
  * The dependency bundle in this kit is built from `assets/dependencies.ts`
  * (p12 rename). esbuild produces `assets/bundles/wpsk-starter-deps.js` and
- * the `@core/dependency-extraction-esbuild-plugin` `saveAssetFile` helper
+ * the `@wpsk/dependency-extraction-esbuild-plugin` `saveAssetFile` helper
  * emits a sibling `wpsk-starter-deps.asset.php` containing the
  * `dependencies`, `internal_packages`, and `hash` keys — the same shape
  * WordPress core reads via `wp_register_script_from_metadata()`.
@@ -48,7 +48,7 @@ let assetFilePath;
 let bundleFilePath;
 
 beforeAll(async () => {
-  const mod = await import("@core/dependency-extraction-esbuild-plugin");
+  const mod = await import("@wpsk/dependency-extraction-esbuild-plugin");
   saveAssetFile = mod.saveAssetFile;
   phpFileContent = mod.phpFileContent;
   assetFilePath = mod.assetFilePath;

@@ -39,9 +39,9 @@ export async function buildAssets() {
     // touch the filesystem. yargs is configured lazily (see getArgv).
     const argv = getArgv();
 
-    // Lazy import so tests can `unstable_mockModule('@core/build', ...)`
+    // Lazy import so tests can `unstable_mockModule('@wpsk/build', ...)`
     // and exercise the validate / dry-run / copy branches in isolation.
-    const { readBuildConfig, validateConfig } = await import("@core/build");
+    const { readBuildConfig, validateConfig } = await import("@wpsk/build");
     const config = await readBuildConfig();
     validateConfig(config);
 

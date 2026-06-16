@@ -3,7 +3,7 @@ import path from "node:path";
 import {
   importAsGlobals,
   saveAssetFile,
-} from "@core/dependency-extraction-esbuild-plugin";
+} from "@wpsk/dependency-extraction-esbuild-plugin";
 import { readBuildConfig } from "./index.js";
 
 export function buildDepsConfig(projectConfig, buildConfig = {}, options = {}) {

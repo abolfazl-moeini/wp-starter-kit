@@ -36,7 +36,7 @@ describe("esbuild-components", () => {
     const emptyDir = mkdtempSync(join(tmpdir(), "wpsk-components-"));
     try {
       const { buildComponents } =
-        await import("@core/build/esbuild-components.js");
+        await import("@wpsk/build/esbuild-components.js");
       expect(typeof buildComponents).toBe("function");
       await expect(
         buildComponents({

@@ -1,12 +1,28 @@
 {
-  "name": "@core/build",
+  "name": "@wpsk/build",
   "version": "0.1.0",
+  "description": "esbuild-based build pipeline for wp-starter-kit consumers (components, dependencies, styles, assets).",
   "type": "module",
+  "main": "index.js",
   "exports": {
     ".": "./index.js",
     "./esbuild-components.js": "./esbuild-components.js",
     "./esbuild-dependencies.js": "./esbuild-dependencies.js",
     "./esbuild-styles.js": "./esbuild-styles.js"
   },
-  "main": "index.js"
+  "files": [
+    "index.js",
+    "esbuild-components.js",
+    "esbuild-components-cli.js",
+    "esbuild-dependencies.js",
+    "esbuild-dependencies-cli.js",
+    "esbuild-styles.js",
+    "esbuild-styles-cli.js",
+    "build-all.js"
+  ],
+  "dependencies": {
+    "@wpsk/dependency-extraction-esbuild-plugin": "^1.0.0",
+    "@core/utils": "^0.1.0"
+  },
+  "license": "MIT"
 }

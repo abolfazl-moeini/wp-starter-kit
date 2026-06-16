@@ -6,7 +6,7 @@ import {
   afterEach,
   describe,
 } from "@jest/globals";
-import { validateConfig } from "@core/build";
+import { validateConfig } from "@wpsk/build";
 import {
   mkdtempSync,
   writeFileSync,

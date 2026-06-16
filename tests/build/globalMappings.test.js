@@ -18,7 +18,7 @@ describe("importAsGlobals — custom global mapping (tabulator pattern)", () => 
   /** Run the plugin's setup() and return the captured handlers. */
   async function runPlugin(mapping) {
     const { importAsGlobals } =
-      await import("@core/dependency-extraction-esbuild-plugin");
+      await import("@wpsk/dependency-extraction-esbuild-plugin");
     const plugin = importAsGlobals(mapping, []);
     const handlers = { onResolve: [], onLoad: [] };
     plugin.setup({
@@ -38,7 +38,7 @@ describe("importAsGlobals — custom global mapping (tabulator pattern)", () => 
 
   test('returns a plugin named "global-imports"', async () => {
     const { importAsGlobals } =
-      await import("@core/dependency-extraction-esbuild-plugin");
+      await import("@wpsk/dependency-extraction-esbuild-plugin");
     const plugin = importAsGlobals({}, []);
     expect(plugin.name).toBe("global-imports");
   });

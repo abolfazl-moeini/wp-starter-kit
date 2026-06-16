@@ -1,11 +1,20 @@
 {
-  "name": "@core/dependency-extraction-esbuild-plugin",
+  "name": "@wpsk/dependency-extraction-esbuild-plugin",
   "version": "1.0.0",
-  "main": "index.js",
-  "author": "Moeini",
+  "description": "esbuild plugin that extracts WordPress-style script dependency registrations from import statements.",
   "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "utils.js"
+  ],
+  "author": "Moeini",
   "dependencies": {
     "json2php": "^0.0.12",
     "@core/utils": "^0.1.0"
-  }
+  },
+  "license": "MIT"
 }

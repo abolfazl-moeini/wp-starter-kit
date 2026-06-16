@@ -1,12 +1,19 @@
 {
   "name": "@wpsk/rest-utils",
   "version": "0.1.0",
+  "description": "WordPress REST helpers (batch endpoint clients, response unwrapping) for wp-starter-kit consumers.",
   "type": "module",
   "main": "index.js",
-  "private": true,
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js"
+  ],
   "dependencies": {
     "@wpsk/utils": "^0.1.0",
     "@wpsk/hooks": "^0.1.0",
     "@wordpress/url": "^3.55.0"
-  }
+  },
+  "license": "MIT"
 }

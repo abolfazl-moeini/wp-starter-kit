@@ -4,7 +4,7 @@ import {
   fileCheckSum,
   phpFileContent,
   writeFile,
-} from "@core/dependency-extraction-esbuild-plugin";
+} from "@wpsk/dependency-extraction-esbuild-plugin";
 import { readBuildConfig } from "./index.js";
 
 /**
@@ -50,7 +50,7 @@ export function buildStyleAssetFile(cssFilePath) {
  *
  * @param {object} [options]
  * @param {object} [options.buildConfig]  Override build config (else
- *   `readBuildConfig()` from @core/build).
+ *   `readBuildConfig()` from @wpsk/build).
  * @param {string} [options.cwd]          Working directory (forwarded to
  *   `buildStyleAssetFile` — entries are expected to be absolute or
  *   repo-relative paths).

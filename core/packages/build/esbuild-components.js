@@ -4,7 +4,7 @@ import { glob } from "glob";
 import {
   importAsGlobals,
   saveAssetFile,
-} from "@core/dependency-extraction-esbuild-plugin";
+} from "@wpsk/dependency-extraction-esbuild-plugin";
 import { readProjectConfig } from "@core/utils";
 import { readBuildConfig } from "./index.js";
 

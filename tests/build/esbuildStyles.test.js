@@ -35,7 +35,7 @@ describe("esbuild-styles", () => {
     const cssPath = join(tmpRoot, "style.css");
     writeFileSync(cssPath, "body { color: red; }");
 
-    const mod = await import("@core/build/esbuild-styles.js");
+    const mod = await import("@wpsk/build/esbuild-styles.js");
     const result = await mod.buildStyleAssetFile(cssPath);
 
     expect(result).toBe(join(tmpRoot, "style.asset.php"));
@@ -45,7 +45,7 @@ describe("esbuild-styles", () => {
     const cssPath = join(tmpRoot, "app.css");
     writeFileSync(cssPath, ".x { margin: 0; }");
 
-    const mod = await import("@core/build/esbuild-styles.js");
+    const mod = await import("@wpsk/build/esbuild-styles.js");
     const assetPath = await mod.buildStyleAssetFile(cssPath);
 
     expect(existsSync(assetPath)).toBe(true);
@@ -60,7 +60,7 @@ describe("esbuild-styles", () => {
     const cssPath = join(tmpRoot, "hash.css");
     writeFileSync(cssPath, "body { background: white; }");
 
-    const mod = await import("@core/build/esbuild-styles.js");
+    const mod = await import("@wpsk/build/esbuild-styles.js");
     const firstPath = await mod.buildStyleAssetFile(cssPath);
     const firstContent = readFileSync(firstPath, "utf8");
     const firstHash = firstContent.match(/'hash'\s*=>\s*'([a-f0-9]+)'/)[1];
@@ -76,7 +76,7 @@ describe("esbuild-styles", () => {
   test("buildStyleAssetFile throws a clear error when source file is missing", async () => {
     const missing = join(tmpRoot, "does-not-exist.css");
 
-    const mod = await import("@core/build/esbuild-styles.js");
+    const mod = await import("@wpsk/build/esbuild-styles.js");
     await expect(mod.buildStyleAssetFile(missing)).rejects.toThrow(
       /not found|css|ENOENT/i,
     );
@@ -88,7 +88,7 @@ describe("esbuild-styles", () => {
     writeFileSync(css1, "/* a */");
     writeFileSync(css2, "/* b */");
 
-    const mod = await import("@core/build/esbuild-styles.js");
+    const mod = await import("@wpsk/build/esbuild-styles.js");
     const results = await mod.buildStyles({
       buildConfig: { styleEntryPoints: [css1, css2] },
     });

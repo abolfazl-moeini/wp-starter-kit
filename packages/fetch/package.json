@@ -1,14 +1,17 @@
 {
   "name": "@wpsk/fetch",
   "version": "0.1.0",
-  "description": "Debounced REST batch fetch client for wp-starter-kit",
+  "description": "Debounced REST batch fetch client for wp-starter-kit consumers.",
   "type": "module",
   "main": "src/index.ts",
   "exports": {
     ".": "./src/index.ts"
   },
-  "private": true,
+  "files": [
+    "src"
+  ],
   "dependencies": {
     "@wordpress/api-fetch": "^7.0.0"
-  }
+  },
+  "license": "MIT"
 }
