@@ -433,46 +433,21 @@ describe("@wpsk/create-wp-project", () => {
       uiFramework: "preact",
     };
 
-    /* ----- src/Core/ emission ----------------------------------------- */
+    /* ----- src/Core/ emission (Phase 23 deps mode) ------------------- */
+    // Framework sources are supplied by the wpsk/framework Composer
+    // dependency. Scaffold never writes src/Core/*.php for consumers
+    // (consumer PSR-4 only maps the developer's vendor ns; the WPSK
+    // references resolve from vendor/wpsk/framework after `composer install`).
 
-    test("scaffolds src/Core/Plugin.php (kit core facade)", async () => {
+    test("does NOT scaffold src/Core/* framework copies (deps mode)", async () => {
       const res = await scaffoldProject(tmp, goodAnswers);
       expect(res.ok).toBe(true);
-      const pluginPhp = await fs.readFile(
-        path.join(tmp, "src", "Core", "Plugin.php"),
-        "utf8",
-      );
-      // Must be a real PHP class, not a placeholder, declaring the
-      // WPSK\Core\Plugin facade the bootstrap template relies on.
-      expect(pluginPhp).toMatch(/namespace\s+WPSK\\Core\b/);
-      expect(pluginPhp).toMatch(/class\s+Plugin\b/);
-      expect(pluginPhp).toMatch(/public\s+static\s+function\s+boot\b/);
-    });
-
-    test("scaffolds src/Core/ModuleInterface.php (module contract)", async () => {
-      const res = await scaffoldProject(tmp, goodAnswers);
-      expect(res.ok).toBe(true);
-      const iface = await fs.readFile(
-        path.join(tmp, "src", "Core", "ModuleInterface.php"),
-        "utf8",
-      );
-      expect(iface).toMatch(/namespace\s+WPSK\\Core\b/);
-      expect(iface).toMatch(/interface\s+ModuleInterface\b/);
-      expect(iface).toMatch(/function\s+boot\b/);
-      expect(iface).toMatch(/function\s+get_slug\b/);
-    });
-
-    test("scaffolds src/Core/ModuleLoader.php (registry + boot orchestrator)", async () => {
-      const res = await scaffoldProject(tmp, goodAnswers);
-      expect(res.ok).toBe(true);
-      const loader = await fs.readFile(
-        path.join(tmp, "src", "Core", "ModuleLoader.php"),
-        "utf8",
-      );
-      expect(loader).toMatch(/namespace\s+WPSK\\Core\b/);
-      expect(loader).toMatch(/class\s+ModuleLoader\b/);
-      expect(loader).toMatch(/function\s+register\b/);
-      expect(loader).toMatch(/function\s+boot_all\b/);
+      await expect(
+        fs.access(path.join(tmp, "src", "Core", "Plugin.php"))
+      ).rejects.toThrow();
+      await expect(
+        fs.access(path.join(tmp, "src", "Core", "ModuleInterface.php"))
+      ).rejects.toThrow();
     });
 
     /* ----- src/Modules/ emission ------------------------------------- */
@@ -719,7 +694,7 @@ describe("@wpsk/create-wp-project", () => {
       expect(plugin).toContain("sentinel");
     });
 
-    test("overwrites with --force: refreshes project.config.json + src/Core/Plugin.php", async () => {
+    test("overwrites with --force: refreshes project.config.json (no src/Core in deps mode)", async () => {
       await fs.mkdir(path.join(tmp, "src", "Core"), { recursive: true });
       await fs.writeFile(
         path.join(tmp, "project.config.json"),
@@ -737,14 +712,10 @@ describe("@wpsk/create-wp-project", () => {
       );
       expect(cfg.sentinel).toBeUndefined();
       expect(cfg.slug).toBe("my-project");
-      // The Plugin.php must be the real WPSK\Core\Plugin facade, not
-      // the sentinel comment.
-      const plugin = await fs.readFile(
-        path.join(tmp, "src", "Core", "Plugin.php"),
-        "utf8",
-      );
-      expect(plugin).toMatch(/namespace\s+WPSK\\Core\b/);
-      expect(plugin).not.toMatch(/sentinel/);
+      // In deps mode there is no src/Core/Plugin.php written by scaffold
+      // (the WPSK\Core reference in bootstrap resolves from the dep).
+      // We only assert that force wrote a fresh project.config.json.
+      expect(await fs.readFile(path.join(tmp, "my-project.php"), "utf8")).toMatch(/my-project/);
     });
 
     /* ----- plugin mode: no functions.php ---------------------------- */

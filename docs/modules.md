@@ -37,8 +37,9 @@ isolation:
   called twice, `boot()` runs twice. Long-lived processes
   (workers, the test runner) routinely do this.
 
-The interface lives at `src/Core/ModuleInterface.php` and is
-emitted by `@wpsk/create-wp-project` so a fresh project has it
+The interface lives at `src/Core/ModuleInterface.php` inside the
+`wpsk/framework` Composer package (installed to `vendor/wpsk/framework`).
+(Pre-Phase 23 projects may still have a local copy under their own `src/Core/`.)
 on day one. The interface is owned by the starter; do not
 hand-edit it.
 
@@ -117,7 +118,7 @@ priority inside their own hooks.
 
 `WPSK\Core\Plugin` is a **static facade** that ties the loader
 to WordPress's plugin lifecycle. The full source is in
-`src/Core/Plugin.php`; the parts that matter for modules:
+the framework package at `vendor/wpsk/framework/src/Core/Plugin.php` (or the source under `packages/framework/src/Core/Plugin.php` in a kit checkout); the parts that matter for modules:
 
 ```php
 final class Plugin
@@ -164,8 +165,8 @@ final class Plugin
 The facade is **theme-agnostic**. A test
 (`PluginTest::test_plugin_source_is_theme_agnostic`) asserts
 that no `get_template_directory` or `load_theme_textdomain`
-call appears in `src/Core/*.php`. The class anchors every path
-it resolves to the plugin root, never the active theme
+call appears in the framework's `Plugin.php`. The class anchors every path
+it resolves to the plugin root, never the active theme (legacy vendored copies under project src/Core are obsolete in deps mode)
 directory.
 
 ## The boot sequence
@@ -470,7 +471,7 @@ The contract is locked in by `tests/phpunit/Core/`:
 - `PluginTest.php` — 6 tests covering `config` parsing,
   `config` error path, `loader()` return, `boot()` /
   `is_booted()` / `last_loaded_hook()`, `loaded_config()`,
-  and a theme-agnostic guard that scans `src/Core/*.php`.
+  and a theme-agnostic guard that scans the framework Plugin.php.
 
 The module-level tests live next to the modules themselves
 under `tests/phpunit/Modules/`.

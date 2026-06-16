@@ -49,12 +49,12 @@ describe("buildManifest() — shape (Phase 20.5)", () => {
     expect(typeof m.features).toBe("object");
   });
 
-  test("distMode defaults to 'vendored' (Phase 23 will flip default to 'deps')", () => {
+  test("distMode defaults to 'deps' (Phase 23 target; new scaffolds use framework-as-dependency)", () => {
     const m = buildManifest({
       kitVersion: "0.2.0",
       features: defaultFeatures(),
     });
-    expect(m.distMode).toBe("vendored");
+    expect(m.distMode).toBe("deps");
   });
 
   test("distMode can be overridden explicitly", () => {
@@ -126,7 +126,7 @@ describe("writeManifest() — writes wpsk-kit.json (Phase 20.6)", () => {
     await writeManifest(nested, {
       schema: 1,
       kitVersion: "0.2.0",
-      distMode: "vendored",
+      distMode: "deps",
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: defaultFeatures(),
     });
@@ -138,7 +138,7 @@ describe("writeManifest() — writes wpsk-kit.json (Phase 20.6)", () => {
     await writeManifest(tmp, {
       schema: 1,
       kitVersion: "0.2.0",
-      distMode: "vendored",
+      distMode: "deps",
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: defaultFeatures(),
     });
@@ -150,7 +150,7 @@ describe("writeManifest() — writes wpsk-kit.json (Phase 20.6)", () => {
     await writeManifest(tmp, {
       schema: 1,
       kitVersion: "0.2.0",
-      distMode: "vendored",
+      distMode: "deps",
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: defaultFeatures(),
     });
@@ -169,7 +169,7 @@ describe("writeManifest() — writes wpsk-kit.json (Phase 20.6)", () => {
     await writeManifest(tmp, {
       schema: 1,
       kitVersion: "0.2.0",
-      distMode: "vendored",
+      distMode: "deps",
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: defaultFeatures(),
     });
@@ -190,7 +190,7 @@ describe("writeManifest() — writes wpsk-kit.json (Phase 20.6)", () => {
     const m1 = {
       schema: 1,
       kitVersion: "0.2.0",
-      distMode: "vendored",
+      distMode: "deps",
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: defaultFeatures(),
     };
@@ -202,7 +202,7 @@ describe("writeManifest() — writes wpsk-kit.json (Phase 20.6)", () => {
     const m2 = {
       schema: 1,
       kitVersion: "0.2.0",
-      distMode: "vendored",
+      distMode: "deps",
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: defaultFeatures(),
     };

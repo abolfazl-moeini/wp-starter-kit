@@ -39,7 +39,7 @@ function makeEngine() {
     buildManifest: jest.fn((args) => ({
       schema: 1,
       kitVersion: args.kitVersion,
-      distMode: "vendored",
+      distMode: "deps",
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: { ...(args.features || {}) },
     })),

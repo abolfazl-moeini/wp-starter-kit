@@ -13,7 +13,7 @@
  *
  *  1. Every generator descriptor (returned by `listGenerators()`)
  *     has a non-empty `owns: string[]` field. The list contains
- *     globs (e.g. `src/Core/**`, `.husky/**`) and / or exact paths
+ *     globs (e.g. `.husky/**`, `assets/stylesheets/**`) and / or exact paths; note src/Core/** is no longer claimed post-Phase 23
  *     (e.g. `composer.json`, `LICENSE`).
  *
  *  2. No two descriptors across DIFFERENT feature ids claim the
@@ -112,9 +112,7 @@ function firstOverlap(a, b) {
     "tailwind.config.js",
     "postcss.config.js",
     "phpunit.xml",
-    "src/Core/Plugin.php",
-    "src/Core/ModuleInterface.php",
-    "src/Core/ModuleLoader.php",
+    // src/Core/* deliberately not owned (Phase 23: framework lives in wpsk/framework dep)
     "src/Modules/ExampleFeature/Module.php",
     "src/Modules/ExampleFeature/Rest/ItemsController.php",
     "src/Modules/ExampleFeature/assets/entries/admin.ts",
@@ -189,12 +187,14 @@ describe("generator ownership — owned-paths map (Phase 22.1, 22.2)", () => {
     }
   });
 
-  test("core owns the always-on files (project.config.json, composer.json, src/Core/**, ...)", () => {
+  test("core owns the always-on files (project.config.json, composer.json, ...; no src/Core in deps)", () => {
     const core = listGenerators().find((g) => g.id === "core");
     expect(core).toBeDefined();
     // The core descriptor MUST claim each of these — addFeature /
     // removeFeature rely on the owns list to detect whether a
     // file is allowed to be touched.
+    // src/Core/* are deliberately NOT claimed (Phase 23 deps mode:
+    // framework code lives only in the wpsk/framework dep).
     const expected = [
       "project.config.json",
       "composer.json",
@@ -203,13 +203,11 @@ describe("generator ownership — owned-paths map (Phase 22.1, 22.2)", () => {
       "README.md",
       ".gitignore",
       ".editorconfig",
-      "src/Core/Plugin.php",
-      "src/Core/ModuleInterface.php",
-      "src/Core/ModuleLoader.php",
     ];
     for (const path of expected) {
       expect(isMatchedBy(path, core.owns)).toBe(true);
     }
+    expect(isMatchedBy("src/Core/Plugin.php", core.owns)).toBe(false);
   });
 
   test("each generator's run() output is fully covered by its owns[]", () => {

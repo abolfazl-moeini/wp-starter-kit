@@ -10,8 +10,8 @@
  * Three contracts (locked by tests/packages/manifest*.test.js):
  *  - buildManifest({kitVersion, features, distMode?}) returns
  *    `{ schema:1, kitVersion, distMode, generatedAt, features }`.
- *    `distMode` defaults to "vendored" — Phase 23 will flip the
- *    default to "deps" once the framework is a Composer package.
+ *    `distMode` defaults to "deps" (Phase 23+). Legacy projects may
+ *    carry "vendored"; migrations + doctor handle the upgrade path.
  *  - writeManifest(dir, manifest) writes `wpsk-kit.json` with
  *    stable key order + trailing newline + 2-space indent (so
  *    diffs stay readable). Creates the directory if missing.
@@ -37,7 +37,7 @@ import { updateJsonFile } from "./json-utils.js";
 
 export const MANIFEST_FILENAME = "wpsk-kit.json";
 export const MANIFEST_SCHEMA = 1;
-export const DEFAULT_DIST_MODE = "vendored";
+export const DEFAULT_DIST_MODE = "deps";
 
 /* -------------------------------------------------------------------- */
 /* buildManifest                                                         */
@@ -54,11 +54,9 @@ export const DEFAULT_DIST_MODE = "vendored";
  *                                    (or last touched) the project.
  * @param {Record<string,string>} args.features
  *                                    The validated feature set.
- * @param {string} [args.distMode="vendored"]
- *                                    "vendored" = src/Core copied
- *                                    (Phase 20–22). "deps" =
- *                                    wpsk/framework via Composer
- *                                    (Phase 23).
+ * @param {string} [args.distMode="deps"]
+ *                                    "deps" = wpsk/framework via Composer (Phase 23+ default).
+ *                                    "vendored" = legacy src/Core copies (pre-Phase 23 projects only).
  * @param {string} [args.generatedAt]  ISO-8601 timestamp; defaults
  *                                    to `new Date().toISOString()`.
  *                                    Tests inject a frozen value.

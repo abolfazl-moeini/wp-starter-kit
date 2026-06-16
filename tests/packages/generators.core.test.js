@@ -107,17 +107,19 @@ function makeCtx(answers = {}, cfg = {}, features = {}) {
 }
 
 describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
-  test("emits the BC golden file list for the default plugin feature set", () => {
+  test("emits the BC golden file list for the default plugin feature set (deps mode: no framework copies)", () => {
     const out = coreRun(makeCtx());
     const files = Object.keys(out.files);
-    // BC: every file in §0.5 is here.
+    // Phase 23: consumer gets framework from wpsk/framework dep; scaffold
+    // only emits thin glue + user-owned src/Modules (when example on).
+    // Core no longer writes src/Core/* (those live in the installed package).
     expect(files).toContain("project.config.json");
     expect(files).toContain("build.config.json");
     expect(files).toContain("readme.txt");
     expect(files).toContain("my-project.php"); // {slug}.php
-    expect(files).toContain("src/Core/Plugin.php");
-    expect(files).toContain("src/Core/ModuleInterface.php");
-    expect(files).toContain("src/Core/ModuleLoader.php");
+    expect(files).not.toContain("src/Core/Plugin.php");
+    expect(files).not.toContain("src/Core/ModuleInterface.php");
+    expect(files).not.toContain("src/Core/ModuleLoader.php");
     expect(files).toContain("assets/stylesheets/style.css");
     expect(files).toContain("composer.json");
     expect(files).toContain("README.md");
@@ -142,30 +144,18 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
     expect(php).toMatch(/WPSK\\Core\\Plugin::boot/);
   });
 
-  test("emits src/Core/Plugin.php with the WPSK\\Core namespace and class", () => {
+  // Phase 23: the WPSK\\Core framework classes are provided exclusively
+  // by the "wpsk/framework" Composer dependency (see packages/framework/src/Core/*).
+  // The scaffold never emits src/Core/*.php copies for consumer projects
+  // (they would be dead files: consumer autoload only maps the user's
+  // vendor ns to src/, and the dep satisfies the WPSK references from
+  // the plugin bootstrap and user modules). These bodies are tested
+  // in the framework package's own PHPUnit suite instead.
+  test("does NOT emit src/Core/* framework sources (they come from wpsk/framework dep)", () => {
     const out = coreRun(makeCtx());
-    const pluginPhp = out.files["src/Core/Plugin.php"];
-    expect(pluginPhp).toMatch(/namespace\s+WPSK\\Core\b/);
-    expect(pluginPhp).toMatch(/class\s+Plugin\b/);
-    expect(pluginPhp).toMatch(/public\s+static\s+function\s+boot\b/);
-  });
-
-  test("emits src/Core/ModuleInterface.php with the contract shape", () => {
-    const out = coreRun(makeCtx());
-    const iface = out.files["src/Core/ModuleInterface.php"];
-    expect(iface).toMatch(/namespace\s+WPSK\\Core\b/);
-    expect(iface).toMatch(/interface\s+ModuleInterface\b/);
-    expect(iface).toMatch(/function\s+boot\b/);
-    expect(iface).toMatch(/function\s+get_slug\b/);
-  });
-
-  test("emits src/Core/ModuleLoader.php with the registry + boot orchestrator", () => {
-    const out = coreRun(makeCtx());
-    const loader = out.files["src/Core/ModuleLoader.php"];
-    expect(loader).toMatch(/namespace\s+WPSK\\Core\b/);
-    expect(loader).toMatch(/class\s+ModuleLoader\b/);
-    expect(loader).toMatch(/function\s+register\b/);
-    expect(loader).toMatch(/function\s+boot_all\b/);
+    expect(out.files["src/Core/Plugin.php"]).toBeUndefined();
+    expect(out.files["src/Core/ModuleInterface.php"]).toBeUndefined();
+    expect(out.files["src/Core/ModuleLoader.php"]).toBeUndefined();
   });
 
   test("emits project.config.json with every v2 default field", () => {

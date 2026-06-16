@@ -38,25 +38,16 @@ import {
   TEMPLATE_PROJECT_CONFIG,
   TEMPLATE_FUNCTIONS_PHP,
   TEMPLATE_FUNCTIONS_PHP_NO_JS,
-  TEMPLATE_DEPENDENCIES_TS,
-  TEMPLATE_STRAUSS_JSON,
-  TEMPLATE_HUSKY_PRE_COMMIT,
-  TEMPLATE_EXAMPLE_FEATURE_ITEMS_CONTROLLER,
-  TEMPLATE_EXAMPLE_FEATURE_ADMIN_TS,
   TEMPLATE_BUILD_CONFIG,
   TEMPLATE_STYLESHEET,
   TEMPLATE_README,
-  TEMPLATE_CORE_PLUGIN_PHP,
-  TEMPLATE_CORE_MODULE_INTERFACE_PHP,
-  TEMPLATE_CORE_MODULE_LOADER_PHP,
-  TEMPLATE_EXAMPLE_FEATURE_MODULE_PHP,
   TEMPLATE_TSCONFIG_JSON,
-  TEMPLATE_COMPOSER_JSON,
   TEMPLATE_GITIGNORE,
   TEMPLATE_EDITORCONFIG,
   loadPluginFileTemplate,
   loadReadmeTxtTemplate,
   packageJsonForAnswers,
+  buildComposerJson,
 } from "./_templates.js";
 
 /**
@@ -81,7 +72,11 @@ export function run(ctx) {
   // Defensive: tplVars can be built by the caller OR by the legacy
   // helper. The contract is the same — it returns a flat object of
   // substitution tokens for `{{token}}` placeholders.
-  const tpl = vars || legacyTplVars(answers, cfg);
+  const tpl = {
+    ...(vars || legacyTplVars(answers, cfg)),
+    wpMinVersion: features.wpMinVersion || "6.0",
+    phpMinVersion: features.phpMinVersion || cfg.phpMinVersion || "7.4",
+  };
   const files = {};
   const dirs = [];
 
@@ -107,14 +102,16 @@ export function run(ctx) {
     : isPhpOnlyTheme
       ? renderTemplate(TEMPLATE_FUNCTIONS_PHP_NO_JS, tpl)
       : renderTemplate(TEMPLATE_FUNCTIONS_PHP, tpl);
-  dirs.push("src/Core");
-
-  // 3. src/Core/{Plugin,ModuleInterface,ModuleLoader}.php — moved
-  //    from the legacy inline template strings. Body is byte-for-byte
-  //    identical to the previous scaffoldProject output (Phase 21.11 BC).
-  files["src/Core/Plugin.php"] = TEMPLATE_CORE_PLUGIN_PHP;
-  files["src/Core/ModuleInterface.php"] = TEMPLATE_CORE_MODULE_INTERFACE_PHP;
-  files["src/Core/ModuleLoader.php"] = TEMPLATE_CORE_MODULE_LOADER_PHP;
+  // 3. (Phase 23) Framework sources (Plugin/ModuleInterface/ModuleLoader)
+  //    are NO LONGER emitted into the consumer. They are supplied by
+  //    the "wpsk/framework" Composer dep (see buildComposerJson require
+  //    + path repo). The consumer's src/ only contains its own modules
+  //    (under its vendor ns). Emitting copies would produce unloaded
+  //    dead code (consumer composer.json never registers a WPSK\\ psr-4
+  //    pointing at src/Core).
+  //    The three TEMPLATE_CORE_* strings are retained in _templates.js
+  //    only for historical reference / potential explicit "vendored"
+  //    reconstruction in migrations.
 
   // 4. readme.txt (WordPress.org plugin format)
   files["readme.txt"] = renderTemplate(loadReadmeTxtTemplate(), tpl);
@@ -134,10 +131,11 @@ export function run(ctx) {
   //    overwritten by the `license` generator when present, but the
   //    default here is "GPL-2.0-or-later" to match the kit's
   //    WordPress.org default.
-  files["composer.json"] = renderTemplate(TEMPLATE_COMPOSER_JSON, {
+  files["composer.json"] = buildComposerJson({
     ...tpl,
     vendorNamespace: deriveVendorNamespace(answers.globalName),
     licenseId: spdxForLicense(features.license || "gpl2"),
+    vendorScopingOn: features.vendorScoping === "on",
   });
 
   // 7. README.md — the kit's default README scaffold
@@ -173,8 +171,7 @@ export function run(ctx) {
   //     same one the engine validated upstream.
   if (features.js && features.js !== "none") {
     files["package.json"] =
-      JSON.stringify(packageJsonForAnswers(answers, features), null, 2) +
-      "\n";
+      JSON.stringify(packageJsonForAnswers(answers, features), null, 2) + "\n";
   } else if (features.husky === "on") {
     // husky is on but js is none — still emit a minimal package.json
     // (the husky generator needs a `prepare: "husky install"` script).
@@ -251,13 +248,12 @@ function spdxForLicense(licenseVariant) {
  *    The generator writes ONE of them at runtime based on
  *    `cfg.projectType`; the glob covers both because the engine
  *    does not know the slug ahead of time.
- *  - `src/Core/**` covers the kit's framework copies. The
- *    `restBatch` / `exampleFeature` / `blocks` generators own
- *    their own subtrees of `src/Modules/**` and never touch
- *    `src/Core/**`.
  *  - `tsconfig.json` and `package.json` are emitted by core
  *    (the latter is gated on `js !== "none"`). No other generator
  *    claims these — `js:typescript` only writes `assets/dependencies.ts`.
+ *  - Framework sources (src/Core/**) are deliberately NOT owned or
+ *    emitted by core in deps mode (Phase 23); see buildComposerJson
+ *    which requires "wpsk/framework". Legacy copies cleaned by migration.
  */
 export const descriptor = {
   id: "core",
@@ -272,9 +268,12 @@ export const descriptor = {
     ".editorconfig",
     "tsconfig.json",
     "package.json",
-    "src/Core/**",
     "assets/stylesheets/**",
     "*.php", // the plugin or theme bootstrap at the project root
+    // NOTE: "src/Core/**" deliberately omitted (Phase 23 deps mode).
+    // Framework sources are never part of consumer thin glue; they
+    // come from the wpsk/framework dep. Legacy vendored projects are
+    // cleaned by a migration (see migrations/ and doctor).
   ],
   run,
 };

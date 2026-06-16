@@ -36,7 +36,7 @@ function makeEngine({ ok = true, written = [], reason = "" } = {}) {
     buildManifest: jest.fn((args) => ({
       schema: 1,
       kitVersion: args.kitVersion,
-      distMode: "vendored",
+      distMode: "deps",
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: { ...(args.features || {}) },
     })),
@@ -115,7 +115,7 @@ describe("runCreate — engine wiring (I3.1)", () => {
     const deps = defaultDeps();
     deps.engine.scaffoldProject = jest.fn(async () => ({
       ok: true,
-      written: ["project.config.json", "src/Core/Plugin.php"],
+      written: ["project.config.json"], // Phase 23: no src/Core/Plugin.php (deps)
     }));
     const out = await runCreate(
       {
@@ -127,7 +127,7 @@ describe("runCreate — engine wiring (I3.1)", () => {
       deps,
     );
     expect(out.ok).toBe(true);
-    expect(out.written).toEqual(["project.config.json", "src/Core/Plugin.php"]);
+    expect(out.written).toEqual(["project.config.json"]); // no src/Core in deps mode (Phase 23)
     // manifestPath is the standard `<dir>/wpsk-kit.json` location.
     expect(out.manifestPath).toBe("/tmp/x/wpsk-kit.json");
     expect(out.warnings).toEqual([]);

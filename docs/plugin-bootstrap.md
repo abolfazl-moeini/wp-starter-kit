@@ -69,9 +69,7 @@ my-project/                      ← the wp-content/plugins/ root
 
 Three trees, three ownerships:
 
-1. **`src/Core/*`** — emitted by the scaffold. The starter owns
-   these files (and overwrites them on re-scaffold if you ask
-   it to). Don't hand-edit; submit changes upstream.
+1. **`src/Core/*`** — (legacy `distMode: "vendored"` only) were emitted by the scaffold in pre-Phase 23 projects. In the default `deps` mode the WPSK\Core classes come exclusively from the `wpsk/framework` Composer package installed into `vendor/`. Do not hand-edit vendored copies; upgrade via `wpsk update` instead. Your own code lives under `src/Modules/*`.
 2. **`src/Modules/*`** — yours. Add one sub-directory per feature
    module (see [modules.md](modules.md)).
 3. **`core/**`and`core/php/**`** — yours-but-versioned. The
@@ -362,10 +360,10 @@ bootstrap, the text domain lived under the theme, and the
 - `load_plugin_textdomain` is the new i18n entry point. Theme
   `load_theme_textdomain` calls are kept for BC but are not
   emitted in the new scaffold.
-- `src/Core/Plugin.php` is theme-agnostic. A test
+- `src/Core/Plugin.php` (in the framework package) is theme-agnostic. A test
   (`PluginTest::test_plugin_source_is_theme_agnostic`) asserts
   that no `get_template_directory` or `load_theme_textdomain`
-  call appears in `src/Core/*.php`.
+  call appears in the framework's `Plugin.php`. (Legacy vendored copies under a project's src/Core/ are no longer produced by default scaffolds.)
 
 ### How to migrate an existing project
 
@@ -374,8 +372,7 @@ If your project was scaffolded before Phase 11:
 1. Run the scaffold against a fresh directory with the same
    `project.config.json` (or copy `project.config.json` into
    the new directory and let the scaffold re-emit the rest).
-2. Compare the new `src/Core/{Plugin,ModuleInterface,ModuleLoader}.php`
-   against your existing tree and merge any local changes.
+2. (Legacy only) If you still have vendored copies under src/Core/ from a pre-deps scaffold, compare against the versions in `vendor/wpsk/framework/src/Core/` (after update) and merge or delete the old copies (migrations handle the common case).
 3. Move every hook that was registered in `functions.php` into
    a module under `src/Modules/<Name>/` and register the module
    with the loader. See

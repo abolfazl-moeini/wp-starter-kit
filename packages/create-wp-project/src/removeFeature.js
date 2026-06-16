@@ -315,7 +315,7 @@ async function* walkFiles(root, dir = root, depth = 0) {
  *   manifest?: Object,
  * }>}
  */
-export async function removeFeature(dir, id, opts = {}) {
+export async function removeFeature(dir, id, _opts = {}) {
   if (!dir || typeof dir !== "string") {
     throw new Error("removeFeature: dir is required (string)");
   }

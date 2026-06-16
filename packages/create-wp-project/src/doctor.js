@@ -46,14 +46,14 @@
  *     it just can't get updates. Message: "kit newer than
  *     installed deps — run wpsk update".
  *
- *  4. If `manifest.distMode === "vendored"`, verify the
- *     checksum of `vendor/wp-framework/*` matches what the
- *     kit shipped. PLACEHOLDER (Phase 24.10 ships the wiring;
- *     the real checksums land in Phase 25+). The check is
- *     a no-op when no files are present; the function
- *     `checkVendoredChecksum(dir)` is exported so the
- *     wiring is testable and a future phase can replace the
- *     body without changing the dispatch.
+ *  4. If `manifest.distMode === "vendored"`, legacy projects may
+ *     still have framework source copies under `src/Core/`.
+ *     Doctor warns if they look hand-edited or are present
+ *     (recommend `wpsk update` to migrate to deps). The
+ *     actual vendored dep install lives at vendor/wpsk/framework
+ *     after composer install. Placeholder logic upgraded for
+ *     the src/Core case (no heavy checksums in v3; migration
+ *     is the supported cleanup path).
  */
 
 import { existsSync } from "node:fs";
@@ -68,7 +68,7 @@ import { getDepVersions } from "./dep-versions.js";
 /* Constants                                                             */
 /* -------------------------------------------------------------------- */
 
-const VENDORED_FRAMEWORK_DIR = "vendor/wp-framework";
+const VENDORED_FRAMEWORK_DIR = "vendor/wpsk/framework"; // legacy vendored layout (pre-deps); actual copies for old projects were under src/Core/
 
 /* -------------------------------------------------------------------- */
 /* Helpers                                                               */
@@ -173,21 +173,27 @@ function readInstalledKitVersion() {
  */
 export function checkVendoredChecksum(dir) {
   if (!dir || typeof dir !== "string") return [];
-  const frameworkDir = path.join(dir, VENDORED_FRAMEWORK_DIR);
-  if (!existsSync(frameworkDir)) {
-    // No files = nothing to check. The project may be in
-    // `distMode: "vendored"` for declaration purposes (the
-    // manifest hasn't been bumped to "deps" yet) but the
-    // files haven't been copied — that's a fresh-scaffold
-    // edge case, not drift.
-    return [];
+  const warnings = [];
+  // Legacy vendored (pre-Phase 23): framework sources lived as
+  // src/Core copies inside the project (not under the Composer
+  // vendor/ path until after install + strauss). Presence of
+  // these in a modern project is drift — recommend update.
+  const legacyCore = path.join(dir, "src", "Core", "Plugin.php");
+  if (existsSync(legacyCore)) {
+    warnings.push(
+      "Legacy vendored framework sources found under src/Core/. " +
+        "Run `wpsk update` (or delete src/Core/ after confirming " +
+        "your modules only use public WPSK APIs) to migrate to deps mode."
+    );
   }
-  // Phase 25+ will: walk the dir, hash each file, compare
-  // against `framework-manifest.json` shipped with the kit.
-  // For Phase 24.10, the wiring is in place and the function
-  // returns no warnings (so the test passes and a future
-  // real implementation can replace this body).
-  return [];
+  const frameworkDir = path.join(dir, VENDORED_FRAMEWORK_DIR);
+  if (existsSync(frameworkDir)) {
+    // Real installed copy under vendor (post composer). No checksum
+    // validation in v3 baseline; the dep + composer.lock is source of
+    // truth. Placeholder kept for forward compat.
+    // (In a future version we could hash against a manifest.)
+  }
+  return warnings;
 }
 
 /* -------------------------------------------------------------------- */

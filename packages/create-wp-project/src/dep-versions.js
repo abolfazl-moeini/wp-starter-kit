@@ -144,7 +144,14 @@ function workspaceDirFor(name) {
   // the npm scope: `@wpsk/<basename>`. The 6 libs live in
   // `packages/<basename>/` and the 2 build tools in
   // `core/packages/<basename>/`.
-  const LIBS = ["hooks", "utils", "rest-utils", "html-utils", "fetch", "translation"];
+  const LIBS = [
+    "hooks",
+    "utils",
+    "rest-utils",
+    "html-utils",
+    "fetch",
+    "translation",
+  ];
   const BUILD_TOOLS = ["build", "dependency-extraction-esbuild-plugin"];
   const m = name.match(/^@wpsk\/(.+)$/);
   if (!m) return null;

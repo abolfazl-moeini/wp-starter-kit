@@ -17,7 +17,7 @@
  *     "no Node toolchain to drive" rule).
  *  4. Core PHP bootstrap + `composer.json` STILL emitted — a
  *     PHP-only consumer is still a real WordPress plugin and must
- *     ship the plugin file, src/Core/{Plugin,ModuleInterface,
+ *     ship the plugin file (no src/Core framework copies in deps mode;
  *     ModuleLoader}.php, readme.txt, and composer.json.
  *  5. The CSS file (`assets/stylesheets/style.css`) is still
  *     emitted because CSS is a separate feature from JS — a
@@ -209,9 +209,10 @@ describe("js:none — core.run() output (Phase 25.A1)", () => {
     const files = Object.keys(out.files);
     // Plugin bootstrap + core framework — must all be present.
     expect(files).toContain("my-project.php"); // {slug}.php
-    expect(files).toContain("src/Core/Plugin.php");
-    expect(files).toContain("src/Core/ModuleInterface.php");
-    expect(files).toContain("src/Core/ModuleLoader.php");
+    // Phase 23 deps: no framework copies emitted regardless of js variant
+    expect(files).not.toContain("src/Core/Plugin.php");
+    expect(files).not.toContain("src/Core/ModuleInterface.php");
+    expect(files).not.toContain("src/Core/ModuleLoader.php");
     // composer.json with the PSR-4 mapping.
     expect(files).toContain("composer.json");
     // The WordPress.org readme.
@@ -322,19 +323,17 @@ describe("js:none — end-to-end scaffold (Phase 25.A1)", () => {
       features: phpOnlyFeatures,
     });
     expect(res.ok).toBe(true);
-    // The plugin bootstrap.
+    // The plugin bootstrap (references WPSK\\Core from the dep).
     const pluginPhp = await fs.readFile(
       path.join(tmp, "my-php-plugin.php"),
       "utf8",
     );
     expect(pluginPhp).toMatch(/Plugin Name:/);
     expect(pluginPhp).toMatch(/WPSK\\Core\\Plugin::boot/);
-    // The core framework files.
-    const moduleInterface = await fs.readFile(
-      path.join(tmp, "src", "Core", "ModuleInterface.php"),
-      "utf8",
-    );
-    expect(moduleInterface).toMatch(/interface\s+ModuleInterface\b/);
+    // Phase 23: core framework sources are NOT written (provided by dep).
+    await expect(
+      fs.access(path.join(tmp, "src", "Core", "ModuleInterface.php"))
+    ).rejects.toThrow();
     // The composer.json with the PSR-4 mapping.
     const composer = JSON.parse(
       await fs.readFile(path.join(tmp, "composer.json"), "utf8"),
@@ -412,25 +411,24 @@ describe("js:none — theme-mode PHP enqueue guard (Phase 25.A2)", () => {
       features: phpOnlyThemeFeatures,
     });
     expect(res.ok).toBe(true);
-    const fn = await fs.readFile(
-      path.join(tmp, "functions.php"),
-      "utf8",
-    );
+    const fn = await fs.readFile(path.join(tmp, "functions.php"), "utf8");
     // The unconditional enqueue line must not be present.
     // We accept either:
     //   (a) the line is omitted entirely, OR
     //   (b) the call is wrapped in a `if (/* js !== "none" */) { ... }` guard.
-    const hasUnconditionalEnqueue = /wpsk_enqueue_bundle_script\(\s*['"]my-php-theme-deps\.js['"]\s*\)/.test(
-      fn,
-    );
+    const hasUnconditionalEnqueue =
+      /wpsk_enqueue_bundle_script\(\s*['"]my-php-theme-deps\.js['"]\s*\)/.test(
+        fn,
+      );
     if (hasUnconditionalEnqueue) {
       // If the call IS present, it must be inside a conditional
       // (e.g. `if (...) { wpsk_enqueue_bundle_script(...); }`).
       // The test fails if the call is at the top level of the
       // enqueue_assets() function.
-      const unguarded = /function\s+\w+_enqueue_assets[^{]*\{[^}]*wpsk_enqueue_bundle_script\s*\(\s*['"]my-php-theme-deps\.js['"]\s*\)/s.test(
-        fn,
-      );
+      const unguarded =
+        /function\s+\w+_enqueue_assets[^{]*\{[^}]*wpsk_enqueue_bundle_script\s*\(\s*['"]my-php-theme-deps\.js['"]\s*\)/s.test(
+          fn,
+        );
       expect(unguarded).toBe(false);
     }
   });
@@ -443,10 +441,7 @@ describe("js:none — theme-mode PHP enqueue guard (Phase 25.A2)", () => {
       features: phpOnlyThemeFeatures,
     });
     expect(res.ok).toBe(true);
-    const fn = await fs.readFile(
-      path.join(tmp, "functions.php"),
-      "utf8",
-    );
+    const fn = await fs.readFile(path.join(tmp, "functions.php"), "utf8");
     expect(fn).toMatch(/wpsk_enqueue_stylesheet\(['"]style\.css['"]\)/);
   });
 });

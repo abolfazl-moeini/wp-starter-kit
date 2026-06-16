@@ -79,6 +79,9 @@ export function tplVars(answers, cfg) {
     // — Phase 23.B (the JS half) will pass it through
     // `dep-versions.js`.
     frameworkVersion: (answers && answers.frameworkVersion) || "*",
+    faultTolerancePath:
+      (answers && answers.faultTolerancePath) ||
+      "../packages/php-fault-tolerance",
   };
 }
 
@@ -106,8 +109,9 @@ export function packageJsonForAnswers(answers, features) {
   //                    source files are .js with the // @flow pragma)
   //   - "none"       → no package.json at all (caller must gate on this;
   //                    this function is only reached when js !== "none")
-  const jsVariant =
-    (features && features.js) || answers.js || "typescript";
+  const jsVariant = (features && features.js) || answers.js || "typescript";
+  const jsTestVariant =
+    (features && features.jsTest) || answers.jsTest || "jest";
 
   // Phase 23.B4: read the kit's dep-versions registry and
   // surface the @wpsk/* framework packages to the consumer.
@@ -174,7 +178,11 @@ export function packageJsonForAnswers(answers, features) {
       "build:styles": "wpsk-build-styles",
       "build:assets": "wpsk-build-dependencies",
       prepare: "husky install",
-      test: "jest",
+      ...(jsTestVariant === "vitest"
+        ? { test: "vitest run" }
+        : jsTestVariant === "jest"
+          ? { test: "jest" }
+          : {}),
       typecheck: "tsc --noEmit",
       "lint:js": "eslint . --ext .js,.jsx,.ts,.tsx",
       "format:check":
@@ -218,6 +226,20 @@ export function packageJsonForAnswers(answers, features) {
       // range the kit's own Flow tooling uses; the consumer
       // can override in their own package.json.
       ...(jsVariant === "flow" ? { "flow-bin": "^0.234.0" } : {}),
+      ...(jsTestVariant === "vitest" ? { vitest: "^2.1.0" } : {}),
+      ...(jsTestVariant === "jest"
+        ? {
+            jest: "^29.7.0",
+            "@jest/globals": "^29.7.0",
+            "babel-jest": "^29.7.0",
+          }
+        : {}),
+      ...(features && features.blocks === "on"
+        ? {
+            "@wordpress/blocks": "^13.0.0",
+            "@wordpress/block-editor": "^14.0.0",
+          }
+        : {}),
     },
   };
 }
@@ -1076,31 +1098,58 @@ export const TEMPLATE_TSCONFIG_JSON = `{
 /* Phase 21 — new template strings (composer.json, .gitignore, .editorconfig) */
 /* -------------------------------------------------------------------- */
 
-export const TEMPLATE_COMPOSER_JSON = `{
-  "name": "{{vendorNamespaceLower}}/{{slug}}",
-  "description": "{{description}}",
-  "type": "wordpress-plugin",
-  "license": "{{licenseId}}",
-  "repositories": [
-    {
-      "type": "path",
-      "url": "{{frameworkPath}}",
-      "options": {
-        "symlink": true
-      }
-    }
-  ],
-  "require": {
-    "php": ">={{phpMinVersion}}",
-    "wpsk/framework": "{{frameworkVersion}}"
-  },
-  "autoload": {
-    "psr-4": {
-      "{{vendorNamespace}}\\\\": "src/"
-    }
-  }
+/**
+ * Build consumer composer.json. Strauss reads config from
+ * composer.json `extra/strauss` (not the standalone strauss.json).
+ */
+export function buildComposerJson(vars) {
+  const vendorPrefix = vars.vendorPrefix || "WpskVendor";
+  const excludeNamespaces = vars.vendorScopingOn === false ? ["WPSK"] : [];
+  const payload = {
+    name: `${vars.vendorNamespaceLower || vars.slug}/${vars.slug}`,
+    description:
+      vars.description ||
+      `${vars.slug} — built on wp-starter-kit (WPSK) framework`,
+    type: "wordpress-plugin",
+    license: vars.licenseId || "GPL-2.0-or-later",
+    repositories: [
+      {
+        type: "path",
+        url: vars.frameworkPath || "../packages/framework",
+        options: { symlink: true },
+      },
+    ],
+    require: {
+      php: `>=${vars.phpMinVersion || "7.4"}`,
+      "wpsk/framework": vars.frameworkVersion || "*",
+    },
+    autoload: {
+      "psr-4": {
+        [`${vars.vendorNamespace}\\`]: "src/",
+      },
+    },
+    extra: {
+      strauss: {
+        target_directory: "vendor-prefixed",
+        namespace_prefix: vendorPrefix,
+        classmap_prefix: `${vendorPrefix}_`,
+        constant_prefix: `${vendorPrefix.toUpperCase()}_`,
+        delete_vendor_files: true,
+        include_modified_files: false,
+        packages: ["wpsk/framework"],
+        exclude_from_prefix: {
+          namespaces: excludeNamespaces,
+          file_patterns: [],
+        },
+        exclude_from_copy: {
+          namespaces: [],
+          file_patterns: [],
+        },
+      },
+    },
+  };
+  return JSON.stringify(payload, null, 2) + "\n";
 }
-`;
 
 /**
  * .gitignore — minimal sane defaults. The kit does not decide for

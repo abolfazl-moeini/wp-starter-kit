@@ -242,7 +242,7 @@ The flip is a single field in the manifest. Two migration paths:
 The scaffold:
 
 1. Emits a `composer.json` that requires `wpsk/framework` (no
-   `WPSK\\` → `src/Core` autoload).
+   `WPSK\\` → src/ would only have been for the old vendored copies; deps uses the package autoload).
 2. Emits a `package.json` that lists the eight `@wpsk/*` packages
    (six runtime, two build) with versions from
    `getDepVersions()`.

@@ -37,16 +37,10 @@
  *    flow can format a human message.
  */
 
-import { existsSync, readFileSync } from "node:fs";
-import { promises as fs } from "node:fs";
+import { existsSync } from "node:fs";
 import * as path from "node:path";
 
-import {
-  readManifest,
-  MANIFEST_FILENAME,
-  writeManifest,
-  buildManifest,
-} from "../manifest.js";
+import { readManifest, writeManifest, buildManifest } from "../manifest.js";
 import { updateJsonFile } from "../json-utils.js";
 
 import * as migration_0_2_0 from "./0.2.0.js";
@@ -305,10 +299,13 @@ export async function runMigrations(dir, { from, to } = {}) {
   // 7. All migrations succeeded — bump the manifest's kitVersion.
   //    We rebuild the manifest to preserve the existing shape
   //    (features, distMode) and only swap kitVersion + generatedAt.
+  //    Re-read after migrations in case a migration (e.g. 0.2.0
+  //    vendored->deps) patched distMode or other glue on disk.
+  const after = readManifest(dir) || manifest;
   const nextManifest = buildManifest({
     kitVersion: to,
-    features: manifest.features || {},
-    distMode: manifest.distMode || "vendored",
+    features: after.features || manifest.features || {},
+    distMode: after.distMode || manifest.distMode || "deps",
     generatedAt: new Date().toISOString(),
   });
   await writeManifest(dir, nextManifest);

@@ -203,6 +203,14 @@ describe("doctorProject() — check 4: vendored framework checksum (Phase 24.10)
     // 0.1.0, which is the kit's own version).
     expect(res.warnings).toEqual([]);
   });
+
+  test("legacy src/Core/ presence under vendored manifest produces a migration warning (Phase 23/24 fix)", async () => {
+    const corePhp = path.join(tmpDir, "src", "Core", "Plugin.php");
+    await fs.mkdir(path.join(tmpDir, "src", "Core"), { recursive: true });
+    await fs.writeFile(corePhp, "<?php namespace WPSK\\Core; class Plugin {}", "utf8");
+    const res = doctorProject(tmpDir);
+    expect(res.warnings.some((w) => /Legacy vendored framework sources/.test(w))).toBe(true);
+  });
 });
 
 describe("doctorProject() — happy path (Phase 24.10)", () => {

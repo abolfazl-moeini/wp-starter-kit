@@ -151,7 +151,7 @@ export function applyPreset(name) {
         `Known presets: ${PRESET_BUILDERS.map(([id]) => id).join(", ")}.`,
     );
   }
-  for (const [id, _description, build] of PRESET_BUILDERS) {
+  for (const [id, , build] of PRESET_BUILDERS) {
     if (id === name) {
       return build();
     }

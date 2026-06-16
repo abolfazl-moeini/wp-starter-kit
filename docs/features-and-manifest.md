@@ -67,7 +67,7 @@ Shape:
 {
   "schema": 1,
   "kitVersion": "0.1.0",
-  "distMode": "vendored",
+  "distMode": "deps",
   "generatedAt": "2026-06-15T12:34:56.789Z",
   "features": {
     "js": "typescript",
@@ -101,10 +101,7 @@ Field semantics:
   (Phase 24), **not** by `addFeature` / `removeFeature` (those
   preserve `kitVersion` so the version reflects the last
   intentional kit-level change, not manual feature toggles).
-- **`distMode: "vendored" | "deps"`** — `"vendored"` means
-  `src/Core` and `src/Support` were copied into the project
-  (Phases 20–22). `"deps"` means they're a Composer package
-  (Phase 23+). The default is `"vendored"` until Phase 23
+- **`distMode: "vendored" | "deps"`** — `"deps"` (Phase 23+ default) means the framework lives in `vendor/wpsk/framework` (Composer) + `@wpsk/*` (npm). `"vendored"` is the legacy mode for projects generated before the switch (framework source copies under src/Core in the project tree). Migrations convert vendored projects.
   flips it to `"deps"`.
 - **`generatedAt: "ISO-8601"`** — the timestamp the manifest
   was last written. **Idempotency tests freeze this value** so

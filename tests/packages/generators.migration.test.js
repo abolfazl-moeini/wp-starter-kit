@@ -71,16 +71,14 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     expect(res.ok).toBe(true);
     const written = new Set(res.written || []);
 
-    // Legacy §0.5 golden list — every file MUST be present.
+    // Post-Phase 23 golden list (deps mode): framework Core classes
+    // come from wpsk/framework dep, not copied into src/Core.
     const legacyGolden = [
       "project.config.json",
       "build.config.json",
       "tsconfig.json",
       "readme.txt",
       "my-project.php",
-      "src/Core/Plugin.php",
-      "src/Core/ModuleInterface.php",
-      "src/Core/ModuleLoader.php",
       "src/Modules/ExampleFeature/Module.php",
       "src/Modules/ExampleFeature/Rest/ItemsController.php",
       "src/Modules/ExampleFeature/assets/entries/admin.ts",
@@ -119,7 +117,7 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     expect(written.has("wpsk-kit.json")).toBe(true);
   });
 
-  test("the manifest wpsk-kit.json carries the default feature set + kitVersion + distMode='vendored'", async () => {
+  test("the manifest wpsk-kit.json carries the default feature set + kitVersion + distMode='deps'", async () => {
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(true);
     const manifestRaw = await fs.readFile(
@@ -129,7 +127,7 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     const manifest = JSON.parse(manifestRaw);
     expect(manifest.schema).toBe(1);
     expect(typeof manifest.kitVersion).toBe("string");
-    expect(manifest.distMode).toBe("vendored"); // Phase 23 flips this
+    expect(manifest.distMode).toBe("deps"); // Phase 23 default
     expect(typeof manifest.generatedAt).toBe("string");
     // The default features (15 ids, per features.js catalog) all match
     // what defaultFeatures() returns.
@@ -168,6 +166,7 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     const tpl = readFileSync(tplPath, "utf8");
     const cfg = answersToProjectConfig(goodAnswers);
     // Re-derive tplVars the same way the scaffold does.
+    const features = defaultFeatures();
     const tplVars = {
       ...goodAnswers,
       ...cfg,
@@ -180,6 +179,8 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
       pluginUri: "https://github.com/abolfazl-moeini/wp-plugin-starter-kit",
       vendor: "WPSK",
       vendorPrefixUpper: cfg.vendorPrefix.toUpperCase(),
+      wpMinVersion: features.wpMinVersion || "6.0",
+      phpMinVersion: features.phpMinVersion || cfg.phpMinVersion || "7.4",
     };
     const expected = renderTemplate(tpl, tplVars);
     expect(onDisk).toBe(expected);
@@ -208,7 +209,7 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     expect(written.has("assets/dependencies.ts")).toBe(false);
     // The PHP/JS-gate-agnostic files are still there.
     expect(written.has("my-project.php")).toBe(true);
-    expect(written.has("src/Core/Plugin.php")).toBe(true);
+    expect(written.has("src/Core/Plugin.php")).toBe(false); // Phase 23: not emitted in deps mode
     // The manifest reflects the supplied features.
     const manifest = JSON.parse(
       await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8"),
@@ -291,7 +292,7 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     await new Promise((resolve) => setTimeout(resolve, 10));
     const r2 = await scaffoldProject(tmp, goodAnswers, { force: true });
     expect(r2.ok).toBe(true);
-    const written2 = r2.written || [];
+    expect(r2.written?.length).toBeGreaterThan(0);
     // Every file in run #1 must be present in run #2 with the same body,
     // EXCEPT wpsk-kit.json (the only timestamped file).
     for (const rel of written1) {

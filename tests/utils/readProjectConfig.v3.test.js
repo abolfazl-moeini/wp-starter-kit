@@ -44,7 +44,7 @@ afterEach(() => {
  *
  *   - features   (the validated feature set; written by
  *                syncFeaturesToConfig in 20.15)
- *   - distMode   (the distribution mode; "vendored" by default
+ *   - distMode   (the distribution mode; "deps" by default (Phase 23)
  *                in Phase 20, flipped to "deps" by Phase 23)
  *
  * readProjectConfig() must:

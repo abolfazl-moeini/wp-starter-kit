@@ -41,6 +41,10 @@ import { descriptor as phpTest } from "./phpTest.js";
 import { descriptor as license } from "./license.js";
 import { descriptor as blocks } from "./blocks.js";
 import { descriptor as css } from "./css.js";
+import { descriptor as jsTest } from "./jsTest.js";
+import { descriptor as phpFramework } from "./phpFramework.js";
+import { descriptor as ci } from "./ci.js";
+import { descriptor as faultTolerance } from "./faultTolerance.js";
 
 /* -------------------------------------------------------------------- */
 /* Full catalog                                                          */
@@ -66,6 +70,10 @@ const ALL = [
   license,
   blocks,
   css,
+  jsTest,
+  phpFramework,
+  ci,
+  faultTolerance,
 ];
 
 /* -------------------------------------------------------------------- */
@@ -155,6 +163,17 @@ export function getGenerators(features) {
     )
       enabled.push(g);
     else if (g.id === "css" && f.css && f.css !== "none" && jsEnabled)
+      enabled.push(g);
+    else if (g.id === "jsTest" && f.jsTest && f.jsTest !== "none" && jsEnabled)
+      enabled.push(g);
+    else if (g.id === "phpFramework" && f.phpFramework === "wpdev")
+      enabled.push(g);
+    else if (
+      g.id === "ci" &&
+      (f.phpTest === "phpunit" || (f.jsTest && f.jsTest !== "none"))
+    )
+      enabled.push(g);
+    else if (g.id === "faultTolerance" && f.faultTolerance === "on")
       enabled.push(g);
   }
   return enabled;
