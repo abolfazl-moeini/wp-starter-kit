@@ -63,17 +63,6 @@ function defaultReadEnginePackageVersion() {
   return "0.0.0";
 }
 
-/**
- * Default `fs.access` shape — returns a Promise that rejects when
- * the file does not exist (which is the expected "OK to scaffold"
- * state). Tests inject a custom one for the "non-empty dir"
- * path.
- */
-async function defaultFsAccess(targetPath) {
-  const { access } = await import("node:fs/promises");
-  return access(targetPath);
-}
-
 /* -------------------------------------------------------------------- */
 /* runCreate                                                             */
 /* -------------------------------------------------------------------- */
@@ -97,7 +86,6 @@ async function defaultFsAccess(targetPath) {
  * @property {object}  ui                  { renderSummary, renderNextSteps,
  *                                          log }
  * @property {Function} readEnginePackageVersion  () => string
- * @property {Function} fsAccess            (path) => Promise<void>
  */
 
 /**
@@ -116,10 +104,8 @@ export async function runCreate(input, deps) {
   const d = deps || {};
   const engine = d.engine;
   const runners = d.runners || {};
-  const ui = d.ui || {};
   const readVersion =
     d.readEnginePackageVersion || defaultReadEnginePackageVersion;
-  const fsAccess = d.fsAccess || defaultFsAccess;
 
   if (!engine || typeof engine.scaffoldProject !== "function") {
     return {
@@ -171,7 +157,7 @@ export async function runCreate(input, deps) {
   //    more than zero files), refuse unless --force is set.
   const force = i.runOptions?.force === true;
   if (!force) {
-    const conflict = await detectNonEmptyDir(dir, fsAccess);
+    const conflict = await detectNonEmptyDir(dir);
     if (conflict) {
       return {
         ok: false,
@@ -338,7 +324,7 @@ export async function runCreate(input, deps) {
  * refuses" — "non-empty" is a directory-level property, not a
  * project-sentinel check.
  */
-async function detectNonEmptyDir(dir, fsAccess) {
+async function detectNonEmptyDir(dir) {
   // First check existence (does the path resolve to a real dir?).
   let stat;
   try {
