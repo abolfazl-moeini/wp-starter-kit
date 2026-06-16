@@ -65,6 +65,12 @@ export function tplVars(answers, cfg) {
     // explicit answers.vendor override. The composer.json PSR-4 mapping
     // in buildComposerJson uses the same value for autoloading.
     vendor: answers.vendor || answers.globalName || "WPSK",
+    vendorNamespaceLower: (
+      answers.vendor ||
+      answers.globalName ||
+      answers.slug ||
+      "wpsk"
+    ).toLowerCase(),
     // {{frameworkNamespace}} — the WPSK framework namespace root, used
     // in `use` imports for framework classes (e.g.
     // "use WPSK\\Core\\ModuleInterface"). Always "WPSK" — the consumer's
@@ -190,7 +196,7 @@ export function packageJsonForAnswers(answers, features) {
       "build:dependencies": "wpsk-build-dependencies",
       "build:components": "wpsk-build-components",
       "build:styles": "wpsk-build-styles",
-      "build:assets": "wpsk-build-dependencies",
+      "build:assets": "wpsk-build-assets",
       ...(huskyOn ? { prepare: "husky install" } : {}),
       ...(jsTestVariant === "vitest"
         ? { test: "vitest run" }
@@ -203,7 +209,6 @@ export function packageJsonForAnswers(answers, features) {
         'prettier --check "**/*.{js,jsx,ts,tsx,json,md,yml,yaml,css}"',
       check: "wpsk-check",
     }),
-    workspaces: ["core/packages/*", "packages/*"],
     dependencies: {
       ...(uiFramework === "preact"
         ? {
@@ -670,7 +675,7 @@ body {
 
 export const TEMPLATE_README = `# {{slug}}
 
-WordPress theme scaffolded from [wp-starter-kit](https://github.com/abolfazl-moeini/wp-plugin-starter-kit).
+WordPress plugin scaffolded from [wp-starter-kit](https://github.com/abolfazl-moeini/wp-plugin-starter-kit).
 
 ## Branding (all from \`project.config.json\`)
 

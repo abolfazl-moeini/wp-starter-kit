@@ -17,7 +17,7 @@
  * Used by the `release` composer script:
  *   `"release": ["@rector:prefix", "@php ./dev/fix-autoloader.php"]`
  *
- * @see /Users/moeini/Documents/ideas/extend-kit/plan.md §6.3.3
+ * @see docs/vendor-scoping.md
  */
 
 declare(strict_types=1);

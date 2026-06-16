@@ -429,13 +429,24 @@ export async function addFeature(dir, id, variant, _opts = {}) {
   // 11. Update project.config.json's `features` key.
   await syncFeaturesToConfig(dir, newFeatures);
 
-  // 12. Apply composer patches (require / repositories) when the
-  //     generator declares them (e.g. faultTolerance).
-  if (contribution.composerPatches) {
+  // 12. Apply composer patches (require / repositories) and suggest
+  //     entries when the generator declares them (e.g. faultTolerance,
+  //     phpFramework).
+  if (contribution.composerPatches || contribution.composerSuggest) {
     const composerPath = path.join(dir, "composer.json");
-    await updateJsonFile(composerPath, (composer) =>
-      applyComposerPatches(composer, contribution.composerPatches),
-    );
+    await updateJsonFile(composerPath, (composer) => {
+      let next = composer;
+      if (contribution.composerPatches) {
+        next = applyComposerPatches(next, contribution.composerPatches);
+      }
+      if (contribution.composerSuggest) {
+        next.suggest = {
+          ...(next.suggest || {}),
+          ...contribution.composerSuggest,
+        };
+      }
+      return next;
+    });
     if (!written.includes("composer.json")) {
       written.push("composer.json");
     }

@@ -47,10 +47,13 @@ export async function refreshGlue(dir, features) {
   const coreOut = coreDescriptor.run(ctx);
   const files = { ...coreOut.files };
 
-  const gens = getGenerators(features);
+  // Filter core out — it was already run above; running it again
+  // via the loop would double-count any future deps it returns.
+  const gens = getGenerators(features).filter((g) => g.id !== "core");
   const deps = {};
   const devDeps = {};
   let composerPatches = null;
+  const composerSuggest = {};
 
   for (const g of gens) {
     const out = g.run(ctx);
@@ -69,6 +72,9 @@ export async function refreshGlue(dir, features) {
         composerPatches.repositories.push(...out.composerPatches.repositories);
       }
     }
+    if (out.composerSuggest) {
+      Object.assign(composerSuggest, out.composerSuggest);
+    }
   }
 
   if ("package.json" in files) {
@@ -86,19 +92,24 @@ export async function refreshGlue(dir, features) {
     delete files["package.json"];
   }
 
-  if ("composer.json" in files && composerPatches) {
+  if ("composer.json" in files) {
     let composer = JSON.parse(files["composer.json"]);
-    composer = applyComposerPatches(composer, composerPatches);
+    if (composerPatches) {
+      composer = applyComposerPatches(composer, composerPatches);
+    }
+    if (Object.keys(composerSuggest).length) {
+      composer.suggest = { ...(composer.suggest || {}), ...composerSuggest };
+    }
     files["composer.json"] = JSON.stringify(composer, null, 2) + "\n";
   }
 
-  // Core's project.config.json template omits `features` (synced
-  // separately by manifest helpers). Merge so refreshGlue does not
-  // clobber the feature state addFeature/removeFeature just wrote.
+  // Core's project.config.json template has a fixed set of fields.
+  // Merge the on-disk cfg so user-added keys are preserved, then
+  // stamp the current features so the manifest stays in sync.
   if ("project.config.json" in files) {
-    const cfg = JSON.parse(files["project.config.json"]);
-    cfg.features = { ...features };
-    files["project.config.json"] = JSON.stringify(cfg, null, 2) + "\n";
+    const templateCfg = JSON.parse(files["project.config.json"]);
+    const merged = { ...cfg, ...templateCfg, features: { ...features } };
+    files["project.config.json"] = JSON.stringify(merged, null, 2) + "\n";
   }
 
   const written = [];

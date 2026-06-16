@@ -11,7 +11,7 @@
  *
  * Usage: `composer rector:upgrade`.
  *
- * @see /Users/moeini/Documents/ideas/extend-kit/plan.md §6.3
+ * @see docs/vendor-scoping.md
  */
 
 declare(strict_types=1);

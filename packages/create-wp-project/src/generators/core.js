@@ -32,8 +32,7 @@
  * template strings so the BC file list is byte-identical (Phase 21.11).
  */
 
-import { renderTemplate } from "../index.js";
-import { tplVars as legacyTplVars } from "./_templateVars.js";
+import { renderTemplate, tplVars as legacyTplVars } from "./_templates.js";
 import {
   TEMPLATE_PROJECT_CONFIG,
   TEMPLATE_FUNCTIONS_PHP,

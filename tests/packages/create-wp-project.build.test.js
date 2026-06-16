@@ -101,6 +101,13 @@ describe("@wpsk/create-wp-project — build scripts use installed @wpsk/* bins (
     expect(pkg.scripts["build:styles"]).toBe("wpsk-build-styles");
   });
 
+  test("scripts.build:assets uses the installed wpsk-build-assets bin", async () => {
+    const res = await scaffoldProject(tmp, goodAnswers);
+    expect(res.ok).toBe(true);
+    const pkg = await readPackageJson();
+    expect(pkg.scripts["build:assets"]).toBe("wpsk-build-assets");
+  });
+
   /* ------------------------------------------------------------------ */
   /* Regression guard — no legacy `node core/packages/...` paths         */
   /* ------------------------------------------------------------------ */
@@ -121,5 +128,14 @@ describe("@wpsk/create-wp-project — build scripts use installed @wpsk/* bins (
       expect(value.includes("core/packages/")).toBe(false);
       expect(value.includes("node core/")).toBe(false);
     }
+  });
+
+  test("consumer package.json does not leak the kit's workspace layout", async () => {
+    // Generated consumer projects install @wpsk/* packages from npm;
+    // they do not contain a monorepo workspace layout.
+    const res = await scaffoldProject(tmp, goodAnswers);
+    expect(res.ok).toBe(true);
+    const pkg = await readPackageJson();
+    expect(pkg.workspaces).toBeUndefined();
   });
 });

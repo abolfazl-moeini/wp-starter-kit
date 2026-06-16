@@ -185,6 +185,8 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
       makeCtx({}, { phpMinVersion: "8.1" }, { phpMinVersion: "8.1" }),
     );
     const composer = JSON.parse(out.files["composer.json"]);
+    // Composer package name is lower-cased globalName / slug.
+    expect(composer.name).toBe("myproject/my-project");
     // PSR-4 mapping: vendorNamespace (PascalCase of globalName) → src/
     expect(composer.autoload["psr-4"]).toBeDefined();
     const psr4 = composer.autoload["psr-4"];

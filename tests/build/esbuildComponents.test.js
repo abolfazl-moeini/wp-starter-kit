@@ -15,6 +15,16 @@ describe("esbuild-components", () => {
     expect(source).toMatch(/['"]examples\/\*\*['"]/);
   });
 
+  test("ignores dist, nested node_modules, and examples when discovering entries", () => {
+    const source = readFileSync(
+      join(process.cwd(), "core/packages/build/esbuild-components.js"),
+      "utf8",
+    );
+    expect(source).toMatch(/\*\*\/node_modules\/\*\*/);
+    expect(source).toMatch(/['"]dist\/\*\*['"]/);
+    expect(source).toMatch(/['"]examples\/\*\*['"]/);
+  });
+
   test("discovers src/Modules/*/assets/entries/*.ts module entry glob", () => {
     const source = readFileSync(
       join(process.cwd(), "core/packages/build/esbuild-components.js"),

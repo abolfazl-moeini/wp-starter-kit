@@ -305,19 +305,20 @@ export function validateFeatureSet(features) {
   }
 
   // 4. Warnings (Phase 25.G2) — advisory only, never block.
-  //    `license=mit` is technically a valid SPDX id, but
-  //    WordPress.org's plugin directory requires GPL compatibility
-  //    (https://wordpress.org/plugins/developers/#legal). MIT is
-  //    permissively licensed but not GPL-compatible, so a plugin
+  //    `license=mit` is technically a valid SPDX id and is
+  //    GPL-compatible, but the WordPress.org plugin directory
+  //    requires hosted plugins themselves to be licensed under
+  //    GPL-2.0-or-later (or later)
+  //    (https://wordpress.org/plugins/developers/#legal). A plugin
   //    shipped to .org with MIT text may be rejected at review time.
   //    We do NOT block — the developer may intentionally pick MIT for
   //    a self-hosted, non-.org-distributed plugin. We SURFACE the
   //    warning so the CLI can flag it before scaffold.
   if (features.license === "mit") {
     warnings.license =
-      `license=mit is not GPL-compatible; WordPress.org plugin ` +
-      `directory requires GPL2/GPL3. The scaffold will still emit ` +
-      `MIT, but the plugin may be rejected at .org review time.`;
+      `license=mit is GPL-compatible, but the WordPress.org plugin ` +
+      `directory requires hosted plugins to be GPL-2.0-or-later (or later). ` +
+      `The scaffold will still emit MIT, but the plugin may be rejected at .org review time.`;
   }
 
   return {

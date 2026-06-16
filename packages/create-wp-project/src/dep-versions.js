@@ -294,29 +294,29 @@ let CACHED_REGISTRY = null;
  * Return the kit's dep-version registry. A `Map<string,string>`
  * where the key is a package name (npm OR composer) and the
  * value is the pinned range the consumer project is expected
- * to have after `wpsk update`. The function is pure (no
- * side effects on the returned map — callers may mutate, but
- * the next call returns a fresh Map) and the result is
- * cached per process so the on-disk reads happen at most
- * once.
+ * to have after `wpsk update`. The on-disk reads are cached
+ * per process so they happen at most once, but every call
+ * returns a fresh `Map` copy — callers may mutate their copy
+ * without corrupting the cache or affecting later callers.
  *
  * @returns {Map<string,string>}
  */
 export function getDepVersions() {
-  if (CACHED_REGISTRY) return CACHED_REGISTRY;
-  const m = new Map();
-  for (const name of REQUIRED_JS_ENTRIES) {
-    const v = readKitDevDep(name);
-    if (v) m.set(name, v);
+  if (!CACHED_REGISTRY) {
+    const m = new Map();
+    for (const name of REQUIRED_JS_ENTRIES) {
+      const v = readKitDevDep(name);
+      if (v) m.set(name, v);
+    }
+    for (const name of REQUIRED_WPSK_PACKAGES) {
+      const v = readKitPackageVersion(name);
+      if (v) m.set(name, v);
+    }
+    for (const name of REQUIRED_COMPOSER_ENTRIES) {
+      const v = readKitComposerDep(name);
+      if (v) m.set(name, v);
+    }
+    CACHED_REGISTRY = m;
   }
-  for (const name of REQUIRED_WPSK_PACKAGES) {
-    const v = readKitPackageVersion(name);
-    if (v) m.set(name, v);
-  }
-  for (const name of REQUIRED_COMPOSER_ENTRIES) {
-    const v = readKitComposerDep(name);
-    if (v) m.set(name, v);
-  }
-  CACHED_REGISTRY = m;
-  return m;
+  return new Map(CACHED_REGISTRY);
 }

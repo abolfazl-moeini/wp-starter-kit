@@ -265,7 +265,7 @@ export function doctorProject(dir) {
   if (project && installed !== "0.0.0") {
     if (compareSemver(project, installed) > 0) {
       result.warnings.push(
-        `kit newer than installed deps — run wpsk update (project=${project}, installed=${installed})`,
+        `project manifest kitVersion (${project}) is newer than the installed kit (${installed}) — run wpsk update`,
       );
     }
   }

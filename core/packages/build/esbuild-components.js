@@ -10,6 +10,13 @@ import { readBuildConfig } from "./index.js";
 
 const MODULE_ENTRY_GLOB = "src/Modules/*/assets/entries/*.ts";
 const LEGACY_SCRIPT_GLOB = "**/script.js";
+const COMPONENT_ENTRY_IGNORE = [
+  "**/node_modules/**",
+  "assets/**",
+  "dist/**",
+  "examples/**",
+  "tests/**",
+];
 
 function bundleNameForEntry(cwd, sourceFile) {
   const normalized = sourceFile.replace(/\\/g, "/");
@@ -27,11 +34,11 @@ async function discoverComponentEntries(cwd) {
   const [moduleEntries, legacyScripts] = await Promise.all([
     glob(MODULE_ENTRY_GLOB, {
       cwd,
-      ignore: ["node_modules/**", "assets/**", "examples/**", "tests/**"],
+      ignore: COMPONENT_ENTRY_IGNORE,
     }),
     glob(LEGACY_SCRIPT_GLOB, {
       cwd,
-      ignore: ["node_modules/**", "assets/**", "examples/**", "tests/**"],
+      ignore: COMPONENT_ENTRY_IGNORE,
     }),
   ]);
 
