@@ -20,6 +20,10 @@ final class RestSetup
 
     public static function register(string|RestHandler $handler): bool
     {
+        // $handler is `string|RestHandler`; both branches of the
+        // ternary return a string (get_class() always does, and the
+        // string-RestHandler case falls through to $handler). So
+        // $classname is statically known to be a string here.
         $classname = $handler instanceof RestHandler ? get_class($handler) : $handler;
 
         // Fail fast on misconfigured class strings. Without this check,
@@ -29,7 +33,7 @@ final class RestSetup
         // instance. Both are hard to diagnose from a stack trace; the
         // return-false contract here lets the caller log + skip the
         // bad route without breaking the rest of the registration.
-        if (! is_string( $classname ) || ! class_exists( $classname ) ) {
+        if ( ! class_exists( $classname ) ) {
             return false;
         }
         if ( ! is_subclass_of( $classname, RestHandler::class ) ) {
