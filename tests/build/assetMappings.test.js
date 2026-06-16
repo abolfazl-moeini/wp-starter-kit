@@ -132,6 +132,40 @@ describe("buildAssets --dry-run mode (end-to-end with real config)", () => {
       logSpy.mockRestore();
     }
   });
+
+  // js-review-core (plan_18f9d2df): the error path used to log the
+  // failure twice — once to console.log and once to console.error —
+  // which was confusing (especially in CLI mode where the rejection
+  // is swallowed by `build-assets-cli.js`). The fix logs ONCE via
+  // console.error with a clear "build-assets error:" prefix and
+  // re-throws. The two assertions below lock that contract.
+  test("on error, logs the failure exactly once via console.error (no double-log)", async () => {
+    process.chdir(tmpRoot);
+    process.argv = ["node", "build-assets.js", "--dry-run"];
+
+    const logSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+    const errSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      const sut = await import("../../build/build-assets.js");
+      await expect(sut.buildAssets()).rejects.toThrow();
+      // Exactly one error log, addressed to stderr, with the
+      // canonical "build-assets error:" prefix.
+      expect(errSpy).toHaveBeenCalledTimes(1);
+      const errArg = String(errSpy.mock.calls[0]?.[0] ?? "");
+      expect(errArg.toLowerCase()).toContain("build-assets error");
+      // The old code path used to also write to console.log with
+      // a fire emoji ("🔥 Error in buildAssets:"). That double-log
+      // is what we want to prevent.
+      const fireEmojiLogs = logSpy.mock.calls.filter((c) =>
+        String(c[0] ?? "").includes("🔥"),
+      );
+      expect(fireEmojiLogs).toHaveLength(0);
+    } finally {
+      errSpy.mockRestore();
+      logSpy.mockRestore();
+    }
+  });
 });
 
 describe("validateConfig with mock config", () => {

@@ -87,8 +87,11 @@ export async function buildAssets() {
     console.log(chalk.green("🎉 Assets copied successfully!"));
     return { mode: "copy", planned: config.assetMappings.length };
   } catch (error) {
-    console.log("🔥 Error in buildAssets:", error);
-    console.error(chalk.red(`❌ Error: ${error.message}`));
+    // Single, structured error log via console.error. The CLI shim
+    // (build-assets-cli.js) translates the rejected promise into
+    // process.exit(1) without printing, so this log is the user's
+    // only chance to see the failure cause.
+    console.error(chalk.red(`❌ build-assets error: ${error.message}`));
     throw error;
   }
 }

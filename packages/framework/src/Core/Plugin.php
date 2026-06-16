@@ -49,10 +49,8 @@ final class Plugin {
 	/**
 	 * Override path for `project.config.json`. Resolved at boot
 	 * time and cached for the rest of the request.
-	 *
-	 * @var string|null
 	 */
-	private static ?string $config_path = null;
+	private static $config_path = null;
 
 	/**
 	 * Parsed contents of `project.config.json`.
