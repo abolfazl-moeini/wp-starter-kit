@@ -59,6 +59,25 @@ export function tplVars(answers, cfg) {
     // override this via answers.vendor (e.g. MyOrg) in real projects.
     vendor: answers.vendor || "WPSK",
     vendorPrefixUpper: (cfg.vendorPrefix || "WpskVendor").toUpperCase(),
+    // Phase 23.A4: {{frameworkPath}} is the URL the consumer
+    // composer.json's `repositories` entry points at for
+    // wpsk/framework. The path is a single source of truth — the
+    // scaffold accepts a `frameworkPath` option (and/or detects
+    // one from a kit config); the default below is the
+    // sibling-project relative path ("../packages/framework"),
+    // which assumes the consumer lives next to a kit checkout
+    // (the dev-mode path repo). The kit's own installer
+    // (Phase 23.A6 release wiring) overrides this with the
+    // real absolute path of the kit workspace.
+    frameworkPath:
+      (answers && answers.frameworkPath) || "../packages/framework",
+    // {{frameworkVersion}} is the composer `require` constraint
+    // for wpsk/framework. `*` is the canonical choice for a
+    // path-repository-driven consumer (the path repo pins the
+    // actual source). Pinned semver is the published-mode choice
+    // — Phase 23.B (the JS half) will pass it through
+    // `dep-versions.js`.
+    frameworkVersion: (answers && answers.frameworkVersion) || "*",
   };
 }
 
@@ -861,8 +880,18 @@ export const TEMPLATE_COMPOSER_JSON = `{
   "description": "{{description}}",
   "type": "wordpress-plugin",
   "license": "{{licenseId}}",
+  "repositories": [
+    {
+      "type": "path",
+      "url": "{{frameworkPath}}",
+      "options": {
+        "symlink": true
+      }
+    }
+  ],
   "require": {
-    "php": ">={{phpMinVersion}}"
+    "php": ">={{phpMinVersion}}",
+    "wpsk/framework": "{{frameworkVersion}}"
   },
   "autoload": {
     "psr-4": {

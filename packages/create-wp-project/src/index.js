@@ -1148,6 +1148,20 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   const cfg = answersToProjectConfig(answers);
   const vars = tplVarsFromGenerators(answers, cfg);
 
+  // 5b. Phase 23.A4: thread the framework path through to the
+  //    composer.json template. The default lives in tplVars
+  //    (../packages/framework — the sibling-project relative
+  //    path that works when the consumer lives next to a kit
+  //    checkout). Real kit installations override this via
+  //    options.frameworkPath (the installer's own working
+  //    directory is the source of truth for the absolute
+  //    workspace path). When neither is set, the sibling-relative
+  //    default stands and a real `composer install` will resolve
+  //    wpsk/framework from the dev path repo.
+  if (options.frameworkPath) {
+    vars.frameworkPath = options.frameworkPath;
+  }
+
   // 6. Run the registry. Each enabled generator contributes
   //    `files` (and optionally `dirs`, `deps`, `devDeps`). The
   //    core generator owns every always-on file; toggle
@@ -1157,7 +1171,7 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   //    collision (e.g. vendorScoping overrides core's
   //    strauss.json).
   const gens = getGenerators(features);
-  const ctx = { answers, cfg, features, vars };
+  const ctx = { answers, cfg, features, vars, options };
   const merged = { files: {}, dirs: [], deps: {}, devDeps: {} };
   for (const g of gens) {
     const out = g.run(ctx);
