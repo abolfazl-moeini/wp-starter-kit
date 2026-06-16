@@ -4,6 +4,12 @@
   "description": "esbuild-based build pipeline for wp-starter-kit consumers (components, dependencies, styles, assets).",
   "type": "module",
   "main": "index.js",
+  "bin": {
+    "wpsk-build-dependencies": "./esbuild-dependencies-cli.js",
+    "wpsk-build-components": "./esbuild-components-cli.js",
+    "wpsk-build-styles": "./esbuild-styles-cli.js",
+    "wpsk-check": "./wpsk-check-cli.js"
+  },
   "exports": {
     ".": "./index.js",
     "./esbuild-components.js": "./esbuild-components.js",
@@ -18,6 +24,7 @@
     "esbuild-dependencies-cli.js",
     "esbuild-styles.js",
     "esbuild-styles-cli.js",
+    "wpsk-check-cli.js",
     "build-all.js"
   ],
   "dependencies": {

@@ -116,9 +116,7 @@ export function packageJsonForAnswers(answers) {
     // from the kit's devDeps), use it as-is. If it returns a
     // bare version (e.g. "0.1.0" from a workspace
     // package.json), wrap with a caret.
-    return v.startsWith("^") || v === "*" || v.includes("npm:")
-      ? v
-      : `^${v}`;
+    return v.startsWith("^") || v === "*" || v.includes("npm:") ? v : `^${v}`;
   };
 
   // The 6 @wpsk/* runtime libs (consumed at runtime by the
@@ -156,18 +154,17 @@ export function packageJsonForAnswers(answers) {
     scripts: {
       build:
         "npm-run-all --parallel build:dependencies build:components build:styles build:assets",
-      "build:dependencies":
-        "node core/packages/build/esbuild-dependencies-cli.js",
-      "build:components": "node core/packages/build/esbuild-components-cli.js",
-      "build:styles": "node core/packages/build/esbuild-styles-cli.js",
-      "build:assets": "node core/packages/build/build-assets.js",
+      "build:dependencies": "wpsk-build-dependencies",
+      "build:components": "wpsk-build-components",
+      "build:styles": "wpsk-build-styles",
+      "build:assets": "wpsk-build-dependencies",
       prepare: "husky install",
       test: "jest",
       typecheck: "tsc --noEmit",
       "lint:js": "eslint . --ext .js,.jsx,.ts,.tsx",
       "format:check":
         'prettier --check "**/*.{js,jsx,ts,tsx,json,md,yml,yaml,css}"',
-      check: "node core/packages/utils/check-cli.js",
+      check: "wpsk-check",
     },
     workspaces: ["core/packages/*", "packages/*"],
     dependencies: {

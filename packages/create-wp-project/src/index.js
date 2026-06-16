@@ -546,18 +546,17 @@ function packageJsonForAnswers(answers) {
     scripts: {
       build:
         "npm-run-all --parallel build:dependencies build:components build:styles build:assets",
-      "build:dependencies":
-        "node core/packages/build/esbuild-dependencies-cli.js",
-      "build:components": "node core/packages/build/esbuild-components-cli.js",
-      "build:styles": "node core/packages/build/esbuild-styles-cli.js",
-      "build:assets": "node build/build-assets.js",
+      "build:dependencies": "wpsk-build-dependencies",
+      "build:components": "wpsk-build-components",
+      "build:styles": "wpsk-build-styles",
+      "build:assets": "wpsk-build-dependencies",
       prepare: "husky install",
       test: "jest",
       typecheck: "tsc --noEmit",
       "lint:js": "eslint . --ext .js,.jsx,.ts,.tsx",
       "format:check":
         'prettier --check "**/*.{js,jsx,ts,tsx,json,md,yml,yaml,css}"',
-      check: "node core/packages/utils/check-cli.js",
+      check: "wpsk-check",
     },
     workspaces: ["core/packages/*", "packages/*"],
     dependencies: preactAliases
