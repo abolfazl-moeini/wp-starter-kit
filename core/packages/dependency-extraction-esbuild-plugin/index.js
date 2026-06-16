@@ -102,31 +102,6 @@ export function generateWordPressScriptHandles(buildResponse) {
   return results.filter(onlyUnique);
 }
 
-export function generateInternalScriptHandles(buildResponse) {
-  const results = [];
-
-  if (!buildResponse?.metafile?.inputs) {
-    return results;
-  }
-
-  for (const input in buildResponse.metafile.inputs) {
-    // Note: This function appears largely unused (internal packages are collected
-    // via the `internalItems` array passed to importAsGlobals + filterInternalRootPackages).
-    // Matcher typo from source has been corrected for safety.
-    const match = input.match(/internal-libraries:(.+)/);
-
-    if (!match) {
-      continue;
-    }
-
-    const handleID = defaultRequestToHandle(match[1]);
-
-    handleID && results.push(handleID);
-  }
-
-  return results.filter(onlyUnique);
-}
-
 /**
  * @param {import('esbuild').BuildResult} buildResponse
  * @param {string[]} forceAssets
@@ -143,7 +118,7 @@ export function assetFileInfo(
     : generatedHandles;
 
   return {
-    dependencies: handles ?? [],
+    dependencies: handles,
     internal_packages: filterInternalRootPackages(internalItems),
     hash: fileCheckSum(bundleFilePath(buildResponse)),
   };
