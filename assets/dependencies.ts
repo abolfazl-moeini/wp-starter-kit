@@ -81,7 +81,7 @@ domReady(() => {
     },
   );
 
-  // <hookPrefix>-form-init — fired by MLForm on first render.
+  // <hookPrefix>-form-init — fired by WDForm on first render.
   hooks.addAction(
     __WPSK_HOOK_PREFIX__ + "-form-init",
     "wpsk-deps-bundle",
@@ -101,7 +101,7 @@ domReady(() => {
     },
   );
 
-  // <hookPrefix>-form-changed — fired by MLForm on any input change.
+  // <hookPrefix>-form-changed — fired by WDForm on any input change.
   hooks.addAction(
     __WPSK_HOOK_PREFIX__ + "-form-changed",
     "wpsk-deps-bundle",

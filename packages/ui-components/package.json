@@ -1,17 +1,23 @@
 {
   "name": "@wpdev/ui-components",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "main": "index.js",
   "exports": {
     ".": "./index.js",
-    "./MLForm/MLForm.js": "./MLForm/MLForm.js"
+    "./WDForm": "./WDForm/index.js"
+  },
+  "peerDependencies": {
+    "preact": ">=10",
+    "@preact/signals": ">=1"
+  },
+  "peerDependenciesMeta": {
+    "@preact/signals": {
+      "optional": true
+    }
   },
   "dependencies": {
-    "@preact/signals": "^2.9.1",
-    "classnames": "^2.5.1",
-    "lodash.isempty": "^4.4.0",
     "preact": "^10.0.0"
   }
 }

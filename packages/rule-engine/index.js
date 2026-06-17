@@ -5,7 +5,7 @@
  * to plain ESM JavaScript (no TypeScript, no lodash). The original is a
  * 150-line port of `node-rules` — a chained when/then rule engine.
  *
- * The contract consumed by MLForm (and any caller) is:
+ * The contract consumed by WDForm (and any caller) is:
  *
  *   const engine = new RuleEngine();
  *   engine.register(rule | rule[]);
