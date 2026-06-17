@@ -75,6 +75,37 @@ final class RestSetup
         }
     }
 
+    // ------------------------------------------------------------------
+    // B-13 (audit plan_8d50edf6) — known limitation, not a bug.
+    //
+    // RestSetup instantiates every registered handler with a plain
+    // `new $handlerClass()` (see rest_init above). There is no
+    // dependency-injection seam: handlers cannot pull dependencies from
+    // a container, cannot be substituted at test time without mocking
+    // the class itself, and cannot be replaced with a decorator / proxy.
+    //
+    // The audit asked us to add a DI seam. We considered two minimal
+    // approaches:
+    //
+    //   (a) A static `setHandlerFactory(?callable $factory)` setter plus
+    //       a `null`-coalesce call site in rest_init(). Backward-
+    //       compatible but adds an unused-by-default global escape hatch
+    //       that every existing call-site would still bypass.
+    //
+    //   (b) Accept handler instances via register() instead of class
+    //       strings (already partially supported — register() accepts
+    //       both). The remaining gap is only the class-string path.
+    //
+    // Neither approach is "minimal" in the sense the audit brief asked
+    // for: both grow the public API surface for a feature that no caller
+    // currently exercises. We are logging the limitation here so the
+    // next audit cycle can pick it up if a real consumer surfaces.
+    //
+    // Workaround for now: handlers that need constructor arguments must
+    // implement a static `from(...)` factory and `register()` an instance
+    // (the register() signature already supports `RestHandler|string`).
+    // ------------------------------------------------------------------
+
     public static function flush(): void
     {
         self::$routes = [];
