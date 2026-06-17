@@ -33,8 +33,17 @@ if ( ! function_exists( 'wpsk_resolve_asset_url' ) ) {
 	 * public shim preserves the function entry point for any direct
 	 * callers in the wild.
 	 *
+	 * Contract mirrors the new class: returns the asset's public URL
+	 * (relative to the plugin root) when the file resolves to a real
+	 * path INSIDE the plugin, or an empty string when the file is
+	 * missing or lives outside the plugin. The legacy fallback that
+	 * synthesised a `plugins_url('assets/bundles/<basename>')` URL has
+	 * been dropped — that guess is wrong for files under any subdir
+	 * other than `assets/bundles/`.
+	 *
 	 * @param string $abs_path Absolute filesystem path to a `.js`/`.css` file.
-	 * @return string
+	 * @return string Public URL of the asset, or `''` when the path
+	 *                cannot be resolved to a URL we trust.
 	 */
 	function wpsk_resolve_asset_url( $abs_path ) {
 		// Re-derive against the plugin base the new class uses.
@@ -50,9 +59,8 @@ if ( ! function_exists( 'wpsk_resolve_asset_url' ) ) {
 			return $base_url . $relative;
 		}
 
-		// Match the old behaviour's "fall back to bundles/ basename" — under
-		// the plugin model, that is `<plugin>/assets/bundles/<basename>`.
-		return WPSK\Support\Assets::resolve_paths()['base_url'] . 'assets/bundles/' . basename( $abs_path );
+		// File not on disk OR outside the plugin root — caller must decide.
+		return '';
 	}
 }
 
