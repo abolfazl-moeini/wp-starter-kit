@@ -1,11 +1,11 @@
 /**
- * Phase 23.A3 RED — consumer composer.json uses wpsk/framework.
+ * Phase 23.A3 RED — consumer composer.json uses wpdev/framework.
  *
  * The kit is moving from a "copy the framework into the consumer"
- * (vendored) model to a "require wpsk/framework via Composer"
+ * (vendored) model to a "require wpdev/framework via Composer"
  * (deps) model. The scaffold's emitted composer.json must:
  *
- *   1. `require` wpsk/framework (version `*` is acceptable for a
+ *   1. `require` wpdev/framework (version `*` is acceptable for a
  *      path-repository-driven scaffold; the path repo is what
  *      actually pins the source).
  *   2. Declare a `repositories` entry of type "path" pointing to
@@ -17,7 +17,7 @@
  *      modules are still in src/, only the framework moved).
  *
  * The test fails RED while the scaffold's composer.json template
- * doesn't have a `require wpsk/framework` line and a path
+ * doesn't have a `require wpdev/framework` line and a path
  * repository; it goes GREEN once 23.A4 wires the template
  * substitutions and adds the path-repo block.
  */
@@ -55,19 +55,19 @@ describe("@wpsk/create-wp-project — consumer composer.json (Phase 23.A3/A4)", 
     );
   }
 
-  test("composer.json requires wpsk/framework", async () => {
+  test("composer.json requires wpdev/framework", async () => {
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(true);
     const composer = await readComposer();
     expect(composer.require).toBeDefined();
-    expect(composer.require["wpsk/framework"]).toBeDefined();
+    expect(composer.require["wpdev/framework"]).toBeDefined();
     // The require may be a pinned semver version OR `*` for a
     // path-repository-driven scaffold. Both are acceptable.
-    expect(typeof composer.require["wpsk/framework"]).toBe("string");
-    expect(composer.require["wpsk/framework"].length).toBeGreaterThan(0);
+    expect(typeof composer.require["wpdev/framework"]).toBe("string");
+    expect(composer.require["wpdev/framework"].length).toBeGreaterThan(0);
   });
 
-  test("composer.json declares a path repository for wpsk/framework", async () => {
+  test("composer.json declares a path repository for wpdev/framework", async () => {
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(true);
     const composer = await readComposer();
@@ -116,7 +116,7 @@ describe("@wpsk/create-wp-project — consumer composer.json (Phase 23.A3/A4)", 
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(true);
     const composer = await readComposer();
-    const hasRequire = !!composer.require?.["wpsk/framework"];
+    const hasRequire = !!composer.require?.["wpdev/framework"];
     const hasPathRepo =
       Array.isArray(composer.repositories) &&
       composer.repositories.some(

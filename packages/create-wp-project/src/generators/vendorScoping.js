@@ -8,13 +8,13 @@
  * consumer's vendor prefix at release time, so the WPSK
  * exclusion that protects the kit's local src/Core copies
  * is no longer correct once the framework lives in
- * `vendor/wpsk/framework`).
+ * `vendor/wpdev/framework`).
  *
  * IMPORTANT: the core generator's `TEMPLATE_STRAUSS_JSON`
  * keeps the WPSK exclusion (the kit's own root config still
  * needs it; Phase 23 lands the deps-mode default for the
  * scaffold). Phase 23+ defaults to `distMode: deps` with
- * `wpsk/framework` as a Composer dependency. Core writes
+ * `wpdev/framework` as a Composer dependency. Core writes
  * `composer.json` `extra/strauss` (the config Strauss reads);
  * this generator also emits a standalone `strauss.json` mirror
  * for human reference. refreshGlue keeps both in sync when

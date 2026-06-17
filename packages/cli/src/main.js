@@ -236,7 +236,7 @@ export function buildProgram() {
   allowPassthrough(
     program
       .command("list")
-      .description("list the features in the current project's wpsk-kit.json")
+      .description("list the features in the current project's wpdev-kit.json")
       .option("--json", "emit machine-readable JSON instead of a table"),
   ).action(async () => {
     const sub = program.commands.find((c) => c.name() === "list");

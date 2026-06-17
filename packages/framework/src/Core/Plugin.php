@@ -31,7 +31,7 @@ namespace WPDev\Core;
  * theme directory.
  *
  * For Composer deployments the framework lives in
- * `vendor/wpsk/framework/src/Core/Plugin.php`, so the default
+ * `vendor/wpdev/framework/src/Core/Plugin.php`, so the default
  * `dirname(__DIR__, 2)` would resolve into the vendor tree and
  * miss the real `project.config.json`. Consumer plugins should
  * call {@see Plugin::set_plugin_dir()} (or pass an explicit path
@@ -64,7 +64,7 @@ final class Plugin {
 	 * Plugin::resolve_default_config_path()} anchors
 	 * `project.config.json` here instead of walking up from
 	 * `__DIR__`. Required for Composer deployments where the
-	 * framework is loaded from `vendor/wpsk/framework/` — the
+	 * framework is loaded from `vendor/wpdev/framework/` — the
 	 * default `dirname(__DIR__, 2)` would otherwise resolve into
 	 * the vendor tree and miss the consumer's config file.
 	 *
@@ -305,7 +305,7 @@ final class Plugin {
 	 * Plugin::resolve_default_config_path()}. Call this from the
 	 * consumer plugin bootstrap (typically the main plugin file,
 	 * before {@see Plugin::boot()}) when the framework is loaded
-	 * from Composer — i.e. from `vendor/wpsk/framework/...` —
+	 * from Composer — i.e. from `vendor/wpdev/framework/...` —
 	 * and `dirname(__DIR__, 2)` would otherwise resolve inside
 	 * the vendor tree.
 	 *
@@ -332,7 +332,7 @@ final class Plugin {
 	 * Resolution order:
 	 *   1. The override set by {@see Plugin::set_plugin_dir()}
 	 *      (used by Composer deployments where the framework is
-	 *      loaded from `vendor/wpsk/framework/`).
+	 *      loaded from `vendor/wpdev/framework/`).
 	 *   2. `dirname(__DIR__, 2)` — the in-tree dev layout where
 	 *      the framework lives at
 	 *      `packages/framework/src/Core/Plugin.php` and the

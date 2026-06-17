@@ -56,7 +56,7 @@ class FrameworkDistTest extends TestCase
         $composer = json_decode((string) file_get_contents($distComposer), true);
         $this->assertIsArray($composer);
         $this->assertArrayHasKey('require', $composer);
-        $this->assertArrayHasKey('wpsk/framework', $composer['require']);
+        $this->assertArrayHasKey('wpdev/framework', $composer['require']);
 
         $hasPathRepo = false;
         foreach ($composer['repositories'] ?? [] as $repo) {
@@ -70,9 +70,9 @@ class FrameworkDistTest extends TestCase
         $this->assertArrayHasKey('extra', $composer);
         $this->assertArrayHasKey('strauss', $composer['extra']);
         $this->assertSame(
-            ['wpsk/framework'],
+            ['wpdev/framework'],
             $composer['extra']['strauss']['packages'] ?? null,
-            'Strauss config must whitelist only wpsk/framework'
+            'Strauss config must whitelist only wpdev/framework'
         );
     }
 
@@ -106,7 +106,7 @@ class FrameworkDistTest extends TestCase
         );
         $vendorPrefix = $config['vendorPrefix'] ?? 'WpskVendor';
 
-        $scoped = $distDir . '/vendor-prefixed/wpsk/framework/src/Core/Plugin.php';
+        $scoped = $distDir . '/vendor-prefixed/wpdev/framework/src/Core/Plugin.php';
         $this->assertFileExists(
             $scoped,
             'dist must run Strauss and scope the framework into vendor-prefixed/'

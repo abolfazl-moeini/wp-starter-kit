@@ -44,7 +44,7 @@ import {
 
 /**
  * Pre-populate a project directory with a v2-valid
- * project.config.json + a wpsk-kit.json that reflect a starting
+ * project.config.json + a wpdev-kit.json that reflect a starting
  * feature set. Mirrors the seedProject helper in addFeature.test.js
  * so the test contract is parallel: addFeature and removeFeature
  * share the same on-disk shape.
@@ -138,7 +138,7 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
     ).rejects.toThrow(/ENOENT/);
   });
 
-  test("turning husky off sets features.husky='off' in wpsk-kit.json", async () => {
+  test("turning husky off sets features.husky='off' in wpdev-kit.json", async () => {
     await seedProject(tmp, defaultFeatures());
     await seedHuskyOn(tmp);
 
@@ -146,7 +146,7 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
     expect(res.ok).toBe(true);
 
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
     );
     expect(manifest.features.husky).toBe("off");
   });
@@ -259,7 +259,7 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
 
     // Manifest unchanged.
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
     );
     expect(manifest.features).toEqual(defaultFeatures());
   });
@@ -290,7 +290,7 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
 
   /* -- guard: project missing manifest -- */
 
-  test("returns { ok:false, reason } on a project missing wpsk-kit.json", async () => {
+  test("returns { ok:false, reason } on a project missing wpdev-kit.json", async () => {
     // Empty tmp — no manifest, no project.config.json.
     const res = await removeFeature(tmp, "husky");
     expect(res.ok).toBe(false);

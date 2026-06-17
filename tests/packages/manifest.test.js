@@ -12,7 +12,7 @@ import { defaultFeatures } from "../../packages/create-wp-project/src/features.j
 /**
  * Phase 20.5 / 20.6 — manifest shape + writer.
  *
- * The manifest is the consumer project's `wpsk-kit.json` —
+ * The manifest is the consumer project's `wpdev-kit.json` —
  * the durable record of "which kit version generated this project,
  * which features are on, in which distMode". The schema is:
  *
@@ -27,7 +27,7 @@ import { defaultFeatures } from "../../packages/create-wp-project/src/features.j
  * Three contracts are locked here:
  *  1. buildManifest() returns the documented shape.
  *  2. distMode defaults to "vendored" until Phase 23 flips it to "deps".
- *  3. writeManifest() writes wpsk-kit.json with stable key order
+ *  3. writeManifest() writes wpdev-kit.json with stable key order
  *     and a trailing newline.
  *  4. The writer only includes features whose ids are in the catalog
  *     (so a future readManifest can rely on the feature set being
@@ -112,7 +112,7 @@ describe("buildManifest() — shape (Phase 20.5)", () => {
   });
 });
 
-describe("writeManifest() — writes wpsk-kit.json (Phase 20.6)", () => {
+describe("writeManifest() — writes wpdev-kit.json (Phase 20.6)", () => {
   let tmp;
   beforeEach(async () => {
     tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-manifest-"));
@@ -130,7 +130,7 @@ describe("writeManifest() — writes wpsk-kit.json (Phase 20.6)", () => {
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: defaultFeatures(),
     });
-    const stat = await fs.stat(path.join(nested, "wpsk-kit.json"));
+    const stat = await fs.stat(path.join(nested, "wpdev-kit.json"));
     expect(stat.isFile()).toBe(true);
   });
 
@@ -142,7 +142,7 @@ describe("writeManifest() — writes wpsk-kit.json (Phase 20.6)", () => {
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: defaultFeatures(),
     });
-    const raw = await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8");
+    const raw = await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8");
     expect(raw.endsWith("\n")).toBe(true);
   });
 
@@ -154,7 +154,7 @@ describe("writeManifest() — writes wpsk-kit.json (Phase 20.6)", () => {
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: defaultFeatures(),
     });
-    const raw = await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8");
+    const raw = await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8");
     // 2-space indent is the kit default — project.config.json uses
     // the same. Stable formatting keeps diffs clean.
     expect(raw).toMatch(/^{\n {2}"schema": 1,/);
@@ -173,7 +173,7 @@ describe("writeManifest() — writes wpsk-kit.json (Phase 20.6)", () => {
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: defaultFeatures(),
     });
-    const raw = await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8");
+    const raw = await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8");
     const keys = [];
     for (const m of raw.matchAll(/^ {2}"([^"]+)":/gm)) keys.push(m[1]);
     expect(keys.slice(0, 5)).toEqual([
@@ -195,7 +195,7 @@ describe("writeManifest() — writes wpsk-kit.json (Phase 20.6)", () => {
       features: defaultFeatures(),
     };
     await writeManifest(tmp, m1);
-    const first = await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8");
+    const first = await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8");
 
     // Second run: a fresh manifest object with the same fields,
     // forced to the SAME generatedAt so the bytes should match.
@@ -207,7 +207,7 @@ describe("writeManifest() — writes wpsk-kit.json (Phase 20.6)", () => {
       features: defaultFeatures(),
     };
     await writeManifest(tmp, m2);
-    const second = await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8");
+    const second = await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8");
     expect(second).toBe(first);
   });
 });

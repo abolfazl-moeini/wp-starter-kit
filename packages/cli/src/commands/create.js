@@ -9,7 +9,7 @@
  *   3. Call `engine.scaffoldProject(dir, answers, {features, force})`.
  *   4. If engine.scaffoldProject returns {ok:false} → return
  *      `{ok:false, reason}` (no post-gen actions).
- *   5. Build + write the manifest (`wpsk-kit.json`) using
+ *   5. Build + write the manifest (`wpdev-kit.json`) using
  *      `kitVersion` from `readEnginePackageVersion()` (or the
  *      `runOptions.kitVersion` override for tests).
  *   6. Run post-generation actions, gated by runOptions:
@@ -226,7 +226,7 @@ export async function runCreate(input, deps) {
   //    package.json unless `runOptions.kitVersion` overrides
   //    (test seam only).
   const kitVersion = i.runOptions?.kitVersion || readVersion();
-  const manifestPath = path.join(dir, "wpsk-kit.json");
+  const manifestPath = path.join(dir, "wpdev-kit.json");
   try {
     const manifest =
       typeof engine.buildManifest === "function"
@@ -246,12 +246,12 @@ export async function runCreate(input, deps) {
       // gets a useful result. We don't try to write the file
       // ourselves — that's the engine's job.
       warnings.push(
-        "engine.writeManifest is missing — wpsk-kit.json NOT written",
+        "engine.writeManifest is missing — wpdev-kit.json NOT written",
       );
     }
   } catch (e) {
     warnings.push(
-      "failed to write wpsk-kit.json: " +
+      "failed to write wpdev-kit.json: " +
         (e && e.message ? e.message : String(e)),
     );
   }

@@ -348,7 +348,7 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   //    directory is the source of truth for the absolute
   //    workspace path). When neither is set, the sibling-relative
   //    default stands and a real `composer install` will resolve
-  //    wpsk/framework from the dev path repo.
+  //    wpdev/framework from the dev path repo.
   if (options.frameworkPath) {
     vars.frameworkPath = options.frameworkPath;
   }
@@ -439,7 +439,7 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   // 9. Write the manifest. The manifest's `features` object
   //    is the validated feature set; `kitVersion` is the kit's
   //    own version; `distMode` defaults to "deps" (framework via
-  //    wpsk/framework Composer dep; vendored is legacy).
+  //    wpdev/framework Composer dep; vendored is legacy).
   const manifest = buildManifest({
     kitVersion: KIT_VERSION,
     features,
@@ -449,14 +449,14 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   // The manifest is part of the consumer's durable state — add
   // it to the `written` list so callers can assert the full
   // file set returned by scaffoldProject.
-  if (!written.includes("wpsk-kit.json")) {
-    written.push("wpsk-kit.json");
+  if (!written.includes("wpdev-kit.json")) {
+    written.push("wpdev-kit.json");
   }
 
   // 10. Dual-write `features` into project.config.json so
   //    pre-Phase 20 readers (the kit's PHP classes, the JS
   //    asset bundle) can answer "which features are on?"
-  //    without discovering wpsk-kit.json.
+  //    without discovering wpdev-kit.json.
   await syncFeaturesToConfig(targetDir, features);
 
   return { ok: true, written };

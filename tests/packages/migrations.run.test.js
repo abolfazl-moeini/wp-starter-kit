@@ -27,7 +27,7 @@
  *     leaves the project at its PRE-migration state).
  *
  *  5. **No manifest** — `runMigrations(dir, ...)` on a directory
- *     with no `wpsk-kit.json` returns `{ok:false, reason: ...}`
+ *     with no `wpdev-kit.json` returns `{ok:false, reason: ...}`
  *     and does NOT throw.
  *
  *  6. **project.config.json mirror** — when a manifest bump
@@ -89,7 +89,7 @@ describe("runMigrations() — happy path (Phase 24.5, 24.6)", () => {
       features: {},
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpsk-kit.json"),
+      path.join(tmpDir, "wpdev-kit.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -122,7 +122,7 @@ describe("runMigrations() — happy path (Phase 24.5, 24.6)", () => {
 
       // Manifest on disk is bumped to 0.2.0.
       const after = JSON.parse(
-        await fs.readFile(path.join(tmpDir, "wpsk-kit.json"), "utf8"),
+        await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
       );
       expect(after.kitVersion).toBe("0.2.0");
     } finally {
@@ -162,7 +162,7 @@ describe("runMigrations() — idempotency (Phase 24.5, 24.6)", () => {
       features: {},
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpsk-kit.json"),
+      path.join(tmpDir, "wpdev-kit.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -186,7 +186,7 @@ describe("runMigrations() — idempotency (Phase 24.5, 24.6)", () => {
       expect(first.alreadyCurrent).toBeUndefined();
       expect(calls).toBe(1);
       const afterFirst = JSON.parse(
-        await fs.readFile(path.join(tmpDir, "wpsk-kit.json"), "utf8"),
+        await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
       );
       expect(afterFirst.kitVersion).toBe("0.2.0");
 
@@ -206,7 +206,7 @@ describe("runMigrations() — idempotency (Phase 24.5, 24.6)", () => {
 
       // Manifest is still 0.2.0 (no double-bump).
       const afterSecond = JSON.parse(
-        await fs.readFile(path.join(tmpDir, "wpsk-kit.json"), "utf8"),
+        await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
       );
       expect(afterSecond.kitVersion).toBe("0.2.0");
     } finally {
@@ -226,7 +226,7 @@ describe("runMigrations() — idempotency (Phase 24.5, 24.6)", () => {
       features: {},
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpsk-kit.json"),
+      path.join(tmpDir, "wpdev-kit.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -238,7 +238,7 @@ describe("runMigrations() — idempotency (Phase 24.5, 24.6)", () => {
     expect(res.ran).toEqual(["0.2.0"]);
 
     const after = JSON.parse(
-      await fs.readFile(path.join(tmpDir, "wpsk-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
     );
     expect(after.kitVersion).toBe("0.2.0");
   });
@@ -269,7 +269,7 @@ describe("runMigrations() — project.config.json edit persists (Phase 24.5, 24.
       projectType: "plugin",
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpsk-kit.json"),
+      path.join(tmpDir, "wpdev-kit.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -303,7 +303,7 @@ describe("runMigrations() — project.config.json edit persists (Phase 24.5, 24.
 
       // Manifest is bumped.
       const afterManifest = JSON.parse(
-        await fs.readFile(path.join(tmpDir, "wpsk-kit.json"), "utf8"),
+        await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
       );
       expect(afterManifest.kitVersion).toBe("0.2.0");
 
@@ -339,7 +339,7 @@ describe("runMigrations() — failing migration aborts (Phase 24.6)", () => {
       features: {},
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpsk-kit.json"),
+      path.join(tmpDir, "wpdev-kit.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -360,7 +360,7 @@ describe("runMigrations() — failing migration aborts (Phase 24.6)", () => {
 
       // Manifest is NOT bumped — it still reads 0.1.0.
       const after = JSON.parse(
-        await fs.readFile(path.join(tmpDir, "wpsk-kit.json"), "utf8"),
+        await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
       );
       expect(after.kitVersion).toBe("0.1.0");
     } finally {
@@ -377,7 +377,7 @@ describe("runMigrations() — failing migration aborts (Phase 24.6)", () => {
       features: {},
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpsk-kit.json"),
+      path.join(tmpDir, "wpdev-kit.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -396,7 +396,7 @@ describe("runMigrations() — failing migration aborts (Phase 24.6)", () => {
       expect(res.reason).toMatch(/soft fail/);
 
       const after = JSON.parse(
-        await fs.readFile(path.join(tmpDir, "wpsk-kit.json"), "utf8"),
+        await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
       );
       expect(after.kitVersion).toBe("0.1.0");
     } finally {

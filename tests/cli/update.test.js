@@ -165,7 +165,7 @@ describe("runUpdate — dry-run default (I5.1)", () => {
     const deps = baseDeps();
     deps.engine.planUpdate = jest.fn(() => {
       throw new Error(
-        "EACCES: permission denied, open '/tmp/proj/wpsk-kit.json'",
+        "EACCES: permission denied, open '/tmp/proj/wpdev-kit.json'",
       );
     });
     const out = await runUpdate(

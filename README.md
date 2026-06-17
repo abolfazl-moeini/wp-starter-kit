@@ -40,7 +40,7 @@ For the full flag table, presets, troubleshooting, and the
   JS bundles, stylesheets, source maps, and translation files that
   ship in `dist/`. See [docs/build-system.md](docs/build-system.md).
 - **Feature model + manifest** — every generated project carries a
-  `wpsk-kit.json` manifest recording its features and variants. The
+  `wpdev-kit.json` manifest recording its features and variants. The
   CLI reads/writes that manifest for `add` / `remove` / `update`.
   See [docs/features-and-manifest.md](docs/features-and-manifest.md).
 - **Test infra** — PHPUnit (with PHPCS + PHPStan) and Jest. See

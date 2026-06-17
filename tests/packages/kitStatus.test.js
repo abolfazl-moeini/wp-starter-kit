@@ -67,7 +67,7 @@ async function seedProject({
     features,
   };
   await fs.writeFile(
-    path.join(dir, "wpsk-kit.json"),
+    path.join(dir, "wpdev-kit.json"),
     JSON.stringify(manifest, null, 2) + "\n",
     "utf8",
   );
@@ -83,7 +83,7 @@ describe("getKitStatus() — no manifest (Phase 24.12)", () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  test("returns {ok:false, reason} when wpsk-kit.json is missing", async () => {
+  test("returns {ok:false, reason} when wpdev-kit.json is missing", async () => {
     const res = await getKitStatus(tmpDir);
     expect(res.ok).toBe(false);
     expect(typeof res.reason).toBe("string");

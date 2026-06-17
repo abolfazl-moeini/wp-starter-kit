@@ -26,7 +26,7 @@ full layout (core, builders, production shell).
 | `Module_Loader::load_all()` | `WPSK\Core\ModuleLoader`      |
 
 The adapter class `WPSK\Adapters\WpdevModuleAdapter` (shipped in
-`wpsk/framework`) wraps a kit `ModuleInterface` instance so you can
+`wpdev/framework`) wraps a kit `ModuleInterface` instance so you can
 register it in wpdev's loader lifecycle without rewriting your module.
 
 ## Consumer wiring

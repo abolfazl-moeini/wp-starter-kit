@@ -56,7 +56,7 @@ export const table = {
  */
 export * as utils from "@wpdev/utils";
 
-// __WPSK_HOOK_PREFIX__ and __WPSK_LOCALIZE_VAR__ are replaced at esbuild
+// __WPDEV_HOOK_PREFIX__ and __WPDEV_LOCALIZE_VAR__ are replaced at esbuild
 // bundle time by defines coming from project.config.json (see buildDepsConfig).
 // This is what allows re-branding the *kit itself* (editing only the config
 // + npm run build) for hook actions that are registered inside this entry.
@@ -65,7 +65,7 @@ domReady(() => {
   // <hookPrefix>-request-ajax-start — fired by @wpdev/rest-utils before any
   // REST / X-URL request. We use the spinner overlay as the loading signal.
   hooks.addAction(
-    __WPSK_HOOK_PREFIX__ + "-request-ajax-start",
+    __WPDEV_HOOK_PREFIX__ + "-request-ajax-start",
     "wpsk-deps-bundle",
     (endpoint: string, options: { disableLoading?: boolean } = {}) => {
       if (!options?.disableLoading) FreezeUI();
@@ -74,7 +74,7 @@ domReady(() => {
 
   // <hookPrefix>-request-ajax-done — fired in `finally` by @wpdev/rest-utils.
   hooks.addAction(
-    __WPSK_HOOK_PREFIX__ + "-request-ajax-done",
+    __WPDEV_HOOK_PREFIX__ + "-request-ajax-done",
     "wpsk-deps-bundle",
     (endpoint: string, options: { disableLoading?: boolean } = {}) => {
       if (!options?.disableLoading) UnFreezeUI();
@@ -83,7 +83,7 @@ domReady(() => {
 
   // <hookPrefix>-form-init — fired by WDForm on first render.
   hooks.addAction(
-    __WPSK_HOOK_PREFIX__ + "-form-init",
+    __WPDEV_HOOK_PREFIX__ + "-form-init",
     "wpsk-deps-bundle",
     (container: Element | null) => {
       if (!container) return;
@@ -103,7 +103,7 @@ domReady(() => {
 
   // <hookPrefix>-form-changed — fired by WDForm on any input change.
   hooks.addAction(
-    __WPSK_HOOK_PREFIX__ + "-form-changed",
+    __WPDEV_HOOK_PREFIX__ + "-form-changed",
     "wpsk-deps-bundle",
     (container: Element | null, changedElementName?: string) => {
       if (!container || !changedElementName) return;

@@ -119,7 +119,7 @@ describe("addFeature faultTolerance happy path", () => {
       path.join(tmp, "composer.json"),
       JSON.stringify(
         {
-          require: { php: ">=8.1", "wpsk/framework": "*" },
+          require: { php: ">=8.1", "wpdev/framework": "*" },
           repositories: [],
         },
         null,

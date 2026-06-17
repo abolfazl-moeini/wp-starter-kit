@@ -11,7 +11,7 @@
  *     version).
  *   - `runOptions.kitVersion` overrides the read-from-package
  *     value (test override per plan §I3.6).
- *   - The manifest is written to `<dir>/wpsk-kit.json`.
+ *   - The manifest is written to `<dir>/wpdev-kit.json`.
  *   - If the manifest write itself fails, runCreate still
  *     returns ok:true with a warning (not a hard error).
  */
@@ -130,7 +130,7 @@ describe("runCreate — manifest write (I3.5)", () => {
     }
   });
 
-  test("the returned manifestPath is <dir>/wpsk-kit.json", async () => {
+  test("the returned manifestPath is <dir>/wpdev-kit.json", async () => {
     const dir = makeEmptyDir();
     try {
       const deps = makeDeps();
@@ -144,7 +144,7 @@ describe("runCreate — manifest write (I3.5)", () => {
         deps,
       );
       expect(out.manifestPath).toBe(
-        path.join(path.resolve(dir), "wpsk-kit.json"),
+        path.join(path.resolve(dir), "wpdev-kit.json"),
       );
     } finally {
       rmSync(dir, { recursive: true, force: true });
@@ -252,7 +252,7 @@ describe("runCreate — manifest write failure is a warning", () => {
       );
       expect(out.ok).toBe(true);
       expect(out.warnings.length).toBeGreaterThan(0);
-      expect(out.warnings[0]).toMatch(/wpsk-kit.json/);
+      expect(out.warnings[0]).toMatch(/wpdev-kit.json/);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

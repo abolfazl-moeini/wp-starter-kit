@@ -18,14 +18,14 @@
 
 defined( 'ABSPATH' ) || exit;
 
-if ( ! defined( 'WPSK_STARTER_VERSION' )) {
-	define( 'WPSK_STARTER_VERSION', '0.1.0' );
+if ( ! defined( 'WPDEV_STARTER_VERSION' )) {
+	define( 'WPDEV_STARTER_VERSION', '0.1.0' );
 }
-if ( ! defined( 'WPSK_STARTER_PLUGIN_FILE' )) {
-	define( 'WPSK_STARTER_PLUGIN_FILE', __FILE__ );
+if ( ! defined( 'WPDEV_STARTER_PLUGIN_FILE' )) {
+	define( 'WPDEV_STARTER_PLUGIN_FILE', __FILE__ );
 }
-if ( ! defined( 'WPSK_STARTER_PLUGIN_DIR' )) {
-	define( 'WPSK_STARTER_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+if ( ! defined( 'WPDEV_STARTER_PLUGIN_DIR' )) {
+	define( 'WPDEV_STARTER_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 }
 
 $autoloadCandidates = [
@@ -42,7 +42,7 @@ foreach ($autoloadCandidates as $autoload) {
 
 $blockstudioCandidates = [
 	(defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR : (defined('ABSPATH') ? ABSPATH . 'wp-content/plugins' : '')) . '/blockstudio/blockstudio.php',
-	WPSK_STARTER_PLUGIN_DIR . 'vendor/blockstudio/blockstudio/blockstudio.php',
+	WPDEV_STARTER_PLUGIN_DIR . 'vendor/blockstudio/blockstudio/blockstudio.php',
 ];
 foreach ($blockstudioCandidates as $blockstudio) {
 	if (is_file( $blockstudio )) {
@@ -63,34 +63,34 @@ if ( ! class_exists( 'WPDev\\Core\\Plugin' )) {
 	return;
 }
 
-register_activation_hook( __FILE__, [ 'wpsk_starter_on_activate', 'handle' ] );
-register_deactivation_hook( __FILE__, [ 'wpsk_starter_on_deactivate', 'handle' ] );
-register_uninstall_hook( __FILE__, 'wpsk_starter_on_uninstall' );
+register_activation_hook( __FILE__, [ 'wpdev_starter_on_activate', 'handle' ] );
+register_deactivation_hook( __FILE__, [ 'wpdev_starter_on_deactivate', 'handle' ] );
+register_uninstall_hook( __FILE__, 'wpdev_starter_on_uninstall' );
 
-if ( ! class_exists( 'wpsk_starter_on_activate' )) {
-	class wpsk_starter_on_activate {
+if ( ! class_exists( 'wpdev_starter_on_activate' )) {
+	class wpdev_starter_on_activate {
 		public static function handle(): void {
 			// Activation stub — extend in your modules.
 		}
 	}
 }
 
-if ( ! class_exists( 'wpsk_starter_on_deactivate' )) {
-	class wpsk_starter_on_deactivate {
+if ( ! class_exists( 'wpdev_starter_on_deactivate' )) {
+	class wpdev_starter_on_deactivate {
 		public static function handle(): void {
 			// Deactivation stub.
 		}
 	}
 }
 
-if ( ! function_exists( 'wpsk_starter_on_uninstall' )) {
-	function wpsk_starter_on_uninstall(): void {
+if ( ! function_exists( 'wpdev_starter_on_uninstall' )) {
+	function wpdev_starter_on_uninstall(): void {
 		// Uninstall stub.
 	}
 }
 
-add_action( 'init', 'wpsk_starter_load_textdomain' );
-function wpsk_starter_load_textdomain(): void {
+add_action( 'init', 'wpdev_starter_load_textdomain' );
+function wpdev_starter_load_textdomain(): void {
 	load_plugin_textdomain(
 		'wpsk-starter',
 		false,
@@ -107,13 +107,13 @@ function wpsk_starter_load_textdomain(): void {
  * wp-cli, test bootstrap) — can re-run registration. An inline
  * closure cannot be called a second time by name; a function can.
  */
-function wpsk_starter_register_modules(): void {
+function wpdev_starter_register_modules(): void {
 	WPDev\Core\Plugin::loader()->register( new WPDev\Modules\ExampleFeature\Module() );
 	WPDev\Core\Plugin::loader()->register( new WPDev\Modules\McpAbilities\Module() );
 	WPDev\Core\Plugin::loader()->register( new WPDev\Modules\Blocks\Module() );
 }
 
-add_action( 'plugins_loaded', 'wpsk_starter_register_modules', 5 );
+add_action( 'plugins_loaded', 'wpdev_starter_register_modules', 5 );
 add_action( 'plugins_loaded', 'WPDev\\Core\\Plugin::boot', 10, 0 );
 
 if ( did_action( 'plugins_loaded' ) ) {
@@ -127,6 +127,6 @@ if ( did_action( 'plugins_loaded' ) ) {
 	// internally, so third-party listeners still see the signal
 	// even though `on_plugins_loaded` will not fire on this request.
 	WPDev\Core\Plugin::boot();
-	wpsk_starter_register_modules();
+	wpdev_starter_register_modules();
 	WPDev\Core\Plugin::loader()->boot_all();
 }

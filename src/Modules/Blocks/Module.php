@@ -48,8 +48,8 @@ final class Module implements ModuleInterface
 
 	private static function plugin_root(): string
 	{
-		if (defined('WPSK_STARTER_PLUGIN_DIR')) {
-			return (string) WPSK_STARTER_PLUGIN_DIR;
+		if (defined('WPDEV_STARTER_PLUGIN_DIR')) {
+			return (string) WPDEV_STARTER_PLUGIN_DIR;
 		}
 
 		return dirname(__DIR__, 3) . DIRECTORY_SEPARATOR;

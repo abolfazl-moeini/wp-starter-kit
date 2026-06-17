@@ -1,6 +1,6 @@
 # Features and Manifest
 
-> Phase 20 / 22 of `plan.v3.md` — feature flags, the `wpsk-kit.json`
+> Phase 20 / 22 of `plan.v3.md` — feature flags, the `wpdev-kit.json`
 > manifest, owned-paths, and the runtime mutation API
 > (`addFeature` / `removeFeature` / variant switch).
 
@@ -11,7 +11,7 @@ of truth — every generator, every template, every runtime helper
 reads it. This document covers:
 
 1. [What a feature is](#what-a-feature-is)
-2. [The `wpsk-kit.json` manifest](#the-wpsk-kitjson-manifest)
+2. [The `wpdev-kit.json` manifest](#the-wpsk-kitjson-manifest)
 3. [Owned paths and the safety rule](#owned-paths-and-the-safety-rule)
 4. [Adding a feature later (`addFeature`)](#adding-a-feature-later-addfeature)
 5. [Switching variants](#switching-variants)
@@ -55,9 +55,9 @@ Dependency rules (the §1.1 table in `plan.v3.md`) live in
 (no I/O) and run before any generator writes — a violation
 returns `{ok: false, reason}` and writes nothing.
 
-## The `wpsk-kit.json` manifest
+## The `wpdev-kit.json` manifest
 
-Every wp-starter-kit project carries a `wpsk-kit.json` at its
+Every wp-starter-kit project carries a `wpdev-kit.json` at its
 root. The manifest is the durable record of the project's kit
 state — kit version, distribution mode, generation timestamp,
 and the feature set.
@@ -102,7 +102,7 @@ Field semantics:
   (Phase 24), **not** by `addFeature` / `removeFeature` (those
   preserve `kitVersion` so the version reflects the last
   intentional kit-level change, not manual feature toggles).
-- **`distMode: "vendored" | "deps"`** — `"deps"` (Phase 23+ default) means the framework lives in `vendor/wpsk/framework` (Composer) + `@wpsk/*` (npm). `"vendored"` is the legacy mode for projects generated before the switch (framework source copies under src/Core in the project tree). Migrations convert vendored projects.
+- **`distMode: "vendored" | "deps"`** — `"deps"` (Phase 23+ default) means the framework lives in `vendor/wpdev/framework` (Composer) + `@wpsk/*` (npm). `"vendored"` is the legacy mode for projects generated before the switch (framework source copies under src/Core in the project tree). Migrations convert vendored projects.
   flips it to `"deps"`.
 - **`generatedAt: "ISO-8601"`** — the timestamp the manifest
   was last written. **Idempotency tests freeze this value** so
@@ -122,7 +122,7 @@ The same `features` object is also written to
 `project.config.json` under a `features` key, via
 `syncFeaturesToConfig()`. Why duplicate?
 
-- `wpsk-kit.json` is the durable kit state (kitVersion,
+- `wpdev-kit.json` is the durable kit state (kitVersion,
   distMode, generatedAt, features).
 - `project.config.json` is the project's primary config —
   every runtime helper (the kit's PHP classes, the JS asset
@@ -130,7 +130,7 @@ The same `features` object is also written to
   BOTH means a consumer that only knows about
   `project.config.json` (pre-Phase 20 readers) can still
   answer "which features are on?" without discovering
-  `wpsk-kit.json`.
+  `wpdev-kit.json`.
 
 `addFeature`, `removeFeature`, and `scaffoldProject` all call
 `syncFeaturesToConfig` after writing the manifest, so the two
@@ -182,7 +182,7 @@ The installer's `wpsk add <feature>` command calls
 
 Semantics:
 
-1. **Read** the manifest from `<dir>/wpsk-kit.json`. Missing
+1. **Read** the manifest from `<dir>/wpdev-kit.json`. Missing
    manifest → **throw** (the caller asserted "this is a
    project, add a feature").
 2. **Validate** the merged set `{ ...current, [id]: variant }`
@@ -208,7 +208,7 @@ Semantics:
    unlinks them, then writes the new files.
 7. **Write** each owned file to disk. Directories are created
    on demand.
-8. **Update** `wpsk-kit.json` (via `writeManifest` +
+8. **Update** `wpdev-kit.json` (via `writeManifest` +
    `buildManifest`).
 9. **Update** `project.config.json`'s `features` key (via
    `syncFeaturesToConfig`).
@@ -312,7 +312,7 @@ reason}` (a softer "if this is a project, turn X off"
 7. **Walk** the project tree. For every file matched by the
    removed feature's `owns` AND not matched by any other
    still-ON feature's `owns`, delete it.
-8. **Update** `wpsk-kit.json` and `project.config.json`.
+8. **Update** `wpdev-kit.json` and `project.config.json`.
 
 The return value is:
 
@@ -363,7 +363,7 @@ the user knows which packages to install. The `written` and
 the user can review what changed.
 
 The CLI also does a pre-flight check: if the target
-directory does not have a `wpsk-kit.json`, it suggests
+directory does not have a `wpdev-kit.json`, it suggests
 running `wpsk create` first (the scaffold path). The engine
 APIs themselves do not do this check — they let the caller
 decide how to handle a missing manifest.

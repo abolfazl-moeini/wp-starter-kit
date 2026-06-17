@@ -6,11 +6,11 @@
  * features are turned on:
  *
  *   - project.config.json (with a `features` key, dual-written to
- *     wpsk-kit.json by `syncFeaturesToConfig` + `writeManifest`
+ *     wpdev-kit.json by `syncFeaturesToConfig` + `writeManifest`
  *     after the generator runs)
  *   - {slug}.php   (the WordPress plugin bootstrap) — plugin mode
  *   - src/Core/{Plugin,ModuleInterface,ModuleLoader}.php
- *   - wpsk-kit.json  (manifest, written by the scaffold AFTER the
+ *   - wpdev-kit.json  (manifest, written by the scaffold AFTER the
  *     generator runs — NOT by the generator itself)
  *   - composer.json (PSR-4 vendor namespace → src/, php >= phpMinVersion)
  *   - package.json (with JS build scripts + devDeps when js ≠ none
@@ -103,7 +103,7 @@ export function run(ctx) {
       : renderTemplate(TEMPLATE_FUNCTIONS_PHP, tpl);
   // 3. (Phase 23) Framework sources (Plugin/ModuleInterface/ModuleLoader)
   //    are NO LONGER emitted into the consumer. They are supplied by
-  //    the "wpsk/framework" Composer dep (see buildComposerJson require
+  //    the "wpdev/framework" Composer dep (see buildComposerJson require
   //    + path repo). The consumer's src/ only contains its own modules
   //    (under its vendor ns). Emitting copies would produce unloaded
   //    dead code (consumer composer.json never registers a WPDev\\ psr-4
@@ -252,7 +252,7 @@ function spdxForLicense(licenseVariant) {
  *    claims these — `js:typescript` only writes `assets/dependencies.ts`.
  *  - Framework sources (src/Core/**) are deliberately NOT owned or
  *    emitted by core in deps mode (Phase 23); see buildComposerJson
- *    which requires "wpsk/framework". Legacy copies cleaned by migration.
+ *    which requires "wpdev/framework". Legacy copies cleaned by migration.
  */
 export const descriptor = {
   id: "core",
@@ -271,7 +271,7 @@ export const descriptor = {
     "*.php", // the plugin or theme bootstrap at the project root
     // NOTE: "src/Core/**" deliberately omitted (Phase 23 deps mode).
     // Framework sources are never part of consumer thin glue; they
-    // come from the wpsk/framework dep. Legacy vendored projects are
+    // come from the wpdev/framework dep. Legacy vendored projects are
     // cleaned by a migration (see migrations/ and doctor).
   ],
   run,

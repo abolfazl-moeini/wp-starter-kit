@@ -69,7 +69,7 @@ my-project/                      ← the wp-content/plugins/ root
 
 Three trees, three ownerships:
 
-1. **`src/Core/*`** — (legacy `distMode: "vendored"` only) were emitted by the scaffold in pre-Phase 23 projects. In the default `deps` mode the WPSK\Core classes come exclusively from the `wpsk/framework` Composer package installed into `vendor/`. Do not hand-edit vendored copies; upgrade via `wpsk update` instead. Your own code lives under `src/Modules/*`.
+1. **`src/Core/*`** — (legacy `distMode: "vendored"` only) were emitted by the scaffold in pre-Phase 23 projects. In the default `deps` mode the WPSK\Core classes come exclusively from the `wpdev/framework` Composer package installed into `vendor/`. Do not hand-edit vendored copies; upgrade via `wpsk update` instead. Your own code lives under `src/Modules/*`.
 2. **`src/Modules/*`** — yours. Add one sub-directory per feature
    module (see [modules.md](modules.md)).
 3. **`core/**`and`core/php/**`** — yours-but-versioned. The
@@ -354,7 +354,7 @@ bootstrap, the text domain lived under the theme, and the
   to `{slug}.php` as the new bootstrap. The body is unchanged
   for backward compatibility.
 - `WPSK\Core\Plugin::boot()` is the new entry point. Theme
-  helpers (`wpsk_starter_setup_theme`, `wpsk_starter_enqueue_assets`)
+  helpers (`wpdev_starter_setup_theme`, `wpdev_starter_enqueue_assets`)
   are still present for BC, but new code should hook into the
   `{$hookPrefix}_plugin_loaded` action instead.
 - `load_plugin_textdomain` is the new i18n entry point. Theme
@@ -372,7 +372,7 @@ If your project was scaffolded before Phase 11:
 1. Run the scaffold against a fresh directory with the same
    `project.config.json` (or copy `project.config.json` into
    the new directory and let the scaffold re-emit the rest).
-2. (Legacy only) If you still have vendored copies under src/Core/ from a pre-deps scaffold, compare against the versions in `vendor/wpsk/framework/src/Core/` (after update) and merge or delete the old copies (migrations handle the common case).
+2. (Legacy only) If you still have vendored copies under src/Core/ from a pre-deps scaffold, compare against the versions in `vendor/wpdev/framework/src/Core/` (after update) and merge or delete the old copies (migrations handle the common case).
 3. Move every hook that was registered in `functions.php` into
    a module under `src/Modules/<Name>/` and register the module
    with the loader. See

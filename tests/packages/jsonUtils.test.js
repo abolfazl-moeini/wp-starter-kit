@@ -9,7 +9,7 @@ import { updateJsonFile } from "../../packages/create-wp-project/src/json-utils.
  * Phase 20.11 / 20.12 — updateJsonFile() helper.
  *
  * The kit edits a number of JSON files in consumer projects
- * (project.config.json, wpsk-kit.json, package.json, etc.) as
+ * (project.config.json, wpdev-kit.json, package.json, etc.) as
  * it adds / removes features. The naive approach — read, parse,
  * modify, JSON.stringify with a fixed indent — is wrong: it
  * reformats the entire file, which produces noisy diffs and
@@ -20,7 +20,7 @@ import { updateJsonFile } from "../../packages/create-wp-project/src/json-utils.
  * back with the SAME indentation the file had on disk:
  *
  *  - 2-space indent  (the kit default — project.config.json,
- *                     wpsk-kit.json, package.json all use it)
+ *                     wpdev-kit.json, package.json all use it)
  *  - 4-space indent  (some IDE-formatted configs)
  *  - tab indent      (Makefiles, some style guides)
  *  - compact         (single-line JSON; treated as a degenerate

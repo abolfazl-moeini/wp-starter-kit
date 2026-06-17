@@ -436,10 +436,10 @@ describe("@wpsk/create-wp-project", () => {
     };
 
     /* ----- src/Core/ emission (Phase 23 deps mode) ------------------- */
-    // Framework sources are supplied by the wpsk/framework Composer
+    // Framework sources are supplied by the wpdev/framework Composer
     // dependency. Scaffold never writes src/Core/*.php for consumers
     // (consumer PSR-4 only maps the developer's vendor ns; the WPSK
-    // references resolve from vendor/wpsk/framework after `composer install`).
+    // references resolve from vendor/wpdev/framework after `composer install`).
 
     test("does NOT scaffold src/Core/* framework copies (deps mode)", async () => {
       const res = await scaffoldProject(tmp, goodAnswers);

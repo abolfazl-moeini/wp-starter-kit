@@ -74,12 +74,12 @@ export function tplVars(answers, cfg) {
     // {{frameworkNamespace}} — the WPDev framework namespace root, used
     // in `use` imports for framework classes (e.g.
     // "use WPDev\\Core\\ModuleInterface"). Always "WPDev" — the consumer's
-    // composer.json resolves this through the wpsk/framework dependency.
+    // composer.json resolves this through the wpdev/framework dependency.
     frameworkNamespace: "WPDev",
     vendorPrefixUpper: (cfg.vendorPrefix || "WpskVendor").toUpperCase(),
     // Phase 23.A4: {{frameworkPath}} is the URL the consumer
     // composer.json's `repositories` entry points at for
-    // wpsk/framework. The path is a single source of truth — the
+    // wpdev/framework. The path is a single source of truth — the
     // scaffold accepts a `frameworkPath` option (and/or detects
     // one from a kit config); the default below is the
     // sibling-project relative path ("../packages/framework"),
@@ -90,7 +90,7 @@ export function tplVars(answers, cfg) {
     frameworkPath:
       (answers && answers.frameworkPath) || "../packages/framework",
     // {{frameworkVersion}} is the composer `require` constraint
-    // for wpsk/framework. `*` is the canonical choice for a
+    // for wpdev/framework. `*` is the canonical choice for a
     // path-repository-driven consumer (the path repo pins the
     // actual source). Pinned semver is the published-mode choice
     // — Phase 23.B (the JS half) will pass it through
@@ -192,10 +192,10 @@ export function packageJsonForAnswers(answers, features) {
     scripts: scriptsForVariant(jsVariant, {
       build:
         "npm-run-all --parallel build:dependencies build:components build:styles build:assets",
-      "build:dependencies": "wpsk-build-dependencies",
-      "build:components": "wpsk-build-components",
-      "build:styles": "wpsk-build-styles",
-      "build:assets": "wpsk-build-assets",
+      "build:dependencies": "wpdev-build-dependencies",
+      "build:components": "wpdev-build-components",
+      "build:styles": "wpdev-build-styles",
+      "build:assets": "wpdev-build-assets",
       ...(huskyOn ? { prepare: "husky install" } : {}),
       ...(jsTestVariant === "vitest"
         ? { test: "vitest run" }
@@ -206,7 +206,7 @@ export function packageJsonForAnswers(answers, features) {
       "lint:js": "eslint . --ext .js,.jsx,.ts,.tsx",
       "format:check":
         'prettier --check "**/*.{js,jsx,ts,tsx,json,md,yml,yaml,css}"',
-      check: "wpsk-check",
+      check: "wpdev-check",
     }),
     dependencies: {
       ...(uiFramework === "preact"
@@ -1138,7 +1138,7 @@ export function buildComposerJson(vars) {
     ],
     require: {
       php: `>=${vars.phpMinVersion || "7.4"}`,
-      "wpsk/framework": vars.frameworkVersion || "*",
+      "wpdev/framework": vars.frameworkVersion || "*",
     },
     autoload: {
       "psr-4": {
@@ -1153,7 +1153,7 @@ export function buildComposerJson(vars) {
         constant_prefix: `${vendorPrefix.toUpperCase()}_`,
         delete_vendor_files: true,
         include_modified_files: false,
-        packages: ["wpsk/framework"],
+        packages: ["wpdev/framework"],
         exclude_from_prefix: {
           namespaces: excludeNamespaces,
           file_patterns: [],

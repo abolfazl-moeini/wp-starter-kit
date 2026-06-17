@@ -19,7 +19,7 @@
 | [css-variants.md](css-variants.md)                       | Sass / Tailwind / PostCSS / plain CSS      | You're picking a CSS build toolchain or switching later.                                     |
 | [blocks.md](blocks.md)                                   | Blockstudio blocks feature (`blocks:on`)   | You're adding block editor support to a generated plugin.                                    |
 | [blocks-blockstudio.md](blocks-blockstudio.md)           | Blockstudio layout, fields, and bridge     | You're authoring blocks or debugging Blockstudio registration.                               |
-| [features-and-manifest.md](features-and-manifest.md)     | Feature model + `wpsk-kit.json` manifest   | You're wiring the installer, add/update flows, or reading feature state.                     |
+| [features-and-manifest.md](features-and-manifest.md)     | Feature model + `wpdev-kit.json` manifest   | You're wiring the installer, add/update flows, or reading feature state.                     |
 | [framework-as-dependency.md](framework-as-dependency.md) | Composer/npm framework deps + `distMode`   | You're shipping or updating framework code as dependencies instead of copies.                |
 | [updating-projects.md](updating-projects.md)             | Migrations, doctor, update plan            | You're upgrading a consumer project to a newer kit version.                                  |
 | [wpdev-adapter.md](wpdev-adapter.md)                     | Optional wpdev-framework bridge            | You're integrating wpdev-framework alongside WPSK modules.                                   |
@@ -39,7 +39,7 @@
 
 ## v3 / installer
 
-Phases 20–27 added the feature model, manifest (`wpsk-kit.json`),
+Phases 20–27 added the feature model, manifest (`wpdev-kit.json`),
 per-feature generators, framework-as-dependency distribution, and
 update/migration tooling. The `wpsk` CLI (`docs/installer.md`) consumes
 these engine APIs.

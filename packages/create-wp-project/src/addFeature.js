@@ -256,7 +256,7 @@ function filterToOwned(id, contribution, owns) {
  *     filtered to only the generator's `owns` files; a leak
  *     throws.
  *  7. Write each owned file to disk.
- *  8. Update wpsk-kit.json (via `writeManifest` + `buildManifest`).
+ *  8. Update wpdev-kit.json (via `writeManifest` + `buildManifest`).
  *  9. Update project.config.json's `features` key (via
  *     `syncFeaturesToConfig`).
  *
@@ -296,7 +296,7 @@ export async function addFeature(dir, id, variant, _opts = {}) {
   const manifest = readManifest(dir);
   if (!manifest) {
     throw new Error(
-      `addFeature: no wpsk-kit.json at ${dir} — ` +
+      `addFeature: no wpdev-kit.json at ${dir} — ` +
         "is this a wp-starter-kit project?",
     );
   }

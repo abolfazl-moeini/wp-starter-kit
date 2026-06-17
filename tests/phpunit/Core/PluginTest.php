@@ -218,7 +218,7 @@ class PluginTest extends TestCase
      * (`packages/framework/src/Core/Plugin.php` → `packages/framework/`
      * → plugin root), but it is wrong for Composer deployments
      * where the framework is loaded from
-     * `vendor/wpsk/framework/src/Core/Plugin.php` — there the same
+     * `vendor/wpdev/framework/src/Core/Plugin.php` — there the same
      * math lands inside the vendor tree and the real
      * `project.config.json` (which lives in the consumer plugin
      * root) is not found.
@@ -235,7 +235,7 @@ class PluginTest extends TestCase
         // deep inside a fake vendor tree, with NO project.config.json
         // there. The "real" config lives at the consumer plugin root
         // we point the resolver at.
-        $fakeVendorRoot = $this->tmpDir . '/vendor/wpsk/framework';
+        $fakeVendorRoot = $this->tmpDir . '/vendor/wpdev/framework';
         mkdir($fakeVendorRoot . '/src/Core', 0777, true);
         mkdir($fakeVendorRoot . '/packages', 0777, true);
 
@@ -282,7 +282,7 @@ class PluginTest extends TestCase
     public function test_plugin_source_is_theme_agnostic(): void
     {
         $root = dirname(__DIR__, 3);
-        // Phase 23.A2: framework Core/ moved into the wpsk/framework
+        // Phase 23.A2: framework Core/ moved into the wpdev/framework
         // package under packages/framework/src/Core/. The framework is
         // still shipped from the kit and must remain theme-agnostic —
         // no `get_template_directory` or `load_theme_textdomain`.

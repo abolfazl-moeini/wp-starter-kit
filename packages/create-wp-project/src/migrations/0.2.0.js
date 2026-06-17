@@ -3,7 +3,7 @@
  *
  * Phase 23/24: removes any legacy src/Core/* framework copies that
  * were emitted by pre-deps scaffolds. These copies are no longer
- * needed (or loaded) once "wpsk/framework" is a Composer dependency.
+ * needed (or loaded) once "wpdev/framework" is a Composer dependency.
  * The migration also ensures the manifest records distMode:"deps".
  *
  * Idempotent: safe to run multiple times; missing files are ignored.
@@ -32,7 +32,7 @@ export async function run(dir) {
   }
 
   // 1. Delete any legacy framework copies under src/Core.
-  //    These were the "vendored" copies of what is now wpsk/framework.
+  //    These were the "vendored" copies of what is now wpdev/framework.
   for (const rel of LEGACY_CORE_FILES) {
     const abs = path.join(dir, rel);
     try {
@@ -68,7 +68,7 @@ export async function run(dir) {
   // 2. Patch manifest (if present) to flip distMode to "deps".
   //    The runner will still bump kitVersion after us, but we ensure
   //    the shape is correct for the current version.
-  const manifestPath = path.join(dir, "wpsk-kit.json");
+  const manifestPath = path.join(dir, "wpdev-kit.json");
   if (existsSync(manifestPath)) {
     try {
       const raw = await fs.readFile(manifestPath, "utf8");

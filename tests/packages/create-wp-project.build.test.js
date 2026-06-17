@@ -4,7 +4,7 @@
  * The kit is moving from "the consumer invokes framework build steps via
  * a relative `node core/packages/build/esbuild-*.js` path" to "the
  * consumer invokes the installed `@wpsk/build` package's bin
- * (e.g. `wpsk-build-dependencies`)" — exactly like a real npm
+ * (e.g. `wpdev-build-dependencies`)" — exactly like a real npm
  * consumer would, after `npm install`.
  *
  * Why this matters:
@@ -14,7 +14,7 @@
  *     `distMode: "deps"`, the consumer only has `node_modules/@wpsk/*`
  *     and no `core/` directory at all. The old `node core/...` path
  *     would crash with "Cannot find module".
- *  2. Using the bin is the standard npm contract — `npx wpsk-build-*`
+ *  2. Using the bin is the standard npm contract — `npx wpdev-build-*`
  *     just works after install, no path glue needed.
  *  3. The bin name is stable and versioned with the package; pinning
  *     `@wpsk/build` to a version pins the bin's behaviour.
@@ -22,12 +22,12 @@
  * The test asserts the post-23.B6 contract:
  *
  *   1. `package.json.scripts["build:dependencies"]` is exactly
- *      `wpsk-build-dependencies` (not `node core/...`).
+ *      `wpdev-build-dependencies` (not `node core/...`).
  *   2. `package.json.scripts["build:components"]` is
- *      `wpsk-build-components` (or similar installed bin).
+ *      `wpdev-build-components` (or similar installed bin).
  *   3. `package.json.scripts["build:styles"]` is
- *      `wpsk-build-styles`.
- *   4. `package.json.scripts["check"]` is `wpsk-check` (or any other
+ *      `wpdev-build-styles`.
+ *   4. `package.json.scripts["check"]` is `wpdev-check` (or any other
  *      installed bin coming from `@wpsk/utils`).
  *   5. NONE of the scripts reference the legacy
  *      `core/packages/...` paths (regression guard).
@@ -80,32 +80,32 @@ describe("@wpsk/create-wp-project — build scripts use installed @wpsk/* bins (
   /* Per-script bin assertions                                            */
   /* ------------------------------------------------------------------ */
 
-  test("scripts.build:dependencies uses the installed wpsk-build-dependencies bin", async () => {
+  test("scripts.build:dependencies uses the installed wpdev-build-dependencies bin", async () => {
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(true);
     const pkg = await readPackageJson();
-    expect(pkg.scripts["build:dependencies"]).toBe("wpsk-build-dependencies");
+    expect(pkg.scripts["build:dependencies"]).toBe("wpdev-build-dependencies");
   });
 
-  test("scripts.build:components uses the installed wpsk-build-components bin", async () => {
+  test("scripts.build:components uses the installed wpdev-build-components bin", async () => {
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(true);
     const pkg = await readPackageJson();
-    expect(pkg.scripts["build:components"]).toBe("wpsk-build-components");
+    expect(pkg.scripts["build:components"]).toBe("wpdev-build-components");
   });
 
-  test("scripts.build:styles uses the installed wpsk-build-styles bin", async () => {
+  test("scripts.build:styles uses the installed wpdev-build-styles bin", async () => {
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(true);
     const pkg = await readPackageJson();
-    expect(pkg.scripts["build:styles"]).toBe("wpsk-build-styles");
+    expect(pkg.scripts["build:styles"]).toBe("wpdev-build-styles");
   });
 
-  test("scripts.build:assets uses the installed wpsk-build-assets bin", async () => {
+  test("scripts.build:assets uses the installed wpdev-build-assets bin", async () => {
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(true);
     const pkg = await readPackageJson();
-    expect(pkg.scripts["build:assets"]).toBe("wpsk-build-assets");
+    expect(pkg.scripts["build:assets"]).toBe("wpdev-build-assets");
   });
 
   /* ------------------------------------------------------------------ */

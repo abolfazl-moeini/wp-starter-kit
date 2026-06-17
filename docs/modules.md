@@ -38,7 +38,7 @@ isolation:
   (workers, the test runner) routinely do this.
 
 The interface lives at `src/Core/ModuleInterface.php` inside the
-`wpsk/framework` Composer package (installed to `vendor/wpsk/framework`).
+`wpdev/framework` Composer package (installed to `vendor/wpdev/framework`).
 (Pre-Phase 23 projects may still have a local copy under their own `src/Core/`.)
 on day one. The interface is owned by the starter; do not
 hand-edit it.
@@ -118,7 +118,7 @@ priority inside their own hooks.
 
 `WPSK\Core\Plugin` is a **static facade** that ties the loader
 to WordPress's plugin lifecycle. The full source is in
-the framework package at `vendor/wpsk/framework/src/Core/Plugin.php` (or the source under `packages/framework/src/Core/Plugin.php` in a kit checkout); the parts that matter for modules:
+the framework package at `vendor/wpdev/framework/src/Core/Plugin.php` (or the source under `packages/framework/src/Core/Plugin.php` in a kit checkout); the parts that matter for modules:
 
 ```php
 final class Plugin

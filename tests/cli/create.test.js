@@ -128,8 +128,8 @@ describe("runCreate — engine wiring (I3.1)", () => {
     );
     expect(out.ok).toBe(true);
     expect(out.written).toEqual(["project.config.json"]); // no src/Core in deps mode (Phase 23)
-    // manifestPath is the standard `<dir>/wpsk-kit.json` location.
-    expect(out.manifestPath).toBe("/tmp/x/wpsk-kit.json");
+    // manifestPath is the standard `<dir>/wpdev-kit.json` location.
+    expect(out.manifestPath).toBe("/tmp/x/wpdev-kit.json");
     expect(out.warnings).toEqual([]);
   });
 

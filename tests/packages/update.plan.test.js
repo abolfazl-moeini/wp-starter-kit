@@ -83,7 +83,7 @@ async function seedProject({
     features: {},
   };
   await fs.writeFile(
-    path.join(dir, "wpsk-kit.json"),
+    path.join(dir, "wpdev-kit.json"),
     JSON.stringify(manifest, null, 2) + "\n",
     "utf8",
   );
@@ -197,7 +197,7 @@ describe("planUpdate() — happy path (Phase 24.7, 24.8)", () => {
   test("NO disk writes — files are byte-identical before vs after", async () => {
     // Snapshot the files we expect to be UNTOUCHED.
     const beforeManifest = readFileSync(
-      path.join(tmpDir, "wpsk-kit.json"),
+      path.join(tmpDir, "wpdev-kit.json"),
       "utf8",
     );
     const beforePackage = readFileSync(
@@ -215,7 +215,7 @@ describe("planUpdate() — happy path (Phase 24.7, 24.8)", () => {
     // Every byte is unchanged. (The contract is "dry run —
     // no writes", and we prove it at the file level.)
     const afterManifest = readFileSync(
-      path.join(tmpDir, "wpsk-kit.json"),
+      path.join(tmpDir, "wpdev-kit.json"),
       "utf8",
     );
     const afterPackage = readFileSync(
@@ -297,7 +297,7 @@ describe("planUpdate() — missing dep files (Phase 24.8)", () => {
       features: {},
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpsk-kit.json"),
+      path.join(tmpDir, "wpdev-kit.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );

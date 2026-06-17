@@ -10,7 +10,7 @@
  *
  * Contracts locked here:
  *
- *  1. addFeature reads the manifest from `<dir>/wpsk-kit.json`
+ *  1. addFeature reads the manifest from `<dir>/wpdev-kit.json`
  *     and the answers-derived `project.config.json`. The two
  *     must be in sync (syncFeaturesToConfig keeps them that way
  *     in the scaffold path; the test pre-populates them
@@ -28,7 +28,7 @@
  *     `owns` globs are written. A file outside `owns` is a
  *     safety violation → throw, not silently touch user code.
  *
- *  4. After the writes, `wpsk-kit.json` and project.config.json's
+ *  4. After the writes, `wpdev-kit.json` and project.config.json's
  *     `features` key are updated atomically (via `writeManifest`
  *     + `syncFeaturesToConfig`). The test asserts both files
  *     reflect the new feature state.
@@ -55,7 +55,7 @@ import {
 
 /**
  * Pre-populate a project directory with a v2-valid
- * project.config.json + a wpsk-kit.json that reflect a "minimal"
+ * project.config.json + a wpdev-kit.json that reflect a "minimal"
  * starting feature set (js=none, husky=off, exampleFeature=off).
  * Returns the configured features so the test can re-merge.
  */
@@ -153,7 +153,7 @@ describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
     expect(preCommit).toMatch(/lint-staged/);
   });
 
-  test("updates features.husky='on' in wpsk-kit.json", async () => {
+  test("updates features.husky='on' in wpdev-kit.json", async () => {
     await seedProject(tmp, {
       features: { ...defaultFeatures(), husky: "off" },
     });
@@ -161,7 +161,7 @@ describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
     const res = await addFeature(tmp, "husky", "on");
     expect(res.ok).toBe(true);
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
     );
     expect(manifest.features.husky).toBe("on");
   });
@@ -228,13 +228,13 @@ describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
     expect(res.ok).toBe(true);
     // No file emitted, but the manifest is updated.
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
     );
     expect(manifest.features.restBatch).toBe("on");
   });
 
   test("throws when called on a directory with no manifest (not a wpsk project)", async () => {
-    // Empty tmp — no wpsk-kit.json, no project.config.json.
+    // Empty tmp — no wpdev-kit.json, no project.config.json.
     await expect(addFeature(tmp, "husky", "on")).rejects.toThrow(
       /wpsk-kit\.json|manifest/i,
     );

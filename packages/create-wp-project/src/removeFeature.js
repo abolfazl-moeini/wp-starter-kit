@@ -299,7 +299,7 @@ async function* walkFiles(root, dir = root, depth = 0) {
  *  7. Walk the project tree; for every file matched by the
  *     removed feature's owns that is NOT matched by any other
  *     still-ON feature's owns, delete it.
- *  8. Update wpsk-kit.json (via `writeManifest` +
+ *  8. Update wpdev-kit.json (via `writeManifest` +
  *     `buildManifest`).
  *  9. Update project.config.json's `features` key (via
  *     `syncFeaturesToConfig`).
@@ -337,7 +337,7 @@ export async function removeFeature(dir, id, _opts = {}) {
     return {
       ok: false,
       reason:
-        `removeFeature: no wpsk-kit.json at ${dir} — ` +
+        `removeFeature: no wpdev-kit.json at ${dir} — ` +
         "is this a wp-starter-kit project?",
       removed: [],
     };

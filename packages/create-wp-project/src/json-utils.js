@@ -2,7 +2,7 @@
  * @wpsk/create-wp-project — safe JSON file editing helper.
  *
  * Phase 20 of plan.v3.md. The kit edits a number of JSON files
- * in consumer projects (project.config.json, wpsk-kit.json,
+ * in consumer projects (project.config.json, wpdev-kit.json,
  * package.json, etc.) as it adds / removes features in
  * Phase 22+ (addFeature, removeFeature, runMigrations). The
  * naive approach — read, parse, modify, JSON.stringify with a
@@ -14,7 +14,7 @@
  * result back with the SAME indentation the file had on disk:
  *
  *  - 2-space indent  (the kit default — project.config.json,
- *                     wpsk-kit.json, package.json all use it)
+ *                     wpdev-kit.json, package.json all use it)
  *  - 4-space indent  (some IDE-formatted configs)
  *  - tab indent      (Makefiles, some style guides)
  *  - compact         (single-line JSON; treated as a degenerate

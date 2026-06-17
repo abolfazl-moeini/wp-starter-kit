@@ -103,7 +103,7 @@ function firstOverlap(a, b) {
     "build.config.json",
     "project.config.json",
     "README.md",
-    "wpsk-kit.json",
+    "wpdev-kit.json",
     ".gitignore",
     ".editorconfig",
     ".husky/pre-commit",
@@ -112,7 +112,7 @@ function firstOverlap(a, b) {
     "tailwind.config.js",
     "postcss.config.js",
     "phpunit.xml",
-    // src/Core/* deliberately not owned (Phase 23: framework lives in wpsk/framework dep)
+    // src/Core/* deliberately not owned (Phase 23: framework lives in wpdev/framework dep)
     "src/Modules/ExampleFeature/Module.php",
     "src/Modules/ExampleFeature/Rest/ItemsController.php",
     "src/Modules/ExampleFeature/assets/entries/admin.ts",
@@ -195,7 +195,7 @@ describe("generator ownership — owned-paths map (Phase 22.1, 22.2)", () => {
     // removeFeature rely on the owns list to detect whether a
     // file is allowed to be touched.
     // src/Core/* are deliberately NOT claimed (Phase 23 deps mode:
-    // framework code lives only in the wpsk/framework dep).
+    // framework code lives only in the wpdev/framework dep).
     const expected = [
       "project.config.json",
       "composer.json",

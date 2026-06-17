@@ -48,7 +48,7 @@ node packages/cli/bin/wpsk.js create my-plugin --yes
 | `wpsk create [slug]`           | Scaffold a new wp-starter-kit plugin (interactive by default; `--yes` for CI). |
 | `wpsk add [opts] <feature>`    | Add a feature to an existing project (e.g. `wpsk add husky`).                  |
 | `wpsk remove [opts] <feature>` | Remove a feature from an existing project.                                     |
-| `wpsk list`                    | Print the features + ON/OFF state from the project's `wpsk-kit.json`.          |
+| `wpsk list`                    | Print the features + ON/OFF state from the project's `wpdev-kit.json`.          |
 | `wpsk update [dir]`            | Plan a kit upgrade (default). Apply with `--run`.                              |
 | `wpsk doctor [dir]`            | Report system prerequisites and project drift.                                 |
 | `wpsk info [dir]`              | Show kit version, feature states, and available updates.                       |
@@ -94,7 +94,7 @@ prompt has a matching flag so the command runs in CI with `--yes`.
 
 ## `wpsk add` / `wpsk remove` / `wpsk list`
 
-Operate on the `wpsk-kit.json` manifest in the current directory (or
+Operate on the `wpdev-kit.json` manifest in the current directory (or
 the directory given by `[dir]` for `update`/`doctor`/`info`).
 
 ```bash
@@ -227,7 +227,7 @@ initializing the repo. Use `git init` manually later.
 ### How do I see what was generated?
 
 `wpsk list` shows the features. `wpsk info` adds the kit version and
-available updates. `cat wpsk-kit.json` shows the raw manifest.
+available updates. `cat wpdev-kit.json` shows the raw manifest.
 
 ### I want to undo an `add` / `remove`
 
@@ -239,5 +239,5 @@ the manifest and the file set round-trip cleanly.
 
 - `docs/scaffold.md` — the underlying engine (`@wpsk/create-wp-project`).
 - `docs/features-and-manifest.md` — the feature model and the
-  `wpsk-kit.json` manifest format.
+  `wpdev-kit.json` manifest format.
 - `plan.installer.md` — the design plan and the full flag map.

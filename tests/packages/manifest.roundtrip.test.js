@@ -91,7 +91,7 @@ describe("readManifest() — missing file (Phase 20.7)", () => {
     expect(r).toBeNull();
   });
 
-  test("returns null when the file is absent (real tmp dir, no wpsk-kit.json)", () => {
+  test("returns null when the file is absent (real tmp dir, no wpdev-kit.json)", () => {
     const dir = path.join(os.tmpdir(), "wpsk-empty-dir-" + Date.now());
     require("node:fs").mkdirSync(dir, { recursive: true });
     try {
@@ -123,7 +123,7 @@ describe("readManifest() — malformed file (Phase 20.8)", () => {
       readManifest(tmp);
     } catch (e) {
       // The error must surface the path so the user knows which
-      // wpsk-kit.json is corrupt.
+      // wpdev-kit.json is corrupt.
       expect(e.message).toContain(path.join(tmp, MANIFEST_FILENAME));
       expect(e.message).toMatch(/malformed/i);
     }

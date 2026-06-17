@@ -58,10 +58,10 @@ if (is_readable( $wpsk_asset_functions )) {
 	require_once $wpsk_asset_functions;
 }
 
-add_action( 'after_setup_theme', 'wpsk_starter_setup_theme' );
-add_action( 'wp_enqueue_scripts', 'wpsk_starter_enqueue_assets' );
+add_action( 'after_setup_theme', 'wpdev_starter_setup_theme' );
+add_action( 'wp_enqueue_scripts', 'wpdev_starter_enqueue_assets' );
 
-if ( ! function_exists( 'wpsk_starter_setup_theme' )) {
+if ( ! function_exists( 'wpdev_starter_setup_theme' )) {
 	/**
 	 * Load translations for the starter theme.
 	 *
@@ -69,20 +69,20 @@ if ( ! function_exists( 'wpsk_starter_setup_theme' )) {
 	 * (`wpsk-starter`). The `.mo` files live under
 	 * `<theme>/languages/`.
 	 */
-	function wpsk_starter_setup_theme(): void {
+	function wpdev_starter_setup_theme(): void {
 		$cfg         = wpsk_read_project_config();
 		$text_domain = $cfg['textDomain'] ?? 'wpsk-starter';
 		load_theme_textdomain( $text_domain, get_template_directory() . '/languages' );
 	}
 }
 
-if ( ! function_exists( 'wpsk_starter_enqueue_assets' )) {
+if ( ! function_exists( 'wpdev_starter_enqueue_assets' )) {
 	/**
 	 * Enqueue the deps bundle, localize the data contract, and register
 	 * the default stylesheet. Specific bundles (e.g. component JS) are
 	 * enqueued by their own bootstrap modules via the same helpers.
 	 */
-	function wpsk_starter_enqueue_assets(): void {
+	function wpdev_starter_enqueue_assets(): void {
 		// Read branding from project.config.json so that simply editing
 		// the config + rebuild is enough to re-brand the kit (localize
 		// global name, bundle filename for the deps handle, etc.).

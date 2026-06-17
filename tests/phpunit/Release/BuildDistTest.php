@@ -41,7 +41,7 @@ class BuildDistTest extends TestCase
         $this->assertFileExists($distDir . '/.dist-built');
         $this->assertFileExists($distDir . '/project.config.json');
         $this->assertFileExists(
-            $distDir . '/vendor-prefixed/wpsk/framework/src/Core/Plugin.php',
+            $distDir . '/vendor-prefixed/wpdev/framework/src/Core/Plugin.php',
             'dist must run Strauss and scope the framework into vendor-prefixed/'
         );
         $this->assertDirectoryDoesNotExist($distDir . '/tests');

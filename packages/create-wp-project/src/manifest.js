@@ -56,7 +56,7 @@ export const DEFAULT_DIST_MODE = "deps";
  * @param {Record<string,string>} args.features
  *                                    The validated feature set.
  * @param {string} [args.distMode="deps"]
- *                                    "deps" = wpsk/framework via Composer (Phase 23+ default).
+ *                                    "deps" = wpdev/framework via Composer (Phase 23+ default).
  *                                    "vendored" = legacy src/Core copies (pre-Phase 23 projects only).
  * @param {string} [args.generatedAt]  ISO-8601 timestamp; defaults
  *                                    to `new Date().toISOString()`.

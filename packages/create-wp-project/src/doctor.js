@@ -50,7 +50,7 @@
  *     still have framework source copies under `src/Core/`.
  *     Doctor warns if they look hand-edited or are present
  *     (recommend `wpsk update` to migrate to deps). The
- *     actual vendored dep install lives at vendor/wpsk/framework
+ *     actual vendored dep install lives at vendor/wpdev/framework
  *     after composer install. Placeholder logic upgraded for
  *     the src/Core case (no heavy checksums in v3; migration
  *     is the supported cleanup path).
@@ -68,7 +68,7 @@ import { getDepVersions } from "./dep-versions.js";
 /* Constants                                                             */
 /* -------------------------------------------------------------------- */
 
-const VENDORED_FRAMEWORK_DIR = "vendor/wpsk/framework"; // legacy vendored layout (pre-deps); actual copies for old projects were under src/Core/
+const VENDORED_FRAMEWORK_DIR = "vendor/wpdev/framework"; // legacy vendored layout (pre-deps); actual copies for old projects were under src/Core/
 
 /* -------------------------------------------------------------------- */
 /* Helpers                                                               */

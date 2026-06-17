@@ -21,7 +21,7 @@
  *     line (which would be the redundancy marker).
  *
  *   - `core/packages/utils/check-cli.js` was a dead CLI shim duplicated
- *     by `core/packages/build/wpsk-check-cli.js` (Phase 23.B6).
+ *     by `core/packages/build/wpdev-check-cli.js` (Phase 23.B6).
  *     The kit's own `package.json` `check` script now points at the
  *     new (better) CLI. Both halves of that move are locked.
  */
@@ -86,7 +86,7 @@ describe("@core/utils/index.js — re-export discipline", () => {
 describe("@core/utils/check-cli.js — dead file removal", () => {
   // js-review-core: `core/packages/utils/check-cli.js` was a thin CLI
   // shim for `checkProject()`. The same intent is now served by
-  // `core/packages/build/wpsk-check-cli.js` (Phase 23.B6), which adds
+  // `core/packages/build/wpdev-check-cli.js` (Phase 23.B6), which adds
   // structured error handling and uses the same `checkProject` library.
   // The package.json `check` script was repointed accordingly. These
   // tests lock both halves of that move so the dead file cannot
@@ -100,13 +100,13 @@ describe("@core/utils/check-cli.js — dead file removal", () => {
     expect(existsSync(deadPath)).toBe(false);
   });
 
-  test("root package.json `check` script targets wpsk-check-cli.js (not the dead file)", () => {
+  test("root package.json `check` script targets wpdev-check-cli.js (not the dead file)", () => {
     const pkgPath = join(process.cwd(), "package.json");
     const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
     expect(pkg.scripts.check).toBeDefined();
     // The new script points at the better CLI in @wpsk/build. The old
     // target `core/packages/utils/check-cli.js` is gone.
-    expect(pkg.scripts.check).toMatch(/wpsk-check-cli\.js/);
+    expect(pkg.scripts.check).toMatch(/wpdev-check-cli\.js/);
     expect(pkg.scripts.check).not.toMatch(/utils\/check-cli\.js/);
   });
 });

@@ -8,7 +8,7 @@ Generated projects are not write-once. The kit ships a small
 **update / migration mechanism** so a project can move safely
 from one kit version to the next. The mechanism is the same
 Angular/Nx "migration script per version" model, adapted to
-the wp-starter-kit's `wpsk-kit.json` manifest.
+the wp-starter-kit's `wpdev-kit.json` manifest.
 
 This document covers:
 
@@ -167,7 +167,7 @@ Checks (one per documented drift category):
 
 | Check | What it detects                                                          | Severity |
 | ----- | ------------------------------------------------------------------------ | -------- |
-| 1     | `wpsk-kit.json` is missing                                               | error    |
+| 1     | `wpdev-kit.json` is missing                                               | error    |
 | 2     | A feature id in `manifest.features` is not in the catalog                | error    |
 | 3     | `manifest.kitVersion` is NEWER than the installed kit's own version      | warning  |
 | 4     | `manifest.distMode === "vendored"` and the framework files were modified | warning  |
@@ -218,7 +218,7 @@ upgrade requires a **migration**:
   **"upgrade the kit first"** message.
 
 Unknown schema versions are **never silently ignored**. A
-consumer that hand-edits `wpsk-kit.json` to a future schema
+consumer that hand-edits `wpdev-kit.json` to a future schema
 that the running kit doesn't understand will see a clear
 "this kit is too old — run `wpsk update`" error from the
 doctor, not a silent crash later in the build.

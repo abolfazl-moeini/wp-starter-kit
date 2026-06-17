@@ -11,9 +11,9 @@ code:
 | Mode       | How the consumer gets the framework                                                                                                             | When                                                            |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
 | `vendored` | Framework files are copied into the consumer's tree at scaffold time. Updates are reapplied by `wpsk update`.                                   | Phases 20–22 default; the kit's pre-Phase 23 shape.             |
-| `deps`     | Framework lives in `node_modules/@wpsk/*` (JS) and `vendor/wpsk/framework` (PHP). Updates are `composer update` / `npm update` plus migrations. | Phase 23 default (new scaffolds); opt-in for existing projects. |
+| `deps`     | Framework lives in `node_modules/@wpsk/*` (JS) and `vendor/wpdev/framework` (PHP). Updates are `composer update` / `npm update` plus migrations. | Phase 23 default (new scaffolds); opt-in for existing projects. |
 
-The `wpsk-kit.json` manifest records which mode a project is on:
+The `wpdev-kit.json` manifest records which mode a project is on:
 
 ```json
 {
@@ -62,12 +62,12 @@ publishable set, asserted by `tests/packages/publishable.test.js`):
 | `@wpsk/dependency-extraction-esbuild-plugin` | esbuild plugin that extracts WP-style script dependency registrations | `devDependencies` (transitive of `@wpsk/build`) |
 
 The internal package `@core/utils` (workspace, not publishable)
-holds the `checkProject` logic; `@wpsk/build` exposes a `wpsk-check`
+holds the `checkProject` logic; `@wpsk/build` exposes a `wpdev-check`
 bin that delegates to it. Keeping `@core/utils` internal lets the
 kit's own tests reach it via the workspace without polluting the
 public package surface.
 
-The PHP side ships as the **`wpsk/framework` Composer package**
+The PHP side ships as the **`wpdev/framework` Composer package**
 (Phase 23.A). It lives at `packages/framework/` and is registered
 in the root `composer.json` as a path repository so kit-side
 tests resolve to the local checkout.
@@ -80,7 +80,7 @@ A freshly-scaffolded consumer project (Phase 23 onward) has no
 ```text
 my-project/
 ├── package.json          # declares @wpsk/* as deps + devDeps
-├── composer.json         # declares wpsk/framework as a Composer dep
+├── composer.json         # declares wpdev/framework as a Composer dep
 ├── node_modules/
 │   └── @wpsk/
 │       ├── hooks/
@@ -93,7 +93,7 @@ my-project/
 │       └── dependency-extraction-esbuild-plugin/
 ├── vendor/
 │   └── wpsk/
-│       └── framework/    # Composer-installed wpsk/framework
+│       └── framework/    # Composer-installed wpdev/framework
 └── ...
 ```
 
@@ -108,11 +108,11 @@ those packages:
 {
   "scripts": {
     "build": "npm-run-all --parallel build:dependencies build:components build:styles build:assets",
-    "build:dependencies": "wpsk-build-dependencies",
-    "build:components": "wpsk-build-components",
-    "build:styles": "wpsk-build-styles",
-    "build:assets": "wpsk-build-dependencies",
-    "check": "wpsk-check"
+    "build:dependencies": "wpdev-build-dependencies",
+    "build:components": "wpdev-build-components",
+    "build:styles": "wpdev-build-styles",
+    "build:assets": "wpdev-build-dependencies",
+    "check": "wpdev-check"
   },
   "dependencies": {
     "@wpsk/hooks": "^0.1.0",
@@ -135,17 +135,17 @@ The bins are declared in `@wpsk/build`'s `package.json`:
 {
   "name": "@wpsk/build",
   "bin": {
-    "wpsk-build-dependencies": "./esbuild-dependencies-cli.js",
-    "wpsk-build-components": "./esbuild-components-cli.js",
-    "wpsk-build-styles": "./esbuild-styles-cli.js",
-    "wpsk-check": "./wpsk-check-cli.js"
+    "wpdev-build-dependencies": "./esbuild-dependencies-cli.js",
+    "wpdev-build-components": "./esbuild-components-cli.js",
+    "wpdev-build-styles": "./esbuild-styles-cli.js",
+    "wpdev-check": "./wpdev-check-cli.js"
   }
 }
 ```
 
 ### PHP side
 
-`composer install` resolves `wpsk/framework` from the configured
+`composer install` resolves `wpdev/framework` from the configured
 repository. The consumer's `composer.json` requires the framework
 and a path repo (only when the consumer lives next to a kit
 checkout):
@@ -153,7 +153,7 @@ checkout):
 ```json
 {
   "require": {
-    "wpsk/framework": "*"
+    "wpdev/framework": "*"
   },
   "repositories": [
     {
@@ -166,7 +166,7 @@ checkout):
 ```
 
 For a real consumer (no kit checkout present), the `repositories`
-entry is omitted and `wpsk/framework` resolves from packagist or
+entry is omitted and `wpdev/framework` resolves from packagist or
 the kit's own Composer registry.
 
 ## Dev mode (workspace) vs published mode
@@ -201,12 +201,12 @@ is the source of truth for the absolute workspace path.
 ```bash
 # In the consumer project
 npm install          # pulls @wpsk/* from the configured registry
-composer install     # pulls wpsk/framework from packagist / Composer registry
+composer install     # pulls wpdev/framework from packagist / Composer registry
 ```
 
 No `core/` or `packages/` directory exists in the consumer's
 tree. The framework lives entirely under `node_modules/@wpsk/*`
-and `vendor/wpsk/framework/`. This is the mode a real
+and `vendor/wpdev/framework/`. This is the mode a real
 production consumer uses — and the mode Phase 23 builds toward
 by default.
 
@@ -220,7 +220,7 @@ by default.
 | Continuous integration of a consumer project            | Published                       |
 | Smoke-testing a fresh scaffold against the dev checkout | Workspace (path repo + symlink) |
 
-The `wpsk-kit.json` `distMode` field tracks the _consumer's_
+The `wpdev-kit.json` `distMode` field tracks the _consumer's_
 mode; the kit itself is always in workspace mode during
 development.
 
@@ -241,13 +241,13 @@ The flip is a single field in the manifest. Two migration paths:
 
 The scaffold:
 
-1. Emits a `composer.json` that requires `wpsk/framework` (no
+1. Emits a `composer.json` that requires `wpdev/framework` (no
    `WPSK\\` → src/ would only have been for the old vendored copies; deps uses the package autoload).
 2. Emits a `package.json` that lists the eight `@wpsk/*` packages
    (six runtime, two build) with versions from
    `getDepVersions()`.
 3. Emits build scripts that call the installed bins
-   (`wpsk-build-dependencies`, etc.) — never the vendored
+   (`wpdev-build-dependencies`, etc.) — never the vendored
    `node core/packages/...` path.
 
 ### Existing projects (migration)
@@ -256,14 +256,14 @@ A pre-Phase 23 project has `distMode: "vendored"` and
 `core/packages/*` vendored into its own tree. Migrating is
 `wpsk update`'s job (Phase 24). The migration:
 
-1. Adds the `wpsk/framework` Composer require + (in dev mode)
+1. Adds the `wpdev/framework` Composer require + (in dev mode)
    the path repo.
 2. Adds the eight `@wpsk/*` npm packages to `package.json`.
 3. Rewrites the build scripts to call the installed bins.
 4. Removes the vendored `core/packages/*` tree (only after
    the new dep set resolves successfully and a test
    pass confirms the consumer project still works).
-5. Updates `wpsk-kit.json`: `distMode` becomes `"deps"`.
+5. Updates `wpdev-kit.json`: `distMode` becomes `"deps"`.
 
 `wpsk doctor` is the safety net: it flags a project that is on
 `"vendored"` mode but missing the vendored tree (or on `"deps"`
@@ -281,7 +281,7 @@ whole framework in one step because:
 - The 6 lib packages and the 2 build packages share a single
   registry (`getDepVersions()`); a partial migration is just a
   half-installed registry.
-- The composer side (`wpsk/framework`) and the npm side
+- The composer side (`wpdev/framework`) and the npm side
   (`@wpsk/*`) are independent in the workspace but the
   consumer sees them as a single "framework" — a project on
   `distMode: "deps"` with only one of the two installed is
@@ -296,6 +296,6 @@ whole framework in one step because:
   the `@wpsk/build` package in detail.
 - `docs/updating-projects.md` — `wpsk update` + `wpsk doctor`
   - migrations.
-- `docs/features-and-manifest.md` — the `wpsk-kit.json`
+- `docs/features-and-manifest.md` — the `wpdev-kit.json`
   schema and the feature toggles.
 - `plan.v3.md` §23 — the full Phase 23 design.

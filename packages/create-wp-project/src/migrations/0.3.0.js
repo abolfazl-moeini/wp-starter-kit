@@ -1,5 +1,5 @@
 /**
- * 0.3.0 migration — wpsk-kit.json → wpdev-kit.json rebrand.
+ * 0.3.0 migration — wpdev-kit.json → wpdev-kit.json rebrand.
  *
  * Renames the legacy manifest for consumers upgrading from pre-rebrand kits.
  * Optionally patches project.config.json only if it still has old default
@@ -15,9 +15,9 @@ import { updateJsonFile } from "../json-utils.js";
 
 export const version = "0.3.0";
 export const description =
-  "Rename wpsk-kit.json → wpdev-kit.json (rebrand) and patch legacy default branding in project.config.json if present";
+  "Rename wpdev-kit.json → wpdev-kit.json (rebrand) and patch legacy default branding in project.config.json if present";
 
-const OLD_MANIFEST = "wpsk-kit.json";
+const OLD_MANIFEST = "wpdev-kit.json";
 const NEW_MANIFEST = "wpdev-kit.json";
 
 const LEGACY_DEFAULTS = {

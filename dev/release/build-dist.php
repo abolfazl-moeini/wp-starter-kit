@@ -4,7 +4,7 @@
  * install dependencies and run Strauss to scope vendor code.
  *
  * Phase 23.A6 GREEN: the framework code lives in
- * `packages/framework/` (the wpsk/framework Composer package).
+ * `packages/framework/` (the wpdev/framework Composer package).
  * For the dist, the framework is installed as a dependency and
  * scoped by Strauss (the pre-Phase-23 strauss.json excluded
  * WPDev because the framework was a first-party copy; post-23 the
@@ -15,7 +15,7 @@
  *   2. Copy the kit's source tree into dist/{slug}/ (excluding
  *      dev-only files like tests/, dev/, node_modules/, etc.).
  *   3. Re-emit a CONSUMER-shaped composer.json into the dist:
- *        - requires wpsk/framework (path repo pointing at the
+ *        - requires wpdev/framework (path repo pointing at the
  *          kit's local packages/framework)
  *        - autoloads {Vendor}\\ → src/ (the user's own modules)
  *   4. Re-emit a CONSUMER-shaped strauss.json into the dist that
@@ -107,7 +107,7 @@ function wpsk_dist_exclude_patterns(): array
         // 1-line bridge shims that re-include the framework files
         // from the kit's own `packages/framework/`. In the dist
         // the framework is installed as a Composer dependency
-        // (wpsk/framework) under vendor/, so the shims are dead
+        // (wpdev/framework) under vendor/, so the shims are dead
         // (and worse: they'd load the wrong path at runtime).
         // Exclude them from the dist tree.
         'src/Core',
@@ -183,7 +183,7 @@ function wpsk_build_dist_composer_json(array $config, string $frameworkPath): st
 
     // The vendor namespace root is the consumer's globalName. The
     // framework's WPDev\\ namespace is shipped as a dependency
-    // (wpsk/framework) and resolved via the path repo.
+    // (wpdev/framework) and resolved via the path repo.
     $payload = [
         'name' => "{$vendorNamespaceLower}/{$slug}",
         'description' => $description,
@@ -207,11 +207,11 @@ function wpsk_build_dist_composer_json(array $config, string $frameworkPath): st
         ],
         'require' => [
             'php' => ">={$phpMin}",
-            // wpsk/framework: *@dev is the path-repo-friendly
+            // wpdev/framework: *@dev is the path-repo-friendly
             // form (it accepts the dev-main version that path
             // repos resolve to). For the published-mode dep
             // (Phase 23.B), the require would be a pinned semver.
-            'wpsk/framework' => '*@dev',
+            'wpdev/framework' => '*@dev',
         ],
         'autoload' => [
             'psr-4' => [
@@ -220,7 +220,7 @@ function wpsk_build_dist_composer_json(array $config, string $frameworkPath): st
         ],
         // Strauss reads config from composer.json extra/strauss
         // (NOT the standalone strauss.json file). Whitelist only
-        // wpsk/framework so Strauss does not traverse
+        // wpdev/framework so Strauss does not traverse
         // brianhenryie/strauss's symfony deps (array PSR-4 paths
         // crash FileEnumerator on strauss 0.11.x).
         'extra' => [
@@ -231,7 +231,7 @@ function wpsk_build_dist_composer_json(array $config, string $frameworkPath): st
                 'constant_prefix' => strtoupper((string) ($config['vendorPrefix'] ?? 'WpskVendor')) . '_',
                 'delete_vendor_files' => true,
                 'include_modified_files' => false,
-                'packages' => ['wpsk/framework'],
+                'packages' => ['wpdev/framework'],
                 'exclude_from_prefix' => [
                     'namespaces' => [],
                     'file_patterns' => [],
@@ -265,20 +265,20 @@ function wpsk_build_dist_strauss_json(array $config): string
         'classmap_prefix' => $vendorPrefix . '_',
         'constant_prefix' => strtoupper($vendorPrefix) . '_',
         // Phase 23.A6: WPDev is no longer excluded from prefixing.
-        // The framework is a dependency (vendor/wpsk/framework/),
+        // The framework is a dependency (vendor/wpdev/framework/),
         // so its WPDev namespace SHOULD be scoped to
         // {vendorPrefix}\WPDev\... The dist's `vendor/` is the
         // only thing strauss touches, and the framework lives
         // there.
         'delete_vendor_files' => true,
         'include_modified_files' => false,
-        // Whitelist: only process wpsk/framework. Strauss 0.8.1
+        // Whitelist: only process wpdev/framework. Strauss 0.8.1
         // chokes on multi-dir PSR-4 entries (e.g. some symfony
         // polyfills ship `"X\\": ["src/", "Resources/"]`). The
         // dist's vendor/ also contains the bundled dev tools
         // (brianhenryie/strauss + symfony/* + composer/*), which
         // we don't want scoped — only the framework.
-        'packages' => ['wpsk/framework'],
+        'packages' => ['wpdev/framework'],
         'exclude_from_prefix' => [
             'namespaces' => [],
             'file_patterns' => [],
@@ -330,7 +330,7 @@ wpsk_copy_tree($root, $distRoot, $exclude);
 
 /**
  * Phase 23.A2 → 23.A6: the framework's `src/Core/` and
- * `src/Support/` moved into the `wpsk/framework` Composer
+ * `src/Support/` moved into the `wpdev/framework` Composer
  * package (`packages/framework/src/`). The dist installs the
  * framework as a dependency via `composer install --no-dev`
  * (below), so we do NOT copy the framework into the dist's

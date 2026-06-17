@@ -4,7 +4,7 @@
  * The kit is moving to a "deps" distribution model where the
  * consumer project installs the framework as npm packages
  * (rather than vendoring framework code into the consumer's
- * `core/packages/*`). Phase 23.A wired the PHP side (`wpsk/framework`
+ * `core/packages/*`). Phase 23.A wired the PHP side (`wpdev/framework`
  * via Composer). Phase 23.B is the JS analogue: the scaffold's
  * emitted `package.json` must list the @wpsk/* packages the
  * consumer needs, not relative `core/packages/*` paths.

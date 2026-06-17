@@ -110,7 +110,7 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
   test("emits the BC golden file list for the default plugin feature set (deps mode: no framework copies)", () => {
     const out = coreRun(makeCtx());
     const files = Object.keys(out.files);
-    // Phase 23: consumer gets framework from wpsk/framework dep; scaffold
+    // Phase 23: consumer gets framework from wpdev/framework dep; scaffold
     // only emits thin glue + user-owned src/Modules (when example on).
     // Core no longer writes src/Core/* (those live in the installed package).
     expect(files).toContain("project.config.json");
@@ -145,13 +145,13 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
   });
 
   // Phase 23: the WPSK\\Core framework classes are provided exclusively
-  // by the "wpsk/framework" Composer dependency (see packages/framework/src/Core/*).
+  // by the "wpdev/framework" Composer dependency (see packages/framework/src/Core/*).
   // The scaffold never emits src/Core/*.php copies for consumer projects
   // (they would be dead files: consumer autoload only maps the user's
   // vendor ns to src/, and the dep satisfies the WPSK references from
   // the plugin bootstrap and user modules). These bodies are tested
   // in the framework package's own PHPUnit suite instead.
-  test("does NOT emit src/Core/* framework sources (they come from wpsk/framework dep)", () => {
+  test("does NOT emit src/Core/* framework sources (they come from wpdev/framework dep)", () => {
     const out = coreRun(makeCtx());
     expect(out.files["src/Core/Plugin.php"]).toBeUndefined();
     expect(out.files["src/Core/ModuleInterface.php"]).toBeUndefined();

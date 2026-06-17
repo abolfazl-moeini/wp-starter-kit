@@ -1,9 +1,9 @@
-// __WPSK_LOCALIZE_VAR__ is injected by esbuild (buildDepsConfig / build for
+// __WPDEV_LOCALIZE_VAR__ is injected by esbuild (buildDepsConfig / build for
 // components) from project.config.json → localizeVar. Fallback keeps the
 // kit itself working even if a particular bundle config omits the define.
 const LOCALIZE_VAR =
-  typeof __WPSK_LOCALIZE_VAR__ !== "undefined"
-    ? __WPSK_LOCALIZE_VAR__
+  typeof __WPDEV_LOCALIZE_VAR__ !== "undefined"
+    ? __WPDEV_LOCALIZE_VAR__
     : "WPSKLoc";
 
 function getLocalizeRoot() {

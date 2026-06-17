@@ -8,7 +8,7 @@
  * would diverge.
  *
  * `globalName` is injected by esbuild `define` at build time
- * (__WPSK_GLOBAL_NAME__).  Fallback keeps the kit working in dev/test when
+ * (__WPDEV_GLOBAL_NAME__).  Fallback keeps the kit working in dev/test when
  * the define is absent.
  *
  * Both the default export (a getter function) and the named `getHooks`
@@ -22,7 +22,7 @@
  */
 
 const FALLBACK_GLOBAL =
-  typeof __WPSK_GLOBAL_NAME__ !== "undefined" ? __WPSK_GLOBAL_NAME__ : "WPSK";
+  typeof __WPDEV_GLOBAL_NAME__ !== "undefined" ? __WPDEV_GLOBAL_NAME__ : "WPSK";
 
 function resolveGlobalName(override) {
   return override || FALLBACK_GLOBAL;

@@ -2,7 +2,7 @@
 /**
  * Phase 23.A2b compatibility bridge shim.
  *
- * The implementation moved to the wpsk/framework Composer
+ * The implementation moved to the wpdev/framework Composer
  * package at packages/framework/src/. This thin shim keeps the
  * legacy src/Core / src/Support path loadable until every
  * reference in the kit and its consumers has been migrated.

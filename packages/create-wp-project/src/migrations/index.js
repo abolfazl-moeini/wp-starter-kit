@@ -180,7 +180,7 @@ const PROJECT_CONFIG_FILENAME = "project.config.json";
  * second call is a no-op.
  *
  * Pre-conditions checked in order:
- *   1. `wpsk-kit.json` exists at `dir` (else
+ *   1. `wpdev-kit.json` exists at `dir` (else
  *      `{ok:false, reason:"no manifest"}`).
  *   2. The manifest's `kitVersion` is < `to` (else already-current).
  *
@@ -314,7 +314,7 @@ export async function runMigrations(dir, { from, to } = {}) {
   // 8. Mirror the kitVersion into project.config.json if it
   //    exists. The manifest is the source of truth; the mirror
   //    is for pre-Phase 20 readers (the kit's PHP classes, the
-  //    JS asset bundle) that haven't discovered wpsk-kit.json.
+  //    JS asset bundle) that haven't discovered wpdev-kit.json.
   //    We use `updateJsonFile` so the file's existing indent
   //    and trailing-newline state are preserved.
   const cfgPath = path.join(dir, PROJECT_CONFIG_FILENAME);

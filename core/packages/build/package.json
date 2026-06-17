@@ -5,11 +5,11 @@
   "type": "module",
   "main": "index.js",
   "bin": {
-    "wpsk-build-dependencies": "./esbuild-dependencies-cli.js",
-    "wpsk-build-components": "./esbuild-components-cli.js",
-    "wpsk-build-styles": "./esbuild-styles-cli.js",
-    "wpsk-build-assets": "./build-assets-cli.js",
-    "wpsk-check": "./wpsk-check-cli.js"
+    "wpdev-build-dependencies": "./esbuild-dependencies-cli.js",
+    "wpdev-build-components": "./esbuild-components-cli.js",
+    "wpdev-build-styles": "./esbuild-styles-cli.js",
+    "wpdev-build-assets": "./build-assets-cli.js",
+    "wpdev-check": "./wpdev-check-cli.js"
   },
   "exports": {
     ".": "./index.js",
@@ -28,7 +28,7 @@
     "esbuild-styles-cli.js",
     "build-assets.js",
     "build-assets-cli.js",
-    "wpsk-check-cli.js",
+    "wpdev-check-cli.js",
     "build-all.js"
   ],
   "dependencies": {

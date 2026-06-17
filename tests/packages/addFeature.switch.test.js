@@ -126,7 +126,7 @@ describe("addFeature() — variant switch (Phase 22.7, 22.8)", () => {
     expect(await fileExists(path.join(tmp, "tsconfig.json"))).toBe(true);
   });
 
-  test("variant switch updates wpsk-kit.json features.js to the new variant", async () => {
+  test("variant switch updates wpdev-kit.json features.js to the new variant", async () => {
     await seedProject(tmp, {
       features: { ...defaultFeatures(), js: "typescript" },
     });
@@ -140,7 +140,7 @@ describe("addFeature() — variant switch (Phase 22.7, 22.8)", () => {
     const res = await addFeature(tmp, "js", "flow");
     expect(res.ok).toBe(true);
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
     );
     expect(manifest.features.js).toBe("flow");
   });

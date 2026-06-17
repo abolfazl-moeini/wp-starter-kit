@@ -16,7 +16,7 @@
  *
  * Checks (one per test, 4 total):
  *
- *  1. `wpsk-kit.json` (the manifest) is present. Missing →
+ *  1. `wpdev-kit.json` (the manifest) is present. Missing →
  *     `errors.push("manifest missing")`. This is the only
  *     FATAL check that doesn't need a manifest to detect.
  *
@@ -93,7 +93,7 @@ async function seedHealthy({
     features: features || defaultFeatureSet(),
   };
   await fs.writeFile(
-    path.join(dir, "wpsk-kit.json"),
+    path.join(dir, "wpdev-kit.json"),
     JSON.stringify(manifest, null, 2) + "\n",
     "utf8",
   );
@@ -118,7 +118,7 @@ describe("doctorProject() — check 1: manifest present (Phase 24.9)", () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  test("when wpsk-kit.json is missing, errors contains 'manifest missing'", () => {
+  test("when wpdev-kit.json is missing, errors contains 'manifest missing'", () => {
     const res = doctorProject(tmpDir);
     expect(res.ok).toBe(false);
     expect(res.errors).toContain("manifest missing");
@@ -130,11 +130,11 @@ describe("doctorProject() — check 1b: unsupported manifest schema", () => {
   beforeEach(async () => {
     tmpDir = await seedHealthy();
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmpDir, "wpsk-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
     );
     manifest.schema = 99;
     await fs.writeFile(
-      path.join(tmpDir, "wpsk-kit.json"),
+      path.join(tmpDir, "wpdev-kit.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -268,7 +268,7 @@ describe("doctorProject() — malformed manifest (Phase 24.10)", () => {
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-doctor-bad-"));
     await fs.writeFile(
-      path.join(tmpDir, "wpsk-kit.json"),
+      path.join(tmpDir, "wpdev-kit.json"),
       '{ "schema": 1, "kit',
       "utf8",
     );
@@ -277,7 +277,7 @@ describe("doctorProject() — malformed manifest (Phase 24.10)", () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  test("malformed JSON in wpsk-kit.json surfaces as a warning (NOT a throw)", () => {
+  test("malformed JSON in wpdev-kit.json surfaces as a warning (NOT a throw)", () => {
     // The contract: doctorProject NEVER throws. A broken
     // manifest is a warning the user can act on, not a
     // fatal error.

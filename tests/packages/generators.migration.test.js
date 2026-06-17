@@ -7,7 +7,7 @@
  * `features` arg) MUST still produce the same file set the
  * legacy scaffold produced, plus the new v3 additions:
  *
- *   - `wpsk-kit.json` (manifest)
+ *   - `wpdev-kit.json` (manifest)
  *   - `features` key in `project.config.json` (dual-written
  *     by syncFeaturesToConfig)
  *   - `composer.json`, `.gitignore`, `.editorconfig`
@@ -72,7 +72,7 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     const written = new Set(res.written || []);
 
     // Post-Phase 23 golden list (deps mode): framework Core classes
-    // come from wpsk/framework dep, not copied into src/Core.
+    // come from wpdev/framework dep, not copied into src/Core.
     const legacyGolden = [
       "project.config.json",
       "build.config.json",
@@ -106,7 +106,7 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     const written = new Set(res.written || []);
     // v3 additions: composer.json, .gitignore, .editorconfig, LICENSE,
     // phpunit.xml, tests/phpunit/bootstrap.php, languages/.gitkeep,
-    // wpsk-kit.json (manifest).
+    // wpdev-kit.json (manifest).
     expect(written.has("composer.json")).toBe(true);
     expect(written.has(".gitignore")).toBe(true);
     expect(written.has(".editorconfig")).toBe(true);
@@ -114,14 +114,14 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     expect(written.has("phpunit.xml")).toBe(true);
     expect(written.has("tests/phpunit/bootstrap.php")).toBe(true);
     expect(written.has("languages/.gitkeep")).toBe(true);
-    expect(written.has("wpsk-kit.json")).toBe(true);
+    expect(written.has("wpdev-kit.json")).toBe(true);
   });
 
-  test("the manifest wpsk-kit.json carries the default feature set + kitVersion + distMode='deps'", async () => {
+  test("the manifest wpdev-kit.json carries the default feature set + kitVersion + distMode='deps'", async () => {
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(true);
     const manifestRaw = await fs.readFile(
-      path.join(tmp, "wpsk-kit.json"),
+      path.join(tmp, "wpdev-kit.json"),
       "utf8",
     );
     const manifest = JSON.parse(manifestRaw);
@@ -141,7 +141,7 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
       await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
     );
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
     );
     expect(cfg.features).toEqual(manifest.features);
   });
@@ -212,7 +212,7 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     expect(written.has("src/Core/Plugin.php")).toBe(false); // Phase 23: not emitted in deps mode
     // The manifest reflects the supplied features.
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
     );
     expect(manifest.features.js).toBe("none");
   });
@@ -294,16 +294,16 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     expect(r2.ok).toBe(true);
     expect(r2.written?.length).toBeGreaterThan(0);
     // Every file in run #1 must be present in run #2 with the same body,
-    // EXCEPT wpsk-kit.json (the only timestamped file).
+    // EXCEPT wpdev-kit.json (the only timestamped file).
     for (const rel of written1) {
-      if (rel === "wpsk-kit.json") continue;
+      if (rel === "wpdev-kit.json") continue;
       const onDisk = await fs.readFile(path.join(tmp, rel), "utf8");
       expect(onDisk).toBe(files1[rel]);
     }
     // The manifest's generatedAt must differ (sanity).
-    const m1 = JSON.parse(files1["wpsk-kit.json"]);
+    const m1 = JSON.parse(files1["wpdev-kit.json"]);
     const m2 = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
     );
     expect(m2.generatedAt).not.toBe(m1.generatedAt);
     // And the manifest's kitVersion + features + distMode must match.

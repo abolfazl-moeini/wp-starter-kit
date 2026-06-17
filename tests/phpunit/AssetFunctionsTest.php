@@ -178,15 +178,15 @@ class AssetFunctionsTest extends TestCase
     public function test_enqueue_stylesheet_prefers_plugin_path_when_plugin_file_exists(): void
     {
         // Simulate a plugin installed at a separate location by
-        // defining WPSK_STARTER_PLUGIN_DIR and overriding plugin_dir_path()
+        // defining WPDEV_STARTER_PLUGIN_DIR and overriding plugin_dir_path()
         // through $GLOBALS['wpsk_test_plugin_dir']. The fake plugin
         // has its own assets/stylesheets/ subdir with a fixture file.
         $fakePlugin = $this->tmpDir . '/fake-plugin';
         $fakeStyles = $fakePlugin . '/assets/stylesheets/style.css';
         mkdir(dirname($fakeStyles), 0777, true);
         file_put_contents($fakeStyles, 'body{color:red}');
-        if (!defined('WPSK_STARTER_PLUGIN_DIR')) {
-            define('WPSK_STARTER_PLUGIN_DIR', $fakePlugin);
+        if (!defined('WPDEV_STARTER_PLUGIN_DIR')) {
+            define('WPDEV_STARTER_PLUGIN_DIR', $fakePlugin);
         }
         $GLOBALS['wpsk_test_plugin_dir'] = $fakePlugin;
         $GLOBALS['wpsk_test_wp_calls']   = [];

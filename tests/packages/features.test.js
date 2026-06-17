@@ -157,7 +157,7 @@ describe("defaultFeatures() — all-default feature set (Phase 20.2)", () => {
 
   test("defaultFeatures() result matches plan.v3.md §1 (first variant per feature)", () => {
     // Source of truth: plan.v3.md §1 table, which states
-    // "first = default" for every feature row. The `wpsk-kit.json`
+    // "first = default" for every feature row. The `wpdev-kit.json`
     // example in plan.v3.md §Phase 20 has `jsLib: "preact"` and
     // `restBatch: "on"` but those conflict with §1's
     // `jsLib: none, preact, react` and `restBatch: off, on` — the

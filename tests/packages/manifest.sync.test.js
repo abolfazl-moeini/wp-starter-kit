@@ -12,11 +12,11 @@ import { removeFeature } from "../../packages/create-wp-project/src/removeFeatur
  * Phase 20.14 / 20.15 — syncFeaturesToConfig(dir, features).
  *
  * The scaffold (Phase 21) writes the same `features` object to
- * BOTH `wpsk-kit.json` AND a `features` key inside
+ * BOTH `wpdev-kit.json` AND a `features` key inside
  * `project.config.json`. This helper does the project.config.json
  * half — the manifest half is `writeManifest`.
  *
- * Why both? `wpsk-kit.json` is the durable kit state (kitVersion,
+ * Why both? `wpdev-kit.json` is the durable kit state (kitVersion,
  * distMode, generatedAt, features). `project.config.json` is the
  * project's primary config — every runtime helper (readProjectConfig,
  * the kit's PHP classes, the JS asset bundle) already reads it.
@@ -24,8 +24,8 @@ import { removeFeature } from "../../packages/create-wp-project/src/removeFeatur
  *
  *  - A consumer that only knows about project.config.json
  *    (pre-Phase 20 readers) can still answer "which features are
- *    on?" without discovering wpsk-kit.json.
- *  - The kit's own state (wpsk-kit.json) is self-contained —
+ *    on?" without discovering wpdev-kit.json.
+ *  - The kit's own state (wpdev-kit.json) is self-contained —
  *    no need to dereference project.config.json.
  *
  * Two contracts are locked here:
@@ -223,7 +223,7 @@ describe("syncFeaturesToConfig() — project.config.json sync (Phase 20.15)", ()
  *
  * Per plan.v3.md §22.13, the installer's `wpsk add` and `wpsk remove`
  * commands go through `addFeature()` and `removeFeature()` — and
- * BOTH must keep `wpsk-kit.json` AND `project.config.json`'s
+ * BOTH must keep `wpdev-kit.json` AND `project.config.json`'s
  * `features` key in sync (the same contract `scaffoldProject`
  * honors via `syncFeaturesToConfig`).
  *
@@ -235,7 +235,7 @@ describe("syncFeaturesToConfig() — project.config.json sync (Phase 20.15)", ()
  *
  * Without 22.13 (i.e. if addFeature/removeFeature forgot to call
  * `syncFeaturesToConfig`), the `project.config.json` half of these
- * tests would fail — the wpsk-kit.json half is updated by
+ * tests would fail — the wpdev-kit.json half is updated by
  * `writeManifest`, but project.config.json is the one the kit's
  * runtime reads, so it's the one that must NOT drift.
  */
@@ -250,7 +250,7 @@ describe("addFeature() / removeFeature() — keep manifest + project.config.json
 
   /**
    * Seed a project whose husky feature starts OFF and whose
-   * `wpsk-kit.json` + `project.config.json` features are
+   * `wpdev-kit.json` + `project.config.json` features are
    * consistent. addFeature / removeFeature both rely on this
    * pre-condition.
    */
@@ -279,15 +279,15 @@ describe("addFeature() / removeFeature() — keep manifest + project.config.json
     await writeManifest(tmp, manifest);
   }
 
-  test("addFeature(husky, on) updates BOTH wpsk-kit.json and project.config.json", async () => {
+  test("addFeature(husky, on) updates BOTH wpdev-kit.json and project.config.json", async () => {
     await seedHuskyOff();
 
     const res = await addFeature(tmp, "husky", "on");
     expect(res.ok).toBe(true);
 
-    // wpsk-kit.json side
+    // wpdev-kit.json side
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
     );
     expect(manifest.features.husky).toBe("on");
 
@@ -300,7 +300,7 @@ describe("addFeature() / removeFeature() — keep manifest + project.config.json
     expect(cfg.features.husky).toBe("on");
   });
 
-  test("removeFeature(husky) updates BOTH wpsk-kit.json and project.config.json", async () => {
+  test("removeFeature(husky) updates BOTH wpdev-kit.json and project.config.json", async () => {
     // Seed: husky:on (default) + the husky artifact on disk.
     const features = { ...defaultFeatures(), husky: "on" };
     const cfg = {
@@ -339,9 +339,9 @@ describe("addFeature() / removeFeature() — keep manifest + project.config.json
     expect(res.ok).toBe(true);
     expect(res.removed).toContain(".husky/pre-commit");
 
-    // wpsk-kit.json side
+    // wpdev-kit.json side
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpsk-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
     );
     expect(manifest.features.husky).toBe("off");
 

@@ -90,7 +90,7 @@ class SrcPsr4Test extends TestCase
         $root = dirname(__DIR__, 3);
         // Phase 23.A2: the framework's `src/Core/` was moved into
         // `packages/framework/src/Core/` so it can be installed as
-        // the `wpsk/framework` Composer package. The kit still
+        // the `wpdev/framework` Composer package. The kit still
         // depends on those classes (and tests rely on them), so
         // the new location is the load-bearing one.
         $this->assertDirectoryExists(
@@ -112,7 +112,7 @@ class SrcPsr4Test extends TestCase
     /* ----------------------------------------------------------------- */
 
     /**
-     * Enumerate every class file that ships with the wpsk/framework
+     * Enumerate every class file that ships with the wpdev/framework
      * package (under packages/framework/src/). Used by the
      * bridge-shim tests below to assert that EACH of them is
      * loadable from BOTH the framework package path AND the

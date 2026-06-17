@@ -1,13 +1,13 @@
 <?php
 /**
- * Phase 23.A1 RED — wpsk/framework package metadata contract.
+ * Phase 23.A1 RED — wpdev/framework package metadata contract.
  *
  * The kit's stable PHP code (under `src/Core/` and `src/Support/`)
  * is being moved to a real Composer package so consumers can
  * install it as a dependency instead of having it copied. This
  * test locks the metadata contract for that package:
  *
- *   - name:    "wpsk/framework"
+ *   - name:    "wpdev/framework"
  *   - type:    "library"
  *   - license: present
  *   - require: includes "php" >= "7.4" and does NOT hard-require
@@ -62,9 +62,9 @@ class PackageMetadataTest extends TestCase
     public function test_package_name_is_wpsk_framework(): void
     {
         $this->assertSame(
-            'wpsk/framework',
+            'wpdev/framework',
             $this->pkg['name'] ?? null,
-            'Framework package must be named wpsk/framework'
+            'Framework package must be named wpdev/framework'
         );
     }
 

@@ -26,7 +26,7 @@
  *
  * Why `unknown` casts in the assertions: `assets/dependencies.ts`
  * imports `createHooks` from `@wordpress/hooks` (an OPTIONAL runtime
- * dep) and uses the `__WPSK_HOOK_PREFIX__` esbuild define. When
+ * dep) and uses the `__WPDEV_HOOK_PREFIX__` esbuild define. When
  * `@wordpress/hooks` is not installed and the defines are not
  * registered, tsc infers the exports as `any` / `unknown`. The
  * assertions below cast through `unknown` to assert the SHAPE (an

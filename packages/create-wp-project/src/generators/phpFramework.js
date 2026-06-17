@@ -3,7 +3,7 @@
  *
  * When `phpFramework:wpdev`, documents the integration seam and
  * adds a composer `suggest` entry for wpdev-framework-core.
- * The adapter class ships in `wpsk/framework`
+ * The adapter class ships in `wpdev/framework`
  * (`WPSK\Adapters\WpdevModuleAdapter`).
  */
 
@@ -20,7 +20,7 @@ This project opted into \`phpFramework: wpdev\`.
 
 ## Adapter
 
-Use \`WPSK\\Adapters\\WpdevModuleAdapter\` from \`wpsk/framework\` to
+Use \`WPSK\\Adapters\\WpdevModuleAdapter\` from \`wpdev/framework\` to
 bridge kit \`ModuleInterface\` modules into wpdev's
 \`Module_Loader::load_all()\` lifecycle.
 

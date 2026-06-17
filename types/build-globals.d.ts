@@ -7,5 +7,5 @@
  * Declaring them here lets `tsc --noEmit` (Phase 12) pass on the .ts source
  * while the real values are substituted at esbuild time.
  */
-declare const __WPSK_HOOK_PREFIX__: string;
-declare const __WPSK_LOCALIZE_VAR__: string;
+declare const __WPDEV_HOOK_PREFIX__: string;
+declare const __WPDEV_LOCALIZE_VAR__: string;
