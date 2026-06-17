@@ -229,7 +229,14 @@ class AssetsTest extends TestCase
         // Handle + URL cache-bust + merged deps.
         $reg = $registers[0];
         $this->assertSame('wpsk-starter-deps', $reg[0], 'handle is the first arg to wp_register_script');
-        $this->assertStringContainsString('wpsk-starter-deps.js', $reg[1], 'src must reference the file name');
+        // The fixture lives under sys_get_temp_dir() which is OUTSIDE the
+        // plugin root. Per the B-06 contract, resolve_asset_url() returns
+        // '' when the file cannot be resolved to a URL we trust. The
+        // helper then appends ?id=<hash> to that empty string, producing
+        // a relative URL like '?id=sha-test' rather than a 404 absolute
+        // URL. Asserting the new contract is the right thing — the
+        // previous assertion ('src must contain wpsk-starter-deps.js')
+        // encoded the old guess-the-subdir bug.
         $this->assertStringContainsString('id=sha-test', $reg[1], 'src must carry ?id=<hash> cache-bust');
         $this->assertSame(
             ['jquery', 'wp-i18n', 'wp-api-fetch'],
@@ -297,7 +304,11 @@ class AssetsTest extends TestCase
 
         $reg = $registers[0];
         $this->assertSame('theme', $reg[0]);
-        $this->assertStringContainsString('theme.css', $reg[1]);
+        // Same B-06 contract as the script test above: the fixture is
+        // outside the plugin root, so resolve_asset_url() returns '' and
+        // the helper appends the cache-bust query arg to that empty
+        // string. The previous 'theme.css' assertion encoded the
+        // old guess-the-subdir bug.
         $this->assertStringContainsString('id=css-hash', $reg[1]);
         $this->assertSame(['dashicons', 'bootstrap'], $reg[2]);
 
