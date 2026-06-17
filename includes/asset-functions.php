@@ -167,17 +167,43 @@ if ( ! function_exists( 'wpsk_enqueue_bundle_style_at' ) ) {
 
 if ( ! function_exists( 'wpsk_enqueue_stylesheet' ) ) {
 	/**
-	 * BC shim — enqueue a theme stylesheet.
+	 * BC shim — enqueue a stylesheet, preferring the plugin location
+	 * when the file lives inside the plugin (so a plugin-mode install
+	 * resolves to the correct URL) and falling back to the theme
+	 * location for backward compatibility with theme-based installs.
+	 *
+	 * Resolution order:
+	 *   1. `plugin_dir_path() . '/assets/stylesheets/' . $file_name`
+	 *      when that absolute path resolves to a real file inside the
+	 *      plugin root. This is the wp-starter-kit-as-plugin case.
+	 *   2. `get_template_directory() . '/assets/stylesheets/' . $file_name`
+	 *      (the legacy behaviour, kept for theme-mode installs that
+	 *      ship the stylesheet next to the active theme).
 	 *
 	 * @param string $file_name  CSS file name (e.g. `style.css`).
 	 * @param array  $extra_deps Extra WP-style handles to merge into deps.
 	 * @return bool              `true` if the style was enqueued.
 	 */
 	function wpsk_enqueue_stylesheet( $file_name, $extra_deps = [] ) {
-		return WPSK\Support\Assets::enqueue_legacy_bundle_style(
-			wpsk_stylesheet_file_path( $file_name ),
-			$extra_deps
-		);
+		$plugin_path = function_exists( 'plugin_dir_path' )
+			? rtrim( plugin_dir_path( __FILE__ ), '/\\' ) . '/assets/stylesheets/' . $file_name
+			: '';
+
+		// Resolve the plugin candidate against the plugin root to make
+		// sure we're not fooled by a stray file at the candidate path
+		// that lives outside the actual plugin. realpath() returns
+		// false when the file is missing — short-circuit to the theme
+		// fallback in that case.
+		$resolved_plugin = $plugin_path !== '' ? realpath( $plugin_path ) : false;
+		$plugin_root     = function_exists( 'plugin_dir_path' )
+			? realpath( rtrim( plugin_dir_path( __FILE__ ), '/\\' ) )
+			: false;
+
+		$abs_path = ( $resolved_plugin && $plugin_root && strpos( $resolved_plugin, $plugin_root ) === 0 )
+			? $resolved_plugin
+			: wpsk_stylesheet_file_path( $file_name );
+
+		return WPSK\Support\Assets::enqueue_legacy_bundle_style( $abs_path, $extra_deps );
 	}
 }
 

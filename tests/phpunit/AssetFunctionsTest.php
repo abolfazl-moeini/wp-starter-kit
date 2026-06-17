@@ -178,8 +178,9 @@ class AssetFunctionsTest extends TestCase
     public function test_enqueue_stylesheet_prefers_plugin_path_when_plugin_file_exists(): void
     {
         // Simulate a plugin installed at a separate location by
-        // defining WPSK_STARTER_PLUGIN_DIR. The fake plugin has its
-        // own assets/stylesheets/ subdir with a fixture file.
+        // defining WPSK_STARTER_PLUGIN_DIR and overriding plugin_dir_path()
+        // through $GLOBALS['wpsk_test_plugin_dir']. The fake plugin
+        // has its own assets/stylesheets/ subdir with a fixture file.
         $fakePlugin = $this->tmpDir . '/fake-plugin';
         $fakeStyles = $fakePlugin . '/assets/stylesheets/style.css';
         mkdir(dirname($fakeStyles), 0777, true);
@@ -187,6 +188,8 @@ class AssetFunctionsTest extends TestCase
         if (!defined('WPSK_STARTER_PLUGIN_DIR')) {
             define('WPSK_STARTER_PLUGIN_DIR', $fakePlugin);
         }
+        $GLOBALS['wpsk_test_plugin_dir'] = $fakePlugin;
+        $GLOBALS['wpsk_test_wp_calls']   = [];
 
         try {
             // With the fix, the function locates the file at the plugin
@@ -202,22 +205,29 @@ class AssetFunctionsTest extends TestCase
                 'wpsk_enqueue_stylesheet must find the file at the plugin location'
             );
 
-            // The enqueue must have been called with the resolved URL
-            // (the plugin URL, not a 404). Look up the wp_enqueue_style
-            // call recorded by the test bootstrap.
+            // The enqueue must have been called with a non-empty URL
+            // that points at the stylesheet basename — proving the
+            // plugin-path lookup produced a usable URL, not an empty
+            // string (which is what the un-fixed code would yield when
+            // the file is outside the plugin root).
             $enqueues = array_values(array_filter(
                 $GLOBALS['wpsk_test_wp_calls'] ?? [],
                 static fn(array $c): bool => ($c['fn'] ?? '') === 'wp_enqueue_style'
             ));
             $this->assertNotEmpty($enqueues, 'wp_enqueue_style must have been called');
             $url = $enqueues[0]['args'][1] ?? '';
+            $this->assertNotSame(
+                '',
+                $url,
+                'wp_enqueue_style must have been called with a non-empty URL (proves the resolver found the file at the plugin path)'
+            );
             $this->assertStringContainsString(
                 'style.css',
                 $url,
-                'enqueued URL must reference the stylesheet basename (proves the plugin-path lookup worked)'
+                'enqueued URL must reference the stylesheet basename'
             );
         } finally {
-            unset($GLOBALS['wpsk_test_plugin_dir']);
+            unset($GLOBALS['wpsk_test_plugin_dir'], $GLOBALS['wpsk_test_wp_calls']);
         }
     }
 
