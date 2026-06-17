@@ -197,23 +197,21 @@ When prompts are enabled (no `--yes`), `gatherInputs` asks branding
 questions first, then each catalog feature whose `when()` gate is open:
 
 1. **Branding** — `slug`, `npmScope`, `globalName`, `textDomain`,
-   `hookPrefix`, `phpFunctionPrefix`, `phpSourceVersion`.
+   `hookPrefix`, `phpFunctionPrefix`, `phpSourceVersion` (`8.1` / `8.2` / `8.3`).
 2. **`js`** — `none` / `typescript` / `pure` / `flow`.
 3. **`jsLib`** — only when `js ≠ none` (`none` / `preact` / `react`).
-4. **`jsTest`** — only when `js ≠ none` (`jest` / `vitest` / `none`).
-5. **`css`** — only when `js ≠ none`.
-6. **`blocks`** — always available (Blockstudio; PHP 8.2+ runtime warning).
+4. **`frontendStack`** — only when `js=typescript` and `jsLib` is
+   `preact` or `react` (`none` / `polaris`).
+5. **`jsTest`** — only when `js ≠ none` (`jest` / `vitest` / `none`).
+6. **`css`** — only when `js ≠ none`.
 7. **`phpMinVersion`** — `7.4` … `8.3`.
-8. **`phpFramework`** — `none` / `wpdev`.
-9. **`phpTest`** — `phpunit` / `none`.
-10. **`license`**, **`wpMinVersion`**, **`restBatch`**, **`vendorScoping`**,
-    **`husky`**, **`exampleFeature`**, **`i18n`**.
-11. **`faultTolerance`** — only when `phpMinVersion ≥ 8.1`.
-12. **`frontendStack`** — only when `js=typescript` and `jsLib` is
-    `preact` or `react`.
-13. **`mcpAbilities`** — always available.
+8. **`phpFramework`** — `none` / `wpdev` (Composer dependency vs no framework package).
+9. **Optional toggles** (one prompt each): **`blocks`**, **`mcpAbilities`**,
+   **`phpTest`**, **`license`**, **`wpMinVersion`**, **`restBatch`**,
+   **`faultTolerance`** (only when `phpMinVersion ≥ 8.1`), **`vendorScoping`**,
+   **`husky`**, **`exampleFeature`**, **`i18n`**.
 
-Passing `--preset=<name>` skips steps 2–13 (flags still override).
+Passing `--preset=<name>` skips steps 2–9 (flags still override).
 
 Flags win over preset values — you can pre-fill with a preset and
 override any individual feature with its flag.

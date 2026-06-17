@@ -18,13 +18,14 @@ describe("buildPromptPlan() — conditional omissions (I2.5)", () => {
     const ids = planIds(plan);
     // Branding ids are at the front, in the order they appear in
     // BRANDING_QUESTIONS.
-    expect(ids.slice(0, 6)).toEqual([
+    expect(ids.slice(0, 7)).toEqual([
       "slug",
       "npmScope",
       "globalName",
       "textDomain",
       "hookPrefix",
       "phpFunctionPrefix",
+      "phpSourceVersion",
     ]);
   });
 
@@ -166,9 +167,45 @@ describe("buildPromptPlan() — branding comes before features (I2.6)", () => {
   test("every branding question precedes every feature question", () => {
     const plan = buildPromptPlan(defaultFeatures());
     const ids = planIds(plan);
-    const lastBrandingIndex = ids.indexOf("phpFunctionPrefix");
+    const lastBrandingIndex = ids.indexOf("phpSourceVersion");
     const firstFeatureIndex = ids.indexOf("js");
     expect(lastBrandingIndex).toBeGreaterThanOrEqual(0);
     expect(firstFeatureIndex).toBeGreaterThan(lastBrandingIndex);
+  });
+});
+
+describe("buildPromptPlan() — JS variant matrix order (TASK-24b)", () => {
+  test("asks js → jsLib → jsTest → phpMinVersion → phpFramework before optional toggles", () => {
+    const plan = buildPromptPlan(defaultFeatures());
+    const ids = planIds(plan);
+    const js = ids.indexOf("js");
+    const jsLib = ids.indexOf("jsLib");
+    const jsTest = ids.indexOf("jsTest");
+    const phpMin = ids.indexOf("phpMinVersion");
+    const phpFramework = ids.indexOf("phpFramework");
+
+    expect(js).toBeGreaterThanOrEqual(0);
+    expect(js).toBeLessThan(jsLib);
+    expect(jsLib).toBeLessThan(jsTest);
+    expect(jsTest).toBeLessThan(phpMin);
+    expect(phpMin).toBeLessThan(phpFramework);
+
+    for (const optionalId of [
+      "blocks",
+      "husky",
+      "i18n",
+      "faultTolerance",
+      "mcpAbilities",
+    ]) {
+      expect(ids.indexOf(optionalId)).toBeGreaterThan(phpFramework);
+    }
+  });
+
+  test("feature prompts have human-readable messages", () => {
+    const plan = buildPromptPlan(defaultFeatures());
+    const jsQ = plan.find((q) => q.id === "js");
+    const phpMinQ = plan.find((q) => q.id === "phpMinVersion");
+    expect(jsQ.message).toMatch(/JavaScript/i);
+    expect(phpMinQ.message).toMatch(/PHP/i);
   });
 });

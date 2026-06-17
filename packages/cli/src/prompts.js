@@ -86,7 +86,42 @@ const BRANDING_QUESTIONS = [
         ? undefined
         : "PHP function prefix must end with an underscore",
   },
+  {
+    id: "phpSourceVersion",
+    type: "select",
+    target: "answers",
+    message:
+      "PHP version you write source code in (Rector downgrades on release)",
+    options: [
+      { label: "8.1", value: "8.1" },
+      { label: "8.2", value: "8.2" },
+      { label: "8.3", value: "8.3" },
+    ],
+    initialValue: "8.1",
+  },
 ];
+
+/** Human labels for catalog features (catalog rows use `notes`, not prompts). */
+const FEATURE_QUESTIONS = {
+  js: "Enable JavaScript?",
+  jsLib: "UI library?",
+  jsTest: "JS test runner?",
+  css: "CSS toolchain?",
+  phpMinVersion: "Minimum PHP version to support?",
+  phpFramework: "Use wpdev/framework as a Composer dependency?",
+  phpTest: "PHP unit tests (PHPUnit)?",
+  license: "License?",
+  wpMinVersion: "Minimum WordPress version?",
+  restBatch: "REST batch endpoint + client?",
+  faultTolerance: "PHP fault-tolerance package?",
+  vendorScoping: "Strauss vendor scoping on release?",
+  husky: "Git pre-commit hooks (Husky)?",
+  exampleFeature: "Include the ExampleFeature demo module?",
+  i18n: "Translation pipeline?",
+  blocks: "Gutenberg blocks (Blockstudio)?",
+  mcpAbilities: "WordPress Abilities API (MCP)?",
+  frontendStack: "Frontend structure?",
+};
 
 /* -------------------------------------------------------------------- */
 /* Feature-to-prompt mapping                                             */
@@ -97,6 +132,8 @@ const BRANDING_QUESTIONS = [
  * rendered as `{ label, value }` pairs for clack's `select`.
  */
 function featureQuestion(feature) {
+  const message =
+    feature.question || FEATURE_QUESTIONS[feature.id] || feature.id;
   // On/off features: use a confirm-style yes/no. We model them as
   // a select so the value strings match the catalog ("on" / "off")
   // without a translation step.
@@ -109,7 +146,7 @@ function featureQuestion(feature) {
       id: feature.id,
       type: "select",
       target: "features",
-      message: feature.question,
+      message,
       options: [
         { label: "Yes", value: "on" },
         { label: "No", value: "off" },
@@ -121,7 +158,7 @@ function featureQuestion(feature) {
     id: feature.id,
     type: "select",
     target: "features",
-    message: feature.question,
+    message,
     options: feature.variants.map((v) => ({
       label: v,
       value: v,
@@ -209,57 +246,29 @@ export function buildPromptPlan(currentFeatures, engine) {
     });
 
     if (id === "jsLib") {
-      plan.push({
-        id: "frontendStack",
-        type: "select",
-        target: "features",
-        message: "Frontend structure?",
-        options: [
-          { label: "None", value: "none" },
-          { label: "Polaris Stack", value: "polaris" },
-        ],
-        initialValue: "none",
-        when: (s) =>
-          s.features.js === "typescript" &&
-          (s.features.jsLib === "react" || s.features.jsLib === "preact"),
-      });
+      const frontendStack = catalog.find((x) => x.id === "frontendStack");
+      if (frontendStack) {
+        plan.push({
+          ...featureQuestion(frontendStack),
+          when: (s) =>
+            s.features.js === "typescript" &&
+            (s.features.jsLib === "react" || s.features.jsLib === "preact"),
+        });
+      }
     }
   }
 
-  // 4. PHP features. Order matches plan.installer.md §1.1 UX.
-  for (const id of ["phpMinVersion", "phpSourceVersion", "phpFramework"]) {
+  // 4. PHP baseline (TASK-24b): min version, then framework dep mode.
+  for (const id of ["phpMinVersion", "phpFramework"]) {
     const f = catalog.find((x) => x.id === id);
     if (!f) continue;
     plan.push({ ...featureQuestion(f), when: () => true });
   }
 
-  plan.push({
-    id: "mcpAbilities",
-    type: "select",
-    target: "features",
-    message: "WordPress Abilities API (MCP)?",
-    options: [
-      { label: "No", value: "off" },
-      { label: "Yes", value: "on" },
-    ],
-    initialValue: "off",
-    when: () => true,
-  });
-
-  plan.push({
-    id: "blocks",
-    type: "select",
-    target: "features",
-    message: "Gutenberg blocks (Blockstudio)?",
-    options: [
-      { label: "No", value: "off" },
-      { label: "Yes", value: "on" },
-    ],
-    initialValue: "off",
-    when: () => true,
-  });
-
+  // 5. Optional features (multi-select style — one prompt per feature).
   for (const id of [
+    "blocks",
+    "mcpAbilities",
     "phpTest",
     "license",
     "wpMinVersion",
