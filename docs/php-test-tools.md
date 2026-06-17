@@ -200,6 +200,20 @@ vendor/bin/phpcs
 vendor/bin/phpstan analyse
 ```
 
+## JavaScript unit tests (Jest)
+
+The kit uses **Jest** for JavaScript/TypeScript unit tests under
+`tests/` and co-located `__tests__/` folders. **Vitest** is not the
+kit default — generated projects may opt into `jsTest: "vitest"`, but
+the starter's own `jest.config.mjs` ignores foreign test trees:
+
+- `wp-content/` (e.g. gitignored Blockstudio vendor Vitest specs)
+- `node_modules/`
+- `dist/`
+
+Run `npx jest --listTests | grep blockstudio` after checkout — it should
+return empty even when Blockstudio is installed under `wp-content/plugins/`.
+
 ## CI integration
 
 GitHub Actions (Phase 10) runs:

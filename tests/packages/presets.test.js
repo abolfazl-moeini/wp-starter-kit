@@ -16,8 +16,9 @@ import { validateFeatureSet } from "../../packages/create-wp-project/src/feature
  * plan.installer.md §1.5 defines the initial set:
  *
  *   minimal       PHP-only, no JS, minimal tooling
- *   full          All features ON with their §1 defaults
- *   woocommerce   full + blocks:on, exampleFeature:off, wpMinVersion:6.0
+ *   standard      §1 defaults (TypeScript + PHPUnit + Jest)
+ *   full          All optional features ON
+ *   woocommerce   standard + blocks:on, exampleFeature:off
  *
  * Three contracts are locked:
  *  1. getPresets() returns the three ids in a stable order
@@ -32,21 +33,19 @@ import { validateFeatureSet } from "../../packages/create-wp-project/src/feature
  *     through to defaults.
  */
 describe("getPresets() — catalog (Phase 20.16)", () => {
-  test("returns the three documented presets", () => {
+  test("returns the four documented presets", () => {
     const presets = getPresets();
     expect(Array.isArray(presets)).toBe(true);
     const ids = presets.map((p) => p.id);
     expect(ids).toContain("minimal");
+    expect(ids).toContain("standard");
     expect(ids).toContain("full");
     expect(ids).toContain("woocommerce");
   });
 
-  test("presets are returned in the documented order: minimal, full, woocommerce", () => {
-    // Stable order matters for the interactive prompt — the first
-    // entry is the default selection in a CLI picker, and the
-    // order is what users see when they scan the help text.
+  test("presets are returned in the documented order: minimal, standard, full, woocommerce", () => {
     const ids = getPresets().map((p) => p.id);
-    expect(ids).toEqual(["minimal", "full", "woocommerce"]);
+    expect(ids).toEqual(["minimal", "standard", "full", "woocommerce"]);
   });
 
   test("every preset has an id, description, and features object", () => {
@@ -103,19 +102,14 @@ describe("applyPreset() — known presets produce valid feature sets (Phase 20.1
     expect(f.wpMinVersion).toBe("6.0");
   });
 
-  test("applyPreset('full') returns a complete valid feature set", () => {
-    const f = applyPreset("full");
+  test("applyPreset('standard') returns a complete valid feature set", () => {
+    const f = applyPreset("standard");
     const v = validateFeatureSet(f);
-    // Phase 25.G2: validateFeatureSet also returns `warnings`.
     expect(v).toMatchObject({ ok: true, errors: {} });
   });
 
-  test("applyPreset('full') = §1 defaults (every variant[0])", () => {
-    // "full" = all features ON with their defaults. The §1
-    // defaults are exactly defaultFeatures() (variants[0]).
-    const full = applyPreset("full");
-    // Spot-check: every key in defaultFeatures() must be present
-    // in 'full' AND match the §1 default.
+  test("applyPreset('standard') = §1 defaults (every variant[0])", () => {
+    const standard = applyPreset("standard");
     for (const [id, defVal] of Object.entries({
       js: "typescript",
       jsLib: "none",
@@ -134,8 +128,27 @@ describe("applyPreset() — known presets produce valid feature sets (Phase 20.1
       exampleFeature: "on",
       i18n: "on",
     })) {
-      expect(full[id]).toBe(defVal);
+      expect(standard[id]).toBe(defVal);
     }
+  });
+
+  test("applyPreset('full') returns a complete valid feature set", () => {
+    const f = applyPreset("full");
+    const v = validateFeatureSet(f);
+    expect(v).toMatchObject({ ok: true, errors: {} });
+  });
+
+  test("applyPreset('full') enables optional features on top of standard", () => {
+    const full = applyPreset("full");
+    const standard = applyPreset("standard");
+    expect(full.jsLib).toBe("preact");
+    expect(full.faultTolerance).toBe("on");
+    expect(full.blocks).toBe("on");
+    expect(full.frontendStack).toBe("polaris");
+    expect(full.restBatch).toBe("on");
+    expect(full.phpMinVersion).toBe("8.2");
+    expect(standard.faultTolerance).toBe("off");
+    expect(standard.blocks).toBe("off");
   });
 
   test("applyPreset('woocommerce') returns a complete valid feature set", () => {
@@ -145,26 +158,16 @@ describe("applyPreset() — known presets produce valid feature sets (Phase 20.1
     expect(v).toMatchObject({ ok: true, errors: {} });
   });
 
-  test("applyPreset('woocommerce') = full + blocks:on + exampleFeature:off + wpMinVersion:6.0", () => {
-    // The §1.5 table says: "Same as `full` but `blocks:on`
-    // (WooCommerce block-based checkout/cart), `wpMinVersion:6.0`,
-    // `exampleFeature:off` (consumer brings their own modules)".
-    // The wpMinVersion:6.0 is already the §1 default, so the
-    // override that distinguishes it is blocks:on +
-    // exampleFeature:off.
+  test("applyPreset('woocommerce') = standard + blocks:on + exampleFeature:off", () => {
     const woo = applyPreset("woocommerce");
-    const full = applyPreset("full");
-    // blocks flips off → on
+    const standard = applyPreset("standard");
     expect(woo.blocks).toBe("on");
-    expect(full.blocks).toBe("off");
-    // exampleFeature flips on → off
+    expect(standard.blocks).toBe("off");
     expect(woo.exampleFeature).toBe("off");
-    expect(full.exampleFeature).toBe("on");
-    // wpMinVersion matches (6.0 is the default for both)
+    expect(standard.exampleFeature).toBe("on");
     expect(woo.wpMinVersion).toBe("6.0");
     expect(woo.phpMinVersion).toBe("8.2");
-    // jsLib flips for blocks to be useful — preset is "on" path
-    // so a real consumer can build WooCommerce block UIs.
+    expect(woo.jsLib).toBe("preact");
     expect(woo.js).not.toBe("none");
   });
 
@@ -187,7 +190,7 @@ describe("applyPreset() — unknown names throw (Phase 20.17)", () => {
       // installer can show the user what they typed.
       expect(e.message).toMatch(/nope/);
       // And it should hint at the valid options.
-      expect(e.message).toMatch(/minimal|full|woocommerce/);
+      expect(e.message).toMatch(/minimal|standard|full|woocommerce/);
     }
   });
 

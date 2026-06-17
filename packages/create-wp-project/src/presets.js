@@ -9,13 +9,14 @@
  * The three documented presets come from plan.installer.md §1.5:
  *
  *   minimal      PHP-only, no JS, minimal tooling
- *   full         All features ON with their §1 defaults
- *   woocommerce  full + blocks:on + exampleFeature:off +
+ *   standard     TypeScript + PHPUnit + Jest (§1 defaults; CLI --yes default)
+ *   full         All optional features ON (fault-tolerance, blocks, polaris, …)
+ *   woocommerce  standard + blocks:on + exampleFeature:off +
  *                jsLib:preact (for block UIs)
  *
  * Order matters: the first entry returned by getPresets() is the
  * default selection in a CLI picker. We order
- * `minimal, full, woocommerce` so the lightest option is first.
+ * `minimal, standard, full, woocommerce` so the lightest option is first.
  *
  * Every preset is verified to pass `validateFeatureSet()` — that
  * is locked by tests/packages/presets.test.js. If a future preset
@@ -73,31 +74,40 @@ function buildMinimal() {
 }
 
 /**
- * Build the 'full' preset: every feature ON with its §1 default.
- * Equivalent to defaultFeatures() — using the function rather
- * than a hand-rolled object means the preset automatically
- * tracks any future catalog additions.
+ * Build the 'standard' preset: every catalog feature at its §1 default.
+ * Equivalent to defaultFeatures() — using the function rather than a
+ * hand-rolled object means the preset automatically tracks catalog additions.
+ * Non-interactive `wpdev create --yes` uses this preset when --preset is omitted.
  */
-function buildFull() {
+function buildStandard() {
   return { ...defaultFeatures() };
 }
 
 /**
- * Build the 'woocommerce' preset: full + blocks:on +
+ * Build the 'full' preset: standard + every optional feature enabled.
+ * Mirrors improve.md TASK-14a (fault-tolerance, blocks, polaris, rest-batch).
+ */
+function buildFull() {
+  return {
+    ...buildStandard(),
+    jsLib: "preact",
+    faultTolerance: "on",
+    phpMinVersion: "8.2",
+    blocks: "on",
+    frontendStack: "polaris",
+    restBatch: "on",
+  };
+}
+
+/**
+ * Build the 'woocommerce' preset: standard + blocks:on +
  * exampleFeature:off + jsLib:preact (so a real consumer can
  * build WooCommerce block UIs without a follow-up flag flip).
  * Mirrors the `woocommerce` row in plan.installer.md §1.5.
- *
- * jsLib flips to 'preact' (the kit's default UI library) for
- * the same reason `wpMinVersion:6.0` is kept — a real
- * WooCommerce consumer who turns on blocks will want a UI
- * library to build them with. The §1.5 table does not pin the
- * jsLib variant, so we pick the most useful one: the kit's
- * own framework.
  */
 function buildWoocommerce() {
   return {
-    ...buildFull(),
+    ...buildStandard(),
     blocks: "on",
     exampleFeature: "off",
     jsLib: "preact",
@@ -107,10 +117,15 @@ function buildWoocommerce() {
 
 const PRESET_BUILDERS = [
   ["minimal", "PHP-only, no JS, minimal tooling.", buildMinimal],
-  ["full", "All features ON with their §1 defaults.", buildFull],
+  [
+    "standard",
+    "TypeScript plugin with PHPUnit + Jest (default for --yes).",
+    buildStandard,
+  ],
+  ["full", "All optional features enabled.", buildFull],
   [
     "woocommerce",
-    "Full + blocks:on, optimized for WooCommerce extensions (consumer brings their own modules).",
+    "Standard + blocks:on, optimized for WooCommerce extensions (consumer brings their own modules).",
     buildWoocommerce,
   ],
 ];

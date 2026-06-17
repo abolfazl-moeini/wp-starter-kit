@@ -760,9 +760,9 @@ describe("@wpdev/create-wp-project", () => {
       expect(existsSyncSync(path.join(tmp, "jest.config.js"))).toBe(false);
     });
 
-    test("full preset includes tsconfig.json and jest config", async () => {
+    test("standard preset includes tsconfig.json and jest config", async () => {
       const res = await scaffoldProject(tmp, goodAnswers, {
-        features: applyPreset("full"),
+        features: applyPreset("standard"),
       });
       expect(res.ok).toBe(true);
       expect(existsSyncSync(path.join(tmp, "tsconfig.json"))).toBe(true);
@@ -770,6 +770,17 @@ describe("@wpdev/create-wp-project", () => {
         existsSyncSync(path.join(tmp, "jest.config.mjs")) ||
         existsSyncSync(path.join(tmp, "jest.config.js"));
       expect(hasJest).toBe(true);
+    });
+
+    test("full preset includes fault-tolerance docs and polaris stack", async () => {
+      const res = await scaffoldProject(tmp, goodAnswers, {
+        features: applyPreset("full"),
+      });
+      expect(res.ok).toBe(true);
+      expect(existsSyncSync(path.join(tmp, "docs", "fault-tolerance.md"))).toBe(
+        true,
+      );
+      expect(existsSyncSync(path.join(tmp, "src", "polaris"))).toBe(true);
     });
   });
 });

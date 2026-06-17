@@ -67,7 +67,7 @@ describe("--yes / -y non-interactive (I2.10, I2.11)", () => {
     expect(promptCalls).toEqual([]);
   });
 
-  test("--yes: all unspecified features come from the engine's defaults", async () => {
+  test("--yes: all unspecified features come from the standard preset", async () => {
     const ui = makeRecordingUi();
     const out = await gatherInputs({
       argv: ["my-plugin", "--yes"],
@@ -75,11 +75,11 @@ describe("--yes / -y non-interactive (I2.10, I2.11)", () => {
       engine: engineStub,
       ui,
     });
-    const defaults = defaultFeatures();
-    // Every key in defaults is present in the resolved features.
-    for (const k of Object.keys(defaults)) {
-      expect(out.features[k]).toBe(defaults[k]);
+    const standard = applyPreset("standard");
+    for (const [k, v] of Object.entries(standard)) {
+      expect(out.features[k]).toBe(v);
     }
+    expect(out.preset).toBe("standard");
   });
 
   test("--yes: feature validation still runs on the merged set", async () => {

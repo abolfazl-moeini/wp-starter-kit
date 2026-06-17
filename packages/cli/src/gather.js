@@ -137,11 +137,13 @@ export async function gatherInputs(opts) {
   const wantPrompts =
     o.interactive !== false && flagInput.runOptions.interactive !== false;
 
-  // Pre-apply a preset if one was passed via --preset=. The preset
-  // becomes the prompt-time "currentFeatures" baseline so the
-  // prompt plan knows what to skip.
+  // Pre-apply a preset if one was passed via --preset=. Non-interactive
+  // runs (--yes) default to "standard" when --preset is omitted (TASK-24c).
   let currentFeatures = flagInput.features;
   let presetName = flagInput.runOptions.preset || null;
+  if (!presetName && !wantPrompts) {
+    presetName = "standard";
+  }
   if (presetName && presetName !== "custom") {
     currentFeatures = engine.applyPreset(presetName);
     // Flags still win — override the preset with anything the user
