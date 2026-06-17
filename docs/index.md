@@ -12,6 +12,8 @@
 | [build-system.md](build-system.md)                       | The four-stage esbuild pipeline            | You're adding a new build step or debugging a build failure.                                 |
 | [build-outputs.md](build-outputs.md)                     | What's in `dist/` and `assets/`            | You need to know which file the browser will request.                                        |
 | [hooks.md](hooks.md)                                     | WordPress hook prefix convention           | You're registering a hook or filter and need the right namespace.                            |
+| [js-hooks.md](js-hooks.md)                               | JS hook inventory (`@wpdev/hooks`)         | You're subscribing to REST/WDForm events or adding a new JS hook.                              |
+| [element-props.md](element-props.md)                     | `elementProps()` DOM → props helper        | You're hydrating a Preact/React widget from `data-*` attributes.                           |
 | [localize-contract.md](localize-contract.md)             | JS↔PHP localize contract                   | You're adding a new field to `wp_localize_script`.                                           |
 | [react-preact.md](react-preact.md)                       | The original Phase 5 notes (pragma-based)  | You're reading the old code that uses `/** @jsx h */`.                                       |
 | [react-preact-switch.md](react-preact-switch.md)         | The new `uiFramework` switch (alias-based) | You're picking the framework for a new project.                                              |
