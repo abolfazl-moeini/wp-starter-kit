@@ -3,6 +3,7 @@ import { describe, test, expect } from "@jest/globals";
 import { gatherInputs } from "../../packages/cli/src/gather.js";
 import * as engineStub from "@wpdev/create-wp-project";
 import { defaultFeatures } from "@wpdev/create-wp-project";
+import { applyPreset } from "@wpdev/create-wp-project";
 
 /**
  * Recording fake UI. Same shape as the one in gather.test.js but
@@ -92,6 +93,21 @@ describe("--yes / -y non-interactive (I2.10, I2.11)", () => {
       ui,
     });
     expect(out.validation.ok).toBe(true);
+  });
+
+  test("--preset=minimal applies the minimal feature set", async () => {
+    const ui = makeRecordingUi();
+    const out = await gatherInputs({
+      argv: ["my-plugin", "--yes", "--preset=minimal"],
+      interactive: true,
+      engine: engineStub,
+      ui,
+    });
+    const minimal = applyPreset("minimal");
+    for (const [k, v] of Object.entries(minimal)) {
+      expect(out.features[k]).toBe(v);
+    }
+    expect(out.preset).toBe("minimal");
   });
 
   test("explicit `interactive: false` also skips prompts (no --yes needed)", async () => {

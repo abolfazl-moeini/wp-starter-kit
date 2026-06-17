@@ -9,6 +9,7 @@ import {
   renderTemplate,
   answersToProjectConfig,
 } from "../../packages/create-wp-project/src/index.js";
+import { applyPreset } from "../../packages/create-wp-project/src/presets.js";
 
 describe("@wpdev/create-wp-project", () => {
   let tmp;
@@ -732,6 +733,43 @@ describe("@wpdev/create-wp-project", () => {
       expect(res.ok).toBe(true);
       const written = res.written || [];
       expect(written).not.toContain("functions.php");
+    });
+  });
+
+  describe("preset scaffold outputs (TASK-14b)", () => {
+    const goodAnswers = {
+      slug: "my-project",
+      npmScope: "myorg",
+      globalName: "MyProject",
+      localizeVar: "MyProjectLoc",
+      textDomain: "my-project",
+      hookPrefix: "my-project",
+      depsBundle: "my-project-deps.js",
+      phpFunctionPrefix: "myprj_",
+      uiFramework: "preact",
+      projectType: "plugin",
+    };
+
+    test("minimal preset omits tsconfig.json and jest config", async () => {
+      const res = await scaffoldProject(tmp, goodAnswers, {
+        features: applyPreset("minimal"),
+      });
+      expect(res.ok).toBe(true);
+      expect(existsSyncSync(path.join(tmp, "tsconfig.json"))).toBe(false);
+      expect(existsSyncSync(path.join(tmp, "jest.config.mjs"))).toBe(false);
+      expect(existsSyncSync(path.join(tmp, "jest.config.js"))).toBe(false);
+    });
+
+    test("full preset includes tsconfig.json and jest config", async () => {
+      const res = await scaffoldProject(tmp, goodAnswers, {
+        features: applyPreset("full"),
+      });
+      expect(res.ok).toBe(true);
+      expect(existsSyncSync(path.join(tmp, "tsconfig.json"))).toBe(true);
+      const hasJest =
+        existsSyncSync(path.join(tmp, "jest.config.mjs")) ||
+        existsSyncSync(path.join(tmp, "jest.config.js"));
+      expect(hasJest).toBe(true);
     });
   });
 });

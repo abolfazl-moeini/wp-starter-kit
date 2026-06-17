@@ -159,7 +159,14 @@ export async function gatherInputs(opts) {
   }
 
   // 4. mergeInputs — flags > prompted > defaults (from the engine).
-  const merged = mergeInputs(flagInput, prompted, engine.defaultFeatures());
+  //    When --preset= is set, the preset's feature map is the
+  //    baseline instead of defaultFeatures() so non-interactive
+  //    runs (--yes) honour the chosen preset.
+  const featureDefaults =
+    presetName && presetName !== "custom"
+      ? engine.applyPreset(presetName)
+      : engine.defaultFeatures();
+  const merged = mergeInputs(flagInput, prompted, featureDefaults);
 
   // 5. Final validation. Catches anything the prompt-derived set
   //    introduced (a bad combination the user picked at the
