@@ -18,6 +18,17 @@ final class DeferredCall
     private static array $stack = [];
 
     /**
+     * Priority that run_queue() is currently registered at, per hook.
+     * Tracked so a subsequent queue() call with a different priority
+     * can re-register the callback at the new priority — without this,
+     * the first queue()'s priority would silently win forever (the
+     * "priority drift" bug).
+     *
+     * @var array<string, int>
+     */
+    private static array $priorities = [];
+
+    /**
      * Queue a callback to run when $hook fires (if it hasn't fired yet).
      *
      * $data shape:
@@ -36,11 +47,27 @@ final class DeferredCall
             throw new \InvalidArgumentException('DeferredCall requires a valid callable "callback"');
         }
 
-        $priority = $data['priority'] ?? 10;
+        $priority = (int) ($data['priority'] ?? 10);
 
         $queueCallback = [self::class, 'run_queue'];
+
+        // First registration for this hook: nothing to remove, just
+        // register at the requested priority.
         if (!has_action($hook, $queueCallback)) {
-            add_action($hook, $queueCallback, (int)$priority, 99);
+            add_action($hook, $queueCallback, $priority, 99);
+            self::$priorities[$hook] = $priority;
+        } elseif ((self::$priorities[$hook] ?? null) !== $priority) {
+            // Priority changed since the first queue(). WordPress has
+            // no priority-update helper for add_action, so the only
+            // way to make the new priority "win" is to drop the stale
+            // registration (remove_action without a priority arg
+            // removes every priority bucket for that callback) and
+            // re-register at the new priority. Leaving both in place
+            // would fire run_queue() twice — once at each priority —
+            // and each fire would re-run every queued callback.
+            remove_action($hook, $queueCallback);
+            add_action($hook, $queueCallback, $priority, 99);
+            self::$priorities[$hook] = $priority;
         }
 
         self::set_stack($hook, $data);
@@ -83,5 +110,6 @@ final class DeferredCall
     public static function reset_for_tests(): void
     {
         self::$stack = [];
+        self::$priorities = [];
     }
 }

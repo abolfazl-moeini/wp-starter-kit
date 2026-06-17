@@ -82,4 +82,69 @@ class DeferredCallTest extends TestCase
         do_action('obj_hook', $dummyObj);
         $this->assertSame($dummyObj, $passedObj);
     }
+
+    /**
+     * Regression test for B-12 (bug audit plan_8d50edf6):
+     *
+     * The first queue() call set the priority for the hook (via
+     * add_action). Subsequent queue() calls hit the `has_action` short
+     * circuit and silently kept the original priority — so the latest
+     * caller's priority hint was ignored. That is "priority drift":
+     * the registration drifted away from the value the most recent
+     * queue() asked for.
+     *
+     * The fix re-registers the run_queue callback at the new priority
+     * (remove_action + add_action) when a later queue() arrives with a
+     * different priority.
+     */
+    public function test_priority_is_updated_when_a_subsequent_queue_uses_a_different_priority(): void
+    {
+        DeferredCall::queue('drift_hook', [
+            'callback' => static fn () => null,
+            'priority' => 5,
+        ]);
+        $this->assertArrayHasKey(
+            5,
+            $GLOBALS['wpsk_wp_actions']['drift_hook'],
+            'first queue() registers at priority 5'
+        );
+
+        DeferredCall::queue('drift_hook', [
+            'callback' => static fn () => null,
+            'priority' => 99,
+        ]);
+
+        $this->assertArrayHasKey(
+            99,
+            $GLOBALS['wpsk_wp_actions']['drift_hook'],
+            'second queue() with priority 99 must move the registration to priority 99'
+        );
+        $this->assertArrayNotHasKey(
+            5,
+            $GLOBALS['wpsk_wp_actions']['drift_hook'],
+            'the stale priority-5 registration must be removed — leaving both would double-fire run_queue'
+        );
+    }
+
+    public function test_priority_is_preserved_when_a_subsequent_queue_uses_the_same_priority(): void
+    {
+        // No remove_action / re-add_action churn when the priority
+        // doesn't change — the registration must stay at 7 with a
+        // single entry, not get duplicated.
+        DeferredCall::queue('same_priority_hook', [
+            'callback' => static fn () => null,
+            'priority' => 7,
+        ]);
+        DeferredCall::queue('same_priority_hook', [
+            'callback' => static fn () => null,
+            'priority' => 7,
+        ]);
+
+        $this->assertArrayHasKey(7, $GLOBALS['wpsk_wp_actions']['same_priority_hook']);
+        $this->assertCount(
+            1,
+            $GLOBALS['wpsk_wp_actions']['same_priority_hook'][7],
+            'same-priority queues must not duplicate the run_queue registration'
+        );
+    }
 }

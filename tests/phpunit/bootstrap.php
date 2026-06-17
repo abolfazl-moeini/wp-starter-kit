@@ -72,6 +72,43 @@ if (!function_exists('has_action')) {
         return false;
     }
 }
+if (!function_exists('remove_action')) {
+    /**
+     * Test stub for WordPress's remove_action(). When no priority is
+     * given, all instances of the callback are dropped across every
+     * priority — mirroring WordPress's actual behaviour (WP iterates
+     * every priority bucket when the third arg is omitted).
+     */
+    function remove_action($hook, $callback, $priority = null)
+    {
+        if (!isset($GLOBALS['wpsk_wp_actions'][$hook])) {
+            return;
+        }
+        if ($priority === null) {
+            foreach ($GLOBALS['wpsk_wp_actions'][$hook] as $prio => $cbs) {
+                $GLOBALS['wpsk_wp_actions'][$hook][$prio] = array_values(
+                    array_filter($cbs, static fn($c) => $c !== $callback)
+                );
+                if (empty($GLOBALS['wpsk_wp_actions'][$hook][$prio])) {
+                    unset($GLOBALS['wpsk_wp_actions'][$hook][$prio]);
+                }
+            }
+            return;
+        }
+        if (!isset($GLOBALS['wpsk_wp_actions'][$hook][(int) $priority])) {
+            return;
+        }
+        $GLOBALS['wpsk_wp_actions'][$hook][(int) $priority] = array_values(
+            array_filter(
+                $GLOBALS['wpsk_wp_actions'][$hook][(int) $priority],
+                static fn($c) => $c !== $callback
+            )
+        );
+        if (empty($GLOBALS['wpsk_wp_actions'][$hook][(int) $priority])) {
+            unset($GLOBALS['wpsk_wp_actions'][$hook][(int) $priority]);
+        }
+    }
+}
 if (!function_exists('current_filter')) {
     function current_filter()
     {
