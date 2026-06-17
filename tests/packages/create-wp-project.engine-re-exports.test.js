@@ -2,10 +2,10 @@
  * Phase 24.13 follow-up — re-exports from create-wp-project/src/index.js.
  *
  * The engine's public API surface is `index.js`. The CLI
- * (plan.installer.md) imports from `@wpsk/create-wp-project`
+ * (plan.installer.md) imports from `@wpdev/create-wp-project`
  * and uses the named exports directly. Adding a new module
  * without re-exporting it would force the CLI to deep-import
- * (e.g. `from "@wpsk/create-wp-project/src/plan-update.js"`),
+ * (e.g. `from "@wpdev/create-wp-project/src/plan-update.js"`),
  * which is brittle (any future file move breaks the CLI).
  *
  * This test pins the public surface. It is a structural lock

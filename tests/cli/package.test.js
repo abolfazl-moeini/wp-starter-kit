@@ -2,16 +2,16 @@ import { describe, test, expect } from "@jest/globals";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
-describe("@wpsk/cli package contract", () => {
+describe("@wpdev/cli package contract", () => {
   const pkgPath = join(process.cwd(), "packages/cli/package.json");
 
   test("package.json exists at packages/cli/package.json", () => {
     expect(existsSync(pkgPath)).toBe(true);
   });
 
-  test("package name is @wpsk/cli with version 0.1.0", () => {
+  test("package name is @wpdev/cli with version 0.1.0", () => {
     const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
-    expect(pkg.name).toBe("@wpsk/cli");
+    expect(pkg.name).toBe("@wpdev/cli");
     expect(pkg.version).toBe("0.1.0");
   });
 
@@ -42,11 +42,11 @@ describe("@wpsk/cli package contract", () => {
     expect(deps.commander).toBeDefined();
     expect(deps.execa).toBeDefined();
     expect(deps.picocolors).toBeDefined();
-    expect(deps["@wpsk/create-wp-project"]).toBeDefined();
+    expect(deps["@wpdev/create-wp-project"]).toBeDefined();
   });
 });
 
-describe("@wpsk/cli bin entry", () => {
+describe("@wpdev/cli bin entry", () => {
   const binPath = join(process.cwd(), "packages/cli/bin/wpdev.js");
 
   test("bin/wpdev.js exists", () => {

@@ -26,26 +26,26 @@ beforeEach(async () => {
   createRestUtils = mod.createRestUtils;
 });
 
-describe("@wpsk/rest-utils — restRequest (via createRestUtils DI)", () => {
+describe("@wpdev/rest-utils — restRequest (via createRestUtils DI)", () => {
   test("fires <hookPrefix>-request-ajax-start before the fetch", async () => {
     const ru = createRestUtils({
       hooks: mockHooks,
       localize: mockLocalize,
       apiFetch: mockApiFetch,
-      hookPrefix: "wpsk",
-      slug: "wpsk-starter",
+      hookPrefix: "wpdev",
+      slug: "wpdev-starter",
     });
     await ru.restRequest("items");
 
     const startCall = mockHooks.doAction.mock.calls.find(
-      ([name]) => name === "wpsk-request-ajax-start",
+      ([name]) => name === "wpdev-request-ajax-start",
     );
     expect(startCall).toBeDefined();
     const startIdx = mockHooks.doAction.mock.calls.findIndex(
-      ([name]) => name === "wpsk-request-ajax-start",
+      ([name]) => name === "wpdev-request-ajax-start",
     );
     const doneIdx = mockHooks.doAction.mock.calls.findIndex(
-      ([name]) => name === "wpsk-request-ajax-done",
+      ([name]) => name === "wpdev-request-ajax-done",
     );
     expect(startIdx).toBeGreaterThanOrEqual(0);
     expect(doneIdx).toBeGreaterThan(startIdx);
@@ -56,12 +56,12 @@ describe("@wpsk/rest-utils — restRequest (via createRestUtils DI)", () => {
       hooks: mockHooks,
       localize: mockLocalize,
       apiFetch: mockApiFetch,
-      hookPrefix: "wpsk",
-      slug: "wpsk-starter",
+      hookPrefix: "wpdev",
+      slug: "wpdev-starter",
     });
     await ru.restRequest("items");
     const doneCall = mockHooks.doAction.mock.calls.find(
-      ([name]) => name === "wpsk-request-ajax-done",
+      ([name]) => name === "wpdev-request-ajax-done",
     );
     expect(doneCall).toBeDefined();
   });
@@ -71,13 +71,13 @@ describe("@wpsk/rest-utils — restRequest (via createRestUtils DI)", () => {
       hooks: mockHooks,
       localize: mockLocalize,
       apiFetch: mockApiFetch,
-      hookPrefix: "wpsk",
-      slug: "wpsk-starter",
+      hookPrefix: "wpdev",
+      slug: "wpdev-starter",
     });
     await ru.restRequest("items");
     expect(mockApiFetch).toHaveBeenCalledTimes(1);
     const callArg = mockApiFetch.mock.calls[0][0];
-    expect(callArg.path).toMatch(/\/wpsk-starter\/v1\/items/);
+    expect(callArg.path).toMatch(/\/wpdev-starter\/v1\/items/);
   });
 
   test("reads api.url and api.nonce from localize for WP REST headers", async () => {
@@ -85,8 +85,8 @@ describe("@wpsk/rest-utils — restRequest (via createRestUtils DI)", () => {
       hooks: mockHooks,
       localize: mockLocalize,
       apiFetch: mockApiFetch,
-      hookPrefix: "wpsk",
-      slug: "wpsk-starter",
+      hookPrefix: "wpdev",
+      slug: "wpdev-starter",
     });
     expect(ru.restRootUrl()).toBe("https://api.example.test/wp-json/");
     expect(ru.restNonce()).toBe("rest-nonce");
@@ -117,14 +117,14 @@ describe("@wpsk/rest-utils — restRequest (via createRestUtils DI)", () => {
   });
 });
 
-describe("@wpsk/rest-utils — restXRequest (via createRestUtils DI)", () => {
+describe("@wpdev/rest-utils — restXRequest (via createRestUtils DI)", () => {
   test("restXRequest reads api_x.url from localize and fires hooks", async () => {
     const ru = createRestUtils({
       hooks: mockHooks,
       localize: mockLocalize,
       fetch: mockFetch,
-      hookPrefix: "wpsk",
-      slug: "wpsk-starter",
+      hookPrefix: "wpdev",
+      slug: "wpdev-starter",
     });
 
     expect(ru.restXRootUrl()).toBe("https://api-x.example.test/");
@@ -138,10 +138,10 @@ describe("@wpsk/rest-utils — restXRequest (via createRestUtils DI)", () => {
     expect(options.headers["X-WP-Nonce"]).toBe("restx-nonce");
 
     const startCall = mockHooks.doAction.mock.calls.find(
-      ([name]) => name === "wpsk-request-ajax-start",
+      ([name]) => name === "wpdev-request-ajax-start",
     );
     const doneCall = mockHooks.doAction.mock.calls.find(
-      ([name]) => name === "wpsk-request-ajax-done",
+      ([name]) => name === "wpdev-request-ajax-done",
     );
     expect(startCall).toBeDefined();
     expect(doneCall).toBeDefined();

@@ -127,7 +127,7 @@ final class Plugin {
 		$config     = self::config( $config_path );
 		$hook_prefix = isset( $config['hookPrefix'] ) && is_string( $config['hookPrefix'] )
 			? $config['hookPrefix']
-			: 'wpsk';
+			: 'wpdev';
 
 		// When boot() is called with an explicit config path, the
 		// config() helper does not cache (it treats the path as a
@@ -199,7 +199,7 @@ final class Plugin {
 
 	public static function loader(): ModuleLoader {
 		if ( null === self::$loader ) {
-			self::$loader = new ModuleLoader( 'wpsk' );
+			self::$loader = new ModuleLoader( 'wpdev' );
 		}
 		return self::$loader;
 	}

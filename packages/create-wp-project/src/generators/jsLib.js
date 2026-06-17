@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — jsLib generator (Phase 21).
+ * @wpdev/create-wp-project — jsLib generator (Phase 21).
  *
  * UI library selection (none / preact / react). The package.json
  * react/preact dependency block and project.config `uiFramework`
@@ -22,7 +22,7 @@ export function run(ctx) {
     files: {
       [MARKER]: `${lib}\n`,
     },
-    dirs: [".wpsk"],
+    dirs: [".wpdev"],
     deps: {},
     devDeps: {},
   };

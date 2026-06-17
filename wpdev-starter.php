@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:       WPSK Starter
+ * Plugin Name:       WPDev Starter
  * Plugin URI:        https://github.com/abolfazl-moeini/wp-plugin-starter-kit
  * Description:       WordPress plugin starter kit — modular monolith reference implementation.
  * Version:           0.1.0
@@ -10,10 +10,10 @@
  * Author URI:        https://github.com/abolfazl-moeini/wp-plugin-starter-kit
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       wpsk-starter
+ * Text Domain:       wpdev-starter
  * Domain Path:       /languages
  *
- * @package wpsk-starter
+ * @package wpdev-starter
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -56,7 +56,7 @@ if ( ! class_exists( 'WPDev\\Core\\Plugin' )) {
 		'admin_notices',
 		static function (): void {
 			echo '<div class="error"><p>' .
-			esc_html__( 'WPSK Starter requires Composer. Run `composer install` in the plugin directory.', 'wpsk-starter' ) .
+			esc_html__( 'WPDev Starter requires Composer. Run `composer install` in the plugin directory.', 'wpdev-starter' ) .
 			'</p></div>';
 		}
 	);
@@ -92,7 +92,7 @@ if ( ! function_exists( 'wpdev_starter_on_uninstall' )) {
 add_action( 'init', 'wpdev_starter_load_textdomain' );
 function wpdev_starter_load_textdomain(): void {
 	load_plugin_textdomain(
-		'wpsk-starter',
+		'wpdev-starter',
 		false,
 		dirname( plugin_basename( __FILE__ ) ) . '/languages'
 	);

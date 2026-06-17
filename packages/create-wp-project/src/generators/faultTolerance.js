@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — faultTolerance generator (Phase 25).
+ * @wpdev/create-wp-project — faultTolerance generator (Phase 25).
  *
  * When `faultTolerance:on` (and `phpMinVersion ≥ 8.1`, enforced by
  * `validateFeatureSet`), wires the optional `wpdev/php-fault-tolerance`
@@ -29,7 +29,8 @@ Run \`composer install\` after scaffolding.
 
 \`\`\`php
 use WPDev\\FaultTolerance\\CircuitBreaker;
-use WPDev\\FaultTolerance\\HttpPool;
+use WPDev\\FaultTolerance\\HttpClient;
+use WPDev\\FaultTolerance\\FaultTolerance;
 \`\`\`
 
 See the kit doc \`docs/fault-tolerance.md\` for patterns.

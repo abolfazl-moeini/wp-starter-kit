@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — phpTest generator (Phase 21).
+ * @wpdev/create-wp-project — phpTest generator (Phase 21).
  *
  * PHPUnit scaffolding: phpunit.xml at the project root +
  * tests/phpunit/bootstrap.php. Phase 21 emits a minimal

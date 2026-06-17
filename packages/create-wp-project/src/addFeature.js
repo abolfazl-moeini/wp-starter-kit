@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — addFeature().
+ * @wpdev/create-wp-project — addFeature().
  *
  * Phase 22.3+. The engine API the installer's `wpsk add <feature>`
  * command calls. Turns a feature ON (or switches its variant) in

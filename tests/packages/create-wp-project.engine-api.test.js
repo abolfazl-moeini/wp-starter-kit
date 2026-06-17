@@ -4,7 +4,7 @@
  * The engine's public surface is the set of named exports on
  * `packages/create-wp-project/src/index.js`. The CLI (plan.installer.md)
  * and kit scripts (Phase 27.5) consume these symbols directly via
- * `import { x } from "@wpsk/create-wp-project"`.
+ * `import { x } from "@wpdev/create-wp-project"`.
  *
  * This test is a different cut from the existing
  * `create-wp-project.engine-re-exports.test.js` (which guards against
@@ -20,7 +20,7 @@
  *   - `engine-api.test.js`     (Phase 23.B7):
  *     package-publishability lock. Asserts that the package's
  *     `package.json` `main` / `exports` is set AND that an
- *     `import("@wpsk/create-wp-project")` resolves to the same
+ *     `import("@wpdev/create-wp-project")` resolves to the same
  *     module the deep-import resolves to. Without this guard, a
  *     future "simplification" of `package.json` (e.g. dropping
  *     `main` or `exports`) would break every external consumer of
@@ -104,7 +104,7 @@ const APPENDIX_C_EXPORTS = [
 /* Tests                                                                 */
 /* -------------------------------------------------------------------- */
 
-describe("@wpsk/create-wp-project — engine public API (Phase 23.B7 / Appendix C)", () => {
+describe("@wpdev/create-wp-project — engine public API (Phase 23.B7 / Appendix C)", () => {
   test("package.json declares a `main` entry point", () => {
     // A 23.B7 sub-task is "Update packages/create-wp-project/package.json
     // (add `main` + `exports` if missing)". The package already had

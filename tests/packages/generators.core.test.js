@@ -73,8 +73,8 @@ function makeCtx(answers = {}, cfg = {}, features = {}) {
     phpFunctionPrefix: a.phpFunctionPrefix,
     uiFramework: a.uiFramework,
     projectType: a.projectType,
-    restNamespace: "wpsk/v1",
-    vendorPrefix: "WpskVendor",
+    restNamespace: "wpdev/v1",
+    vendorPrefix: "WpdevVendor",
     phpMinVersion: "7.4",
     phpSourceVersion: "8.1",
     batchEndpoint: "/batch/v1",
@@ -141,7 +141,7 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
     // ABSPATH guard + autoload + Plugin::boot
     expect(php).toMatch(/defined\s*\(\s*['"]ABSPATH['"]\s*\)/);
     expect(php).toMatch(/require_once.*vendor\/autoload\.php/);
-    expect(php).toMatch(/WPSK\\Core\\Plugin::boot/);
+    expect(php).toMatch(/WPDev\\Core\\Plugin::boot/);
   });
 
   // Phase 23: the WPSK\\Core framework classes are provided exclusively
@@ -172,8 +172,8 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
       phpFunctionPrefix: "myprj_",
       uiFramework: "preact",
       projectType: "plugin",
-      restNamespace: "wpsk/v1",
-      vendorPrefix: "WpskVendor",
+      restNamespace: "wpdev/v1",
+      vendorPrefix: "WpdevVendor",
       phpMinVersion: "7.4",
       phpSourceVersion: "8.1",
       batchEndpoint: "/batch/v1",
@@ -274,9 +274,9 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
     expect(out.files["functions.php"]).toBeDefined();
     expect(out.files["my-project.php"]).toBeUndefined();
     const fn = out.files["functions.php"];
-    // BC: theme bootstrap uses wpsk_* framework helpers + slug_underscore
-    expect(fn).toMatch(/\bwpsk_enqueue_bundle_script\b/);
-    expect(fn).toMatch(/\bwpsk_enqueue_stylesheet\b/);
+    // BC: theme bootstrap uses wpdev_* framework helpers + slug_underscore
+    expect(fn).toMatch(/\bwpdev_enqueue_bundle_script\b/);
+    expect(fn).toMatch(/\bwpdev_enqueue_stylesheet\b/);
     expect(fn).toMatch(/\bmy_project_setup\b/);
     expect(fn).toMatch(/\bmy_project_enqueue_assets\b/);
   });

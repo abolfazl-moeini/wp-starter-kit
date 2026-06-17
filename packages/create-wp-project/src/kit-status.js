@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — `getKitStatus` kit/project info.
+ * @wpdev/create-wp-project — `getKitStatus` kit/project info.
  *
  * Phase 24 of plan.v3.md (24.12, 24.13). The installer's
  * `wpsk info` command runs this function. It is the
@@ -104,7 +104,7 @@ function compareSemver(a, b) {
 /**
  * Return the kit/project status. NEVER throws; a missing
  * manifest is a `{ok:false, reason}` so the CLI can show
- * the user a clean "not a wpsk project" message.
+ * the user a clean "not a wpdev project" message.
  *
  * The function awaits `lookupLatest` only if it was
  * provided. With the default (noop), the await is a single

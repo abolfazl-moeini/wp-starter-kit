@@ -42,7 +42,7 @@ describe("mcpAbilities feature integration", () => {
       vars: {
         slug: "acme-plugin",
         vendor: "AcmePlugin",
-        frameworkNamespace: "WPSK",
+        frameworkNamespace: "WPDev",
       },
     };
     const out = runMcpAbilities(ctx);

@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — frontendStack generator.
+ * @wpdev/create-wp-project — frontendStack generator.
  *
  * Copies self-contained Polaris Stack source into generated projects.
  */

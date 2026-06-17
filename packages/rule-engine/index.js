@@ -1,5 +1,5 @@
 /**
- * @wpsk/rule-engine — minimal rule executor for @wpsk forms.
+ * @wpdev/rule-engine — minimal rule executor for @wpdev forms.
  *
  * Ports the API surface of `mrlogistic/assets/packages/rule-engine/lib/index.ts`
  * to plain ESM JavaScript (no TypeScript, no lodash). The original is a

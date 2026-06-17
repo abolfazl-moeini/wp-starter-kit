@@ -142,7 +142,7 @@ function unknownFlagError(flag) {
       `Valid flags (plan.installer.md Appendix A):\n` +
       lines.join("\n"),
   );
-  err.code = "WPSK_UNKNOWN_FLAG";
+  err.code = "WPDEV_UNKNOWN_FLAG";
   return err;
 }
 

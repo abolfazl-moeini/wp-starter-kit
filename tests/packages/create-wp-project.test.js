@@ -10,7 +10,7 @@ import {
   answersToProjectConfig,
 } from "../../packages/create-wp-project/src/index.js";
 
-describe("@wpsk/create-wp-project", () => {
+describe("@wpdev/create-wp-project", () => {
   let tmp;
   beforeEach(async () => {
     tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-scaffold-"));
@@ -118,8 +118,8 @@ describe("@wpsk/create-wp-project", () => {
         phpFunctionPrefix: "myprj_",
         uiFramework: "preact",
         projectType: "plugin",
-        restNamespace: "wpsk/v1",
-        vendorPrefix: "WpskVendor",
+        restNamespace: "wpdev/v1",
+        vendorPrefix: "WpdevVendor",
         phpMinVersion: "7.4",
         phpSourceVersion: "8.1",
         batchEndpoint: "/batch/v1",
@@ -218,8 +218,8 @@ describe("@wpsk/create-wp-project", () => {
         phpFunctionPrefix: "myprj_",
         uiFramework: "preact",
         projectType: "plugin",
-        restNamespace: "wpsk/v1",
-        vendorPrefix: "WpskVendor",
+        restNamespace: "wpdev/v1",
+        vendorPrefix: "WpdevVendor",
         phpMinVersion: "7.4",
         phpSourceVersion: "8.1",
         batchEndpoint: "/batch/v1",
@@ -246,7 +246,7 @@ describe("@wpsk/create-wp-project", () => {
       });
     });
 
-    test("writes functions.php using stable wpsk_* framework asset helpers + slug-derived names for own glue", async () => {
+    test("writes functions.php using stable wpdev_* framework asset helpers + slug-derived names for own glue", async () => {
       // Phase 11: theme bootstrap is opt-in via projectType: 'theme'.
       // The default is now 'plugin' which emits {slug}.php; this
       // test covers the legacy theme path.
@@ -254,11 +254,11 @@ describe("@wpsk/create-wp-project", () => {
       const res = await scaffoldProject(tmp, themeAnswers);
       expect(res.ok).toBe(true);
       const fn = await fs.readFile(path.join(tmp, "functions.php"), "utf8");
-      // Framework asset helpers are always the stable wpsk_* names (shipped
+      // Framework asset helpers are always the stable wpdev_* names (shipped
       // once by the kit in includes/asset-functions.php or via composer).
-      expect(fn).toMatch(/\bwpsk_enqueue_bundle_script\b/);
-      expect(fn).toMatch(/\bwpsk_enqueue_stylesheet\b/);
-      expect(fn).toMatch(/\bwpsk_get_localize_data\b/);
+      expect(fn).toMatch(/\bwpdev_enqueue_bundle_script\b/);
+      expect(fn).toMatch(/\bwpdev_enqueue_stylesheet\b/);
+      expect(fn).toMatch(/\bwpdev_get_localize_data\b/);
       // The project's own bootstrap functions are derived from slug (with _ not -)
       // and the phpFunctionPrefix is carried in project.config but the bootstrap
       // template prefers the descriptive slug_ form for the action callbacks.
@@ -372,7 +372,7 @@ describe("@wpsk/create-wp-project", () => {
       // WPSK\Core\Plugin::boot can be either an add_action callback
       // (a string) or a direct call site. Either form proves the
       // plugin knows about the kit's facade.
-      expect(src).toMatch(/WPSK\\Core\\Plugin::boot/);
+      expect(src).toMatch(/WPDev\\Core\\Plugin::boot/);
     });
 
     test("plugin mode: {slug}.php includes register_(activation|deactivation|uninstall)_hook", async () => {
@@ -481,7 +481,7 @@ describe("@wpsk/create-wp-project", () => {
       const strauss = JSON.parse(
         await fs.readFile(path.join(tmp, "strauss.json"), "utf8"),
       );
-      expect(strauss.namespace_prefix).toBe("WpskVendor");
+      expect(strauss.namespace_prefix).toBe("WpdevVendor");
       const hook = await fs.readFile(
         path.join(tmp, ".husky", "pre-commit"),
         "utf8",
@@ -529,8 +529,8 @@ describe("@wpsk/create-wp-project", () => {
       // v2 defaults must be present in the scaffold output so that
       // consumers (e.g. readProjectConfig) can rely on them without
       // a follow-up migration step.
-      expect(cfg.restNamespace).toBe("wpsk/v1");
-      expect(cfg.vendorPrefix).toBe("WpskVendor");
+      expect(cfg.restNamespace).toBe("wpdev/v1");
+      expect(cfg.vendorPrefix).toBe("WpdevVendor");
       expect(cfg.phpMinVersion).toBe("7.4");
       expect(cfg.phpSourceVersion).toBe("8.1");
       expect(cfg.batchEndpoint).toBe("/batch/v1");

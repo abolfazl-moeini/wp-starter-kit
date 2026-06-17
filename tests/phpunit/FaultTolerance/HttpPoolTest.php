@@ -4,13 +4,13 @@ declare(strict_types=1);
 namespace WPDev\Tests\FaultTolerance;
 
 use PHPUnit\Framework\TestCase;
-use WPDev\FaultTolerance\HttpPool;
+use WPDev\FaultTolerance\HttpClient;
 
 class HttpPoolTest extends TestCase
 {
     public function test_http_pool_blocks_private_hosts(): void
     {
-        $responses = HttpPool::http_pool([
+        $responses = HttpClient::pool([
             ['url' => 'http://127.0.0.1/internal'],
             ['url' => 'http://169.254.169.254/latest/meta-data'],
         ]);
@@ -29,7 +29,7 @@ class HttpPoolTest extends TestCase
     /**
      * Regression test for B-10 (bug audit plan_8d50edf6):
      *
-     * HttpPool::get_status_message() used to cover only 7 codes
+     * HttpClient::get_status_message() used to cover only 7 codes
      * (200, 201, 400, 401, 403, 404, 500). Anything else — including
      * the common 204, 301, 302, 304, 409, 422, 429, 502, 503, 504
      * — fell back to 'Unknown'. The expanded map returns the
@@ -43,7 +43,7 @@ class HttpPoolTest extends TestCase
         // PHP 8.1+: ReflectionMethod can invoke private methods without
         // setAccessible() — and calling setAccessible() emits a deprecation
         // notice on PHP 8.5+. Only call it when we must (PHP < 8.1).
-        $method = new \ReflectionMethod(HttpPool::class, 'get_status_message');
+        $method = new \ReflectionMethod(HttpClient::class, 'get_status_message');
         if (PHP_VERSION_ID < 80100) {
             $method->setAccessible(true);
         }
@@ -79,7 +79,7 @@ class HttpPoolTest extends TestCase
 
     public function test_get_status_message_returns_unknown_for_unmapped_codes(): void
     {
-        $method = new \ReflectionMethod(HttpPool::class, 'get_status_message');
+        $method = new \ReflectionMethod(HttpClient::class, 'get_status_message');
         if (PHP_VERSION_ID < 80100) {
             $method->setAccessible(true);
         }
@@ -92,7 +92,7 @@ class HttpPoolTest extends TestCase
     /**
      * Regression test for B-11 (bug audit plan_8d50edf6):
      *
-     * HttpPool::parse_headers() used to assign each header into a
+     * HttpClient::parse_headers() used to assign each header into a
      * plain associative array keyed by header name. RFC 7230 allows
      * a response to carry multiple values for the same name (most
      * commonly `Set-Cookie`, but also `Vary`, `Link`, `Warning`, ...).
@@ -108,7 +108,7 @@ class HttpPoolTest extends TestCase
      */
     public function test_parse_headers_collects_repeated_set_cookie_into_array(): void
     {
-        $method = new \ReflectionMethod(HttpPool::class, 'parse_headers');
+        $method = new \ReflectionMethod(HttpClient::class, 'parse_headers');
         if (PHP_VERSION_ID < 80100) {
             $method->setAccessible(true);
         }
@@ -135,7 +135,7 @@ class HttpPoolTest extends TestCase
 
     public function test_parse_headers_keeps_single_set_cookie_as_string(): void
     {
-        $method = new \ReflectionMethod(HttpPool::class, 'parse_headers');
+        $method = new \ReflectionMethod(HttpClient::class, 'parse_headers');
         if (PHP_VERSION_ID < 80100) {
             $method->setAccessible(true);
         }

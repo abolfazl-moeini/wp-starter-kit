@@ -1,10 +1,10 @@
 /**
- * @wpsk/create-wp-project — phpFramework generator (Phase 25.E).
+ * @wpdev/create-wp-project — phpFramework generator (Phase 25.E).
  *
  * When `phpFramework:wpdev`, documents the integration seam and
  * adds a composer `suggest` entry for wpdev-framework-core.
  * The adapter class ships in `wpdev/framework`
- * (`WPSK\Adapters\WpdevModuleAdapter`).
+ * (`WPDev\Adapters\WpdevModuleAdapter`).
  */
 
 export function run(ctx) {
@@ -20,7 +20,7 @@ This project opted into \`phpFramework: wpdev\`.
 
 ## Adapter
 
-Use \`WPSK\\Adapters\\WpdevModuleAdapter\` from \`wpdev/framework\` to
+Use \`WPDev\\Adapters\\WpdevModuleAdapter\` from \`wpdev/framework\` to
 bridge kit \`ModuleInterface\` modules into wpdev's
 \`Module_Loader::load_all()\` lifecycle.
 

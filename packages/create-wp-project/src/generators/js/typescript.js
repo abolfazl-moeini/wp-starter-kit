@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — js:typescript generator (Phase 21).
+ * @wpdev/create-wp-project — js:typescript generator (Phase 21).
  *
  * The TypeScript variant of the `js` feature. Emits the TS-flavored
  * dependencies entry. The `tsconfig.json` and `package.json` are

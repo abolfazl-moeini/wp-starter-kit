@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — feature presets.
+ * @wpdev/create-wp-project — feature presets.
  *
  * Phase 20 of plan.v3.md. Presets are named feature combinations
  * that pre-fill the installer's question flow. The CLI (Phase I1+)

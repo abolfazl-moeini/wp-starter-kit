@@ -54,21 +54,7 @@ class BuildDistTest extends TestCase
         if (!is_dir($dir)) {
             return;
         }
-        $items = scandir($dir);
-        if ($items === false) {
-            return;
-        }
-        foreach ($items as $item) {
-            if ($item === '.' || $item === '..') {
-                continue;
-            }
-            $path = $dir . '/' . $item;
-            if (is_dir($path)) {
-                $this->removeTree($path);
-            } else {
-                unlink($path);
-            }
-        }
-        rmdir($dir);
+
+        exec('rm -rf ' . escapeshellarg($dir));
     }
 }

@@ -23,9 +23,9 @@ full layout (core, builders, production shell).
 | --------------------------- | ----------------------------- |
 | `modules/*/setup.php` entry | `ModuleInterface::boot()`     |
 | Module slug                 | `ModuleInterface::get_slug()` |
-| `Module_Loader::load_all()` | `WPSK\Core\ModuleLoader`      |
+| `Module_Loader::load_all()` | `WPDev\Core\ModuleLoader`     |
 
-The adapter class `WPSK\Adapters\WpdevModuleAdapter` (shipped in
+The adapter class `WPDev\Adapters\WpdevModuleAdapter` (shipped in
 `wpdev/framework`) wraps a kit `ModuleInterface` instance so you can
 register it in wpdev's loader lifecycle without rewriting your module.
 

@@ -15,7 +15,7 @@
  * the dev scripts can share the same code path.
  *
  * NB: this shim does NOT implement the wp-cli call (it just delegates
- * to `wpsk_run_wp_i18n` in bootstrap.php). It is also not part of the
+ * to `wpdev_run_wp_i18n` in bootstrap.php). It is also not part of the
  * user-facing composer scripts — those live in dev/translation/*.php.
  */
 
@@ -27,25 +27,25 @@ $verb = $argv[1] ?? '';
 
 switch ($verb) {
     case 'list':
-        fwrite(STDOUT, json_encode(wpsk_list_components()));
+        fwrite(STDOUT, json_encode(wpdev_list_components()));
         break;
 
     case 'helper':
         $op = $argv[2] ?? '';
         $payloadJson = $argv[3] ?? '{}';
         $payload = json_decode($payloadJson, true) ?: [];
-        fwrite(STDOUT, json_encode(wpsk_run_translation_helper($op, $payload)));
+        fwrite(STDOUT, json_encode(wpdev_run_translation_helper($op, $payload)));
         break;
 
     case 'wp-i18n':
         $rest = array_slice($argv, 2);
-        fwrite(STDOUT, json_encode(wpsk_run_wp_i18n($rest)));
+        fwrite(STDOUT, json_encode(wpdev_run_wp_i18n($rest)));
         break;
 
     case 'build-map':
         $component = $argv[2] ?? '';
         $pot_rel = $argv[3] ?? '';
-        fwrite(STDOUT, json_encode(wpsk_build_map_file($component, $pot_rel)));
+        fwrite(STDOUT, json_encode(wpdev_build_map_file($component, $pot_rel)));
         break;
 
     default:

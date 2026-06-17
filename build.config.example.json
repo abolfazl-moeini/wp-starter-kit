@@ -11,7 +11,7 @@
     }
   ],
   "globalMappings": {
-    "tabulator-tables": "WPSK.table"
+    "tabulator-tables": "WPDev.table"
   },
   "styleEntryPoints": ["assets/stylesheets/style.css"]
 }

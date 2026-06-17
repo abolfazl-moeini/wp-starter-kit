@@ -14,12 +14,12 @@ declare(strict_types=1);
 
 require __DIR__ . '/bootstrap.php';
 
-wpsk_color_log('Generating PHP translation files...');
+wpdev_color_log('Generating PHP translation files...');
 
-foreach (wpsk_list_components() as $component) {
-    wpsk_color_log("  Component: $component");
+foreach (wpdev_list_components() as $component) {
+    wpdev_color_log("  Component: $component");
     $rel = '/components/' . $component . '/' . $component . '.php.pot';
-    $r = wpsk_run_wp_i18n([
+    $r = wpdev_run_wp_i18n([
         'make-pot',
         SOURCE_ROOT . '/components/' . $component,
         SOURCE_ROOT . $rel,
@@ -31,10 +31,10 @@ foreach (wpsk_list_components() as $component) {
         '--skip-audit',
     ]);
     if ($r['ok']) {
-        wpsk_color_log("    " . $rel, 'g');
+        wpdev_color_log("    " . $rel, 'g');
     } else {
-        wpsk_color_log("    " . $rel . ' — wp i18n not available, skip', 'w');
+        wpdev_color_log("    " . $rel . ' — wp i18n not available, skip', 'w');
     }
 }
 
-wpsk_color_log('Done.');
+wpdev_color_log('Done.');

@@ -54,7 +54,7 @@ See [Blockstudio documentation](https://blockstudio.dev/documentation/) for full
 
 ## Installer
 
-Enable with `blocks:on` during `wpsk create` or `wpsk add blocks`. Works with `js:none` (PHP-only plugins).
+Enable with `blocks:on` during `wpdev create` or `wpdev add blocks`. Works with `js:none` (PHP-only plugins).
 
 ```bash
 wpdev create my-plugin --blocks=on --yes

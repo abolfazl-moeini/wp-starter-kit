@@ -1,17 +1,17 @@
 /**
- * @wpsk/create-wp-project — vendorScoping generator (Phase 21).
+ * @wpdev/create-wp-project — vendorScoping generator (Phase 21).
  *
  * Strauss vendor scoping for distributed plugins. When this
  * feature is on, the consumer's `strauss.json` is emitted
- * WITHOUT the `"WPSK"` namespace in `exclude_from_prefix` —
+ * WITHOUT the `"WPDev"` namespace in `exclude_from_prefix` —
  * per plan §0.4.1 (Strauss scopes the framework under the
- * consumer's vendor prefix at release time, so the WPSK
+ * consumer's vendor prefix at release time, so the WPDev
  * exclusion that protects the kit's local src/Core copies
  * is no longer correct once the framework lives in
  * `vendor/wpdev/framework`).
  *
  * IMPORTANT: the core generator's `TEMPLATE_STRAUSS_JSON`
- * keeps the WPSK exclusion (the kit's own root config still
+ * keeps the WPDev exclusion (the kit's own root config still
  * needs it; Phase 23 lands the deps-mode default for the
  * scaffold). Phase 23+ defaults to `distMode: deps` with
  * `wpdev/framework` as a Composer dependency. Core writes

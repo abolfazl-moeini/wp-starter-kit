@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — i18n generator (Phase 21).
+ * @wpdev/create-wp-project — i18n generator (Phase 21).
  *
  * Translation pipeline (text domain is already declared in
  * project.config.json / {slug}.php by core; this generator

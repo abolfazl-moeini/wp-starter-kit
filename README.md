@@ -2,7 +2,7 @@
 
 > A WordPress plugin starter with a module system, an esbuild-based
 > build pipeline, and an updatable feature model. Ships a CLI
-> installer (`wpsk`) that scaffolds new projects, adds/removes
+> installer (`wpdev`) that scaffolds new projects, adds/removes
 > features, and upgrades existing projects to a newer kit version.
 
 ## Quick start
@@ -10,21 +10,21 @@
 Generate a new wp-starter-kit plugin in one command:
 
 ```bash
-npm create @wpsk/plugin@latest my-plugin
+npm create @wpdev/plugin@latest my-plugin
 cd my-plugin
 npm install
 npm run dev
 ```
 
-That uses the `wpsk` CLI under the hood. The wrapper
-(`@wpsk/create-plugin`) just forwards to `wpsk create`.
+That uses the `wpdev` CLI under the hood. The wrapper
+(`@wpdev/create-plugin`) just forwards to `wpdev create`.
 
 Non-interactive form (for CI / scripts):
 
 ```bash
-npm create @wpsk/plugin@latest my-plugin -- --yes
-# or, after `npm i -g @wpsk/cli`:
-wpsk create my-plugin --yes
+npm create @wpdev/plugin@latest my-plugin -- --yes
+# or, after `npm i -g @wpdev/cli`:
+wpdev create my-plugin --yes
 ```
 
 For the full flag table, presets, troubleshooting, and the
@@ -56,17 +56,17 @@ view. The short version:
 ```
 wp-starter-kit/
 ├── packages/
-│   ├── cli/              # the `wpsk` installer (front-end)
+│   ├── cli/              # the `wpdev` installer (front-end)
 │   ├── create-wp-project/# the engine (templates + manifest + migrations)
 │   ├── framework/        # the PHP framework (modules, hooks, REST)
-│   └── create-plugin/    # the `npm create @wpsk/plugin` wrapper
+│   └── create-plugin/    # the `npm create @wpdev/plugin` wrapper
 ├── core/packages/        # JS packages (hooks, signals, fetch, ...)
 ├── docs/                 # everything you'd want to read
 └── .github/workflows/    # CI (tests, lint, build, installer job)
 ```
 
 The CLI is a thin front-end; **all file generation lives in
-`@wpsk/create-wp-project`**. The CLI asks questions, builds a
+`@wpdev/create-wp-project`**. The CLI asks questions, builds a
 feature set, and hands it to the engine.
 
 ## Documentation
@@ -80,7 +80,7 @@ Pick by what you're trying to do:
 | Scaffold a new project           | [docs/installer.md](docs/installer.md)                                |
 | Add a feature module             | [docs/modules.md](docs/modules.md)                                    |
 | Wire a build step                | [docs/build-system.md](docs/build-system.md)                          |
-| Upgrade an existing project      | [docs/installer.md](installer.md#wpsk-update--wpsk-doctor--wpsk-info) |
+| Upgrade an existing project      | [docs/installer.md](docs/installer.md#wpdev-update--wpdev-doctor--wpdev-info) |
 | Ship a plugin with Composer deps | [docs/vendor-scoping.md](docs/vendor-scoping.md)                      |
 | Open a PR                        | [docs/contributing.md](docs/contributing.md)                          |
 

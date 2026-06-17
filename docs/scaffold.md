@@ -1,4 +1,4 @@
-# Project Scaffold (`@wpsk/create-wp-project`)
+# Project Scaffold (`@wpdev/create-wp-project`)
 
 > Phase 8 of `plan.md` — generate a new wp-starter-kit-based project
 > from a small set of answers. **No Plop, no Yeoman, no extra
@@ -19,12 +19,30 @@ that:
 
 Tests live in `tests/packages/create-wp-project.test.js`.
 
+## TDD-first scaffold
+
+Generated projects include **test stubs before implementation**:
+
+- `phpTest: phpunit` + `exampleFeature: on` →
+  `tests/phpunit/Modules/ExampleFeature/ModuleTest.php` (slug contract test).
+- `jsTest: jest` + `exampleFeature: on` →
+  `src/Modules/ExampleFeature/assets/entries/__tests__/admin.test.ts`
+  (`test.todo` placeholder).
+
+Workflow:
+
+1. Run `composer test` or `npm test` — stubs should pass (or show `todo`).
+2. Add failing tests for the behavior you want.
+3. Implement until green, then refactor.
+
+See [contributing.md](contributing.md#red--green--refactor) for the full loop.
+
 ## Usage
 
 ### 1. As a one-shot from a project dir
 
 ```bash
-WPSK_ANSWERS_JSON='{
+WPDEV_ANSWERS_JSON='{
   "slug":          "my-project",
   "npmScope":      "myorg",
   "globalName":    "MyProject",
@@ -52,7 +70,7 @@ node packages/create-wp-project/src/index.js \
 ### 3. From another Node program
 
 ```js
-import { scaffoldProject } from "@wpsk/create-wp-project/src/index.js";
+import { scaffoldProject } from "@wpdev/create-wp-project/src/index.js";
 const res = await scaffoldProject("/path/to/dir", {
   slug: "my-project",
   npmScope: "myorg",
@@ -72,7 +90,7 @@ if (res.ok) console.log("Wrote", res.written);
 | `textDomain`        | yes      | `^[a-z0-9][a-z0-9-]*$`                         | `my-project`               |
 | `hookPrefix`        | yes      | `^[a-z0-9][a-z0-9-]*$`                         | `my-project`               |
 | `depsBundle`        | no       | `*.js` (inferred: `slug + '-deps.js'`)         | `my-project-deps.js`       |
-| `phpFunctionPrefix` | no       | `^[a-z][a-z0-9_]*_$`                           | `myprj_` (default `wpsk_`) |
+| `phpFunctionPrefix` | no       | `^[a-z][a-z0-9_]*_$`                           | `myprj_` (default `wpdev_`) |
 | `uiFramework`       | yes      | `preact` \| `react`                            | `preact`                   |
 
 ## Output

@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — safe JSON file editing helper.
+ * @wpdev/create-wp-project — safe JSON file editing helper.
  *
  * Phase 20 of plan.v3.md. The kit edits a number of JSON files
  * in consumer projects (project.config.json, wpdev-kit.json,

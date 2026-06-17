@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — migration registry + selector + runner.
+ * @wpdev/create-wp-project — migration registry + selector + runner.
  *
  * Phase 24 of plan.v3.md. The engine's "update consumer project
  * from kit version A to version B" surface. Powers the

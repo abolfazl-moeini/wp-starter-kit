@@ -10,7 +10,7 @@ import {
 jest.mock("@wordpress/api-fetch", () => jest.fn());
 
 import apiFetch from "@wordpress/api-fetch";
-import { createBatchRequest } from "../../packages/fetch/src/index";
+import { createBatchRequest } from "../../packages/rest-utils/src/fetch/index";
 
 const mockedApiFetch = apiFetch as jest.MockedFunction<typeof apiFetch>;
 
@@ -40,7 +40,7 @@ describe("createBatchRequest cache behavior", () => {
       requestChunk: 10,
       requestDelay: 50,
       method: "POST",
-      path: "/wpsk/v1/items",
+      path: "/wpdev/v1/items",
       batchEndpoint: "/batch/v1",
     });
 
@@ -71,7 +71,7 @@ describe("createBatchRequest cache behavior", () => {
       requestChunk: 10,
       requestDelay: 20,
       method: "POST",
-      path: "/wpsk/v1/items",
+      path: "/wpdev/v1/items",
       batchEndpoint: "/batch/v1",
     });
 
@@ -102,7 +102,7 @@ describe("createBatchRequest cache behavior", () => {
       requestChunk: 10,
       requestDelay: 10,
       method: "POST",
-      path: "/wpsk/v1/items",
+      path: "/wpdev/v1/items",
       batchEndpoint: "/batch/v1",
     });
 
@@ -126,7 +126,7 @@ describe("createBatchRequest cache behavior", () => {
       requestChunk: 10,
       requestDelay: 10,
       method: "POST",
-      path: "/wpsk/v1/items",
+      path: "/wpdev/v1/items",
       batchEndpoint: "/batch/v1",
     });
 

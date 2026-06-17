@@ -1,6 +1,6 @@
 import { describe, test, expect, jest } from "@jest/globals";
 
-describe("@wpsk/rule-engine", () => {
+describe("@wpdev/rule-engine", () => {
   test("RuleEngine class is exported and instantiable", async () => {
     const { RuleEngine } = await import("../../packages/rule-engine/index.js");
     const engine = new RuleEngine();

@@ -4,7 +4,7 @@ import { describe, test, expect, beforeEach } from "@jest/globals";
 import { localize } from "../../packages/utils/localize.js";
 
 beforeEach(() => {
-  globalThis.WPSKLoc = {
+  globalThis.WPDevLoc = {
     api: { url: "https://api.example.test", nonce: "abc123" },
     api_x: { url: "https://api-x.example.test", nonce: "xyz789" },
     a: { b: { c: "deep-value" } },

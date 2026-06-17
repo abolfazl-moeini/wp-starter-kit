@@ -4,13 +4,13 @@ declare(strict_types=1);
 namespace WPDev\Tests\FaultTolerance;
 
 use PHPUnit\Framework\TestCase;
-use WPDev\FaultTolerance\HttpPool;
+use WPDev\FaultTolerance\HttpClient;
 
 class HttpBatchTest extends TestCase
 {
     public function test_http_batch_returns_sequential_responses(): void
     {
-        $responses = HttpPool::batch([
+        $responses = HttpClient::batch([
             ['url' => 'https://example.test/a'],
             ['url' => 'https://example.test/b'],
         ]);
@@ -21,7 +21,7 @@ class HttpBatchTest extends TestCase
 
     public function test_http_batch_blocks_loopback_host(): void
     {
-        $responses = HttpPool::batch([
+        $responses = HttpClient::batch([
             ['url' => 'http://127.0.0.1/admin'],
         ]);
 
@@ -32,7 +32,7 @@ class HttpBatchTest extends TestCase
 
     public function test_http_batch_blocks_file_scheme(): void
     {
-        $responses = HttpPool::batch([
+        $responses = HttpClient::batch([
             ['url' => 'file:///etc/passwd'],
         ]);
 
@@ -43,7 +43,7 @@ class HttpBatchTest extends TestCase
 
     public function test_http_batch_blocks_empty_url(): void
     {
-        $responses = HttpPool::batch([
+        $responses = HttpClient::batch([
             ['url' => ''],
         ]);
 

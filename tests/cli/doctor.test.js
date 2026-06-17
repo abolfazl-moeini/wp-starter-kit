@@ -211,13 +211,13 @@ describe("runDoctor — engine.doctorProject wiring (I5.5)", () => {
     const deps = baseDeps();
     deps.engine.doctorProject = jest.fn(() => ({
       ok: false,
-      warnings: ["manifest newer than installed deps — run wpsk update"],
+      warnings: ["manifest newer than installed deps — run wpdev update"],
       errors: ["unknown feature: foo"],
     }));
     const out = await runDoctor("/tmp/proj", deps);
     expect(out.report.project.ok).toBe(false);
     expect(out.report.project.warnings).toEqual([
-      "manifest newer than installed deps — run wpsk update",
+      "manifest newer than installed deps — run wpdev update",
     ]);
     expect(out.report.project.errors).toEqual(["unknown feature: foo"]);
   });
@@ -282,7 +282,7 @@ describe("runDoctor — exit codes (I5.6)", () => {
     }));
     deps.engine.doctorProject = jest.fn(() => ({
       ok: true,
-      warnings: ["kit newer than installed deps — run wpsk update"],
+      warnings: ["kit newer than installed deps — run wpdev update"],
       errors: [],
     }));
     const out = await runDoctor("/tmp/proj", deps);

@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — removeFeature().
+ * @wpdev/create-wp-project — removeFeature().
  *
  * Phase 22.9+. The engine API the installer's `wpsk remove <feature>`
  * command calls. The mirror of addFeature(): turn a feature OFF

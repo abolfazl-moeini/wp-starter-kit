@@ -36,7 +36,7 @@ import { sanitizeSlug } from "../slug.js";
 /* -------------------------------------------------------------------- */
 
 /**
- * Read the on-disk package.json of `@wpsk/create-wp-project` to
+ * Read the on-disk package.json of `@wpdev/create-wp-project` to
  * discover the kit version. Resolution order:
  *   1. `cwd()/packages/create-wp-project/package.json` (kit's
  *      local workspace, which is the common case).

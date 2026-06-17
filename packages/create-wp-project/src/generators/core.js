@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — core generator (Phase 21).
+ * @wpdev/create-wp-project — core generator (Phase 21).
  *
  * The "core" generator is always-on. It emits the files that
  * every wp-starter-kit consumer project has, regardless of which

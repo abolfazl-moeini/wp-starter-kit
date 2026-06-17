@@ -6,7 +6,7 @@
  *     (the bin layer uses this to `process.exit(code)`).
  *   - Writes a readable, one-error-per-line list to stderr.
  *     Each line is formatted as `  <key>: <message>`.
- *   - Includes a `title` line up top (e.g. "wpsk create: invalid
+ *   - Includes a `title` line up top (e.g. "wpdev create: invalid
  *     feature combination").
  *   - Tolerates an empty / missing `errors` object — returns
  *     `{code: 1}` and does not throw.
@@ -64,7 +64,7 @@ afterEach(() => {
 describe("ui.renderError()", () => {
   test("returns a result object (not a Promise, not undefined)", async () => {
     const result = await renderError({
-      title: "wpsk create: invalid",
+      title: "wpdev create: invalid",
       errors: { slug: "bad" },
     });
     expect(result).toBeDefined();
@@ -73,7 +73,7 @@ describe("ui.renderError()", () => {
 
   test("returns a non-zero exit code when errors are present", async () => {
     const result = await renderError({
-      title: "wpsk create: invalid",
+      title: "wpdev create: invalid",
       errors: { slug: "must be lowercase" },
     });
     expect(result.code).toBeDefined();
@@ -83,16 +83,16 @@ describe("ui.renderError()", () => {
 
   test("writes a title line to stderr", async () => {
     await renderError({
-      title: "wpsk create: invalid feature combination",
+      title: "wpdev create: invalid feature combination",
       errors: { slug: "must be lowercase" },
     });
     const out = stderrChunks.join("");
-    expect(out).toMatch(/wpsk create: invalid feature combination/);
+    expect(out).toMatch(/wpdev create: invalid feature combination/);
   });
 
   test("writes one line per field, formatted as '  <key>: <message>'", async () => {
     await renderError({
-      title: "wpsk create: invalid",
+      title: "wpdev create: invalid",
       errors: {
         slug: "must be lowercase",
         js: "must be one of: typescript, none",
@@ -113,7 +113,7 @@ describe("ui.renderError()", () => {
 
   test("tolerates an empty errors object (no throw, still non-zero code)", async () => {
     const result = await renderError({
-      title: "wpsk create: invalid",
+      title: "wpdev create: invalid",
       errors: {},
     });
     expect(result.code).not.toBe(0);
@@ -121,7 +121,7 @@ describe("ui.renderError()", () => {
 
   test("tolerates a missing errors object (no throw, still non-zero code)", async () => {
     const result = await renderError({
-      title: "wpsk create: invalid",
+      title: "wpdev create: invalid",
     });
     expect(result.code).not.toBe(0);
   });
@@ -133,7 +133,7 @@ describe("ui.renderError()", () => {
 
   test("tolerates non-string error values (does not throw)", async () => {
     const result = await renderError({
-      title: "wpsk create: invalid",
+      title: "wpdev create: invalid",
       errors: { slug: 42, js: null, css: undefined },
     });
     expect(result.code).not.toBe(0);
@@ -158,7 +158,7 @@ describe("ui.renderError()", () => {
 
   test("never writes to stdout (errors are a stderr-only concern)", async () => {
     await renderError({
-      title: "wpsk create: invalid",
+      title: "wpdev create: invalid",
       errors: { slug: "bad" },
     });
     expect(stdoutChunks.join("")).toBe("");
@@ -173,7 +173,7 @@ describe("default ui export — renderError", () => {
   test("ui.renderError is the same function shape (callable, returns code)", async () => {
     expect(typeof ui.renderError).toBe("function");
     const result = await ui.renderError({
-      title: "wpsk create: invalid",
+      title: "wpdev create: invalid",
       errors: { slug: "bad" },
     });
     expect(result.code).not.toBe(0);

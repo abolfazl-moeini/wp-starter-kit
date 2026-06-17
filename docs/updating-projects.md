@@ -1,8 +1,8 @@
 # Updating Projects
 
 > Phase 24 of `plan.v3.md` — the installer's update flow:
-> `wpsk update` (dry-run by default), `wpsk update --run` (apply),
-> `wpsk doctor` (drift report), and the rollback policy.
+> `wpdev update` (dry-run by default), `wpdev update --run` (apply),
+> `wpdev doctor` (drift report), and the rollback policy.
 
 Generated projects are not write-once. The kit ships a small
 **update / migration mechanism** so a project can move safely
@@ -21,16 +21,16 @@ This document covers:
 
 ## The update flow
 
-The installer's `wpsk update` command runs in two phases:
+The installer's `wpdev update` command runs in two phases:
 
 ```bash
 # Phase 1 — dry-run (default). Prints the plan, writes nothing.
-wpsk update                          # → kitVersion 0.1.0 → 0.2.0
-wpsk update --to 0.3.0               # → target a specific version
+wpdev update                          # → kitVersion 0.1.0 → 0.2.0
+wpdev update --to 0.3.0               # → target a specific version
 
 # Phase 2 — apply. Runs the migrations, bumps the manifest.
-wpsk update --run                    # → applies the plan
-wpsk update --run --to 0.3.0         # → applies to a specific target
+wpdev update --run                    # → applies the plan
+wpdev update --run --to 0.3.0         # → applies to a specific target
 ```
 
 The dry-run step is the **safe default**. Every installer's
@@ -80,7 +80,7 @@ catalog).
 The kit ships a sorted registry of all registered migrations:
 
 ```js
-import { getMigrations } from "@wpsk/create-wp-project";
+import { getMigrations } from "@wpdev/create-wp-project";
 // → [{ version: "0.2.0", description: "no-op baseline ...", run: [Function] }, ...]
 ```
 
@@ -144,13 +144,13 @@ Per plan.v3.md §24:
 
 ## Doctor: drift detection
 
-The installer's `wpsk doctor` command runs `doctorProject(dir)`
+The installer's `wpdev doctor` command runs `doctorProject(dir)`
 and prints the result. The doctor is a **safe** read-only
 operation — it never throws, never writes, never auto-fixes.
 
 ```bash
-wpsk doctor                  # → prints { ok, warnings, errors }
-wpsk doctor --strict         # → exits non-zero on warnings too
+wpdev doctor                  # → prints { ok, warnings, errors }
+wpdev doctor --strict         # → exits non-zero on warnings too
 ```
 
 The result is a small object:
@@ -159,7 +159,7 @@ The result is a small object:
 {
   ok: true,            // true iff errors.length === 0
   warnings: [],        // non-fatal drift
-  errors: []           // fatal — `wpsk update` is recommended
+  errors: []           // fatal — `wpdev update` is recommended
 }
 ```
 
@@ -184,13 +184,13 @@ Automated rollback (reverse migrations) is **not** implemented
 in v3. The recommended recovery path is:
 
 ```bash
-# Before running `wpsk update --run`, the CLI prints:
+# Before running `wpdev update --run`, the CLI prints:
 #   "It is strongly recommended to commit your changes before
 #    applying migrations. Rollback path: git checkout ."
 
 git add -A
 git commit -m "pre-update: 0.1.0 → 0.2.0"
-wpsk update --run
+wpdev update --run
 # If something went wrong:
 git checkout .
 ```
@@ -220,7 +220,7 @@ upgrade requires a **migration**:
 Unknown schema versions are **never silently ignored**. A
 consumer that hand-edits `wpdev-kit.json` to a future schema
 that the running kit doesn't understand will see a clear
-"this kit is too old — run `wpsk update`" error from the
+"this kit is too old — run `wpdev update`" error from the
 doctor, not a silent crash later in the build.
 
 ## The dry-run plan

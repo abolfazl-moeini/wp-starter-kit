@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — husky generator (Phase 21).
+ * @wpdev/create-wp-project — husky generator (Phase 21).
  *
  * Husky is the git pre-commit hook installer. The generator
  * emits `.husky/pre-commit` (a shell script that runs

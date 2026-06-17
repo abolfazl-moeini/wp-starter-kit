@@ -25,7 +25,7 @@ A project uses it by adding to its own `composer.json`:
 
 ```jsonc
 "require-dev": {
-  "@wpsk/php-test-tools": "^0.1.0"
+  "@wpdev/php-test-tools": "^0.1.0"
 }
 ```
 
@@ -129,8 +129,8 @@ each.
 `phpcs.xml.dist` extends `WordPress-Extra`:
 
 ```xml
-<ruleset name="wpsk/php-test-tools">
-  <description>WordPress-Extra + WPSK additions</description>
+<ruleset name="wpdev/php-test-tools">
+  <description>WordPress-Extra + WPDev additions</description>
   <rule ref="WordPress-Extra"/>
   <rule ref="WordPress.Security.NonceVerification"/>
   <rule ref="WordPress.Security.ValidatedSanitizedInput"/>
@@ -138,7 +138,7 @@ each.
 </ruleset>
 ```
 
-Plus a few **WPSK-specific rules** (defined in `ruleset.xml`):
+Plus a few **WPDev-specific rules** (defined in `ruleset.xml`):
 
 - `WPDev.NamingConventions.FunctionPrefix` — every function in
   `core/php/` must start with the project's `phpFunctionPrefix`
@@ -148,7 +148,7 @@ Plus a few **WPSK-specific rules** (defined in `ruleset.xml`):
 - `WPDev.Files.ClassFileName` — class files must be `class-<name>.php`
   (PSR-4-ish).
 
-The WPSK rules are in `core/packages/php-test-tools/rules/` and total
+The WPDev rules are in `packages/php-test-tools/rules/` and total
 ~300 LOC of PHPCS custom sniff code.
 
 ## PHPStan
@@ -224,5 +224,5 @@ nit (e.g. "use `wp_date()` not `date()`"), add a sniff:
 4. Document it in this file.
 
 The starter ships with 3 custom sniffs. Most projects can stay on
-WordPress-Extra for the first year and add WPSK-specific rules as
+WordPress-Extra for the first year and add WPDev-specific rules as
 they stabilize.

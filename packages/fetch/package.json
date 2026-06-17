@@ -1,7 +1,7 @@
 {
   "name": "@wpdev/fetch",
   "version": "0.1.0",
-  "description": "Debounced REST batch fetch client for wp-starter-kit consumers.",
+  "description": "Deprecated: batch fetch client — use @wpdev/rest-utils/fetch instead.",
   "type": "module",
   "main": "src/index.ts",
   "exports": {
@@ -11,7 +11,7 @@
     "src"
   ],
   "dependencies": {
-    "@wordpress/api-fetch": "^7.0.0"
+    "@wpdev/rest-utils": "^0.1.0"
   },
   "license": "MIT"
 }

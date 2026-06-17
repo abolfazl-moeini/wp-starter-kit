@@ -31,15 +31,15 @@ assets/bundles/<depsBundle>.asset.php
 ```
 
 Where `<depsBundle>` comes from `project.config.json → depsBundle`
-(e.g. `wpsk-starter-deps.js`).
+(e.g. `wpdev-starter-deps.js`).
 
 ### Bundle format
 
 - **Format:** `iife` (Immediately Invoked Function Expression).
-- **Global name:** `project.config.json → globalName` (e.g. `WPSK`).
+- **Global name:** `project.config.json → globalName` (e.g. `WPDev`).
   After the script runs, `window[globalName]` exists and exposes:
   - `<globalName>.hooks` — hook registry created in `assets/dependencies.js`
-    (e.g. `WPSK.hooks.doAction('wpsk-request-ajax-start', ...)`)
+    (e.g. `WPDev.hooks.doAction('wpdev-request-ajax-start', ...)`)
   - `<globalName>.table` — alias for `window.Tabulator` (when used)
   - `<globalName>.utils` — re-exported `@<npmScope>/utils`
   - `<globalName>.<other>` — anything explicitly exported from
@@ -69,7 +69,7 @@ PHP uses this to:
 
 `importAsGlobals(globalMappings, internalItems)` is wired with:
 
-- `globalMappings` from `build.config.json` (e.g. `{ "tabulator-tables": "WPSK.table" }`)
+- `globalMappings` from `build.config.json` (e.g. `{ "tabulator-tables": "WPDev.table" }`)
 - The internal `<npmScope>/utils` mapping: `${globalName}.utils`.
 
 This means the bundle can `import { x } from "@<npmScope>/utils"` even though
@@ -102,7 +102,7 @@ naming is the "component bundle" contract — PHP enqueues by directory name.
 - **Format:** esbuild `iife` is **not** used (components are loaded individually
   via `wp_enqueue_script`, not via the global IIFE).
 - **Force-injected dependency:** the dependencies bundle handle — derived from
-  `projectConfig.depsBundle` minus the `.js` extension (e.g. `wpsk-starter-deps`).
+  `projectConfig.depsBundle` minus the `.js` extension (e.g. `wpdev-starter-deps`).
   The handle is always appended to the `.asset.php → dependencies` array so
   WordPress loads the deps bundle **before** the component bundle.
 
@@ -110,7 +110,7 @@ naming is the "component bundle" contract — PHP enqueues by directory name.
 
 ```php
 <?php return array(
-  'dependencies' => array('wpsk-starter-deps', 'wp-i18n'),
+  'dependencies' => array('wpdev-starter-deps', 'wp-i18n'),
   'internal_packages' => array('utils'),
   'hash' => 'abc123...',
 );
@@ -272,13 +272,13 @@ imports of third-party libraries to references on the IIFE global.
 ```json
 {
   "globalMappings": {
-    "tabulator-tables": "WPSK.table"
+    "tabulator-tables": "WPDev.table"
   }
 }
 ```
 
 With this config, a component bundle that contains `import { Tabulator } from
-"tabulator-tables"` will be rewritten to use `WPSK.table.Tabulator` at runtime,
+"tabulator-tables"` will be rewritten to use `WPDev.table.Tabulator` at runtime,
 which is bridged from `window.Tabulator` (loaded by WordPress's enqueue
 pipeline) via an alias in `assets/dependencies.js`:
 

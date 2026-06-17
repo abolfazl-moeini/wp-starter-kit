@@ -124,7 +124,7 @@ matter of:
 
 1. **Update `project.config.json`** — flip `"css"` to the new
    variant (e.g. `"css": "tailwind"`).
-2. **Re-run the scaffold** — `npx @wpsk/create-wp-project update`
+2. **Re-run the scaffold** — `npx @wpdev/create-wp-project update`
    in the consumer project. The CSS generator's `run()` runs
    again with the new variant and overwrites the config files
    (the generator's `owns` list: `.sassrc`, `tailwind.config.js`,

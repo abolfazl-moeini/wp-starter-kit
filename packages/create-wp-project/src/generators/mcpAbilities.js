@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — mcpAbilities generator.
+ * @wpdev/create-wp-project — mcpAbilities generator.
  *
  * When mcpAbilities=on, copies the self-contained wp-mcp-integration
  * library into src/Mcp/ and emits a kit bridge module plus an early

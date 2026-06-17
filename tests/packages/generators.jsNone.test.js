@@ -79,8 +79,8 @@ function makeCoreCtx(answers = {}, cfg = {}, features = {}) {
     phpFunctionPrefix: a.phpFunctionPrefix,
     uiFramework: a.uiFramework,
     projectType: a.projectType,
-    restNamespace: "wpsk/v1",
-    vendorPrefix: "WpskVendor",
+    restNamespace: "wpdev/v1",
+    vendorPrefix: "WpdevVendor",
     phpMinVersion: "7.4",
     phpSourceVersion: "8.1",
     batchEndpoint: "/batch/v1",
@@ -333,7 +333,7 @@ describe("js:none — end-to-end scaffold (Phase 25.A1)", () => {
       "utf8",
     );
     expect(pluginPhp).toMatch(/Plugin Name:/);
-    expect(pluginPhp).toMatch(/WPSK\\Core\\Plugin::boot/);
+    expect(pluginPhp).toMatch(/WPDev\\Core\\Plugin::boot/);
     // Phase 23: core framework sources are NOT written (provided by dep).
     await expect(
       fs.access(path.join(tmp, "src", "Core", "ModuleInterface.php")),
@@ -409,7 +409,7 @@ describe("js:none — theme-mode PHP enqueue guard (Phase 25.A2)", () => {
 
   test("functions.php (theme bootstrap) does NOT enqueue the missing JS bundle when js=none", async () => {
     // Phase 25.A2: a js:none theme has no bundle to enqueue.
-    // The wpsk_enqueue_bundle_script() helper checks file_exists()
+    // The wpdev_enqueue_bundle_script() helper checks file_exists()
     // at runtime, but emitting the call site is still misleading
     // for a PHP-only project. The theme bootstrap must either
     // omit the enqueue OR guard it behind a js !== "none" check.
@@ -423,16 +423,16 @@ describe("js:none — theme-mode PHP enqueue guard (Phase 25.A2)", () => {
     //   (a) the line is omitted entirely, OR
     //   (b) the call is wrapped in a `if (/* js !== "none" */) { ... }` guard.
     const hasUnconditionalEnqueue =
-      /wpsk_enqueue_bundle_script\(\s*['"]my-php-theme-deps\.js['"]\s*\)/.test(
+      /wpdev_enqueue_bundle_script\(\s*['"]my-php-theme-deps\.js['"]\s*\)/.test(
         fn,
       );
     if (hasUnconditionalEnqueue) {
       // If the call IS present, it must be inside a conditional
-      // (e.g. `if (...) { wpsk_enqueue_bundle_script(...); }`).
+      // (e.g. `if (...) { wpdev_enqueue_bundle_script(...); }`).
       // The test fails if the call is at the top level of the
       // enqueue_assets() function.
       const unguarded =
-        /function\s+\w+_enqueue_assets[^{]*\{[^}]*wpsk_enqueue_bundle_script\s*\(\s*['"]my-php-theme-deps\.js['"]\s*\)/s.test(
+        /function\s+\w+_enqueue_assets[^{]*\{[^}]*wpdev_enqueue_bundle_script\s*\(\s*['"]my-php-theme-deps\.js['"]\s*\)/s.test(
           fn,
         );
       expect(unguarded).toBe(false);
@@ -448,6 +448,6 @@ describe("js:none — theme-mode PHP enqueue guard (Phase 25.A2)", () => {
     });
     expect(res.ok).toBe(true);
     const fn = await fs.readFile(path.join(tmp, "functions.php"), "utf8");
-    expect(fn).toMatch(/wpsk_enqueue_stylesheet\(['"]style\.css['"]\)/);
+    expect(fn).toMatch(/wpdev_enqueue_stylesheet\(['"]style\.css['"]\)/);
   });
 });

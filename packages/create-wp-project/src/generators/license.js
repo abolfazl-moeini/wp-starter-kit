@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — license generator (Phase 21).
+ * @wpdev/create-wp-project — license generator (Phase 21).
  *
  * License file (LICENSE) + composer.json `license` field. The
  * full LICENSE file bodies land in Phase 25.G; Phase 21 emits

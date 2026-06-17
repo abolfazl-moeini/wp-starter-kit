@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — re-export of tplVars from _templates.
+ * @wpdev/create-wp-project — re-export of tplVars from _templates.
  *
  * Phase 21 split: `tplVars` lives in `_templates.js` (Phase 21
  * consolidated the inline templates and helpers there). This

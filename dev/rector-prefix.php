@@ -8,14 +8,15 @@
  * so downstream projects can re-brand without forking the framework.
  *
  * Resolution order for the `from => to` pair:
- *   1. Environment variables `WPSK_PREFIX_FROM` and `WPSK_PREFIX_TO`.
+ *   1. Environment variables `WPDEV_PREFIX_FROM` / `WPDEV_PREFIX_TO`
+ *      (legacy `WPSK_PREFIX_*` still accepted).
  *   2. `dev/rector.prefix.json` (a small JSON file committed in the
  *      downstream project; the starter repo does not commit it).
  *   3. Fallback: empty mapping (no rewrite) so the pipeline is still a
  *      no-op when neither is configured.
  *
  * Usage:
- *   WPSK_PREFIX_FROM=OldName WPSK_PREFIX_TO=NewName composer rector:prefix
+ *   WPDEV_PREFIX_FROM=OldName WPDEV_PREFIX_TO=NewName composer rector:prefix
  *   — or —
  *   echo '{"from":"OldName","to":"NewName"}' > dev/rector.prefix.json
  *   composer rector:prefix
@@ -38,8 +39,8 @@ return static function (RectorConfig $rector_config): void {
     // are rewritten too (they reference the old namespace).
     $shared($rector_config, ['include_vendor' => true]);
 
-    $from = (string) getenv('WPSK_PREFIX_FROM');
-    $to   = (string) getenv('WPSK_PREFIX_TO');
+    $from = (string) (getenv('WPDEV_PREFIX_FROM') ?: getenv('WPSK_PREFIX_FROM'));
+    $to   = (string) (getenv('WPDEV_PREFIX_TO') ?: getenv('WPSK_PREFIX_TO'));
 
     if (($from === '' || $to === '') && is_file(__DIR__ . '/rector.prefix.json')) {
         $decoded = json_decode((string) file_get_contents(__DIR__ . '/rector.prefix.json'), true);

@@ -23,7 +23,7 @@ becomes:
   call in `core/php/` matches.
 
 The hook prefix must be **lowercase kebab-case** and unique per project.
-The scaffold (`@wpsk/create-wp-project`) validates this with a regex.
+The scaffold (`@wpdev/create-wp-project`) validates this with a regex.
 
 ## Why a project-specific prefix?
 

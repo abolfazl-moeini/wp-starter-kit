@@ -58,19 +58,19 @@ jobs:
           cp phpunit.xml phpcs.xml phpstan.neon release-archive/
           if [ -f README.md ]; then cp README.md release-archive/; fi
           if [ -f CHANGELOG.md ]; then cp CHANGELOG.md release-archive/; fi
-          tar -czf wpsk-starter-${{ github.ref_name }}.tar.gz -C release-archive .
+          tar -czf wpdev-starter-${{ github.ref_name }}.tar.gz -C release-archive .
 
       - name: Create zip archive
         run: |
-          zip -r wpsk-starter-${{ github.ref_name }}.zip release-archive/ -x "*/node_modules/*" "*/vendor/*"
+          zip -r wpdev-starter-${{ github.ref_name }}.zip release-archive/ -x "*/node_modules/*" "*/vendor/*"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ github.ref_name }}
           path: |
-            wpsk-starter-${{ github.ref_name }}.tar.gz
-            wpsk-starter-${{ github.ref_name }}.zip
+            wpdev-starter-${{ github.ref_name }}.tar.gz
+            wpdev-starter-${{ github.ref_name }}.zip
 
   # ============================================================
   # Create the GitHub Release and attach the artifacts
@@ -119,7 +119,7 @@ jobs:
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
-            artifacts/wpsk-starter-${{ github.ref_name }}.tar.gz
-            artifacts/wpsk-starter-${{ github.ref_name }}.zip
+            artifacts/wpdev-starter-${{ github.ref_name }}.tar.gz
+            artifacts/wpdev-starter-${{ github.ref_name }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

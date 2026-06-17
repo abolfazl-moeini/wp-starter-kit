@@ -27,7 +27,7 @@
 
 ## Rector namespace rename (if scope changed)
 
-If you renamed the project's namespace (`@wpsk` → `@myorg`), Rector
+If you renamed the project's namespace (`@wpdev` → `@myorg`), Rector
 will rewrite the imports:
 
 ```bash

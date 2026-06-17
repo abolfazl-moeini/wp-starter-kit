@@ -8,7 +8,7 @@ use WP_REST_Response;
 /**
  * Helper for responses that participate in the JS batch client contract.
  *
- * The client (@wpsk/fetch or equivalent) requires `extra.cacheKey` in the
+ * The client (@wpdev/rest-utils or equivalent) requires `extra.cacheKey` in the
  * response body so concurrent/debounced callers can be resolved.
  */
 final class BatchResponse

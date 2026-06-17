@@ -60,7 +60,7 @@ export function mcpLibraryFiles(_ctx) {
 }
 
 /**
- * Kit bridge module: wires the vendored library into WPSK\Core\Plugin.
+ * Kit bridge module: wires the vendored library into WPDev\Core\Plugin.
  *
  * @param {object} _ctx
  * @returns {string}

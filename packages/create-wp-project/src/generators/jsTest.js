@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — jsTest generator (Phase 21 / 25.D).
+ * @wpdev/create-wp-project — jsTest generator (Phase 21 / 25.D).
  *
  * Emits the JS unit-test runner config for the consumer:
  *   - jsTest:jest   → jest.config.mjs (default)

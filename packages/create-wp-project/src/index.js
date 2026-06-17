@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — minimal Node scaffold for a new wp-starter-kit
+ * @wpdev/create-wp-project — minimal Node scaffold for a new wp-starter-kit
  * project (Phase 8).
  *
  * The mrlogistic approach was a Yeoman generator. The wp-starter-kit
@@ -73,7 +73,7 @@ import {
 // Phase 24 (24.1–24.6) — migrations registry, selector, and
 // runner live under `./migrations/index.js`. Re-exported
 // here by the 24.13 follow-up (this commit) so the CLI
-// imports them from the engine surface (`@wpsk/create-wp-project`)
+// imports them from the engine surface (`@wpdev/create-wp-project`)
 // rather than deep-importing the file path.
 import {
   getMigrations,
@@ -192,7 +192,7 @@ export function answersToProjectConfig(a) {
     hookPrefix: a.hookPrefix,
     npmScope: "@" + a.npmScope,
     depsBundle: a.depsBundle || `${a.slug}-deps.js`,
-    phpFunctionPrefix: a.phpFunctionPrefix || "wpsk_",
+    phpFunctionPrefix: a.phpFunctionPrefix || "wpdev_",
     uiFramework: a.uiFramework,
     projectType: a.projectType || "plugin",
     // Phase 11 v2 defaults — present in every scaffolded
@@ -200,8 +200,8 @@ export function answersToProjectConfig(a) {
     // router, JS bundles) can rely on the keys without a follow-up
     // migration step. Override per-project by passing a non-default
     // value through answers (the renderer will use it).
-    restNamespace: a.restNamespace || "wpsk/v1",
-    vendorPrefix: a.vendorPrefix || "WpskVendor",
+    restNamespace: a.restNamespace || "wpdev/v1",
+    vendorPrefix: a.vendorPrefix || "WpdevVendor",
     phpMinVersion: a.phpMinVersion || "7.4",
     phpSourceVersion: a.phpSourceVersion || "8.1",
     batchEndpoint: a.batchEndpoint || "/batch/v1",
@@ -220,7 +220,7 @@ const TOKEN_RE = /\{\{\s*([a-zA-Z][a-zA-Z0-9_]*)\s*\}\}/g;
  * `kitVersion` field. The Phase 20+ manifest uses this to
  * detect when a project needs a migration. Read at module
  * load time from the package's own package.json so a release
- * of @wpsk/create-wp-project automatically advances the
+ * of @wpdev/create-wp-project automatically advances the
  * version. Falls back to "0.0.0" if the package.json is
  * missing (e.g. when the test runner inlines the module).
  */

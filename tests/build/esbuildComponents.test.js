@@ -34,6 +34,16 @@ describe("esbuild-components", () => {
     expect(source).toMatch(/MODULE_ENTRY_GLOB|moduleEntries/);
   });
 
+  test("reads uiFramework via getJsxOptions for automatic JSX runtime", () => {
+    const source = readFileSync(
+      join(process.cwd(), "core/packages/build/esbuild-components.js"),
+      "utf8",
+    );
+    expect(source).toContain("getJsxOptions");
+    expect(source).toContain("getReactAliases");
+    expect(source).toContain("projectConfig.uiFramework");
+  });
+
   test("names module bundles as <Module>-<entry>.js", () => {
     const source = readFileSync(
       join(process.cwd(), "core/packages/build/esbuild-components.js"),
@@ -46,7 +56,7 @@ describe("esbuild-components", () => {
     const emptyDir = mkdtempSync(join(tmpdir(), "wpsk-components-"));
     try {
       const { buildComponents } =
-        await import("@wpsk/build/esbuild-components.js");
+        await import("@wpdev/build/esbuild-components.js");
       expect(typeof buildComponents).toBe("function");
       await expect(
         buildComponents({

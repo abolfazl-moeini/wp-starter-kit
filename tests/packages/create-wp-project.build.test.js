@@ -3,7 +3,7 @@
  *
  * The kit is moving from "the consumer invokes framework build steps via
  * a relative `node core/packages/build/esbuild-*.js` path" to "the
- * consumer invokes the installed `@wpsk/build` package's bin
+ * consumer invokes the installed `@wpdev/build` package's bin
  * (e.g. `wpdev-build-dependencies`)" — exactly like a real npm
  * consumer would, after `npm install`.
  *
@@ -11,13 +11,13 @@
  *
  *  1. The vendored `core/packages/*` path only exists when the
  *     consumer's repo has the kit sources vendored. After
- *     `distMode: "deps"`, the consumer only has `node_modules/@wpsk/*`
+ *     `distMode: "deps"`, the consumer only has `node_modules/@wpdev/*`
  *     and no `core/` directory at all. The old `node core/...` path
  *     would crash with "Cannot find module".
  *  2. Using the bin is the standard npm contract — `npx wpdev-build-*`
  *     just works after install, no path glue needed.
  *  3. The bin name is stable and versioned with the package; pinning
- *     `@wpsk/build` to a version pins the bin's behaviour.
+ *     `@wpdev/build` to a version pins the bin's behaviour.
  *
  * The test asserts the post-23.B6 contract:
  *
@@ -28,7 +28,7 @@
  *   3. `package.json.scripts["build:styles"]` is
  *      `wpdev-build-styles`.
  *   4. `package.json.scripts["check"]` is `wpdev-check` (or any other
- *      installed bin coming from `@wpsk/utils`).
+ *      installed bin coming from `@wpdev/utils`).
  *   5. NONE of the scripts reference the legacy
  *      `core/packages/...` paths (regression guard).
  *   6. The "build" aggregator script is unchanged
@@ -36,7 +36,7 @@
  *      build:styles build:assets`).
  *
  * The 23.B6 GREEN will add the `bin` entries to the
- * `@wpsk/build` package (and any other relevant package) and update
+ * `@wpdev/build` package (and any other relevant package) and update
  * the scaffold's emitted `package.json` template to call the bin.
  * For now (23.B5 RED), the test will FAIL because the scaffold
  * still emits `node core/packages/build/esbuild-dependencies-cli.js`
@@ -49,7 +49,7 @@ import * as os from "node:os";
 
 import { scaffoldProject } from "../../packages/create-wp-project/src/index.js";
 
-describe("@wpsk/create-wp-project — build scripts use installed @wpsk/* bins (Phase 23.B5)", () => {
+describe("@wpdev/create-wp-project — build scripts use installed @wpdev/* bins (Phase 23.B5)", () => {
   let tmp;
   const goodAnswers = {
     slug: "my-project",
@@ -131,7 +131,7 @@ describe("@wpsk/create-wp-project — build scripts use installed @wpsk/* bins (
   });
 
   test("consumer package.json does not leak the kit's workspace layout", async () => {
-    // Generated consumer projects install @wpsk/* packages from npm;
+    // Generated consumer projects install @wpdev/* packages from npm;
     // they do not contain a monorepo workspace layout.
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(true);

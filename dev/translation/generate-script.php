@@ -19,30 +19,30 @@ require __DIR__ . '/bootstrap.php';
 $generated = [];
 $failed    = [];
 
-wpsk_color_log('Generating script translation files...');
+wpdev_color_log('Generating script translation files...');
 
-foreach (wpsk_list_components() as $component) {
-    wpsk_color_log("  Component: $component");
+foreach (wpdev_list_components() as $component) {
+    wpdev_color_log("  Component: $component");
 
-    $pot_rel = wpsk_make_script_pot($component);
+    $pot_rel = wpdev_make_script_pot($component);
     if ($pot_rel === '') {
-        wpsk_color_log("    make-script-pot: SKIP (wp i18n not available or no strings)", 'w');
+        wpdev_color_log("    make-script-pot: SKIP (wp i18n not available or no strings)", 'w');
         $failed[] = $component;
         continue;
     }
-    wpsk_color_log("    make-script-pot: " . $pot_rel, 'g');
+    wpdev_color_log("    make-script-pot: " . $pot_rel, 'g');
 
-    $map_rel = wpsk_build_map_file($component, $pot_rel);
+    $map_rel = wpdev_build_map_file($component, $pot_rel);
     if ($map_rel === '') {
-        wpsk_color_log("    build-map: SKIP", 'w');
+        wpdev_color_log("    build-map: SKIP", 'w');
         $failed[] = $component;
         continue;
     }
-    wpsk_color_log("    build-map:    " . $map_rel, 'g');
+    wpdev_color_log("    build-map:    " . $map_rel, 'g');
     $generated[] = $component;
 }
 
-wpsk_color_log(sprintf(
+wpdev_color_log(sprintf(
     'Done. %d component(s) generated, %d failed.',
     count($generated),
     count($failed)

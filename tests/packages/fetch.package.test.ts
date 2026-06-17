@@ -2,7 +2,7 @@ import { describe, test, expect } from "@jest/globals";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-describe("@wpsk/fetch package contract", () => {
+describe("@wpdev/fetch package contract", () => {
   const pkgPath = join(process.cwd(), "packages/fetch/package.json");
   const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
 
@@ -13,12 +13,13 @@ describe("@wpsk/fetch package contract", () => {
     expect(pkg.name).toBe(`${rootConfig.npmScope}/fetch`);
   });
 
-  test("exports createBatchRequest from TypeScript entry", () => {
+  test("shim re-exports createBatchRequest from @wpdev/rest-utils", () => {
     const index = readFileSync(
       join(process.cwd(), "packages/fetch/src/index.ts"),
       "utf8",
     );
     expect(index).toMatch(/createBatchRequest/);
-    expect(index).toMatch(/from ['"]\.\/handler['"]/);
+    expect(index).toMatch(/rest-utils\/src\/fetch/);
+    expect(pkg.dependencies["@wpdev/rest-utils"]).toBeDefined();
   });
 });

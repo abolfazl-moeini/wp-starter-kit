@@ -132,13 +132,13 @@ describe("readProjectConfig — v3 tolerance (Phase 20.9/20.10)", () => {
     mockFs({ "/tmp/v2-only.json": JSON.stringify(minimal) });
     const { readProjectConfig } = await import("@core/utils");
     const result = readProjectConfig({ path: "/tmp/v2-only.json" });
-    expect(result.restNamespace).toBe("wpsk/v1");
-    expect(result.vendorPrefix).toBe("WpskVendor");
+    expect(result.restNamespace).toBe("wpdev/v1");
+    expect(result.vendorPrefix).toBe("WpdevVendor");
     expect(result.phpMinVersion).toBe("7.4");
     expect(result.phpSourceVersion).toBe("8.1");
     expect(result.batchEndpoint).toBe("/batch/v1");
     expect(result.depsBundle).toBe("test-deps.js");
-    expect(result.phpFunctionPrefix).toBe("wpsk_");
+    expect(result.phpFunctionPrefix).toBe("wpdev_");
     expect(result.uiFramework).toBe("preact");
   });
 

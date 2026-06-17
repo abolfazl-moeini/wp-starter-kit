@@ -4,7 +4,7 @@
 const LOCALIZE_VAR =
   typeof __WPDEV_LOCALIZE_VAR__ !== "undefined"
     ? __WPDEV_LOCALIZE_VAR__
-    : "WPSKLoc";
+    : "WPDevLoc";
 
 function getLocalizeRoot() {
   return globalThis[LOCALIZE_VAR];

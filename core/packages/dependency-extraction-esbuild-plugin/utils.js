@@ -12,7 +12,7 @@ const WORDPRESS_NAMESPACE = "@wordpress/";
 // Precedence:
 //   1. project.config.json → npmScope (if file exists and field is set)
 //   2. ROOT_NAME env var or root package.json name
-//   3. Fallback: @wpsk/
+//   3. Fallback: @wpdev/
 // Build scripts should set `cross-env ROOT_NAME=$npm_package_name ...` (or equivalent) before importing.
 export const INTERNAL_NAMESPACE = (() => {
   // Try project.config.json first (config-driven override)
@@ -36,10 +36,10 @@ export const INTERNAL_NAMESPACE = (() => {
     // Real builds must provide correct ROOT_NAME to get proper internal package filtering.
     if (process.env.NODE_ENV !== "test") {
       console.warn(
-        "[dependency-extraction-esbuild-plugin] INTERNAL_NAMESPACE fallback used (@wpsk/). Set ROOT_NAME env for correct org.",
+        "[dependency-extraction-esbuild-plugin] INTERNAL_NAMESPACE fallback used (@wpdev/). Set ROOT_NAME env for correct org.",
       );
     }
-    return "@wpsk/";
+    return "@wpdev/";
   }
 })();
 

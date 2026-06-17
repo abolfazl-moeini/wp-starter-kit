@@ -321,11 +321,11 @@ export async function gitStatus(dir, deps = {}) {
 }
 
 /* -------------------------------------------------------------------- */
-/* lookupLatestKit — `npm view @wpsk/cli version` shim                    */
+/* lookupLatestKit — `npm view @wpdev/cli version` shim                    */
 /* -------------------------------------------------------------------- */
 
 /**
- * Look up the latest version of `@wpsk/cli` on the npm
+ * Look up the latest version of `@wpdev/cli` on the npm
  * registry. Returns the trimmed stdout on success, or `null`
  * on ANY failure (no `npm` on PATH, non-zero exit, empty
  * output, spawn error, registry timeout). This function
@@ -360,7 +360,7 @@ export async function gitStatus(dir, deps = {}) {
  */
 export async function lookupLatestKit(_currentVersion, deps = {}) {
   // The currentVersion arg is intentionally ignored — the
-  // `npm view @wpsk/cli version` query returns the
+  // `npm view @wpdev/cli version` query returns the
   // registry's latest regardless of what we already have.
   // We keep it in the signature so this helper is a
   // drop-in for the engine's `lookupLatest`.
@@ -381,7 +381,7 @@ export async function lookupLatestKit(_currentVersion, deps = {}) {
   }
   let res;
   try {
-    res = await execa("npm", ["view", "@wpsk/cli", "version"], {
+    res = await execa("npm", ["view", "@wpdev/cli", "version"], {
       // `cwd` not set on purpose — `npm view` is registry-bound,
       // and a project-local `.npmrc` is what the user wants.
       stdio: "pipe",

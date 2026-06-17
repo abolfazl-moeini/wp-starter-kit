@@ -55,7 +55,7 @@ final class RestSetup
     public static function rest_init(): void
     {
         $config = Plugin::config();
-        $namespace = $config['restNamespace'] ?? 'wpsk/v1';
+        $namespace = $config['restNamespace'] ?? 'wpdev/v1';
 
         foreach (self::$routes as $handlerClass) {
             /** @var RestHandler $handler */

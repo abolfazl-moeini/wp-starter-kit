@@ -5,16 +5,15 @@
 # Run lint-staged first (auto-fixes + prettier on staged files)
 npx lint-staged
 
-# Run related JS tests for staged .ts/.js files when possible; fall back to full suite for safety (weak-agent friendly)
-STAGED_JS=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx)$' | tr '\n' ' ' || true)
+# Run related JS tests for staged files only (no full-suite fallback)
+STAGED_JS=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx|js|jsx)$' || true)
 if [ -n "$STAGED_JS" ]; then
-  npm test -- --bail --findRelatedTests --passWithNoTests $STAGED_JS || npm test -- --bail
-else
-  npm test -- --bail
+  echo "$STAGED_JS" | xargs npx jest --bail --passWithNoTests --findRelatedTests
 fi
 
 # For staged PHP test files, run composer test with filter when practical
-STAGED_PHP_TESTS=$(git diff --cached --name-only --diff-filter=ACM | grep -E 'Test\.php$' | sed 's/.*\///;s/Test\.php$//' | tr '\n' '|' | sed 's/|$//' || true)
+STAGED_PHP_TESTS=$(git diff --cached --name-only --diff-filter=ACM | grep -E 'Test\.php$' || true)
 if [ -n "$STAGED_PHP_TESTS" ]; then
-  composer test -- --filter "$STAGED_PHP_TESTS" || composer test
+  FILTER=$(echo "$STAGED_PHP_TESTS" | xargs -I{} basename {} .php | tr '\n' '|' | sed 's/|$//')
+  composer test -- --filter "$FILTER"
 fi

@@ -1,7 +1,7 @@
 /**
  * I7.6 — version sync helper.
  *
- * Single source of truth: `@wpsk/create-wp-project`'s
+ * Single source of truth: `@wpdev/create-wp-project`'s
  * `package.json` `version` field. The CLI is a thin dispatcher
  * (subcommand parser + UX layer); the engine is the real
  * product. Two separate package versions drift apart over

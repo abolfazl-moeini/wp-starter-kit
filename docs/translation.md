@@ -48,7 +48,7 @@ The whole thing is invoked by `composer translation` (or
 }
 ```
 
-## The pure-data helpers (`@wpsk/translation`)
+## The pure-data helpers (`@wpdev/translation`)
 
 `packages/translation/src/index.js` exports six pure functions:
 
@@ -69,12 +69,12 @@ by running them via `proc_open` against `node -e`.
 
 `dev/translation/` ships 6 thin PHP files:
 
-- `bootstrap.php` — shared helpers (`wpsk_list_components`,
-  `wpsk_run_translation_helper`, `wpsk_run_wp_i18n`,
-  `wpsk_make_script_pot`, `wpsk_build_map_file`).
+- `bootstrap.php` — shared helpers (`wpdev_list_components`,
+  `wpdev_run_translation_helper`, `wpdev_run_wp_i18n`,
+  `wpdev_make_script_pot`, `wpdev_build_map_file`).
 - `cli.php` — PHPUnit-friendly shim (each test gets a fresh
   process so `SOURCE_ROOT` constant isn't redefinition-blocked).
-- `colors.php` — `wpsk_color_log` (NO_COLOR-aware).
+- `colors.php` — `wpdev_color_log` (NO_COLOR-aware).
 - `generate-script.php` / `generate-php.php` — entry points for
   `translation:generate:script` / `translation:generate:php`.
 - `build-script.php` / `build-php.php` — entry points for
@@ -147,7 +147,7 @@ small theme:
 
 - `wp i18n make-pot` → `xgettext` for PHP, `@wordpress/babel-plugin-makepot` for JS.
 - `wp i18n make-json --use-map` → `dev/translation/build-script.php`
-  - `wpsk_build_map_file` helper.
+  - `wpdev_build_map_file` helper.
 
 The remaining 80% (PO file editing, MO compilation) is the translator's
 job, and they have Poedit / Crowdin / Weblate for that.

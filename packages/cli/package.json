@@ -1,7 +1,7 @@
 {
   "name": "@wpdev/cli",
   "version": "0.1.0",
-  "description": "wpdev command-line installer for the wp-starter-kit framework (plan.installer.md Phases I1–I8). Thin front-end: prompts + flags, delegates all generation to @wpsk/create-wp-project.",
+  "description": "wpdev command-line installer for the wp-starter-kit framework (plan.installer.md Phases I1–I8). Thin front-end: prompts + flags, delegates all generation to @wpdev/create-wp-project.",
   "type": "module",
   "private": true,
   "license": "MIT",

@@ -59,16 +59,16 @@ export function projectConfigToAnswers(cfg) {
     textDomain: cfg.textDomain,
     hookPrefix: cfg.hookPrefix,
     depsBundle: cfg.depsBundle || (slug ? `${slug}-deps.js` : undefined),
-    phpFunctionPrefix: cfg.phpFunctionPrefix || "wpsk_",
+    phpFunctionPrefix: cfg.phpFunctionPrefix || "wpdev_",
     uiFramework,
     projectType: cfg.projectType || "plugin",
     vendor: cfg.vendor,
-    vendorPrefix: cfg.vendorPrefix || "WpskVendor",
+    vendorPrefix: cfg.vendorPrefix || "WpdevVendor",
     vendorPrefixUpper:
       cfg.vendorPrefix && cfg.vendorPrefix.toUpperCase
         ? cfg.vendorPrefix.toUpperCase()
         : undefined,
-    restNamespace: cfg.restNamespace || "wpsk/v1",
+    restNamespace: cfg.restNamespace || "wpdev/v1",
     phpMinVersion: cfg.phpMinVersion || "7.4",
     phpSourceVersion: cfg.phpSourceVersion || "8.1",
     batchEndpoint: cfg.batchEndpoint || "/batch/v1",

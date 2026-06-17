@@ -110,9 +110,9 @@ describe("getGenerators(features) — registry dispatch (Phase 21.1/21.2)", () =
     expect(gens.map((g) => g.id)).toContain("vendorScoping");
     const vs = gens.find((g) => g.id === "vendorScoping");
     // Phase 21.8: per plan §0.4.1 the consumer scaffold's strauss.json
-    // must NOT contain "WPSK" in exclude_from_prefix. We assert
+    // must NOT contain "WPDev" in exclude_from_prefix. We assert
     // that the generator's run() output, given minimal ctx, does
-    // not emit a strauss.json with "WPSK" in the exclusion list.
+    // not emit a strauss.json with "WPDev" in the exclusion list.
     const ctx = {
       answers: {
         slug: "p",
@@ -130,7 +130,7 @@ describe("getGenerators(features) — registry dispatch (Phase 21.1/21.2)", () =
     const out = vs.run(ctx);
     const straussPath = "strauss.json";
     expect(out.files[straussPath]).toBeDefined();
-    expect(out.files[straussPath]).not.toMatch(/"WPSK"/);
+    expect(out.files[straussPath]).not.toMatch(/"WPDev"/);
   });
 
   test("phpTest:phpunit → phpTest generator is enabled", () => {

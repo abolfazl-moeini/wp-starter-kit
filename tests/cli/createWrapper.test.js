@@ -1,35 +1,35 @@
 /**
- * `npm create @wpsk/plugin` wrapper package (plan.installer.md Phase I7 — I7.3 / I7.4)
+ * `npm create @wpdev/plugin` wrapper package (plan.installer.md Phase I7 — I7.3 / I7.4)
  *
  * The `npm create` convention (see `npm help npm-init`):
  *   - `npm create <name>`         → `npm exec create-<name>`
  *   - `npm create @scope/<name>`  → `npm exec @scope/create-<name>`
- *   - `npm create @wpsk/plugin`   → `npm exec @wpsk/create-plugin`
+ *   - `npm create @wpdev/plugin`   → `npm exec @wpdev/create-plugin`
  *
- * So the package MUST be named `@wpsk/create-plugin` and expose a bin
+ * So the package MUST be named `@wpdev/create-plugin` and expose a bin
  * that takes whatever argv the user passed to `npm create` and forwards
- * it to `wpsk create` (so `npm create @wpsk/plugin my-plugin --yes`
- * becomes `wpsk create my-plugin --yes`).
+ * it to `wpdev create` (so `npm create @wpdev/plugin my-plugin --yes`
+ * becomes `wpdev create my-plugin --yes`).
  *
  * The wrapper is a *tiny* adapter — it does NOT regenerate anything
- * itself. All real work happens in `@wpsk/cli`. This keeps the engine
- * (`@wpsk/create-wp-project`) as the single source of truth for the
+ * itself. All real work happens in `@wpdev/cli`. This keeps the engine
+ * (`@wpdev/create-wp-project`) as the single source of truth for the
  * generated project shape (Phase 25 variants, etc.).
  *
  * Source contract that this locks in (don't break these without bumping
  * the wrapper's behavior):
  *   packages/cli/create-plugin/package.json
- *     - "name": "@wpsk/create-plugin"
+ *     - "name": "@wpdev/create-plugin"
  *     - "type": "module"
- *     - "bin": { "create-wpsk-plugin": "bin/create-wpsk-plugin.js" }
+ *     - "bin": { "create-wpdev-plugin": "bin/create-wpdev-plugin.js" }
  *       (or any bin — npm `create` only requires the package name to
- *        match `@wpsk/create-plugin`; the bin name is what `npm exec`
+ *        match `@wpdev/create-plugin`; the bin name is what `npm exec`
  *        actually invokes)
  *     - "files": includes "bin"
- *     - "dependencies": includes "@wpsk/cli" (workspace:* or ^0.1.0)
- *   packages/cli/create-plugin/bin/create-wpsk-plugin.js
+ *     - "dependencies": includes "@wpdev/cli" (workspace:* or ^0.1.0)
+ *   packages/cli/create-plugin/bin/create-wpdev-plugin.js
  *     - shebang "#!/usr/bin/env node"
- *     - delegates to the @wpsk/cli bin with the `create` subcommand
+ *     - delegates to the @wpdev/cli bin with the `create` subcommand
  *       prepended to argv
  */
 import { describe, test, expect } from "@jest/globals";
@@ -43,34 +43,34 @@ function loadWrapperPkg() {
   return JSON.parse(readFileSync(WRAPPER_PKG_JSON, "utf8"));
 }
 
-describe("@wpsk/create-plugin — package shape (I7.3/I7.4)", () => {
+describe("@wpdev/create-plugin — package shape (I7.3/I7.4)", () => {
   test("packages/cli/create-plugin/package.json exists", () => {
     expect(existsSync(WRAPPER_PKG_JSON)).toBe(true);
   });
 
-  test("package name is exactly @wpsk/create-plugin (npm create match)", () => {
+  test("package name is exactly @wpdev/create-plugin (npm create match)", () => {
     const pkg = loadWrapperPkg();
-    // npm maps `npm create @wpsk/plugin` → `npm exec @wpsk/create-plugin`.
+    // npm maps `npm create @wpdev/plugin` → `npm exec @wpdev/create-plugin`.
     // The package name MUST match exactly (scope + name) — npm does not
     // try fallback permutations.
-    expect(pkg.name).toBe("@wpsk/create-plugin");
+    expect(pkg.name).toBe("@wpdev/create-plugin");
   });
 
-  test("package depends on @wpsk/cli (the real dispatcher)", () => {
+  test("package depends on @wpdev/cli (the real dispatcher)", () => {
     const pkg = loadWrapperPkg();
     const deps = {
       ...(pkg.dependencies || {}),
       ...(pkg.peerDependencies || {}),
     };
-    expect(deps["@wpsk/cli"]).toBeDefined();
+    expect(deps["@wpdev/cli"]).toBeDefined();
   });
 
   test("package declares a bin entry (so `npm exec` can run it)", () => {
     const pkg = loadWrapperPkg();
     expect(pkg.bin).toBeDefined();
     // The bin name is up to us; the wrapper invokes it directly.
-    // Common choices: "create-wpsk-plugin" or "wpsk-create".
-    // We just need SOMETHING — npm exec @wpsk/create-plugin invokes
+    // Common choices: "create-wpdev-plugin" or "wpdev-create".
+    // We just need SOMETHING — npm exec @wpdev/create-plugin invokes
     // whatever bin the package declares.
     const binNames = Object.keys(pkg.bin);
     expect(binNames.length).toBeGreaterThan(0);
@@ -84,9 +84,9 @@ describe("@wpsk/create-plugin — package shape (I7.3/I7.4)", () => {
   });
 });
 
-describe("@wpsk/create-plugin — bin argv forwarding (I7.3/I7.4)", () => {
+describe("@wpdev/create-plugin — bin argv forwarding (I7.3/I7.4)", () => {
   // The wrapper bin must exist and be wired to forward argv into
-  // `wpsk create <rest>`. We test the contract on disk (not by
+  // `wpdev create <rest>`. We test the contract on disk (not by
   // spawning a child process) so the test stays hermetic.
 
   function findBinTarget() {
@@ -117,12 +117,12 @@ describe("@wpsk/create-plugin — bin argv forwarding (I7.3/I7.4)", () => {
     expect(st.mode & 0o100).toBe(0o100);
   });
 
-  test("bin source forwards argv to wpsk with the `create` subcommand", () => {
+  test("bin source forwards argv to wpdev with the `create` subcommand", () => {
     const { target } = findBinTarget();
     const binPath = join(WRAPPER_ROOT, target);
     const body = readFileSync(binPath, "utf8");
     // The wrapper must:
-    //   (a) reference @wpsk/cli (or its bin) AND
+    //   (a) reference @wpdev/cli (or its bin) AND
     //   (b) inject the `create` subcommand into the argv it forwards
     //       to wpsk.
     // We assert both pieces appear in the source.
@@ -130,7 +130,7 @@ describe("@wpsk/create-plugin — bin argv forwarding (I7.3/I7.4)", () => {
     // We accept any of the common patterns:
     //   - execFileSync("wpsk", ["create", ...process.argv.slice(2)])
     //   - spawnSync(node, [wpskBin, "create", ...args])
-    //   - require("@wpsk/cli")(...) — programmatic delegation
+    //   - require("@wpdev/cli")(...) — programmatic delegation
     // The invariant is: "create" is hard-coded in the source, and
     // the wrapper reads process.argv to forward user args.
     expect(body).toMatch(/create/);

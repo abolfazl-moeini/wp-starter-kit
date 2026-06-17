@@ -83,7 +83,7 @@ A consumer's `composer.json` pins to a major:
 
 ```jsonc
 "require": {
-  "@wpsk/starter": "^0.2.0"  // accepts 0.2.x, 0.3.x; not 1.0
+  "@wpdev/starter": "^0.2.0"  // accepts 0.2.x, 0.3.x; not 1.0
 }
 ```
 
@@ -124,7 +124,7 @@ fixture consumer project:
 - Clone starter at `v0.1.0`.
 - Add a consumer component (`core/components/hello-world/script.js`).
 - Merge starter `v0.2.0` (which adds a new package,
-  `@wpsk/localize`).
+  `@wpdev/localize`).
 - Verify: consumer's component is intact, new package is bundled,
   tests still pass.
 

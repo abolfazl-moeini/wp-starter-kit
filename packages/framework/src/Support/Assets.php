@@ -94,7 +94,7 @@ final class Assets {
 	 * @return bool              `true` once the script is registered and
 	 *                           enqueued.
 	 */
-	public static function enqueue_bundle_script(
+	public static function register_bundle_script(
 		string $handle,
 		string $rel_path,
 		array $extra_deps = []
@@ -109,12 +109,7 @@ final class Assets {
 		}
 
 		wp_register_script( $handle, $url, $deps, $version, true );
-		wp_enqueue_script( $handle );
 
-		// Wire translations: this is the plan.v2.md gap the legacy helpers
-		// never closed. We always call wp_set_script_translations, even
-		// when no .asset.php sidecar exists, so localization keeps
-		// working for hand-written bundles.
 		$config = self::read_project_config();
 		$domain = $config['textDomain'] ?? 'default';
 
@@ -125,6 +120,29 @@ final class Assets {
 			: rtrim( $paths['base_path'], '/\\' ) . '/languages';
 
 		wp_set_script_translations( $handle, $domain, $translations_path );
+
+		return true;
+	}
+
+	/**
+	 * Enqueue a bundle JS file. When `$rel_path` is omitted, the handle must
+	 * already be registered via {@see self::register_bundle_script()}.
+	 *
+	 * @param string $handle     WP script handle.
+	 * @param string $rel_path   Path to the `.js` file, or empty to enqueue only.
+	 * @param array  $extra_deps Extra WP-script handles (register path only).
+	 * @return bool              `true` once the script is enqueued.
+	 */
+	public static function enqueue_bundle_script(
+		string $handle,
+		string $rel_path = '',
+		array $extra_deps = []
+	): bool {
+		if ( '' !== $rel_path ) {
+			self::register_bundle_script( $handle, $rel_path, $extra_deps );
+		}
+
+		wp_enqueue_script( $handle );
 
 		return true;
 	}
@@ -161,7 +179,7 @@ final class Assets {
 	}
 
 	/**
-	 * Build the localize payload (shape consumed by `@wpsk/utils/localize.js`).
+	 * Build the localize payload (shape consumed by `@wpdev/utils/localize.js`).
 	 *
 	 * Shape:
 	 *   api   => ['url' => ..., 'nonce' => ...]   standard WP REST namespace
@@ -171,8 +189,8 @@ final class Assets {
 	 */
 	public static function get_localize_data(): array {
 		$config      = self::read_project_config();
-		$slug        = $config['slug'] ?? 'wpsk-starter';
-		$hook_prefix = $config['hookPrefix'] ?? 'wpsk';
+		$slug        = $config['slug'] ?? 'wpdev-starter';
+		$hook_prefix = $config['hookPrefix'] ?? 'wpdev';
 
 		return [
 			'api'   => [

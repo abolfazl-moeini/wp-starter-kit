@@ -10,7 +10,7 @@
  * Pipeline:
  *   1. Validate deps. `engine.getKitStatus` is the only hard
  *      dep; the lookup helper is injected (the bin layer wires
- *      a real `npm view @wpsk/cli version` shim; tests inject
+ *      a real `npm view @wpdev/cli version` shim; tests inject
  *      a fake). `ui.renderKitStatus` is optional — the command
  *      still returns the status object even when ui is missing
  *      (the bin layer can decide how to print it).

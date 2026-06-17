@@ -11,7 +11,7 @@ import mock from "mock-fs";
 let assetFileInfo, saveAssetFile;
 
 beforeAll(async () => {
-  const mod = await import("@wpsk/dependency-extraction-esbuild-plugin");
+  const mod = await import("@wpdev/dependency-extraction-esbuild-plugin");
   assetFileInfo = mod.assetFileInfo;
   saveAssetFile = mod.saveAssetFile;
 });

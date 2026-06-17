@@ -4,9 +4,9 @@
  * p12-asset-metadata — `.asset.php` contract for TS-entry builds
  * ---------------------------------------------------------------
  * The dependency bundle in this kit is built from `assets/dependencies.ts`
- * (p12 rename). esbuild produces `assets/bundles/wpsk-starter-deps.js` and
- * the `@wpsk/dependency-extraction-esbuild-plugin` `saveAssetFile` helper
- * emits a sibling `wpsk-starter-deps.asset.php` containing the
+ * (p12 rename). esbuild produces `assets/bundles/wpdev-starter-deps.js` and
+ * the `@wpdev/dependency-extraction-esbuild-plugin` `saveAssetFile` helper
+ * emits a sibling `wpdev-starter-deps.asset.php` containing the
  * `dependencies`, `internal_packages`, and `hash` keys — the same shape
  * WordPress core reads via `wp_register_script_from_metadata()`.
  *
@@ -48,7 +48,7 @@ let assetFilePath;
 let bundleFilePath;
 
 beforeAll(async () => {
-  const mod = await import("@wpsk/dependency-extraction-esbuild-plugin");
+  const mod = await import("@wpdev/dependency-extraction-esbuild-plugin");
   saveAssetFile = mod.saveAssetFile;
   phpFileContent = mod.phpFileContent;
   assetFilePath = mod.assetFilePath;
@@ -57,7 +57,7 @@ beforeAll(async () => {
 
 // --- synthetic metafile shape ----------------------------------------------
 // A build where the entry is `assets/dependencies.ts` (p12 rename), the
-// bundle is emitted to `assets/bundles/wpsk-starter-deps.js`, and the
+// bundle is emitted to `assets/bundles/wpdev-starter-deps.js`, and the
 // metafile contains one resolved WordPress external (`wp-hooks`).
 const tsEntryMetafile = {
   metafile: {
@@ -66,13 +66,13 @@ const tsEntryMetafile = {
       "assets/dependencies.ts": { bytes: 200 },
     },
     outputs: {
-      "assets/bundles/wpsk-starter-deps.js": { bytes: 500 },
+      "assets/bundles/wpdev-starter-deps.js": { bytes: 500 },
     },
   },
 };
 
 const tsEntryJsBundleContent =
-  "/* synthetic wpsk-starter-deps.ts bundle for asset.php tests */";
+  "/* synthetic wpdev-starter-deps.ts bundle for asset.php tests */";
 
 describe("saveAssetFile — TS-entry metafile contract", () => {
   beforeEach(() => {
@@ -81,7 +81,7 @@ describe("saveAssetFile — TS-entry metafile contract", () => {
     // we keep the repo's own node_modules/etc. by routing through process.cwd()
     // and letting the real fs paths resolve.
     mock({
-      "assets/bundles/wpsk-starter-deps.js": tsEntryJsBundleContent,
+      "assets/bundles/wpdev-starter-deps.js": tsEntryJsBundleContent,
     });
   });
 
@@ -99,9 +99,9 @@ describe("saveAssetFile — TS-entry metafile contract", () => {
     // written next to the .js bundle. mock-fs lets us see what got written.
     await saveAssetFile(tsEntryMetafile);
     // The plugin writes to assetFilePath(bundleFilePath(metafile)). The
-    // bundle file is `assets/bundles/wpsk-starter-deps.js`, so the asset
-    // file is `assets/bundles/wpsk-starter-deps.asset.php`.
-    expect(existsSync("assets/bundles/wpsk-starter-deps.asset.php")).toBe(true);
+    // bundle file is `assets/bundles/wpdev-starter-deps.js`, so the asset
+    // file is `assets/bundles/wpdev-starter-deps.asset.php`.
+    expect(existsSync("assets/bundles/wpdev-starter-deps.asset.php")).toBe(true);
   });
 
   test("saveAssetFile accepts a TS-entry metafile with no WP externals (no throw)", async () => {
@@ -113,13 +113,13 @@ describe("saveAssetFile — TS-entry metafile contract", () => {
           "assets/dependencies.ts": { bytes: 200 },
         },
         outputs: {
-          "assets/bundles/wpsk-starter-deps.js": { bytes: 500 },
+          "assets/bundles/wpdev-starter-deps.js": { bytes: 500 },
         },
       },
     };
     const result = await saveAssetFile(noWPMetafile);
     expect(result).toBeTruthy();
-    expect(existsSync("assets/bundles/wpsk-starter-deps.asset.php")).toBe(true);
+    expect(existsSync("assets/bundles/wpdev-starter-deps.asset.php")).toBe(true);
   });
 
   test("saveAssetFile rejects a metafile with no outputs (no .js bundle resolves)", async () => {
@@ -142,7 +142,7 @@ describe("saveAssetFile — TS-entry metafile contract", () => {
     // Either the function returned false, or it threw. The hard rule is:
     // no .asset.php got written for a no-outputs metafile.
     expect(threw || result === false).toBe(true);
-    expect(existsSync("assets/bundles/wpsk-starter-deps.asset.php")).toBe(
+    expect(existsSync("assets/bundles/wpdev-starter-deps.asset.php")).toBe(
       false,
     );
   });
@@ -184,8 +184,8 @@ describe("phpFileContent + assetFilePath — WordPress .asset.php shape", () => 
   });
 
   test("assetFilePath replaces the .js extension with .asset.php next to the bundle", () => {
-    const phpPath = assetFilePath("assets/bundles/wpsk-starter-deps.js");
-    expect(phpPath).toBe("assets/bundles/wpsk-starter-deps.asset.php");
+    const phpPath = assetFilePath("assets/bundles/wpdev-starter-deps.js");
+    expect(phpPath).toBe("assets/bundles/wpdev-starter-deps.asset.php");
   });
 
   test("assetFilePath also works for .css bundles (WordPress also reads CSS asset.php)", () => {
@@ -194,19 +194,19 @@ describe("phpFileContent + assetFilePath — WordPress .asset.php shape", () => 
   });
 
   test("bundleFilePath picks the .js output from a metafile with map sibling", () => {
-    // Real esbuild output includes both `wpsk-starter-deps.js` and
-    // `wpsk-starter-deps.js.map`. bundleFilePath must return ONLY the
+    // Real esbuild output includes both `wpdev-starter-deps.js` and
+    // `wpdev-starter-deps.js.map`. bundleFilePath must return ONLY the
     // .js entry so the .asset.php is named after it, not after the map.
     const mf = {
       metafile: {
         outputs: {
-          "assets/bundles/wpsk-starter-deps.js": { bytes: 500 },
-          "assets/bundles/wpsk-starter-deps.js.map": { bytes: 200 },
+          "assets/bundles/wpdev-starter-deps.js": { bytes: 500 },
+          "assets/bundles/wpdev-starter-deps.js.map": { bytes: 200 },
         },
       },
     };
     const bundle = bundleFilePath(mf);
-    expect(bundle).toBe("assets/bundles/wpsk-starter-deps.js");
+    expect(bundle).toBe("assets/bundles/wpdev-starter-deps.js");
   });
 });
 
@@ -266,8 +266,8 @@ describe("Hard-disk integration — build:dependencies produces .asset.php", () 
   // is also asserted in the static asserts above.
 
   const BUNDLES_DIR = join(process.cwd(), "assets/bundles");
-  const JS_BUNDLE = join(BUNDLES_DIR, "wpsk-starter-deps.js");
-  const ASSET_PHP = join(BUNDLES_DIR, "wpsk-starter-deps.asset.php");
+  const JS_BUNDLE = join(BUNDLES_DIR, "wpdev-starter-deps.js");
+  const ASSET_PHP = join(BUNDLES_DIR, "wpdev-starter-deps.asset.php");
 
   let buildSucceeded = false;
   let buildError = null;

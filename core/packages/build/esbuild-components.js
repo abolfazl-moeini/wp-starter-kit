@@ -1,4 +1,4 @@
-import { build } from "esbuild";
+import { build, context } from "esbuild";
 import path from "node:path";
 import { glob } from "glob";
 import {
@@ -7,6 +7,7 @@ import {
 } from "@wpdev/dependency-extraction-esbuild-plugin";
 import { readProjectConfig } from "@core/utils";
 import { readBuildConfig } from "./index.js";
+import { getJsxOptions, getReactAliases } from "./getJsxOptions.js";
 
 const MODULE_ENTRY_GLOB = "src/Modules/*/assets/entries/*.ts";
 const LEGACY_SCRIPT_GLOB = "**/script.js";
@@ -54,13 +55,34 @@ async function discoverComponentEntries(cwd) {
   return entries;
 }
 
-export async function buildComponents(options = {}) {
-  const projectConfig = options.projectConfig ?? readProjectConfig();
-  const buildConfig = options.buildConfig ?? (await readBuildConfig());
-  const cwd = options.cwd ?? process.cwd();
-  const isDev = options.isDev ?? false;
+function assetSidecarPlugin(depsHandle, internalItems) {
+  return {
+    name: "save-asset-sidecar",
+    setup(buildApi) {
+      buildApi.onEnd(async (result) => {
+        if (!result.errors?.length) {
+          await saveAssetFile(result, [depsHandle], internalItems);
+        }
+      });
+    },
+  };
+}
 
-  const jsfiles = await discoverComponentEntries(cwd);
+async function buildSingleComponent({
+  cwd,
+  sourceFile,
+  projectConfig,
+  buildConfig,
+  isDev,
+  watch,
+}) {
+  console.info(`build:${sourceFile}`);
+
+  const bundleFile = path.join(
+    cwd,
+    "assets/bundles",
+    bundleNameForEntry(cwd, sourceFile),
+  );
 
   const globalMappings = {
     ...(buildConfig.globalMappings ?? {}),
@@ -68,41 +90,82 @@ export async function buildComponents(options = {}) {
   };
 
   const depsHandle = projectConfig.depsBundle.replace(/\.js$/, "");
+  const internalItems = [];
+
+  const esbuildOptions = {
+    entryPoints: [path.join(cwd, sourceFile)],
+    bundle: true,
+    minify: !isDev,
+    sourcemap: isDev,
+    metafile: true,
+    ...getJsxOptions(projectConfig.uiFramework),
+    alias: getReactAliases(projectConfig.uiFramework),
+    define: {
+      IS_DEV: String(isDev),
+      __WPDEV_GLOBAL_NAME__: JSON.stringify(projectConfig.globalName),
+      __WPDEV_HOOK_PREFIX__: JSON.stringify(projectConfig.hookPrefix),
+      __WPDEV_LOCALIZE_VAR__: JSON.stringify(projectConfig.localizeVar),
+      __WPDEV_SLUG__: JSON.stringify(projectConfig.slug),
+    },
+    outfile: bundleFile,
+    loader: { ".js": "jsx", ".ts": "ts", ".tsx": "tsx" },
+    plugins: [
+      importAsGlobals(globalMappings, internalItems),
+      assetSidecarPlugin(depsHandle, internalItems),
+    ],
+  };
+
+  if (watch) {
+    const ctx = await context(esbuildOptions);
+    await ctx.watch();
+    console.info(`Watching: ${bundleFile}`);
+    return ctx;
+  }
+
+  const result = await build(esbuildOptions);
+  console.info(`Done: ${bundleFile}`);
+  await saveAssetFile(result, [depsHandle], internalItems);
+  return result;
+}
+
+export async function buildComponents(options = {}) {
+  const projectConfig = options.projectConfig ?? readProjectConfig();
+  const buildConfig = options.buildConfig ?? (await readBuildConfig());
+  const cwd = options.cwd ?? process.cwd();
+  const isDev = options.isDev ?? false;
+  const watch = options.watch ?? false;
+
+  const jsfiles = await discoverComponentEntries(cwd);
+
+  if (watch) {
+    const contexts = [];
+    for (const sourceFile of jsfiles) {
+      contexts.push(
+        await buildSingleComponent({
+          cwd,
+          sourceFile,
+          projectConfig,
+          buildConfig,
+          isDev: true,
+          watch: true,
+        }),
+      );
+    }
+    console.info(`Watching ${contexts.length} component bundle(s)…`);
+    return contexts;
+  }
 
   await Promise.all(
-    jsfiles.map(async (sourceFile) => {
-      console.info(`build:${sourceFile}`);
-
-      const bundleFile = path.join(
+    jsfiles.map((sourceFile) =>
+      buildSingleComponent({
         cwd,
-        "assets/bundles",
-        bundleNameForEntry(cwd, sourceFile),
-      );
-
-      const internalItems = [];
-
-      const result = await build({
-        entryPoints: [path.join(cwd, sourceFile)],
-        bundle: true,
-        minify: !isDev,
-        sourcemap: isDev,
-        metafile: true,
-        define: {
-          IS_DEV: String(isDev),
-          __WPDEV_GLOBAL_NAME__: JSON.stringify(projectConfig.globalName),
-          __WPDEV_HOOK_PREFIX__: JSON.stringify(projectConfig.hookPrefix),
-          __WPDEV_LOCALIZE_VAR__: JSON.stringify(projectConfig.localizeVar),
-          __WPDEV_SLUG__: JSON.stringify(projectConfig.slug),
-        },
-        outfile: bundleFile,
-        loader: { ".js": "jsx", ".ts": "ts", ".tsx": "tsx" },
-        plugins: [importAsGlobals(globalMappings, internalItems)],
-      });
-
-      console.info(`Done: ${bundleFile}`);
-
-      await saveAssetFile(result, [depsHandle], internalItems);
-    }),
+        sourceFile,
+        projectConfig,
+        buildConfig,
+        isDev,
+        watch: false,
+      }),
+    ),
   );
 }
 

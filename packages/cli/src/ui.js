@@ -98,7 +98,7 @@ function getTinter() {
 export function renderError(input) {
   const i = input || {};
   const title =
-    typeof i.title === "string" && i.title.length > 0 ? i.title : "wpsk: error";
+    typeof i.title === "string" && i.title.length > 0 ? i.title : "wpdev: error";
   const errors = i.errors && typeof i.errors === "object" ? i.errors : {};
 
   process.stderr.write(title + "\n");
@@ -436,8 +436,8 @@ const ui = {
     const LABEL = 16;
     const label = (k) => k.padEnd(LABEL, " ");
     const lines = [];
-    lines.push("wpsk info");
-    lines.push("─".repeat("wpsk info".length));
+    lines.push("wpdev info");
+    lines.push("─".repeat("wpdev info".length));
     lines.push(label("Path:") + (s.path || ""));
     lines.push(label("Kit version:") + (s.kitVersion || ""));
     lines.push(label("Dist mode:") + (s.distMode || ""));
@@ -630,8 +630,8 @@ const ui = {
     const tint = await getTinter();
 
     const lines = [];
-    lines.push("wpsk doctor");
-    lines.push("─".repeat("wpsk doctor".length));
+    lines.push("wpdev doctor");
+    lines.push("─".repeat("wpdev doctor".length));
 
     // System block.
     const system = Array.isArray(r.system) ? r.system : [];

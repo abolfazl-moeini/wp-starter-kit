@@ -34,7 +34,7 @@ function makeCtx(features = {}) {
     cfg: {
       slug: goodAnswers.slug,
       globalName: goodAnswers.globalName,
-      vendorPrefix: "WpskVendor",
+      vendorPrefix: "WpdevVendor",
     },
     features: {
       ...defaultFeatures(),
@@ -53,7 +53,7 @@ describe("faultTolerance generator (Phase 25)", () => {
   test("emits docs/fault-tolerance.md when faultTolerance=on", () => {
     const out = faultToleranceRun(makeCtx());
     expect(out.files["docs/fault-tolerance.md"]).toBeDefined();
-    expect(out.composerPatches.require["wpsk/php-fault-tolerance"]).toBe("*");
+    expect(out.composerPatches.require["wpdev/php-fault-tolerance"]).toBe("*");
   });
 
   test("emits nothing when faultTolerance=off", () => {
@@ -72,7 +72,7 @@ describe("faultTolerance scaffold integration", () => {
     await fs.rm(tmp, { recursive: true, force: true });
   });
 
-  test("scaffold with faultTolerance:on + phpMinVersion:8.1 requires wpsk/php-fault-tolerance", async () => {
+  test("scaffold with faultTolerance:on + phpMinVersion:8.1 requires wpdev/php-fault-tolerance", async () => {
     const res = await scaffoldProject(tmp, goodAnswers, {
       features: {
         ...defaultFeatures(),
@@ -84,7 +84,7 @@ describe("faultTolerance scaffold integration", () => {
     const composer = JSON.parse(
       await fs.readFile(path.join(tmp, "composer.json"), "utf8"),
     );
-    expect(composer.require["wpsk/php-fault-tolerance"]).toBe("*");
+    expect(composer.require["wpdev/php-fault-tolerance"]).toBe("*");
     const repo = (composer.repositories || []).find(
       (r) => typeof r.url === "string" && r.url.includes("php-fault-tolerance"),
     );
@@ -146,7 +146,7 @@ describe("addFeature faultTolerance happy path", () => {
     const composer = JSON.parse(
       await fs.readFile(path.join(tmp, "composer.json"), "utf8"),
     );
-    expect(composer.require["wpsk/php-fault-tolerance"]).toBe("*");
+    expect(composer.require["wpdev/php-fault-tolerance"]).toBe("*");
     expect(res.written).toContain("docs/fault-tolerance.md");
   });
 });

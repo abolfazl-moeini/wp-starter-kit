@@ -94,6 +94,9 @@ final class ModuleLoader {
 		$this->modules = $this->filter_modules( $this->modules );
 
 		foreach ( $this->modules as $module ) {
+			if ( method_exists( $module, 'should_boot' ) && ! $module->should_boot() ) {
+				continue;
+			}
 			$module->boot();
 		}
 

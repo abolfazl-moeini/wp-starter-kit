@@ -15,7 +15,7 @@
  */
 
 // @ts-nocheck -- legacy global-bridge code (Tabulator, Element.prototype polyfills,
-// injected __WPSK_* defines, loose callbacks for hook actions). The rest of the
+// injected __WPDEV_* defines, loose callbacks for hook actions). The rest of the
 // project is strict; this file is special as the IIFE deps entry.
 
 import { createHooks } from "@wordpress/hooks";

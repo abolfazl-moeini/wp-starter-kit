@@ -209,12 +209,19 @@ describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
     expect(res.written).toContain(
       "src/Modules/ExampleFeature/assets/entries/admin.ts",
     );
+    expect(res.written).toContain(
+      "tests/phpunit/Modules/ExampleFeature/ModuleTest.php",
+    );
+    expect(res.written).toContain(
+      "src/Modules/ExampleFeature/assets/entries/__tests__/admin.test.ts",
+    );
     // The file actually exists on disk.
     const moduleBody = await fs.readFile(
       path.join(tmp, "src", "Modules", "ExampleFeature", "Module.php"),
       "utf8",
     );
-    expect(moduleBody).toMatch(/ModuleInterface/);
+    expect(moduleBody).toMatch(/AbstractModule/);
+    expect(moduleBody).toMatch(/register_bundle_script/);
   });
 
   test("works for a feature that has no files (restBatch) — returns ok with empty written", async () => {
@@ -233,10 +240,10 @@ describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
     expect(manifest.features.restBatch).toBe("on");
   });
 
-  test("throws when called on a directory with no manifest (not a wpsk project)", async () => {
+  test("throws when called on a directory with no manifest (not a wpdev project)", async () => {
     // Empty tmp — no wpdev-kit.json, no project.config.json.
     await expect(addFeature(tmp, "husky", "on")).rejects.toThrow(
-      /wpsk-kit\.json|manifest/i,
+      /wpdev-kit\.json|manifest/i,
     );
   });
 });

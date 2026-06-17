@@ -10,7 +10,7 @@ import {
 jest.mock("@wordpress/api-fetch", () => jest.fn());
 
 import apiFetch from "@wordpress/api-fetch";
-import { createBatchRequest } from "../../packages/fetch/src/index";
+import { createBatchRequest } from "../../packages/rest-utils/src/fetch/index";
 
 const mockedApiFetch = apiFetch as jest.MockedFunction<typeof apiFetch>;
 
@@ -45,7 +45,7 @@ describe("fetch + PHP batch contract integration", () => {
       requestChunk: 5,
       requestDelay: 40,
       method: "POST",
-      path: "/wpsk/v1/items",
+      path: "/wpdev/v1/items",
       batchEndpoint: "/batch/v1",
     });
 

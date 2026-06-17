@@ -1,10 +1,11 @@
-import { build } from "esbuild";
+import { build, context } from "esbuild";
 import path from "node:path";
 import {
   importAsGlobals,
   saveAssetFile,
 } from "@wpdev/dependency-extraction-esbuild-plugin";
 import { readBuildConfig } from "./index.js";
+import { getJsxOptions, getReactAliases } from "./getJsxOptions.js";
 
 export function buildDepsConfig(projectConfig, buildConfig = {}, options = {}) {
   const cwd = options.cwd ?? process.cwd();
@@ -27,6 +28,8 @@ export function buildDepsConfig(projectConfig, buildConfig = {}, options = {}) {
     format: "iife",
     globalName: projectConfig.globalName,
     outfile,
+    ...getJsxOptions(projectConfig.uiFramework),
+    alias: getReactAliases(projectConfig.uiFramework),
     define: {
       IS_DEV: String(isDev),
       __WPDEV_GLOBAL_NAME__: JSON.stringify(projectConfig.globalName),
@@ -36,9 +39,19 @@ export function buildDepsConfig(projectConfig, buildConfig = {}, options = {}) {
     },
     loader: { ".js": "jsx", ".ts": "ts" },
     plugins: [importAsGlobals(globalMappings)],
-    // SaveAssetFile is called in runBuild after build completes.
-    // The deps bundle inlines all @wpdev/* packages; they are not external.
-    // No separate internalItems needed since everything is bundled.
+  };
+}
+
+function depsAssetSidecarPlugin() {
+  return {
+    name: "save-deps-asset-sidecar",
+    setup(buildApi) {
+      buildApi.onEnd(async (result) => {
+        if (!result.errors?.length) {
+          await saveAssetFile(result, [], []);
+        }
+      });
+    },
   };
 }
 
@@ -46,17 +59,28 @@ export async function runBuild(options = {}) {
   const { readProjectConfig } = await import("@core/utils");
   const projectConfig = options.projectConfig ?? readProjectConfig();
   const buildConfig = options.buildConfig ?? (await readBuildConfig());
+  const watch = options.watch ?? false;
+  const isDev = options.isDev ?? watch;
 
   const esbuildConfig = buildDepsConfig(projectConfig, buildConfig, {
     cwd: options.cwd,
-    isDev: options.isDev,
+    isDev,
     entryPoint: options.entryPoint,
   });
 
-  const result = await build(esbuildConfig);
+  if (watch) {
+    esbuildConfig.plugins = [
+      ...(esbuildConfig.plugins ?? []),
+      depsAssetSidecarPlugin(),
+    ];
+    const ctx = await context(esbuildConfig);
+    await ctx.watch();
+    console.info(`Watching: ${esbuildConfig.outfile}`);
+    return ctx;
+  }
 
+  const result = await build(esbuildConfig);
   console.info(`Done: ${esbuildConfig.outfile}`);
   await saveAssetFile(result, [], []);
-
   return result;
 }

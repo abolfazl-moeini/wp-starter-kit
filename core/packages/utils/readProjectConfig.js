@@ -12,14 +12,14 @@ const REQUIRED_FIELDS = [
 ];
 
 const OPTIONAL_DEFAULTS = {
-  phpFunctionPrefix: "wpsk_",
+  phpFunctionPrefix: "wpdev_",
   uiFramework: "preact",
   // Phase 14 v2 fields — sensible defaults so consumers (REST router,
   // Strauss release pipeline, fetch batch client) can rely on the keys
   // without a follow-up migration step. Override per-project by passing
   // a non-default value through project.config.json.
-  restNamespace: "wpsk/v1",
-  vendorPrefix: "WpskVendor",
+  restNamespace: "wpdev/v1",
+  vendorPrefix: "WpdevVendor",
   phpMinVersion: "7.4",
   phpSourceVersion: "8.1",
   batchEndpoint: "/batch/v1",

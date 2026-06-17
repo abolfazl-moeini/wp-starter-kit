@@ -1,18 +1,10 @@
 /**
- * @wpsk/create-wp-project — restBatch generator (Phase 21).
+ * @wpdev/create-wp-project — restBatch generator (Phase 21).
  *
- * REST batch + `@wpsk/fetch` JS client. The PHP-side batch
- * support ships with the core (RestSetup is in src/Support),
- * so this generator ONLY owns the JS wiring — the `@wpsk/fetch`
- * package dep merged into the consumer's `package.json`.
- *
- * Two gates:
- *  - restBatch === "on"
- *  - js !== "none"  (the registry filter applies; we still
- *                   early-return for defence in depth)
+ * REST batch PHP support ships with the core (RestSetup in framework).
+ * The JS batch client lives in `@wpdev/rest-utils` (merged from `@wpdev/fetch`).
+ * This generator is a no-op for files — `rest-utils` is always a core dep.
  */
-
-import { getDepVersions } from "../dep-versions.js";
 
 export function run(ctx) {
   if (ctx.features.restBatch !== "on") {
@@ -21,18 +13,11 @@ export function run(ctx) {
   if (ctx.features.js === "none") {
     return { files: {}, dirs: [], deps: {}, devDeps: {} };
   }
-  const kitVersions = getDepVersions();
-  const fetchVersion = kitVersions.get("@wpsk/fetch") || "*";
-  const version =
-    fetchVersion.startsWith("^") || fetchVersion === "*"
-      ? fetchVersion
-      : `^${fetchVersion}`;
+
   return {
     files: {},
     dirs: [],
-    deps: {
-      "@wpsk/fetch": version,
-    },
+    deps: {},
     devDeps: {},
   };
 }

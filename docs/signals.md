@@ -19,10 +19,10 @@ Signals are read-only with respect to each other (the engine advances
 in order, never backwards), so a downstream signal can rely on an
 upstream signal's output.
 
-## The API (`@wpsk/rule-engine`)
+## The API (`@wpdev/rule-engine`)
 
 ```js
-import { createEngine } from "@wpsk/rule-engine";
+import { createEngine } from "@wpdev/rule-engine";
 
 const engine = createEngine();
 
@@ -90,10 +90,10 @@ engine.add({
 });
 ```
 
-### Hook a WordPress filter (via `@wpsk/hooks`)
+### Hook a WordPress filter (via `@wpdev/hooks`)
 
 ```js
-import { createNamespacedHooks } from "@wpsk/hooks";
+import { createNamespacedHooks } from "@wpdev/hooks";
 
 const hooks = createNamespacedHooks("my-project");
 
@@ -150,5 +150,5 @@ engine.add({
   workflows, use a state machine or a queue.
 - **Don't** register a signal whose `condition` does I/O (DB query,
   HTTP call). The engine runs every signal on every load; I/O
-  conditions kill performance. Use `@wpsk/hooks` filters for I/O-gated
+  conditions kill performance. Use `@wpdev/hooks` filters for I/O-gated
   work.

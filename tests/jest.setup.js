@@ -36,10 +36,10 @@ jest.mock("@core/utils", () => {
         }
         const defaults = {
           depsBundle: `${config.slug}-deps.js`,
-          phpFunctionPrefix: "wpsk_",
+          phpFunctionPrefix: "wpdev_",
           uiFramework: "preact",
-          restNamespace: "wpsk/v1",
-          vendorPrefix: "WpskVendor",
+          restNamespace: "wpdev/v1",
+          vendorPrefix: "WpdevVendor",
           phpMinVersion: "7.4",
           phpSourceVersion: "8.1",
           batchEndpoint: "/batch/v1",

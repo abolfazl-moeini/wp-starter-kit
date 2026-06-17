@@ -9,7 +9,7 @@
  * Contracts locked here:
  *
  *  1. husky         (on/off)   → .husky/pre-commit when on
- *  2. vendorScoping (on/off)   → strauss.json WITHOUT "WPSK" in
+ *  2. vendorScoping (on/off)   → strauss.json WITHOUT "WPDev" in
  *                                 exclude_from_prefix when on
  *  3. exampleFeature(on/off)   → src/Modules/ExampleFeature/* when on
  *  4. restBatch     (off/on)   → no files (Phase 25) but the gate
@@ -68,8 +68,8 @@ function makeCtx(answers = {}, cfg = {}, features = {}) {
     phpFunctionPrefix: a.phpFunctionPrefix,
     uiFramework: a.uiFramework,
     projectType: a.projectType,
-    restNamespace: "wpsk/v1",
-    vendorPrefix: "WpskVendor",
+    restNamespace: "wpdev/v1",
+    vendorPrefix: "WpdevVendor",
     phpMinVersion: "7.4",
     phpSourceVersion: "8.1",
     batchEndpoint: "/batch/v1",
@@ -120,10 +120,10 @@ describe("husky generator (Phase 21.7/21.8)", () => {
 });
 
 describe("vendorScoping generator (Phase 21.7/21.8)", () => {
-  test("emits strauss.json WITHOUT 'WPSK' in exclude_from_prefix when on (§0.4.1)", () => {
+  test("emits strauss.json WITHOUT 'WPDev' in exclude_from_prefix when on (§0.4.1)", () => {
     const out = vendorScopingRun(makeCtx({}, {}, { vendorScoping: "on" }));
     expect(out.files["strauss.json"]).toBeDefined();
-    expect(out.files["strauss.json"]).not.toMatch(/"WPSK"/);
+    expect(out.files["strauss.json"]).not.toMatch(/"WPDev"/);
   });
 
   test("emits nothing when vendorScoping=off", () => {
@@ -134,13 +134,23 @@ describe("vendorScoping generator (Phase 21.7/21.8)", () => {
 
 describe("exampleFeature generator (Phase 21.7/21.8)", () => {
   test("emits the ExampleFeature module (Module.php + Rest/ItemsController.php + assets/entries/admin.ts) when on", () => {
-    const out = exampleFeatureRun(makeCtx({}, {}, { exampleFeature: "on" }));
+    const out = exampleFeatureRun(
+      makeCtx({}, {}, { exampleFeature: "on", phpTest: "phpunit", jsTest: "jest" }),
+    );
     expect(out.files["src/Modules/ExampleFeature/Module.php"]).toBeDefined();
     expect(
       out.files["src/Modules/ExampleFeature/Rest/ItemsController.php"],
     ).toBeDefined();
     expect(
       out.files["src/Modules/ExampleFeature/assets/entries/admin.ts"],
+    ).toBeDefined();
+    expect(
+      out.files["tests/phpunit/Modules/ExampleFeature/ModuleTest.php"],
+    ).toBeDefined();
+    expect(
+      out.files[
+        "src/Modules/ExampleFeature/assets/entries/__tests__/admin.test.ts"
+      ],
     ).toBeDefined();
     // Body sanity-check (RestSetup::register is the canonical kit
     // wiring — see src/Modules/ExampleFeature/Module.php).

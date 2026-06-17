@@ -10,7 +10,7 @@
 ## The contract: `ModuleInterface`
 
 ```php
-namespace WPSK\Core;
+namespace WPDev\Core;
 
 interface ModuleInterface
 {
@@ -68,7 +68,7 @@ to assert the registration.
 ## The registry: `ModuleLoader`
 
 ```php
-namespace WPSK\Core;
+namespace WPDev\Core;
 
 final class ModuleLoader
 {
@@ -116,7 +116,7 @@ priority inside their own hooks.
 
 ## The facade: `Plugin`
 
-`WPSK\Core\Plugin` is a **static facade** that ties the loader
+`WPDev\Core\Plugin` is a **static facade** that ties the loader
 to WordPress's plugin lifecycle. The full source is in
 the framework package at `vendor/wpdev/framework/src/Core/Plugin.php` (or the source under `packages/framework/src/Core/Plugin.php` in a kit checkout); the parts that matter for modules:
 
@@ -134,7 +134,7 @@ final class Plugin
 ```
 
 - **`boot()`** — the entry point the plugin file calls. Reads
-  `project.config.json`, picks up `hookPrefix` (default `wpsk`),
+  `project.config.json`, picks up `hookPrefix` (default `wpdev`),
   constructs the loader, and registers `on_plugins_loaded` on
   `plugins_loaded@10` and `init@10` so the boot survives the
   case where `plugins_loaded` has already fired (wp-cli, unit
@@ -176,30 +176,30 @@ The end-to-end flow for a normal HTTP request:
 ```
 1. WordPress loads my-project.php (the plugin file).
 2. my-project.php defines constants and requires vendor/autoload.php.
-3. my-project.php calls add_action('plugins_loaded', 'WPSK\\Core\\Plugin::boot').
+3. my-project.php calls add_action('plugins_loaded', 'WPDev\\Core\\Plugin::boot').
 4. WP continues loading other plugins.
 5. WP fires plugins_loaded (priority 10).
-6. WPSK\Core\Plugin::boot() runs:
+6. WPDev\Core\Plugin::boot() runs:
      - reads project.config.json from the plugin root,
-     - reads hookPrefix (e.g. "wpsk"),
+     - reads hookPrefix (e.g. "wpdev"),
      - constructs the ModuleLoader,
-     - fires do_action('wpsk_plugin_loaded').
-7. WPSK\Core\Plugin::on_plugins_loaded() runs (the plugins_loaded
+     - fires do_action('wpdev_plugin_loaded').
+7. WPDev\Core\Plugin::on_plugins_loaded() runs (the plugins_loaded
    callback that boot() registered):
      - calls $loader->boot_all() — every registered module's
        boot() method runs, in registration order.
-     - ModuleLoader applies the wpsk_module_loader filter
+     - ModuleLoader applies the wpdev_module_loader filter
        (third-party swap/decorate hook).
-     - ModuleLoader fires do_action('wpsk_modules_loaded').
+     - ModuleLoader fires do_action('wpdev_modules_loaded').
 8. WP fires init (priority 10) → on_plugins_loaded() runs a
    second time (the loader is idempotent — see "Lazy boot
    semantics" below).
 ```
 
 Steps 6 and 7 are the parts a module author needs to
-understand. The `wpsk_plugin_loaded` action in step 6 is the
+understand. The `wpdev_plugin_loaded` action in step 6 is the
 right place to **register** a module (the loader is empty at
-this point if you call it directly). The `wpsk_modules_loaded`
+this point if you call it directly). The `wpdev_modules_loaded`
 action in step 7 is the right place to **react** to a module
 being up.
 
@@ -209,9 +209,9 @@ The scaffold emits a sample `ExampleFeature` module at
 `src/Modules/ExampleFeature/Module.php`:
 
 ```php
-namespace Vendor\Modules\ExampleFeature;
+namespace WPDev\Modules\ExampleFeature;
 
-use WPSK\Core\ModuleInterface;
+use WPDev\Core\ModuleInterface;
 
 final class Module implements ModuleInterface
 {
@@ -250,8 +250,8 @@ A module is a single class. To add a real feature:
    module):
 
    ```php
-   \WPSK\Core\Plugin::loader()->register(
-       new \Vendor\Modules\MyFeature\Module()
+   \WPDev\Core\Plugin::loader()->register(
+       new \MyProject\Modules\MyFeature\Module()
    );
    ```
 
@@ -279,9 +279,9 @@ type:
 
 ```php
 // src/Modules/Newsletter/Module.php
-namespace Vendor\Modules\Newsletter;
+namespace MyProject\Modules\Newsletter;
 
-use WPSK\Core\ModuleInterface;
+use WPDev\Core\ModuleInterface;
 
 final class Module implements ModuleInterface
 {
@@ -312,8 +312,8 @@ Registered in the plugin file:
 
 ```php
 // my-project.php, after the autoloader is loaded
-\WPSK\Core\Plugin::loader()->register(
-    new \Vendor\Modules\Newsletter\Module()
+\WPDev\Core\Plugin::loader()->register(
+    new \MyProject\Modules\Newsletter\Module()
 );
 ```
 
@@ -322,10 +322,10 @@ Tested in `tests/phpunit/Modules/NewsletterTest.php`:
 ```php
 public function test_newsletter_module_registers_post_type_on_init(): void
 {
-    $module = new \Vendor\Modules\Newsletter\Module();
+    $module = new \MyProject\Modules\Newsletter\Module();
     $this->assertSame('newsletter', $module->get_slug());
 
-    $loader = new \WPSK\Core\ModuleLoader('vendor');
+    $loader = new \WPDev\Core\ModuleLoader('vendor');
     $loader->register($module);
     $loader->boot_all();
 
@@ -401,7 +401,7 @@ A third-party plugin can use this to swap or decorate the
 loader:
 
 ```php
-add_filter( 'wpsk_module_loader', function ( $loader ) {
+add_filter( 'wpdev_module_loader', function ( $loader ) {
     // Example: drop a module that the site owner has disabled.
     $loader->unregister( 'newsletter' );
     return $loader;
@@ -485,10 +485,51 @@ under `tests/phpunit/Modules/`.
 A green run on all three is the canonical proof that the
 core module system is wired correctly.
 
+## Asset registration best practices
+
+Register scripts and styles early; enqueue them only when the page actually
+needs them.
+
+1. **Register in `boot()` on a cheap hook** (`admin_init`, `wp_enqueue_scripts`).
+   Registration records the handle, URL, and dependencies — it does not load
+   bytes over the network.
+2. **Enqueue on a contextual hook** (`admin_enqueue_scripts` with a `$hook` check,
+   or a render callback). Enqueue only when the UI that needs the bundle is shown.
+
+```php
+use WPDev\Support\Assets;
+
+public function boot(): void
+{
+    add_action('admin_init', [$this, 'register_admin_assets']);
+    add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
+}
+
+public function register_admin_assets(): void
+{
+    Assets::register_bundle_script(
+        'example-feature-admin',
+        'assets/bundles/ExampleFeature-admin.js'
+    );
+}
+
+public function enqueue_admin_assets(string $hook): void
+{
+    if ($hook !== 'toplevel_page_example-feature') {
+        return;
+    }
+
+    Assets::enqueue_bundle_script('example-feature-admin');
+}
+```
+
+See [asset-mappings.md](asset-mappings.md) for how third-party libraries (e.g.
+tabulator-tables) join the deps bundle and static asset tree.
+
 ## Related docs
 
 - [plugin-bootstrap.md](plugin-bootstrap.md) — the `{slug}.php`
-  file that calls `WPSK\Core\Plugin::boot()` and wires the
+  file that calls `WPDev\Core\Plugin::boot()` and wires the
   loader into WordPress.
 - [architecture.md](architecture.md) — the big picture, the
   three rings, and the "what goes where" decision tree.

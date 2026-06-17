@@ -1,7 +1,7 @@
 # Framework as a Dependency
 
 > Phase 23 of `plan.v3.md` — the kit's distribution model.
-> The `@wpsk/*` packages ship as real npm packages; consumer
+> The `@wpdev/*` packages ship as real npm packages; consumer
 > projects install them as `dependencies` / `devDependencies` and
 > never vendor framework sources into their own tree.
 
@@ -10,8 +10,8 @@ code:
 
 | Mode       | How the consumer gets the framework                                                                                                             | When                                                            |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| `vendored` | Framework files are copied into the consumer's tree at scaffold time. Updates are reapplied by `wpsk update`.                                   | Phases 20–22 default; the kit's pre-Phase 23 shape.             |
-| `deps`     | Framework lives in `node_modules/@wpsk/*` (JS) and `vendor/wpdev/framework` (PHP). Updates are `composer update` / `npm update` plus migrations. | Phase 23 default (new scaffolds); opt-in for existing projects. |
+| `vendored` | Framework files are copied into the consumer's tree at scaffold time. Updates are reapplied by `wpdev update`.                                   | Phases 20–22 default; the kit's pre-Phase 23 shape.             |
+| `deps`     | Framework lives in `node_modules/@wpdev/*` (JS) and `vendor/wpdev/framework` (PHP). Updates are `composer update` / `npm update` plus migrations. | Phase 23 default (new scaffolds); opt-in for existing projects. |
 
 The `wpdev-kit.json` manifest records which mode a project is on:
 
@@ -25,7 +25,7 @@ The `wpdev-kit.json` manifest records which mode a project is on:
 
 The `distMode` field is the contract: `scaffoldProject` and
 `runMigrations` read it, the doctor uses it to decide which
-drift checks apply, and the installer's `wpsk info` command
+drift checks apply, and the installer's `wpdev info` command
 surfaces it.
 
 This document covers:
@@ -52,17 +52,17 @@ publishable set, asserted by `tests/packages/publishable.test.js`):
 
 | Package                                      | Purpose                                                               | Consumer placement                              |
 | -------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------- |
-| `@wpsk/hooks`                                | WordPress-style hooks runtime                                         | `dependencies`                                  |
-| `@wpsk/utils`                                | Generic JS helpers                                                    | `dependencies`                                  |
-| `@wpsk/rest-utils`                           | REST helper utilities                                                 | `dependencies`                                  |
-| `@wpsk/html-utils`                           | DOM/HTML helpers                                                      | `dependencies`                                  |
-| `@wpsk/fetch`                                | Wrapper around `fetch`                                                | `dependencies`                                  |
-| `@wpsk/translation`                          | i18n / text-domain helpers                                            | `dependencies`                                  |
-| `@wpsk/build`                                | esbuild build pipeline (components, deps, styles, check)              | `devDependencies`                               |
-| `@wpsk/dependency-extraction-esbuild-plugin` | esbuild plugin that extracts WP-style script dependency registrations | `devDependencies` (transitive of `@wpsk/build`) |
+| `@wpdev/hooks`                               | WordPress-style hooks runtime                                         | `dependencies`                                  |
+| `@wpdev/utils`                               | Generic JS helpers                                                    | `dependencies`                                  |
+| `@wpdev/rest-utils`                          | REST helpers + batch client (`createBatchRequest`)                  | `dependencies`                                  |
+| `@wpdev/html-utils`                          | DOM/HTML helpers                                                      | `dependencies`                                  |
+| `@wpdev/translation`                         | i18n / text-domain helpers                                            | `dependencies`                                  |
+| `@wpdev/fetch`                               | Deprecated shim — re-exports `@wpdev/rest-utils/fetch`              | workspace only (not scaffolded into consumers)  |
+| `@wpdev/build`                               | esbuild build pipeline (components, deps, styles, check)              | `devDependencies`                               |
+| `@wpdev/dependency-extraction-esbuild-plugin` | esbuild plugin that extracts WP-style script dependency registrations | `devDependencies` (transitive of `@wpdev/build`) |
 
 The internal package `@core/utils` (workspace, not publishable)
-holds the `checkProject` logic; `@wpsk/build` exposes a `wpdev-check`
+holds the `checkProject` logic; `@wpdev/build` exposes a `wpdev-check`
 bin that delegates to it. Keeping `@core/utils` internal lets the
 kit's own tests reach it via the workspace without polluting the
 public package surface.
@@ -79,27 +79,26 @@ A freshly-scaffolded consumer project (Phase 23 onward) has no
 
 ```text
 my-project/
-├── package.json          # declares @wpsk/* as deps + devDeps
+├── package.json          # declares @wpdev/* as deps + devDeps
 ├── composer.json         # declares wpdev/framework as a Composer dep
 ├── node_modules/
-│   └── @wpsk/
+│   └── @wpdev/
 │       ├── hooks/
 │       ├── utils/
-│       ├── rest-utils/
+│       ├── rest-utils/   # includes createBatchRequest (batch client)
 │       ├── html-utils/
-│       ├── fetch/
 │       ├── translation/
 │       ├── build/
 │       └── dependency-extraction-esbuild-plugin/
 ├── vendor/
-│   └── wpsk/
+│   └── wpdev/
 │       └── framework/    # Composer-installed wpdev/framework
 └── ...
 ```
 
 ### JavaScript side
 
-`npm install` resolves the `@wpsk/*` packages from the
+`npm install` resolves the `@wpdev/*` packages from the
 configured registry (or a path repo / npm-link in dev mode).
 The build scripts in `package.json` call the bins shipped by
 those packages:
@@ -115,25 +114,24 @@ those packages:
     "check": "wpdev-check"
   },
   "dependencies": {
-    "@wpsk/hooks": "^0.1.0",
-    "@wpsk/utils": "^0.1.0",
-    "@wpsk/rest-utils": "^0.1.0",
-    "@wpsk/html-utils": "^0.1.0",
-    "@wpsk/fetch": "^0.1.0",
-    "@wpsk/translation": "^0.1.0"
+    "@wpdev/hooks": "^0.1.0",
+    "@wpdev/utils": "^0.1.0",
+    "@wpdev/rest-utils": "^0.1.0",
+    "@wpdev/html-utils": "^0.1.0",
+    "@wpdev/translation": "^0.1.0"
   },
   "devDependencies": {
-    "@wpsk/build": "^0.1.0",
-    "@wpsk/dependency-extraction-esbuild-plugin": "^1.0.0"
+    "@wpdev/build": "^0.1.0",
+    "@wpdev/dependency-extraction-esbuild-plugin": "^1.0.0"
   }
 }
 ```
 
-The bins are declared in `@wpsk/build`'s `package.json`:
+The bins are declared in `@wpdev/build`'s `package.json`:
 
 ```json
 {
-  "name": "@wpsk/build",
+  "name": "@wpdev/build",
   "bin": {
     "wpdev-build-dependencies": "./esbuild-dependencies-cli.js",
     "wpdev-build-components": "./esbuild-components-cli.js",
@@ -174,8 +172,8 @@ the kit's own Composer registry.
 The kit's own tests run in **workspace mode**: the monorepo's
 `node_modules` is a flat tree of symlinks that point back to the
 checked-out package directories. `package.json` resolution for
-`@wpsk/hooks` (etc.) returns the source in `packages/hooks/`, not
-a copy in `node_modules/@wpsk/hooks/`. This is how `npm test`
+`@wpdev/hooks` (etc.) returns the source in `packages/hooks/`, not
+a copy in `node_modules/@wpdev/hooks/`. This is how `npm test`
 inside the kit can run integration tests against the framework
 without a publish step.
 
@@ -186,7 +184,7 @@ Two ways to consume the framework:
 ```bash
 # In the kit repo
 npm install          # sets up the workspace symlinks
-npm test             # tests resolve @wpsk/* from packages/*
+npm test             # tests resolve @wpdev/* from packages/*
 ```
 
 A consumer that lives **next to** a kit checkout can opt into
@@ -200,12 +198,12 @@ is the source of truth for the absolute workspace path.
 
 ```bash
 # In the consumer project
-npm install          # pulls @wpsk/* from the configured registry
+npm install          # pulls @wpdev/* from the configured registry
 composer install     # pulls wpdev/framework from packagist / Composer registry
 ```
 
 No `core/` or `packages/` directory exists in the consumer's
-tree. The framework lives entirely under `node_modules/@wpsk/*`
+tree. The framework lives entirely under `node_modules/@wpdev/*`
 and `vendor/wpdev/framework/`. This is the mode a real
 production consumer uses — and the mode Phase 23 builds toward
 by default.
@@ -215,7 +213,7 @@ by default.
 | Use case                                                | Mode                            |
 | ------------------------------------------------------- | ------------------------------- |
 | Running the kit's own test suite                        | Workspace                       |
-| Contributing a change to a `@wpsk/*` package            | Workspace                       |
+| Contributing a change to a `@wpdev/*` package            | Workspace                       |
 | Building a real consumer project                        | Published                       |
 | Continuous integration of a consumer project            | Published                       |
 | Smoke-testing a fresh scaffold against the dev checkout | Workspace (path repo + symlink) |
@@ -242,8 +240,8 @@ The flip is a single field in the manifest. Two migration paths:
 The scaffold:
 
 1. Emits a `composer.json` that requires `wpdev/framework` (no
-   `WPSK\\` → src/ would only have been for the old vendored copies; deps uses the package autoload).
-2. Emits a `package.json` that lists the eight `@wpsk/*` packages
+   local `WPDev\\` → src/ PSR-4 would only have been for old vendored copies; deps mode uses the package autoload).
+2. Emits a `package.json` that lists the `@wpdev/*` packages
    (six runtime, two build) with versions from
    `getDepVersions()`.
 3. Emits build scripts that call the installed bins
@@ -254,20 +252,20 @@ The scaffold:
 
 A pre-Phase 23 project has `distMode: "vendored"` and
 `core/packages/*` vendored into its own tree. Migrating is
-`wpsk update`'s job (Phase 24). The migration:
+`wpdev update`'s job (Phase 24). The migration:
 
 1. Adds the `wpdev/framework` Composer require + (in dev mode)
    the path repo.
-2. Adds the eight `@wpsk/*` npm packages to `package.json`.
+2. Adds the `@wpdev/*` npm packages to `package.json`.
 3. Rewrites the build scripts to call the installed bins.
 4. Removes the vendored `core/packages/*` tree (only after
    the new dep set resolves successfully and a test
    pass confirms the consumer project still works).
 5. Updates `wpdev-kit.json`: `distMode` becomes `"deps"`.
 
-`wpsk doctor` is the safety net: it flags a project that is on
+`wpdev doctor` is the safety net: it flags a project that is on
 `"vendored"` mode but missing the vendored tree (or on `"deps"`
-mode but missing the `@wpsk/*` packages), so a half-applied
+mode but missing the `@wpdev/*` packages), so a half-applied
 migration is always visible.
 
 ### Why a single flip, not a per-file one
@@ -282,7 +280,7 @@ whole framework in one step because:
   registry (`getDepVersions()`); a partial migration is just a
   half-installed registry.
 - The composer side (`wpdev/framework`) and the npm side
-  (`@wpsk/*`) are independent in the workspace but the
+  (`@wpdev/*`) are independent in the workspace but the
   consumer sees them as a single "framework" — a project on
   `distMode: "deps"` with only one of the two installed is
   broken.
@@ -293,8 +291,8 @@ whole framework in one step because:
 
 - `docs/scaffold.md` — the consumer-side scaffold flow.
 - `docs/build-system.md` — the esbuild build pipeline and
-  the `@wpsk/build` package in detail.
-- `docs/updating-projects.md` — `wpsk update` + `wpsk doctor`
+  the `@wpdev/build` package in detail.
+- `docs/updating-projects.md` — `wpdev update` + `wpdev doctor`
   - migrations.
 - `docs/features-and-manifest.md` — the `wpdev-kit.json`
   schema and the feature toggles.

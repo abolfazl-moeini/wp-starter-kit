@@ -6,14 +6,14 @@
  *   1. Loads the asset helper API (autoloaded by Composer, but the include
  *      is defensive in case the autoloader is not registered yet, e.g. when
  *      the file is loaded by WP directly during theme switch).
- *   2. Loads the theme text domain (`wpsk-starter`).
+ *   2. Loads the theme text domain (`wpdev-starter`).
  *   3. Wires the standard `wp_enqueue_scripts` handler that:
- *        - enqueues the deps bundle using `wpsk_enqueue_bundle_script()`,
- *        - localizes the deps bundle with `wpsk_get_localize_data()`,
- *        - enqueues a default stylesheet using `wpsk_enqueue_bundle_style()`.
+ *        - enqueues the deps bundle using `wpdev_enqueue_bundle_script()`,
+ *        - localizes the deps bundle with `wpdev_get_localize_data()`,
+ *        - enqueues a default stylesheet using `wpdev_enqueue_stylesheet()`.
  *
  * The text domain and function prefix are scaffold-generated from
- * `project.config.json` (`textDomain: wpsk-starter`, `phpFunctionPrefix: wpsk_`).
+ * `project.config.json` (`textDomain: wpdev-starter`, `phpFunctionPrefix: wpdev_`).
  * After scaffolding, re-branding is done by editing `project.config.json` and
  * running the build pipeline (do NOT hand-rewrite this file's strings).
  *
@@ -30,7 +30,7 @@
  *   - declares the WordPress.org plugin headers (Plugin Name, Version,
  *     Requires PHP, Text Domain, ...),
  *   - pulls in `vendor/autoload.php`,
- *   - wires `WPDev\Core\Plugin::boot()` so the WPSK namespace owns the
+ *   - wires `WPDev\Core\Plugin::boot()` so the WPDev namespace owns the
  *     boot sequence,
  *   - registers activation / deactivation / uninstall hooks,
  *   - calls `load_plugin_textdomain` against the *plugin* languages
@@ -53,9 +53,9 @@ defined( 'ABSPATH' ) || exit;
 
 // Defensive include: composer.json `autoload.files` already pulls this in,
 // but loading it here keeps the file usable without the autoloader.
-$wpsk_asset_functions = __DIR__ . '/includes/asset-functions.php';
-if (is_readable( $wpsk_asset_functions )) {
-	require_once $wpsk_asset_functions;
+$wpdev_asset_functions = __DIR__ . '/includes/asset-functions.php';
+if (is_readable( $wpdev_asset_functions )) {
+	require_once $wpdev_asset_functions;
 }
 
 add_action( 'after_setup_theme', 'wpdev_starter_setup_theme' );
@@ -66,12 +66,12 @@ if ( ! function_exists( 'wpdev_starter_setup_theme' )) {
 	 * Load translations for the starter theme.
 	 *
 	 * The text domain matches `project.config.json → textDomain`
-	 * (`wpsk-starter`). The `.mo` files live under
+	 * (`wpdev-starter`). The `.mo` files live under
 	 * `<theme>/languages/`.
 	 */
 	function wpdev_starter_setup_theme(): void {
-		$cfg         = wpsk_read_project_config();
-		$text_domain = $cfg['textDomain'] ?? 'wpsk-starter';
+		$cfg         = wpdev_read_project_config();
+		$text_domain = $cfg['textDomain'] ?? 'wpdev-starter';
 		load_theme_textdomain( $text_domain, get_template_directory() . '/languages' );
 	}
 }
@@ -86,24 +86,24 @@ if ( ! function_exists( 'wpdev_starter_enqueue_assets' )) {
 		// Read branding from project.config.json so that simply editing
 		// the config + rebuild is enough to re-brand the kit (localize
 		// global name, bundle filename for the deps handle, etc.).
-		$cfg         = wpsk_read_project_config();
-		$deps_bundle = $cfg['depsBundle'] ?? 'wpsk-starter-deps.js';
-		$loc_var     = $cfg['localizeVar'] ?? 'WPSKLoc';
+		$cfg         = wpdev_read_project_config();
+		$deps_bundle = $cfg['depsBundle'] ?? 'wpdev-starter-deps.js';
+		$loc_var     = $cfg['localizeVar'] ?? 'WPDevLoc';
 		// Strip .js suffix to derive the WP script handle.
 		$handle = substr( $deps_bundle, 0, -3 );
 
-		wpsk_enqueue_bundle_script( $deps_bundle );
+		wpdev_enqueue_bundle_script( $deps_bundle );
 
 		// Localize using the configured var name so that
-		// @wpsk/utils/localize (which may have the name define-injected
+		// @wpdev/utils/localize (which may have the name define-injected
 		// or fallback) can find the payload under the right global.
 		wp_localize_script(
 			$handle,
 			$loc_var,
-			wpsk_get_localize_data()
+			wpdev_get_localize_data()
 		);
 
 		// Default stylesheet (hashed cache-bust via the .asset.php).
-		wpsk_enqueue_stylesheet( 'style.css' );
+		wpdev_enqueue_stylesheet( 'style.css' );
 	}
 }

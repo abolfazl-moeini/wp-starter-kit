@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — manifest writer / reader.
+ * @wpdev/create-wp-project — manifest writer / reader.
  *
  * Phase 20 of plan.v3.md. The manifest is the consumer project's
  * durable record of "which kit version generated this project,
@@ -151,27 +151,35 @@ export async function writeManifest(dir, manifest) {
  * @param {string} dir
  * @returns {Object|null}
  */
+const LEGACY_MANIFEST_FILENAME = "wpsk-kit.json";
+
 export function readManifest(dir) {
   if (!dir || typeof dir !== "string") {
     throw new Error("readManifest: dir is required (string)");
   }
   const file = path.join(dir, MANIFEST_FILENAME);
-  if (!existsSync(file)) {
+  const legacyFile = path.join(dir, LEGACY_MANIFEST_FILENAME);
+  const manifestPath = existsSync(file)
+    ? file
+    : existsSync(legacyFile)
+      ? legacyFile
+      : null;
+  if (!manifestPath) {
     return null;
   }
   let raw;
   try {
-    raw = readFileSync(file, "utf8");
+    raw = readFileSync(manifestPath, "utf8");
   } catch (error) {
     throw new Error(
-      `Failed to read ${MANIFEST_FILENAME} at ${file}: ${error.message}`,
+      `Failed to read manifest at ${manifestPath}: ${error.message}`,
     );
   }
   try {
     return JSON.parse(raw);
   } catch (error) {
     throw new Error(
-      `${file}: malformed JSON in ${MANIFEST_FILENAME} (${error.message})`,
+      `${manifestPath}: malformed JSON in manifest (${error.message})`,
     );
   }
 }
@@ -196,17 +204,17 @@ const PROJECT_CONFIG_FILENAME = "project.config.json";
  * break readProjectConfig on the first read.
  */
 const MINIMAL_V2_BRANDING = {
-  slug: "wpsk-project",
-  globalName: "WpskProject",
-  localizeVar: "WpskProjectLoc",
-  textDomain: "wpsk-project",
-  hookPrefix: "wpsk-project",
-  npmScope: "@wpsk",
-  phpFunctionPrefix: "wpsk_",
+  slug: "wpdev-project",
+  globalName: "WPDevProject",
+  localizeVar: "WPDevProjectLoc",
+  textDomain: "wpdev-project",
+  hookPrefix: "wpdev-project",
+  npmScope: "@wpdev",
+  phpFunctionPrefix: "wpdev_",
   uiFramework: "preact",
   projectType: "plugin",
-  restNamespace: "wpsk/v1",
-  vendorPrefix: "WpskVendor",
+  restNamespace: "wpdev/v1",
+  vendorPrefix: "WpdevVendor",
   phpMinVersion: "7.4",
   phpSourceVersion: "8.1",
   batchEndpoint: "/batch/v1",

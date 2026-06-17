@@ -33,7 +33,7 @@ should rarely be hand-edited.
 ```
 wp-starter-kit/
 ├── core/                 ← FRAMEWORK + your code (mixed)
-│   ├── packages/         ← JS workspaces (@wpsk/*)
+│   ├── packages/         ← JS workspaces (@wpdev/*)
 │   ├── components/       ← per-component JSX/JS+SCSS
 │   ├── assets/           ← images, fonts, vendor JS (verbatim copy)
 │   ├── styles/           ← global SCSS (editor, front, ...)
@@ -53,11 +53,11 @@ wp-starter-kit/
 **Why two package roots (`core/packages/` AND `packages/`)?**
 
 - `core/packages/` — JS workspaces consumed by the build
-  (`@wpsk/starter` reads them via npm workspaces). They become
-  the `dist/<slug>-deps.js` bundle.
+  (`@wpdev/build` and friends via npm workspaces). They become
+  the `assets/bundles/<slug>-deps.js` bundle.
 - `packages/` — standalone packages with their own `package.json`
   and tests, **not** part of the consumer's bundle. Examples:
-  `@wpsk/translation` (CLI tool), `@wpsk/create-wp-project`
+  `@wpdev/translation` (CLI tool), `@wpdev/create-wp-project`
   (scaffold tool).
 
 Splitting them avoids the trap of "everything is a workspace
@@ -96,7 +96,7 @@ Browser loads dist/components/hello-world.js
     → imports from window.MyProject.ui, .hooks, .utils
     → mounts <HelloWorld /> at <div data-component="hello-world">
     ↓
-User interacts → @wpsk/hooks fires → JS-side filter chain → optional fetch
+User interacts → @wpdev/hooks fires → JS-side filter chain → optional fetch
     ↓
 `fetch(window.MyProjectLoc.restUrl + 'items', { headers: { 'X-WP-Nonce': ... } })`
     ↓
@@ -122,58 +122,73 @@ JS receives, updates state, re-renders
 The hook prefix (`my-project`) is the namespace that ties both
 sides together. See `hooks.md`.
 
+## JS package map
+
+Runtime packages ship in the deps bundle (`assets/bundles/<slug>-deps.js`) unless
+noted as tooling-only. Build-time packages are devDependencies.
+
+| Package | Path | Installer | Role |
+|---------|------|-----------|------|
+| `@wpdev/hooks` | `packages/hooks/` | always-on | Single `getHooks()` accessor to `@wordpress/hooks` global |
+| `@wpdev/utils` | `packages/utils/` | always-on | Localize bridge, shared JS helpers |
+| `@wpdev/rest-utils` | `packages/rest-utils/` | always-on | REST/AJAX client, hook dispatch, and `createBatchRequest` batch fetch |
+| `@wpdev/html-utils` | `packages/html-utils/` | always-on | `elementProps`, `mountComponent`, form/DOM helpers |
+| `@wpdev/fetch` | `packages/fetch/` | deprecated shim | Re-exports `@wpdev/rest-utils/fetch` for one release |
+| `@wpdev/ui-components` | `packages/ui-components/` | `jsLib: preact/react` | WDForm and shared UI primitives |
+| `@wpdev/rule-engine` | `packages/rule-engine/` | always-on | Generic rule DSL (WDForm validators stay form-specific) |
+| `@wpdev/polaris-stack` | `packages/polaris-stack/` | `frontendStack: polaris` | CSS variables + layout primitives |
+| `@wpdev/build` | `core/packages/build/` | always-on (dev) | esbuild pipeline CLIs |
+| `@wpdev/dependency-extraction-esbuild-plugin` | `core/packages/dependency-extraction-esbuild-plugin/` | always-on (dev) | `importAsGlobals` + asset sidecars |
+| `@core/utils` | `core/packages/utils/` | kit-internal | `readProjectConfig()` for build scripts |
+| `@wpdev/translation` | `packages/translation/` | `i18n: on` | Translation CLI (not in runtime bundle) |
+| `@wpdev/create-wp-project` | `packages/create-wp-project/` | tooling | Scaffold / add-feature CLI |
+| `@wpdev/mcp-integration` | `packages/mcp-integration/` | `mcpAbilities: on` | MCP Abilities bridge (PHP Composer package) |
+
+**Boundaries (do not merge without ADR):**
+
+- `@wpdev/html-utils` — stable DOM API used by every bundle; keep standalone.
+- `@wpdev/rule-engine` vs `WDForm/validators` — generic DSL vs form-specific rules.
+- `@wpdev/fetch` — deprecated shim; import `createBatchRequest` from `@wpdev/rest-utils` instead.
+
+See [js-hooks.md](js-hooks.md) for hook naming and [element-props.md](element-props.md)
+for the PHP→JS props bridge.
+
 ## Module boundaries
 
-### `@wpsk/starter` (`core/packages/starter/`)
+See the **JS package map** table above for the canonical list. Highlights:
 
-The "import everything from a single name" entry point:
-
-```js
-import { useState, createElement, hooks, ui } from "@wpsk/starter";
-```
-
-Re-exports from `@wpsk/hooks`, `@wpsk/ui-components`, `@wpsk/utils`,
-`@wpsk/localize`, etc. — so a component only needs to depend on
-`@wpsk/starter` to get the full surface.
-
-### `@wpsk/hooks` (`core/packages/hooks/`)
+### `@wpdev/hooks` (`packages/hooks/`)
 
 Wraps `@wordpress/hooks` with the project's `hookPrefix` pre-bound.
 See `hooks.md`.
 
-### `@wpsk/ui-components` (`core/packages/ui-components/`)
+### `@wpdev/ui-components` (`packages/ui-components/`)
 
-The shared UI primitives: `<Button>`, `<Modal>`, `<Notice>`, etc.
-Pure Preact/React (no WP dependencies). The components are
-framework-agnostic — see `react-preact-switch.md`.
+WDForm and shared UI primitives. Framework-agnostic TSX — see
+`react-preact-switch.md`.
 
-### `@wpsk/utils` (`core/packages/utils/`)
+### `@wpdev/utils` (`packages/utils/`)
 
-`deepClone`, `debounce`, `throttle`, `chunk`, etc. The kind of
-thing Lodash used to provide, hand-rolled and tree-shake-friendly.
+Localize bridge and shared JS helpers consumed by every bundle.
 
-### `@wpsk/localize` (`core/packages/localize/`)
-
-`getLocalize()` — typed accessor for `window[localizeVar]`.
-See `localize-contract.md`.
-
-### `@wpsk/rule-engine` (`core/packages/rule-engine/`)
+### `@wpdev/rule-engine` (`packages/rule-engine/`)
 
 Declarative signal engine. See `signals.md`.
 
-### `@wpsk/translation` (`packages/translation/`)
+### `@wpdev/translation` (`packages/translation/`)
 
-CLI tool for the translation pipeline. **Not in `core/`.**
+CLI tool for the translation pipeline. **Not in the runtime bundle.**
 See `translation.md`.
 
-### `@wpsk/create-wp-project` (`packages/create-wp-project/`)
+### `@wpdev/create-wp-project` (`packages/create-wp-project/`)
 
-Scaffold CLI. **Not in `core/`.** See `scaffold.md`.
+Scaffold / add-feature engine. **Not in the runtime bundle.**
+See `scaffold.md` and `installer.md`.
 
-### `@wpsk/php-test-tools` (`core/packages/php-test-tools/`)
+### `@wpdev/cli` (`packages/cli/`)
 
-PHPUnit + PHPCS + PHPStan configs and base classes. See
-`php-test-tools.md`.
+Thin CLI front-end (`wpdev create`, `wpdev add`, …). Delegates all
+file generation to `@wpdev/create-wp-project`.
 
 ## Testing strategy
 

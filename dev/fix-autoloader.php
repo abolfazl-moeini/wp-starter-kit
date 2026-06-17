@@ -10,7 +10,7 @@
  * then `dev/rector.prefix.json`), so the operation is dynamic.
  *
  * Resolution order matches `rector-prefix.php`:
- *   1. Env vars `WPSK_PREFIX_FROM` / `WPSK_PREFIX_TO`.
+ *   1. Env vars `WPDEV_PREFIX_FROM` / `WPDEV_PREFIX_TO` (legacy `WPSK_PREFIX_*` OK).
  *   2. `dev/rector.prefix.json` (decoded `from` / `to` keys).
  *   3. No-op if neither is set.
  *
@@ -29,8 +29,8 @@ if (!is_dir($composer_dir)) {
     exit(0);
 }
 
-$from = (string) getenv('WPSK_PREFIX_FROM');
-$to   = (string) getenv('WPSK_PREFIX_TO');
+$from = (string) (getenv('WPDEV_PREFIX_FROM') ?: getenv('WPSK_PREFIX_FROM'));
+$to   = (string) (getenv('WPDEV_PREFIX_TO') ?: getenv('WPSK_PREFIX_TO'));
 
 if (($from === '' || $to === '') && is_file(__DIR__ . '/rector.prefix.json')) {
     $decoded = json_decode((string) file_get_contents(__DIR__ . '/rector.prefix.json'), true);

@@ -140,7 +140,7 @@ existing project:
 
 1. **Edit `project.config.json`** — change the `js` field to the
    new variant.
-2. **Run `npx wpsk doctor`** — the doctor command (Phase 24.x)
+2. **Run `npx wpdev doctor`** — the doctor command (Phase 24.x)
    checks that the new variant's required files are present and
    reports any missing pieces.
 3. **Run the new variant's install step** — for `js:flow`, this

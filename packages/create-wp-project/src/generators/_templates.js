@@ -76,7 +76,7 @@ export function tplVars(answers, cfg) {
     // "use WPDev\\Core\\ModuleInterface"). Always "WPDev" — the consumer's
     // composer.json resolves this through the wpdev/framework dependency.
     frameworkNamespace: "WPDev",
-    vendorPrefixUpper: (cfg.vendorPrefix || "WpskVendor").toUpperCase(),
+    vendorPrefixUpper: (cfg.vendorPrefix || "WpdevVendor").toUpperCase(),
     // Phase 23.A4: {{frameworkPath}} is the URL the consumer
     // composer.json's `repositories` entry points at for
     // wpdev/framework. The path is a single source of truth — the
@@ -109,7 +109,6 @@ export function tplVars(answers, cfg) {
 export function packageJsonForAnswers(answers, features) {
   const uiFramework = deriveUiFramework(features, answers);
   const huskyOn = !features || features.husky !== "off";
-  const restBatchOn = features && features.restBatch === "on";
   const projectType = answers.projectType || "plugin";
   const description =
     projectType === "theme"
@@ -164,7 +163,6 @@ export function packageJsonForAnswers(answers, features) {
     "@wpdev/utils",
     "@wpdev/rest-utils",
     "@wpdev/html-utils",
-    ...(restBatchOn ? ["@wpdev/fetch"] : []),
     "@wpdev/translation",
   ];
   // The 2 @wpdev/* build tools (compile-time only). The
@@ -405,7 +403,7 @@ export const TEMPLATE_FUNCTIONS_PHP = `<?php
  * Scaffolded from wp-starter-kit. The project's own functions use the
  * {{phpFunctionPrefix}} (from project.config.json). Calls to the asset
  * helpers (enqueue, get_localize_data, asset_info, etc.) use the stable
- * framework names (wpsk_*) because wp-starter-kit ships a single
+ * framework names (wpdev_*) because wp-starter-kit ships a single
  * implementation of the PHP asset layer (in includes/asset-functions.php
  * or via the kit's Composer autoload). The helpers are intentionally not
  * re-prefixed per project to avoid code duplication and maintenance drift.
@@ -442,14 +440,14 @@ function {{slug_underscore}}_setup(): void
 add_action('wp_enqueue_scripts', '{{slug_underscore}}_enqueue_assets');
 function {{slug_underscore}}_enqueue_assets(): void
 {
-    // Framework-provided asset helpers (always wpsk_* names). The
+    // Framework-provided asset helpers (always wpdev_* names). The
     // project's phpFunctionPrefix is used only for its own glue code.
-    wpsk_enqueue_bundle_script('{{depsBundle}}');
-    wpsk_enqueue_stylesheet('style.css');
+    wpdev_enqueue_bundle_script('{{depsBundle}}');
+    wpdev_enqueue_stylesheet('style.css');
     wp_localize_script(
         '{{depsHandle}}',
         '{{localizeVar}}',
-        wpsk_get_localize_data()
+        wpdev_get_localize_data()
     );
     wp_set_script_translations('{{depsHandle}}', '{{textDomain}}', get_template_directory() . '/assets/translations');
 }
@@ -460,7 +458,7 @@ function {{slug_underscore}}_enqueue_assets(): void
  *
  * Emitted by core.js when `projectType === "theme"` AND
  * `features.js === "none"`. The body is identical to
- * TEMPLATE_FUNCTIONS_PHP MINUS the `wpsk_enqueue_bundle_script()`
+ * TEMPLATE_FUNCTIONS_PHP MINUS the `wpdev_enqueue_bundle_script()`
  * call and the `wp_localize_script()` / `wp_set_script_translations()`
  * calls — they reference a bundle that does not exist for a
  * PHP-only consumer. The stylesheet enqueue is preserved because
@@ -517,7 +515,7 @@ function {{slug_underscore}}_enqueue_assets(): void
     // PHP-only theme (js:none) — the stylesheet enqueue is
     // preserved (CSS ≠ JS), but the bundle enqueue is omitted
     // because the consumer has no JS bundle to load.
-    wpsk_enqueue_stylesheet('style.css');
+    wpdev_enqueue_stylesheet('style.css');
 }
 `;
 
@@ -559,7 +557,7 @@ export const TEMPLATE_STRAUSS_JSON = `{
   "namespace_prefix": "{{vendorPrefix}}",
   "classmap_prefix": "{{vendorPrefix}}_",
   "constant_prefix": "{{vendorPrefixUpper}}_",
-  "delete_vendor_files": true,
+  "delete_vendor_files": false,
   "exclude_from_prefix": {
     "namespaces": ["WPDev"],
     "file_patterns": []
@@ -581,7 +579,7 @@ export const TEMPLATE_STRAUSS_JSON_NO_WPDEV_EXCLUSION = `{
   "namespace_prefix": "{{vendorPrefix}}",
   "classmap_prefix": "{{vendorPrefix}}_",
   "constant_prefix": "{{vendorPrefixUpper}}_",
-  "delete_vendor_files": true,
+  "delete_vendor_files": false,
   "exclude_from_prefix": {
     "namespaces": [],
     "file_patterns": []
@@ -644,6 +642,35 @@ domReady(() => {
   if (root) {
     root.textContent = 'ExampleFeature admin bundle loaded';
   }
+});
+`;
+
+export const TEMPLATE_EXAMPLE_FEATURE_MODULE_TEST_PHP = `<?php
+declare(strict_types=1);
+
+namespace {{vendor}}\\Tests\\Modules\\ExampleFeature;
+
+use PHPUnit\\Framework\\TestCase;
+use {{vendor}}\\Modules\\ExampleFeature\\Module;
+
+/**
+ * TDD stub — extend with behavior tests as you implement ExampleFeature.
+ */
+final class ModuleTest extends TestCase
+{
+    public function test_slug_is_non_empty_kebab_case(): void
+    {
+        $module = new Module();
+        $this->assertNotEmpty($module->get_slug());
+        $this->assertMatchesRegularExpression('/^[a-z][a-z0-9-]*$/', $module->get_slug());
+    }
+}
+`;
+
+export const TEMPLATE_EXAMPLE_FEATURE_ADMIN_TEST_TS = `import { describe, test } from '@jest/globals';
+
+describe('ExampleFeature admin entry', () => {
+  test.todo('implement feature behavior');
 });
 `;
 
@@ -789,7 +816,7 @@ final class Plugin
         \$config = self::config(\$configPath);
         \$hookPrefix = isset(\$config['hookPrefix']) && is_string(\$config['hookPrefix'])
             ? \$config['hookPrefix']
-            : 'wpsk';
+            : 'wpdev';
 
         if (\$configPath !== null) {
             self::\$configCache = \$config;
@@ -821,7 +848,7 @@ final class Plugin
     public static function loader(): ModuleLoader
     {
         if (self::\$loader === null) {
-            self::\$loader = new ModuleLoader('wpsk');
+            self::\$loader = new ModuleLoader('wpdev');
         }
         return self::\$loader;
     }
@@ -1058,34 +1085,46 @@ declare(strict_types=1);
 
 namespace {{vendor}}\\Modules\\ExampleFeature;
 
-use {{frameworkNamespace}}\\Core\\ModuleInterface;
-use {{frameworkNamespace}}\\Core\\Plugin;
+use {{frameworkNamespace}}\\Core\\AbstractModule;
 use {{vendor}}\\Modules\\ExampleFeature\\Rest\\ItemsController;
 use {{frameworkNamespace}}\\Support\\Assets;
 use {{frameworkNamespace}}\\Support\\Rest\\RestSetup;
 
-final class Module implements ModuleInterface
+final class Module extends AbstractModule
 {
     public function get_slug(): string
     {
         return 'example-feature';
     }
 
+    public function should_boot(): bool
+    {
+        return function_exists('is_admin') && is_admin();
+    }
+
     public function boot(): void
     {
         RestSetup::register(ItemsController::class);
+
+        add_action('admin_init', [$this, 'register_admin_assets']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     }
 
-    public function enqueue_admin_assets(): void
+    public function register_admin_assets(): void
     {
-        if (!function_exists('is_admin') || !is_admin()) {
-            return;
-        }
-        Assets::enqueue_bundle_script(
+        Assets::register_bundle_script(
             'example-feature-admin',
             'assets/bundles/ExampleFeature-admin.js'
         );
+    }
+
+    public function enqueue_admin_assets(string $hook): void
+    {
+        if ($hook !== 'toplevel_page_example-feature') {
+            return;
+        }
+
+        Assets::enqueue_bundle_script('example-feature-admin');
     }
 }
 `;
@@ -1120,7 +1159,7 @@ export const TEMPLATE_TSCONFIG_JSON = `{
  * composer.json `extra/strauss` (not the standalone strauss.json).
  */
 export function buildComposerJson(vars) {
-  const vendorPrefix = vars.vendorPrefix || "WpskVendor";
+  const vendorPrefix = vars.vendorPrefix || "WpdevVendor";
   const excludeNamespaces = vars.vendorScopingOn === false ? ["WPDev"] : [];
   const payload = {
     name: `${vars.vendorNamespaceLower || vars.slug}/${vars.slug}`,
@@ -1145,13 +1184,18 @@ export function buildComposerJson(vars) {
         [`${vars.vendorNamespace}\\`]: "src/",
       },
     },
+    scripts: {
+      "post-install-cmd": ["@php vendor/bin/strauss"],
+      "post-update-cmd": ["@php vendor/bin/strauss"],
+      "scope:vendor": "@php vendor/bin/strauss",
+    },
     extra: {
       strauss: {
         target_directory: "vendor-prefixed",
         namespace_prefix: vendorPrefix,
         classmap_prefix: `${vendorPrefix}_`,
         constant_prefix: `${vendorPrefix.toUpperCase()}_`,
-        delete_vendor_files: true,
+        delete_vendor_files: false,
         include_modified_files: false,
         packages: ["wpdev/framework"],
         exclude_from_prefix: {

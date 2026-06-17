@@ -16,10 +16,12 @@
     "./esbuild-components.js": "./esbuild-components.js",
     "./esbuild-dependencies.js": "./esbuild-dependencies.js",
     "./esbuild-styles.js": "./esbuild-styles.js",
-    "./build-assets.js": "./build-assets.js"
+    "./build-assets.js": "./build-assets.js",
+    "./getJsxOptions.js": "./getJsxOptions.js"
   },
   "files": [
     "index.js",
+    "getJsxOptions.js",
     "esbuild-components.js",
     "esbuild-components-cli.js",
     "esbuild-dependencies.js",

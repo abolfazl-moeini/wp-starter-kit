@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — css generator (Phase 21 + 25.H).
+ * @wpdev/create-wp-project — css generator (Phase 21 + 25.H).
  *
  * CSS framework config. Three real variants (`sass`, `tailwind`,
  * `postcss`) and one no-op (`css: none` — the registry filter

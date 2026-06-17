@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — CI workflow generator (Phase 26.4).
+ * @wpdev/create-wp-project — CI workflow generator (Phase 26.4).
  *
  * Emits `.github/workflows/ci.yml` for the consumer when at least
  * one test runner is enabled (phpTest:phpunit and/or jsTest ≠ none).

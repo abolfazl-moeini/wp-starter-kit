@@ -8,7 +8,7 @@ with no legacy private dependencies.
 - `RestSetup` — dynamic `restNamespace` from `project.config.json`.
 - `RestHandler` — safe exception responses, strong `permission_callback`.
 - `AllowBatch` — opt-in WordPress REST batch support.
-- `BatchResponse::wrap()` — `extra.cacheKey` contract for `@wpsk/fetch`.
+- `BatchResponse::wrap()` — `extra.cacheKey` contract for `@wpdev/rest-utils` batch client.
 
 ## Queue (`src/Support/Queue/DeferredCall.php`)
 

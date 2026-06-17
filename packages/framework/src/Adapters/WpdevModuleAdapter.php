@@ -6,7 +6,7 @@ namespace WPDev\Adapters;
 use WPDev\Core\ModuleInterface;
 
 /**
- * Thin bridge between WPSK's ModuleInterface and wpdev-framework's
+ * Thin bridge between WPDev's ModuleInterface and wpdev-framework's
  * module loader convention (modules/{name}/setup.php + Module_Loader::load_all()).
  *
  * Consumers with phpFramework:wpdev use this adapter to register kit

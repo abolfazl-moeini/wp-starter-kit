@@ -32,14 +32,19 @@ minute, only the latest runs.
 
 **Status check job:** `ci-pass` is a tiny aggregator that fails the
 overall status if any required job failed. This is the "required"
-check on the branch protection rule.
+check on the branch protection rule. `js-test` and `php-test` do not
+use `continue-on-error` — a failing test suite blocks the PR.
+
+**Coverage:** the nightly `coverage-report` job (see [nightly.yml](../.github/workflows/nightly.yml))
+uploads JS and PHP coverage to Codecov. Use it to spot regressions; the
+main CI path does not gate on coverage percentage.
 
 ## Nightly (`nightly.yml`)
 
 Runs at 02:00 UTC every day, plus `workflow_dispatch` for ad-hoc
 triggers. Three jobs:
 
-1. **`scaffold-smoke`** — runs `@wpsk/create-wp-project` in a temp
+1. **`scaffold-smoke`** — runs `@wpdev/create-wp-project` in a temp
    dir, verifies the output tree and the generated
    `project.config.json`. Catches scaffold regressions that unit
    tests can miss.
@@ -69,7 +74,7 @@ Triggered by a tag push matching `v*.*.*`. The pattern is
 3. `composer translation` — regenerate translation bundles.
 4. **If `-prefixed` tag:** `composer rector:prefix` (see
    `release-checklist.md`).
-5. Create `wpsk-starter-<version>.tar.gz` and `.zip` archives.
+5. Create `wpdev-starter-<version>.tar.gz` and `.zip` archives.
 6. Upload as workflow artifacts.
 7. Download artifacts, create GitHub Release with the
    CHANGELOG.md section for this version, attach the archives.

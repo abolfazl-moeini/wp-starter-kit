@@ -15,14 +15,14 @@
  * accessor are provided for ergonomics:
  *
  *   import getHooks from '@wpdev/hooks';
- *   getHooks().doAction('wpsk-form-init', container);
+ *   getHooks().doAction('wpdev-form-init', container);
  *
  *   import { getHooks } from '@wpdev/hooks';
  *   getHooks('MyApp').addAction(...);
  */
 
 const FALLBACK_GLOBAL =
-  typeof __WPDEV_GLOBAL_NAME__ !== "undefined" ? __WPDEV_GLOBAL_NAME__ : "WPSK";
+  typeof __WPDEV_GLOBAL_NAME__ !== "undefined" ? __WPDEV_GLOBAL_NAME__ : "WPDev";
 
 function resolveGlobalName(override) {
   return override || FALLBACK_GLOBAL;

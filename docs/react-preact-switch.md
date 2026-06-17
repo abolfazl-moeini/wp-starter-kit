@@ -65,7 +65,7 @@ esbuild.build({
   // ...
   alias,
   define: {
-    "process.env.WPSK_UI_FRAMEWORK": JSON.stringify(config.uiFramework),
+    "process.env.WPDEV_UI_FRAMEWORK": JSON.stringify(config.uiFramework),
   },
 });
 ```
@@ -121,7 +121,7 @@ the editor experience is unaffected.
 `tests/integration/react-preact.test.js` runs the same component
 harness under both `uiFramework: react` and `uiFramework: preact`
 config and asserts the rendered output is identical. Plus a
-unit test (`@wpsk/ui-components`) that verifies the alias is set
+unit test (`@wpdev/ui-components`) that verifies the alias is set
 in the esbuild config when the key is `preact`.
 
 See `react-preact.md` for the pre-existing notes from the initial

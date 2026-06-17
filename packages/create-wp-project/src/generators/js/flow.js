@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — js:flow generator (Phase 21 + Phase 25.C).
+ * @wpdev/create-wp-project — js:flow generator (Phase 21 + Phase 25.C).
  *
  * The Flow variant of the `js` feature. Emits a Flow-typed
  * dependencies entry (with the `// @flow` pragma), a

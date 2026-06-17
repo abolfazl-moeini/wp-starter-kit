@@ -107,7 +107,7 @@ describe("jsLib scaffold + addFeature", () => {
     expect(pkg.dependencies.react).toMatch(/^[\^~]?18\./);
     expect(pkg.dependencies.preact).toBeUndefined();
     const marker = await fs.readFile(
-      path.join(tmp, ".wpsk/ui-framework"),
+      path.join(tmp, ".wpdev/ui-framework"),
       "utf8",
     );
     expect(marker.trim()).toBe("react");

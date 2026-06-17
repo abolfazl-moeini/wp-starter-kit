@@ -1,5 +1,5 @@
 /**
- * @wpsk/cli — main entry. Wires the `commander` program with subcommands
+ * @wpdev/cli — main entry. Wires the `commander` program with subcommands
  * (`create`, `add`, `remove`, `list`, `update`, `doctor`, `info`) and the
  * global `--version` / `--help` flags. The action bodies live in
  * `src/commands/*.js`; this module is the dispatcher.
@@ -40,7 +40,7 @@ import { getKitVersion } from "./version.js";
 // The real engine — Phase 20+21 work in `packages/create-wp-project`.
 // We import it directly here (the bin is the only place that
 // should ever need the real engine; unit tests inject fakes).
-import * as engine from "@wpsk/create-wp-project";
+import * as engine from "@wpdev/create-wp-project";
 
 /**
  * Slice the raw argv tail (everything after the subcommand name)
@@ -129,7 +129,7 @@ export function buildProgram() {
       // invalid (the user typed something contradictory at the
       // terminal). The bin layer shows a single readable
       // message.
-      process.stderr.write("wpsk create: invalid feature combination:\n");
+      process.stderr.write("wpdev create: invalid feature combination:\n");
       for (const [k, msg] of Object.entries(resolved.validation.errors || {})) {
         process.stderr.write("  " + k + ": " + msg + "\n");
       }
@@ -167,7 +167,7 @@ export function buildProgram() {
     //    0/1 based on the result.
     if (!result.ok) {
       process.stderr.write(
-        "wpsk create failed: " + (result.reason || "unknown") + "\n",
+        "wpdev create failed: " + (result.reason || "unknown") + "\n",
       );
       process.exit(1);
     }
@@ -270,12 +270,12 @@ export function buildProgram() {
     );
     if (!result.ok) {
       process.stderr.write(
-        "wpsk update: " + (result.reason || "unknown") + "\n",
+        "wpdev update: " + (result.reason || "unknown") + "\n",
       );
       process.exit(1);
     }
     if (result.warning) {
-      process.stderr.write("wpsk update: " + result.warning + "\n");
+      process.stderr.write("wpdev update: " + result.warning + "\n");
     }
   });
 
@@ -300,7 +300,7 @@ export function buildProgram() {
     );
     if (!result.ok && !result.report) {
       process.stderr.write(
-        "wpsk doctor: " + (result.reason || "unknown") + "\n",
+        "wpdev doctor: " + (result.reason || "unknown") + "\n",
       );
       process.exit(1);
     }
@@ -330,7 +330,7 @@ export function buildProgram() {
       { engine, ui, lookupLatestKit: runners.lookupLatestKit },
     );
     if (!result.ok) {
-      process.stderr.write("wpsk info: " + (result.reason || "unknown") + "\n");
+      process.stderr.write("wpdev info: " + (result.reason || "unknown") + "\n");
       process.exit(1);
     }
   });
@@ -381,7 +381,7 @@ function isBinInvocation() {
   if (!process.argv[1]) return false;
   // Either the bin file itself, or this main.js with bin/wpdev.js as argv[1].
   return (
-    process.argv[1].endsWith("wpsk") ||
+    process.argv[1].endsWith("wpdev") ||
     process.argv[1].endsWith("wpdev.js") ||
     process.argv[1].endsWith("bin/wpdev.js")
   );

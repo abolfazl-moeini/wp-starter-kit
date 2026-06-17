@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
 
-use WPDev\FaultTolerance\HttpPool;
+use WPDev\FaultTolerance\FaultTolerance;
+use WPDev\FaultTolerance\HttpClient;
 use WPDev\FaultTolerance\Resilient;
 
 if (!function_exists('resilient')) {
@@ -22,7 +23,7 @@ if (!function_exists('http_batch')) {
      */
     function http_batch(array $requests): array
     {
-        return HttpPool::batch($requests);
+        return HttpClient::batch($requests);
     }
 }
 
@@ -33,6 +34,13 @@ if (!function_exists('http_pool')) {
      */
     function http_pool(array $requests): array
     {
-        return HttpPool::http_pool($requests);
+        return HttpClient::pool($requests);
+    }
+}
+
+if (!function_exists('fault_tolerance')) {
+    function fault_tolerance(): FaultTolerance
+    {
+        return new FaultTolerance();
     }
 }

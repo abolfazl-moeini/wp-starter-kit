@@ -15,14 +15,14 @@ import { updateJsonFile } from "../json-utils.js";
 
 export const version = "0.3.0";
 export const description =
-  "Rename wpdev-kit.json → wpdev-kit.json (rebrand) and patch legacy default branding in project.config.json if present";
+  "Rename wpsk-kit.json → wpdev-kit.json (rebrand) and patch legacy default branding in project.config.json if present";
 
-const OLD_MANIFEST = "wpdev-kit.json";
+const OLD_MANIFEST = "wpsk-kit.json";
 const NEW_MANIFEST = "wpdev-kit.json";
 
 const LEGACY_DEFAULTS = {
   slug: "wpsk-starter",
-  globalName: "WPSK",
+  globalName: "WPDev",
   npmScope: "@wpsk",
   textDomain: "wpsk-starter",
   hookPrefix: "wpsk",

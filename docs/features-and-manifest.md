@@ -11,7 +11,7 @@ of truth — every generator, every template, every runtime helper
 reads it. This document covers:
 
 1. [What a feature is](#what-a-feature-is)
-2. [The `wpdev-kit.json` manifest](#the-wpsk-kitjson-manifest)
+2. [The `wpdev-kit.json` manifest](#the-wpdev-kitjson-manifest)
 3. [Owned paths and the safety rule](#owned-paths-and-the-safety-rule)
 4. [Adding a feature later (`addFeature`)](#adding-a-feature-later-addfeature)
 5. [Switching variants](#switching-variants)
@@ -102,7 +102,7 @@ Field semantics:
   (Phase 24), **not** by `addFeature` / `removeFeature` (those
   preserve `kitVersion` so the version reflects the last
   intentional kit-level change, not manual feature toggles).
-- **`distMode: "vendored" | "deps"`** — `"deps"` (Phase 23+ default) means the framework lives in `vendor/wpdev/framework` (Composer) + `@wpsk/*` (npm). `"vendored"` is the legacy mode for projects generated before the switch (framework source copies under src/Core in the project tree). Migrations convert vendored projects.
+- **`distMode: "vendored" | "deps"`** — `"deps"` (Phase 23+ default) means the framework lives in `vendor/wpdev/framework` (Composer) + `@wpdev/*` (npm). `"vendored"` is the legacy mode for projects generated before the switch (framework source copies under src/Core in the project tree). Migrations convert vendored projects.
   flips it to `"deps"`.
 - **`generatedAt: "ISO-8601"`** — the timestamp the manifest
   was last written. **Idempotency tests freeze this value** so
@@ -176,7 +176,7 @@ them.
 
 ## Adding a feature later (`addFeature`)
 
-The installer's `wpsk add <feature>` command calls
+The installer's `wpdev add <feature>` command calls
 `addFeature(dir, id, variant, { force? })` from
 `packages/create-wp-project/src/addFeature.js`.
 
@@ -241,7 +241,7 @@ are bookkeeping; only generator-emitted files are in
 Example:
 
 ```js
-import { addFeature } from "@wpsk/create-wp-project";
+import { addFeature } from "@wpdev/create-wp-project";
 
 const res = await addFeature("/path/to/project", "husky", "on");
 if (res.ok) {
@@ -285,7 +285,7 @@ manifest — only migrations and `update` operations bump it.
 
 ## Removing a feature (`removeFeature`)
 
-The installer's `wpsk remove <feature>` command calls
+The installer's `wpdev remove <feature>` command calls
 `removeFeature(dir, id, { force? })` from
 `packages/create-wp-project/src/removeFeature.js`. The
 mirror of `addFeature`: turn a feature OFF in an EXISTING
@@ -338,23 +338,23 @@ anything change?" check is uniform across `addFeature` and
 
 ## CLI integration
 
-The installer (the `wpsk` CLI) wraps `addFeature` and
+The installer (the `wpdev` CLI) wraps `addFeature` and
 `removeFeature` for end users. The CLI does the work of
 mapping CLI flags to API calls, prompting for confirmation,
 and reporting the result. From a consumer's perspective:
 
 ```bash
 # Turn husky on
-wpsk add husky
+wpdev add husky
 
 # Turn a variant feature on
-wpsk add css --variant=tailwind
+wpdev add css --variant=tailwind
 
 # Switch a variant
-wpsk add jsTest --variant=vitest
+wpdev add jsTest --variant=vitest
 
 # Turn a feature off
-wpsk remove husky
+wpdev remove husky
 ```
 
 The CLI shows the `deps` and `devDeps` from the result so
@@ -364,6 +364,6 @@ the user can review what changed.
 
 The CLI also does a pre-flight check: if the target
 directory does not have a `wpdev-kit.json`, it suggests
-running `wpsk create` first (the scaffold path). The engine
+running `wpdev create` first (the scaffold path). The engine
 APIs themselves do not do this check — they let the caller
 decide how to handle a missing manifest.

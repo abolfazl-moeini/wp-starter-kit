@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, watch as fsWatch } from "node:fs";
 import { dirname } from "node:path";
 import {
   fileCheckSum,
@@ -11,10 +11,6 @@ import { readBuildConfig } from "./index.js";
  * Compute the hash of a CSS source file and write a `<file>.asset.php`
  * sidecar containing `['hash' => '<md5>']` (serialized by the dependency
  * plugin's `phpFileContent` helper). Returns the asset file path.
- *
- * Throws when the source file does not exist. The throw is wrapped in a
- * rejected Promise so `await buildStyleAssetFile(...)` reports it the
- * same way as a real write failure.
  *
  * @param {string} cssFilePath  Absolute path to the source CSS file.
  * @returns {Promise<string>}   Path to the written `.asset.php` file.
@@ -45,20 +41,16 @@ export function buildStyleAssetFile(cssFilePath) {
 
 /**
  * Walk `build.config.json → styleEntryPoints` and emit an `.asset.php`
- * sidecar for every entry. Returns the list of asset file paths in the
- * same order as the input array.
+ * sidecar for every entry.
  *
  * @param {object} [options]
- * @param {object} [options.buildConfig]  Override build config (else
- *   `readBuildConfig()` from @wpdev/build).
- * @param {string} [options.cwd]          Working directory (forwarded to
- *   `buildStyleAssetFile` — entries are expected to be absolute or
- *   repo-relative paths).
- * @returns {Promise<string[]>}           Asset file paths.
+ * @param {boolean} [options.watch]     Watch entry files and rebuild sidecars.
+ * @returns {Promise<string[]|import('node:fs').FSWatcher[]>}
  */
 export async function buildStyles(options = {}) {
   const buildConfig = options.buildConfig ?? (await readBuildConfig());
   const entries = buildConfig?.styleEntryPoints ?? [];
+  const watch = options.watch ?? false;
 
   const results = [];
   for (const cssFilePath of entries) {
@@ -66,5 +58,24 @@ export async function buildStyles(options = {}) {
     console.info(`Done: ${assetPath}`);
     results.push(assetPath);
   }
-  return results;
+
+  if (!watch) {
+    return results;
+  }
+
+  const watchers = [];
+  for (const cssFilePath of entries) {
+    const watcher = fsWatch(cssFilePath, async () => {
+      try {
+        const assetPath = await buildStyleAssetFile(cssFilePath);
+        console.info(`Rebuilt: ${assetPath}`);
+      } catch (error) {
+        console.error(`Style rebuild failed for ${cssFilePath}:`, error.message);
+      }
+    });
+    watchers.push(watcher);
+  }
+
+  console.info(`Watching ${watchers.length} style entry point(s)…`);
+  return watchers;
 }

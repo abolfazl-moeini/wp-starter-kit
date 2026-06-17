@@ -1,7 +1,7 @@
 import { describe, test, expect } from "@jest/globals";
 
 import { gatherInputs } from "../../packages/cli/src/gather.js";
-import * as engineStub from "@wpsk/create-wp-project";
+import * as engineStub from "@wpdev/create-wp-project";
 
 /**
  * A fake `ui` that records every call. We never actually call the

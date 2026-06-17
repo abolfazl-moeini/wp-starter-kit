@@ -20,6 +20,13 @@ class BlocksModuleTest extends TestCase
     {
         $module = new Module();
         $this->assertSame('blocks', $module->get_slug());
+        $this->assertMatchesRegularExpression('/^[a-z][a-z0-9-]*$/', $module->get_slug());
+    }
+
+    public function test_module_instantiates_without_wordpress(): void
+    {
+        $this->expectNotToPerformAssertions();
+        new Module();
     }
 
     public function test_boot_does_not_throw_when_blockstudio_missing(): void

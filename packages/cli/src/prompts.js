@@ -21,7 +21,7 @@
  *    so we can react to choices made earlier in the plan.
  */
 
-import { getFeatureCatalog } from "@wpsk/create-wp-project";
+import { getFeatureCatalog } from "@wpdev/create-wp-project";
 
 /* -------------------------------------------------------------------- */
 /* Branding questions (always first; asked before features)              */
@@ -344,7 +344,7 @@ export async function runPrompts(plan, ui, prefill) {
     // graceful abort.
     if (value === undefined || value === null) {
       const err = new Error("user cancelled");
-      err.code = "WPSK_USER_CANCELLED";
+      err.code = "WPDEV_USER_CANCELLED";
       throw err;
     }
 

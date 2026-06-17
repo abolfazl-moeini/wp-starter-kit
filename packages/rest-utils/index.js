@@ -21,7 +21,7 @@ import { currentLanguage } from "@wpdev/html-utils";
 const FALLBACK_HOOK_PREFIX =
   typeof __WPDEV_HOOK_PREFIX__ !== "undefined" ? __WPDEV_HOOK_PREFIX__ : "wpdev";
 const FALLBACK_SLUG =
-  typeof __WPDEV_SLUG__ !== "undefined" ? __WPDEV_SLUG__ : "wpsk-starter";
+  typeof __WPDEV_SLUG__ !== "undefined" ? __WPDEV_SLUG__ : "wpdev-starter";
 
 const ACTIONS = {
   start: `${FALLBACK_HOOK_PREFIX}-request-ajax-start`,
@@ -187,3 +187,9 @@ export const restHeaders = defaultUtils.restHeaders;
 export const restXHeaders = defaultUtils.restXHeaders;
 export const restUrl = defaultUtils.restUrl;
 export const restXUrl = defaultUtils.restXUrl;
+
+// Batch fetch client (merged from @wpdev/fetch — import subpath in TS/bundler).
+export {
+  createBatchRequest,
+  createCache,
+} from "./src/fetch/index.ts";

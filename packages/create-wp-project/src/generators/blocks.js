@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — blocks generator.
+ * @wpdev/create-wp-project — blocks generator.
  *
  * Gutenberg blocks via Blockstudio 7 (PHP-first). Emits blockstudio.json,
  * example block files, and the kit bridge module when blocks=on.

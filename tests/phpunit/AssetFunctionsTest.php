@@ -3,16 +3,16 @@
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the `wpsk_asset_info`, `wpsk_bundle_file_path`, and
- * `wpsk_bundle_file_url` helpers defined in `includes/asset-functions.php`.
+ * Tests for the `wpdev_asset_info`, `wpdev_bundle_file_path`, and
+ * `wpdev_bundle_file_url` helpers defined in `includes/asset-functions.php`.
  *
  * The behaviour mirrors the mrlogistic `ml_asset_info` family:
  * - returns `[]` for non-`.js`/`.css` paths
  * - returns `[]` for missing `.asset.php` companions
  * - includes the companion file and returns its array otherwise
  *
- * Prefix is `wpsk_` (read from `project.config.json` in the live code; tests
- * reference the public function names directly).
+ * Canonical helpers use the `wpdev_*` prefix; deprecated `wpsk_*` shims
+ * delegate to the same implementation.
  */
 class AssetFunctionsTest extends TestCase
 {
@@ -75,16 +75,16 @@ class AssetFunctionsTest extends TestCase
         $this->writeAssetFile($js, [
             'dependencies'      => ['jquery', 'wp-i18n'],
             'hash'              => 'abc123',
-            'internal_packages' => ['@wpsk/hooks'],
+            'internal_packages' => ['@wpdev/hooks'],
         ]);
 
-        $info = wpsk_asset_info($js);
+        $info = wpdev_asset_info($js);
 
         $this->assertSame(
             [
                 'dependencies'      => ['jquery', 'wp-i18n'],
                 'hash'              => 'abc123',
-                'internal_packages' => ['@wpsk/hooks'],
+                'internal_packages' => ['@wpdev/hooks'],
             ],
             $info
         );
@@ -99,7 +99,7 @@ class AssetFunctionsTest extends TestCase
             'hash'         => 'deadbeef',
         ]);
 
-        $info = wpsk_asset_info($css);
+        $info = wpdev_asset_info($css);
 
         $this->assertSame(
             [
@@ -112,9 +112,9 @@ class AssetFunctionsTest extends TestCase
 
     public function test_asset_info_returns_empty_array_for_non_js_or_css_path(): void
     {
-        $this->assertSame([], wpsk_asset_info('foo/bar.txt'));
-        $this->assertSame([], wpsk_asset_info('foo/bar.php'));
-        $this->assertSame([], wpsk_asset_info('foo/bar'));
+        $this->assertSame([], wpdev_asset_info('foo/bar.txt'));
+        $this->assertSame([], wpdev_asset_info('foo/bar.php'));
+        $this->assertSame([], wpdev_asset_info('foo/bar'));
     }
 
     public function test_asset_info_returns_empty_array_when_companion_file_missing(): void
@@ -122,22 +122,22 @@ class AssetFunctionsTest extends TestCase
         $js = $this->tmpDir . '/no-asset.js';
         file_put_contents($js, '/* no companion */');
 
-        $this->assertSame([], wpsk_asset_info($js));
+        $this->assertSame([], wpdev_asset_info($js));
     }
 
     public function test_bundle_file_path_resolves_under_assets_bundles(): void
     {
         $this->assertSame(
-            get_template_directory() . '/assets/bundles/wpsk-starter-deps.js',
-            wpsk_bundle_file_path('wpsk-starter-deps.js')
+            get_template_directory() . '/assets/bundles/wpdev-starter-deps.js',
+            wpdev_bundle_file_path('wpdev-starter-deps.js')
         );
     }
 
     public function test_bundle_file_url_resolves_under_assets_bundles(): void
     {
         $this->assertSame(
-            get_template_directory_uri() . '/assets/bundles/wpsk-starter-deps.js',
-            wpsk_bundle_file_url('wpsk-starter-deps.js')
+            get_template_directory_uri() . '/assets/bundles/wpdev-starter-deps.js',
+            wpdev_bundle_file_url('wpdev-starter-deps.js')
         );
     }
 
@@ -145,7 +145,7 @@ class AssetFunctionsTest extends TestCase
     {
         $this->assertSame(
             get_template_directory() . '/assets/stylesheets/style.css',
-            wpsk_stylesheet_file_path('style.css')
+            wpdev_stylesheet_file_path('style.css')
         );
     }
 
@@ -153,12 +153,12 @@ class AssetFunctionsTest extends TestCase
     {
         $this->assertSame(
             get_template_directory_uri() . '/assets/stylesheets/style.css',
-            wpsk_stylesheet_file_url('style.css')
+            wpdev_stylesheet_file_url('style.css')
         );
     }
 
     // ------------------------------------------------------------------
-    // B-14 (audit plan_8d50edf6): wpsk_enqueue_stylesheet() always
+    // B-14 (audit plan_8d50edf6): wpdev_enqueue_stylesheet() always
     // resolved through get_template_directory(), which returns the
     // active theme's directory. When wp-starter-kit is installed as a
     // plugin, the stylesheet lives under the plugin root, not the
@@ -201,8 +201,8 @@ class AssetFunctionsTest extends TestCase
             // with a non-resolvable path — which surfaces as a "false"
             // result in the test wp-call log.
             $this->assertTrue(
-                wpsk_enqueue_stylesheet('style.css'),
-                'wpsk_enqueue_stylesheet must find the file at the plugin location'
+                wpdev_enqueue_stylesheet('style.css'),
+                'wpdev_enqueue_stylesheet must find the file at the plugin location'
             );
 
             // The enqueue must have been called with a non-empty URL
@@ -248,14 +248,26 @@ class AssetFunctionsTest extends TestCase
 
         $threw = null;
         try {
-            wpsk_enqueue_stylesheet($missing);
+            wpdev_enqueue_stylesheet($missing);
         } catch (\Throwable $e) {
             $threw = $e;
         }
 
         $this->assertNull(
             $threw,
-            'wpsk_enqueue_stylesheet must not throw when the file is missing in both plugin and theme locations'
+            'wpdev_enqueue_stylesheet must not throw when the file is missing in both plugin and theme locations'
+        );
+    }
+
+    public function test_deprecated_wpsk_shims_delegate_to_wpdev_helpers(): void
+    {
+        $this->assertSame(
+            wpdev_bundle_file_path('demo.js'),
+            wpsk_bundle_file_path('demo.js')
+        );
+        $this->assertSame(
+            wpdev_get_localize_data(),
+            wpsk_get_localize_data()
         );
     }
 }

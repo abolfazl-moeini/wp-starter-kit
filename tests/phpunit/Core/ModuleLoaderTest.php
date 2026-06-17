@@ -1,6 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use WPDev\Core\AbstractModule;
 use WPDev\Core\ModuleInterface;
 use WPDev\Core\ModuleLoader;
 
@@ -38,6 +39,36 @@ final class RecordingModule implements ModuleInterface
     public static function reset(): void
     {
         self::$bootLog = [];
+    }
+}
+
+/**
+ * Module that can decline booting via should_boot().
+ */
+final class ConditionalModule extends AbstractModule
+{
+    public string $slug;
+    public bool $allowBoot;
+
+    public function __construct(string $slug, bool $allowBoot = true)
+    {
+        $this->slug = $slug;
+        $this->allowBoot = $allowBoot;
+    }
+
+    public function boot(): void
+    {
+        RecordingModule::$bootLog[] = $this->slug;
+    }
+
+    public function get_slug(): string
+    {
+        return $this->slug;
+    }
+
+    public function should_boot(): bool
+    {
+        return $this->allowBoot;
     }
 }
 
@@ -162,5 +193,30 @@ class ModuleLoaderTest extends TestCase
             RecordingModule::$bootLog,
             'boot_all() is allowed to be called more than once; each call iterates the registered modules'
         );
+    }
+
+    public function test_boot_all_skips_module_when_should_boot_returns_false(): void
+    {
+        $loader = new ModuleLoader('wpsk');
+        $loader->register(new ConditionalModule('skipped', false));
+        $loader->register(new ConditionalModule('allowed', true));
+
+        $loader->boot_all();
+
+        $this->assertSame(
+            ['allowed'],
+            RecordingModule::$bootLog,
+            'Modules with should_boot() === false must not have boot() invoked'
+        );
+    }
+
+    public function test_boot_all_boots_module_when_should_boot_returns_true(): void
+    {
+        $loader = new ModuleLoader('wpsk');
+        $loader->register(new ConditionalModule('always', true));
+
+        $loader->boot_all();
+
+        $this->assertSame(['always'], RecordingModule::$bootLog);
     }
 }

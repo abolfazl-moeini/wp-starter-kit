@@ -27,7 +27,7 @@ class FrameworkDistTest extends TestCase
             (string) file_get_contents($this->root . '/project.config.json'),
             true
         );
-        $slug = $config['slug'] ?? 'wpsk-starter';
+        $slug = $config['slug'] ?? 'wpdev-starter';
         $distDir = $this->root . '/dist/' . $slug;
 
         if (is_dir($distDir)) {
@@ -89,7 +89,7 @@ class FrameworkDistTest extends TestCase
 
         $excluded = $strauss['exclude_from_prefix']['namespaces'] ?? [];
         $this->assertNotContains(
-            'WPSK',
+            'WPDev',
             $excluded,
             'dist strauss.json must NOT exclude WPSK when the framework is a dependency'
         );
@@ -104,7 +104,7 @@ class FrameworkDistTest extends TestCase
             (string) file_get_contents($this->root . '/project.config.json'),
             true
         );
-        $vendorPrefix = $config['vendorPrefix'] ?? 'WpskVendor';
+        $vendorPrefix = $config['vendorPrefix'] ?? 'WpdevVendor';
 
         $scoped = $distDir . '/vendor-prefixed/wpdev/framework/src/Core/Plugin.php';
         $this->assertFileExists(
@@ -113,7 +113,7 @@ class FrameworkDistTest extends TestCase
         );
 
         $body = (string) file_get_contents($scoped);
-        $expectedNs = $vendorPrefix . '\\WPSK';
+        $expectedNs = $vendorPrefix . '\\WPDev';
         $this->assertStringContainsString(
             'namespace ' . $expectedNs,
             $body,
@@ -126,21 +126,8 @@ class FrameworkDistTest extends TestCase
         if (!is_dir($dir)) {
             return;
         }
-        $items = scandir($dir);
-        if ($items === false) {
-            return;
-        }
-        foreach ($items as $item) {
-            if ($item === '.' || $item === '..') {
-                continue;
-            }
-            $path = $dir . '/' . $item;
-            if (is_dir($path)) {
-                $this->removeTree($path);
-            } else {
-                unlink($path);
-            }
-        }
-        rmdir($dir);
+
+        // Nested .git dirs (e.g. mcp-integration submodule) break pure PHP rmdir.
+        exec('rm -rf ' . escapeshellarg($dir));
     }
 }

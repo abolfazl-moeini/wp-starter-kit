@@ -9,7 +9,7 @@ afterEach(() => {
   document.body.innerHTML = "";
 });
 
-describe("@wpsk/html-utils — elementProps", () => {
+describe("@wpdev/html-utils — elementProps", () => {
   test('converts data-foo="bar" to { foo: "bar" }', async () => {
     const { elementProps } = await import("../../packages/html-utils/index.js");
     const el = document.createElement("div");
@@ -55,7 +55,7 @@ describe("@wpsk/html-utils — elementProps", () => {
   });
 });
 
-describe("@wpsk/html-utils — isInputNameValid (whole-string whitelist)", () => {
+describe("@wpdev/html-utils — isInputNameValid (whole-string whitelist)", () => {
   test("accepts plain ASCII names (alphanumerics, underscores, dashes)", async () => {
     const { isInputNameValid } =
       await import("../../packages/html-utils/index.js");
@@ -94,7 +94,7 @@ describe("@wpsk/html-utils — isInputNameValid (whole-string whitelist)", () =>
   });
 });
 
-describe("@wpsk/html-utils — mountComponent", () => {
+describe("@wpdev/html-utils — mountComponent", () => {
   test("mountComponent renders a Preact component into the target div", async () => {
     const { mountComponent } =
       await import("../../packages/html-utils/index.js");

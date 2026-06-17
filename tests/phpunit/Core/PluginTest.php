@@ -137,17 +137,17 @@ class PluginTest extends TestCase
     public function test_config_reads_project_config_json(): void
     {
         $path = $this->writeConfig([
-            'slug' => 'wpsk-starter',
+            'slug' => 'wpdev-starter',
             'hookPrefix' => 'wpsk',
-            'textDomain' => 'wpsk-starter',
+            'textDomain' => 'wpdev-starter',
         ]);
 
         $config = Plugin::config($path);
 
         $this->assertIsArray($config, 'config() must return an associative array');
-        $this->assertSame('wpsk-starter', $config['slug']);
+        $this->assertSame('wpdev-starter', $config['slug']);
         $this->assertSame('wpsk', $config['hookPrefix']);
-        $this->assertSame('wpsk-starter', $config['textDomain']);
+        $this->assertSame('wpdev-starter', $config['textDomain']);
     }
 
     public function test_config_throws_when_file_is_missing(): void
@@ -174,9 +174,9 @@ class PluginTest extends TestCase
     public function test_boot_initializes_loader_and_makes_it_booted(): void
     {
         $configPath = $this->writeConfig([
-            'slug' => 'wpsk-starter',
+            'slug' => 'wpdev-starter',
             'hookPrefix' => 'wpsk',
-            'textDomain' => 'wpsk-starter',
+            'textDomain' => 'wpdev-starter',
         ]);
 
         Plugin::boot($configPath);
@@ -195,15 +195,15 @@ class PluginTest extends TestCase
     public function test_boot_loads_config_from_plugin_root(): void
     {
         $configPath = $this->writeConfig([
-            'slug' => 'wpsk-starter',
+            'slug' => 'wpdev-starter',
             'hookPrefix' => 'wpsk',
-            'textDomain' => 'wpsk-starter',
+            'textDomain' => 'wpdev-starter',
         ]);
 
         Plugin::boot($configPath);
 
         $this->assertSame(
-            ['slug' => 'wpsk-starter', 'hookPrefix' => 'wpsk', 'textDomain' => 'wpsk-starter'],
+            ['slug' => 'wpdev-starter', 'hookPrefix' => 'wpsk', 'textDomain' => 'wpdev-starter'],
             Plugin::loaded_config(),
             'Plugin::boot() must remember the parsed config for later inspection'
         );
@@ -322,9 +322,9 @@ class PluginTest extends TestCase
     public function test_boot_preserves_modules_registered_before_boot(): void
     {
         $configPath = $this->writeConfig([
-            'slug' => 'wpsk-starter',
+            'slug' => 'wpdev-starter',
             'hookPrefix' => 'wpsk',
-            'textDomain' => 'wpsk-starter',
+            'textDomain' => 'wpdev-starter',
         ]);
 
         // Simulate a priority-5 `plugins_loaded` closure that
@@ -356,9 +356,9 @@ class PluginTest extends TestCase
     public function test_on_plugins_loaded_is_registered_only_on_plugins_loaded(): void
     {
         $configPath = $this->writeConfig([
-            'slug' => 'wpsk-starter',
+            'slug' => 'wpdev-starter',
             'hookPrefix' => 'wpsk',
-            'textDomain' => 'wpsk-starter',
+            'textDomain' => 'wpdev-starter',
         ]);
 
         Plugin::boot($configPath);
@@ -389,9 +389,9 @@ class PluginTest extends TestCase
     public function test_on_plugins_loaded_does_not_double_boot(): void
     {
         $configPath = $this->writeConfig([
-            'slug' => 'wpsk-starter',
+            'slug' => 'wpdev-starter',
             'hookPrefix' => 'wpsk',
-            'textDomain' => 'wpsk-starter',
+            'textDomain' => 'wpdev-starter',
         ]);
 
         Plugin::boot($configPath);
@@ -436,9 +436,9 @@ class PluginTest extends TestCase
     public function test_boot_all_after_boot_boots_modules_registered_post_boot(): void
     {
         $configPath = $this->writeConfig([
-            'slug' => 'wpsk-starter',
+            'slug' => 'wpdev-starter',
             'hookPrefix' => 'wpsk',
-            'textDomain' => 'wpsk-starter',
+            'textDomain' => 'wpdev-starter',
         ]);
 
         // Simulate the late-load path: boot() runs first (no modules

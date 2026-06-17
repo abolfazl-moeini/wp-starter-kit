@@ -40,7 +40,7 @@ function myprj_get_localize_data(): array
 **JS side** (any component):
 
 ```js
-import { getLocalize } from "@wpsk/localize";
+import { getLocalize } from "@wpdev/localize";
 
 const data = getLocalize(); // type: LocalizeData (auto-inferred)
 console.log(data.restUrl); // → 'https://example.test/?rest_route=/my-project/v1/'
@@ -59,7 +59,7 @@ console.log(data.restUrl); // → 'https://example.test/?rest_route=/my-project/
 
 - `localizeVar` is what `wp_localize_script` writes the data under
   (`window.MyProjectLoc`).
-- The `getLocalize()` helper in `@wpsk/localize` reads
+- The `getLocalize()` helper in `@wpdev/localize` reads
   `window[<localizeVar>]` with a typed return.
 
 If `localizeVar` is not set, the scaffold defaults to
@@ -67,7 +67,7 @@ If `localizeVar` is not set, the scaffold defaults to
 
 ## The `LocalizeData` type
 
-`@wpsk/localize/src/types.ts`:
+`@wpdev/localize/src/types.ts`:
 
 ```ts
 export interface LocalizeData {

@@ -24,7 +24,7 @@ function setupMocks() {
     build: jest.fn(async (cfg) => ({
       metafile: {
         outputs: {
-          "assets/bundles/wpsk-starter-deps.js": {
+          "assets/bundles/wpdev-starter-deps.js": {
             imports: [],
             exports: [],
             entryPoint: cfg?.entryPoints?.[0] ?? "",
@@ -38,17 +38,17 @@ function setupMocks() {
   }));
   // Mock the dependency-extraction plugin — we only need the surface
   // runBuild touches.
-  jest.doMock("@wpsk/dependency-extraction-esbuild-plugin", () => ({
+  jest.doMock("@wpdev/dependency-extraction-esbuild-plugin", () => ({
     importAsGlobals: jest.fn(() => ({ name: "global-imports" })),
     saveAssetFile: jest.fn(async () => true),
     phpFileContent: jest.fn((o) => `<?php return ${JSON.stringify(o)};\n`),
     writeFile: jest.fn(async (p, c) => `${p}|${c}`),
   }));
   // Mock the local build package so we don't need readBuildConfig side effects.
-  jest.doMock("@wpsk/build", () => ({
+  jest.doMock("@wpdev/build", () => ({
     readBuildConfig: jest.fn(async () => ({
       assetMappings: [],
-      globalMappings: { "tabulator-tables": "WPSK.table" },
+      globalMappings: { "tabulator-tables": "WPDev.table" },
     })),
   }));
 }
@@ -61,12 +61,12 @@ describe("esbuild-dependencies — build with .ts entry point (p12 rename)", () 
   });
 
   test("buildDepsConfig accepts a .ts entry point override (no path rewrite)", async () => {
-    const mod = await import("@wpsk/build/esbuild-dependencies.js");
+    const mod = await import("@wpdev/build/esbuild-dependencies.js");
     const config = mod.buildDepsConfig(
       {
-        globalName: "WPSK",
-        depsBundle: "wpsk-starter-deps.js",
-        npmScope: "@wpsk",
+        globalName: "WPDev",
+        depsBundle: "wpdev-starter-deps.js",
+        npmScope: "@wpdev",
       },
       {},
       { cwd: "/abs/project", entryPoint: "assets/dependencies.ts" },
@@ -78,12 +78,12 @@ describe("esbuild-dependencies — build with .ts entry point (p12 rename)", () 
   });
 
   test("buildDepsConfig default entryPoint resolves to .ts (not .js)", async () => {
-    const mod = await import("@wpsk/build/esbuild-dependencies.js");
+    const mod = await import("@wpdev/build/esbuild-dependencies.js");
     const config = mod.buildDepsConfig(
       {
-        globalName: "WPSK",
-        depsBundle: "wpsk-starter-deps.js",
-        npmScope: "@wpsk",
+        globalName: "WPDev",
+        depsBundle: "wpdev-starter-deps.js",
+        npmScope: "@wpdev",
       },
       {},
       { cwd: "/abs/project" }, // no entryPoint override
@@ -101,12 +101,12 @@ describe("esbuild-dependencies — build with .ts entry point (p12 rename)", () 
     const esbuildMod = await import("esbuild");
     const buildSpy = esbuildMod.build;
 
-    const mod = await import("@wpsk/build/esbuild-dependencies.js");
+    const mod = await import("@wpdev/build/esbuild-dependencies.js");
     await mod.runBuild({
       projectConfig: {
-        globalName: "WPSK",
-        depsBundle: "wpsk-starter-deps.js",
-        npmScope: "@wpsk",
+        globalName: "WPDev",
+        depsBundle: "wpdev-starter-deps.js",
+        npmScope: "@wpdev",
         hookPrefix: "wp",
         localizeVar: "WPLOC",
         slug: "wp",

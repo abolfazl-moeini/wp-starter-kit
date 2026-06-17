@@ -5,7 +5,7 @@ namespace WPDev\Core;
 
 // phpcs:disable WordPress.Files.FileName.NotHyphenatedLowercase
 // phpcs:disable WordPress.Files.FileName.InvalidClassFileName
-// PSR-4 autoload (`WPSK\\` => `src/`) maps
+// PSR-4 autoload (`WPDev\\` => `src/`) maps
 // `WPDev\Core\ModuleInterface` to `ModuleInterface.php` exactly.
 // The WPCS FileName rules would require `module-interface.php`
 // (PSR-4 cannot resolve that), so they are disabled locally for

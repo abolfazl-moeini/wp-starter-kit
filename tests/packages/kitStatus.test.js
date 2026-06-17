@@ -20,7 +20,7 @@
  * Edge cases:
  *
  *  - Manifest missing → `Promise<{ok:false, reason:string}>`.
- *    The CLI shows a clear "not a wpsk project" message and
+ *    The CLI shows a clear "not a wpdev project" message and
  *    exits with a non-zero code.
  *
  *  - `lookupLatest` is OPTIONAL. The default is a noop

@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — js:pure generator (Phase 21).
+ * @wpdev/create-wp-project — js:pure generator (Phase 21).
  *
  * The pure-JS variant of the `js` feature. Emits a plain JS
  * dependencies entry (no TypeScript syntax, no `tsconfig.json`

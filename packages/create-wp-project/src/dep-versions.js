@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — kit-wide dep-version registry.
+ * @wpdev/create-wp-project — kit-wide dep-version registry.
  *
  * Phase 24 of plan.v3.md (24.8 part 2). The engine needs a
  * single source of truth for "what package/composer versions
@@ -120,10 +120,10 @@ function readKitComposerDep(name) {
 /**
  * Map an npm package name to the workspace directory that
  * contains it. The kit uses npm workspaces with two roots:
- * `packages/*` (the @wpsk/* lib packages) and `core/packages/*`
- * (the @wpsk/* build tools, plus the internal @core/utils).
+ * `packages/*` (the @wpdev/* lib packages) and `core/packages/*`
+ * (the @wpdev/* build tools, plus the internal @core/utils).
  *
- * Only the entries we expect to be `@wpsk/*`-scoped live here —
+ * Only the entries we expect to be `@wpdev/*`-scoped live here —
  * non-workspace deps are read from the kit's own `package.json`
  * via `readKitDevDep` (or `readKitComposerDep` for composer).
  *
@@ -131,7 +131,7 @@ function readKitComposerDep(name) {
  * is itself hard-coded in the root `package.json`; if a new
  * workspace package is added, the entry is added here in the
  * same commit. The depVersions test (and the per-package
- * `publishable.test.js`) cross-check that all 8 shippable
+ * `publishable.test.js`) cross-check that all shippable
  * packages ARE present in the registry.
  *
  * @param {string} name
@@ -140,9 +140,9 @@ function readKitComposerDep(name) {
  *                          package.
  */
 function workspaceDirFor(name) {
-  // The 6 lib packages + 2 build packages. The basenames match
-  // the npm scope: `@wpsk/<basename>`. The 6 libs live in
-  // `packages/<basename>/` and the 2 build tools in
+  // The lib packages + 2 build packages. The basenames match
+  // the npm scope: `@wpdev/<basename>`. Libs live in
+  // `packages/<basename>/` and build tools in
   // `core/packages/<basename>/`.
   const LIBS = [
     "hooks",
@@ -153,7 +153,7 @@ function workspaceDirFor(name) {
     "translation",
   ];
   const BUILD_TOOLS = ["build", "dependency-extraction-esbuild-plugin"];
-  const m = name.match(/^@wpsk\/(.+)$/);
+  const m = name.match(/^@wpdev\/(.+)$/);
   if (!m) return null;
   const base = m[1];
   if (LIBS.includes(base)) return path.join("packages", base);
@@ -165,7 +165,7 @@ function workspaceDirFor(name) {
  * Read a workspace package's `version` field from its own
  * `package.json`. Returns the version string (e.g. "0.1.0")
  * or `null` if the workspace directory or `version` field is
- * missing. This is how the @wpsk/* entries land in the
+ * missing. This is how the @wpdev/* entries land in the
  * registry: the kit's own workspace package files are the
  * source of truth for the framework's own versions.
  *
@@ -245,7 +245,7 @@ const REQUIRED_JS_ENTRIES = [
 ];
 
 /**
- * The list of shippable @wpsk/* package names whose versions
+ * The list of shippable @wpdev/* package names whose versions
  * are read live from the kit's own workspace package.json
  * files (see `readKitPackageVersion` above). Adding a package
  * here without adding it to `publishable.test.js`'s list of
@@ -254,15 +254,15 @@ const REQUIRED_JS_ENTRIES = [
  */
 const REQUIRED_WPDEV_PACKAGES = [
   // Runtime libs (consumer `dependencies`)
-  "@wpsk/hooks",
-  "@wpsk/utils",
-  "@wpsk/rest-utils",
-  "@wpsk/html-utils",
-  "@wpsk/fetch",
-  "@wpsk/translation",
+  "@wpdev/hooks",
+  "@wpdev/utils",
+  "@wpdev/rest-utils",
+  "@wpdev/html-utils",
+  "@wpdev/fetch",
+  "@wpdev/translation",
   // Build tools (consumer `devDependencies`)
-  "@wpsk/build",
-  "@wpsk/dependency-extraction-esbuild-plugin",
+  "@wpdev/build",
+  "@wpdev/dependency-extraction-esbuild-plugin",
 ];
 
 const REQUIRED_COMPOSER_ENTRIES = [

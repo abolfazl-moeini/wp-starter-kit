@@ -47,12 +47,12 @@ import {
 } from "../../packages/create-wp-project/src/migrations/index.js";
 
 describe("selectMigrations() — range selection (Phase 24.3, 24.4)", () => {
-  test('selectMigrations("0.1.0", "0.3.0") returns the 0.2.0 migration', () => {
+  test('selectMigrations("0.1.0", "0.3.0") returns migrations in (0.1.0, 0.3.0]', () => {
     const list = selectMigrations("0.1.0", "0.3.0");
     const versions = list.map((m) => m.version);
     expect(versions).toContain("0.2.0");
-    // No other migrations registered in that range currently.
-    expect(versions).toEqual(["0.2.0"]);
+    expect(versions).toContain("0.3.0");
+    expect(versions).toEqual(["0.2.0", "0.3.0"]);
   });
 
   test('selectMigrations("0.2.0", "0.2.0") returns [] (already at target)', () => {

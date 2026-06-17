@@ -1,52 +1,31 @@
 <?php
 /**
- * BC shims for the asset helper functions originally defined here.
+ * Global asset helper functions for wp-starter-kit consumers.
  *
- * The implementation moved to `src/Support/Assets.php` (PSR-4, namespace
- * `WPDev\Support\Assets`) so wp-starter-kit can be installed as a plugin
- * and resolve paths through `plugin_dir_path()` / `plugins_url()` instead
- * of `get_template_directory()`.
+ * The implementation delegates to `WPDev\Support\Assets` (PSR-4) so the kit
+ * resolves paths through plugin APIs instead of theme directory helpers.
  *
- * The functions in this file are kept ONLY for backward compatibility
- * with existing call-sites. New code MUST call `WPDev\Support\Assets::`
- * directly. Each shim is a one-liner that delegates to the corresponding
- * static method on `WPDev\Support\Assets`.
+ * Canonical names use the `wpdev_*` prefix. The legacy `wpsk_*` names at the
+ * bottom of this file are thin BC shims for one release cycle.
  *
  * @package wp-starter-kit
  */
 
-if ( ! function_exists( 'wpsk_read_project_config' ) ) {
+if ( ! function_exists( 'wpdev_read_project_config' ) ) {
 	/**
-	 * BC shim → `WPDev\Support\Assets::read_project_config()`.
-	 *
 	 * @return array<string, mixed>
 	 */
-	function wpsk_read_project_config() {
+	function wpdev_read_project_config() {
 		return WPDev\Support\Assets::read_project_config();
 	}
 }
 
-if ( ! function_exists( 'wpsk_resolve_asset_url' ) ) {
+if ( ! function_exists( 'wpdev_resolve_asset_url' ) ) {
 	/**
-	 * BC shim — internal URL resolver used by the old `wpsk_*_at()`
-	 * helpers. The new class exposes the same logic privately; this
-	 * public shim preserves the function entry point for any direct
-	 * callers in the wild.
-	 *
-	 * Contract mirrors the new class: returns the asset's public URL
-	 * (relative to the plugin root) when the file resolves to a real
-	 * path INSIDE the plugin, or an empty string when the file is
-	 * missing or lives outside the plugin. The legacy fallback that
-	 * synthesised a `plugins_url('assets/bundles/<basename>')` URL has
-	 * been dropped — that guess is wrong for files under any subdir
-	 * other than `assets/bundles/`.
-	 *
 	 * @param string $abs_path Absolute filesystem path to a `.js`/`.css` file.
-	 * @return string Public URL of the asset, or `''` when the path
-	 *                cannot be resolved to a URL we trust.
+	 * @return string Public URL of the asset, or `''` when unresolved.
 	 */
-	function wpsk_resolve_asset_url( $abs_path ) {
-		// Re-derive against the plugin base the new class uses.
+	function wpdev_resolve_asset_url( $abs_path ) {
 		$paths     = WPDev\Support\Assets::resolve_paths();
 		$base_path = rtrim( $paths['base_path'], '/\\' );
 		$base_url  = $paths['base_url'];
@@ -59,141 +38,103 @@ if ( ! function_exists( 'wpsk_resolve_asset_url' ) ) {
 			return $base_url . $relative;
 		}
 
-		// File not on disk OR outside the plugin root — caller must decide.
 		return '';
 	}
 }
 
-if ( ! function_exists( 'wpsk_asset_info' ) ) {
+if ( ! function_exists( 'wpdev_asset_info' ) ) {
 	/**
-	 * BC shim → `WPDev\Support\Assets::asset_info()`.
-	 *
 	 * @param string $file_path Absolute or relative path to a `.js`/`.css` file.
 	 * @return array
 	 */
-	function wpsk_asset_info( $file_path ) {
+	function wpdev_asset_info( $file_path ) {
 		return WPDev\Support\Assets::asset_info( $file_path );
 	}
 }
 
-if ( ! function_exists( 'wpsk_bundle_file_path' ) ) {
+if ( ! function_exists( 'wpdev_bundle_file_path' ) ) {
 	/**
-	 * BC shim — bundle file path. **Preserved theme-based behaviour**
-	 * so legacy `AssetFunctionsTest` keeps passing: the test asserts the
-	 * path is `get_template_directory() . '/assets/bundles/...'` and
-	 * that contract is load-bearing for existing themes that already
-	 * rely on the function. New code should not call this.
+	 * Theme-based bundle path (legacy theme-mode contract).
 	 *
-	 * @param string $file_name Bundle file name (e.g. `wpsk-starter-deps.js`).
+	 * @param string $file_name Bundle file name (e.g. `wpdev-starter-deps.js`).
 	 * @return string
 	 */
-	function wpsk_bundle_file_path( $file_name ) {
+	function wpdev_bundle_file_path( $file_name ) {
 		return untrailingslashit( get_template_directory() ) . '/assets/bundles/' . $file_name;
 	}
 }
 
-if ( ! function_exists( 'wpsk_bundle_file_url' ) ) {
+if ( ! function_exists( 'wpdev_bundle_file_url' ) ) {
 	/**
-	 * BC shim — bundle file URL. **Preserved theme-based behaviour**
-	 * for the same reason as `wpsk_bundle_file_path()`.
-	 *
-	 * @param string $file_name Bundle file name (e.g. `wpsk-starter-deps.js`).
+	 * @param string $file_name Bundle file name (e.g. `wpdev-starter-deps.js`).
 	 * @return string
 	 */
-	function wpsk_bundle_file_url( $file_name ) {
+	function wpdev_bundle_file_url( $file_name ) {
 		return untrailingslashit( get_template_directory_uri() ) . '/assets/bundles/' . $file_name;
 	}
 }
 
-if ( ! function_exists( 'wpsk_enqueue_bundle_script' ) ) {
+if ( ! function_exists( 'wpdev_enqueue_bundle_script' ) ) {
 	/**
-	 * BC shim — resolves a bundle file name to its absolute path then
-	 * forwards to `WPDev\Support\Assets::enqueue_legacy_bundle_script()`.
-	 *
-	 * @param string $file_name  JS file name (e.g. `wpsk-starter-deps.js`).
-	 * @param array  $extra_deps Extra WP-script handles to merge into deps.
-	 * @return bool              `true` if the script was enqueued.
+	 * @param string $file_name  JS file name.
+	 * @param array  $extra_deps Extra WP-script handles.
+	 * @return bool
 	 */
-	function wpsk_enqueue_bundle_script( $file_name, $extra_deps = [] ) {
+	function wpdev_enqueue_bundle_script( $file_name, $extra_deps = [] ) {
 		return WPDev\Support\Assets::enqueue_legacy_bundle_script(
-			wpsk_bundle_file_path( $file_name ),
+			wpdev_bundle_file_path( $file_name ),
 			$extra_deps
 		);
 	}
 }
 
-if ( ! function_exists( 'wpsk_enqueue_bundle_script_at' ) ) {
+if ( ! function_exists( 'wpdev_enqueue_bundle_script_at' ) ) {
 	/**
-	 * BC shim — test seam for enqueuing a bundle JS file at an absolute path.
-	 *
 	 * @param string $abs_path   Absolute path to the JS file.
-	 * @param array  $extra_deps Extra WP-script handles to merge into deps.
-	 * @return bool              `true` if the script was enqueued.
+	 * @param array  $extra_deps Extra WP-script handles.
+	 * @return bool
 	 */
-	function wpsk_enqueue_bundle_script_at( $abs_path, $extra_deps = [] ) {
+	function wpdev_enqueue_bundle_script_at( $abs_path, $extra_deps = [] ) {
 		return WPDev\Support\Assets::enqueue_legacy_bundle_script( $abs_path, $extra_deps );
 	}
 }
 
-if ( ! function_exists( 'wpsk_enqueue_bundle_style' ) ) {
+if ( ! function_exists( 'wpdev_enqueue_bundle_style' ) ) {
 	/**
-	 * BC shim — resolves a bundle file name to its absolute path then
-	 * forwards to `WPDev\Support\Assets::enqueue_legacy_bundle_style()`.
-	 *
-	 * @param string $file_name  CSS file name (e.g. `style.css`).
-	 * @param array  $extra_deps Extra WP-style handles to merge into deps.
-	 * @return bool              `true` if the style was enqueued.
+	 * @param string $file_name  CSS file name.
+	 * @param array  $extra_deps Extra WP-style handles.
+	 * @return bool
 	 */
-	function wpsk_enqueue_bundle_style( $file_name, $extra_deps = [] ) {
+	function wpdev_enqueue_bundle_style( $file_name, $extra_deps = [] ) {
 		return WPDev\Support\Assets::enqueue_legacy_bundle_style(
-			wpsk_bundle_file_path( $file_name ),
+			wpdev_bundle_file_path( $file_name ),
 			$extra_deps
 		);
 	}
 }
 
-if ( ! function_exists( 'wpsk_enqueue_bundle_style_at' ) ) {
+if ( ! function_exists( 'wpdev_enqueue_bundle_style_at' ) ) {
 	/**
-	 * BC shim — test seam for enqueuing a bundle CSS file at an absolute path.
-	 *
 	 * @param string $abs_path   Absolute path to the CSS file.
-	 * @param array  $extra_deps Extra WP-style handles to merge into deps.
-	 * @return bool              `true` if the style was enqueued.
+	 * @param array  $extra_deps Extra WP-style handles.
+	 * @return bool
 	 */
-	function wpsk_enqueue_bundle_style_at( $abs_path, $extra_deps = [] ) {
+	function wpdev_enqueue_bundle_style_at( $abs_path, $extra_deps = [] ) {
 		return WPDev\Support\Assets::enqueue_legacy_bundle_style( $abs_path, $extra_deps );
 	}
 }
 
-if ( ! function_exists( 'wpsk_enqueue_stylesheet' ) ) {
+if ( ! function_exists( 'wpdev_enqueue_stylesheet' ) ) {
 	/**
-	 * BC shim — enqueue a stylesheet, preferring the plugin location
-	 * when the file lives inside the plugin (so a plugin-mode install
-	 * resolves to the correct URL) and falling back to the theme
-	 * location for backward compatibility with theme-based installs.
-	 *
-	 * Resolution order:
-	 *   1. `plugin_dir_path() . '/assets/stylesheets/' . $file_name`
-	 *      when that absolute path resolves to a real file inside the
-	 *      plugin root. This is the wp-starter-kit-as-plugin case.
-	 *   2. `get_template_directory() . '/assets/stylesheets/' . $file_name`
-	 *      (the legacy behaviour, kept for theme-mode installs that
-	 *      ship the stylesheet next to the active theme).
-	 *
 	 * @param string $file_name  CSS file name (e.g. `style.css`).
-	 * @param array  $extra_deps Extra WP-style handles to merge into deps.
-	 * @return bool              `true` if the style was enqueued.
+	 * @param array  $extra_deps Extra WP-style handles.
+	 * @return bool
 	 */
-	function wpsk_enqueue_stylesheet( $file_name, $extra_deps = [] ) {
+	function wpdev_enqueue_stylesheet( $file_name, $extra_deps = [] ) {
 		$plugin_path = function_exists( 'plugin_dir_path' )
 			? rtrim( plugin_dir_path( __FILE__ ), '/\\' ) . '/assets/stylesheets/' . $file_name
 			: '';
 
-		// Resolve the plugin candidate against the plugin root to make
-		// sure we're not fooled by a stray file at the candidate path
-		// that lives outside the actual plugin. realpath() returns
-		// false when the file is missing — short-circuit to the theme
-		// fallback in that case.
 		$resolved_plugin = $plugin_path !== '' ? realpath( $plugin_path ) : false;
 		$plugin_root     = function_exists( 'plugin_dir_path' )
 			? realpath( rtrim( plugin_dir_path( __FILE__ ), '/\\' ) )
@@ -201,58 +142,38 @@ if ( ! function_exists( 'wpsk_enqueue_stylesheet' ) ) {
 
 		$abs_path = ( $resolved_plugin && $plugin_root && strpos( $resolved_plugin, $plugin_root ) === 0 )
 			? $resolved_plugin
-			: wpsk_stylesheet_file_path( $file_name );
+			: wpdev_stylesheet_file_path( $file_name );
 
 		return WPDev\Support\Assets::enqueue_legacy_bundle_style( $abs_path, $extra_deps );
 	}
 }
 
 /**
- * Helper: resolve the stylesheet base directory.
- *
- * Returns the active theme's directory in the original theme-mode
- * flow (the legacy default), but switches to the plugin directory
- * when `WPDEV_STARTER_PLUGIN_DIR` is defined. The plugin-mode path
- * lets a consumer keep `functions.php` (against the deprecation
- * notice at functions.php:24-47) without getting a broken
- * `<parent-theme>/assets/stylesheets/...` URL pointing at a
- * non-existent location.
- *
  * @return string
  */
-function wpsk_stylesheet_base_dir(): string {
+function wpdev_stylesheet_base_dir(): string {
 	if ( defined( 'WPDEV_STARTER_PLUGIN_DIR' ) ) {
 		return untrailingslashit( WPDEV_STARTER_PLUGIN_DIR );
 	}
 	return untrailingslashit( get_template_directory() );
 }
 
-if ( ! function_exists( 'wpsk_stylesheet_file_path' ) ) {
+if ( ! function_exists( 'wpdev_stylesheet_file_path' ) ) {
 	/**
-	 * BC shim — stylesheet file path. **Preserved theme-based behaviour**
-	 * for the same reason as `wpsk_bundle_file_path()`. Plugin-mode
-	 * consumers should define `WPDEV_STARTER_PLUGIN_DIR` to get the
-	 * right base (see `wpsk_stylesheet_base_dir()`).
-	 *
 	 * @param string $file_name Stylesheet file name (e.g. `style.css`).
 	 * @return string
 	 */
-	function wpsk_stylesheet_file_path( $file_name ) {
-		return wpsk_stylesheet_base_dir() . '/assets/stylesheets/' . $file_name;
+	function wpdev_stylesheet_file_path( $file_name ) {
+		return wpdev_stylesheet_base_dir() . '/assets/stylesheets/' . $file_name;
 	}
 }
 
-if ( ! function_exists( 'wpsk_stylesheet_file_url' ) ) {
+if ( ! function_exists( 'wpdev_stylesheet_file_url' ) ) {
 	/**
-	 * BC shim — stylesheet file URL. Same plugin-mode switch as
-	 * `wpsk_stylesheet_file_path()` — when `WPDEV_STARTER_PLUGIN_DIR`
-	 * is defined, the URL is built from the plugin's URL, not the
-	 * active theme's URL.
-	 *
 	 * @param string $file_name Stylesheet file name (e.g. `style.css`).
 	 * @return string
 	 */
-	function wpsk_stylesheet_file_url( $file_name ) {
+	function wpdev_stylesheet_file_url( $file_name ) {
 		if ( defined( 'WPDEV_STARTER_PLUGIN_DIR' ) && defined( 'WPDEV_STARTER_PLUGIN_URL' ) ) {
 			return untrailingslashit( WPDEV_STARTER_PLUGIN_URL ) . '/assets/stylesheets/' . $file_name;
 		}
@@ -260,13 +181,113 @@ if ( ! function_exists( 'wpsk_stylesheet_file_url' ) ) {
 	}
 }
 
-if ( ! function_exists( 'wpsk_get_localize_data' ) ) {
+if ( ! function_exists( 'wpdev_get_localize_data' ) ) {
 	/**
-	 * BC shim → `WPDev\Support\Assets::get_localize_data()`.
-	 *
 	 * @return array
 	 */
-	function wpsk_get_localize_data() {
+	function wpdev_get_localize_data() {
 		return WPDev\Support\Assets::get_localize_data();
+	}
+}
+
+/* -------------------------------------------------------------------- */
+/* Deprecated wpsk_* shims (one release cycle)                           */
+/* -------------------------------------------------------------------- */
+
+if ( ! function_exists( 'wpsk_read_project_config' ) ) {
+	/** @deprecated Use wpdev_read_project_config() */
+	function wpsk_read_project_config() {
+		return wpdev_read_project_config();
+	}
+}
+
+if ( ! function_exists( 'wpsk_resolve_asset_url' ) ) {
+	/** @deprecated Use wpdev_resolve_asset_url() */
+	function wpsk_resolve_asset_url( $abs_path ) {
+		return wpdev_resolve_asset_url( $abs_path );
+	}
+}
+
+if ( ! function_exists( 'wpsk_asset_info' ) ) {
+	/** @deprecated Use wpdev_asset_info() */
+	function wpsk_asset_info( $file_path ) {
+		return wpdev_asset_info( $file_path );
+	}
+}
+
+if ( ! function_exists( 'wpsk_bundle_file_path' ) ) {
+	/** @deprecated Use wpdev_bundle_file_path() */
+	function wpsk_bundle_file_path( $file_name ) {
+		return wpdev_bundle_file_path( $file_name );
+	}
+}
+
+if ( ! function_exists( 'wpsk_bundle_file_url' ) ) {
+	/** @deprecated Use wpdev_bundle_file_url() */
+	function wpsk_bundle_file_url( $file_name ) {
+		return wpdev_bundle_file_url( $file_name );
+	}
+}
+
+if ( ! function_exists( 'wpsk_enqueue_bundle_script' ) ) {
+	/** @deprecated Use wpdev_enqueue_bundle_script() */
+	function wpsk_enqueue_bundle_script( $file_name, $extra_deps = [] ) {
+		return wpdev_enqueue_bundle_script( $file_name, $extra_deps );
+	}
+}
+
+if ( ! function_exists( 'wpsk_enqueue_bundle_script_at' ) ) {
+	/** @deprecated Use wpdev_enqueue_bundle_script_at() */
+	function wpsk_enqueue_bundle_script_at( $abs_path, $extra_deps = [] ) {
+		return wpdev_enqueue_bundle_script_at( $abs_path, $extra_deps );
+	}
+}
+
+if ( ! function_exists( 'wpsk_enqueue_bundle_style' ) ) {
+	/** @deprecated Use wpdev_enqueue_bundle_style() */
+	function wpsk_enqueue_bundle_style( $file_name, $extra_deps = [] ) {
+		return wpdev_enqueue_bundle_style( $file_name, $extra_deps );
+	}
+}
+
+if ( ! function_exists( 'wpsk_enqueue_bundle_style_at' ) ) {
+	/** @deprecated Use wpdev_enqueue_bundle_style_at() */
+	function wpsk_enqueue_bundle_style_at( $abs_path, $extra_deps = [] ) {
+		return wpdev_enqueue_bundle_style_at( $abs_path, $extra_deps );
+	}
+}
+
+if ( ! function_exists( 'wpsk_enqueue_stylesheet' ) ) {
+	/** @deprecated Use wpdev_enqueue_stylesheet() */
+	function wpsk_enqueue_stylesheet( $file_name, $extra_deps = [] ) {
+		return wpdev_enqueue_stylesheet( $file_name, $extra_deps );
+	}
+}
+
+if ( ! function_exists( 'wpsk_stylesheet_base_dir' ) ) {
+	/** @deprecated Use wpdev_stylesheet_base_dir() */
+	function wpsk_stylesheet_base_dir(): string {
+		return wpdev_stylesheet_base_dir();
+	}
+}
+
+if ( ! function_exists( 'wpsk_stylesheet_file_path' ) ) {
+	/** @deprecated Use wpdev_stylesheet_file_path() */
+	function wpsk_stylesheet_file_path( $file_name ) {
+		return wpdev_stylesheet_file_path( $file_name );
+	}
+}
+
+if ( ! function_exists( 'wpsk_stylesheet_file_url' ) ) {
+	/** @deprecated Use wpdev_stylesheet_file_url() */
+	function wpsk_stylesheet_file_url( $file_name ) {
+		return wpdev_stylesheet_file_url( $file_name );
+	}
+}
+
+if ( ! function_exists( 'wpsk_get_localize_data' ) ) {
+	/** @deprecated Use wpdev_get_localize_data() */
+	function wpsk_get_localize_data() {
+		return wpdev_get_localize_data();
 	}
 }

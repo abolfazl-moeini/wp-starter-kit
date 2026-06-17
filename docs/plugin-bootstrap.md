@@ -12,7 +12,7 @@ project is a WordPress plugin, not a theme. The consequences:
 
 - The plugin's primary entry point is `{slug}.php` at the plugin
   root, not a `functions.php` inside a theme.
-- The `WPSK\Core\Plugin` static facade (see
+- The `WPDev\Core\Plugin` static facade (see
   [modules.md](modules.md)) owns the boot sequence. Theme-style
   `after_setup_theme` wiring is kept only for backward
   compatibility and is scheduled to be removed.
@@ -32,8 +32,8 @@ See [scaffold.md](scaffold.md#output) for the full file list.
 ```
 my-project/                      ← the wp-content/plugins/ root
 ├── my-project.php               ← the WordPress plugin file (this doc)
-├── composer.json                ← PHP deps + PSR-4 (WPSK\\ + Vendor\\
-│                                   + WPSK\TestTools\)
+├── composer.json                ← PHP deps + PSR-4 ({VendorNamespace}\\ + WPDev\\
+│                                   + WPDev\TestTools\)
 ├── composer.lock
 ├── vendor/                      ← generated; gitignored
 │   └── autoload.php
@@ -51,7 +51,7 @@ my-project/                      ← the wp-content/plugins/ root
 │   └── images/  fonts/  vendor/
 ├── core/                        ← the framework + your code
 │   ├── components/              ← per-component JSX/JS+SCSS
-│   ├── packages/                ← @wpsk/* JS workspaces
+│   ├── packages/                ← @wpdev/* JS workspaces
 │   ├── assets/                  ← verbatim-copy source assets
 │   ├── styles/                  ← global SCSS
 │   └── php/                     ← PHP functions/classes
@@ -69,7 +69,7 @@ my-project/                      ← the wp-content/plugins/ root
 
 Three trees, three ownerships:
 
-1. **`src/Core/*`** — (legacy `distMode: "vendored"` only) were emitted by the scaffold in pre-Phase 23 projects. In the default `deps` mode the WPSK\Core classes come exclusively from the `wpdev/framework` Composer package installed into `vendor/`. Do not hand-edit vendored copies; upgrade via `wpsk update` instead. Your own code lives under `src/Modules/*`.
+1. **`src/Core/*`** — (legacy `distMode: "vendored"` only) were emitted by the scaffold in pre-Phase 23 projects. In the default `deps` mode the `WPDev\Core` classes come exclusively from the `wpdev/framework` Composer package installed into `vendor/`. Do not hand-edit vendored copies; upgrade via `wpdev update` instead. Your own code lives under `src/Modules/*`.
 2. **`src/Modules/*`** — yours. Add one sub-directory per feature
    module (see [modules.md](modules.md)).
 3. **`core/**`and`core/php/**`** — yours-but-versioned. The
@@ -164,7 +164,7 @@ if ( ! file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 require_once __DIR__ . '/vendor/autoload.php';
 ```
 
-`vendor/autoload.php` is what makes `WPSK\Core\Plugin` and every
+`vendor/autoload.php` is what makes `WPDev\Core\Plugin` and every
 other class shipped by the kit reachable. If the autoloader is
 missing (the user hasn't run `composer install`), we show an
 admin notice and bail. The notice string is translatable
@@ -270,14 +270,14 @@ $this->assertStringContainsString(
 `plugin_basename(__FILE__)` — `plugin_dir_path` shows up in
 the `_PLUGIN_DIR` constant definition above.)
 
-### 7. Wire `WPSK\Core\Plugin`
+### 7. Wire `WPDev\Core\Plugin`
 
 ```php
-add_action( 'plugins_loaded', 'WPSK\\Core\\Plugin::boot', 10, 0 );
+add_action( 'plugins_loaded', 'WPDev\\Core\\Plugin::boot', 10, 0 );
 // Direct call as a safety net for environments where
 // plugins_loaded has already fired (wp-cli, unit tests).
-if ( function_exists( 'WPSK\\Core\\Plugin' ) && did_action( 'plugins_loaded' ) ) {
-    WPSK\Core\Plugin::boot();
+if ( function_exists( 'WPDev\\Core\\Plugin' ) && did_action( 'plugins_loaded' ) ) {
+    WPDev\Core\Plugin::boot();
 }
 ```
 
@@ -307,7 +307,7 @@ the double-invocation is safe. See
 
 The template lives at
 `packages/create-wp-project/src/templates/plugin/plugin-file.php.tpl`.
-The scaffold (`@wpsk/create-wp-project`) reads it, runs
+The scaffold (`@wpdev/create-wp-project`) reads it, runs
 `renderTemplate(template, vars)` over it, and writes
 `<target>/<slug>.php`. The `{{token}}` placeholders are:
 
@@ -327,7 +327,7 @@ The render function leaves unknown tokens verbatim, so a
 missing config field is loud at scaffold time.
 
 The scaffold **refuses to overwrite an existing `project.config.json`**
-(`@wpsk/create-wp-project` calls it a guard against accidental
+(`@wpdev/create-wp-project` calls it a guard against accidental
 re-runs). The plugin file is similarly protected unless you
 pass `--force`.
 
@@ -353,7 +353,7 @@ bootstrap, the text domain lived under the theme, and the
   contains a `DEPRECATION NOTICE` block at the top that points
   to `{slug}.php` as the new bootstrap. The body is unchanged
   for backward compatibility.
-- `WPSK\Core\Plugin::boot()` is the new entry point. Theme
+- `WPDev\Core\Plugin::boot()` is the new entry point. Theme
   helpers (`wpdev_starter_setup_theme`, `wpdev_starter_enqueue_assets`)
   are still present for BC, but new code should hook into the
   `{$hookPrefix}_plugin_loaded` action instead.
@@ -398,7 +398,7 @@ no execution — and uses regex to assert the structure:
 - 5 header tests (Plugin Name, Version, Requires PHP, Text Domain).
 - 1 ABSPATH guard test.
 - 1 autoloader test.
-- 1 `WPSK\Core\Plugin` wiring test.
+- 1 `WPDev\Core\Plugin` wiring test.
 - 3 lifecycle hook tests (activation, deactivation, uninstall).
 - 3 lifecycle-callable shape tests.
 - 4 text-domain tests (signature, `false` relative path,
@@ -417,11 +417,11 @@ emitting a WordPress.org-compliant plugin file.
 ## Related docs
 
 - [architecture.md](architecture.md) — the big picture.
-- [scaffold.md](scaffold.md) — the `@wpsk/create-wp-project`
+- [scaffold.md](scaffold.md) — the `@wpdev/create-wp-project`
   output and the `{{token}}` substitution engine.
 - [hooks.md](hooks.md) — the `hookPrefix` namespace that the
   `{$hookPrefix}_plugin_loaded` action uses.
-- [modules.md](modules.md) — the `WPSK\Core\Plugin` facade and
+- [modules.md](modules.md) — the `WPDev\Core\Plugin` facade and
   the `ModuleLoader` registry that boot() drives.
 - [translation.md](translation.md) — the JS+PHP translation
   pipeline, and the role of the `Text Domain:` header.

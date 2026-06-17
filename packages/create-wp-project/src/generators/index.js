@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — generator registry (Phase 21).
+ * @wpdev/create-wp-project — generator registry (Phase 21).
  *
  * The registry is the central dispatch from a feature set to a
  * list of enabled generator descriptors. The scaffold uses

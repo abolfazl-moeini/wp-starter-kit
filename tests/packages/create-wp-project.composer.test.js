@@ -28,7 +28,7 @@ import * as os from "node:os";
 
 import { scaffoldProject } from "../../packages/create-wp-project/src/index.js";
 
-describe("@wpsk/create-wp-project — consumer composer.json (Phase 23.A3/A4)", () => {
+describe("@wpdev/create-wp-project — consumer composer.json (Phase 23.A3/A4)", () => {
   let tmp;
   const goodAnswers = {
     slug: "my-project",

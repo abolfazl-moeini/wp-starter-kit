@@ -65,8 +65,8 @@ async function seedProject(tmp, features) {
     phpFunctionPrefix: "myprj_",
     uiFramework: "preact",
     projectType: "plugin",
-    restNamespace: "wpsk/v1",
-    vendorPrefix: "WpskVendor",
+    restNamespace: "wpdev/v1",
+    vendorPrefix: "WpdevVendor",
     phpMinVersion: "7.4",
     phpSourceVersion: "8.1",
     batchEndpoint: "/batch/v1",
@@ -176,7 +176,7 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
     expect(cfg.globalName).toBe("MyProject");
     expect(cfg.textDomain).toBe("my-project");
     expect(cfg.hookPrefix).toBe("my-project");
-    expect(cfg.restNamespace).toBe("wpsk/v1");
+    expect(cfg.restNamespace).toBe("wpdev/v1");
   });
 
   test("turning exampleFeature off deletes all its owned files", async () => {
@@ -188,7 +188,11 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
       recursive: true,
     });
     await fs.mkdir(
-      path.join(tmp, "src/Modules/ExampleFeature/assets/entries"),
+      path.join(tmp, "src/Modules/ExampleFeature/assets/entries/__tests__"),
+      { recursive: true },
+    );
+    await fs.mkdir(
+      path.join(tmp, "tests/phpunit/Modules/ExampleFeature"),
       { recursive: true },
     );
     await fs.writeFile(
@@ -206,6 +210,19 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
       "// admin entry\n",
       "utf8",
     );
+    await fs.writeFile(
+      path.join(
+        tmp,
+        "src/Modules/ExampleFeature/assets/entries/__tests__/admin.test.ts",
+      ),
+      "test.todo('x');\n",
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(tmp, "tests/phpunit/Modules/ExampleFeature/ModuleTest.php"),
+      "<?php // ModuleTest stub\n",
+      "utf8",
+    );
 
     const res = await removeFeature(tmp, "exampleFeature");
     expect(res.ok).toBe(true);
@@ -216,12 +233,20 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
     expect(res.removed).toContain(
       "src/Modules/ExampleFeature/assets/entries/admin.ts",
     );
+    expect(res.removed).toContain(
+      "tests/phpunit/Modules/ExampleFeature/ModuleTest.php",
+    );
+    expect(res.removed).toContain(
+      "src/Modules/ExampleFeature/assets/entries/__tests__/admin.test.ts",
+    );
 
-    // All three are gone.
+    // All owned paths are gone.
     for (const rel of [
       "src/Modules/ExampleFeature/Module.php",
       "src/Modules/ExampleFeature/Rest/ItemsController.php",
       "src/Modules/ExampleFeature/assets/entries/admin.ts",
+      "tests/phpunit/Modules/ExampleFeature/ModuleTest.php",
+      "src/Modules/ExampleFeature/assets/entries/__tests__/admin.test.ts",
     ]) {
       await expect(fs.readFile(path.join(tmp, rel), "utf8")).rejects.toThrow(
         /ENOENT/,

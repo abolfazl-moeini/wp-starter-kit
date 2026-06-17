@@ -1,5 +1,5 @@
 /**
- * @wpsk/translation — pure data helpers for the WP i18n pipeline.
+ * @wpdev/translation — pure data helpers for the WP i18n pipeline.
  *
  * Ported from mrlogistic/dev/translation/bootstrap.php (Phase 6). All
  * functions are pure: they accept strings/objects and return strings/objects,

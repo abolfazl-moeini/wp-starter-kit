@@ -186,7 +186,7 @@ if (!function_exists('get_template_directory')) {
 }
 if (!function_exists('get_template_directory_uri')) {
     function get_template_directory_uri() {
-        return 'http://example.test/wp-content/themes/wpsk-starter';
+        return 'http://example.test/wp-content/themes/wpdev-starter';
     }
 }
 if (!function_exists('plugins_url')) {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace WPDev\Tests\FaultTolerance;
 
 use PHPUnit\Framework\TestCase;
-use WPDev\FaultTolerance\HttpPool;
+use WPDev\FaultTolerance\HttpClient;
 
 /**
  * Coverage for the SSRF gap (B-07) and the mid-loop handle leak (B-08).
@@ -31,7 +31,7 @@ class HttpPoolGapsTest extends TestCase
     private function block(string $label, array $urls): array
     {
         $requests = array_map(static fn(string $u) => ['url' => $u], $urls);
-        $responses = HttpPool::http_pool($requests);
+        $responses = HttpClient::pool($requests);
 
         $this->assertCount(count($urls), $responses, $label . ': response count');
         foreach ($responses as $i => $r) {
@@ -183,7 +183,7 @@ class HttpPoolGapsTest extends TestCase
 
         $thrown = null;
         try {
-            HttpPool::http_pool([
+            HttpClient::pool([
                 ['url' => 'https://example.test/first'],
                 ['url' => 'https://example.test/second', 'args' => ['body' => $throwingBody]],
             ]);
@@ -202,7 +202,7 @@ class HttpPoolGapsTest extends TestCase
         // assert a specific code because the test environment can't
         // resolve example.test; we only assert the function came back
         // with a normal response shape instead of an error or a hang.
-        $responses = HttpPool::http_pool([
+        $responses = HttpClient::pool([
             ['url' => 'https://example.test/follow-up'],
         ]);
         $this->assertCount(1, $responses, 'follow-up call must produce a response');

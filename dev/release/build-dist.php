@@ -54,7 +54,7 @@ $frameworkPath = $root . '/packages/framework';
 /**
  * @param string $dir
  */
-function wpsk_rmtree(string $dir): void
+function wpdev_rmtree(string $dir): void
 {
     if (!is_dir($dir)) {
         return;
@@ -69,7 +69,7 @@ function wpsk_rmtree(string $dir): void
         }
         $path = $dir . '/' . $item;
         if (is_dir($path)) {
-            wpsk_rmtree($path);
+            wpdev_rmtree($path);
         } else {
             unlink($path);
         }
@@ -80,7 +80,7 @@ function wpsk_rmtree(string $dir): void
 /**
  * @return list<string>
  */
-function wpsk_dist_exclude_patterns(): array
+function wpdev_dist_exclude_patterns(): array
 {
     return [
         'tests',
@@ -119,7 +119,7 @@ function wpsk_dist_exclude_patterns(): array
  * @param string $relative
  * @param list<string> $exclude
  */
-function wpsk_should_exclude(string $relative, array $exclude): bool
+function wpdev_should_exclude(string $relative, array $exclude): bool
 {
     $normalized = str_replace('\\', '/', $relative);
     foreach ($exclude as $pattern) {
@@ -135,7 +135,7 @@ function wpsk_should_exclude(string $relative, array $exclude): bool
  * @param string $dest
  * @param list<string> $exclude
  */
-function wpsk_copy_tree(string $src, string $dest, array $exclude): void
+function wpdev_copy_tree(string $src, string $dest, array $exclude): void
 {
     $iterator = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($src, FilesystemIterator::SKIP_DOTS),
@@ -147,7 +147,7 @@ function wpsk_copy_tree(string $src, string $dest, array $exclude): void
         $fullPath = $item->getPathname();
         $relative = substr($fullPath, strlen($src) + 1);
 
-        if (wpsk_should_exclude($relative, $exclude)) {
+        if (wpdev_should_exclude($relative, $exclude)) {
             continue;
         }
 
@@ -172,11 +172,11 @@ function wpsk_copy_tree(string $src, string $dest, array $exclude): void
  * @param string $frameworkPath
  * @return string JSON-encoded composer.json
  */
-function wpsk_build_dist_composer_json(array $config, string $frameworkPath): string
+function wpdev_build_dist_composer_json(array $config, string $frameworkPath): string
 {
     $globalName = (string) ($config['globalName'] ?? 'WPDev');
     $vendorNamespaceLower = strtolower($globalName);
-    $slug = (string) ($config['slug'] ?? 'wpsk');
+    $slug = (string) ($config['slug'] ?? 'wpdev');
     $description = (string) ($config['description'] ?? "{$slug} — WordPress plugin built on wp-starter-kit");
     $phpMin = (string) ($config['phpMinVersion'] ?? '7.4');
     $licenseId = (string) ($config['licenseId'] ?? 'GPL-2.0-or-later');
@@ -226,10 +226,10 @@ function wpsk_build_dist_composer_json(array $config, string $frameworkPath): st
         'extra' => [
             'strauss' => [
                 'target_directory' => 'vendor-prefixed',
-                'namespace_prefix' => (string) ($config['vendorPrefix'] ?? 'WpskVendor'),
-                'classmap_prefix' => ((string) ($config['vendorPrefix'] ?? 'WpskVendor')) . '_',
-                'constant_prefix' => strtoupper((string) ($config['vendorPrefix'] ?? 'WpskVendor')) . '_',
-                'delete_vendor_files' => true,
+                'namespace_prefix' => (string) ($config['vendorPrefix'] ?? 'WpdevVendor'),
+                'classmap_prefix' => ((string) ($config['vendorPrefix'] ?? 'WpdevVendor')) . '_',
+                'constant_prefix' => strtoupper((string) ($config['vendorPrefix'] ?? 'WpdevVendor')) . '_',
+                'delete_vendor_files' => false,
                 'include_modified_files' => false,
                 'packages' => ['wpdev/framework'],
                 'exclude_from_prefix' => [
@@ -256,9 +256,9 @@ function wpsk_build_dist_composer_json(array $config, string $frameworkPath): st
  * @param array<string,mixed> $config
  * @return string JSON-encoded strauss.json
  */
-function wpsk_build_dist_strauss_json(array $config): string
+function wpdev_build_dist_strauss_json(array $config): string
 {
-    $vendorPrefix = (string) ($config['vendorPrefix'] ?? 'WpskVendor');
+    $vendorPrefix = (string) ($config['vendorPrefix'] ?? 'WpdevVendor');
     $payload = [
         'target_directory' => 'vendor-prefixed',
         'namespace_prefix' => $vendorPrefix,
@@ -270,7 +270,7 @@ function wpsk_build_dist_strauss_json(array $config): string
         // {vendorPrefix}\WPDev\... The dist's `vendor/` is the
         // only thing strauss touches, and the framework lives
         // there.
-        'delete_vendor_files' => true,
+        'delete_vendor_files' => false,
         'include_modified_files' => false,
         // Whitelist: only process wpdev/framework. Strauss 0.8.1
         // chokes on multi-dir PSR-4 entries (e.g. some symfony
@@ -297,7 +297,7 @@ function wpsk_build_dist_strauss_json(array $config): string
  *
  * @return array{0:int,1:string}
  */
-function wpsk_run(string $cmd, string $cwd): array
+function wpdev_run(string $cmd, string $cwd): array
 {
     $descriptors = [
         0 => ['pipe', 'r'],
@@ -322,11 +322,11 @@ function wpsk_run(string $cmd, string $cwd): array
 /* Step 1: prepare dist tree (clean + copy)                              */
 /* -------------------------------------------------------------------- */
 
-wpsk_rmtree($distRoot);
+wpdev_rmtree($distRoot);
 mkdir($distRoot, 0755, true);
 
-$exclude = wpsk_dist_exclude_patterns();
-wpsk_copy_tree($root, $distRoot, $exclude);
+$exclude = wpdev_dist_exclude_patterns();
+wpdev_copy_tree($root, $distRoot, $exclude);
 
 /**
  * Phase 23.A2 → 23.A6: the framework's `src/Core/` and
@@ -349,11 +349,11 @@ fwrite(STDOUT, "Built dist tree at {$distRoot}\n");
 
 file_put_contents(
     $distRoot . '/composer.json',
-    wpsk_build_dist_composer_json($config, $frameworkPath)
+    wpdev_build_dist_composer_json($config, $frameworkPath)
 );
 file_put_contents(
     $distRoot . '/strauss.json',
-    wpsk_build_dist_strauss_json($config)
+    wpdev_build_dist_strauss_json($config)
 );
 
 fwrite(STDOUT, "Emitted consumer composer.json + strauss.json in dist\n");
@@ -362,7 +362,7 @@ fwrite(STDOUT, "Emitted consumer composer.json + strauss.json in dist\n");
 /* Step 3: composer install --no-dev (install the framework dep)       */
 /* -------------------------------------------------------------------- */
 
-[$installExit, $installOut] = wpsk_run(
+[$installExit, $installOut] = wpdev_run(
     'composer install --no-dev --no-interaction --no-progress 2>&1',
     $distRoot
 );
@@ -388,7 +388,7 @@ if (!is_file($straussBin)) {
     exit(1);
 }
 
-[$straussExit, $straussOut] = wpsk_run(
+[$straussExit, $straussOut] = wpdev_run(
     'php ' . escapeshellarg($straussBin) . ' 2>&1',
     $distRoot
 );

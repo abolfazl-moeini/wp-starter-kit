@@ -1,10 +1,10 @@
-# `wpsk` CLI — Project Installer
+# `wpdev` CLI — Project Installer
 
-> The `wpsk` command-line installer scaffolds new wp-starter-kit
+> The `wpdev` command-line installer scaffolds new wp-starter-kit
 > plugins, adds/removes features from existing projects, and upgrades
 > projects to a newer kit version. Built on `@clack/prompts` +
 > `commander` + `execa` and powered by the
-> `@wpsk/create-wp-project` engine (which owns all templates, the
+> `@wpdev/create-wp-project` engine (which owns all templates, the
 > feature catalog, the manifest, and the migration runner).
 
 The CLI is a thin front-end. **All file generation is delegated to
@@ -21,39 +21,39 @@ the engine.** The CLI's only jobs are:
 ## Install / first run
 
 You do not need a global install for the common case — `npm create`
-fetches the wrapper and runs `wpsk` for you:
+fetches the wrapper and runs `wpdev` for you:
 
 ```bash
-npm create @wpsk/plugin@latest my-plugin
+npm create @wpdev/plugin@latest my-plugin
 # equivalent (after global install):
-npm i -g @wpsk/cli
-wpsk create my-plugin
+npm i -g @wpdev/cli
+wpdev create my-plugin
 ```
 
-The wrapper is `@wpsk/create-plugin`; the binary it forwards to is
-`@wpsk/cli` (the `wpsk` command). The engine is
-`@wpsk/create-wp-project` — it is **not** renamed.
+The wrapper is `@wpdev/create-plugin`; the binary it forwards to is
+`@wpdev/cli` (the `wpdev` command). The engine is
+`@wpdev/create-wp-project`.
 
 During kit development, you can also run the CLI directly out of the
 workspace:
 
 ```bash
-node packages/cli/bin/wpsk.js create my-plugin --yes
+node packages/cli/bin/wpdev.js create my-plugin --yes
 ```
 
 ## Commands
 
-| Command                        | What it does                                                                   |
-| ------------------------------ | ------------------------------------------------------------------------------ |
-| `wpsk create [slug]`           | Scaffold a new wp-starter-kit plugin (interactive by default; `--yes` for CI). |
-| `wpsk add [opts] <feature>`    | Add a feature to an existing project (e.g. `wpsk add husky`).                  |
-| `wpsk remove [opts] <feature>` | Remove a feature from an existing project.                                     |
-| `wpsk list`                    | Print the features + ON/OFF state from the project's `wpdev-kit.json`.          |
-| `wpsk update [dir]`            | Plan a kit upgrade (default). Apply with `--run`.                              |
-| `wpsk doctor [dir]`            | Report system prerequisites and project drift.                                 |
-| `wpsk info [dir]`              | Show kit version, feature states, and available updates.                       |
+| Command                         | What it does                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| `wpdev create [slug]`           | Scaffold a new wp-starter-kit plugin (interactive by default; `--yes` for CI). |
+| `wpdev add [opts] <feature>`    | Add a feature to an existing project (e.g. `wpdev add husky`).                  |
+| `wpdev remove [opts] <feature>` | Remove a feature from an existing project.                                     |
+| `wpdev list`                    | Print the features + ON/OFF state from the project's `wpdev-kit.json`.          |
+| `wpdev update [dir]`            | Plan a kit upgrade (default). Apply with `--run`.                              |
+| `wpdev doctor [dir]`            | Report system prerequisites and project drift.                                 |
+| `wpdev info [dir]`              | Show kit version, feature states, and available updates.                       |
 
-## `wpsk create` — flags
+## `wpdev create` — flags
 
 The full flag map mirrors `plan.installer.md` §1.2. Every interactive
 prompt has a matching flag so the command runs in CI with `--yes`.
@@ -79,7 +79,7 @@ prompt has a matching flag so the command runs in CI with `--yes`.
 | `--php-test=<opt>`            | `features.phpTest`          | `phpunit` / `none`.                                                                          |
 | `--license=<id>`              | `features.license`          | `gpl2` / `gpl3` / `mit`.                                                                     |
 | `--wp-min=<ver>`              | `features.wpMinVersion`     | `5.8` / `6.0` / `6.2` / `6.4` / `6.6`.                                                       |
-| `--rest-batch=<on\|off>`      | `features.restBatch`        | `@wpsk/fetch` REST batch client.                                                             |
+| `--rest-batch=<on\|off>`      | `features.restBatch`        | REST batch endpoint + `createBatchRequest` in `@wpdev/rest-utils`.                         |
 | `--fault-tolerance=<on\|off>` | `features.faultTolerance`   | PHP 8.1+ resilience package.                                                                 |
 | `--vendor-scoping=<on\|off>`  | `features.vendorScoping`    | Strauss on release.                                                                          |
 | `--husky=<on\|off>`           | `features.husky`            | Git pre-commit hooks.                                                                        |
@@ -92,16 +92,16 @@ prompt has a matching flag so the command runs in CI with `--yes`.
 | `--verbose` / `-v`            | `runOptions.verbose`        | Stream child-process output to the terminal.                                                 |
 | `--kit-version=<ver>`         | (override)                  | Override the engine version (testing only).                                                  |
 
-## `wpsk add` / `wpsk remove` / `wpsk list`
+## `wpdev add` / `wpdev remove` / `wpdev list`
 
 Operate on the `wpdev-kit.json` manifest in the current directory (or
 the directory given by `[dir]` for `update`/`doctor`/`info`).
 
 ```bash
-wpsk add husky --yes              # add a feature non-interactively
-wpsk add js-test --variant=vitest # add a feature with a specific variant
-wpsk remove example-feature       # remove a feature
-wpsk list                         # show features + ON/OFF state
+wpdev add husky --yes              # add a feature non-interactively
+wpdev add js-test --variant=vitest # add a feature with a specific variant
+wpdev remove example-feature       # remove a feature
+wpdev list                         # show features + ON/OFF state
 ```
 
 `add` flags:
@@ -118,21 +118,21 @@ wpsk list                         # show features + ON/OFF state
 emits the list of files to create/delete from the feature
 descriptor, not from the CLI.
 
-## `wpsk update` / `wpsk doctor` / `wpsk info`
+## `wpdev update` / `wpdev doctor` / `wpdev info`
 
 ```bash
-wpsk update            # dry-run: print the migration plan, then exit
-wpsk update --run      # apply migrations + bump deps
-wpsk doctor            # report system environment + project drift
-wpsk info              # kit version, feature states, available updates
+wpdev update            # dry-run: print the migration plan, then exit
+wpdev update --run      # apply migrations + bump deps
+wpdev doctor            # report system environment + project drift
+wpdev info              # kit version, feature states, available updates
 ```
 
-- `wpsk update` is **dry-run by default**. Use `--run` to apply.
-- `wpsk doctor` exits non-zero on hard errors (missing Node/Composer,
+- `wpdev update` is **dry-run by default**. Use `--run` to apply.
+- `wpdev doctor` exits non-zero on hard errors (missing Node/Composer,
   uncommitted manifest drift). Missing `composer`/`git`/`wp` are
   warnings, not errors — the run never crashes on a missing optional
   tool.
-- `wpsk info` is a read-only status dump; safe to run in CI.
+- `wpdev info` is a read-only status dump; safe to run in CI.
 
 ## Non-interactive / CI usage
 
@@ -141,7 +141,7 @@ every flag, or pass `--yes` to accept defaults for anything left
 out.
 
 ```bash
-wpsk create my-plugin \
+wpdev create my-plugin \
   --scope=myorg --global=MyPlugin --domain=my-plugin --hook=my-plugin --php-fn=myprj_ \
   --js=typescript --js-lib=preact --js-test=jest \
   --css=tailwind --blocks=on \
@@ -156,9 +156,9 @@ wpsk create my-plugin \
 For the "I just want a default project" path:
 
 ```bash
-npm create @wpsk/plugin@latest my-plugin -- --yes
+npm create @wpdev/plugin@latest my-plugin -- --yes
 # or
-wpsk create my-plugin --yes
+wpdev create my-plugin --yes
 ```
 
 Invalid feature combos are rejected **before** any prompt is shown
@@ -180,9 +180,9 @@ not require a CLI release.
 Use a preset:
 
 ```bash
-wpsk create my-plugin --preset=minimal
-wpsk create my-plugin --preset=full
-wpsk create my-plugin --preset=woocommerce
+wpdev create my-plugin --preset=minimal
+wpdev create my-plugin --preset=full
+wpdev create my-plugin --preset=woocommerce
 ```
 
 Flags win over preset values — you can pre-fill with a preset and
@@ -190,11 +190,11 @@ override any individual feature with its flag.
 
 ## Troubleshooting
 
-### "command not found: wpsk"
+### "command not found: wpdev"
 
-The CLI is not on `PATH`. Either use `npm create @wpsk/plugin@latest`
-(no install needed), `npm i -g @wpsk/cli`, or invoke it directly out
-of the workspace: `node packages/cli/bin/wpsk.js ...`.
+The CLI is not on `PATH`. Either use `npm create @wpdev/plugin@latest`
+(no install needed), `npm i -g @wpdev/cli`, or invoke it directly out
+of the workspace: `node packages/cli/bin/wpdev.js ...`.
 
 ### "PHP 7.4 is below the minimum for fault-tolerance"
 
@@ -205,7 +205,7 @@ feature, raise `--php-min=8.1`, or set `--fault-tolerance=off`.
 
 `blocks:on` adds `blockstudio/blockstudio` via Composer. Blockstudio requires **PHP 8.2+** on the server. If `phpMinVersion < 8.2`, the installer warns that Rector downlevels your plugin source only — not Blockstudio vendor code. Run `composer install` after scaffold.
 
-### "Cannot resolve @wpsk/create-wp-project"
+### "Cannot resolve @wpdev/create-wp-project"
 
 Inside the `wp-starter-kit` workspace, run `npm install` to hoist
 the engine into the root `node_modules/`. The CLI resolves the
@@ -216,7 +216,7 @@ engine through the workspace's `node_modules` symlinks.
 Network failures during `npm install` or `composer install` are
 caught, reported as warnings, and the run **continues** — the
 project is fully generated; the user can install deps later. Use
-`wpsk doctor` afterward to see which install steps are still
+`wpdev doctor` afterward to see which install steps are still
 pending.
 
 ### `git init` failed (or `git` not installed)
@@ -226,18 +226,18 @@ initializing the repo. Use `git init` manually later.
 
 ### How do I see what was generated?
 
-`wpsk list` shows the features. `wpsk info` adds the kit version and
+`wpdev list` shows the features. `wpdev info` adds the kit version and
 available updates. `cat wpdev-kit.json` shows the raw manifest.
 
 ### I want to undo an `add` / `remove`
 
-`wpsk add X` is undone by `wpsk remove X`, and vice versa. The
+`wpdev add X` is undone by `wpdev remove X`, and vice versa. The
 engine tracks the inverse operations on the feature descriptor, so
 the manifest and the file set round-trip cleanly.
 
 ## See also
 
-- `docs/scaffold.md` — the underlying engine (`@wpsk/create-wp-project`).
+- `docs/scaffold.md` — the underlying engine (`@wpdev/create-wp-project`).
 - `docs/features-and-manifest.md` — the feature model and the
   `wpdev-kit.json` manifest format.
 - `plan.installer.md` — the design plan and the full flag map.

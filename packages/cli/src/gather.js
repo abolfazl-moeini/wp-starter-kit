@@ -16,14 +16,14 @@
  *   5. validateFeatureSet(final) + validateAnswers(final)  →  last gate
  *
  * Phase I3: the default engine is the real one
- * (`@wpsk/create-wp-project`) — the engine-stub used during
+ * (`@wpdev/create-wp-project`) — the engine-stub used during
  * I1/I2 has been deleted. Tests inject fakes through the
  * `engine` option; the bin wires the real engine.
  */
 
 import { parseFlags } from "./flags.js";
 import { buildPromptPlan, runPrompts } from "./prompts.js";
-import * as realEngine from "@wpsk/create-wp-project";
+import * as realEngine from "@wpdev/create-wp-project";
 
 /**
  * Pure merge. Precedence: flags > prompted > defaults.
@@ -63,7 +63,7 @@ export function mergeInputs(flags, prompted, defaults) {
  * The default engine surface used by `gatherInputs()`. Production
  * callers (Phase I3+) will inject a real engine via the `engine`
  * option. Tests inject a stub. The default is the real engine
- * (`@wpsk/create-wp-project`) — see plan §0.3.
+ * (`@wpdev/create-wp-project`) — see plan §0.3.
  *
  * Phase I3 swapped the engine-stub for the real engine; this
  * function is the single source of truth for the default.
@@ -126,7 +126,7 @@ export async function gatherInputs(opts) {
       "Invalid feature combination from flags: " +
         JSON.stringify(flagValidation.errors),
     );
-    err.code = "WPSK_INVALID_FLAG_COMBO";
+    err.code = "WPDEV_INVALID_FLAG_COMBO";
     err.errors = flagValidation.errors;
     throw err;
   }

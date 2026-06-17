@@ -263,8 +263,8 @@ describe("runMigrations() — project.config.json edit persists (Phase 24.5, 24.
       features: {},
     };
     const projectConfig = {
-      slug: "wpsk-project",
-      globalName: "WpskProject",
+      slug: "wpdev-project",
+      globalName: "WPDevProject",
       uiFramework: "preact",
       projectType: "plugin",
     };

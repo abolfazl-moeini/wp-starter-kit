@@ -1,5 +1,5 @@
 /**
- * @wpsk/html-utils — DOM utilities for the @wpsk starter kit.
+ * @wpdev/html-utils — DOM utilities for the wpdev starter kit.
  *
  * Ported from `mrlogistic/assets/packages/html-utils/index.js`. Heavy
  * domain-specific helpers (SweetAlert2, jQuery, Datepicker, progressbar.js,

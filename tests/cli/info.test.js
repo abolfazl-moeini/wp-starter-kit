@@ -7,7 +7,7 @@
  *     (string shorthand or `{ dir, runOptions: { json, dir } }`).
  *   - Calls `deps.engine.getKitStatus(dir, { lookupLatest })` with
  *     the injected `lookupLatest` (default = the bin's real
- *     `npm view @wpsk/cli version` shim; tests inject a fake).
+ *     `npm view @wpdev/cli version` shim; tests inject a fake).
  *   - When the engine returns `{ok:false, reason}`, the command
  *     returns `{ok:false, reason}` verbatim and does NOT print
  *     the info panel. The bin layer uses this to exit non-zero.

@@ -20,8 +20,10 @@ final class Module implements ModuleInterface
 
     public function boot(): void
     {
-        $slug = Plugin::config()['slug'] ?? 'wpsk-starter';
+        $config = Plugin::config();
+        $slug = $config['slug'] ?? 'wpdev-starter';
+        $hookPrefix = $config['hookPrefix'] ?? 'wpdev';
         McpPlugin::loader()->register(new McpExampleModule());
-        McpPlugin::boot(['namespace' => (string) $slug, 'hookPrefix' => 'wpsk_mcp']);
+        McpPlugin::boot(['namespace' => (string) $slug, 'hookPrefix' => $hookPrefix . '_mcp']);
     }
 }

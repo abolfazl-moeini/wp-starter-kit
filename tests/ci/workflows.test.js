@@ -10,6 +10,10 @@ const nightly = readFileSync(
   join(process.cwd(), ".github/workflows/nightly.yml"),
   "utf8",
 );
+const release = readFileSync(
+  join(process.cwd(), ".github/workflows/release.yml"),
+  "utf8",
+);
 
 describe("CI workflow contract", () => {
   test("ci.yml includes typecheck and eslint jobs/steps", () => {
@@ -32,13 +36,18 @@ describe("CI workflow contract", () => {
     expect(nightly).not.toMatch(/test -f "\$TMP\/my-project\/functions\.php"/);
   });
 
+  test("release.yml names archives wpdev-starter", () => {
+    expect(release).toMatch(/wpdev-starter-\$\{\{ github\.ref_name \}\}\.tar\.gz/);
+    expect(release).not.toMatch(/wpsk-starter-/);
+  });
+
   test("ci.yml defines an installer-e2e job", () => {
     // Job must exist (top-level `installer-e2e:` under `jobs:`), must
-    // run CLI unit tests, must run `wpsk create` with --yes, and must
-    // run `wpsk info` on the generated project.
+    // run CLI unit tests, must run `wpdev create` with --yes, and must
+    // run `wpdev info` on the generated project.
     expect(ci).toMatch(/^\s{2}installer-e2e:\s*$/m);
     expect(ci).toMatch(/npm test\s+--\s+cli/);
-    expect(ci).toMatch(/wpsk create[^\n]*--yes/);
-    expect(ci).toMatch(/wpsk info/);
+    expect(ci).toMatch(/wpdev\.js create[^\n]*--yes/);
+    expect(ci).toMatch(/wpdev\.js info/);
   });
 });

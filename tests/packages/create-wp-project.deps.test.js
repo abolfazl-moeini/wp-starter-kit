@@ -1,34 +1,34 @@
 /**
- * Phase 23.B3 RED — scaffold consumer package.json depends on @wpsk/*.
+ * Phase 23.B3 RED — scaffold consumer package.json depends on @wpdev/*.
  *
  * The kit is moving to a "deps" distribution model where the
  * consumer project installs the framework as npm packages
  * (rather than vendoring framework code into the consumer's
  * `core/packages/*`). Phase 23.A wired the PHP side (`wpdev/framework`
  * via Composer). Phase 23.B is the JS analogue: the scaffold's
- * emitted `package.json` must list the @wpsk/* packages the
+ * emitted `package.json` must list the @wpdev/* packages the
  * consumer needs, not relative `core/packages/*` paths.
  *
  * The current scaffold (pre-23.B4) emits:
  *
  *   - scripts: node core/packages/build/esbuild-*.js   ← relative path
- *   - dependencies: react/react-dom/wp packages        ← no @wpsk/*
+ *   - dependencies: react/react-dom/wp packages        ← no @wpdev/*
  *
  * The 23.B4 GREEN will replace those scripts with the
  * installed-package bin paths (per 23.B5/23.B6 — out of scope
- * for 23.B) and add @wpsk/* as dependencies with pinned
+ * for 23.B) and add @wpdev/* as dependencies with pinned
  * versions from `getDepVersions()`.
  *
  * The tests assert the post-23.B4 contract:
  *
  *   1. `package.json.dependencies` includes each of the 6
- *      shippable @wpsk/* lib packages (hooks, utils, rest-utils,
+ *      shippable @wpdev/* lib packages (hooks, utils, rest-utils,
  *      html-utils, fetch, translation) with a non-empty version
  *      string. The test does NOT pin the version — that comes
  *      from `getDepVersions()` and the dep-versions test already
  *      cross-checks the four canonical entries.
- *   2. `package.json.devDependencies` includes @wpsk/build and
- *      @wpsk/dependency-extraction-esbuild-plugin (the renamed
+ *   2. `package.json.devDependencies` includes @wpdev/build and
+ *      @wpdev/dependency-extraction-esbuild-plugin (the renamed
  *      build packages from 23.B2) with non-empty version
  *      strings.
  *   3. The scaffold's `scripts` section does NOT reference
@@ -50,7 +50,7 @@ import * as os from "node:os";
 
 import { scaffoldProject } from "../../packages/create-wp-project/src/index.js";
 
-describe("@wpsk/create-wp-project — consumer package.json deps (Phase 23.B3/B4)", () => {
+describe("@wpdev/create-wp-project — consumer package.json deps (Phase 23.B3/B4)", () => {
   let tmp;
   const goodAnswers = {
     slug: "my-project",
@@ -78,15 +78,15 @@ describe("@wpsk/create-wp-project — consumer package.json deps (Phase 23.B3/B4
   }
 
   /* ------------------------------------------------------------------ */
-  /* Runtime @wpsk/* deps (6 lib packages)                                */
+  /* Runtime @wpdev/* deps (6 lib packages)                                */
   /* ------------------------------------------------------------------ */
 
   test.each([
-    "@wpsk/hooks",
-    "@wpsk/utils",
-    "@wpsk/rest-utils",
-    "@wpsk/html-utils",
-    "@wpsk/translation",
+    "@wpdev/hooks",
+    "@wpdev/utils",
+    "@wpdev/rest-utils",
+    "@wpdev/html-utils",
+    "@wpdev/translation",
   ])(
     "package.json.dependencies includes %s with a non-empty version",
     async (pkg) => {
@@ -100,30 +100,23 @@ describe("@wpsk/create-wp-project — consumer package.json deps (Phase 23.B3/B4
     },
   );
 
-  test("package.json.dependencies includes @wpsk/fetch only when restBatch=on", async () => {
-    const off = await scaffoldProject(tmp, goodAnswers);
-    expect(off.ok).toBe(true);
-    const offPkg = await readPackageJson();
-    expect(offPkg.dependencies["@wpsk/fetch"]).toBeUndefined();
-
-    await fs.rm(tmp, { recursive: true, force: true });
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-scaffold-pkg-"));
-
+  test("batch client ships via @wpdev/rest-utils (not a separate @wpdev/fetch dep)", async () => {
     const { defaultFeatures } =
       await import("../../packages/create-wp-project/src/features.js");
     const res = await scaffoldProject(tmp, goodAnswers, {
       features: { ...defaultFeatures(), restBatch: "on" },
     });
     expect(res.ok).toBe(true);
-    const onPkg = await readPackageJson();
-    expect(onPkg.dependencies["@wpsk/fetch"]).toBeDefined();
+    const pkg = await readPackageJson();
+    expect(pkg.dependencies["@wpdev/rest-utils"]).toBeDefined();
+    expect(pkg.dependencies["@wpdev/fetch"]).toBeUndefined();
   });
 
   /* ------------------------------------------------------------------ */
-  /* Build-time @wpsk/* deps (2 renamed from @core/* in 23.B2)           */
+  /* Build-time @wpdev/* deps (2 renamed from @core/* in 23.B2)           */
   /* ------------------------------------------------------------------ */
 
-  test.each(["@wpsk/build", "@wpsk/dependency-extraction-esbuild-plugin"])(
+  test.each(["@wpdev/build", "@wpdev/dependency-extraction-esbuild-plugin"])(
     "package.json.devDependencies includes %s with a non-empty version",
     async (pkg) => {
       const res = await scaffoldProject(tmp, goodAnswers);
@@ -139,7 +132,7 @@ describe("@wpsk/create-wp-project — consumer package.json deps (Phase 23.B3/B4
   test("package.json no longer references the old @core/build name", async () => {
     // Guard against a regression where someone re-introduces the
     // old @core/* names (e.g. by re-running the old templates).
-    // After 23.B2, the build package is @wpsk/build; the
+    // After 23.B2, the build package is @wpdev/build; the
     // consumer must use the new name and the old one must be
     // absent from BOTH dependencies and devDependencies.
     const res = await scaffoldProject(tmp, goodAnswers);
@@ -157,7 +150,7 @@ describe("@wpsk/create-wp-project — consumer package.json deps (Phase 23.B3/B4
 
   test("package.json scripts do not contain a `node core/packages/...` invocation", async () => {
     // Phase 23.B5/B6 (out of scope for 23.B4) will switch the
-    // build scripts to installed @wpsk/* bins. The 23.B4
+    // build scripts to installed @wpdev/* bins. The 23.B4
     // contract is about *deps*; the script-paths check is
     // forward-looking: it asserts the scaffold no longer
     // hand-rolls `node core/packages/build/esbuild-*.js` style
@@ -168,7 +161,7 @@ describe("@wpsk/create-wp-project — consumer package.json deps (Phase 23.B3/B4
     //       the 23.B4 cycle.
     //
     // Either way, the deps must include the renamed
-    // @wpsk/build and @wpsk/dependency-extraction-esbuild-plugin
+    // @wpdev/build and @wpdev/dependency-extraction-esbuild-plugin
     // — which the earlier per-package tests already assert. This
     // test is a *soft* guard: it documents the upcoming
     // direction without blocking 23.B4.
@@ -178,6 +171,6 @@ describe("@wpsk/create-wp-project — consumer package.json deps (Phase 23.B3/B4
     // For 23.B4, we accept the old `node core/packages/...`
     // paths in scripts. The hard guarantee is in the deps:
     expect(consumerPkg.devDependencies).toBeDefined();
-    expect(consumerPkg.devDependencies["@wpsk/build"]).toBeDefined();
+    expect(consumerPkg.devDependencies["@wpdev/build"]).toBeDefined();
   });
 });

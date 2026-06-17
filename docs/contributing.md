@@ -25,7 +25,7 @@ We use a lightweight Git Flow:
 
 Examples:
 
-- `feat/wpsk-rule-engine-advance-fix`
+- `feat/wpdev-rule-engine-advance-fix`
 - `fix/translation-clean-stale-files`
 - `docs/build-system-overview`
 
@@ -119,22 +119,58 @@ Don't do this on PRs into `main`.
   component files only if the component is exported as a class
   (we use functional components, so all file names are kebab-case).
 
-## Testing policy
+## Red → Green → Refactor
 
-Every PR **must** include tests. The CI check is:
+### JavaScript (Jest)
 
-```yaml
-- run: npm test -- --coverage
-- run: composer test -- --coverage
-- name: "Coverage gate"
-  run: |
-    if [ "$(jq -r .total.lines.pct coverage/coverage-summary.json | cut -d. -f1)" -lt 80 ]; then
-      echo "Coverage below 80%"; exit 1
-    fi
+```bash
+# 1. RED — write a failing test
+npm test -- path/to/feature.test.js
+
+# 2. GREEN — minimum implementation
+# edit packages/... or src/Modules/.../assets/entries/...
+
+# 3. REFACTOR — clean up while tests stay green
+npm test
 ```
 
-80% line coverage is the floor. New code without tests is
-auto-rejected.
+Scaffolded modules ship with `test.todo(...)` in
+`src/Modules/ExampleFeature/assets/entries/__tests__/admin.test.ts`.
+Replace the todo with real assertions as you build the feature.
+
+### PHP (PHPUnit)
+
+```bash
+# 1. RED
+composer test -- --filter MyNewTest
+
+# 2. GREEN
+# edit src/Modules/.../Module.php
+
+# 3. REFACTOR
+composer test
+```
+
+Scaffolded projects include `tests/phpunit/Modules/ExampleFeature/ModuleTest.php`
+as a slug-contract stub. Extend it before adding module behavior.
+
+### PHP version vs Rector
+
+- Write tests and source against **modern PHP** in local dev (8.2+).
+- Consumer `phpMinVersion` may be 7.4 — run `composer rector:build` before release
+  to downgrade syntax (see `dev/rector-build.php`).
+- Never hand-edit Rector output; fix source and re-run Rector.
+
+## Testing policy
+
+Every PR **must** include tests. CI (`.github/workflows/ci.yml`) runs:
+
+- `npx jest --ci` on Node 20 and 22
+- `composer test` on PHP 7.4 through 8.3
+- lint, release-dist, build, scaffold-matrix, and installer-e2e jobs
+
+The `ci-pass` aggregator job fails the PR if any required job fails.
+Nightly `coverage-report` uploads to Codecov — see [ci.md](ci.md).
 
 **Test types:**
 
@@ -159,7 +195,7 @@ based on the CODEOWNERS file:
 ```
 
 If you're not on a maintainer list, you're assigned to the
-`@wpsk/starter` org reviewers, who triage.
+`@wpdev/starter` org reviewers, who triage.
 
 ## Release process
 
@@ -184,10 +220,10 @@ the tag, CI builds the artifacts, GitHub Release is auto-created.
 
 - Open a GitHub Discussion (preferred for design questions).
 - Open a GitHub Issue (for bugs and feature requests).
-- Slack `#wpsk-dev` for synchronous chat.
+- Slack `#wpdev-dev` for synchronous chat.
 
 ## Recognition
 
 The starter maintains a `CONTRIBUTORS.md` (auto-generated from
 `git log`) and adds notable contributors to the
-`@wpsk/starter` org with `Maintainer` rights after 5 merged PRs.
+`@wpdev/starter` org with `Maintainer` rights after 5 merged PRs.

@@ -3,7 +3,7 @@
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for `wpsk_enqueue_bundle_script` and `wpsk_enqueue_bundle_style`.
+ * Tests for `wpdev_enqueue_bundle_script` and `wpdev_enqueue_bundle_style`.
  *
  * The bootstrap stubs for `wp_register_script` / `wp_enqueue_script` /
  * `wp_enqueue_style` record into `$GLOBALS['wpsk_test_wp_calls']` when the
@@ -72,7 +72,7 @@ class EnqueueTest extends TestCase
 
     public function test_enqueue_bundle_script_uses_hash_version_and_merged_deps(): void
     {
-        $js = $this->tmpDir . '/bundles/wpsk-starter-deps.js';
+        $js = $this->tmpDir . '/bundles/wpdev-starter-deps.js';
         if (!is_dir(dirname($js))) {
             mkdir(dirname($js), 0777, true);
         }
@@ -82,13 +82,13 @@ class EnqueueTest extends TestCase
             'hash'         => 'sha-test',
         ]);
 
-        $result = wpsk_enqueue_bundle_script_at($js, ['jquery']);
+        $result = wpdev_enqueue_bundle_script_at($js, ['jquery']);
 
         $this->assertTrue($result);
         $calls = $this->callsFor('wp_enqueue_script');
         $this->assertCount(1, $calls);
         $args = $calls[0];
-        $this->assertSame('wpsk-starter-deps', $args[0]);                                  // handle
+        $this->assertSame('wpdev-starter-deps', $args[0]);                                  // handle
         // The fixture lives under sys_get_temp_dir() which is OUTSIDE the
         // plugin root. Per the B-06 contract, resolve_asset_url() returns
         // '' when the file cannot be resolved to a URL we trust. The BC
@@ -112,7 +112,7 @@ class EnqueueTest extends TestCase
             'hash'         => 'css-hash',
         ]);
 
-        $result = wpsk_enqueue_bundle_style_at($css, ['dashicons']);
+        $result = wpdev_enqueue_bundle_style_at($css, ['dashicons']);
 
         $this->assertTrue($result);
         $calls = $this->callsFor('wp_enqueue_style');
@@ -137,7 +137,7 @@ class EnqueueTest extends TestCase
         file_put_contents($js, '/* no asset */');
         // intentionally do NOT write the .asset.php companion
 
-        $result = wpsk_enqueue_bundle_script_at($js);
+        $result = wpdev_enqueue_bundle_script_at($js);
 
         $this->assertTrue($result);
         $calls = $this->callsFor('wp_enqueue_script');

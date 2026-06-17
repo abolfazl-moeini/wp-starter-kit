@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — `doctorProject` health check.
+ * @wpdev/create-wp-project — `doctorProject` health check.
  *
  * Phase 24 of plan.v3.md (24.9, 24.10). The installer's
  * `wpsk doctor` command runs this function and prints the
@@ -182,8 +182,8 @@ export function checkVendoredChecksum(dir) {
   if (existsSync(legacyCore)) {
     warnings.push(
       "Legacy vendored framework sources found under src/Core/. " +
-        "Run `wpsk update` (or delete src/Core/ after confirming " +
-        "your modules only use public WPSK APIs) to migrate to deps mode.",
+        "Run `wpdev update` (or delete src/Core/ after confirming " +
+        "your modules only use public WPDev APIs) to migrate to deps mode.",
     );
   }
   const frameworkDir = path.join(dir, VENDORED_FRAMEWORK_DIR);
@@ -265,7 +265,7 @@ export function doctorProject(dir) {
   if (project && installed !== "0.0.0") {
     if (compareSemver(project, installed) > 0) {
       result.warnings.push(
-        `project manifest kitVersion (${project}) is newer than the installed kit (${installed}) — run wpsk update`,
+        `project manifest kitVersion (${project}) is newer than the installed kit (${installed}) — run wpdev update`,
       );
     }
   }

@@ -17,7 +17,7 @@ See [blocks-blockstudio.md](blocks-blockstudio.md) for layout, adding blocks, an
 
 ## Composer
 
-The scaffold adds `blockstudio/blockstudio` to `composer.json`. Run `composer install` after create or `wpsk add blocks`.
+The scaffold adds `blockstudio/blockstudio` to `composer.json`. Run `composer install` after create or `wpdev add blocks`.
 
 ## CLI
 

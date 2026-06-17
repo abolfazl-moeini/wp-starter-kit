@@ -132,8 +132,8 @@ class AssetsTest extends TestCase
 
         // Must equal the plugins_url() stub return value.
         $this->assertSame(
-            plugins_url('assets/bundles/wpsk-starter-deps.js'),
-            plugins_url('assets/bundles/wpsk-starter-deps.js'), // sanity: stub is callable
+            plugins_url('assets/bundles/wpdev-starter-deps.js'),
+            plugins_url('assets/bundles/wpdev-starter-deps.js'), // sanity: stub is callable
             'plugins_url() stub is callable'
         );
         $this->assertStringStartsWith(
@@ -168,12 +168,12 @@ class AssetsTest extends TestCase
 
     public function test_asset_info_reads_companion_asset_php_full_shape(): void
     {
-        $js = $this->tmpDir . '/wpsk-starter-deps.js';
+        $js = $this->tmpDir . '/wpdev-starter-deps.js';
         file_put_contents($js, '/* foo */');
         $this->writeAssetFile($js, [
             'dependencies'      => ['jquery', 'wp-i18n'],
             'hash'              => 'abc123',
-            'internal_packages' => ['@wpsk/hooks', '@wpsk/utils'],
+            'internal_packages' => ['@wpdev/hooks', '@wpdev/utils'],
         ]);
 
         $info = Assets::asset_info($js);
@@ -182,7 +182,7 @@ class AssetsTest extends TestCase
             [
                 'dependencies'      => ['jquery', 'wp-i18n'],
                 'hash'              => 'abc123',
-                'internal_packages' => ['@wpsk/hooks', '@wpsk/utils'],
+                'internal_packages' => ['@wpdev/hooks', '@wpdev/utils'],
             ],
             $info
         );
@@ -211,14 +211,14 @@ class AssetsTest extends TestCase
 
     public function test_enqueue_bundle_script_calls_register_and_enqueue_and_set_translations(): void
     {
-        $js = $this->tmpDir . '/wpsk-starter-deps.js';
+        $js = $this->tmpDir . '/wpdev-starter-deps.js';
         file_put_contents($js, '/* x */');
         $this->writeAssetFile($js, [
             'dependencies' => ['wp-i18n', 'wp-api-fetch'],
             'hash'         => 'sha-test',
         ]);
 
-        Assets::enqueue_bundle_script('wpsk-starter-deps', $js, ['jquery']);
+        Assets::enqueue_bundle_script('wpdev-starter-deps', $js, ['jquery']);
 
         // Both register and enqueue must fire.
         $registers = $this->callsFor('wp_register_script');
@@ -228,14 +228,14 @@ class AssetsTest extends TestCase
 
         // Handle + URL cache-bust + merged deps.
         $reg = $registers[0];
-        $this->assertSame('wpsk-starter-deps', $reg[0], 'handle is the first arg to wp_register_script');
+        $this->assertSame('wpdev-starter-deps', $reg[0], 'handle is the first arg to wp_register_script');
         // The fixture lives under sys_get_temp_dir() which is OUTSIDE the
         // plugin root. Per the B-06 contract, resolve_asset_url() returns
         // '' when the file cannot be resolved to a URL we trust. The
         // helper then appends ?id=<hash> to that empty string, producing
         // a relative URL like '?id=sha-test' rather than a 404 absolute
         // URL. Asserting the new contract is the right thing — the
-        // previous assertion ('src must contain wpsk-starter-deps.js')
+        // previous assertion ('src must contain wpdev-starter-deps.js')
         // encoded the old guess-the-subdir bug.
         $this->assertStringContainsString('id=sha-test', $reg[1], 'src must carry ?id=<hash> cache-bust');
         $this->assertSame(
@@ -245,16 +245,57 @@ class AssetsTest extends TestCase
         );
 
         // The enqueue call should use the same handle.
-        $this->assertSame('wpsk-starter-deps', $enqueues[0][0]);
+        $this->assertSame('wpdev-starter-deps', $enqueues[0][0]);
 
         // wp_set_script_translations gap from plan.v2.md must now be wired.
         $translations = $this->callsFor('wp_set_script_translations');
         $this->assertCount(1, $translations, 'wp_set_script_translations must be called exactly once');
-        $this->assertSame('wpsk-starter-deps', $translations[0][0], 'first arg is the script handle');
-        // Domain is read from project.config.json (textDomain= wpsk-starter).
-        $this->assertSame('wpsk-starter',       $translations[0][1], 'second arg is the text domain from project.config.json');
+        $this->assertSame('wpdev-starter-deps', $translations[0][0], 'first arg is the script handle');
+        // Domain is read from project.config.json (textDomain= wpdev-starter).
+        $this->assertSame('wpdev-starter',       $translations[0][1], 'second arg is the text domain from project.config.json');
         $this->assertIsString($translations[0][2], 'third arg is the translations path');
         $this->assertNotSame('', $translations[0][2], 'translations path must be a non-empty string');
+    }
+
+    public function test_register_bundle_script_registers_without_enqueueing(): void
+    {
+        $js = $this->tmpDir . '/register-only.js';
+        file_put_contents($js, '/* x */');
+        $this->writeAssetFile($js, [
+            'dependencies' => ['wp-i18n'],
+            'hash'         => 'reg-hash',
+        ]);
+
+        Assets::register_bundle_script('register-only', $js, ['jquery']);
+
+        $registers = $this->callsFor('wp_register_script');
+        $enqueues  = $this->callsFor('wp_enqueue_script');
+        $this->assertCount(1, $registers);
+        $this->assertCount(0, $enqueues, 'register_bundle_script must not enqueue');
+        $this->assertSame('register-only', $registers[0][0]);
+        $this->assertStringContainsString('id=reg-hash', $registers[0][1]);
+        $this->assertSame(['jquery', 'wp-i18n'], $registers[0][2]);
+
+        $translations = $this->callsFor('wp_set_script_translations');
+        $this->assertCount(1, $translations);
+        $this->assertSame('register-only', $translations[0][0]);
+    }
+
+    public function test_enqueue_bundle_script_with_handle_only_enqueues_registered_script(): void
+    {
+        $js = $this->tmpDir . '/enqueue-only.js';
+        file_put_contents($js, '/* x */');
+
+        Assets::register_bundle_script('enqueue-only', $js);
+        $GLOBALS['wpsk_test_wp_calls'] = [];
+
+        Assets::enqueue_bundle_script('enqueue-only');
+
+        $registers = $this->callsFor('wp_register_script');
+        $enqueues  = $this->callsFor('wp_enqueue_script');
+        $this->assertCount(0, $registers, 'handle-only enqueue must not register again');
+        $this->assertCount(1, $enqueues);
+        $this->assertSame('enqueue-only', $enqueues[0][0]);
     }
 
     public function test_enqueue_bundle_script_without_asset_file_skips_hash_and_translations_path(): void
@@ -327,13 +368,13 @@ class AssetsTest extends TestCase
         $this->assertArrayHasKey('slug',         $config);
         $this->assertArrayHasKey('textDomain',   $config);
         $this->assertArrayHasKey('hookPrefix',   $config);
-        $this->assertSame('wpsk-starter', $config['slug']);
-        $this->assertSame('wpsk-starter', $config['textDomain']);
-        $this->assertSame('wpsk',         $config['hookPrefix']);
+        $this->assertSame('wpdev-starter', $config['slug']);
+        $this->assertSame('wpdev-starter', $config['textDomain']);
+        $this->assertSame('wpdev',         $config['hookPrefix']);
     }
 
     // ------------------------------------------------------------------
-    // get_localize_data: same shape as wpsk_get_localize_data().
+    // get_localize_data: same shape as wpdev_get_localize_data().
     // ------------------------------------------------------------------
 
     public function test_get_localize_data_returns_expected_api_shape(): void

@@ -39,7 +39,7 @@ class StraussConfigTest extends TestCase
             true
         );
 
-        $this->assertContains('WPSK', $strauss['exclude_from_prefix']['namespaces']);
+        $this->assertContains('WPDev', $strauss['exclude_from_prefix']['namespaces']);
     }
 
     public function test_composer_has_scope_vendor_script(): void

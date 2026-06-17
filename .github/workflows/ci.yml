@@ -224,24 +224,24 @@ jobs:
 
       - name: Scaffold js:none project
         run: |
-          node packages/cli/bin/wpsk.js create /tmp/wpsk-matrix-none --yes \
+          node packages/cli/bin/wpdev.js create /tmp/wpsk-matrix-none --yes \
             --scope=acme --global=Acme --domain=acme --hook=acme --php-fn=acme_ \
             --js=none --husky=off
 
       - name: Scaffold js:flow project
         run: |
-          node packages/cli/bin/wpsk.js create /tmp/wpsk-matrix-flow --yes \
+          node packages/cli/bin/wpdev.js create /tmp/wpsk-matrix-flow --yes \
             --scope=acme --global=Acme --domain=acme --hook=acme --php-fn=acme_ \
             --js=flow
 
       - name: Scaffold jsTest:vitest + faultTolerance project
         run: |
-          node packages/cli/bin/wpsk.js create /tmp/wpsk-matrix-vitest --yes \
+          node packages/cli/bin/wpdev.js create /tmp/wpsk-matrix-vitest --yes \
             --scope=acme --global=Acme --domain=acme --hook=acme --php-fn=acme_ \
             --js-test=vitest --fault-tolerance=on --php-min=8.1
 
   # ============================================================
-  # Job 7: Installer e2e (wpsk CLI — create + info)
+  # Job 7: Installer e2e (wpdev CLI — create + info)
   # ============================================================
   installer-e2e:
     name: Installer E2E
@@ -271,14 +271,14 @@ jobs:
       - name: Run CLI unit tests
         run: npm test -- cli
 
-      - name: "E2E: generate a default project (wpsk create --yes)"
+      - name: "E2E: generate a default project (wpdev create --yes)"
         run: |
-          node packages/cli/bin/wpsk.js create /tmp/wpsk-installer-e2e \
+          node packages/cli/bin/wpdev.js create /tmp/wpsk-installer-e2e \
             --yes --scope=acme --global=Acme --domain=acme --hook=acme --php-fn=acme_
 
-      - name: "E2E: wpsk info on the generated project"
+      - name: "E2E: wpdev info on the generated project"
         run: |
-          node packages/cli/bin/wpsk.js info /tmp/wpsk-installer-e2e
+          node packages/cli/bin/wpdev.js info /tmp/wpsk-installer-e2e
 
   # ============================================================
   # Job 8: Status check (fails if any required job failed)

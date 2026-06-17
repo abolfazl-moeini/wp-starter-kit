@@ -4,15 +4,15 @@ declare(strict_types=1);
 namespace WPDev\FaultTolerance;
 
 /**
- * Parallel HTTP pool with SSRF hygiene — falls back to sequential batch.
+ * HTTP transport: parallel pool (curl_multi) and sequential batch with SSRF hygiene.
  */
-final class HttpPool
+final class HttpClient
 {
     /**
      * @param list<array{url:string,args?:array<string,mixed>}> $requests
      * @return list<array<string,mixed>|\WP_Error>
      */
-    public static function http_pool(array $requests): array
+    public static function pool(array $requests): array
     {
         if (!function_exists('curl_multi_init')) {
             return self::sequential_fallback($requests);
@@ -273,8 +273,7 @@ final class HttpPool
      * RFC1918, link-local, unique-local, 0.0.0.0/8, ...), and any hostname
      * that resolves to one of those IPs.
      *
-     * Public so HttpBatch can share the same policy on its wp_remote_request
-     * path.
+     * Shared by both pool() and batch() request paths.
      */
     public static function is_private_host(string $url): bool
     {

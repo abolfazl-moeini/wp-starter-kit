@@ -2,7 +2,7 @@
  * js-review-core: dead-code removal locks.
  *
  * The js review (plan_18f9d2df) removed unused exports from
- * @wpsk/dependency-extraction-esbuild-plugin and @core/utils.
+ * @wpdev/dependency-extraction-esbuild-plugin and @core/utils.
  * These tests lock the public surface so a future PR cannot
  * re-introduce the dead code without explicit intent.
  *
@@ -29,9 +29,9 @@ import { describe, test, expect } from "@jest/globals";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-describe("@wpsk/dependency-extraction-esbuild-plugin — public surface", () => {
+describe("@wpdev/dependency-extraction-esbuild-plugin — public surface", () => {
   test("generateInternalScriptHandles is not exported (dead code removed)", async () => {
-    const mod = await import("@wpsk/dependency-extraction-esbuild-plugin");
+    const mod = await import("@wpdev/dependency-extraction-esbuild-plugin");
     expect(typeof mod.generateInternalScriptHandles).toBe("undefined");
   });
 
@@ -104,7 +104,7 @@ describe("@core/utils/check-cli.js — dead file removal", () => {
     const pkgPath = join(process.cwd(), "package.json");
     const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
     expect(pkg.scripts.check).toBeDefined();
-    // The new script points at the better CLI in @wpsk/build. The old
+    // The new script points at the better CLI in @wpdev/build. The old
     // target `core/packages/utils/check-cli.js` is gone.
     expect(pkg.scripts.check).toMatch(/wpdev-check-cli\.js/);
     expect(pkg.scripts.check).not.toMatch(/utils\/check-cli\.js/);

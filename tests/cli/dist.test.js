@@ -1,5 +1,5 @@
 /**
- * @wpsk/cli distribution contract (plan.installer.md Phase I7 — I7.1 / I7.2)
+ * @wpdev/cli distribution contract (plan.installer.md Phase I7 — I7.1 / I7.2)
  *
  * Asserts the bits that make the package *installable* by end users:
  *   - `bin.wpdev` maps to a real file that is a Node ESM entry (shebang).
@@ -8,12 +8,12 @@
  *     dev-only folders).
  *   - `engines.node` advertises a minimum runtime the bin actually requires.
  *   - The bin file resolves to ESM source so `node bin/wpdev.js` and
- *     `npx wpsk` both work.
+ *     `npx wpdev` both work.
  *
  * Source contract that this locks in (don't break these without bumping the
  * package's behavior):
  *   packages/cli/package.json
- *     - "name": "@wpsk/cli"
+ *     - "name": "@wpdev/cli"
  *     - "type": "module"        (so the bin can `import "../src/main.js"`)
  *     - "bin.wpdev": "bin/wpdev.js"
  *     - "files": [ "bin", "src" ]
@@ -37,7 +37,7 @@ function loadPkg() {
   return JSON.parse(readFileSync(PKG_JSON, "utf8"));
 }
 
-describe("@wpsk/cli distribution — bin executable contract", () => {
+describe("@wpdev/cli distribution — bin executable contract", () => {
   test("package.json declares bin.wpdev → bin/wpdev.js", () => {
     const pkg = loadPkg();
     expect(pkg.bin).toBeDefined();
@@ -72,7 +72,7 @@ describe("@wpsk/cli distribution — bin executable contract", () => {
   });
 });
 
-describe("@wpsk/cli distribution — files whitelist contract", () => {
+describe("@wpdev/cli distribution — files whitelist contract", () => {
   test("files whitelist is an array that includes bin and src", () => {
     const pkg = loadPkg();
     expect(Array.isArray(pkg.files)).toBe(true);
@@ -90,7 +90,7 @@ describe("@wpsk/cli distribution — files whitelist contract", () => {
   });
 });
 
-describe("@wpsk/cli distribution — engines node contract", () => {
+describe("@wpdev/cli distribution — engines node contract", () => {
   test("engines.node advertises Node >= 18", () => {
     const pkg = loadPkg();
     expect(pkg.engines).toBeDefined();

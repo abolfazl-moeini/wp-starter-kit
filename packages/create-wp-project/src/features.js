@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — feature catalog & validation
+ * @wpdev/create-wp-project — feature catalog & validation
  *
  * Phase 20 of plan.v3.md. The catalog is the single source of truth
  * for every feature the installer + generators know about. The table
@@ -75,7 +75,7 @@ const FEATURE_CATALOG = [
     id: "restBatch",
     variants: ["off", "on"],
     default: "off",
-    notes: "REST batch endpoint + @scope/fetch JS client.",
+    notes: "REST batch endpoint + batch client in @scope/rest-utils (not a separate fetch dep).",
   },
   {
     id: "faultTolerance",

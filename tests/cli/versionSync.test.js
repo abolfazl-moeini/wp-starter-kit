@@ -14,7 +14,7 @@
  *      `packages/create-wp-project/package.json` file on disk.
  *   2. `getKitVersion({ override: "X" })` → "X" (explicit override
  *      for tests / scripts).
- *   3. `WPSK_CLI_KIT_VERSION_OVERRIDE` env var, when set and
+ *   3. `WPDEV_CLI_KIT_VERSION_OVERRIDE` env var, when set and
  *      non-empty, takes precedence over the on-disk read (test
  *      seam only — production code never sets it).
  *
@@ -29,7 +29,7 @@ import { join } from "node:path";
 import { getKitVersion } from "../../packages/cli/src/version.js";
 
 describe("getKitVersion() — I7.5/I7.6 (CLI <-> engine version sync)", () => {
-  const ENV_VAR = "WPSK_CLI_KIT_VERSION_OVERRIDE";
+  const ENV_VAR = "WPDEV_CLI_KIT_VERSION_OVERRIDE";
   const ENGINE_PKG = join(
     process.cwd(),
     "packages/create-wp-project/package.json",
@@ -72,7 +72,7 @@ describe("getKitVersion() — I7.5/I7.6 (CLI <-> engine version sync)", () => {
     expect(getKitVersion({ override: "9.9.9" })).toBe("9.9.9");
   });
 
-  test("WPSK_CLI_KIT_VERSION_OVERRIDE env var wins over the on-disk version", () => {
+  test("WPDEV_CLI_KIT_VERSION_OVERRIDE env var wins over the on-disk version", () => {
     // The plan-mandated env var. Used in CI to pin the
     // reported version, and in tests to avoid filesystem
     // reads of the engine package.

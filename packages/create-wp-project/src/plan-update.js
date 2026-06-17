@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — `planUpdate` dry-run planner.
+ * @wpdev/create-wp-project — `planUpdate` dry-run planner.
  *
  * Phase 24 of plan.v3.md (24.7, 24.8). The installer runs
  * `wpsk update` in two phases:
@@ -248,7 +248,7 @@ export function planUpdate(dir, toVersion) {
 
   // 1. Manifest is the source of truth. Missing → fail-soft
   //    (matches runMigrations' contract; the installer's CLI
-  //    surfaces this as "not a wpsk project").
+  //    surfaces this as "not a wpdev project").
   const manifest = readManifest(dir);
   if (!manifest) {
     return { ok: false, reason: "no manifest" };
