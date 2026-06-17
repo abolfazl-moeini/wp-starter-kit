@@ -12,8 +12,10 @@ use PHPUnit\Framework\TestCase;
  *
  *  - Plugin Name / Version / Requires PHP / Text Domain headers.
  *  - `defined('ABSPATH') || exit;` guard at the top of the file.
- *  - `require_once __DIR__ . '/vendor/autoload.php';` to pull in
- *    the composer autoloader (and therefore WPDev\Core\Plugin).
+ *  - `vendor-prefixed/autoload.php` loaded before `vendor/autoload.php`
+ *    (Strauss-scoped classes must register first).
+ *  - `require_once` for the composer autoloader(s) so
+ *    WPDev\Core\Plugin is reachable.
  *  - A `plugins_loaded` action hook (or a direct call to
  *    `WPDev\Core\Plugin::boot()`) that wires the kit into WordPress.
  *  - `register_activation_hook`, `register_deactivation_hook`,
@@ -145,9 +147,24 @@ class PluginBootstrapTest extends TestCase
             'Plugin bootstrap must require_once the composer autoloader'
         );
         $this->assertStringContainsString(
+            'vendor-prefixed/autoload.php',
+            $source,
+            'Plugin bootstrap must load vendor-prefixed/autoload.php when Strauss has run'
+        );
+        $this->assertStringContainsString(
             'vendor/autoload.php',
             $source,
             'Plugin bootstrap must pull in vendor/autoload.php so WPDev\\Core\\Plugin is reachable'
+        );
+    }
+
+    public function test_template_loads_vendor_prefixed_before_unscoped_vendor(): void
+    {
+        $source = $this->templateSource();
+        $this->assertMatchesRegularExpression(
+            '/require_once\s+\$scoped_autoload\s*;[\s\S]*require_once\s+\$vendor_autoload\s*;/',
+            $source,
+            'Plugin bootstrap must require_once $scoped_autoload before $vendor_autoload'
         );
     }
 

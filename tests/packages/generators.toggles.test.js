@@ -138,6 +138,21 @@ describe("vendorScoping generator (Phase 21.7/21.8)", () => {
     expect(out.files["strauss.json"]).not.toMatch(/"WPDev"/);
   });
 
+  test("emits strauss.json with project vendorPrefix (not hardcoded WpdevVendor)", () => {
+    const out = vendorScopingRun(
+      makeCtx({}, { vendorPrefix: "AcmeVendor" }, { vendorScoping: "on" }),
+    );
+    expect(out.files["strauss.json"]).toMatch(
+      /"namespace_prefix": "AcmeVendor"/,
+    );
+    expect(out.files["strauss.json"]).toMatch(
+      /"classmap_prefix": "AcmeVendor_"/,
+    );
+    expect(out.files["strauss.json"]).toMatch(
+      /"target_directory": "vendor-prefixed"/,
+    );
+  });
+
   test("emits nothing when vendorScoping=off", () => {
     const out = vendorScopingRun(makeCtx({}, {}, { vendorScoping: "off" }));
     expect(Object.keys(out.files)).toEqual([]);

@@ -46,9 +46,9 @@ node packages/cli/bin/wpdev.js create my-plugin --yes
 | Command                         | What it does                                                                   |
 | ------------------------------- | ------------------------------------------------------------------------------ |
 | `wpdev create [slug]`           | Scaffold a new wp-starter-kit plugin (interactive by default; `--yes` for CI). |
-| `wpdev add [opts] <feature>`    | Add a feature to an existing project (e.g. `wpdev add husky`).                  |
+| `wpdev add [opts] <feature>`    | Add a feature to an existing project (e.g. `wpdev add husky`).                 |
 | `wpdev remove [opts] <feature>` | Remove a feature from an existing project.                                     |
-| `wpdev list`                    | Print the features + ON/OFF state from the project's `wpdev-kit.json`.          |
+| `wpdev list`                    | Print the features + ON/OFF state from the project's `wpdev-kit.json`.         |
 | `wpdev update [dir]`            | Plan a kit upgrade (default). Apply with `--run`.                              |
 | `wpdev doctor [dir]`            | Report system prerequisites and project drift.                                 |
 | `wpdev info [dir]`              | Show kit version, feature states, and available updates.                       |
@@ -79,13 +79,13 @@ prompt has a matching flag so the command runs in CI with `--yes`.
 | `--php-test=<opt>`            | `features.phpTest`          | `phpunit` / `none`.                                                                          |
 | `--license=<id>`              | `features.license`          | `gpl2` / `gpl3` / `mit`.                                                                     |
 | `--wp-min=<ver>`              | `features.wpMinVersion`     | `5.8` / `6.0` / `6.2` / `6.4` / `6.6`.                                                       |
-| `--rest-batch=<on\|off>`      | `features.restBatch`        | REST batch endpoint + `createBatchRequest` in `@wpdev/rest-utils`.                         |
+| `--rest-batch=<on\|off>`      | `features.restBatch`        | REST batch endpoint + `createBatchRequest` in `@wpdev/rest-utils`.                           |
 | `--fault-tolerance=<on\|off>` | `features.faultTolerance`   | PHP 8.1+ resilience package.                                                                 |
 | `--vendor-scoping=<on\|off>`  | `features.vendorScoping`    | Strauss on release.                                                                          |
 | `--husky=<on\|off>`           | `features.husky`            | Git pre-commit hooks.                                                                        |
 | `--example=<on\|off>`         | `features.exampleFeature`   | Include the `ExampleFeature` demo module.                                                    |
 | `--i18n=<on\|off>`            | `features.i18n`             | Translation pipeline.                                                                        |
-| `--preset=<name>`             | `runOptions.preset`         | `minimal` / `full` / `woocommerce` (pre-fills feature values; flags win).                    |
+| `--preset=<name>`             | `runOptions.preset`         | `minimal` / `standard` / `full` / `woocommerce` (pre-fills feature values; flags win).       |
 | `--install`                   | `runOptions.install`        | Run `npm install` and `composer install` after scaffolding.                                  |
 | `--git`                       | `runOptions.gitInit`        | Run `git init` after scaffolding.                                                            |
 | `--yes` / `-y`                | `runOptions.nonInteractive` | Skip all prompts; use flag values, then defaults.                                            |
@@ -161,6 +161,10 @@ npm create @wpdev/plugin@latest my-plugin -- --yes
 wpdev create my-plugin --yes
 ```
 
+`--yes` applies the **`standard`** preset when `--preset` is omitted
+(TypeScript + PHPUnit + Jest with §1 defaults). Override with
+`--preset=minimal` or `--preset=full`.
+
 Invalid feature combos are rejected **before** any prompt is shown
 (fail-fast). `--yes` never prompts.
 
@@ -174,16 +178,42 @@ not require a CLI release.
 | Preset        | What it sets                                                                                                                                                                                                   |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `minimal`     | `js:none`, `jsLib:none`, `jsTest:none`, `css:none`, `blocks:off`, `phpTest:phpunit`, `husky:off`, `exampleFeature:off`, `i18n:off`, `restBatch:off`, `faultTolerance:off`, `license:gpl2`, `wpMinVersion:6.0`. |
-| `full`        | All features ON with their defaults (see `plan.v3.md` §1).                                                                                                                                                     |
-| `woocommerce` | Same as `full` but `blocks:on`, `wpMinVersion:6.0`, `exampleFeature:off`.                                                                                                                                      |
+| `standard`    | §1 defaults — TypeScript + PHPUnit + Jest, vendor scoping on, husky on, example feature on. **Default for `--yes`.**                                                                                           |
+| `full`        | `standard` + `jsLib:preact`, `faultTolerance:on`, `blocks:on`, `frontendStack:polaris`, `restBatch:on`, `phpMinVersion:8.2`.                                                                                   |
+| `woocommerce` | `standard` + `blocks:on`, `exampleFeature:off`, `jsLib:preact`, `phpMinVersion:8.2`.                                                                                                                           |
 
 Use a preset:
 
 ```bash
 wpdev create my-plugin --preset=minimal
+wpdev create my-plugin --preset=standard
 wpdev create my-plugin --preset=full
 wpdev create my-plugin --preset=woocommerce
 ```
+
+## Interactive prompt tree
+
+When prompts are enabled (no `--yes`), `gatherInputs` asks branding
+questions first, then each catalog feature whose `when()` gate is open:
+
+1. **Branding** — `slug`, `npmScope`, `globalName`, `textDomain`,
+   `hookPrefix`, `phpFunctionPrefix`, `phpSourceVersion`.
+2. **`js`** — `none` / `typescript` / `pure` / `flow`.
+3. **`jsLib`** — only when `js ≠ none` (`none` / `preact` / `react`).
+4. **`jsTest`** — only when `js ≠ none` (`jest` / `vitest` / `none`).
+5. **`css`** — only when `js ≠ none`.
+6. **`blocks`** — always available (Blockstudio; PHP 8.2+ runtime warning).
+7. **`phpMinVersion`** — `7.4` … `8.3`.
+8. **`phpFramework`** — `none` / `wpdev`.
+9. **`phpTest`** — `phpunit` / `none`.
+10. **`license`**, **`wpMinVersion`**, **`restBatch`**, **`vendorScoping`**,
+    **`husky`**, **`exampleFeature`**, **`i18n`**.
+11. **`faultTolerance`** — only when `phpMinVersion ≥ 8.1`.
+12. **`frontendStack`** — only when `js=typescript` and `jsLib` is
+    `preact` or `react`.
+13. **`mcpAbilities`** — always available.
+
+Passing `--preset=<name>` skips steps 2–13 (flags still override).
 
 Flags win over preset values — you can pre-fill with a preset and
 override any individual feature with its flag.

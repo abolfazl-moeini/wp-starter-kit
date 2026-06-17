@@ -140,7 +140,8 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
     expect(php).toMatch(/Text Domain:/);
     // ABSPATH guard + autoload + Plugin::boot
     expect(php).toMatch(/defined\s*\(\s*['"]ABSPATH['"]\s*\)/);
-    expect(php).toMatch(/require_once.*vendor\/autoload\.php/);
+    expect(php).toMatch(/vendor-prefixed\/autoload\.php/);
+    expect(php).toMatch(/require_once\s+\$vendor_autoload/);
     expect(php).toMatch(/WPDev\\Core\\Plugin::boot/);
   });
 

@@ -369,7 +369,8 @@ describe("@wpdev/create-wp-project", () => {
       expect(src).toMatch(/Text Domain:/);
       // Guard + autoload + Plugin::boot.
       expect(src).toMatch(/defined\s*\(\s*['"]ABSPATH['"]\s*\)/);
-      expect(src).toMatch(/require_once.*vendor\/autoload\.php/);
+      expect(src).toMatch(/vendor-prefixed\/autoload\.php/);
+      expect(src).toMatch(/require_once\s+\$vendor_autoload/);
       // WPSK\Core\Plugin::boot can be either an add_action callback
       // (a string) or a direct call site. Either form proves the
       // plugin knows about the kit's facade.
