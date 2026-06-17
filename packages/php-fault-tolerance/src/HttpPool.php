@@ -166,7 +166,13 @@ final class HttpPool
         return $messages[$code] ?? 'Unknown';
     }
 
-    private static function sanitize_url(string $url): string
+    /**
+     * WordPress sanitize_url wrapper. Falls back to the raw value when the
+     * WP helper is not loaded (e.g. plain composer tests). Public so that
+     * HttpBatch::http_batch can apply the same SSRF hygiene to the
+     * wp_remote_request path that HttpPool applies to the curl path.
+     */
+    public static function sanitize_url(string $url): string
     {
         if (!function_exists('sanitize_url')) {
             return $url;
@@ -174,7 +180,12 @@ final class HttpPool
         return sanitize_url($url);
     }
 
-    private static function is_private_host(string $url): bool
+    /**
+     * Cheap SSRF guard — rejects loopback names, RFC1918 ranges, link-local,
+     * and any URL whose host fails to parse (which also catches file:// and
+     * other unsafe schemes). Public so HttpBatch can share the policy.
+     */
+    public static function is_private_host(string $url): bool
     {
         $host = parse_url($url, PHP_URL_HOST);
         if (!is_string($host) || $host === '') {
