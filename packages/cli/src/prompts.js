@@ -11,7 +11,8 @@
  *
  * Conditional rules (plan.installer.md I2.5):
  *  - Skip JS sub-questions (`jsLib`, `jsTest`) when `js:none`.
- *  - Skip `css` and `blocks` when `js:none`.
+ *  - Skip `css` when `js:none`.
+ *  - Ask `blocks` independently (Blockstudio is PHP-first).
  *  - Skip `faultTolerance` when `phpMinVersion < 8.1`.
  *  - Branding questions always come first.
  *  - Preset short-circuit: when `preset` is not `custom`, no
@@ -134,8 +135,8 @@ function featureQuestion(feature) {
 /* -------------------------------------------------------------------- */
 
 /**
- * Should the JS sub-questions (`jsLib`, `jsTest`, `css`, `blocks`)
- * be asked? The plan says: hide them when `js:none`.
+ * Should the JS sub-questions (`jsLib`, `jsTest`, `css`) be asked?
+ * The plan says: hide them when `js:none`.
  */
 function needsJsSubQuestions(state) {
   return state.features.js && state.features.js !== "none";
@@ -194,7 +195,7 @@ export function buildPromptPlan(currentFeatures, engine) {
   }
 
   // 3. JS sub-features. Each `when` re-checks state.features.js.
-  for (const id of ["jsLib", "jsTest", "css", "blocks"]) {
+  for (const id of ["jsLib", "jsTest", "css"]) {
     const f = catalog.find((x) => x.id === id);
     if (!f) continue;
     plan.push({
@@ -237,6 +238,19 @@ export function buildPromptPlan(currentFeatures, engine) {
     type: "select",
     target: "features",
     message: "WordPress Abilities API (MCP)?",
+    options: [
+      { label: "No", value: "off" },
+      { label: "Yes", value: "on" },
+    ],
+    initialValue: "off",
+    when: () => true,
+  });
+
+  plan.push({
+    id: "blocks",
+    type: "select",
+    target: "features",
+    message: "Gutenberg blocks (Blockstudio)?",
     options: [
       { label: "No", value: "off" },
       { label: "Yes", value: "on" },

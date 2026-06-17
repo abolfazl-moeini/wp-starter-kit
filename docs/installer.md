@@ -72,7 +72,7 @@ prompt has a matching flag so the command runs in CI with `--yes`.
 | `--js-lib=<lib>`              | `features.jsLib`            | `none` / `preact` / `react`.                                                                 |
 | `--js-test=<runner>`          | `features.jsTest`           | `jest` / `vitest` / `none`.                                                                  |
 | `--css=<flavor>`              | `features.css`              | `none` / `sass` / `tailwind` / `postcss` (requires `js != none`).                            |
-| `--blocks=<on\|off>`          | `features.blocks`           | Gutenberg blocks (requires `js != none`, `wp-min >= 5.8`).                                   |
+| `--blocks=<on\|off>`          | `features.blocks`           | Gutenberg blocks via Blockstudio 7 (PHP-first; PHP 8.2+ runtime).                            |
 | `--php-min=<ver>`             | `features.phpMinVersion`    | `7.4` … `8.3`.                                                                               |
 | `--php-source=<ver>`          | `features.phpSourceVersion` | `8.1` / `8.2` / `8.3`.                                                                       |
 | `--php-framework=<opt>`       | `features.phpFramework`     | `none` / `wpdev-framework`.                                                                  |
@@ -201,10 +201,9 @@ of the workspace: `node packages/cli/bin/wpsk.js ...`.
 The `fault-tolerance` feature requires PHP 8.1+. Either drop the
 feature, raise `--php-min=8.1`, or set `--fault-tolerance=off`.
 
-### "Blocks require JavaScript"
+### Blockstudio PHP 8.2 runtime
 
-The `blocks` feature is hidden when `--js=none`. Pick a JS variant
-(`typescript` / `pure` / `flow`) or set `--blocks=off`.
+`blocks:on` adds `blockstudio/blockstudio` via Composer. Blockstudio requires **PHP 8.2+** on the server. If `phpMinVersion < 8.2`, the installer warns that Rector downlevels your plugin source only — not Blockstudio vendor code. Run `composer install` after scaffold.
 
 ### "Cannot resolve @wpsk/create-wp-project"
 

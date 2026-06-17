@@ -1,37 +1,41 @@
-# Gutenberg Blocks Scaffold
+# Gutenberg Blocks (Blockstudio)
 
-The `blocks` feature (`blocks:on`) adds a starter module at
-`src/Modules/Blocks/` with:
+The `blocks` feature (`blocks:on`) scaffolds [Blockstudio 7](https://blockstudio.dev) integration:
 
-- `block.json` — block metadata (WP 5.8+)
-- `index.ts` — editor entry registered via `@wordpress/blocks`
-- `Module.php` — calls `register_block_type_from_metadata()` on `init`
+- `blockstudio.json` — global Blockstudio settings
+- `blockstudio/example-hero/` — example block with `apiVersion: 3`
+- `src/Modules/Blocks/Module.php` — bridge that boots Blockstudio
+- `src/blocks-register.php` — early `plugins_loaded` registration
+
+See [blocks-blockstudio.md](blocks-blockstudio.md) for layout, adding blocks, and Blockstudio capabilities.
 
 ## Requirements
 
-- `js` ≠ `none` (a JS build pipeline is required)
-- `wpMinVersion` ≥ `5.8`
+- **PHP 8.2+** at runtime (Blockstudio vendor requirement)
+- **WordPress 6.7+** minimum; **7.0** recommended for Block API v3
+- **No JS build required** — `blocks:on` works with `js:none`
 
-## Dependencies
+## Composer
 
-The scaffold adds `@wordpress/blocks` and `@wordpress/block-editor` to
-the consumer `package.json` devDependencies.
+The scaffold adds `blockstudio/blockstudio` to `composer.json`. Run `composer install` after create or `wpsk add blocks`.
 
-## Build pipeline
+## CLI
 
-Block editor scripts are built by the standard four-stage esbuild
-pipeline (`build:dependencies`, `build:components`, `build:styles`,
-`build:assets`). The `block.json` `editorScript` field points at
-`file:./index.ts`.
+```bash
+wpsk create my-plugin --blocks=on --yes
+wpsk add blocks
+wpsk remove blocks
+```
 
-## Turning blocks on later
+If `phpMinVersion < 8.2`, the installer warns that Rector downlevels your plugin source but the server must still run PHP 8.2+ for Blockstudio.
 
-Use `wpsk add blocks` (or `addFeature(dir, 'blocks', 'on')`) on an
-existing project. Only files under `src/Modules/Blocks/**` are owned by
-the blocks generator.
+## Owned paths
 
-## Switching off
+The blocks generator owns:
 
-Set `blocks:off` via `removeFeature` or the installer. Owned block files
-under `src/Modules/Blocks/**` are removed; your other modules are
-untouched.
+- `blockstudio.json`
+- `blockstudio/**`
+- `src/Modules/Blocks/**`
+- `src/blocks-register.php`
+
+Custom blocks should live under `blockstudio/` so add/remove stays predictable.

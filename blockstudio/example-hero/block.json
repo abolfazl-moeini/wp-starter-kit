@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "wpsk-starter/example-hero",
+  "title": "Example Hero",
+  "category": "widgets",
+  "icon": "smiley",
+  "description": "Example Blockstudio block for the starter kit.",
+  "textdomain": "wpsk-starter",
+  "blockstudio": {
+    "attributes": {
+      "heading": {
+        "type": "text",
+        "label": "Heading",
+        "default": "Hello",
+        "role": "content"
+      },
+      "intro": {
+        "type": "textarea",
+        "label": "Intro",
+        "role": "content"
+      },
+      "showCta": {
+        "type": "toggle",
+        "label": "Show CTA",
+        "default": false
+      }
+    }
+  }
+}

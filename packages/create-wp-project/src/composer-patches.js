@@ -11,6 +11,7 @@ export function mergeComposerPatchAccumulator(accumulator, patch) {
     repositories: [],
     suggest: {},
     autoload: {},
+    extra: {},
   };
   if (patch.require) {
     Object.assign(next.require, patch.require);
@@ -33,6 +34,15 @@ export function mergeComposerPatchAccumulator(accumulator, patch) {
         ...(next.autoload.files || []),
         ...patch.autoload.files,
       ];
+    }
+  }
+  if (patch.extra) {
+    next.extra = { ...(next.extra || {}), ...patch.extra };
+    if (patch.extra["installer-paths"]) {
+      next.extra["installer-paths"] = {
+        ...(next.extra["installer-paths"] || {}),
+        ...patch.extra["installer-paths"],
+      };
     }
   }
   return next;
@@ -87,6 +97,15 @@ export function applyComposerPatches(composer, patch) {
         }
       }
       next.autoload.files = merged;
+    }
+  }
+  if (patch.extra) {
+    next.extra = { ...(next.extra || {}) };
+    if (patch.extra["installer-paths"]) {
+      next.extra["installer-paths"] = {
+        ...(next.extra["installer-paths"] || {}),
+        ...patch.extra["installer-paths"],
+      };
     }
   }
   return next;

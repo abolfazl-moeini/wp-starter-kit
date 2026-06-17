@@ -162,6 +162,7 @@ describe("applyPreset() — known presets produce valid feature sets (Phase 20.1
     expect(full.exampleFeature).toBe("on");
     // wpMinVersion matches (6.0 is the default for both)
     expect(woo.wpMinVersion).toBe("6.0");
+    expect(woo.phpMinVersion).toBe("8.2");
     // jsLib flips for blocks to be useful — preset is "on" path
     // so a real consumer can build WooCommerce block UIs.
     expect(woo.js).not.toBe("none");

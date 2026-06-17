@@ -79,26 +79,29 @@ describe("buildPromptPlan() — conditional omissions (I2.5)", () => {
     expect(q.when({ features: { js: "pure", jsLib: "preact" } })).toBe(false);
   });
 
-  test("when js=none, omits jsLib, jsTest, css, blocks at plan-time via when()", () => {
-    // The plan is a static list. Conditional omission is enforced
-    // by the `when()` callback at runtime (runPrompts evaluates it
-    // with the running state). We assert the `when()` predicate
-    // directly here.
+  test("when js=none, omits jsLib, jsTest, css but still asks blocks", () => {
     const plan = buildPromptPlan({ js: "none" });
     const findQ = (id) => plan.find((q) => q.id === id);
     expect(findQ("jsLib").when({ features: { js: "none" } })).toBe(false);
     expect(findQ("jsTest").when({ features: { js: "none" } })).toBe(false);
     expect(findQ("css").when({ features: { js: "none" } })).toBe(false);
-    expect(findQ("blocks").when({ features: { js: "none" } })).toBe(false);
+    expect(findQ("blocks").when({ features: { js: "none" } })).toBe(true);
   });
 
-  test("when js=typescript, includes jsLib, jsTest, css, blocks", () => {
+  test("when js=typescript, includes jsLib, jsTest, css", () => {
     const plan = buildPromptPlan({ js: "typescript" });
     const findQ = (id) => plan.find((q) => q.id === id);
     expect(findQ("jsLib").when({ features: { js: "typescript" } })).toBe(true);
     expect(findQ("jsTest").when({ features: { js: "typescript" } })).toBe(true);
     expect(findQ("css").when({ features: { js: "typescript" } })).toBe(true);
-    expect(findQ("blocks").when({ features: { js: "typescript" } })).toBe(true);
+  });
+
+  test("blocks prompt is always available and mentions Blockstudio", () => {
+    const plan = buildPromptPlan({});
+    const blocksQ = plan.find((q) => q.id === "blocks");
+    expect(blocksQ).toBeDefined();
+    expect(blocksQ.message).toMatch(/Blockstudio/i);
+    expect(blocksQ.when({ features: { js: "none" } })).toBe(true);
   });
 
   test("when phpMinVersion < 8.1, omits faultTolerance via when()", () => {

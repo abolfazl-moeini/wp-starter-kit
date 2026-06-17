@@ -40,6 +40,17 @@ foreach ($autoloadCandidates as $autoload) {
 	}
 }
 
+$blockstudioCandidates = [
+	WPSK_STARTER_PLUGIN_DIR . 'wp-content/plugins/blockstudio/blockstudio.php',
+	WPSK_STARTER_PLUGIN_DIR . 'vendor/blockstudio/blockstudio/blockstudio.php',
+];
+foreach ($blockstudioCandidates as $blockstudio) {
+	if (is_file( $blockstudio )) {
+		require_once $blockstudio;
+		break;
+	}
+}
+
 if ( ! class_exists( 'WPDev\\Core\\Plugin' )) {
 	add_action(
 		'admin_notices',
@@ -99,6 +110,7 @@ function wpsk_starter_load_textdomain(): void {
 function wpsk_starter_register_modules(): void {
 	WPDev\Core\Plugin::loader()->register( new WPDev\Modules\ExampleFeature\Module() );
 	WPDev\Core\Plugin::loader()->register( new WPDev\Modules\McpAbilities\Module() );
+	WPDev\Core\Plugin::loader()->register( new WPDev\Modules\Blocks\Module() );
 }
 
 add_action( 'plugins_loaded', 'wpsk_starter_register_modules', 5 );

@@ -249,59 +249,55 @@ describe("validateFeatureSet — §1.1 rule 2 (faultTolerance + phpMinVersion)",
 });
 
 /* -------------------------------------------------------------------- */
-/* §1.1 rule 3 — blocks:on requires js ≠ none AND wpMinVersion ≥ 5.8     */
+/* §1.1 rule 3 — blocks:on Blockstudio warnings (no js gate)            */
 /* -------------------------------------------------------------------- */
 
-describe("validateFeatureSet — §1.1 rule 3 (blocks + js + wpMinVersion)", () => {
-  test("blocks:on + js:none → error (regardless of wpMinVersion)", () => {
+describe("validateFeatureSet — §1.1 rule 3 (blocks + Blockstudio)", () => {
+  test("blocks:on + js:none → ok with blocksPhp warning when phpMinVersion < 8.2", () => {
     const r = validateFeatureSet({
       ...defaultFeatures(),
       js: "none",
+      jsTest: "none",
       blocks: "on",
+      phpMinVersion: "7.4",
       wpMinVersion: "6.0",
     });
-    expect(r.ok).toBe(false);
-    expect(r.errors.blocks).toMatch(/requires js ≠ none/);
+    expect(r.ok).toBe(true);
+    expect(r.warnings.blocksPhp).toMatch(/PHP 8\.2/);
   });
 
-  test("blocks:on + js:typescript + wpMinVersion:6.0 → no error", () => {
+  test("blocks:on + js:typescript → ok", () => {
     const r = validateFeatureSet({
       ...defaultFeatures(),
       js: "typescript",
       blocks: "on",
       wpMinVersion: "6.0",
+      phpMinVersion: "8.2",
     });
+    expect(r.ok).toBe(true);
     expect(r.errors?.blocks).toBeUndefined();
   });
 
-  test("blocks:on + js:pure + wpMinVersion:5.8 → no error (boundary)", () => {
+  test("blocks:on + wpMinVersion below 6.7 → advisory blocks warning", () => {
     const r = validateFeatureSet({
       ...defaultFeatures(),
-      js: "pure",
       blocks: "on",
-      wpMinVersion: "5.8",
+      wpMinVersion: "6.0",
+      phpMinVersion: "8.2",
     });
-    expect(r.errors?.blocks).toBeUndefined();
+    expect(r.ok).toBe(true);
+    expect(r.warnings.blocks).toMatch(/6\.7/);
   });
 
-  test("blocks:on + js:flow + wpMinVersion:5.8.0 → no error", () => {
-    const r = validateFeatureSet({
-      ...defaultFeatures(),
-      js: "flow",
-      blocks: "on",
-      wpMinVersion: "5.8.0",
-    });
-    expect(r.errors?.blocks).toBeUndefined();
-  });
-
-  test("blocks:off → no error regardless of js / wpMinVersion", () => {
+  test("blocks:off → no blocks warnings", () => {
     const r = validateFeatureSet({
       ...defaultFeatures(),
       js: "none",
       blocks: "off",
       wpMinVersion: "5.8",
     });
-    expect(r.errors?.blocks).toBeUndefined();
+    expect(r.warnings?.blocks).toBeUndefined();
+    expect(r.warnings?.blocksPhp).toBeUndefined();
   });
 });
 

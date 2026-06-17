@@ -4,8 +4,62 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "494a000f8282cf40eeff89f216950060",
+    "content-hash": "ac456a3f4e8813f6145ee64ae35d41a5",
     "packages": [
+        {
+            "name": "blockstudio/blockstudio",
+            "version": "v7.3.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/inline0/blockstudio.git",
+                "reference": "f0f148012dad9949b6f6124867c9b67831ed9562"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/inline0/blockstudio/zipball/f0f148012dad9949b6f6124867c9b67831ed9562",
+                "reference": "f0f148012dad9949b6f6124867c9b67831ed9562",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2",
+                "yahnis-elsts/plugin-update-checker": "^5.6"
+            },
+            "require-dev": {
+                "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+                "humbug/php-scoper": "^0.18.18",
+                "matthiasmullie/minify": "^1.3",
+                "phpunit/phpunit": "^11.0",
+                "scssphp/scssphp": "^2.1",
+                "squizlabs/php_codesniffer": "^3.7",
+                "tailwindphp/tailwindphp": "^1.0",
+                "wp-coding-standards/wpcs": "^3.0"
+            },
+            "type": "wordpress-plugin",
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ],
+                "classmap": [
+                    "lib/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "dennis",
+                    "email": "dnnsjsk@gmail.com"
+                }
+            ],
+            "description": "The block framework for WordPress.",
+            "support": {
+                "issues": "https://github.com/inline0/blockstudio/issues",
+                "source": "https://github.com/inline0/blockstudio/tree/v7.3.3"
+            },
+            "time": "2026-06-04T10:15:00+00:00"
+        },
         {
             "name": "brianhenryie/strauss",
             "version": "0.11.1",
@@ -3536,6 +3590,56 @@
                 "source": "https://github.com/webmozarts/assert/tree/1.12.1"
             },
             "time": "2025-10-29T15:56:20+00:00"
+        },
+        {
+            "name": "yahnis-elsts/plugin-update-checker",
+            "version": "v5.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/YahnisElsts/plugin-update-checker.git",
+                "reference": "275a96a2a18d03c34c87f35cb68673c8c49ac3b1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/YahnisElsts/plugin-update-checker/zipball/275a96a2a18d03c34c87f35cb68673c8c49ac3b1",
+                "reference": "275a96a2a18d03c34c87f35cb68673c8c49ac3b1",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "php": ">=5.6.20"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "load-v5p7.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Yahnis Elsts",
+                    "email": "whiteshadow@w-shadow.com",
+                    "homepage": "https://w-shadow.com/",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A custom update checker for WordPress plugins and themes. Useful if you can't host your plugin in the official WP repository but still want it to support automatic updates.",
+            "homepage": "https://github.com/YahnisElsts/plugin-update-checker/",
+            "keywords": [
+                "automatic updates",
+                "plugin updates",
+                "theme updates",
+                "wordpress"
+            ],
+            "support": {
+                "issues": "https://github.com/YahnisElsts/plugin-update-checker/issues",
+                "source": "https://github.com/YahnisElsts/plugin-update-checker/tree/v5.7"
+            },
+            "time": "2026-05-26T12:48:45+00:00"
         }
     ],
     "packages-dev": [
@@ -8623,12 +8727,38 @@
             "time": "2025-11-25T12:08:04+00:00"
         },
         {
+            "name": "wpdev/framework",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "packages/framework",
+                "reference": "00868d8304d9662ed393a21432a418a270549343"
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "WPDev\\": "src/"
+                }
+            },
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "description": "WordPress Starter Kit framework: PSR-4 plugin core (Plugin / ModuleLoader / ModuleInterface) and the Support namespace (Assets, Auth, Queue, Rest, Shortcodes).",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "wpdev/mcp-integration",
             "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "packages/mcp-integration",
-                "reference": "0b2048d13fae0d04ad1deda84a4f20b961475d35"
+                "reference": "938d477cb4debc25ef98ee0edbc6419a993fd1f1"
             },
             "require": {
                 "php": ">=7.4"
@@ -8666,39 +8796,13 @@
                 "symlink": true,
                 "relative": true
             }
-        },
-        {
-            "name": "wpsk/framework",
-            "version": "dev-main",
-            "dist": {
-                "type": "path",
-                "url": "packages/framework",
-                "reference": "9d6526de3f5761784527032a121dee92a8a91381"
-            },
-            "require": {
-                "php": ">=7.4"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "WPSK\\": "src/"
-                }
-            },
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "description": "WordPress Starter Kit framework: PSR-4 plugin core (Plugin / ModuleLoader / ModuleInterface) and the Support namespace (Assets, Auth, Queue, Rest, Shortcodes).",
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
         }
     ],
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "wpdev/mcp-integration": 20,
-        "wpsk/framework": 20
+        "wpdev/framework": 20,
+        "wpdev/mcp-integration": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

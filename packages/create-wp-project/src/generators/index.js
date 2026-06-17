@@ -161,13 +161,7 @@ export function getGenerators(features) {
     else if (g.id === "i18n" && f.i18n === "on") enabled.push(g);
     else if (g.id === "phpTest" && f.phpTest === "phpunit") enabled.push(g);
     else if (g.id === "license" && f.license) enabled.push(g);
-    else if (
-      g.id === "blocks" &&
-      f.blocks === "on" &&
-      jsEnabled &&
-      compareWpVersion(wpMin, "5.8") >= 0
-    )
-      enabled.push(g);
+    else if (g.id === "blocks" && f.blocks === "on") enabled.push(g);
     else if (g.id === "css" && f.css && f.css !== "none" && jsEnabled)
       enabled.push(g);
     else if (g.id === "jsTest" && f.jsTest && f.jsTest !== "none" && jsEnabled)

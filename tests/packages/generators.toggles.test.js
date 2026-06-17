@@ -238,24 +238,22 @@ describe("license generator (Phase 21.7/21.8)", () => {
   });
 });
 
-describe("blocks generator (Phase 21.7/21.8)", () => {
-  test("emits src/Modules/Blocks/* when blocks=on + js=typescript + wpMinVersion=6.0", () => {
+describe("blocks generator (Blockstudio)", () => {
+  test("emits Blockstudio scaffold when blocks=on", () => {
     const out = blocksRun(
       makeCtx({}, {}, { blocks: "on", js: "typescript", wpMinVersion: "6.0" }),
     );
-    expect(out.files["src/Modules/Blocks/block.json"]).toBeDefined();
+    expect(out.files["blockstudio.json"]).toBeDefined();
+    expect(out.files["blockstudio/example-hero/block.json"]).toBeDefined();
     expect(out.files["src/Modules/Blocks/Module.php"]).toBeDefined();
-    expect(out.files["src/Modules/Blocks/index.ts"]).toBeDefined();
-    // body sanity: block.json has the WP schema + the entry points to index.ts
-    const bj = JSON.parse(out.files["src/Modules/Blocks/block.json"]);
+    const bj = JSON.parse(out.files["blockstudio/example-hero/block.json"]);
     expect(bj.$schema).toMatch(/wp\.org\/trunk\/block\.json/);
-    expect(bj.editorScript).toBe("file:./index.ts");
-    // namespace uses consumer's vendor (derived from globalName); use imports reference WPSK framework
+    expect(bj.apiVersion).toBe(3);
     expect(out.files["src/Modules/Blocks/Module.php"]).toMatch(
       /namespace\s+MyProject\\Modules\\Blocks/,
     );
     expect(out.files["src/Modules/Blocks/Module.php"]).toMatch(
-      /use\s+WPSK\\Core\\ModuleInterface/,
+      /Blockstudio\\Build::init/,
     );
   });
 
@@ -264,9 +262,9 @@ describe("blocks generator (Phase 21.7/21.8)", () => {
     expect(Object.keys(out.files)).toEqual([]);
   });
 
-  test("emits nothing when blocks=on but js=none (defence in depth)", () => {
+  test("emits scaffold when blocks=on with js=none (PHP-first)", () => {
     const out = blocksRun(makeCtx({}, {}, { blocks: "on", js: "none" }));
-    expect(Object.keys(out.files)).toEqual([]);
+    expect(out.files["blockstudio.json"]).toBeDefined();
   });
 });
 

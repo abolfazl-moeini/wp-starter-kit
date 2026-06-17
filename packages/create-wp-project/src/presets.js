@@ -101,6 +101,7 @@ function buildWoocommerce() {
     blocks: "on",
     exampleFeature: "off",
     jsLib: "preact",
+    phpMinVersion: "8.2",
   };
 }
 

@@ -257,12 +257,6 @@ export function packageJsonForAnswers(answers, features) {
             "babel-jest": "^29.7.0",
           }
         : {}),
-      ...(features && features.blocks === "on"
-        ? {
-            "@wordpress/blocks": "^13.0.0",
-            "@wordpress/block-editor": "^14.0.0",
-          }
-        : {}),
     },
   };
 }

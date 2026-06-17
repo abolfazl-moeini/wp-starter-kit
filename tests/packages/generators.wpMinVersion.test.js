@@ -62,8 +62,8 @@ describe("wpMinVersion — plugin header + readme (Phase 25.I)", () => {
   });
 });
 
-describe("wpMinVersion — blocks gate (Phase 25.I)", () => {
-  test("blocks:on + wpMinVersion:5.6 is rejected by validateFeatureSet", () => {
+describe("wpMinVersion — blocks advisory (Blockstudio)", () => {
+  test("blocks:on + wpMinVersion:5.6 is rejected (unknown catalog variant)", () => {
     const r = validateFeatureSet({
       ...defaultFeatures(),
       blocks: "on",
@@ -71,7 +71,19 @@ describe("wpMinVersion — blocks gate (Phase 25.I)", () => {
       wpMinVersion: "5.6",
     });
     expect(r.ok).toBe(false);
-    // 5.6 is below the blocks gate and is not a catalog variant.
-    expect(r.errors.wpMinVersion || r.errors.blocks).toBeDefined();
+    expect(r.errors.wpMinVersion).toBeDefined();
+  });
+
+  test("blocks:on + wpMinVersion:6.0 warns but remains valid", () => {
+    const r = validateFeatureSet({
+      ...defaultFeatures(),
+      blocks: "on",
+      js: "none",
+      jsTest: "none",
+      wpMinVersion: "6.0",
+      phpMinVersion: "8.2",
+    });
+    expect(r.ok).toBe(true);
+    expect(r.warnings.blocks).toMatch(/6\.7/);
   });
 });

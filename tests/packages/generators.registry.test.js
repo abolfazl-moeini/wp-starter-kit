@@ -157,9 +157,9 @@ describe("getGenerators(features) — registry dispatch (Phase 21.1/21.2)", () =
     expect(gens.map((g) => g.id)).toContain("blocks");
   });
 
-  test("blocks:on + js:none → blocks generator is NOT enabled (gate)", () => {
+  test("blocks:on + js:none → blocks generator is enabled (PHP-first)", () => {
     const gens = getGenerators({ js: "none", blocks: "on" });
-    expect(gens.map((g) => g.id)).not.toContain("blocks");
+    expect(gens.map((g) => g.id)).toContain("blocks");
   });
 
   test("restBatch:on + js:typescript → restBatch generator is enabled", () => {

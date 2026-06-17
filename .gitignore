@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 vendor/
+wp-content/plugins/blockstudio/
 
 # OS / IDE noise
 .DS_Store

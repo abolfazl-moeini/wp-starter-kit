@@ -22,7 +22,8 @@
   "require": {
     "php": ">=7.4",
     "composer/installers": "^2.2",
-    "brianhenryie/strauss": "^0.11"
+    "brianhenryie/strauss": "^0.11",
+    "blockstudio/blockstudio": "^7.3"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.6",

@@ -106,7 +106,10 @@ const FEATURE_CATALOG = [
     variants: ["off", "on"],
     default: "off",
     notes:
-      "Gutenberg block support. Requires js ≠ none and wpMinVersion ≥ 5.8.",
+      "Gutenberg blocks via Blockstudio 7 (blockstudio/blockstudio). " +
+      "PHP-first; 30+ field types defined in block.json; no build step required. " +
+      "Requires PHP 8.2+ at runtime (Rector can downlevel plugin source, but not Blockstudio vendor code). " +
+      "WordPress 6.7+ minimum; 7.0 recommended for Block API v3 (iframed editor, pattern overrides).",
   },
   {
     id: "license",
@@ -334,17 +337,24 @@ export function validateFeatureSet(features) {
       "Polaris uses global BEM CSS + design tokens; Tailwind conflicts with the layout/style separation rule.";
   }
 
-  // 3. `blocks: on` requires `js` ≠ none AND `wpMinVersion` ≥ 5.8.
+  // 3. blocks:on — Blockstudio runtime requirements (warnings only in v1).
   if (features.blocks === "on") {
-    if (features.js === "none") {
-      errors.blocks = "blocks=on requires js ≠ none (currently js=none)";
-    } else if (comparePhpVersion(features.wpMinVersion, "5.8") < 0) {
-      // Note: plan §1.1 says "≥ 5.8" for wpMinVersion. The version
-      // comparator treats "5.8" and "5.8.0" as equal; that matches
-      // the plan's "major.minor" shape.
-      errors.blocks =
-        `blocks=on requires wpMinVersion ≥ 5.8 ` +
-        `(currently wpMinVersion=${features.wpMinVersion})`;
+    if (comparePhpVersion(features.wpMinVersion, "6.7") < 0) {
+      warnings.blocks =
+        "blocks=on uses Blockstudio, which targets WordPress 6.7+ (7.0 recommended for Block API v3 iframe editor). " +
+        `Current wpMinVersion=${features.wpMinVersion}.`;
+    }
+
+    if (comparePhpVersion(features.phpMinVersion, "8.2") < 0) {
+      warnings.blocksPhp =
+        "blocks=on requires Blockstudio (PHP 8.2+ at runtime on the server). " +
+        `Your phpMinVersion=${features.phpMinVersion} enables Rector to downgrade YOUR plugin PHP source, ` +
+        "but Blockstudio itself cannot run on PHP < 8.2. " +
+        "Recommend phpMinVersion 8.2 when using blocks, or omit blocks for PHP 7.4-only hosts.";
+    } else {
+      warnings.blocks =
+        warnings.blocks ||
+        "blocks=on adds blockstudio/blockstudio via Composer. Run composer install after scaffold.";
     }
   }
 

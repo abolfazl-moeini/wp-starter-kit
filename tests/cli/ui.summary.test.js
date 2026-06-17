@@ -92,13 +92,13 @@ describe("renderSummary()", () => {
     expect(out).toMatch(/tailwind/i);
   });
 
-  test("includes the blocks toggle", () => {
+  test("includes Blockstudio label when blocks:on", () => {
     const out = renderSummary({
       answers: { slug: "x" },
-      features: { js: "typescript", blocks: "on" },
+      features: { js: "typescript", blocks: "on", phpMinVersion: "8.2" },
       runOptions: {},
     });
-    expect(out).toMatch(/blocks:\s*on/i);
+    expect(out).toMatch(/Blocks:\s*Blockstudio/i);
   });
 
   test("includes the PHP minimum version", () => {

@@ -1,5 +1,5 @@
 /**
- * Phase 25.F — blocks:on scaffold contract.
+ * Blockstudio blocks:on scaffold contract.
  */
 
 import { describe, test, expect } from "@jest/globals";
@@ -37,11 +37,12 @@ function makeCtx(features = {}) {
     phpMinVersion: "7.4",
     phpSourceVersion: "8.1",
     batchEndpoint: "/batch/v1",
+    slug_underscore: "my_project",
   };
   const f = {
     ...defaultFeatures(),
     blocks: "on",
-    js: "typescript",
+    js: "none",
     wpMinVersion: "6.0",
     ...features,
   };
@@ -49,29 +50,62 @@ function makeCtx(features = {}) {
     answers,
     cfg,
     features: f,
-    vars: { ...answers, ...cfg, vendor: "WPSK" },
+    vars: { ...answers, ...cfg, vendor: "WPSK", frameworkNamespace: "WPDev" },
   };
 }
 
-describe("blocks:on scaffold (Phase 25.F)", () => {
-  test("emits block module with block.json, index.ts, Module.php", () => {
+describe("blocks:on Blockstudio scaffold", () => {
+  test("emits blockstudio.json, example block, bridge module, register bootstrap", () => {
     const out = blocksRun(makeCtx());
-    expect(out.files["src/Modules/Blocks/block.json"]).toBeDefined();
-    expect(out.files["src/Modules/Blocks/index.ts"]).toBeDefined();
+    expect(out.files["blockstudio.json"]).toBeDefined();
+    expect(out.files["blockstudio/example-hero/block.json"]).toBeDefined();
+    expect(out.files["blockstudio/example-hero/index.php"]).toBeDefined();
     expect(out.files["src/Modules/Blocks/Module.php"]).toBeDefined();
+    expect(out.files["src/blocks-register.php"]).toBeDefined();
   });
 
-  test("Module.php registers the block via register_block_type_from_metadata", () => {
+  test("works with js:none (PHP-first)", () => {
+    const out = blocksRun(makeCtx({ js: "none" }));
+    expect(out.files["blockstudio.json"]).toBeDefined();
+  });
+
+  test("Module.php uses Blockstudio Build API", () => {
     const out = blocksRun(makeCtx());
-    expect(out.files["src/Modules/Blocks/Module.php"]).toMatch(
-      /register_block_type_from_metadata/,
+    const php = out.files["src/Modules/Blocks/Module.php"];
+    expect(php).toMatch(/Blockstudio\\Build::init/);
+    expect(php).toMatch(/blockstudio\/settings\/path/);
+    expect(php).not.toMatch(/blockstudio_load/);
+    expect(php).not.toMatch(/register_block_type/);
+  });
+
+  test("composerPatches require blockstudio and composer/installers", () => {
+    const out = blocksRun(makeCtx());
+    expect(out.composerPatches.require["blockstudio/blockstudio"]).toBe("^7.3");
+    expect(out.composerPatches.require["composer/installers"]).toBe("^2.2");
+  });
+
+  test("example block uses apiVersion 3 and object-format blockstudio.attributes", () => {
+    const out = blocksRun(makeCtx());
+    const parsed = JSON.parse(out.files["blockstudio/example-hero/block.json"]);
+    expect(parsed.apiVersion).toBe(3);
+    expect(typeof parsed.blockstudio.attributes).toBe("object");
+    expect(Array.isArray(parsed.blockstudio.attributes)).toBe(false);
+  });
+
+  test("blockstudio.json uses v7 schema", () => {
+    const out = blocksRun(makeCtx());
+    const parsed = JSON.parse(out.files["blockstudio.json"]);
+    expect(parsed.$schema).toBe(
+      "https://app.blockstudio.dev/schema/blockstudio",
     );
   });
 
-  test("package.json includes @wordpress/block-editor when blocks:on", () => {
-    const out = coreRun(makeCtx());
+  test("core package.json does not add @wordpress/blocks when blocks:on", () => {
+    const ctx = makeCtx({ js: "typescript" });
+    const out = coreRun(ctx);
+    expect(out.files["package.json"]).toBeDefined();
     const pkg = JSON.parse(out.files["package.json"]);
-    expect(pkg.devDependencies["@wordpress/block-editor"]).toBeDefined();
-    expect(pkg.devDependencies["@wordpress/blocks"]).toBeDefined();
+    expect(pkg.devDependencies?.["@wordpress/blocks"]).toBeUndefined();
+    expect(pkg.devDependencies?.["@wordpress/block-editor"]).toBeUndefined();
   });
 });

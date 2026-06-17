@@ -38,7 +38,7 @@ has a stable `id`, a list of allowed `variants`, and a default
 | `vendorScoping`  | `on`, `off`                           | `on`         | Strauss vendor scoping on release.                                                            |
 | `husky`          | `on`, `off`                           | `on`         | Git pre-commit hooks via husky.                                                               |
 | `css`            | `none`, `sass`, `tailwind`, `postcss` | `none`       | CSS framework. Requires `js !== "none"`.                                                      |
-| `blocks`         | `off`, `on`                           | `off`        | Gutenberg block support. Requires `js !== "none"` + WP ≥ 5.8.                                 |
+| `blocks`         | `off`, `on`                           | `off`        | Gutenberg blocks via Blockstudio 7. PHP-first; PHP 8.2+ runtime; WP 6.7+ recommended.         |
 | `license`        | `gpl2`, `gpl3`, `mit`                 | `gpl2`       | License.                                                                                      |
 | `wpMinVersion`   | `6.0`, `5.8`, `6.2`, `6.4`, `6.6`     | `6.0`        | Minimum WordPress version.                                                                    |
 | `exampleFeature` | `on`, `off`                           | `on`         | Include the ExampleFeature demo module.                                                       |

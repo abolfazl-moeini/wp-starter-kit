@@ -167,7 +167,12 @@ export function renderSummary(input) {
   // 2. CSS.
   push("CSS", f.css);
   // 3. Blocks.
-  push("Blocks", f.blocks);
+  push("Blocks", f.blocks === "on" ? "Blockstudio" : f.blocks);
+  if (f.blocks === "on" && f.phpMinVersion && f.phpMinVersion < "8.2") {
+    lines.push(
+      "  Note: Blockstudio requires PHP 8.2+ at runtime (Rector downlevels your plugin source only).",
+    );
+  }
   // 4. PHP min + framework + test.
   push("PHP min", f.phpMinVersion);
   push("PHP framework", f.phpFramework);
