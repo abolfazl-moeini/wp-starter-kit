@@ -160,6 +160,10 @@ export function renderSummary(input) {
   } else {
     push("JS", "<unset>");
   }
+  if (f.mcpAbilities === "on") {
+    lines[0] = `${lines[0]} · Abilities API (MCP)`;
+  }
+
   // 2. CSS.
   push("CSS", f.css);
   // 3. Blocks.

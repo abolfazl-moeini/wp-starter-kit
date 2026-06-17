@@ -130,6 +130,10 @@ describe("parseFlags()", () => {
     ).toBe("polaris");
   });
 
+  test("parses --mcp-abilities=on → features.mcpAbilities", () => {
+    expect(parseFlags(["--mcp-abilities=on"]).features.mcpAbilities).toBe("on");
+  });
+
   test("parses --preset=full → runOptions.preset", () => {
     expect(parseFlags(["--preset=full"]).runOptions.preset).toBe("full");
   });
@@ -201,6 +205,7 @@ describe("parseFlags()", () => {
       "--example=",
       "--i18n=",
       "--frontend-stack=",
+      "--mcp-abilities=",
       "--preset=",
       "--kit-version=",
       "--install",

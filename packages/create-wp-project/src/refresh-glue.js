@@ -15,7 +15,10 @@ import minimatch from "minimatch";
 import { descriptor as coreDescriptor } from "./generators/core.js";
 import { getGenerators } from "./generators/index.js";
 import { tplVars } from "./generators/_templates.js";
-import { applyComposerPatches } from "./composer-patches.js";
+import {
+  applyComposerPatches,
+  mergeComposerPatchAccumulator,
+} from "./composer-patches.js";
 import {
   readProjectConfigFromDir,
   projectConfigToAnswers,
@@ -80,17 +83,10 @@ export async function refreshGlue(dir, features) {
     Object.assign(deps, out.deps || {});
     Object.assign(devDeps, out.devDeps || {});
     if (out.composerPatches) {
-      composerPatches = composerPatches || {
-        require: {},
-        repositories: [],
-        suggest: {},
-      };
-      if (out.composerPatches.require) {
-        Object.assign(composerPatches.require, out.composerPatches.require);
-      }
-      if (out.composerPatches.repositories) {
-        composerPatches.repositories.push(...out.composerPatches.repositories);
-      }
+      composerPatches = mergeComposerPatchAccumulator(
+        composerPatches,
+        out.composerPatches,
+      );
     }
     if (out.composerSuggest) {
       Object.assign(composerSuggest, out.composerSuggest);

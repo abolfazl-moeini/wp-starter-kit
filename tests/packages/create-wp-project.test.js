@@ -241,6 +241,7 @@ describe("@wpsk/create-wp-project", () => {
           exampleFeature: "on",
           i18n: "on",
           frontendStack: "none",
+          mcpAbilities: "off",
         },
       });
     });

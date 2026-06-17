@@ -45,6 +45,8 @@ describe("getFeatureCatalog() — feature data model (Phase 20.1/20.2)", () => {
       "wpMinVersion",
       "exampleFeature",
       "i18n",
+      "frontendStack",
+      "mcpAbilities",
     ];
     for (const id of expected) {
       expect(ids).toContain(id);
@@ -118,6 +120,8 @@ describe("getFeatureCatalog() — feature data model (Phase 20.1/20.2)", () => {
     ]);
     expect(byId.exampleFeature.variants).toEqual(["on", "off"]);
     expect(byId.i18n.variants).toEqual(["on", "off"]);
+    expect(byId.frontendStack.variants).toEqual(["none", "polaris"]);
+    expect(byId.mcpAbilities.variants).toEqual(["off", "on"]);
   });
 
   test("feature descriptors carry an id, variants, and a default (variant[0])", () => {
@@ -176,6 +180,7 @@ describe("defaultFeatures() — all-default feature set (Phase 20.2)", () => {
       exampleFeature: "on",
       i18n: "on",
       frontendStack: "none",
+      mcpAbilities: "off",
     });
   });
 });

@@ -226,10 +226,26 @@ export function buildPromptPlan(currentFeatures, engine) {
   }
 
   // 4. PHP features. Order matches plan.installer.md §1.1 UX.
+  for (const id of ["phpMinVersion", "phpSourceVersion", "phpFramework"]) {
+    const f = catalog.find((x) => x.id === id);
+    if (!f) continue;
+    plan.push({ ...featureQuestion(f), when: () => true });
+  }
+
+  plan.push({
+    id: "mcpAbilities",
+    type: "select",
+    target: "features",
+    message: "WordPress Abilities API (MCP)?",
+    options: [
+      { label: "No", value: "off" },
+      { label: "Yes", value: "on" },
+    ],
+    initialValue: "off",
+    when: () => true,
+  });
+
   for (const id of [
-    "phpMinVersion",
-    "phpSourceVersion",
-    "phpFramework",
     "phpTest",
     "license",
     "wpMinVersion",

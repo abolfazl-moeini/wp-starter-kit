@@ -60,6 +60,15 @@ describe("renderSummary()", () => {
     expect(out).toMatch(/preact/i);
   });
 
+  test("includes Abilities API (MCP) in header when mcpAbilities=on", () => {
+    const out = renderSummary({
+      answers: { slug: "my-plugin" },
+      features: { js: "none", mcpAbilities: "on" },
+      runOptions: {},
+    });
+    expect(out).toMatch(/Abilities API \(MCP\)/);
+  });
+
   test("includes Polaris Stack in header when frontendStack=polaris", () => {
     const out = renderSummary({
       answers: { slug: "my-plugin" },

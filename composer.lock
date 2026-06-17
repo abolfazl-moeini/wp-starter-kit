@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "45502aa42acd402ab0ef2cd4db349240",
+    "content-hash": "494a000f8282cf40eeff89f216950060",
     "packages": [
         {
             "name": "brianhenryie/strauss",
@@ -8623,6 +8623,51 @@
             "time": "2025-11-25T12:08:04+00:00"
         },
         {
+            "name": "wpdev/mcp-integration",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "packages/mcp-integration",
+                "reference": "0b2048d13fae0d04ad1deda84a4f20b961475d35"
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "WPDev\\MCP\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "WPDev\\MCP\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ]
+            },
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "description": "Self-contained WordPress Abilities API integration: register abilities that the MCP Adapter can expose to AI agents as MCP tools.",
+            "keywords": [
+                "abilities-api",
+                "ai",
+                "mcp",
+                "wordpress"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "wpsk/framework",
             "version": "dev-main",
             "dist": {
@@ -8652,6 +8697,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "wpdev/mcp-integration": 20,
         "wpsk/framework": 20
     },
     "prefer-stable": false,

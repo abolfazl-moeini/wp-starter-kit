@@ -1,0 +1,9 @@
+# For Packagist distribution (keep composer.json + README + src)
+tests/ export-ignore
+vendor/ export-ignore
+*.dist export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
+phpunit.xml.dist export-ignore
+composer.lock export-ignore
+

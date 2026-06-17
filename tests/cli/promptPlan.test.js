@@ -52,9 +52,18 @@ describe("buildPromptPlan() — conditional omissions (I2.5)", () => {
       "exampleFeature",
       "i18n",
       "frontendStack",
+      "mcpAbilities",
     ]) {
       expect(ids).toContain(id);
     }
+  });
+
+  test("mcpAbilities prompt is always available (no js gate)", () => {
+    const plan = buildPromptPlan({ js: "none" });
+    const q = plan.find((item) => item.id === "mcpAbilities");
+    expect(q).toBeDefined();
+    expect(q.when({ features: { js: "none" } })).toBe(true);
+    expect(q.when({ features: { js: "typescript" } })).toBe(true);
   });
 
   test("frontendStack prompt only when js=typescript and jsLib is react/preact", () => {

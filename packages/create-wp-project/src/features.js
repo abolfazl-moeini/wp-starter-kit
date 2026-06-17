@@ -139,6 +139,13 @@ const FEATURE_CATALOG = [
     notes:
       "Design system foundation. `polaris` = Polaris Stack (CSS vars + layout primitives + basic styled components). v1 requires js=typescript and jsLib=react/preact.",
   },
+  {
+    id: "mcpAbilities",
+    variants: ["off", "on"],
+    default: "off",
+    notes:
+      "WordPress Abilities API integration (wp-mcp-integration). Registers abilities the MCP Adapter can expose as tools. Requires WordPress 6.9+ at runtime.",
+  },
 ];
 
 /**
@@ -356,6 +363,12 @@ export function validateFeatureSet(features) {
       `license=mit is GPL-compatible, but the WordPress.org plugin ` +
       `directory requires hosted plugins to be GPL-2.0-or-later (or later). ` +
       `The scaffold will still emit MIT, but the plugin may be rejected at .org review time.`;
+  }
+
+  if (features.mcpAbilities === "on") {
+    warnings.mcpAbilities =
+      "mcpAbilities=on requires WordPress 6.9+ at runtime (the Abilities API). " +
+      "The generated plugin shows an admin notice and registers nothing when the API is missing.";
   }
 
   return {

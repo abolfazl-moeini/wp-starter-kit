@@ -65,6 +65,10 @@ import { tplVars as tplVarsFromGenerators } from "./generators/_templates.js";
 import { addFeature } from "./addFeature.js";
 import { removeFeature } from "./removeFeature.js";
 import { shouldEmitPackageJson } from "./refresh-glue.js";
+import {
+  applyComposerPatches,
+  mergeComposerPatchAccumulator,
+} from "./composer-patches.js";
 //
 // Phase 24 (24.1–24.6) — migrations registry, selector, and
 // runner live under `./migrations/index.js`. Re-exported
@@ -371,20 +375,10 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
     if (out.composerSuggest)
       Object.assign(composerSuggest, out.composerSuggest);
     if (out.composerPatches) {
-      composerPatches = composerPatches || {
-        require: {},
-        repositories: [],
-        suggest: {},
-      };
-      if (out.composerPatches.require) {
-        Object.assign(composerPatches.require, out.composerPatches.require);
-      }
-      if (out.composerPatches.suggest) {
-        Object.assign(composerPatches.suggest, out.composerPatches.suggest);
-      }
-      if (out.composerPatches.repositories) {
-        composerPatches.repositories.push(...out.composerPatches.repositories);
-      }
+      composerPatches = mergeComposerPatchAccumulator(
+        composerPatches,
+        out.composerPatches,
+      );
     }
   }
 
@@ -405,7 +399,6 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
     "composer.json" in merged.files &&
     (Object.keys(composerSuggest).length || composerPatches)
   ) {
-    const { applyComposerPatches } = await import("./composer-patches.js");
     let composer = JSON.parse(merged.files["composer.json"]);
     if (composerPatches) {
       composer = applyComposerPatches(composer, composerPatches);

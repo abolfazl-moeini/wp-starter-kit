@@ -66,6 +66,7 @@ function buildMinimal() {
     exampleFeature: "off",
     i18n: "off",
     frontendStack: "none",
+    mcpAbilities: "off",
     license: "gpl2",
     wpMinVersion: "6.0",
   };

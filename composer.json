@@ -10,6 +10,13 @@
       "options": {
         "symlink": true
       }
+    },
+    {
+      "type": "path",
+      "url": "packages/mcp-integration",
+      "options": {
+        "symlink": true
+      }
     }
   ],
   "require": {
@@ -30,7 +37,8 @@
     "rector/rector": "^2.0",
     "wp-cli/wp-cli-bundle": "^2.11",
     "laminas/laminas-code": "^4.7",
-    "wpsk/framework": "*@dev"
+    "wpsk/framework": "*@dev",
+    "wpdev/mcp-integration": "*@dev"
   },
   "autoload": {
     "files": [

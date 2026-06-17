@@ -47,6 +47,7 @@ import { descriptor as phpFramework } from "./phpFramework.js";
 import { descriptor as ci } from "./ci.js";
 import { descriptor as faultTolerance } from "./faultTolerance.js";
 import { descriptor as frontendStack } from "./frontendStack.js";
+import { descriptor as mcpAbilities } from "./mcpAbilities.js";
 
 /* -------------------------------------------------------------------- */
 /* Full catalog                                                          */
@@ -78,6 +79,7 @@ const ALL = [
   ci,
   faultTolerance,
   frontendStack,
+  mcpAbilities,
 ];
 
 /* -------------------------------------------------------------------- */
@@ -182,6 +184,8 @@ export function getGenerators(features) {
     else if (g.id === "faultTolerance" && f.faultTolerance === "on")
       enabled.push(g);
     else if (g.id === "frontendStack" && f["frontendStack"] === "polaris")
+      enabled.push(g);
+    else if (g.id === "mcpAbilities" && f.mcpAbilities === "on")
       enabled.push(g);
   }
   return enabled;

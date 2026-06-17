@@ -98,6 +98,7 @@ function wpsk_starter_load_textdomain(): void {
  */
 function wpsk_starter_register_modules(): void {
 	WPSK\Core\Plugin::loader()->register( new WPSK\Modules\ExampleFeature\Module() );
+	WPSK\Core\Plugin::loader()->register( new WPSK\Modules\McpAbilities\Module() );
 }
 
 add_action( 'plugins_loaded', 'wpsk_starter_register_modules', 5 );

@@ -36,6 +36,7 @@ export const KNOWN_FLAGS = [
   "--example=",
   "--fault-tolerance=",
   "--frontend-stack=",
+  "--mcp-abilities=",
   "--force",
   "--git",
   "--global=",
@@ -98,6 +99,7 @@ const FLAG_MAP = [
   ["features", "exampleFeature", "--example=", "kv"],
   ["features", "i18n", "--i18n=", "kv"],
   ["features", "frontendStack", "--frontend-stack=", "kv"],
+  ["features", "mcpAbilities", "--mcp-abilities=", "kv"],
 
   // runOptions.*
   ["runOptions", "targetDir", "--dir=", "kv"],

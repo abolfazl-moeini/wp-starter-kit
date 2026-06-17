@@ -108,6 +108,7 @@ function makeCoreCtx(answers = {}, cfg = {}, features = {}) {
     exampleFeature: "off",
     i18n: "off",
     frontendStack: "none",
+    mcpAbilities: "off",
     ...features,
   };
   return { answers: a, cfg: c, features: f };
@@ -272,6 +273,7 @@ describe("js:none — end-to-end scaffold (Phase 25.A1)", () => {
     exampleFeature: "off",
     i18n: "off",
     frontendStack: "none",
+    mcpAbilities: "off",
   };
 
   test("writes NO assets/dependencies.{ts,js} (the JS dir contents)", async () => {
@@ -402,6 +404,7 @@ describe("js:none — theme-mode PHP enqueue guard (Phase 25.A2)", () => {
     exampleFeature: "off",
     i18n: "off",
     frontendStack: "none",
+    mcpAbilities: "off",
   };
 
   test("functions.php (theme bootstrap) does NOT enqueue the missing JS bundle when js=none", async () => {
