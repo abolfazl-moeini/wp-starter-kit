@@ -1154,6 +1154,7 @@ export const TEMPLATE_TSCONFIG_JSON = `{
     "moduleResolution": "Bundler",
     "lib": ["DOM", "DOM.Iterable", "ES2020"],
     "jsx": "react-jsx",
+    "jsxImportSource": "{{jsxImportSource}}",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

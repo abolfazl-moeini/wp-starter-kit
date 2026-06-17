@@ -63,6 +63,21 @@ describe("jsLib scaffold + addFeature", () => {
       await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
     );
     expect(cfg.uiFramework).toBe("react");
+    const tsconfig = JSON.parse(
+      await fs.readFile(path.join(tmp, "tsconfig.json"), "utf8"),
+    );
+    expect(tsconfig.compilerOptions.jsxImportSource).toBe("react");
+  });
+
+  test("scaffold with jsLib=preact sets jsxImportSource preact in tsconfig", async () => {
+    const res = await scaffoldProject(tmp, goodAnswers, {
+      features: { ...defaultFeatures(), jsLib: "preact" },
+    });
+    expect(res.ok).toBe(true);
+    const tsconfig = JSON.parse(
+      await fs.readFile(path.join(tmp, "tsconfig.json"), "utf8"),
+    );
+    expect(tsconfig.compilerOptions.jsxImportSource).toBe("preact");
   });
 
   test("addFeature(jsLib, react) updates package.json and marker file", async () => {

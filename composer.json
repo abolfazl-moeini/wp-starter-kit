@@ -68,6 +68,12 @@
       "@php ./dev/fix-autoloader.php"
     ],
     "scope:vendor": "@php vendor/bin/strauss",
+    "post-install-cmd": [
+      "@scope:vendor"
+    ],
+    "post-update-cmd": [
+      "@scope:vendor"
+    ],
     "release:dist": "@php dev/release/build-dist.php",
     "test:pre": "@php ./tests/patch/apply-patches.php",
     "translation:generate:php": "@php dev/translation/generate-php.php",

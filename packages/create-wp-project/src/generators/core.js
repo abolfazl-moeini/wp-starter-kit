@@ -32,6 +32,7 @@
  * template strings so the BC file list is byte-identical (Phase 21.11).
  */
 
+import { deriveUiFramework } from "../derive-ui-framework.js";
 import { renderTemplate, tplVars as legacyTplVars } from "./_templates.js";
 import {
   TEMPLATE_PROJECT_CONFIG,
@@ -153,7 +154,11 @@ export function run(ctx) {
   //    likewise — Flow replaces TypeScript as the type-checker.
   //    (Phase 25.B / 25.C narrowing of the gate.)
   if (features.js === "typescript") {
-    files["tsconfig.json"] = TEMPLATE_TSCONFIG_JSON;
+    const uiFramework = deriveUiFramework(features, answers) || "preact";
+    files["tsconfig.json"] = renderTemplate(TEMPLATE_TSCONFIG_JSON, {
+      ...tpl,
+      jsxImportSource: uiFramework === "react" ? "react" : "preact",
+    });
   }
 
   // 10. package.json — always emitted by core when the registry gate

@@ -13,6 +13,8 @@
 
 if ( ! function_exists( 'wpdev_read_project_config' ) ) {
 	/**
+	 * Read `project.config.json` through the Assets helper.
+	 *
 	 * @return array<string, mixed>
 	 */
 	function wpdev_read_project_config() {
@@ -22,6 +24,8 @@ if ( ! function_exists( 'wpdev_read_project_config' ) ) {
 
 if ( ! function_exists( 'wpdev_resolve_asset_url' ) ) {
 	/**
+	 * Resolve a bundle file path to a public URL under the plugin root.
+	 *
 	 * @param string $abs_path Absolute filesystem path to a `.js`/`.css` file.
 	 * @return string Public URL of the asset, or `''` when unresolved.
 	 */
@@ -44,6 +48,8 @@ if ( ! function_exists( 'wpdev_resolve_asset_url' ) ) {
 
 if ( ! function_exists( 'wpdev_asset_info' ) ) {
 	/**
+	 * Read the companion `.asset.php` metadata for a bundle file.
+	 *
 	 * @param string $file_path Absolute or relative path to a `.js`/`.css` file.
 	 * @return array
 	 */
@@ -66,6 +72,8 @@ if ( ! function_exists( 'wpdev_bundle_file_path' ) ) {
 
 if ( ! function_exists( 'wpdev_bundle_file_url' ) ) {
 	/**
+	 * Theme-based bundle URL (legacy theme-mode contract).
+	 *
 	 * @param string $file_name Bundle file name (e.g. `wpdev-starter-deps.js`).
 	 * @return string
 	 */
@@ -76,6 +84,8 @@ if ( ! function_exists( 'wpdev_bundle_file_url' ) ) {
 
 if ( ! function_exists( 'wpdev_enqueue_bundle_script' ) ) {
 	/**
+	 * Enqueue a JS bundle from the theme `assets/bundles/` directory.
+	 *
 	 * @param string $file_name  JS file name.
 	 * @param array  $extra_deps Extra WP-script handles.
 	 * @return bool
@@ -90,6 +100,8 @@ if ( ! function_exists( 'wpdev_enqueue_bundle_script' ) ) {
 
 if ( ! function_exists( 'wpdev_enqueue_bundle_script_at' ) ) {
 	/**
+	 * Enqueue a JS bundle from an absolute filesystem path.
+	 *
 	 * @param string $abs_path   Absolute path to the JS file.
 	 * @param array  $extra_deps Extra WP-script handles.
 	 * @return bool
@@ -101,6 +113,8 @@ if ( ! function_exists( 'wpdev_enqueue_bundle_script_at' ) ) {
 
 if ( ! function_exists( 'wpdev_enqueue_bundle_style' ) ) {
 	/**
+	 * Enqueue a CSS bundle from the theme `assets/bundles/` directory.
+	 *
 	 * @param string $file_name  CSS file name.
 	 * @param array  $extra_deps Extra WP-style handles.
 	 * @return bool
@@ -115,6 +129,8 @@ if ( ! function_exists( 'wpdev_enqueue_bundle_style' ) ) {
 
 if ( ! function_exists( 'wpdev_enqueue_bundle_style_at' ) ) {
 	/**
+	 * Enqueue a CSS bundle from an absolute filesystem path.
+	 *
 	 * @param string $abs_path   Absolute path to the CSS file.
 	 * @param array  $extra_deps Extra WP-style handles.
 	 * @return bool
@@ -126,6 +142,8 @@ if ( ! function_exists( 'wpdev_enqueue_bundle_style_at' ) ) {
 
 if ( ! function_exists( 'wpdev_enqueue_stylesheet' ) ) {
 	/**
+	 * Enqueue a global stylesheet from `assets/stylesheets/`.
+	 *
 	 * @param string $file_name  CSS file name (e.g. `style.css`).
 	 * @param array  $extra_deps Extra WP-style handles.
 	 * @return bool
@@ -135,7 +153,7 @@ if ( ! function_exists( 'wpdev_enqueue_stylesheet' ) ) {
 			? rtrim( plugin_dir_path( __FILE__ ), '/\\' ) . '/assets/stylesheets/' . $file_name
 			: '';
 
-		$resolved_plugin = $plugin_path !== '' ? realpath( $plugin_path ) : false;
+		$resolved_plugin = '' !== $plugin_path ? realpath( $plugin_path ) : false;
 		$plugin_root     = function_exists( 'plugin_dir_path' )
 			? realpath( rtrim( plugin_dir_path( __FILE__ ), '/\\' ) )
 			: false;
@@ -149,6 +167,8 @@ if ( ! function_exists( 'wpdev_enqueue_stylesheet' ) ) {
 }
 
 /**
+ * Base directory for stylesheet resolution (plugin dir or active theme).
+ *
  * @return string
  */
 function wpdev_stylesheet_base_dir(): string {
@@ -160,6 +180,8 @@ function wpdev_stylesheet_base_dir(): string {
 
 if ( ! function_exists( 'wpdev_stylesheet_file_path' ) ) {
 	/**
+	 * Filesystem path to a stylesheet under `assets/stylesheets/`.
+	 *
 	 * @param string $file_name Stylesheet file name (e.g. `style.css`).
 	 * @return string
 	 */
@@ -170,6 +192,8 @@ if ( ! function_exists( 'wpdev_stylesheet_file_path' ) ) {
 
 if ( ! function_exists( 'wpdev_stylesheet_file_url' ) ) {
 	/**
+	 * Public URL for a stylesheet under `assets/stylesheets/`.
+	 *
 	 * @param string $file_name Stylesheet file name (e.g. `style.css`).
 	 * @return string
 	 */
@@ -183,6 +207,8 @@ if ( ! function_exists( 'wpdev_stylesheet_file_url' ) ) {
 
 if ( ! function_exists( 'wpdev_get_localize_data' ) ) {
 	/**
+	 * Build the localize payload for the deps bundle.
+	 *
 	 * @return array
 	 */
 	function wpdev_get_localize_data() {
@@ -190,103 +216,203 @@ if ( ! function_exists( 'wpdev_get_localize_data' ) ) {
 	}
 }
 
-/* -------------------------------------------------------------------- */
-/* Deprecated wpsk_* shims (one release cycle)                           */
-/* -------------------------------------------------------------------- */
+/*
+ * Deprecated wpsk_* shims (one release cycle).
+ */
 
 if ( ! function_exists( 'wpsk_read_project_config' ) ) {
-	/** @deprecated Use wpdev_read_project_config() */
+	/**
+	 * Deprecated shim for wpdev_read_project_config().
+	 *
+	 * @deprecated Use wpdev_read_project_config()
+	 *
+	 * @return array<string, mixed>
+	 */
 	function wpsk_read_project_config() {
 		return wpdev_read_project_config();
 	}
 }
 
 if ( ! function_exists( 'wpsk_resolve_asset_url' ) ) {
-	/** @deprecated Use wpdev_resolve_asset_url() */
+	/**
+	 * Deprecated shim for wpdev_resolve_asset_url().
+	 *
+	 * @deprecated Use wpdev_resolve_asset_url()
+	 *
+	 * @param string $abs_path Absolute filesystem path.
+	 * @return string
+	 */
 	function wpsk_resolve_asset_url( $abs_path ) {
 		return wpdev_resolve_asset_url( $abs_path );
 	}
 }
 
 if ( ! function_exists( 'wpsk_asset_info' ) ) {
-	/** @deprecated Use wpdev_asset_info() */
+	/**
+	 * Deprecated shim for wpdev_asset_info().
+	 *
+	 * @deprecated Use wpdev_asset_info()
+	 *
+	 * @param string $file_path Path to a bundle file.
+	 * @return array
+	 */
 	function wpsk_asset_info( $file_path ) {
 		return wpdev_asset_info( $file_path );
 	}
 }
 
 if ( ! function_exists( 'wpsk_bundle_file_path' ) ) {
-	/** @deprecated Use wpdev_bundle_file_path() */
+	/**
+	 * Deprecated shim for wpdev_bundle_file_path().
+	 *
+	 * @deprecated Use wpdev_bundle_file_path()
+	 *
+	 * @param string $file_name Bundle file name.
+	 * @return string
+	 */
 	function wpsk_bundle_file_path( $file_name ) {
 		return wpdev_bundle_file_path( $file_name );
 	}
 }
 
 if ( ! function_exists( 'wpsk_bundle_file_url' ) ) {
-	/** @deprecated Use wpdev_bundle_file_url() */
+	/**
+	 * Deprecated shim for wpdev_bundle_file_url().
+	 *
+	 * @deprecated Use wpdev_bundle_file_url()
+	 *
+	 * @param string $file_name Bundle file name.
+	 * @return string
+	 */
 	function wpsk_bundle_file_url( $file_name ) {
 		return wpdev_bundle_file_url( $file_name );
 	}
 }
 
 if ( ! function_exists( 'wpsk_enqueue_bundle_script' ) ) {
-	/** @deprecated Use wpdev_enqueue_bundle_script() */
+	/**
+	 * Deprecated shim for wpdev_enqueue_bundle_script().
+	 *
+	 * @deprecated Use wpdev_enqueue_bundle_script()
+	 *
+	 * @param string $file_name  JS file name.
+	 * @param array  $extra_deps Extra WP-script handles.
+	 * @return bool
+	 */
 	function wpsk_enqueue_bundle_script( $file_name, $extra_deps = [] ) {
 		return wpdev_enqueue_bundle_script( $file_name, $extra_deps );
 	}
 }
 
 if ( ! function_exists( 'wpsk_enqueue_bundle_script_at' ) ) {
-	/** @deprecated Use wpdev_enqueue_bundle_script_at() */
+	/**
+	 * Deprecated shim for wpdev_enqueue_bundle_script_at().
+	 *
+	 * @deprecated Use wpdev_enqueue_bundle_script_at()
+	 *
+	 * @param string $abs_path   Absolute path to the JS file.
+	 * @param array  $extra_deps Extra WP-script handles.
+	 * @return bool
+	 */
 	function wpsk_enqueue_bundle_script_at( $abs_path, $extra_deps = [] ) {
 		return wpdev_enqueue_bundle_script_at( $abs_path, $extra_deps );
 	}
 }
 
 if ( ! function_exists( 'wpsk_enqueue_bundle_style' ) ) {
-	/** @deprecated Use wpdev_enqueue_bundle_style() */
+	/**
+	 * Deprecated shim for wpdev_enqueue_bundle_style().
+	 *
+	 * @deprecated Use wpdev_enqueue_bundle_style()
+	 *
+	 * @param string $file_name  CSS file name.
+	 * @param array  $extra_deps Extra WP-style handles.
+	 * @return bool
+	 */
 	function wpsk_enqueue_bundle_style( $file_name, $extra_deps = [] ) {
 		return wpdev_enqueue_bundle_style( $file_name, $extra_deps );
 	}
 }
 
 if ( ! function_exists( 'wpsk_enqueue_bundle_style_at' ) ) {
-	/** @deprecated Use wpdev_enqueue_bundle_style_at() */
+	/**
+	 * Deprecated shim for wpdev_enqueue_bundle_style_at().
+	 *
+	 * @deprecated Use wpdev_enqueue_bundle_style_at()
+	 *
+	 * @param string $abs_path   Absolute path to the CSS file.
+	 * @param array  $extra_deps Extra WP-style handles.
+	 * @return bool
+	 */
 	function wpsk_enqueue_bundle_style_at( $abs_path, $extra_deps = [] ) {
 		return wpdev_enqueue_bundle_style_at( $abs_path, $extra_deps );
 	}
 }
 
 if ( ! function_exists( 'wpsk_enqueue_stylesheet' ) ) {
-	/** @deprecated Use wpdev_enqueue_stylesheet() */
+	/**
+	 * Deprecated shim for wpdev_enqueue_stylesheet().
+	 *
+	 * @deprecated Use wpdev_enqueue_stylesheet()
+	 *
+	 * @param string $file_name  CSS file name.
+	 * @param array  $extra_deps Extra WP-style handles.
+	 * @return bool
+	 */
 	function wpsk_enqueue_stylesheet( $file_name, $extra_deps = [] ) {
 		return wpdev_enqueue_stylesheet( $file_name, $extra_deps );
 	}
 }
 
 if ( ! function_exists( 'wpsk_stylesheet_base_dir' ) ) {
-	/** @deprecated Use wpdev_stylesheet_base_dir() */
+	/**
+	 * Deprecated shim for wpdev_stylesheet_base_dir().
+	 *
+	 * @deprecated Use wpdev_stylesheet_base_dir()
+	 *
+	 * @return string
+	 */
 	function wpsk_stylesheet_base_dir(): string {
 		return wpdev_stylesheet_base_dir();
 	}
 }
 
 if ( ! function_exists( 'wpsk_stylesheet_file_path' ) ) {
-	/** @deprecated Use wpdev_stylesheet_file_path() */
+	/**
+	 * Deprecated shim for wpdev_stylesheet_file_path().
+	 *
+	 * @deprecated Use wpdev_stylesheet_file_path()
+	 *
+	 * @param string $file_name Stylesheet file name.
+	 * @return string
+	 */
 	function wpsk_stylesheet_file_path( $file_name ) {
 		return wpdev_stylesheet_file_path( $file_name );
 	}
 }
 
 if ( ! function_exists( 'wpsk_stylesheet_file_url' ) ) {
-	/** @deprecated Use wpdev_stylesheet_file_url() */
+	/**
+	 * Deprecated shim for wpdev_stylesheet_file_url().
+	 *
+	 * @deprecated Use wpdev_stylesheet_file_url()
+	 *
+	 * @param string $file_name Stylesheet file name.
+	 * @return string
+	 */
 	function wpsk_stylesheet_file_url( $file_name ) {
 		return wpdev_stylesheet_file_url( $file_name );
 	}
 }
 
 if ( ! function_exists( 'wpsk_get_localize_data' ) ) {
-	/** @deprecated Use wpdev_get_localize_data() */
+	/**
+	 * Deprecated shim for wpdev_get_localize_data().
+	 *
+	 * @deprecated Use wpdev_get_localize_data()
+	 *
+	 * @return array
+	 */
 	function wpsk_get_localize_data() {
 		return wpdev_get_localize_data();
 	}
