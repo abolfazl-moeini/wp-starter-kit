@@ -73,7 +73,7 @@ export function tplVars(answers, cfg) {
       answers.vendor ||
       answers.globalName ||
       answers.slug ||
-      "wpsk"
+      "wpdev"
     ).toLowerCase(),
     // {{frameworkNamespace}} — the WPDev framework namespace root, used
     // in `use` imports for framework classes (e.g.
@@ -160,10 +160,10 @@ export function packageJsonForAnswers(answers, features) {
     return v.startsWith("^") || v === "*" || v.includes("npm:") ? v : `^${v}`;
   };
 
-  const wpskDeps = Object.fromEntries(
+  const wpdevDeps = Object.fromEntries(
     CONSUMER_RUNTIME_WPDEV_PACKAGES.map((name) => [name, versionOf(name)]),
   );
-  const wpskDevDeps = Object.fromEntries(
+  const wpdevDevDeps = Object.fromEntries(
     CONSUMER_BUILD_WPDEV_PACKAGES.map((name) => [name, versionOf(name)]),
   );
 
@@ -218,7 +218,7 @@ export function packageJsonForAnswers(answers, features) {
       // Phase 23.B4: the @wpdev/* framework packages, surfaced
       // so the consumer can `import { ... } from "@wpdev/hooks"`
       // at runtime. See header comment.
-      ...wpskDeps,
+      ...wpdevDeps,
     },
     devDependencies: {
       // Phase 23.B4: the @wpdev/* build tools. The consumer
@@ -226,7 +226,7 @@ export function packageJsonForAnswers(answers, features) {
       // bundles the dependency-extraction plugin as a
       // transitive dep, but we surface it explicitly so
       // the version is visible in the consumer's lockfile.
-      ...wpskDevDeps,
+      ...wpdevDevDeps,
       // Phase 25.C: the Flow variant adds `flow-bin` as a
       // devDep so the consumer can run `npm run typecheck:flow`
       // without an extra install step. We pin to the same

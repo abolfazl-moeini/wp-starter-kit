@@ -125,13 +125,11 @@ final class HttpClient
             // AND every per-request handle already added to it.
             //
             // curl_multi_remove_handle() on an already-removed handle is
-            // a silent no-op, and curl_close() on an already-closed
-            // handle is a no-op too (with a PHP 8.5 deprecation notice
-            // that we tolerate since the alternative — a missing
-            // finally — is the leak this method is here to prevent).
+            // a silent no-op. curl_close() is omitted because it is a
+            // no-op since PHP 8.0 (and emits a deprecation notice in 8.5+);
+            // handles are freed when curl_multi_close() runs.
             foreach ($handles as $ch) {
                 curl_multi_remove_handle($mh, $ch);
-                curl_close($ch);
             }
             curl_multi_close($mh);
         }

@@ -66,7 +66,7 @@ domReady(() => {
   // REST / X-URL request. We use the spinner overlay as the loading signal.
   hooks.addAction(
     __WPDEV_HOOK_PREFIX__ + "-request-ajax-start",
-    "wpsk-deps-bundle",
+    "wpdev-deps-bundle",
     (endpoint: string, options: { disableLoading?: boolean } = {}) => {
       if (!options?.disableLoading) FreezeUI();
     },
@@ -75,7 +75,7 @@ domReady(() => {
   // <hookPrefix>-request-ajax-done — fired in `finally` by @wpdev/rest-utils.
   hooks.addAction(
     __WPDEV_HOOK_PREFIX__ + "-request-ajax-done",
-    "wpsk-deps-bundle",
+    "wpdev-deps-bundle",
     (endpoint: string, options: { disableLoading?: boolean } = {}) => {
       if (!options?.disableLoading) UnFreezeUI();
     },
@@ -84,7 +84,7 @@ domReady(() => {
   // <hookPrefix>-form-init — fired by WDForm on first render.
   hooks.addAction(
     __WPDEV_HOOK_PREFIX__ + "-form-init",
-    "wpsk-deps-bundle",
+    "wpdev-deps-bundle",
     (container: Element | null) => {
       if (!container) return;
       // Re-exported from @wpdev/html-utils; the local import (top of file)
@@ -104,7 +104,7 @@ domReady(() => {
   // <hookPrefix>-form-changed — fired by WDForm on any input change.
   hooks.addAction(
     __WPDEV_HOOK_PREFIX__ + "-form-changed",
-    "wpsk-deps-bundle",
+    "wpdev-deps-bundle",
     (container: Element | null, changedElementName?: string) => {
       if (!container || !changedElementName) return;
       try {

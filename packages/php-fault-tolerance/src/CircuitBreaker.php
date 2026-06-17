@@ -85,6 +85,6 @@ final class CircuitBreaker
 
     private function storageKey(): string
     {
-        return 'wpsk_cb_' . md5($this->key);
+        return 'wpdev_cb_' . md5($this->key);
     }
 }
