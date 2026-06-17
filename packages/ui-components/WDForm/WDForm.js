@@ -99,16 +99,20 @@ export function WDForm(props) {
     props.mode,
   ]);
 
+  const fetchInitialRef = useRef(props.fetchInitialValues);
+  useEffect(() => {
+    fetchInitialRef.current = props.fetchInitialValues;
+  });
+
   useEffect(() => {
     const load = async () => {
-      if (typeof props.fetchInitialValues !== "function") return;
+      const loader = fetchInitialRef.current;
+      if (typeof loader !== "function") return;
       if (props.entityId != null) {
-        await store.loadInitialValues(() =>
-          props.fetchInitialValues(props.entityId),
-        );
+        await store.loadInitialValues(() => loader(props.entityId));
         return;
       }
-      await store.loadInitialValues(props.fetchInitialValues);
+      await store.loadInitialValues(loader);
     };
     void load();
   }, [props.entityId]);
