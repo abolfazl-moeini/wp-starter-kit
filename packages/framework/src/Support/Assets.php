@@ -304,7 +304,11 @@ final class Assets {
 			return $base_url . $relative;
 		}
 
-		return plugins_url( 'assets/bundles/' . basename( $abs_path ) );
+		// File not on disk OR outside the plugin root — caller must decide.
+		// Returning '' makes the failure mode explicit; the previous
+		// guess-the-subdir fallback silently produced 404 URLs for any
+		// file under a non-bundles subdir (assets/stylesheets/, etc).
+		return '';
 	}
 
 	/**
