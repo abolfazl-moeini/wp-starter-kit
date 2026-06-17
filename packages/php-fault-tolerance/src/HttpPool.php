@@ -141,12 +141,42 @@ final class HttpPool
 
     private static function parse_headers(string $headerContent): array
     {
+        // Build a header map that preserves RFC 7230 multi-headers
+        // (e.g. multiple `Set-Cookie`, `Vary`, `Link` values).
+        //
+        // Shape contract:
+        //   - A header that appears once is stored as a string under
+        //     its lower-cased name (mirrors the legacy behaviour so
+        //     existing call-sites keep working).
+        //   - A header that appears more than once is stored as a
+        //     list<string> of all values, in the order the server
+        //     emitted them. The old code silently overwrote every
+        //     value after the first — so an auth cookie shadowed by
+        //     an analytics cookie was lost.
+        //
+        // Header names are case-insensitive (RFC 7230 §3.2); we
+        // normalise to the first-seen casing to match what most WP
+        // callers expect when reading `$headers['Content-Type']`.
         $headers = [];
         $lines = explode("\r\n", $headerContent);
         foreach ($lines as $line) {
-            if (str_contains($line, ':')) {
-                list($key, $value) = explode(':', $line, 2);
-                $headers[trim($key)] = trim($value);
+            if (!str_contains($line, ':')) {
+                continue;
+            }
+            list($key, $value) = explode(':', $line, 2);
+            $name  = trim($key);
+            $value = trim($value);
+
+            if (!isset($headers[$name])) {
+                $headers[$name] = $value;
+                continue;
+            }
+
+            // Already seen this header once → promote to array.
+            if (is_array($headers[$name])) {
+                $headers[$name][] = $value;
+            } else {
+                $headers[$name] = [$headers[$name], $value];
             }
         }
         return $headers;

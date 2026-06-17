@@ -88,4 +88,66 @@ class HttpPoolTest extends TestCase
         // return a stable 'Unknown' string rather than throw.
         $this->assertSame('Unknown', $method->invoke(null, 799));
     }
+
+    /**
+     * Regression test for B-11 (bug audit plan_8d50edf6):
+     *
+     * HttpPool::parse_headers() used to assign each header into a
+     * plain associative array keyed by header name. RFC 7230 allows
+     * a response to carry multiple values for the same name (most
+     * commonly `Set-Cookie`, but also `Vary`, `Link`, `Warning`, ...).
+     * The old behaviour silently overwrote every value after the
+     * first — so a response that set two cookies only kept the
+     * last one, and any downstream session-restoration logic lost
+     * the auth cookie.
+     *
+     * The fix collects repeats into an array under the same key.
+     * Single-occurrence headers keep the original `string` shape so
+     * existing call-sites (e.g. `$headers['Content-Type']`) do not
+     * break.
+     */
+    public function test_parse_headers_collects_repeated_set_cookie_into_array(): void
+    {
+        $method = new \ReflectionMethod(HttpPool::class, 'parse_headers');
+        if (PHP_VERSION_ID < 80100) {
+            $method->setAccessible(true);
+        }
+
+        $raw = "HTTP/1.1 200 OK\r\n"
+             . "Content-Type: text/html\r\n"
+             . "Set-Cookie: a=1; Path=/\r\n"
+             . "Set-Cookie: b=2; Path=/\r\n"
+             . "Set-Cookie: c=3; Path=/\r\n"
+             . "\r\n";
+
+        $headers = $method->invoke(null, $raw);
+
+        // Single-occurrence header keeps its string shape.
+        $this->assertSame('text/html', $headers['Content-Type']);
+
+        // Repeated Set-Cookie is collected as an array, in order.
+        $this->assertIsArray($headers['Set-Cookie']);
+        $this->assertSame(
+            ['a=1; Path=/', 'b=2; Path=/', 'c=3; Path=/'],
+            $headers['Set-Cookie']
+        );
+    }
+
+    public function test_parse_headers_keeps_single_set_cookie_as_string(): void
+    {
+        $method = new \ReflectionMethod(HttpPool::class, 'parse_headers');
+        if (PHP_VERSION_ID < 80100) {
+            $method->setAccessible(true);
+        }
+
+        $raw = "HTTP/1.1 200 OK\r\n"
+             . "Set-Cookie: only=one; Path=/\r\n"
+             . "\r\n";
+
+        $headers = $method->invoke(null, $raw);
+
+        // A single Set-Cookie stays a string (not a 1-element array)
+        // so call-sites that read it as a scalar keep working.
+        $this->assertSame('only=one; Path=/', $headers['Set-Cookie']);
+    }
 }
