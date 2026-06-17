@@ -24,8 +24,8 @@
  */
 
 use PHPUnit\Framework\TestCase;
-use WPSK\TestTools\Patch\Cli;
-use WPSK\TestTools\Patch\GitPatch;
+use WPDev\TestTools\Patch\Cli;
+use WPDev\TestTools\Patch\GitPatch;
 
 class PatchApplyTest extends TestCase
 {

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Support\Rest;
+namespace WPDev\Support\Rest;
 
 /**
  * Marker interface for REST handlers that opt into WordPress REST batch support.

@@ -4,7 +4,7 @@
  */
 declare(strict_types=1);
 
-namespace WPSK\Tests\Release;
+namespace WPDev\Tests\Release;
 
 use PHPUnit\Framework\TestCase;
 

@@ -22,10 +22,10 @@ describe("@wpsk/cli package contract", () => {
     expect(pkg.engines.node).toMatch(/>=\s*18/);
   });
 
-  test("bin.wpsk points at bin/wpsk.js", () => {
+  test("bin.wpdev points at bin/wpdev.js", () => {
     const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
     expect(pkg.bin).toBeDefined();
-    expect(pkg.bin.wpsk).toBe("bin/wpsk.js");
+    expect(pkg.bin.wpdev).toBe("bin/wpdev.js");
   });
 
   test("files whitelist includes bin and src", () => {
@@ -47,13 +47,13 @@ describe("@wpsk/cli package contract", () => {
 });
 
 describe("@wpsk/cli bin entry", () => {
-  const binPath = join(process.cwd(), "packages/cli/bin/wpsk.js");
+  const binPath = join(process.cwd(), "packages/cli/bin/wpdev.js");
 
-  test("bin/wpsk.js exists", () => {
+  test("bin/wpdev.js exists", () => {
     expect(existsSync(binPath)).toBe(true);
   });
 
-  test("bin/wpsk.js starts with the node shebang", () => {
+  test("bin/wpdev.js starts with the node shebang", () => {
     const head = readFileSync(binPath, "utf8");
     expect(head.startsWith("#!/usr/bin/env node")).toBe(true);
   });

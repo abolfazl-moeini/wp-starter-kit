@@ -3,7 +3,7 @@ import path from "node:path";
 import {
   importAsGlobals,
   saveAssetFile,
-} from "@wpsk/dependency-extraction-esbuild-plugin";
+} from "@wpdev/dependency-extraction-esbuild-plugin";
 import { readBuildConfig } from "./index.js";
 
 export function buildDepsConfig(projectConfig, buildConfig = {}, options = {}) {
@@ -29,15 +29,15 @@ export function buildDepsConfig(projectConfig, buildConfig = {}, options = {}) {
     outfile,
     define: {
       IS_DEV: String(isDev),
-      __WPSK_GLOBAL_NAME__: JSON.stringify(projectConfig.globalName),
-      __WPSK_HOOK_PREFIX__: JSON.stringify(projectConfig.hookPrefix),
-      __WPSK_LOCALIZE_VAR__: JSON.stringify(projectConfig.localizeVar),
-      __WPSK_SLUG__: JSON.stringify(projectConfig.slug),
+      __WPDEV_GLOBAL_NAME__: JSON.stringify(projectConfig.globalName),
+      __WPDEV_HOOK_PREFIX__: JSON.stringify(projectConfig.hookPrefix),
+      __WPDEV_LOCALIZE_VAR__: JSON.stringify(projectConfig.localizeVar),
+      __WPDEV_SLUG__: JSON.stringify(projectConfig.slug),
     },
     loader: { ".js": "jsx", ".ts": "ts" },
     plugins: [importAsGlobals(globalMappings)],
     // SaveAssetFile is called in runBuild after build completes.
-    // The deps bundle inlines all @wpsk/* packages; they are not external.
+    // The deps bundle inlines all @wpdev/* packages; they are not external.
     // No separate internalItems needed since everything is bundled.
   };
 }

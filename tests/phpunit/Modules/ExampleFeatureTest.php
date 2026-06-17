@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Tests\Modules;
+namespace WPDev\Tests\Modules;
 
 use PHPUnit\Framework\TestCase;
-use WPSK\Core\Plugin;
-use WPSK\Modules\ExampleFeature\Module;
-use WPSK\Modules\ExampleFeature\Rest\ItemsController;
-use WPSK\Support\Rest\RestSetup;
+use WPDev\Core\Plugin;
+use WPDev\Modules\ExampleFeature\Module;
+use WPDev\Modules\ExampleFeature\Rest\ItemsController;
+use WPDev\Support\Rest\RestSetup;
 
 class ExampleFeatureTest extends TestCase
 {

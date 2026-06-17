@@ -22,7 +22,7 @@
  */
 
 import { renderTemplate } from "./_templates.js";
-import { TEMPLATE_STRAUSS_JSON_NO_WPSK_EXCLUSION } from "./_templates.js";
+import { TEMPLATE_STRAUSS_JSON_NO_WPDEV_EXCLUSION } from "./_templates.js";
 
 export function run(ctx) {
   if (ctx.features.vendorScoping !== "on") {
@@ -32,7 +32,7 @@ export function run(ctx) {
   return {
     files: {
       "strauss.json": renderTemplate(
-        TEMPLATE_STRAUSS_JSON_NO_WPSK_EXCLUSION,
+        TEMPLATE_STRAUSS_JSON_NO_WPDEV_EXCLUSION,
         tpl,
       ),
     },

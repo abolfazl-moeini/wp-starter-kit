@@ -3,7 +3,7 @@ import { scaffoldProject } from "./index.js";
 
 function parseFeaturesJson() {
   const raw =
-    process.env.WPSK_FEATURES_JSON ||
+    process.env.WPDEV_FEATURES_JSON ||
     process.argv
       .find((arg) => arg.startsWith("--features-json="))
       ?.slice("--features-json=".length);
@@ -23,8 +23,8 @@ if (!target || target.startsWith("--")) {
 }
 const force = process.argv.includes("--force");
 const features = parseFeaturesJson();
-const answers = process.env.WPSK_ANSWERS_JSON
-  ? JSON.parse(process.env.WPSK_ANSWERS_JSON)
+const answers = process.env.WPDEV_ANSWERS_JSON
+  ? JSON.parse(process.env.WPDEV_ANSWERS_JSON)
   : {
       slug: "my-project",
       npmScope: "myorg",

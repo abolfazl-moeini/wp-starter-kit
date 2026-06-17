@@ -10,10 +10,10 @@
  *
  * Examples:
  *   npm create @wpsk/plugin my-plugin --yes
- *     → node packages/cli/bin/wpsk.js create my-plugin --yes
+ *     → node packages/cli/bin/wpdev.js create my-plugin --yes
  *
  *   npm create @wpsk/plugin@0.1.0 my-plugin --scope=acme
- *     → node packages/cli/bin/wpsk.js create my-plugin --scope=acme
+ *     → node packages/cli/bin/wpdev.js create my-plugin --scope=acme
  *
  * The npm `create` convention (see `npm help npm-init`) maps:
  *   `npm create @wpsk/plugin`  →  `npm exec @wpsk/create-plugin`

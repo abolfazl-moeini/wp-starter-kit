@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Support\Queue;
+namespace WPDev\Support\Queue;
 
 /**
  * Deferred hook callback queue.

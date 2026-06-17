@@ -1,5 +1,5 @@
 <?php
-namespace WPSK\Support;
+namespace WPDev\Support;
 
 /**
  * Asset loading helpers for wp-starter-kit — the PSR-4 successor to the

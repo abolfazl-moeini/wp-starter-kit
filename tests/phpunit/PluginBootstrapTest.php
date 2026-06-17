@@ -13,9 +13,9 @@ use PHPUnit\Framework\TestCase;
  *  - Plugin Name / Version / Requires PHP / Text Domain headers.
  *  - `defined('ABSPATH') || exit;` guard at the top of the file.
  *  - `require_once __DIR__ . '/vendor/autoload.php';` to pull in
- *    the composer autoloader (and therefore WPSK\Core\Plugin).
+ *    the composer autoloader (and therefore WPDev\Core\Plugin).
  *  - A `plugins_loaded` action hook (or a direct call to
- *    `WPSK\Core\Plugin::boot()`) that wires the kit into WordPress.
+ *    `WPDev\Core\Plugin::boot()`) that wires the kit into WordPress.
  *  - `register_activation_hook`, `register_deactivation_hook`,
  *    `register_uninstall_hook` so the plugin participates in the
  *    WordPress lifecycle.
@@ -147,7 +147,7 @@ class PluginBootstrapTest extends TestCase
         $this->assertStringContainsString(
             'vendor/autoload.php',
             $source,
-            'Plugin bootstrap must pull in vendor/autoload.php so WPSK\\Core\\Plugin is reachable'
+            'Plugin bootstrap must pull in vendor/autoload.php so WPDev\\Core\\Plugin is reachable'
         );
     }
 
@@ -159,14 +159,14 @@ class PluginBootstrapTest extends TestCase
     {
         $source = $this->templateSource();
         // Either an `add_action('plugins_loaded', ...)` or a direct
-        // WPSK\Core\Plugin::boot() call. We accept both forms.
+        // WPDev\Core\Plugin::boot() call. We accept both forms.
         $hasAction = strpos($source, "add_action('plugins_loaded'") !== false
                   || strpos($source, 'add_action("plugins_loaded"') !== false;
-        $hasBoot = strpos($source, 'WPSK\\Core\\Plugin::boot(') !== false
-                || strpos($source, 'WPSK\Core\Plugin::boot(') !== false;
+        $hasBoot = strpos($source, 'WPDev\\Core\\Plugin::boot(') !== false
+                || strpos($source, 'WPDev\Core\Plugin::boot(') !== false;
         $this->assertTrue(
             $hasAction || $hasBoot,
-            'Plugin bootstrap must wire `add_action(\'plugins_loaded\', ...)` or call `WPSK\\Core\\Plugin::boot()`'
+            'Plugin bootstrap must wire `add_action(\'plugins_loaded\', ...)` or call `WPDev\\Core\\Plugin::boot()`'
         );
     }
 

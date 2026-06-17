@@ -1,5 +1,5 @@
 /**
- * @wpsk/create-wp-project — shared template strings + tplVars.
+ * @wpdev/create-wp-project — shared template strings + tplVars.
  *
  * Phase 21 refactor: the inline template constants and the
  * `tplVars` helper that used to live in `src/index.js` are moved
@@ -55,7 +55,7 @@ export function tplVars(answers, cfg) {
     // {{name}} / {{description}} / {{author}} / {{authorUri}} / {{pluginUri}}
     // — sensible defaults so the WP plugin header is always populated.
     name: cfg.globalName || answers.slug,
-    description: `${answers.slug} — built on wp-starter-kit (WPSK) framework`,
+    description: `${answers.slug} — built on wp-starter-kit (WPDev) framework`,
     author: "wp-starter-kit scaffold",
     authorUri: "https://github.com/abolfazl-moeini/wp-plugin-starter-kit",
     pluginUri: "https://github.com/abolfazl-moeini/wp-plugin-starter-kit",
@@ -64,18 +64,18 @@ export function tplVars(answers, cfg) {
     // Derived from the consumer's globalName (PascalCase) or an
     // explicit answers.vendor override. The composer.json PSR-4 mapping
     // in buildComposerJson uses the same value for autoloading.
-    vendor: answers.vendor || answers.globalName || "WPSK",
+    vendor: answers.vendor || answers.globalName || "WPDev",
     vendorNamespaceLower: (
       answers.vendor ||
       answers.globalName ||
       answers.slug ||
       "wpsk"
     ).toLowerCase(),
-    // {{frameworkNamespace}} — the WPSK framework namespace root, used
+    // {{frameworkNamespace}} — the WPDev framework namespace root, used
     // in `use` imports for framework classes (e.g.
-    // "use WPSK\\Core\\ModuleInterface"). Always "WPSK" — the consumer's
+    // "use WPDev\\Core\\ModuleInterface"). Always "WPDev" — the consumer's
     // composer.json resolves this through the wpsk/framework dependency.
-    frameworkNamespace: "WPSK",
+    frameworkNamespace: "WPDev",
     vendorPrefixUpper: (cfg.vendorPrefix || "WpskVendor").toUpperCase(),
     // Phase 23.A4: {{frameworkPath}} is the URL the consumer
     // composer.json's `repositories` entry points at for
@@ -133,13 +133,13 @@ export function packageJsonForAnswers(answers, features) {
     (features && features.jsTest) || answers.jsTest || "jest";
 
   // Phase 23.B4: read the kit's dep-versions registry and
-  // surface the @wpsk/* framework packages to the consumer.
+  // surface the @wpdev/* framework packages to the consumer.
   // The 6 lib packages go in `dependencies` (runtime) and the
   // 2 build packages go in `devDependencies` (compile-time
   // tooling). Versions come from the kit's own workspace
   // package.json files (see `getDepVersions` /
   // `readKitPackageVersion` in dep-versions.js), so a single
-  // `npm version patch` in any @wpsk/* package propagates
+  // `npm version patch` in any @wpdev/* package propagates
   // automatically to the next scaffold.
   //
   // The wrap `^X.Y.Z` matches npm's caret-range convention —
@@ -157,30 +157,30 @@ export function packageJsonForAnswers(answers, features) {
     return v.startsWith("^") || v === "*" || v.includes("npm:") ? v : `^${v}`;
   };
 
-  // The 6 @wpsk/* runtime libs (consumed at runtime by the
+  // The 6 @wpdev/* runtime libs (consumed at runtime by the
   // generated plugin's JS code).
-  const WPSK_RUNTIME_DEPS = [
-    "@wpsk/hooks",
-    "@wpsk/utils",
-    "@wpsk/rest-utils",
-    "@wpsk/html-utils",
-    ...(restBatchOn ? ["@wpsk/fetch"] : []),
-    "@wpsk/translation",
+  const WPDev_RUNTIME_DEPS = [
+    "@wpdev/hooks",
+    "@wpdev/utils",
+    "@wpdev/rest-utils",
+    "@wpdev/html-utils",
+    ...(restBatchOn ? ["@wpdev/fetch"] : []),
+    "@wpdev/translation",
   ];
-  // The 2 @wpsk/* build tools (compile-time only). The
+  // The 2 @wpdev/* build tools (compile-time only). The
   // dep-extraction plugin is a transitive dep of
-  // @wpsk/build, so the consumer only needs to declare
-  // @wpsk/build — but we surface it explicitly for
+  // @wpdev/build, so the consumer only needs to declare
+  // @wpdev/build — but we surface it explicitly for
   // transparency.
-  const WPSK_BUILD_DEPS = [
-    "@wpsk/build",
-    "@wpsk/dependency-extraction-esbuild-plugin",
+  const WPDev_BUILD_DEPS = [
+    "@wpdev/build",
+    "@wpdev/dependency-extraction-esbuild-plugin",
   ];
   const wpskDeps = Object.fromEntries(
-    WPSK_RUNTIME_DEPS.map((name) => [name, versionOf(name)]),
+    WPDev_RUNTIME_DEPS.map((name) => [name, versionOf(name)]),
   );
   const wpskDevDeps = Object.fromEntries(
-    WPSK_BUILD_DEPS.map((name) => [name, versionOf(name)]),
+    WPDev_BUILD_DEPS.map((name) => [name, versionOf(name)]),
   );
 
   return {
@@ -231,14 +231,14 @@ export function packageJsonForAnswers(answers, features) {
               "@wordpress/hooks": "^3.50.0",
               "@wordpress/dom-ready": "^3.50.0",
             }),
-      // Phase 23.B4: the @wpsk/* framework packages, surfaced
-      // so the consumer can `import { ... } from "@wpsk/hooks"`
+      // Phase 23.B4: the @wpdev/* framework packages, surfaced
+      // so the consumer can `import { ... } from "@wpdev/hooks"`
       // at runtime. See header comment.
       ...wpskDeps,
     },
     devDependencies: {
-      // Phase 23.B4: the @wpsk/* build tools. The consumer
-      // uses them at scaffold/build time. `@wpsk/build`
+      // Phase 23.B4: the @wpdev/* build tools. The consumer
+      // uses them at scaffold/build time. `@wpdev/build`
       // bundles the dependency-extraction plugin as a
       // transitive dep, but we surface it explicitly so
       // the version is visible in the consumer's lockfile.
@@ -567,22 +567,22 @@ export const TEMPLATE_STRAUSS_JSON = `{
   "constant_prefix": "{{vendorPrefixUpper}}_",
   "delete_vendor_files": true,
   "exclude_from_prefix": {
-    "namespaces": ["WPSK"],
+    "namespaces": ["WPDev"],
     "file_patterns": []
   }
 }
 `;
 
 /**
- * Phase 21 — vendorScoping generator overrides the WPSK exclusion
- * (plan §0.4.1). The CORE template keeps the WPSK exclusion (the
+ * Phase 21 — vendorScoping generator overrides the WPDev exclusion
+ * (plan §0.4.1). The CORE template keeps the WPDev exclusion (the
  * kit's own `strauss.json` does the same; local src/Core copies
  * still need the exclusion to scope correctly at release time
  * while Phase 23 lands). The vendorScoping generator (when ON)
- * emits a strauss.json WITHOUT the WPSK exclusion — that is the
+ * emits a strauss.json WITHOUT the WPDev exclusion — that is the
  * template consumed by the `run()` of vendorScoping.js.
  */
-export const TEMPLATE_STRAUSS_JSON_NO_WPSK_EXCLUSION = `{
+export const TEMPLATE_STRAUSS_JSON_NO_WPDEV_EXCLUSION = `{
   "target_directory": "vendor-prefixed",
   "namespace_prefix": "{{vendorPrefix}}",
   "classmap_prefix": "{{vendorPrefix}}_",
@@ -704,7 +704,7 @@ See the parent starter docs in \`node_modules/wp-starter-kit/README.md\` (if lin
 export const TEMPLATE_CORE_PLUGIN_PHP = `<?php
 declare(strict_types=1);
 
-namespace WPSK\\Core;
+namespace WPDev\\Core;
 
 /**
  * Static facade for the wp-starter-kit plugin.
@@ -905,7 +905,7 @@ final class Plugin
 export const TEMPLATE_CORE_MODULE_INTERFACE_PHP = `<?php
 declare(strict_types=1);
 
-namespace WPSK\\Core;
+namespace WPDev\\Core;
 
 /**
  * Contract every pluggable feature module must implement.
@@ -947,7 +947,7 @@ interface ModuleInterface
 export const TEMPLATE_CORE_MODULE_LOADER_PHP = `<?php
 declare(strict_types=1);
 
-namespace WPSK\\Core;
+namespace WPDev\\Core;
 
 /**
  * In-memory registry and boot orchestrator for {@see ModuleInterface}
@@ -1127,12 +1127,12 @@ export const TEMPLATE_TSCONFIG_JSON = `{
  */
 export function buildComposerJson(vars) {
   const vendorPrefix = vars.vendorPrefix || "WpskVendor";
-  const excludeNamespaces = vars.vendorScopingOn === false ? ["WPSK"] : [];
+  const excludeNamespaces = vars.vendorScopingOn === false ? ["WPDev"] : [];
   const payload = {
     name: `${vars.vendorNamespaceLower || vars.slug}/${vars.slug}`,
     description:
       vars.description ||
-      `${vars.slug} — built on wp-starter-kit (WPSK) framework`,
+      `${vars.slug} — built on wp-starter-kit (WPDev) framework`,
     type: "wordpress-plugin",
     license: vars.licenseId || "GPL-2.0-or-later",
     repositories: [

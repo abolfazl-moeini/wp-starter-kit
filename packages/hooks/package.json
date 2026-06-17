@@ -1,5 +1,5 @@
 {
-  "name": "@wpsk/hooks",
+  "name": "@wpdev/hooks",
   "version": "0.1.0",
   "description": "WordPress hooks helper for wp-starter-kit consumers (typed wrappers around @wordpress/hooks).",
   "type": "module",

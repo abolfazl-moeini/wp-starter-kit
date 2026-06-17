@@ -106,7 +106,7 @@ export function run(ctx) {
   //    the "wpsk/framework" Composer dep (see buildComposerJson require
   //    + path repo). The consumer's src/ only contains its own modules
   //    (under its vendor ns). Emitting copies would produce unloaded
-  //    dead code (consumer composer.json never registers a WPSK\\ psr-4
+  //    dead code (consumer composer.json never registers a WPDev\\ psr-4
   //    pointing at src/Core).
   //    The three TEMPLATE_CORE_* strings are retained in _templates.js
   //    only for historical reference / potential explicit "vendored"
@@ -203,7 +203,7 @@ export function run(ctx) {
  */
 function deriveVendorNamespace(globalName) {
   if (typeof globalName !== "string" || globalName.length === 0) {
-    return "WPSK";
+    return "WPDev";
   }
   return globalName.trim();
 }

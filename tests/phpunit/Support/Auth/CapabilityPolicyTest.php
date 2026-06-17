@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Tests\Support\Auth;
+namespace WPDev\Tests\Support\Auth;
 
 use PHPUnit\Framework\TestCase;
-use WPSK\Support\Auth\CapabilityPolicy;
+use WPDev\Support\Auth\CapabilityPolicy;
 
 class CapabilityPolicyTest extends TestCase
 {

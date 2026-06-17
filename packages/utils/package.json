@@ -1,5 +1,5 @@
 {
-  "name": "@wpsk/utils",
+  "name": "@wpdev/utils",
   "version": "0.1.0",
   "description": "Shared JS utilities for wp-starter-kit consumers (localize, formatters, etc.).",
   "type": "module",

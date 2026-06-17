@@ -8,7 +8,7 @@
  * can target the feature without claiming core-owned glue paths.
  */
 
-const MARKER = ".wpsk/ui-framework";
+const MARKER = ".wpdev/ui-framework";
 
 export function run(ctx) {
   if (ctx.features.js === "none") {

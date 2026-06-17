@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Tests\Support\Rest;
+namespace WPDev\Tests\Support\Rest;
 
 use PHPUnit\Framework\TestCase;
-use WPSK\Support\Rest\RestHandler;
+use WPDev\Support\Rest\RestHandler;
 
 class RestHandlerTest extends TestCase
 {

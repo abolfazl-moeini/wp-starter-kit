@@ -7,7 +7,7 @@
  * `packages/framework/` (the wpsk/framework Composer package).
  * For the dist, the framework is installed as a dependency and
  * scoped by Strauss (the pre-Phase-23 strauss.json excluded
- * WPSK because the framework was a first-party copy; post-23 the
+ * WPDev because the framework was a first-party copy; post-23 the
  * framework is a dep and SHOULD be scoped).
  *
  * Steps:
@@ -19,7 +19,7 @@
  *          kit's local packages/framework)
  *        - autoloads {Vendor}\\ → src/ (the user's own modules)
  *   4. Re-emit a CONSUMER-shaped strauss.json into the dist that
- *      DOES NOT exclude WPSK (the framework should be scoped).
+ *      DOES NOT exclude WPDev (the framework should be scoped).
  *   5. Run `composer install --no-dev` inside the dist.
  *   6. Run `vendor/bin/strauss` inside the dist.
  *
@@ -174,7 +174,7 @@ function wpsk_copy_tree(string $src, string $dest, array $exclude): void
  */
 function wpsk_build_dist_composer_json(array $config, string $frameworkPath): string
 {
-    $globalName = (string) ($config['globalName'] ?? 'WPSK');
+    $globalName = (string) ($config['globalName'] ?? 'WPDev');
     $vendorNamespaceLower = strtolower($globalName);
     $slug = (string) ($config['slug'] ?? 'wpsk');
     $description = (string) ($config['description'] ?? "{$slug} — WordPress plugin built on wp-starter-kit");
@@ -182,7 +182,7 @@ function wpsk_build_dist_composer_json(array $config, string $frameworkPath): st
     $licenseId = (string) ($config['licenseId'] ?? 'GPL-2.0-or-later');
 
     // The vendor namespace root is the consumer's globalName. The
-    // framework's WPSK\\ namespace is shipped as a dependency
+    // framework's WPDev\\ namespace is shipped as a dependency
     // (wpsk/framework) and resolved via the path repo.
     $payload = [
         'name' => "{$vendorNamespaceLower}/{$slug}",
@@ -264,10 +264,10 @@ function wpsk_build_dist_strauss_json(array $config): string
         'namespace_prefix' => $vendorPrefix,
         'classmap_prefix' => $vendorPrefix . '_',
         'constant_prefix' => strtoupper($vendorPrefix) . '_',
-        // Phase 23.A6: WPSK is no longer excluded from prefixing.
+        // Phase 23.A6: WPDev is no longer excluded from prefixing.
         // The framework is a dependency (vendor/wpsk/framework/),
-        // so its WPSK namespace SHOULD be scoped to
-        // {vendorPrefix}\WPSK\... The dist's `vendor/` is the
+        // so its WPDev namespace SHOULD be scoped to
+        // {vendorPrefix}\WPDev\... The dist's `vendor/` is the
         // only thing strauss touches, and the framework lives
         // there.
         'delete_vendor_files' => true,
@@ -335,8 +335,8 @@ wpsk_copy_tree($root, $distRoot, $exclude);
  * framework as a dependency via `composer install --no-dev`
  * (below), so we do NOT copy the framework into the dist's
  * `src/` — that would create a namespace conflict (the
- * project's own `WPSK\\` autoload and the framework's
- * `WPSK\\` autoload would both resolve to `src/`).
+ * project's own `WPDev\\` autoload and the framework's
+ * `WPDev\\` autoload would both resolve to `src/`).
  */
 $marker = $distRoot . '/.dist-built';
 file_put_contents($marker, gmdate('c') . "\n");

@@ -11,9 +11,9 @@ describe("final audit", () => {
     expect(arch).toMatch(/plugin|ModuleLoader|src\//i);
   });
 
-  test("wpsk-starter.php exists for starter repo dogfood", () => {
+  test("wpdev-starter.php exists for starter repo dogfood", () => {
     const plugin = readFileSync(
-      join(process.cwd(), "wpsk-starter.php"),
+      join(process.cwd(), "wpdev-starter.php"),
       "utf8",
     );
     expect(plugin).toMatch(/Plugin::boot/);

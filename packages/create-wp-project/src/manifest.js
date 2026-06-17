@@ -4,7 +4,7 @@
  * Phase 20 of plan.v3.md. The manifest is the consumer project's
  * durable record of "which kit version generated this project,
  * which features are on, in which distMode". It lives at
- * `<projectRoot>/wpsk-kit.json` and is the single source of truth
+ * `<projectRoot>/wpdev-kit.json` and is the single source of truth
  * for every later phase that needs to ask "what is in this project".
  *
  * Three contracts (locked by tests/packages/manifest*.test.js):
@@ -12,7 +12,7 @@
  *    `{ schema:1, kitVersion, distMode, generatedAt, features }`.
  *    `distMode` defaults to "deps" (Phase 23+). Legacy projects may
  *    carry "vendored"; migrations + doctor handle the upgrade path.
- *  - writeManifest(dir, manifest) writes `wpsk-kit.json` with
+ *  - writeManifest(dir, manifest) writes `wpdev-kit.json` with
  *    stable key order + trailing newline + 2-space indent (so
  *    diffs stay readable). Creates the directory if missing.
  *  - readManifest(dir) returns the parsed object or `null` if
@@ -36,7 +36,7 @@ import { deriveUiFramework } from "./derive-ui-framework.js";
 /* Constants                                                             */
 /* -------------------------------------------------------------------- */
 
-export const MANIFEST_FILENAME = "wpsk-kit.json";
+export const MANIFEST_FILENAME = "wpdev-kit.json";
 export const MANIFEST_SCHEMA = 1;
 export const DEFAULT_DIST_MODE = "deps";
 
@@ -95,7 +95,7 @@ export function buildManifest({
 /* -------------------------------------------------------------------- */
 
 /**
- * Write a manifest to `<dir>/wpsk-kit.json`. Creates the directory
+ * Write a manifest to `<dir>/wpdev-kit.json`. Creates the directory
  * if it doesn't exist. The output is JSON with 2-space indent
  * and a trailing newline (so POSIX tools that expect a final '\n'
  * are happy, and so byte-for-byte idempotency is achievable).
@@ -129,7 +129,7 @@ export async function writeManifest(dir, manifest) {
 /* -------------------------------------------------------------------- */
 
 /**
- * Read a manifest from `<dir>/wpsk-kit.json`.
+ * Read a manifest from `<dir>/wpdev-kit.json`.
  *
  *  - File absent → returns `null`. The installer treats `null` as
  *    "not a wp-starter-kit project" and decides whether that's
@@ -213,7 +213,7 @@ const MINIMAL_V2_BRANDING = {
 };
 
 /**
- * Write the same `features` object to BOTH `wpsk-kit.json` and
+ * Write the same `features` object to BOTH `wpdev-kit.json` and
  * a `features` key in `project.config.json`.
  *
  * This helper does ONLY the project.config.json half — the
@@ -223,15 +223,15 @@ const MINIMAL_V2_BRANDING = {
  *   1. writeManifest(dir, buildManifest({ kitVersion, features }))
  *   2. syncFeaturesToConfig(dir, features)
  *
- * Why duplicate? `wpsk-kit.json` is the durable kit state
+ * Why duplicate? `wpdev-kit.json` is the durable kit state
  * (kitVersion, distMode, generatedAt, features). Putting
  * `features` ALSO in `project.config.json` means:
  *
  *  - Pre-Phase 20 readers of project.config.json (the kit's
  *    PHP classes, the JS asset bundle) can answer
  *    "which features are on?" without discovering
- *    wpsk-kit.json.
- *  - The kit's own state is self-contained — `wpsk-kit.json`
+ *    wpdev-kit.json.
+ *  - The kit's own state is self-contained — `wpdev-kit.json`
  *    can be read in isolation.
  *
  * project.config.json is updated via `updateJsonFile`, so the

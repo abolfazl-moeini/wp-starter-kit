@@ -3,26 +3,26 @@
  * BC shims for the asset helper functions originally defined here.
  *
  * The implementation moved to `src/Support/Assets.php` (PSR-4, namespace
- * `WPSK\Support\Assets`) so wp-starter-kit can be installed as a plugin
+ * `WPDev\Support\Assets`) so wp-starter-kit can be installed as a plugin
  * and resolve paths through `plugin_dir_path()` / `plugins_url()` instead
  * of `get_template_directory()`.
  *
  * The functions in this file are kept ONLY for backward compatibility
- * with existing call-sites. New code MUST call `WPSK\Support\Assets::`
+ * with existing call-sites. New code MUST call `WPDev\Support\Assets::`
  * directly. Each shim is a one-liner that delegates to the corresponding
- * static method on `WPSK\Support\Assets`.
+ * static method on `WPDev\Support\Assets`.
  *
  * @package wp-starter-kit
  */
 
 if ( ! function_exists( 'wpsk_read_project_config' ) ) {
 	/**
-	 * BC shim → `WPSK\Support\Assets::read_project_config()`.
+	 * BC shim → `WPDev\Support\Assets::read_project_config()`.
 	 *
 	 * @return array<string, mixed>
 	 */
 	function wpsk_read_project_config() {
-		return WPSK\Support\Assets::read_project_config();
+		return WPDev\Support\Assets::read_project_config();
 	}
 }
 
@@ -47,7 +47,7 @@ if ( ! function_exists( 'wpsk_resolve_asset_url' ) ) {
 	 */
 	function wpsk_resolve_asset_url( $abs_path ) {
 		// Re-derive against the plugin base the new class uses.
-		$paths     = WPSK\Support\Assets::resolve_paths();
+		$paths     = WPDev\Support\Assets::resolve_paths();
 		$base_path = rtrim( $paths['base_path'], '/\\' );
 		$base_url  = $paths['base_url'];
 
@@ -66,13 +66,13 @@ if ( ! function_exists( 'wpsk_resolve_asset_url' ) ) {
 
 if ( ! function_exists( 'wpsk_asset_info' ) ) {
 	/**
-	 * BC shim → `WPSK\Support\Assets::asset_info()`.
+	 * BC shim → `WPDev\Support\Assets::asset_info()`.
 	 *
 	 * @param string $file_path Absolute or relative path to a `.js`/`.css` file.
 	 * @return array
 	 */
 	function wpsk_asset_info( $file_path ) {
-		return WPSK\Support\Assets::asset_info( $file_path );
+		return WPDev\Support\Assets::asset_info( $file_path );
 	}
 }
 
@@ -108,14 +108,14 @@ if ( ! function_exists( 'wpsk_bundle_file_url' ) ) {
 if ( ! function_exists( 'wpsk_enqueue_bundle_script' ) ) {
 	/**
 	 * BC shim — resolves a bundle file name to its absolute path then
-	 * forwards to `WPSK\Support\Assets::enqueue_legacy_bundle_script()`.
+	 * forwards to `WPDev\Support\Assets::enqueue_legacy_bundle_script()`.
 	 *
 	 * @param string $file_name  JS file name (e.g. `wpsk-starter-deps.js`).
 	 * @param array  $extra_deps Extra WP-script handles to merge into deps.
 	 * @return bool              `true` if the script was enqueued.
 	 */
 	function wpsk_enqueue_bundle_script( $file_name, $extra_deps = [] ) {
-		return WPSK\Support\Assets::enqueue_legacy_bundle_script(
+		return WPDev\Support\Assets::enqueue_legacy_bundle_script(
 			wpsk_bundle_file_path( $file_name ),
 			$extra_deps
 		);
@@ -131,21 +131,21 @@ if ( ! function_exists( 'wpsk_enqueue_bundle_script_at' ) ) {
 	 * @return bool              `true` if the script was enqueued.
 	 */
 	function wpsk_enqueue_bundle_script_at( $abs_path, $extra_deps = [] ) {
-		return WPSK\Support\Assets::enqueue_legacy_bundle_script( $abs_path, $extra_deps );
+		return WPDev\Support\Assets::enqueue_legacy_bundle_script( $abs_path, $extra_deps );
 	}
 }
 
 if ( ! function_exists( 'wpsk_enqueue_bundle_style' ) ) {
 	/**
 	 * BC shim — resolves a bundle file name to its absolute path then
-	 * forwards to `WPSK\Support\Assets::enqueue_legacy_bundle_style()`.
+	 * forwards to `WPDev\Support\Assets::enqueue_legacy_bundle_style()`.
 	 *
 	 * @param string $file_name  CSS file name (e.g. `style.css`).
 	 * @param array  $extra_deps Extra WP-style handles to merge into deps.
 	 * @return bool              `true` if the style was enqueued.
 	 */
 	function wpsk_enqueue_bundle_style( $file_name, $extra_deps = [] ) {
-		return WPSK\Support\Assets::enqueue_legacy_bundle_style(
+		return WPDev\Support\Assets::enqueue_legacy_bundle_style(
 			wpsk_bundle_file_path( $file_name ),
 			$extra_deps
 		);
@@ -161,7 +161,7 @@ if ( ! function_exists( 'wpsk_enqueue_bundle_style_at' ) ) {
 	 * @return bool              `true` if the style was enqueued.
 	 */
 	function wpsk_enqueue_bundle_style_at( $abs_path, $extra_deps = [] ) {
-		return WPSK\Support\Assets::enqueue_legacy_bundle_style( $abs_path, $extra_deps );
+		return WPDev\Support\Assets::enqueue_legacy_bundle_style( $abs_path, $extra_deps );
 	}
 }
 
@@ -203,7 +203,7 @@ if ( ! function_exists( 'wpsk_enqueue_stylesheet' ) ) {
 			? $resolved_plugin
 			: wpsk_stylesheet_file_path( $file_name );
 
-		return WPSK\Support\Assets::enqueue_legacy_bundle_style( $abs_path, $extra_deps );
+		return WPDev\Support\Assets::enqueue_legacy_bundle_style( $abs_path, $extra_deps );
 	}
 }
 
@@ -262,11 +262,11 @@ if ( ! function_exists( 'wpsk_stylesheet_file_url' ) ) {
 
 if ( ! function_exists( 'wpsk_get_localize_data' ) ) {
 	/**
-	 * BC shim → `WPSK\Support\Assets::get_localize_data()`.
+	 * BC shim → `WPDev\Support\Assets::get_localize_data()`.
 	 *
 	 * @return array
 	 */
 	function wpsk_get_localize_data() {
-		return WPSK\Support\Assets::get_localize_data();
+		return WPDev\Support\Assets::get_localize_data();
 	}
 }

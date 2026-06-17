@@ -1,6 +1,6 @@
 <?php
 /**
- * WPSK\TestTools\Patch\GitPatch — applies unified-diff patches using
+ * WPDev\TestTools\Patch\GitPatch — applies unified-diff patches using
  * `git apply` via symfony/process.
  *
  * Ported from sample-plugin/packages/php-test-tools/src/Patch/GitPatch.php.
@@ -17,7 +17,7 @@
 
 declare(strict_types=1);
 
-namespace WPSK\TestTools\Patch;
+namespace WPDev\TestTools\Patch;
 
 use RuntimeException;
 use Symfony\Component\Process\Process;

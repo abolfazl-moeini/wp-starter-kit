@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Tests\FaultTolerance;
+namespace WPDev\Tests\FaultTolerance;
 
 use PHPUnit\Framework\TestCase;
-use WPSK\FaultTolerance\HttpPool;
+use WPDev\FaultTolerance\HttpPool;
 
 /**
  * Coverage for the SSRF gap (B-07) and the mid-loop handle leak (B-08).

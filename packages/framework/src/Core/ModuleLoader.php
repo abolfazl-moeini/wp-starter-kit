@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Core;
+namespace WPDev\Core;
 
 // phpcs:disable WordPress.Files.FileName.NotHyphenatedLowercase
 // phpcs:disable WordPress.Files.FileName.InvalidClassFileName
-// PSR-4 autoload (`WPSK\\` => `src/`) maps `WPSK\Core\ModuleLoader`
+// PSR-4 autoload (`WPDev\\` => `src/`) maps `WPDev\Core\ModuleLoader`
 // to `ModuleLoader.php` exactly. The WPCS FileName rules would
 // require `class-module-loader.php` (PSR-4 cannot resolve that),
 // so they are disabled locally for this one file. The other WPCS

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Support\Shortcodes;
+namespace WPDev\Support\Shortcodes;
 
 /**
  * Base for class-based shortcode handlers.

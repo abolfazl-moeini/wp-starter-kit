@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Support\Shortcodes;
+namespace WPDev\Support\Shortcodes;
 
 use WP_Shortcode;
 

@@ -3,7 +3,7 @@
  * Patch configuration for `tests/patch/apply-patches.php`.
  *
  * Returned shape: flat `name => /absolute/path/to/patch` map. The unified
- * `WPSK\TestTools\Patch\Cli::init($root, $config)` iterates this map and
+ * `WPDev\TestTools\Patch\Cli::init($root, $config)` iterates this map and
  * applies each patch under `$root` using `git apply`.
  *
  * The wp-starter-kit starter ships an empty config — downstream projects

@@ -15,7 +15,7 @@
  *              php-stubs/wordpress-stubs, etc. belong in require-dev
  *              of the kit itself, never in a published library's
  *              runtime require).
- *   - autoload.psr-4:  "WPSK\\" => "src/"
+ *   - autoload.psr-4:  "WPDev\\" => "src/"
  *
  * These tests fail RED while `packages/framework/composer.json`
  * is missing or has the wrong shape; they go GREEN once the
@@ -23,7 +23,7 @@
  */
 declare(strict_types=1);
 
-namespace WPSK\Tests\Framework;
+namespace WPDev\Tests\Framework;
 
 use PHPUnit\Framework\TestCase;
 
@@ -85,14 +85,14 @@ class PackageMetadataTest extends TestCase
             'autoload.psr-4 must be an array on the framework package'
         );
         $this->assertArrayHasKey(
-            'WPSK\\',
+            'WPDev\\',
             $psr4,
-            'Framework package must expose WPSK\\ via PSR-4'
+            'Framework package must expose WPDev\\ via PSR-4'
         );
         $this->assertSame(
             'src/',
-            $psr4['WPSK\\'],
-            'WPSK\\ must map to src/ inside packages/framework'
+            $psr4['WPDev\\'],
+            'WPDev\\ must map to src/ inside packages/framework'
         );
     }
 

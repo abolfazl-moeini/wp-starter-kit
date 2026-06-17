@@ -19,7 +19,7 @@
 // project is strict; this file is special as the IIFE deps entry.
 
 import { createHooks } from "@wordpress/hooks";
-import { FreezeUI, UnFreezeUI } from "@wpsk/html-utils";
+import { FreezeUI, UnFreezeUI } from "@wpdev/html-utils";
 
 // dom-ready shim. @wordpress/dom-ready is the canonical choice but is an
 // optional runtime dep; we fall back to rAF so this template loads even when
@@ -32,7 +32,7 @@ const domReady =
 
 /**
  * The hooks singleton — the only `createHooks()` instance in the whole
- * project. Component bundles read it via `@wpsk/hooks → getHooks()`.
+ * project. Component bundles read it via `@wpdev/hooks → getHooks()`.
  */
 export const hooks = createHooks();
 
@@ -47,14 +47,14 @@ export const table = {
 };
 
 /**
- * Default-form export of the project's `@wpsk/utils` namespace, so consumers
+ * Default-form export of the project's `@wpdev/utils` namespace, so consumers
  * can reach `localize` / `objectMap` / `formData2Object` via the same IIFE
  * global without a second bundle.
  *
  * `export * as utils` is bundled by esbuild's IIFE wrapper as
  * `<globalName>.utils = { localize, objectMap, formData2Object }`.
  */
-export * as utils from "@wpsk/utils";
+export * as utils from "@wpdev/utils";
 
 // __WPSK_HOOK_PREFIX__ and __WPSK_LOCALIZE_VAR__ are replaced at esbuild
 // bundle time by defines coming from project.config.json (see buildDepsConfig).
@@ -62,7 +62,7 @@ export * as utils from "@wpsk/utils";
 // + npm run build) for hook actions that are registered inside this entry.
 
 domReady(() => {
-  // <hookPrefix>-request-ajax-start — fired by @wpsk/rest-utils before any
+  // <hookPrefix>-request-ajax-start — fired by @wpdev/rest-utils before any
   // REST / X-URL request. We use the spinner overlay as the loading signal.
   hooks.addAction(
     __WPSK_HOOK_PREFIX__ + "-request-ajax-start",
@@ -72,7 +72,7 @@ domReady(() => {
     },
   );
 
-  // <hookPrefix>-request-ajax-done — fired in `finally` by @wpsk/rest-utils.
+  // <hookPrefix>-request-ajax-done — fired in `finally` by @wpdev/rest-utils.
   hooks.addAction(
     __WPSK_HOOK_PREFIX__ + "-request-ajax-done",
     "wpsk-deps-bundle",
@@ -87,12 +87,12 @@ domReady(() => {
     "wpsk-deps-bundle",
     (container: Element | null) => {
       if (!container) return;
-      // Re-exported from @wpsk/html-utils; the local import (top of file)
+      // Re-exported from @wpdev/html-utils; the local import (top of file)
       // and the global re-export are two distinct bindings — keep them so
       // the deps bundle can act as a fallback for consumers that loaded
       // the global before the html-utils package was imported.
       try {
-        const htmlUtils = require("@wpsk/html-utils");
+        const htmlUtils = require("@wpdev/html-utils");
         htmlUtils.initDatepicker?.(container);
         htmlUtils.initFormatNumbers?.(container);
       } catch (_) {
@@ -108,7 +108,7 @@ domReady(() => {
     (container: Element | null, changedElementName?: string) => {
       if (!container || !changedElementName) return;
       try {
-        const htmlUtils = require("@wpsk/html-utils");
+        const htmlUtils = require("@wpdev/html-utils");
         htmlUtils.SwitchableFocusElement?.(container, changedElementName);
       } catch (_) {
         // no-op

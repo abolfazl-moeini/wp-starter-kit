@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Core;
+namespace WPDev\Core;
 
 // phpcs:disable WordPress.Files.FileName.NotHyphenatedLowercase
 // phpcs:disable WordPress.Files.FileName.InvalidClassFileName
-// PSR-4 autoload (`WPSK\\` => `src/`) maps `WPSK\Core\Plugin` to
+// PSR-4 autoload (`WPDev\\` => `src/`) maps `WPDev\Core\Plugin` to
 // `Plugin.php` exactly. The WPCS FileName rules would require
 // `class-plugin.php` (PSR-4 cannot resolve that), so they are
 // disabled locally for this one file. The other WPCS rules still
@@ -311,8 +311,8 @@ final class Plugin {
 	 *
 	 * Example:
 	 *
-	 *     \WPSK\Core\Plugin::set_plugin_dir( plugin_dir_path( __FILE__ ) );
-	 *     \WPSK\Core\Plugin::boot();
+	 *     \WPDev\Core\Plugin::set_plugin_dir( plugin_dir_path( __FILE__ ) );
+	 *     \WPDev\Core\Plugin::boot();
 	 *
 	 * Calling with `null` restores the default in-tree resolution
 	 * (useful for tests that need to switch back and forth).

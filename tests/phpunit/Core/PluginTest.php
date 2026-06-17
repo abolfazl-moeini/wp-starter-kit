@@ -1,9 +1,9 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use WPSK\Core\ModuleInterface;
-use WPSK\Core\ModuleLoader;
-use WPSK\Core\Plugin;
+use WPDev\Core\ModuleInterface;
+use WPDev\Core\ModuleLoader;
+use WPDev\Core\Plugin;
 
 /**
  * Minimal ModuleInterface stub for PluginTest — distinct from
@@ -37,7 +37,7 @@ final class PluginTestStubModule implements ModuleInterface
 }
 
 /**
- * Tests for the WPSK\Core\Plugin facade.
+ * Tests for the WPDev\Core\Plugin facade.
  *
  * Coverage:
  *  - config() reads project.config.json from a given path and
@@ -417,7 +417,7 @@ class PluginTest extends TestCase
     /**
      * Regression test for B-03 (bug audit plan_b8f3db01):
      *
-     * The default wpsk-starter.php plugin file uses an inline closure
+     * The default wpdev-starter.php plugin file uses an inline closure
      * for the priority-5 module registration. When the file is
      * included AFTER `plugins_loaded` has already fired, the closure
      * is too late — the fallback `if (did_action('plugins_loaded'))`
@@ -425,7 +425,7 @@ class PluginTest extends TestCase
      * module. Result: the plugin booted with zero modules in
      * non-standard include orders (mu-plugins, wp-cli, test bootstrap).
      *
-     * The fix is in wpsk-starter.php itself (not the framework):
+     * The fix is in wpdev-starter.php itself (not the framework):
      * extract the registration into a named function and call it
      * from the late-load fallback. The test verifies the
      * framework-side contract: `Plugin::loader()->boot_all()` works
@@ -454,7 +454,7 @@ class PluginTest extends TestCase
             PluginTestStubModule::$bootedCount,
             'A module registered AFTER boot() must be bootable via '
             . 'boot_all() — this is the contract the late-load '
-            . 'fallback in wpsk-starter.php relies on (B-03 regression)'
+            . 'fallback in wpdev-starter.php relies on (B-03 regression)'
         );
         $this->assertTrue(
             Plugin::loader()->has('late-load'),

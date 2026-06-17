@@ -1,5 +1,5 @@
 {
-  "name": "@wpsk/dependency-extraction-esbuild-plugin",
+  "name": "@wpdev/dependency-extraction-esbuild-plugin",
   "version": "1.0.0",
   "description": "esbuild plugin that extracts WordPress-style script dependency registrations from import statements.",
   "type": "module",

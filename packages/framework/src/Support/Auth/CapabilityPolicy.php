@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Support\Auth;
+namespace WPDev\Support\Auth;
 
 /**
  * Thin wrappers around current_user_can() for REST permission reuse.

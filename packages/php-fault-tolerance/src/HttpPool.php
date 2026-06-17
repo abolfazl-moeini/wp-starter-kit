@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\FaultTolerance;
+namespace WPDev\FaultTolerance;
 
 /**
  * Parallel HTTP pool with SSRF hygiene — falls back to sequential batch.

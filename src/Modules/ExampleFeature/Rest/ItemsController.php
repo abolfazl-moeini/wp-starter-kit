@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Modules\ExampleFeature\Rest;
+namespace WPDev\Modules\ExampleFeature\Rest;
 
-use WPSK\Support\Auth\CapabilityPolicy;
-use WPSK\Support\Rest\AllowBatch;
-use WPSK\Support\Rest\BatchResponse;
-use WPSK\Support\Rest\RestHandler;
+use WPDev\Support\Auth\CapabilityPolicy;
+use WPDev\Support\Rest\AllowBatch;
+use WPDev\Support\Rest\BatchResponse;
+use WPDev\Support\Rest\RestHandler;
 use WP_REST_Request;
 use WP_REST_Response;
 

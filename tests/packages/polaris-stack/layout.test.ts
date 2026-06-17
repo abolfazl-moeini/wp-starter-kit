@@ -33,8 +33,9 @@ describe("polaris-stack layout.css", () => {
     expect(BOX_TSX).toContain('"--ps-p"');
     expect(BOX_TSX).toContain('"--ps-px"');
     expect(BOX_TSX).not.toMatch(/s\.padding\b/);
-    expect(LAYOUT_CSS).toContain("padding: var(--ps-p)");
-    expect(LAYOUT_CSS).toContain("padding-inline-start: var(--ps-pl)");
+    expect(LAYOUT_CSS).toContain("--ps-p: initial");
+    expect(LAYOUT_CSS).toContain("padding-block-start: var(--ps-pt,");
+    expect(LAYOUT_CSS).toContain("padding-inline-start: var(--ps-pl,");
   });
 
   test("Switcher limit uses nth-child overflow rules", () => {

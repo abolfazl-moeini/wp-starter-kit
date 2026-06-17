@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Tests\Support\Queue;
+namespace WPDev\Tests\Support\Queue;
 
 use PHPUnit\Framework\TestCase;
-use WPSK\Support\Queue\DeferredCall;
+use WPDev\Support\Queue\DeferredCall;
 
 class DeferredCallTest extends TestCase
 {

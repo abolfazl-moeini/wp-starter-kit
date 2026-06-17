@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Tests\Support\Rest;
+namespace WPDev\Tests\Support\Rest;
 
 use PHPUnit\Framework\TestCase;
-use WPSK\Core\Plugin;
-use WPSK\Support\Rest\AllowBatch;
-use WPSK\Support\Rest\RestHandler;
-use WPSK\Support\Rest\RestSetup;
+use WPDev\Core\Plugin;
+use WPDev\Support\Rest\AllowBatch;
+use WPDev\Support\Rest\RestHandler;
+use WPDev\Support\Rest\RestSetup;
 
 class RestSetupTest extends TestCase
 {
@@ -63,7 +63,7 @@ class RestSetupTest extends TestCase
     public function test_register_rejects_unknown_class_string(): void
     {
         $this->assertFalse(
-            RestSetup::register('WPSK\\Tests\\Support\\Rest\\NotARealClass'),
+            RestSetup::register('WPDev\\Tests\\Support\\Rest\\NotARealClass'),
             'register() must return false (not throw) for an unknown class so callers can fall back gracefully'
         );
         $this->assertCount(0, RestSetup::routes(), 'Failed registration must not add to the routes list');

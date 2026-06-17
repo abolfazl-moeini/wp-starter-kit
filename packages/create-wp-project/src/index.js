@@ -14,7 +14,7 @@
  * Usage (CLI):
  *   node packages/create-wp-project/src/index.js [target-dir]
  *
- * When called without args, the script reads answers from `WPSK_ANSWERS_JSON`
+ * When called without args, the script reads answers from `WPDEV_ANSWERS_JSON`
  * env var. When called from PHPUnit or another test, import the named
  * exports and drive `scaffoldProject()` directly.
  *
@@ -467,7 +467,7 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
 /* -------------------------------------------------------------------- */
 
 function parseAnswersFromEnv() {
-  const raw = process.env.WPSK_ANSWERS_JSON;
+  const raw = process.env.WPDEV_ANSWERS_JSON;
   if (!raw) return null;
   try {
     return JSON.parse(raw);
@@ -507,13 +507,13 @@ async function main() {
   const fromEnv = parseAnswersFromEnv();
   const fromArgs = parseAnswersFromArgs(argv);
   const answers = fromEnv || fromArgs.answers;
-  const target = process.env.WPSK_TARGET || fromArgs.target || process.cwd();
+  const target = process.env.WPDEV_TARGET || fromArgs.target || process.cwd();
 
   if (!answers || Object.keys(answers).length === 0) {
     process.stdout.write(
       "Usage: node packages/create-wp-project/src/index.js " +
         "[--target=<dir>] [--slug=<s> --scope=<s> --global=<s> --domain=<s> --hook=<s> --php=<s> --ui=preact|react --type=plugin|theme]\n" +
-        "   or: WPSK_ANSWERS_JSON=<json> node packages/create-wp-project/src/index.js\n",
+        "   or: WPDEV_ANSWERS_JSON=<json> node packages/create-wp-project/src/index.js\n",
     );
     process.exit(2);
   }

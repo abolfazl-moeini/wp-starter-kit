@@ -10,7 +10,7 @@
  *
  * Resolution order (first non-empty wins):
  *   1. `override` argument (explicit test seam).
- *   2. `WPSK_CLI_KIT_VERSION_OVERRIDE` env var (CI / test seam).
+ *   2. `WPDEV_CLI_KIT_VERSION_OVERRIDE` env var (CI / test seam).
  *   3. Read the engine's on-disk `package.json` from the
  *      kit's workspace layout (`cwd()/packages/create-wp-project/package.json`).
  *   4. Fall back to `"0.0.0"` so `wpsk --version` still prints
@@ -22,13 +22,13 @@
  * triggers the next fallback.
  *
  * The env var name is exposed as a named constant for tests
- * (`WPSK_CLI_KIT_VERSION_OVERRIDE`) and stable for downstream
+ * (`WPDEV_CLI_KIT_VERSION_OVERRIDE`) and stable for downstream
  * tooling that wants to pin the reported version.
  */
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
-export const KIT_VERSION_OVERRIDE_ENV = "WPSK_CLI_KIT_VERSION_OVERRIDE";
+export const KIT_VERSION_OVERRIDE_ENV = "WPDEV_CLI_KIT_VERSION_OVERRIDE";
 
 /**
  * Resolve the canonical engine package.json path. The kit

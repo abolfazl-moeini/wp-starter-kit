@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Tests\Modules;
+namespace WPDev\Tests\Modules;
 
 use PHPUnit\Framework\TestCase;
-use WPSK\Modules\ExampleFeature\Module;
+use WPDev\Modules\ExampleFeature\Module;
 
 class ExampleFeatureAssetsTest extends TestCase
 {

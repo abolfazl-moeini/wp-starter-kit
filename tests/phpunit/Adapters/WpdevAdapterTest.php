@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Tests\Adapters;
+namespace WPDev\Tests\Adapters;
 
 use PHPUnit\Framework\TestCase;
-use WPSK\Adapters\WpdevModuleAdapter;
-use WPSK\Core\ModuleInterface;
+use WPDev\Adapters\WpdevModuleAdapter;
+use WPDev\Core\ModuleInterface;
 
 class WpdevAdapterTest extends TestCase
 {

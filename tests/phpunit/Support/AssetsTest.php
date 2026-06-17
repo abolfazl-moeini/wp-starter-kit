@@ -1,10 +1,10 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use WPSK\Support\Assets;
+use WPDev\Support\Assets;
 
 /**
- * Tests for `WPSK\Support\Assets` — the PSR-4 class that supersedes the
+ * Tests for `WPDev\Support\Assets` — the PSR-4 class that supersedes the
  * theme-based `wpsk_*` helpers in `includes/asset-functions.php`.
  *
  * Spec contracts verified here:

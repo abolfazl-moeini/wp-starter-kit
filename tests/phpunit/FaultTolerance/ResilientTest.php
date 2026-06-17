@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Tests\FaultTolerance;
+namespace WPDev\Tests\FaultTolerance;
 
 use PHPUnit\Framework\TestCase;
-use WPSK\FaultTolerance\Resilient;
+use WPDev\FaultTolerance\Resilient;
 
 class ResilientTest extends TestCase
 {

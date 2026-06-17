@@ -4,7 +4,7 @@ import { glob } from "glob";
 import {
   importAsGlobals,
   saveAssetFile,
-} from "@wpsk/dependency-extraction-esbuild-plugin";
+} from "@wpdev/dependency-extraction-esbuild-plugin";
 import { readProjectConfig } from "@core/utils";
 import { readBuildConfig } from "./index.js";
 
@@ -89,10 +89,10 @@ export async function buildComponents(options = {}) {
         metafile: true,
         define: {
           IS_DEV: String(isDev),
-          __WPSK_GLOBAL_NAME__: JSON.stringify(projectConfig.globalName),
-          __WPSK_HOOK_PREFIX__: JSON.stringify(projectConfig.hookPrefix),
-          __WPSK_LOCALIZE_VAR__: JSON.stringify(projectConfig.localizeVar),
-          __WPSK_SLUG__: JSON.stringify(projectConfig.slug),
+          __WPDEV_GLOBAL_NAME__: JSON.stringify(projectConfig.globalName),
+          __WPDEV_HOOK_PREFIX__: JSON.stringify(projectConfig.hookPrefix),
+          __WPDEV_LOCALIZE_VAR__: JSON.stringify(projectConfig.localizeVar),
+          __WPDEV_SLUG__: JSON.stringify(projectConfig.slug),
         },
         outfile: bundleFile,
         loader: { ".js": "jsx", ".ts": "ts", ".tsx": "tsx" },

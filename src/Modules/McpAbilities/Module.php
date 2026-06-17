@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Modules\McpAbilities;
+namespace WPDev\Modules\McpAbilities;
 
-use WPSK\Core\ModuleInterface;
-use WPSK\Core\Plugin;
+use WPDev\Core\ModuleInterface;
+use WPDev\Core\Plugin;
 use WPDev\MCP\Core\Plugin as McpPlugin;
 use WPDev\MCP\Modules\ExampleAbilities\Module as McpExampleModule;
 

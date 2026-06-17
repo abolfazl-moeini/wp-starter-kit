@@ -3,7 +3,7 @@
  * Apply a set of git patches to the project before running tests.
  *
  * Phase 7.0 reconciliation of the sample-plugin apply-patches.php:
- *   - imports `WPSK\TestTools\Patch` (unified, NOT the
+ *   - imports `WPDev\TestTools\Patch` (unified, NOT the
  *     `BetterStudioTest\TestTools\` alias the source used).
  *   - calls `Cli::init($root, $config)` with the correct two-arg signature
  *     (the source's `init(array $patches)` was broken).
@@ -22,7 +22,7 @@ $root = dirname(__DIR__, 2);
 
 require $root . '/vendor/autoload.php';
 
-use WPSK\TestTools\Patch\Cli;
+use WPDev\TestTools\Patch\Cli;
 
 $config = require $root . '/tests/patch/plugins-patches.php';
 

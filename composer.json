@@ -1,5 +1,5 @@
 {
-  "name": "wpsk/starter",
+  "name": "wpdev/starter",
   "description": "WordPress Theme/Plugin Starter Kit",
   "type": "project",
   "license": "MIT",
@@ -37,7 +37,7 @@
     "rector/rector": "^2.0",
     "wp-cli/wp-cli-bundle": "^2.11",
     "laminas/laminas-code": "^4.7",
-    "wpsk/framework": "*@dev",
+    "wpdev/framework": "*@dev",
     "wpdev/mcp-integration": "*@dev"
   },
   "autoload": {
@@ -49,9 +49,9 @@
       "includes/"
     ],
     "psr-4": {
-      "WPSK\\": "src/",
-      "WPSK\\TestTools\\": "packages/php-test-tools/src/",
-      "WPSK\\FaultTolerance\\": "packages/php-fault-tolerance/src/"
+      "WPDev\\": "src/",
+      "WPDev\\TestTools\\": "packages/php-test-tools/src/",
+      "WPDev\\FaultTolerance\\": "packages/php-fault-tolerance/src/"
     }
   },
   "scripts": {

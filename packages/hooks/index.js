@@ -1,5 +1,5 @@
 /**
- * @wpsk/hooks — config-driven accessor for the deps-bundle hooks instance.
+ * @wpdev/hooks — config-driven accessor for the deps-bundle hooks instance.
  *
  * The actual `hooks` object lives on the IIFE global created by
  * `assets/dependencies.js` (see @wordpress/hooks `createHooks()`). Component
@@ -14,10 +14,10 @@
  * Both the default export (a getter function) and the named `getHooks`
  * accessor are provided for ergonomics:
  *
- *   import getHooks from '@wpsk/hooks';
+ *   import getHooks from '@wpdev/hooks';
  *   getHooks().doAction('wpsk-form-init', container);
  *
- *   import { getHooks } from '@wpsk/hooks';
+ *   import { getHooks } from '@wpdev/hooks';
  *   getHooks('MyApp').addAction(...);
  */
 

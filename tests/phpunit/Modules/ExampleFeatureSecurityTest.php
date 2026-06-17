@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Tests\Modules;
+namespace WPDev\Tests\Modules;
 
 use PHPUnit\Framework\TestCase;
-use WPSK\Modules\ExampleFeature\Rest\ItemsController;
+use WPDev\Modules\ExampleFeature\Rest\ItemsController;
 
 /**
  * Security contract tests for the in-scope ExampleFeature/Rest/ItemsController.

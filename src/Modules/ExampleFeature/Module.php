@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Modules\ExampleFeature;
+namespace WPDev\Modules\ExampleFeature;
 
-use WPSK\Core\ModuleInterface;
-use WPSK\Core\Plugin;
-use WPSK\Modules\ExampleFeature\Rest\ItemsController;
-use WPSK\Support\Assets;
-use WPSK\Support\Rest\RestSetup;
+use WPDev\Core\ModuleInterface;
+use WPDev\Core\Plugin;
+use WPDev\Modules\ExampleFeature\Rest\ItemsController;
+use WPDev\Support\Assets;
+use WPDev\Support\Rest\RestSetup;
 
 final class Module implements ModuleInterface
 {

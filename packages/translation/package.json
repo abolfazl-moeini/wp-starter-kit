@@ -1,5 +1,5 @@
 {
-  "name": "@wpsk/translation",
+  "name": "@wpdev/translation",
   "version": "0.1.0",
   "description": "Translation pipeline (PHP pot generation, JS map files, JSON merge) for wp-starter-kit. Phase 6 port from mrlogistic/dev/translation/ — refactored to expose injectable shell + pure data helpers for TDD.",
   "main": "src/index.js",

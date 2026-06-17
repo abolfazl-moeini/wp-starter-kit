@@ -111,7 +111,7 @@ use {{vendor}}\\Modules\\McpAbilities\\Module;
 
 /**
  * Registers the MCP Abilities bridge module on plugins_loaded (priority 5),
- * before WPSK\\Core\\Plugin::boot() at priority 10.
+ * before WPDev\\Core\\Plugin::boot() at priority 10.
  */
 if (!function_exists('add_action')) {
     return;

@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Tests\FaultTolerance;
+namespace WPDev\Tests\FaultTolerance;
 
 use PHPUnit\Framework\TestCase;
-use WPSK\FaultTolerance\CircuitBreaker;
-use WPSK\FaultTolerance\CircuitState;
+use WPDev\FaultTolerance\CircuitBreaker;
+use WPDev\FaultTolerance\CircuitState;
 
 class CircuitBreakerTest extends TestCase
 {

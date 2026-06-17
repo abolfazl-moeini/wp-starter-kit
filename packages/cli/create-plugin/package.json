@@ -1,12 +1,12 @@
 {
-  "name": "@wpsk/create-plugin",
+  "name": "@wpdev/create-plugin",
   "version": "0.1.0",
-  "description": "Tiny shim for `npm create @wpsk/plugin` (plan.installer.md Phase I7 — I7.4). Forwards argv to the @wpsk/cli `create` subcommand. The real scaffolder lives in @wpsk/create-wp-project.",
+  "description": "Tiny shim for `npm create @wpdev/plugin` (plan.installer.md Phase I7 — I7.4). Forwards argv to the @wpdev/cli `create` subcommand. The real scaffolder lives in @wpdev/create-wp-project.",
   "type": "module",
   "private": true,
   "license": "MIT",
   "bin": {
-    "create-wpsk-plugin": "bin/create-wpsk-plugin.js"
+    "create-wpdev-plugin": "bin/create-wpdev-plugin.js"
   },
   "files": [
     "bin"
@@ -15,6 +15,6 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@wpsk/cli": "^0.1.0"
+    "@wpdev/cli": "^0.1.0"
   }
 }

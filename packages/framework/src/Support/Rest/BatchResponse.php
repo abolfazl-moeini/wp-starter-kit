@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Support\Rest;
+namespace WPDev\Support\Rest;
 
 use WP_REST_Response;
 

@@ -252,7 +252,7 @@ const REQUIRED_JS_ENTRIES = [
  * shippable packages (or vice versa) is a contract bug —
  * `depVersions.test.js` cross-checks that the two lists agree.
  */
-const REQUIRED_WPSK_PACKAGES = [
+const REQUIRED_WPDEV_PACKAGES = [
   // Runtime libs (consumer `dependencies`)
   "@wpsk/hooks",
   "@wpsk/utils",
@@ -308,7 +308,7 @@ export function getDepVersions() {
       const v = readKitDevDep(name);
       if (v) m.set(name, v);
     }
-    for (const name of REQUIRED_WPSK_PACKAGES) {
+    for (const name of REQUIRED_WPDEV_PACKAGES) {
       const v = readKitPackageVersion(name);
       if (v) m.set(name, v);
     }

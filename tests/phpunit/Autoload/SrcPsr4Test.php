@@ -4,7 +4,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Verifies the PSR-4 autoload entry for the WPSK production source tree
- * declared in `composer.json` (`"WPSK\\": "src/")` and proves that the
+ * declared in `composer.json` (`"WPDev\\": "src/")` and proves that the
  * classes placed under `src/Core/` become loadable through Composer's
  * PSR-4 autoloader.
  *
@@ -37,31 +37,31 @@ class SrcPsr4Test extends TestCase
         $this->composer = $decoded;
     }
 
-    public function test_composer_json_declares_WPSK_psr4_root_to_src(): void
+    public function test_composer_json_declares_WPDev_psr4_root_to_src(): void
     {
         $psr4 = $this->composer['autoload']['psr-4'] ?? null;
         $this->assertIsArray($psr4, 'composer.json autoload.psr-4 must be an array');
 
         $this->assertArrayHasKey(
-            'WPSK\\',
+            'WPDev\\',
             $psr4,
-            "composer.json autoload.psr-4 must include \"WPSK\\\" => \"src/\""
+            "composer.json autoload.psr-4 must include \"WPDev\\\" => \"src/\""
         );
 
         $this->assertSame(
             'src/',
-            $psr4['WPSK\\'],
-            "WPSK\\ must map to src/ (got " . var_export($psr4['WPSK\\'], true) . ")"
+            $psr4['WPDev\\'],
+            "WPDev\\ must map to src/ (got " . var_export($psr4['WPDev\\'], true) . ")"
         );
     }
 
-    public function test_composer_json_preserves_existing_WPSK_TestTools_psr4_entry(): void
+    public function test_composer_json_preserves_existing_WPDev_TestTools_psr4_entry(): void
     {
         $psr4 = $this->composer['autoload']['psr-4'] ?? [];
         $this->assertArrayHasKey(
-            'WPSK\\TestTools\\',
+            'WPDev\\TestTools\\',
             $psr4,
-            'composer.json autoload.psr-4 must still include the WPSK\\TestTools\\ entry'
+            'composer.json autoload.psr-4 must still include the WPDev\\TestTools\\ entry'
         );
     }
 
@@ -81,7 +81,7 @@ class SrcPsr4Test extends TestCase
         $root = dirname(__DIR__, 3);
         $this->assertDirectoryExists(
             $root . '/src',
-            'src/ directory must exist so WPSK\\ classes can be placed there'
+            'src/ directory must exist so WPDev\\ classes can be placed there'
         );
     }
 
@@ -95,15 +95,15 @@ class SrcPsr4Test extends TestCase
         // the new location is the load-bearing one.
         $this->assertDirectoryExists(
             $root . '/packages/framework/src/Core',
-            'packages/framework/src/Core/ directory must exist for the WPSK\\Core\\* namespace (moved in Phase 23.A2)'
+            'packages/framework/src/Core/ directory must exist for the WPDev\\Core\\* namespace (moved in Phase 23.A2)'
         );
     }
 
     public function test_WPSK_Core_Plugin_class_is_loadable(): void
     {
         $this->assertTrue(
-            class_exists('WPSK\\Core\\Plugin', true),
-            'WPSK\\Core\\Plugin must be autoloadable through the PSR-4 entry'
+            class_exists('WPDev\\Core\\Plugin', true),
+            'WPDev\\Core\\Plugin must be autoloadable through the PSR-4 entry'
         );
     }
 
@@ -141,7 +141,7 @@ class SrcPsr4Test extends TestCase
             $abs = $file->getPathname();
             $rel = substr($abs, strlen($framework) + 1); // e.g. "Core/Plugin.php"
             $relNoExt = substr($rel, 0, -4);              // "Core/Plugin"
-            $class = 'WPSK\\' . str_replace('/', '\\', $relNoExt);
+            $class = 'WPDev\\' . str_replace('/', '\\', $relNoExt);
 
             // Shim lives at src/<rel>, e.g. src/Core/Plugin.php.
             $shimRel = 'src/' . $rel;

@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Adapters;
+namespace WPDev\Adapters;
 
-use WPSK\Core\ModuleInterface;
+use WPDev\Core\ModuleInterface;
 
 /**
  * Thin bridge between WPSK's ModuleInterface and wpdev-framework's

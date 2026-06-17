@@ -1,10 +1,10 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use WPSK\Core\ModuleInterface;
+use WPDev\Core\ModuleInterface;
 
 /**
- * Contract tests for the WPSK\Core\ModuleInterface.
+ * Contract tests for the WPDev\Core\ModuleInterface.
  *
  * The interface is intentionally tiny (boot + get_slug) — a feature
  * contract that every pluggable module must honour. Because PHP
@@ -20,14 +20,14 @@ class ModuleInterfaceTest extends TestCase
     public function test_module_interface_exists(): void
     {
         $this->assertTrue(
-            interface_exists('WPSK\\Core\\ModuleInterface', true),
-            'WPSK\\Core\\ModuleInterface must be declared'
+            interface_exists('WPDev\\Core\\ModuleInterface', true),
+            'WPDev\\Core\\ModuleInterface must be declared'
         );
     }
 
     public function test_module_interface_declares_boot_method(): void
     {
-        $reflection = new ReflectionClass('WPSK\\Core\\ModuleInterface');
+        $reflection = new ReflectionClass('WPDev\\Core\\ModuleInterface');
 
         $this->assertTrue(
             $reflection->hasMethod('boot'),
@@ -43,7 +43,7 @@ class ModuleInterfaceTest extends TestCase
 
     public function test_module_interface_declares_get_slug_method(): void
     {
-        $reflection = new ReflectionClass('WPSK\\Core\\ModuleInterface');
+        $reflection = new ReflectionClass('WPDev\\Core\\ModuleInterface');
 
         $this->assertTrue(
             $reflection->hasMethod('get_slug'),

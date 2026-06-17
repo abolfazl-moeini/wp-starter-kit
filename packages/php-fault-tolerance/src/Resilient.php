@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\FaultTolerance;
+namespace WPDev\FaultTolerance;
 
 /**
  * Retry helper with optional fallback.

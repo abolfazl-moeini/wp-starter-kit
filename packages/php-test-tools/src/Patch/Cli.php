@@ -1,11 +1,11 @@
 <?php
 /**
- * WPSK\TestTools\Patch\Cli — CLI entry point for the patch system.
+ * WPDev\TestTools\Patch\Cli — CLI entry point for the patch system.
  *
  * Ported from sample-plugin/packages/php-test-tools/src/Patch/Cli.php
  * with the following reconciliations (Phase 7.0 / §6.0):
  *
- *   1. Namespace: `WPDevTest\PHPTestTools\Patch` → `WPSK\TestTools\Patch`
+ *   1. Namespace: `WPDevTest\PHPTestTools\Patch` → `WPDev\TestTools\Patch`
  *      (unified across the wp-starter-kit port; the caller used to import
  *      a totally different namespace, `BetterStudioTest\TestTools\Patch`).
  *   2. Signature: `init(array $patches)` → `init(string $root, array $config)`
@@ -24,7 +24,7 @@
 
 declare(strict_types=1);
 
-namespace WPSK\TestTools\Patch;
+namespace WPDev\TestTools\Patch;
 
 use Throwable;
 

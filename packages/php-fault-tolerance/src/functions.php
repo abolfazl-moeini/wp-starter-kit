@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-use WPSK\FaultTolerance\HttpBatch;
-use WPSK\FaultTolerance\HttpPool;
-use WPSK\FaultTolerance\Resilient;
+use WPDev\FaultTolerance\HttpBatch;
+use WPDev\FaultTolerance\HttpPool;
+use WPDev\FaultTolerance\Resilient;
 
 if (!function_exists('resilient')) {
     /**

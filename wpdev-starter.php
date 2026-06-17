@@ -40,7 +40,7 @@ foreach ($autoloadCandidates as $autoload) {
 	}
 }
 
-if ( ! class_exists( 'WPSK\\Core\\Plugin' )) {
+if ( ! class_exists( 'WPDev\\Core\\Plugin' )) {
 	add_action(
 		'admin_notices',
 		static function (): void {
@@ -91,21 +91,21 @@ function wpsk_starter_load_textdomain(): void {
  * Register every feature module on the active Plugin loader.
  *
  * Exposed as a named function (rather than an inline closure) so the
- * late-load fallback below — which fires when `wpsk-starter.php` is
+ * late-load fallback below — which fires when `wpdev-starter.php` is
  * included AFTER `plugins_loaded` has already happened (mu-plugins,
  * wp-cli, test bootstrap) — can re-run registration. An inline
  * closure cannot be called a second time by name; a function can.
  */
 function wpsk_starter_register_modules(): void {
-	WPSK\Core\Plugin::loader()->register( new WPSK\Modules\ExampleFeature\Module() );
-	WPSK\Core\Plugin::loader()->register( new WPSK\Modules\McpAbilities\Module() );
+	WPDev\Core\Plugin::loader()->register( new WPDev\Modules\ExampleFeature\Module() );
+	WPDev\Core\Plugin::loader()->register( new WPDev\Modules\McpAbilities\Module() );
 }
 
 add_action( 'plugins_loaded', 'wpsk_starter_register_modules', 5 );
-add_action( 'plugins_loaded', 'WPSK\\Core\\Plugin::boot', 10, 0 );
+add_action( 'plugins_loaded', 'WPDev\\Core\\Plugin::boot', 10, 0 );
 
 if ( did_action( 'plugins_loaded' ) ) {
-	// Late load: wpsk-starter.php was included after `plugins_loaded`
+	// Late load: wpdev-starter.php was included after `plugins_loaded`
 	// already fired, so the add_action() calls above are too late to
 	// run. Re-run both halves of the normal flow so the plugin still
 	// boots: register the modules, run Plugin::boot() (which is
@@ -114,7 +114,7 @@ if ( did_action( 'plugins_loaded' ) ) {
 	// the loader. boot_all() fires the `_modules_loaded` action
 	// internally, so third-party listeners still see the signal
 	// even though `on_plugins_loaded` will not fire on this request.
-	WPSK\Core\Plugin::boot();
+	WPDev\Core\Plugin::boot();
 	wpsk_starter_register_modules();
-	WPSK\Core\Plugin::loader()->boot_all();
+	WPDev\Core\Plugin::loader()->boot_all();
 }

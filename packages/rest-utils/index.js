@@ -1,27 +1,27 @@
 /**
- * @wpsk/rest-utils — config-driven REST + AJAX helpers.
+ * @wpdev/rest-utils — config-driven REST + AJAX helpers.
  *
  * Ports the source `mrlogistic/assets/packages/rest-utils/index.js` with
  * every brand-specific token replaced by build-time injected values:
  *
- *   hookPrefix (__WPSK_HOOK_PREFIX__) → '<prefix>-request-ajax-{start,done,error}'
- *   slug       (__WPSK_SLUG__)        → '<slug>/v1/<endpoint>'
+ *   hookPrefix (__WPDEV_HOOK_PREFIX__) → '<prefix>-request-ajax-{start,done,error}'
+ *   slug       (__WPDEV_SLUG__)        → '<slug>/v1/<endpoint>'
  *   localize                         → api.url / api.nonce / api_x.url/api_x.nonce
  *
  * Dependency injection:
  *   The package's defaults pull `getHooks()` and `localize` from the real
- *   `@wpsk/hooks` and `@wpsk/utils` packages. Tests can override by passing
+ *   `@wpdev/hooks` and `@wpdev/utils` packages. Tests can override by passing
  *   an options object: `createRestUtils({ hooks, localize, apiFetch })`.
  */
 import { addQueryArgs } from "@wordpress/url";
-import { localize } from "@wpsk/utils";
-import getHooks from "@wpsk/hooks";
-import { currentLanguage } from "@wpsk/html-utils";
+import { localize } from "@wpdev/utils";
+import getHooks from "@wpdev/hooks";
+import { currentLanguage } from "@wpdev/html-utils";
 
 const FALLBACK_HOOK_PREFIX =
-  typeof __WPSK_HOOK_PREFIX__ !== "undefined" ? __WPSK_HOOK_PREFIX__ : "wpsk";
+  typeof __WPDEV_HOOK_PREFIX__ !== "undefined" ? __WPDEV_HOOK_PREFIX__ : "wpdev";
 const FALLBACK_SLUG =
-  typeof __WPSK_SLUG__ !== "undefined" ? __WPSK_SLUG__ : "wpsk-starter";
+  typeof __WPDEV_SLUG__ !== "undefined" ? __WPDEV_SLUG__ : "wpsk-starter";
 
 const ACTIONS = {
   start: `${FALLBACK_HOOK_PREFIX}-request-ajax-start`,
@@ -42,8 +42,8 @@ function resolveActions(prefix) {
  * Build a `restUtils` namespace bound to a specific set of dependencies.
  *
  * @param {object} [deps]
- * @param {object} [deps.hooks]        Object exposing `doAction` (defaults to @wpsk/hooks() result).
- * @param {object} [deps.localize]     Object exposing `get(key)` (defaults to @wpsk/utils localize).
+ * @param {object} [deps.hooks]        Object exposing `doAction` (defaults to @wpdev/hooks() result).
+ * @param {object} [deps.localize]     Object exposing `get(key)` (defaults to @wpdev/utils localize).
  * @param {Function} [deps.apiFetch]   WP apiFetch implementation.
  * @param {Function} [deps.fetch]      Browser fetch (defaults to globalThis.fetch).
  * @param {string} [deps.hookPrefix]   Override the config-driven hook prefix.

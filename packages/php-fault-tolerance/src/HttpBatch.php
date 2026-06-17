@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\FaultTolerance;
+namespace WPDev\FaultTolerance;
 
 /**
  * Sequential HTTP batch via wp_remote_request.

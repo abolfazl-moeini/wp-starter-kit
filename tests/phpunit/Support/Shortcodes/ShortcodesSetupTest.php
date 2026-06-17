@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Tests\Support\Shortcodes;
+namespace WPDev\Tests\Support\Shortcodes;
 
 use PHPUnit\Framework\TestCase;
-use WPSK\Support\Shortcodes\Shortcode;
-use WPSK\Support\Shortcodes\ShortcodesSetup;
+use WPDev\Support\Shortcodes\Shortcode;
+use WPDev\Support\Shortcodes\ShortcodesSetup;
 
 class ShortcodesSetupTest extends TestCase
 {

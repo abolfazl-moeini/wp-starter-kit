@@ -82,7 +82,7 @@ export function polarisDemoEntry(ctx) {
   return [
     `// uiFramework: ${framework}`,
     'import "../../../../polaris/styles.css";',
-    'import { mountComponent } from "@wpsk/html-utils";',
+    'import { mountComponent } from "@wpdev/html-utils";',
     'import { Button, Card, Heading, Stack, Text, setPolarisTheme } from "../../../../polaris";',
     "",
     'setPolarisTheme("system");',

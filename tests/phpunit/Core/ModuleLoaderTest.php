@@ -1,8 +1,8 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use WPSK\Core\ModuleInterface;
-use WPSK\Core\ModuleLoader;
+use WPDev\Core\ModuleInterface;
+use WPDev\Core\ModuleLoader;
 
 /**
  * A controllable test double for the ModuleInterface contract.
@@ -42,7 +42,7 @@ final class RecordingModule implements ModuleInterface
 }
 
 /**
- * Tests for WPSK\Core\ModuleLoader.
+ * Tests for WPDev\Core\ModuleLoader.
  *
  * Coverage:
  *  - register() stores the module by slug

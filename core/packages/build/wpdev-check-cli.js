@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /**
- * @wpsk/build — wpsk-check bin (Phase 23.B6).
+ * @wpdev/build — wpdev-check bin (Phase 23.B6).
  *
  * Thin CLI shim that delegates to `@core/utils`'s `checkProject`.
  * The actual check logic lives in `core/packages/utils/check.js`
  * (an internal workspace package) — we keep that package internal
  * (it is NOT in the 8-package publishable list) and expose the
- * `wpsk-check` bin from `@wpsk/build` instead, which is the
+ * `wpdev-check` bin from `@wpdev/build` instead, which is the
  * publishable package consumers install.
  *
  * Usage:
- *   $ wpsk-check
+ *   $ wpdev-check
  *   Check passed.
  *   # or
  *   Check failed:

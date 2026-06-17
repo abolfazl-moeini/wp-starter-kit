@@ -24,8 +24,8 @@
  */
 
 use PHPUnit\Framework\TestCase;
-use WPSK\TestTools\Patch\Cli;
-use WPSK\TestTools\Patch\GitPatch;
+use WPDev\TestTools\Patch\Cli;
+use WPDev\TestTools\Patch\GitPatch;
 
 /**
  * Helper: create `hello.txt` at the TOP LEVEL of $root (not a subdir) with
@@ -133,11 +133,11 @@ class ReconcilePatchTest extends TestCase
     {
         $this->assertTrue(
             class_exists(Cli::class),
-            'Expected reconciled Cli class at WPSK\\TestTools\\Patch\\Cli'
+            'Expected reconciled Cli class at WPDev\\TestTools\\Patch\\Cli'
         );
         $this->assertTrue(
             class_exists(GitPatch::class),
-            'Expected GitPatch at WPSK\\TestTools\\Patch\\GitPatch'
+            'Expected GitPatch at WPDev\\TestTools\\Patch\\GitPatch'
         );
     }
 

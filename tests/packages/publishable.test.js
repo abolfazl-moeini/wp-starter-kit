@@ -1,8 +1,8 @@
 /**
  * Phase 23.B1 RED — publishable JS package metadata.
  *
- * The kit is moving from "the consumer installs @wpsk/* from npm"
- * (publishable) to a coherent `@wpsk/*` scope. The first half of
+ * The kit is moving from "the consumer installs @wpdev/* from npm"
+ * (publishable) to a coherent `@wpdev/*` scope. The first half of
  * that move is to assert that each shippable package is *actually*
  * shaped like a publishable npm package: it has a `name`, a
  * `version`, an entry point (`main` or `exports`), a `files`
@@ -12,17 +12,17 @@
  *
  * The eight packages under test are:
  *
- *   packages/hooks                                  -> @wpsk/hooks
- *   packages/utils                                  -> @wpsk/utils
- *   packages/rest-utils                             -> @wpsk/rest-utils
- *   packages/html-utils                             -> @wpsk/html-utils
- *   packages/fetch                                  -> @wpsk/fetch
- *   packages/translation                            -> @wpsk/translation
- *   core/packages/build                             -> @wpsk/build
+ *   packages/hooks                                  -> @wpdev/hooks
+ *   packages/utils                                  -> @wpdev/utils
+ *   packages/rest-utils                             -> @wpdev/rest-utils
+ *   packages/html-utils                             -> @wpdev/html-utils
+ *   packages/fetch                                  -> @wpdev/fetch
+ *   packages/translation                            -> @wpdev/translation
+ *   core/packages/build                             -> @wpdev/build
  *   core/packages/dependency-extraction-esbuild-plugin
- *                                                    -> @wpsk/dependency-extraction-esbuild-plugin
+ *                                                    -> @wpdev/dependency-extraction-esbuild-plugin
  *
- * Scope is unified to `@wpsk/*` (single-scope decision from
+ * Scope is unified to `@wpdev/*` (single-scope decision from
  * plan.v3.md §23.B2). The previous `@core/*` names for the build
  * tooling are renamed in 23.B2 — this test asserts the
  * post-rename shape, so it goes RED until 23.B2 lands.
@@ -52,7 +52,7 @@ import * as path from "node:path";
  * The list of shippable packages. Each entry is
  * `{ dir, expectedName, minFiles }` where:
  *   - `dir`         is the directory relative to the kit root
- *   - `expectedName` is the canonical `@wpsk/*` name
+ *   - `expectedName` is the canonical `@wpdev/*` name
  *   - `minFiles`    is the minimum number of `files` whitelist
  *                   entries (a publishable package must declare
  *                   a whitelist, and an empty array is treated
@@ -69,42 +69,42 @@ import * as path from "node:path";
 const SHIPPABLE_PACKAGES = [
   {
     dir: "packages/hooks",
-    expectedName: "@wpsk/hooks",
+    expectedName: "@wpdev/hooks",
     minFiles: 1,
   },
   {
     dir: "packages/utils",
-    expectedName: "@wpsk/utils",
+    expectedName: "@wpdev/utils",
     minFiles: 1,
   },
   {
     dir: "packages/rest-utils",
-    expectedName: "@wpsk/rest-utils",
+    expectedName: "@wpdev/rest-utils",
     minFiles: 1,
   },
   {
     dir: "packages/html-utils",
-    expectedName: "@wpsk/html-utils",
+    expectedName: "@wpdev/html-utils",
     minFiles: 1,
   },
   {
     dir: "packages/fetch",
-    expectedName: "@wpsk/fetch",
+    expectedName: "@wpdev/fetch",
     minFiles: 1,
   },
   {
     dir: "packages/translation",
-    expectedName: "@wpsk/translation",
+    expectedName: "@wpdev/translation",
     minFiles: 1,
   },
   {
     dir: "core/packages/build",
-    expectedName: "@wpsk/build",
+    expectedName: "@wpdev/build",
     minFiles: 1,
   },
   {
     dir: "core/packages/dependency-extraction-esbuild-plugin",
-    expectedName: "@wpsk/dependency-extraction-esbuild-plugin",
+    expectedName: "@wpdev/dependency-extraction-esbuild-plugin",
     minFiles: 1,
   },
 ];
@@ -122,7 +122,7 @@ function readPkg(relDir) {
 /* Tests                                                                 */
 /* -------------------------------------------------------------------- */
 
-describe("@wpsk/* packages — publishable metadata (Phase 23.B1)", () => {
+describe("@wpdev/* packages — publishable metadata (Phase 23.B1)", () => {
   test("all shippable packages are listed (no missing entries)", () => {
     // The list has 8 entries. This test guards against silent
     // removal — if someone drops an entry from the list, the
@@ -151,7 +151,7 @@ describe("@wpsk/* packages — publishable metadata (Phase 23.B1)", () => {
           return pkg;
         };
 
-        test("name is the canonical @wpsk/* scoped name", () => {
+        test("name is the canonical @wpdev/* scoped name", () => {
           expect(load().name).toBe(expectedName);
         });
 

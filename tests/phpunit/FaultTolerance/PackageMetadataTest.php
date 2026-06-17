@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Tests\FaultTolerance;
+namespace WPDev\Tests\FaultTolerance;
 
 use PHPUnit\Framework\TestCase;
 
@@ -24,7 +24,7 @@ class PackageMetadataTest extends TestCase
         $this->assertFileExists($path);
         $json = json_decode((string) file_get_contents($path), true);
         $this->assertGreaterThanOrEqual('8.1', $json['require']['php']);
-        $this->assertArrayHasKey('WPSK\\FaultTolerance\\', $json['autoload']['psr-4']);
+        $this->assertArrayHasKey('WPDev\\FaultTolerance\\', $json['autoload']['psr-4']);
     }
 
     public function test_root_composer_autoloads_fault_tolerance_namespace(): void
@@ -34,7 +34,7 @@ class PackageMetadataTest extends TestCase
             true
         );
         $this->assertArrayHasKey(
-            'WPSK\\FaultTolerance\\',
+            'WPDev\\FaultTolerance\\',
             $composer['autoload']['psr-4']
         );
     }

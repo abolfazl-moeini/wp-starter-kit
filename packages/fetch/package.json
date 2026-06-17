@@ -1,5 +1,5 @@
 {
-  "name": "@wpsk/fetch",
+  "name": "@wpdev/fetch",
   "version": "0.1.0",
   "description": "Debounced REST batch fetch client for wp-starter-kit consumers.",
   "type": "module",

@@ -30,7 +30,7 @@
  *   - declares the WordPress.org plugin headers (Plugin Name, Version,
  *     Requires PHP, Text Domain, ...),
  *   - pulls in `vendor/autoload.php`,
- *   - wires `WPSK\Core\Plugin::boot()` so the WPSK namespace owns the
+ *   - wires `WPDev\Core\Plugin::boot()` so the WPSK namespace owns the
  *     boot sequence,
  *   - registers activation / deactivation / uninstall hooks,
  *   - calls `load_plugin_textdomain` against the *plugin* languages

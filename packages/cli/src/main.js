@@ -75,7 +75,7 @@ export function buildProgram() {
   const program = new Command();
 
   program
-    .name("wpsk")
+    .name("wpdev")
     .description(
       "Command-line installer for wp-starter-kit plugins. " +
         "Scaffolds new projects, adds/removes features, and updates " +
@@ -84,7 +84,7 @@ export function buildProgram() {
     .version(
       getKitVersion(),
       "-V, --version",
-      "print wpsk version and exit (mirrors the engine's version)",
+      "print wpdev version and exit (mirrors the engine's version)",
     )
     // The 30+ feature/answer/runOptions flags (Appendix A) are
     // parsed by gather.js, not by commander. `allowUnknownOption`
@@ -373,17 +373,17 @@ function parseUpdateRunOptions(argv) {
 }
 
 /**
- * Run the CLI. Called by `bin/wpsk.js`. We detect "bin mode" by looking
+ * Run the CLI. Called by `bin/wpdev.js`. We detect "bin mode" by looking
  * at `process.argv[1]` and the import path so unit tests that import
  * `buildProgram()` do not trigger parse().
  */
 function isBinInvocation() {
   if (!process.argv[1]) return false;
-  // Either the bin file itself, or this main.js with bin/wpsk.js as argv[1].
+  // Either the bin file itself, or this main.js with bin/wpdev.js as argv[1].
   return (
     process.argv[1].endsWith("wpsk") ||
-    process.argv[1].endsWith("wpsk.js") ||
-    process.argv[1].endsWith("bin/wpsk.js")
+    process.argv[1].endsWith("wpdev.js") ||
+    process.argv[1].endsWith("bin/wpdev.js")
   );
 }
 

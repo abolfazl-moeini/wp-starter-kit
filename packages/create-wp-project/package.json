@@ -1,5 +1,5 @@
 {
-  "name": "@wpsk/create-wp-project",
+  "name": "@wpdev/create-wp-project",
   "version": "0.1.0",
   "description": "Project scaffold CLI for wp-starter-kit (Phase 8). Pure Node, no Plop/Yeoman dependency. Generates a new wp-starter-kit-based project from a small set of answers.",
   "main": "src/index.js",

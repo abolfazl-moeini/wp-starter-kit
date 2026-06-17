@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace WPSK\Support\Rest;
+namespace WPDev\Support\Rest;
 
-use WPSK\Core\Plugin;
+use WPDev\Core\Plugin;
 use WP_REST_Request;
 use WP_REST_Response;
 
