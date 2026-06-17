@@ -65,8 +65,16 @@ abstract class RestHandler
         try {
             return $this->rest_handler($request);
         } catch (\Throwable $e) {
-            $code   = $e->getCode();
-            $status = ( is_int( $code ) && $code >= 100 && $code < 600 ) ? $code : 500;
+            // Throwable::getCode() returns int|string. The legacy
+            // `(is_int($code) && $code >= 100 && $code < 600)` guard
+            // rejects any non-int code (defaults to 500), which is
+            // correct for clearly-string codes like 'unknown' — but a
+            // stringly-typed code that looks numeric ('500') slipped
+            // through and was used as the HTTP status. Casting to
+            // int via (int) before the range check closes the gap.
+            $raw_code = $e->getCode();
+            $numeric  = is_numeric( $raw_code ) ? (int) $raw_code : 0;
+            $status   = ( $numeric >= 100 && $numeric < 600 ) ? $numeric : 500;
             $is_client_error = $status >= 400 && $status < 500;
             $message = $is_client_error
                 ? $e->getMessage()
