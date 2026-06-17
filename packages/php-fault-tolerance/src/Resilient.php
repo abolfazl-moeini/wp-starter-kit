@@ -17,6 +17,7 @@ final class Resilient
     public static function resilient(callable $operation, array $options = []): mixed
     {
         $retries = $options['retries'] ?? 2;
+        $delayMs = (int) ( $options['delayMs'] ?? 0 );
         $fallback = $options['fallback'] ?? null;
         $attempt = 0;
         $last = null;
@@ -27,6 +28,9 @@ final class Resilient
             } catch (\Throwable $e) {
                 $last = $e;
                 $attempt++;
+                if ($delayMs > 0) {
+                    usleep($delayMs * 1000);
+                }
             }
         }
 
