@@ -1,6 +1,31 @@
 /** @jest-environment jsdom */
-import { describe, test, expect, beforeEach } from "@jest/globals";
+import { describe, test, expect, beforeEach, beforeAll } from "@jest/globals";
+import { execSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { h, render } from "preact";
+
+const POLARIS_DIST = join(
+  process.cwd(),
+  "packages/polaris-stack/dist/index.js",
+);
+
+let Stack;
+let Button;
+let Card;
+let Heading;
+let Text;
+
+beforeAll(() => {
+  if (!existsSync(POLARIS_DIST)) {
+    execSync("npm run build", {
+      cwd: join(process.cwd(), "packages/polaris-stack"),
+      stdio: "pipe",
+    });
+  }
+  const polaris = require(POLARIS_DIST);
+  ({ Stack, Button, Card, Heading, Text } = polaris);
+});
 
 describe("polaris-stack smoke render", () => {
   beforeEach(() => {
@@ -36,19 +61,9 @@ describe("polaris-stack smoke render", () => {
     expect(document.querySelectorAll("style").length).toBe(0);
   });
 
-  test("imports and renders actual Polaris Stack TSX components via createElement", () => {
+  test("renders Polaris Stack TSX components with layout CSS variables", () => {
     const root = document.createElement("div");
     document.body.appendChild(root);
-
-    let PolarisModule;
-    try {
-      PolarisModule = require("../../../packages/polaris-stack/src/components/index");
-    } catch {
-      return;
-    }
-
-    const { Stack, Card, Heading, Text, Button } = PolarisModule;
-    if (typeof Stack !== "function") return;
 
     function Demo() {
       return h(
@@ -61,11 +76,15 @@ describe("polaris-stack smoke render", () => {
         ]),
       );
     }
+
     render(h(Demo, null), root);
 
-    expect(root.querySelector(".ps-stack")).not.toBeNull();
+    const stack = root.querySelector(".ps-stack");
+    expect(stack).not.toBeNull();
+    expect(stack.style.getPropertyValue("--ps-gap")).toBe("var(--ps-space-4)");
     expect(root.querySelector(".ps-card")).not.toBeNull();
     expect(root.querySelector(".ps-heading")).not.toBeNull();
     expect(root.querySelector(".ps-button")).not.toBeNull();
+    expect(document.querySelectorAll("style").length).toBe(0);
   });
 });

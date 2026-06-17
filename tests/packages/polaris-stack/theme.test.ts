@@ -53,4 +53,20 @@ describe("polaris-stack theme", () => {
     expect(script).toMatch(/document\.documentElement\.dataset\.theme/);
     expect(script).not.toContain("import ");
   });
+
+  test("createPolarisThemeInitScript resolves stored system preference", () => {
+    localStorage.setItem("polaris-theme", "system");
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: (query: string) => ({
+        matches: query.includes("dark"),
+        media: query,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }),
+    });
+    // eslint-disable-next-line no-eval
+    eval(createPolarisThemeInitScript());
+    expect(document.documentElement.dataset.theme).toBe("dark");
+  });
 });
