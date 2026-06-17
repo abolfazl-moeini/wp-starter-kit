@@ -29,6 +29,13 @@ namespace WPSK\Core;
  * resolves is anchored to the *plugin* root (the directory that
  * contains this file's parent's parent), never to the active
  * theme directory.
+ *
+ * For Composer deployments the framework lives in
+ * `vendor/wpsk/framework/src/Core/Plugin.php`, so the default
+ * `dirname(__DIR__, 2)` would resolve into the vendor tree and
+ * miss the real `project.config.json`. Consumer plugins should
+ * call {@see Plugin::set_plugin_dir()} (or pass an explicit path
+ * to {@see Plugin::boot()}) before the first config read.
  */
 final class Plugin {
 
@@ -51,6 +58,19 @@ final class Plugin {
 	 * time and cached for the rest of the request.
 	 */
 	private static $config_path = null;
+
+	/**
+	 * Consumer-supplied plugin root. When set, {@see
+	 * Plugin::resolve_default_config_path()} anchors
+	 * `project.config.json` here instead of walking up from
+	 * `__DIR__`. Required for Composer deployments where the
+	 * framework is loaded from `vendor/wpsk/framework/` — the
+	 * default `dirname(__DIR__, 2)` would otherwise resolve into
+	 * the vendor tree and miss the consumer's config file.
+	 *
+	 * @var string|null
+	 */
+	private static ?string $plugin_dir = null;
 
 	/**
 	 * Parsed contents of `project.config.json`.
@@ -277,20 +297,54 @@ final class Plugin {
 		self::$config_cache = null;
 		self::$last_hook    = null;
 		self::$booted       = false;
+		self::$plugin_dir   = null;
+	}
+
+	/**
+	 * Override the plugin root used by {@see
+	 * Plugin::resolve_default_config_path()}. Call this from the
+	 * consumer plugin bootstrap (typically the main plugin file,
+	 * before {@see Plugin::boot()}) when the framework is loaded
+	 * from Composer — i.e. from `vendor/wpsk/framework/...` —
+	 * and `dirname(__DIR__, 2)` would otherwise resolve inside
+	 * the vendor tree.
+	 *
+	 * Example:
+	 *
+	 *     \WPSK\Core\Plugin::set_plugin_dir( plugin_dir_path( __FILE__ ) );
+	 *     \WPSK\Core\Plugin::boot();
+	 *
+	 * Calling with `null` restores the default in-tree resolution
+	 * (useful for tests that need to switch back and forth).
+	 *
+	 * @param string|null $path Absolute path to the consumer
+	 *                           plugin root, or `null` to clear
+	 *                           the override.
+	 */
+	public static function set_plugin_dir( ?string $path ): void {
+		self::$plugin_dir = ( null === $path || '' === $path ) ? null : $path;
 	}
 
 	/**
 	 * Resolve the default `project.config.json` path from the
-	 * plugin root. The file lives two directories up from this
-	 * file: `src/Core/Plugin.php` → `src/` → plugin root.
+	 * plugin root.
+	 *
+	 * Resolution order:
+	 *   1. The override set by {@see Plugin::set_plugin_dir()}
+	 *      (used by Composer deployments where the framework is
+	 *      loaded from `vendor/wpsk/framework/`).
+	 *   2. `dirname(__DIR__, 2)` — the in-tree dev layout where
+	 *      the framework lives at
+	 *      `packages/framework/src/Core/Plugin.php` and the
+	 *      config sits two directories up.
 	 */
 	private static function resolve_default_config_path(): string {
 		if ( null !== self::$config_path ) {
 			return self::$config_path;
 		}
 		// __DIR__ === src/Core (this file lives there)
-		// dirname(__DIR__, 2) === plugin root
-		$plugin_root = dirname( __DIR__, 2 );
+		// dirname(__DIR__, 2) === plugin root in the in-tree layout
+		$plugin_root = self::$plugin_dir ?? dirname( __DIR__, 2 );
 		return $plugin_root . '/project.config.json';
 	}
 }

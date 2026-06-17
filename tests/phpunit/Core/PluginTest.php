@@ -82,6 +82,7 @@ class PluginTest extends TestCase
             'config_cache' => null,
             'last_hook'    => null,
             'booted'       => false,
+            'plugin_dir'   => null,
         ];
         // PHP 7.x needs setAccessible(true) on private static props;
         // PHP 8.1+ ignores it and emits a deprecation. Guard the call
@@ -206,6 +207,76 @@ class PluginTest extends TestCase
             Plugin::loaded_config(),
             'Plugin::boot() must remember the parsed config for later inspection'
         );
+    }
+
+    /**
+     * Regression test for B-05 (bug audit plan_b8f3db01):
+     *
+     * `Plugin::resolve_default_config_path()` used to walk up
+     * from `__DIR__` with `dirname(__DIR__, 2)`. That is correct
+     * for the in-tree dev layout
+     * (`packages/framework/src/Core/Plugin.php` → `packages/framework/`
+     * → plugin root), but it is wrong for Composer deployments
+     * where the framework is loaded from
+     * `vendor/wpsk/framework/src/Core/Plugin.php` — there the same
+     * math lands inside the vendor tree and the real
+     * `project.config.json` (which lives in the consumer plugin
+     * root) is not found.
+     *
+     * The fix exposes `Plugin::set_plugin_dir()` so a consumer
+     * plugin installed via Composer can point the resolver at its
+     * own root. This test pins the contract: with the override
+     * set, `boot()` reads the config from the override location,
+     * not from the in-tree default.
+     */
+    public function test_set_plugin_dir_overrides_default_resolution(): void
+    {
+        // Simulate a Composer layout: the framework sits two levels
+        // deep inside a fake vendor tree, with NO project.config.json
+        // there. The "real" config lives at the consumer plugin root
+        // we point the resolver at.
+        $fakeVendorRoot = $this->tmpDir . '/vendor/wpsk/framework';
+        mkdir($fakeVendorRoot . '/src/Core', 0777, true);
+        mkdir($fakeVendorRoot . '/packages', 0777, true);
+
+        // Sanity-check: there is no project.config.json in the
+        // vendor tree (i.e. the default resolver would throw).
+        $this->assertFileDoesNotExist(
+            $fakeVendorRoot . '/project.config.json',
+            'Test setup invariant: vendor tree must not have a project.config.json'
+        );
+
+        // Write the real config at the consumer plugin root.
+        $consumerRoot = $this->tmpDir . '/consumer-plugin';
+        mkdir($consumerRoot, 0777, true);
+        $configPath = $consumerRoot . '/project.config.json';
+        file_put_contents($configPath, json_encode([
+            'slug' => 'consumer-plugin',
+            'hookPrefix' => 'consumer',
+            'textDomain' => 'consumer-plugin',
+        ]));
+
+        Plugin::set_plugin_dir($consumerRoot);
+        try {
+            Plugin::boot(null);
+
+            $this->assertTrue(
+                Plugin::is_booted(),
+                'Plugin::boot() must succeed when set_plugin_dir() points at a valid config '
+                . '(B-05 regression — Composer deployment layout)'
+            );
+            $this->assertSame(
+                'consumer',
+                Plugin::loaded_config()['hookPrefix'],
+                'Plugin::boot() must read the config from the set_plugin_dir() root, '
+                . 'not from the in-tree dirname(__DIR__, 2) default'
+            );
+        } finally {
+            // Always clear the override so the next test starts clean
+            // (setUp resets the static property, but explicit clear
+            // is a clear contract in this test).
+            Plugin::set_plugin_dir(null);
+        }
     }
 
     public function test_plugin_source_is_theme_agnostic(): void
