@@ -19,6 +19,13 @@ if (!function_exists('wpsk_test_reset_wp_state')) {
         $GLOBALS['wpsk_wp_shortcodes'] = [];
         $GLOBALS['wpsk_wp_transients'] = [];
         $GLOBALS['wpsk_wp_current_user_caps'] = ['read' => true];
+        // Per-test call log for wp_enqueue_* / wp_register_* /
+        // wp_set_script_translations shims. The shims use isset()
+        // before pushing so the variable MUST be initialized here;
+        // otherwise calls silently disappear and tests see empty
+        // arrays when they assert 'wp_enqueue_style must have been
+        // called'.
+        $GLOBALS['wpsk_test_wp_calls'] = [];
     }
 }
 
@@ -192,6 +199,15 @@ if (!function_exists('plugin_dir_path')) {
     // Mirrors real WP behaviour: `plugin_dir_path(__FILE__)` from a file inside
     // the plugin returns the plugin's filesystem root with a trailing slash.
     function plugin_dir_path($file) {
+        // Test override: when a test sets $GLOBALS['wpsk_test_plugin_dir'],
+        // the stub returns that path so the test can simulate a plugin
+        // installed at an arbitrary location (e.g. a temp dir that is
+        // distinct from the theme dir). Used by tests that need to
+        // distinguish "the plugin location" from "the theme location" —
+        // the production paths happen to be identical under the test root.
+        if (!empty($GLOBALS['wpsk_test_plugin_dir'])) {
+            return rtrim((string) $GLOBALS['wpsk_test_plugin_dir'], '/\\') . '/';
+        }
         // __FILE__ under tests/phpunit/bootstrap.php → project root.
         $root = dirname(__DIR__, 2);
         return rtrim($root, '/\\') . '/';

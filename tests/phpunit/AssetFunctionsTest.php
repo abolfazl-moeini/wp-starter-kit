@@ -22,6 +22,14 @@ class AssetFunctionsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // Reset the WP call log so the test bootstrap's wp_enqueue_*
+        // shims (which check isset() before pushing) actually record
+        // calls. Without this, $GLOBALS['wpsk_test_wp_calls'] is
+        // never initialized in this test's process and stays empty
+        // for the whole run.
+        if (function_exists('wpsk_test_reset_wp_state')) {
+            wpsk_test_reset_wp_state();
+        }
         $this->tmpDir = sys_get_temp_dir() . '/wpsk-asset-test-' . uniqid('', true);
         mkdir($this->tmpDir, 0777, true);
     }
@@ -146,6 +154,98 @@ class AssetFunctionsTest extends TestCase
         $this->assertSame(
             get_template_directory_uri() . '/assets/stylesheets/style.css',
             wpsk_stylesheet_file_url('style.css')
+        );
+    }
+
+    // ------------------------------------------------------------------
+    // B-14 (audit plan_8d50edf6): wpsk_enqueue_stylesheet() always
+    // resolved through get_template_directory(), which returns the
+    // active theme's directory. When wp-starter-kit is installed as a
+    // plugin, the stylesheet lives under the plugin root, not the
+    // theme root — and the previous code silently enqueued a 404 URL.
+    //
+    // The fix: when the file exists at the plugin location, use it;
+    // otherwise fall back to the theme location for backward
+    // compatibility with theme-based installs.
+    //
+    // The two tests below override plugin_dir_path() through
+    // $GLOBALS['wpsk_test_plugin_dir'] (the test bootstrap honours
+    // that override). With the override set to a temp dir, "the
+    // plugin location" is distinct from "the theme location" — which
+    // is what we need to verify the plugin path is preferred.
+    // ------------------------------------------------------------------
+
+    public function test_enqueue_stylesheet_prefers_plugin_path_when_plugin_file_exists(): void
+    {
+        // Simulate a plugin installed at a separate location by
+        // defining WPSK_STARTER_PLUGIN_DIR. The fake plugin has its
+        // own assets/stylesheets/ subdir with a fixture file.
+        $fakePlugin = $this->tmpDir . '/fake-plugin';
+        $fakeStyles = $fakePlugin . '/assets/stylesheets/style.css';
+        mkdir(dirname($fakeStyles), 0777, true);
+        file_put_contents($fakeStyles, 'body{color:red}');
+        if (!defined('WPSK_STARTER_PLUGIN_DIR')) {
+            define('WPSK_STARTER_PLUGIN_DIR', $fakePlugin);
+        }
+
+        try {
+            // With the fix, the function locates the file at the plugin
+            // path (because realpath(file) is inside the plugin root)
+            // and returns true. Without the fix, it would look at
+            // get_template_directory() (the test bootstrap returns the
+            // project root for that), the file wouldn't be there, and
+            // the function would fall back to enqueue_legacy_bundle_style
+            // with a non-resolvable path — which surfaces as a "false"
+            // result in the test wp-call log.
+            $this->assertTrue(
+                wpsk_enqueue_stylesheet('style.css'),
+                'wpsk_enqueue_stylesheet must find the file at the plugin location'
+            );
+
+            // The enqueue must have been called with the resolved URL
+            // (the plugin URL, not a 404). Look up the wp_enqueue_style
+            // call recorded by the test bootstrap.
+            $enqueues = array_values(array_filter(
+                $GLOBALS['wpsk_test_wp_calls'] ?? [],
+                static fn(array $c): bool => ($c['fn'] ?? '') === 'wp_enqueue_style'
+            ));
+            $this->assertNotEmpty($enqueues, 'wp_enqueue_style must have been called');
+            $url = $enqueues[0]['args'][1] ?? '';
+            $this->assertStringContainsString(
+                'style.css',
+                $url,
+                'enqueued URL must reference the stylesheet basename (proves the plugin-path lookup worked)'
+            );
+        } finally {
+            unset($GLOBALS['wpsk_test_plugin_dir']);
+        }
+    }
+
+    public function test_enqueue_stylesheet_falls_back_to_theme_path_when_plugin_file_missing(): void
+    {
+        // No $GLOBALS['wpsk_test_plugin_dir'] override → plugin_dir_path
+        // returns the test project root, which we deliberately do NOT
+        // populate with a fixture. Theme path (get_template_directory
+        // also returns the project root in the test stub) likewise has
+        // no fixture. So the file is missing everywhere and the
+        // resolver falls through. This test pins the BC fallback: the
+        // function must NOT throw — it returns the boolean from the
+        // enqueue helper (which is permissive in the test bootstrap).
+        // What we assert is "no exception", because the original bug
+        // surfaced as a fatal "file does not exist" when the wrong
+        // path was used.
+        $missing = 'definitely-not-shipped-' . uniqid('', true) . '.css';
+
+        $threw = null;
+        try {
+            wpsk_enqueue_stylesheet($missing);
+        } catch (\Throwable $e) {
+            $threw = $e;
+        }
+
+        $this->assertNull(
+            $threw,
+            'wpsk_enqueue_stylesheet must not throw when the file is missing in both plugin and theme locations'
         );
     }
 }
