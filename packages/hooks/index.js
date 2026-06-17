@@ -35,7 +35,7 @@ function resolveGlobalName(override) {
  * bundle has not loaded yet) or if `globalName` cannot be resolved.
  *
  * @param {string} [globalName]  Override the config-driven global name.
- * @returns {object|undefined}
+ * @returns {import('./types.js').HooksInstance | undefined}
  */
 export function getHooks(globalName) {
   const name = resolveGlobalName(globalName);

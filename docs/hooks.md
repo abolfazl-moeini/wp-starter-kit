@@ -3,6 +3,37 @@
 > How `project.config.json`'s `hookPrefix` reaches every `add_action` /
 > `add_filter` in the project — and why it matters.
 
+For the **JavaScript** hook inventory (`@wpdev/hooks`, REST/WDForm events,
+`__WPDEV_HOOK_PREFIX__` defines), see [js-hooks.md](js-hooks.md).
+
+## JavaScript (canonical pattern)
+
+```js
+import { getHooks } from "@wpdev/hooks";
+
+const hooks = getHooks();
+
+hooks?.addAction(
+  `${__WPDEV_HOOK_PREFIX__}-request-ajax-start`,
+  "@wpdev/rest-utils",
+  (endpoint, options = {}) => {
+    // side effects or mutation
+  },
+);
+
+hooks?.applyFilters(
+  `${__WPDEV_HOOK_PREFIX__}.form.validate`,
+  errors,
+  formData,
+);
+```
+
+Hook names use `{hookPrefix}` from `project.config.json` (injected as
+`__WPDEV_HOOK_PREFIX__` at build time). Legacy kit hooks use hyphen-separated
+names (`{hookPrefix}-request-ajax-start`); new hooks should prefer dot notation
+(`{hookPrefix}.rest.before_request`). See [js-hooks.md](js-hooks.md) for the
+full inventory.
+
 ## The contract
 
 `project.config.json`:

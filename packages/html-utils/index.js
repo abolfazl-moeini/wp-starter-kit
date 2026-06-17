@@ -85,7 +85,7 @@ export function mountComponent(elementId, Component, extraProps = {}) {
 
 /* ---------- Loading overlay ------------------------------------------- */
 
-const LOADING_ID = "wpsk-loading";
+const LOADING_ID = "wpdev-loading";
 
 export function FreezeUI() {
   if (typeof document === "undefined") return;

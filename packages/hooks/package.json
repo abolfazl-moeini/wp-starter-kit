@@ -5,10 +5,12 @@
   "type": "module",
   "main": "index.js",
   "exports": {
-    ".": "./index.js"
+    ".": "./index.js",
+    "./types": "./types.ts"
   },
   "files": [
-    "index.js"
+    "index.js",
+    "types.ts"
   ],
   "dependencies": {},
   "license": "MIT"

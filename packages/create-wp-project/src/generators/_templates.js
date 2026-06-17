@@ -635,7 +635,25 @@ final class ItemsController extends RestHandler implements AllowBatch
 }
 `;
 
-export const TEMPLATE_EXAMPLE_FEATURE_ADMIN_TS = `import domReady from '@wordpress/dom-ready';
+export const TEMPLATE_EXAMPLE_FEATURE_ADMIN_TS = `/**
+ * ExampleFeature admin bundle entry.
+ *
+ * Hook examples (use __WPDEV_HOOK_PREFIX__ — never hardcode the prefix):
+ *
+ *   import { getHooks } from '@wpdev/hooks';
+ *   const hooks = getHooks();
+ *   hooks?.addAction(
+ *     \`\${__WPDEV_HOOK_PREFIX__}-request-ajax-start\`,
+ *     '@wpdev/example-feature',
+ *     (endpoint, options = {}) => { ... },
+ *   );
+ *   hooks?.applyFilters(
+ *     \`\${__WPDEV_HOOK_PREFIX__}.example-feature.validate\`,
+ *     errors,
+ *     formData,
+ *   );
+ */
+import domReady from '@wordpress/dom-ready';
 
 domReady(() => {
   const root = document.getElementById('{{slug}}-example-feature-admin');
@@ -984,7 +1002,7 @@ namespace WPDev\\Core;
  * Extensibility hooks (filter / action) follow the project's
  * \`{\$hookPrefix}_*\` naming convention. The \`hookPrefix\` is supplied
  * at construction time and is typically read from
- * \`project.config.json\` (e.g. \`wpsk_module_loader\` for \`wpsk\`).
+ * \`project.config.json\` (e.g. \`wpdev_module_loader\` for \`wpdev\`).
  */
 final class ModuleLoader
 {
