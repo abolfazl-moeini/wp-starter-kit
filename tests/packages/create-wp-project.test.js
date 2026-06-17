@@ -773,6 +773,29 @@ describe("@wpdev/create-wp-project", () => {
       expect(hasJest).toBe(true);
     });
 
+    test("standard preset emits PHP and JS TDD stubs (TASK-23b)", async () => {
+      const res = await scaffoldProject(tmp, goodAnswers, {
+        features: applyPreset("standard"),
+      });
+      expect(res.ok).toBe(true);
+
+      const phpTest = path.join(
+        tmp,
+        "tests/phpunit/Modules/ExampleFeature/ModuleTest.php",
+      );
+      expect(existsSyncSync(phpTest)).toBe(true);
+      const phpContents = await fs.readFile(phpTest, "utf8");
+      expect(phpContents).toMatch(/get_slug\(\)/);
+
+      const jsTest = path.join(
+        tmp,
+        "src/Modules/ExampleFeature/assets/entries/__tests__/admin.test.ts",
+      );
+      expect(existsSyncSync(jsTest)).toBe(true);
+      const jsContents = await fs.readFile(jsTest, "utf8");
+      expect(jsContents).toMatch(/test\.todo/);
+    });
+
     test("full preset includes fault-tolerance docs and polaris stack", async () => {
       const res = await scaffoldProject(tmp, goodAnswers, {
         features: applyPreset("full"),

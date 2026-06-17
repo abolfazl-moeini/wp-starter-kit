@@ -154,6 +154,16 @@ composer test
 Scaffolded projects include `tests/phpunit/Modules/ExampleFeature/ModuleTest.php`
 as a slug-contract stub. Extend it before adding module behavior.
 
+**Policy:** every `src/Modules/<Feature>/Module.php` must have at least one
+matching test under `tests/phpunit/Modules/`. The kit enforces this locally
+with:
+
+```bash
+composer test:architecture
+```
+
+`ArchitectureTest` runs the same check in the main PHPUnit suite.
+
 ### PHP version vs Rector
 
 - Write tests and source against **modern PHP** in local dev (8.2+).
