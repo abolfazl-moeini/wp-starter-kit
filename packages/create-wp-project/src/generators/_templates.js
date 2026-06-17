@@ -194,7 +194,7 @@ export function packageJsonForAnswers(answers, features) {
       "build:components": "wpdev-build-components",
       "build:styles": "wpdev-build-styles",
       "build:assets": "wpdev-build-assets",
-      ...(huskyOn ? { prepare: "husky install" } : {}),
+      ...(huskyOn ? { prepare: "husky" } : {}),
       ...(jsTestVariant === "vitest"
         ? { test: "vitest run" }
         : jsTestVariant === "jest"
@@ -588,9 +588,32 @@ export const TEMPLATE_STRAUSS_JSON_NO_WPDEV_EXCLUSION = `{
 `;
 
 export const TEMPLATE_HUSKY_PRE_COMMIT = `#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
 
+# Run lint-staged first (auto-fixes + prettier on staged files)
 npx lint-staged
+
+# Run related JS tests for staged files only (no full-suite fallback)
+STAGED_JS=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\\.(ts|tsx|js|jsx)$' || true)
+if [ -n "$STAGED_JS" ]; then
+  echo "$STAGED_JS" | xargs npx jest --bail --passWithNoTests --findRelatedTests
+fi
+
+# For staged PHP test files, run composer test with filter when practical
+STAGED_PHP_TESTS=$(git diff --cached --name-only --diff-filter=ACM | grep -E 'Test\\.php$' || true)
+if [ -n "$STAGED_PHP_TESTS" ]; then
+  FILTER=$(echo "$STAGED_PHP_TESTS" | xargs -I{} basename {} .php | tr '\\n' '|' | sed 's/|$//')
+  composer test -- --filter "$FILTER"
+fi
+`;
+
+export const TEMPLATE_HUSKY_COMMIT_MSG = `#!/usr/bin/env sh
+
+npx --no -- commitlint --edit "$1"
+`;
+
+export const TEMPLATE_COMMITLINT_CONFIG = `module.exports = {
+  extends: ["@commitlint/config-conventional"],
+};
 `;
 
 export const TEMPLATE_EXAMPLE_FEATURE_ITEMS_CONTROLLER = `<?php

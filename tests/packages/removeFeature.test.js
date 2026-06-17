@@ -96,7 +96,17 @@ async function seedHuskyOn(tmp) {
   await fs.mkdir(path.join(tmp, ".husky"), { recursive: true });
   await fs.writeFile(
     path.join(tmp, ".husky", "pre-commit"),
-    '#!/usr/bin/env sh\n. "$(dirname -- "$0")/_/husky.sh"\n\nnpx lint-staged\n',
+    "#!/usr/bin/env sh\n\nnpx lint-staged\n",
+    "utf8",
+  );
+  await fs.writeFile(
+    path.join(tmp, ".husky", "commit-msg"),
+    '#!/usr/bin/env sh\n\nnpx --no -- commitlint --edit "$1"\n',
+    "utf8",
+  );
+  await fs.writeFile(
+    path.join(tmp, "commitlint.config.cjs"),
+    'module.exports = { extends: ["@commitlint/config-conventional"] };\n',
     "utf8",
   );
 }
@@ -112,7 +122,7 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
 
   /* -- happy path: toggle OFF removes owned files -- */
 
-  test("turning husky off deletes the .husky/pre-commit owned file", async () => {
+  test("turning husky off deletes husky-owned hook and commitlint files", async () => {
     // Seed: defaults (husky:on by default) + the real husky
     // artifact on disk (mimics what scaffoldProject would have
     // written when husky:on was the default).
@@ -128,13 +138,21 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
     const res = await removeFeature(tmp, "husky");
     expect(res.ok).toBe(true);
     expect(res.removed).toContain(".husky/pre-commit");
+    expect(res.removed).toContain(".husky/commit-msg");
+    expect(res.removed).toContain("commitlint.config.cjs");
     expect(Array.isArray(res.written) ? res.written.length : 0).toBeGreaterThan(
       0,
     );
 
-    // File is gone from disk.
+    // Files are gone from disk.
     await expect(
       fs.readFile(path.join(tmp, ".husky", "pre-commit"), "utf8"),
+    ).rejects.toThrow(/ENOENT/);
+    await expect(
+      fs.readFile(path.join(tmp, ".husky", "commit-msg"), "utf8"),
+    ).rejects.toThrow(/ENOENT/);
+    await expect(
+      fs.readFile(path.join(tmp, "commitlint.config.cjs"), "utf8"),
     ).rejects.toThrow(/ENOENT/);
   });
 
@@ -191,10 +209,9 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
       path.join(tmp, "src/Modules/ExampleFeature/assets/entries/__tests__"),
       { recursive: true },
     );
-    await fs.mkdir(
-      path.join(tmp, "tests/phpunit/Modules/ExampleFeature"),
-      { recursive: true },
-    );
+    await fs.mkdir(path.join(tmp, "tests/phpunit/Modules/ExampleFeature"), {
+      recursive: true,
+    });
     await fs.writeFile(
       path.join(tmp, "src/Modules/ExampleFeature/Module.php"),
       "<?php // Module body\n",

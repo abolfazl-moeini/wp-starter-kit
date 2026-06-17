@@ -55,6 +55,11 @@ describe("selectMigrations() — range selection (Phase 24.3, 24.4)", () => {
     expect(versions).toEqual(["0.2.0", "0.3.0"]);
   });
 
+  test('selectMigrations("0.3.0", "0.4.0") returns [0.4.0]', () => {
+    const list = selectMigrations("0.3.0", "0.4.0");
+    expect(list.map((m) => m.version)).toEqual(["0.4.0"]);
+  });
+
   test('selectMigrations("0.2.0", "0.2.0") returns [] (already at target)', () => {
     const list = selectMigrations("0.2.0", "0.2.0");
     expect(list).toEqual([]);

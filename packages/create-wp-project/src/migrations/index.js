@@ -45,6 +45,7 @@ import { updateJsonFile } from "../json-utils.js";
 
 import * as migration_0_2_0 from "./0.2.0.js";
 import * as migration_0_3_0 from "./0.3.0.js";
+import * as migration_0_4_0 from "./0.4.0.js";
 
 /* -------------------------------------------------------------------- */
 /* Migration catalog                                                     */
@@ -56,7 +57,7 @@ import * as migration_0_3_0 from "./0.3.0.js";
  * returning. Order here exists for human readability (oldest
  * at the top) and as a checklist ("did you add the new one?").
  */
-const MIGRATIONS = [migration_0_2_0, migration_0_3_0];
+const MIGRATIONS = [migration_0_2_0, migration_0_3_0, migration_0_4_0];
 
 /**
  * Return the registered migrations sorted ASCENDING by semver

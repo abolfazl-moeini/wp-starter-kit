@@ -105,6 +105,16 @@ describe("husky generator (Phase 21.7/21.8)", () => {
     const out = huskyRun(makeCtx({}, {}, { husky: "on" }));
     expect(out.files[".husky/pre-commit"]).toBeDefined();
     expect(out.files[".husky/pre-commit"]).toMatch(/lint-staged/);
+    expect(out.files[".husky/pre-commit"]).toMatch(/passWithNoTests/);
+    expect(out.files[".husky/pre-commit"]).not.toMatch(/husky\.sh/);
+  });
+
+  test("emits .husky/commit-msg and commitlint.config.cjs when husky=on", () => {
+    const out = huskyRun(makeCtx({}, {}, { husky: "on" }));
+    expect(out.files[".husky/commit-msg"]).toMatch(/commitlint/);
+    expect(out.files["commitlint.config.cjs"]).toMatch(
+      /@commitlint\/config-conventional/,
+    );
   });
 
   test("emits nothing when husky=off (early-return)", () => {
@@ -112,10 +122,12 @@ describe("husky generator (Phase 21.7/21.8)", () => {
     expect(Object.keys(out.files)).toEqual([]);
   });
 
-  test("reports husky + lint-staged as devDeps when on", () => {
+  test("reports husky + lint-staged + commitlint as devDeps when on", () => {
     const out = huskyRun(makeCtx({}, {}, { husky: "on" }));
     expect(out.devDeps.husky).toBeDefined();
     expect(out.devDeps["lint-staged"]).toBeDefined();
+    expect(out.devDeps["@commitlint/cli"]).toBeDefined();
+    expect(out.devDeps["@commitlint/config-conventional"]).toBeDefined();
   });
 });
 
@@ -135,7 +147,11 @@ describe("vendorScoping generator (Phase 21.7/21.8)", () => {
 describe("exampleFeature generator (Phase 21.7/21.8)", () => {
   test("emits the ExampleFeature module (Module.php + Rest/ItemsController.php + assets/entries/admin.ts) when on", () => {
     const out = exampleFeatureRun(
-      makeCtx({}, {}, { exampleFeature: "on", phpTest: "phpunit", jsTest: "jest" }),
+      makeCtx(
+        {},
+        {},
+        { exampleFeature: "on", phpTest: "phpunit", jsTest: "jest" },
+      ),
     );
     expect(out.files["src/Modules/ExampleFeature/Module.php"]).toBeDefined();
     expect(

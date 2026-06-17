@@ -1,5 +1,4 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
 
 # Phase 13 pragmatic pre-commit per plan.v2.md
 # Run lint-staged first (auto-fixes + prettier on staged files)

@@ -28,7 +28,7 @@
     "build:components": "node core/packages/build/esbuild-components-cli.js",
     "build:dependencies": "node core/packages/build/esbuild-dependencies-cli.js",
     "build:styles": "node core/packages/build/esbuild-styles-cli.js",
-    "prepare": "husky install && npm run build:assets",
+    "prepare": "husky && npm run build:assets",
     "lint:js": "npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=20",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml,css}\"",
     "format:write": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml,css}\"",

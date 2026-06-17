@@ -107,6 +107,8 @@ function firstOverlap(a, b) {
     ".gitignore",
     ".editorconfig",
     ".husky/pre-commit",
+    ".husky/commit-msg",
+    "commitlint.config.cjs",
     ".flowconfig",
     ".sassrc",
     "tailwind.config.js",
@@ -280,10 +282,12 @@ describe("generator ownership — owned-paths map (Phase 22.1, 22.2)", () => {
     }
   });
 
-  test("the husky generator owns only .husky/pre-commit (single exact file)", () => {
+  test("the husky generator owns pre-commit, commit-msg, and commitlint.config.cjs", () => {
     const husky = listGenerators().find((g) => g.id === "husky");
     expect(husky).toBeDefined();
     expect(isMatchedBy(".husky/pre-commit", husky.owns)).toBe(true);
+    expect(isMatchedBy(".husky/commit-msg", husky.owns)).toBe(true);
+    expect(isMatchedBy("commitlint.config.cjs", husky.owns)).toBe(true);
     // And it does NOT own other files.
     expect(isMatchedBy("package.json", husky.owns)).toBe(false);
     expect(isMatchedBy(".gitignore", husky.owns)).toBe(false);

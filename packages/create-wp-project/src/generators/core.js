@@ -178,7 +178,7 @@ export function run(ctx) {
       JSON.stringify(packageJsonForAnswers(answers, features), null, 2) + "\n";
   } else if (features.husky === "on") {
     // husky is on but js is none — still emit a minimal package.json
-    // (the husky generator needs a `prepare: "husky install"` script).
+    // (the husky generator needs a `prepare: "husky"` script).
     // This is delegated to the husky generator itself; the core does
     // not emit a duplicate.
   }

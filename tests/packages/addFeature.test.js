@@ -132,8 +132,9 @@ describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
     expect(res.ok).toBe(true);
     expect(res.written).toBeDefined();
     expect(Array.isArray(res.written)).toBe(true);
-    // .husky/pre-commit is the husky generator's primary file
     expect(res.written).toContain(".husky/pre-commit");
+    expect(res.written).toContain(".husky/commit-msg");
+    expect(res.written).toContain("commitlint.config.cjs");
     // deps / devDeps reported so the CLI can show "you also need to npm install …"
     expect(res.deps).toBeDefined();
     expect(res.devDeps).toBeDefined();
