@@ -22,9 +22,9 @@ The scaffold adds `blockstudio/blockstudio` to `composer.json`. Run `composer in
 ## CLI
 
 ```bash
-wpsk create my-plugin --blocks=on --yes
-wpsk add blocks
-wpsk remove blocks
+wpdev create my-plugin --blocks=on --yes
+wpdev add blocks
+wpdev remove blocks
 ```
 
 If `phpMinVersion < 8.2`, the installer warns that Rector downlevels your plugin source but the server must still run PHP 8.2+ for Blockstudio.

@@ -57,6 +57,6 @@ See [Blockstudio documentation](https://blockstudio.dev/documentation/) for full
 Enable with `blocks:on` during `wpsk create` or `wpsk add blocks`. Works with `js:none` (PHP-only plugins).
 
 ```bash
-wpsk create my-plugin --blocks=on --yes
+wpdev create my-plugin --blocks=on --yes
 composer install
 ```

@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use WPDev\FaultTolerance\HttpBatch;
 use WPDev\FaultTolerance\HttpPool;
 use WPDev\FaultTolerance\Resilient;
 
@@ -23,7 +22,7 @@ if (!function_exists('http_batch')) {
      */
     function http_batch(array $requests): array
     {
-        return HttpBatch::http_batch($requests);
+        return HttpPool::batch($requests);
     }
 }
 

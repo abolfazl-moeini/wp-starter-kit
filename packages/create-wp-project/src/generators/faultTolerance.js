@@ -2,7 +2,7 @@
  * @wpsk/create-wp-project — faultTolerance generator (Phase 25).
  *
  * When `faultTolerance:on` (and `phpMinVersion ≥ 8.1`, enforced by
- * `validateFeatureSet`), wires the optional `wpsk/php-fault-tolerance`
+ * `validateFeatureSet`), wires the optional `wpdev/php-fault-tolerance`
  * Composer package into the consumer project.
  */
 
@@ -22,14 +22,14 @@ This project has \`faultTolerance: on\`.
 
 ## Composer dependency
 
-\`composer.json\` requires \`wpsk/php-fault-tolerance\` (PHP ≥ 8.1).
+\`composer.json\` requires \`wpdev/php-fault-tolerance\` (PHP ≥ 8.1).
 Run \`composer install\` after scaffolding.
 
 ## Usage
 
 \`\`\`php
-use WPSK\\FaultTolerance\\CircuitBreaker;
-use WPSK\\FaultTolerance\\HttpPool;
+use WPDev\\FaultTolerance\\CircuitBreaker;
+use WPDev\\FaultTolerance\\HttpPool;
 \`\`\`
 
 See the kit doc \`docs/fault-tolerance.md\` for patterns.
@@ -40,7 +40,7 @@ See the kit doc \`docs/fault-tolerance.md\` for patterns.
     devDeps: {},
     composerPatches: {
       require: {
-        "wpsk/php-fault-tolerance": "*",
+        "wpdev/php-fault-tolerance": "*",
       },
       repositories: [
         {

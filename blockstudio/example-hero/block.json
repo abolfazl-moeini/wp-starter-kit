@@ -1,12 +1,12 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "wpsk-starter/example-hero",
+  "name": "wpdev-starter/example-hero",
   "title": "Example Hero",
   "category": "widgets",
   "icon": "smiley",
   "description": "Example Blockstudio block for the starter kit.",
-  "textdomain": "wpsk-starter",
+  "textdomain": "wpdev-starter",
   "blockstudio": {
     "attributes": {
       "heading": {

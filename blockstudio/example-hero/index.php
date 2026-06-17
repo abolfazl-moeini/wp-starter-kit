@@ -4,6 +4,6 @@
 		<p><?php echo esc_html( $a['intro'] ); ?></p>
 	<?php endif; ?>
 	<?php if ( ! empty( $a['showCta'] ) ) : ?>
-		<p class="example-hero__cta"><?php esc_html_e( 'Call to action', 'wpsk-starter' ); ?></p>
+		<p class="example-hero__cta"><?php esc_html_e( 'Call to action', 'wpdev-starter' ); ?></p>
 	<?php endif; ?>
 </section>

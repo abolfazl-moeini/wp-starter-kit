@@ -6,8 +6,8 @@ describe("buildProgram()", () => {
   const program = buildProgram();
   const commandNames = program.commands.map((c) => c.name());
 
-  test("uses 'wpsk' as the program name", () => {
-    expect(program.name()).toBe("wpsk");
+  test("uses 'wpdev' as the program name", () => {
+    expect(program.name()).toBe("wpdev");
   });
 
   test("registers every subcommand from the plan", () => {

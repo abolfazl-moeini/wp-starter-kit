@@ -128,8 +128,6 @@ export function findGenerator(id) {
  *                          (every license variant in the catalog is
  *                          a real license — there's no "off" value)
  *  - blocks                enabled iff `features.blocks === "on"`
- *                          AND `features.js !== "none"`
- *                          AND `features.wpMinVersion ≥ 5.8`
  *  - css                   enabled iff `features.css !== "none"`
  *                          AND `features.js !== "none"`
  *
@@ -192,7 +190,7 @@ export function getGenerators(features) {
 /**
  * Compare two dotted WP version strings (e.g. "5.8", "6.0", "6.2.3").
  * Returns negative if a < b, 0 if equal, positive if a > b. The
- * `blocks` feature gate (≥ 5.8) is the only consumer in Phase 21.
+ * (no special gate for blocks beyond `blocks === "on"`)
  */
 function compareWpVersion(a, b) {
   const parse = (v) => {

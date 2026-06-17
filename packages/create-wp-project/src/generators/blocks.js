@@ -27,7 +27,7 @@ export function run(ctx) {
     ...(ctx.answers || {}),
     ...(ctx.cfg || {}),
     ...(ctx.vars || {}),
-    vendor: ctx.vars?.vendor || ctx.answers?.globalName || "WPSK",
+    vendor: ctx.vars?.vendor || ctx.answers?.globalName || "WPDev",
     frameworkNamespace: ctx.vars?.frameworkNamespace || "WPDev",
     slug,
     slug_underscore: String(slug).replace(/-/g, "_"),
@@ -52,12 +52,6 @@ export function run(ctx) {
     composerPatches: {
       require: {
         "blockstudio/blockstudio": "^7.3",
-        "composer/installers": "^2.2",
-      },
-      extra: {
-        "installer-paths": {
-          "wp-content/plugins/{$name}/": ["type:wordpress-plugin"],
-        },
       },
       autoload: {
         files: [REGISTER_FILE],

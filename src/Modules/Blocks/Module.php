@@ -42,7 +42,7 @@ final class Module implements ModuleInterface
 	public static function missing_blockstudio_notice(): void
 	{
 		echo '<div class="notice notice-error"><p>'
-			. esc_html__('Blockstudio is not available. Run composer install.', 'wpsk-starter')
+			. esc_html__('Blockstudio is not available. Run composer install.', 'wpdev-starter')
 			. '</p></div>';
 	}
 

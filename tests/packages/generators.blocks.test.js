@@ -50,7 +50,7 @@ function makeCtx(features = {}) {
     answers,
     cfg,
     features: f,
-    vars: { ...answers, ...cfg, vendor: "WPSK", frameworkNamespace: "WPDev" },
+    vars: { ...answers, ...cfg, vendor: "WPDev", frameworkNamespace: "WPDev" },
   };
 }
 
@@ -78,10 +78,9 @@ describe("blocks:on Blockstudio scaffold", () => {
     expect(php).not.toMatch(/register_block_type/);
   });
 
-  test("composerPatches require blockstudio and composer/installers", () => {
+  test("composerPatches require blockstudio", () => {
     const out = blocksRun(makeCtx());
     expect(out.composerPatches.require["blockstudio/blockstudio"]).toBe("^7.3");
-    expect(out.composerPatches.require["composer/installers"]).toBe("^2.2");
   });
 
   test("example block uses apiVersion 3 and object-format blockstudio.attributes", () => {

@@ -187,7 +187,7 @@ if (!function_exists('add_action')) {
 }
 
 $blockstudioCandidates = [
-    dirname(__DIR__) . '/wp-content/plugins/blockstudio/blockstudio.php',
+    (defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR : (defined('ABSPATH') ? ABSPATH . 'wp-content/plugins' : '')) . '/blockstudio/blockstudio.php',
     dirname(__DIR__) . '/vendor/blockstudio/blockstudio/blockstudio.php',
 ];
 foreach ($blockstudioCandidates as $blockstudioFile) {

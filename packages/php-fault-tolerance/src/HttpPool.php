@@ -231,9 +231,7 @@ final class HttpPool
 
     /**
      * WordPress sanitize_url wrapper. Falls back to the raw value when the
-     * WP helper is not loaded (e.g. plain composer tests). Public so that
-     * HttpBatch::http_batch can apply the same SSRF hygiene to the
-     * wp_remote_request path that HttpPool applies to the curl path.
+     * WP helper is not loaded (e.g. plain composer tests).
      */
     public static function sanitize_url(string $url): string
     {
@@ -241,6 +239,32 @@ final class HttpPool
             return $url;
         }
         return sanitize_url($url);
+    }
+
+    /**
+     * Sequential HTTP batch (consolidated from former HttpBatch class).
+     * Applies the same SSRF hygiene as the pool path.
+     *
+     * @param list<array{url:string,args?:array<string,mixed>}> $requests
+     * @return list<array<string,mixed>|WP_Error>
+     */
+    public static function batch(array $requests): array
+    {
+        $responses = [];
+        foreach ($requests as $request) {
+            $url = self::sanitize_url((string) ($request['url'] ?? ''));
+            if ($url === '') {
+                $responses[] = new \WP_Error('invalid_url', 'Blocked empty URL');
+                continue;
+            }
+            if (self::is_private_host($url)) {
+                $responses[] = new \WP_Error('ssrf_blocked', 'Blocked private network URL');
+                continue;
+            }
+            $args = $request['args'] ?? [];
+            $responses[] = wp_remote_request($url, $args);
+        }
+        return $responses;
     }
 
     /**
