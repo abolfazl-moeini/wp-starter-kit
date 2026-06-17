@@ -66,7 +66,7 @@ async function fileExists(p) {
 describe("refreshGlue after feature mutations", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-glue-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-glue-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });

@@ -43,7 +43,7 @@ describe("@wpdev/create-wp-project — consumer composer.json (Phase 23.A3/A4)",
   };
 
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-scaffold-composer-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-scaffold-composer-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });

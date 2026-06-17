@@ -4,7 +4,7 @@
  * The doctor is the installer's "is this consumer project
  * healthy?" check. It's a SAFE read-only operation: it never
  * throws, never writes, and never auto-fixes. The CLI's
- * `wpsk doctor` command calls it and prints the result.
+ * `wpdev doctor` command calls it and prints the result.
  *
  * The contract:
  *
@@ -80,7 +80,7 @@ async function seedHealthy({
   distMode = "vendored",
   features,
 } = {}) {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-doctor-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-doctor-"));
   // Default kitVersion to a value the test can reason about
   // (the registered "0.1.0" baseline). Tests that need a
   // different version pass it explicitly.
@@ -112,7 +112,7 @@ function defaultFeatureSet() {
 describe("doctorProject() — check 1: manifest present (Phase 24.9)", () => {
   let tmpDir;
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-doctor-1-"));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-doctor-1-"));
   });
   afterEach(async () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
@@ -203,7 +203,9 @@ describe("doctorProject() — check 3: kitVersion vs installed deps (Phase 24.10
     // The warning is non-fatal — ok is still true iff
     // errors is empty.
     expect(
-      res.warnings.some((w) => /kit newer than installed|wpdev update/i.test(w)),
+      res.warnings.some((w) =>
+        /kit newer than installed|wpdev update/i.test(w),
+      ),
     ).toBe(true);
   });
 });
@@ -236,7 +238,7 @@ describe("doctorProject() — check 4: vendored framework checksum (Phase 24.10)
     await fs.mkdir(path.join(tmpDir, "src", "Core"), { recursive: true });
     await fs.writeFile(
       corePhp,
-      "<?php namespace WPSK\\Core; class Plugin {}",
+      "<?php namespace WPDev\\Core; class Plugin {}",
       "utf8",
     );
     const res = doctorProject(tmpDir);
@@ -266,7 +268,7 @@ describe("doctorProject() — happy path (Phase 24.10)", () => {
 describe("doctorProject() — malformed manifest (Phase 24.10)", () => {
   let tmpDir;
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-doctor-bad-"));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-doctor-bad-"));
     await fs.writeFile(
       path.join(tmpDir, "wpdev-kit.json"),
       '{ "schema": 1, "kit',

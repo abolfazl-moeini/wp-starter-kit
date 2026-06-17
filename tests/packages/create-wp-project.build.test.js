@@ -64,7 +64,7 @@ describe("@wpdev/create-wp-project — build scripts use installed @wpdev/* bins
   };
 
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-scaffold-bins-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-scaffold-bins-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });

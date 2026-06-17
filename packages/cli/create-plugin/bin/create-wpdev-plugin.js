@@ -19,7 +19,7 @@
  *   `npm create @wpdev/plugin`  →  `npm exec @wpdev/create-plugin`
  * so the package name must be exactly `@wpdev/create-plugin` and
  * the bin is what `npm exec` invokes — the bin name itself is
- * free-form (we use `create-wpsk-plugin` for symmetry with the
+ * free-form (we use `create-wpdev-plugin` for symmetry with the
  * unscoped `create-*` convention).
  *
  * Why we resolve the @wpdev/cli bin by *file path* (not by `wpdev` on

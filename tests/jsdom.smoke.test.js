@@ -6,7 +6,7 @@
 //   3. mountComponent() merges extraProps and forwards them to the rendered component
 //   4. mountComponent() is a no-op when the target element does not exist
 //
-// Constraint: NO hardcoded WPSK brand string in the tests. Placeholder id is generic.
+// Constraint: NO hardcoded WPDev brand string in the tests. Placeholder id is generic.
 
 import { test, expect, beforeEach, afterEach } from "@jest/globals";
 import { h } from "preact";

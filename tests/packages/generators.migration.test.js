@@ -48,7 +48,7 @@ import {
 describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21.12/21.13)", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-migration-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-migration-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });

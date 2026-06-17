@@ -40,7 +40,7 @@ class PatchApplyTest extends TestCase
         // assertion on empty/non-empty depends only on the current run.
         Cli::$errors = [];
 
-        $this->tmpRoot = sys_get_temp_dir() . '/wpsk-patch-apply-' . uniqid('', true);
+        $this->tmpRoot = sys_get_temp_dir() . '/wpdev-patch-apply-' . uniqid('', true);
         mkdir($this->tmpRoot, 0777, true);
 
         // Initialise a git repo so `git apply` enforces context matching
@@ -54,7 +54,7 @@ class PatchApplyTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->wpskRrmdir($this->tmpRoot);
+        $this->wpdevRrmdir($this->tmpRoot);
         Cli::$errors = [];
         parent::tearDown();
     }
@@ -74,7 +74,7 @@ class PatchApplyTest extends TestCase
         }
     }
 
-    private function wpskRrmdir(string $dir): void
+    private function wpdevRrmdir(string $dir): void
     {
         if (!is_dir($dir)) {
             return;
@@ -89,7 +89,7 @@ class PatchApplyTest extends TestCase
             }
             $path = $dir . DIRECTORY_SEPARATOR . $entry;
             if (is_dir($path)) {
-                $this->wpskRrmdir($path);
+                $this->wpdevRrmdir($path);
             } else {
                 @unlink($path);
             }

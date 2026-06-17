@@ -65,7 +65,7 @@ describe("@wpdev/create-wp-project — consumer package.json deps (Phase 23.B3/B
   };
 
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-scaffold-pkg-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-scaffold-pkg-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });

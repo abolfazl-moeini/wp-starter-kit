@@ -172,7 +172,7 @@ class PluginBootstrapTest extends TestCase
     /* Plugin boot wiring                                                 */
     /* ------------------------------------------------------------------ */
 
-    public function test_template_wires_WPSK_Core_Plugin(): void
+    public function test_template_wires_WPDEV_Core_Plugin(): void
     {
         $source = $this->templateSource();
         // Either an `add_action('plugins_loaded', ...)` or a direct

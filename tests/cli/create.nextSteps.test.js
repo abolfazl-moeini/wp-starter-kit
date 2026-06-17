@@ -2,7 +2,7 @@
  * Tests for `packages/cli/src/commands/create.js` — next-steps
  * output (I3.9 + I3.10).
  *
- * Contract: after a successful `wpsk create`, the bin layer
+ * Contract: after a successful `wpdev create`, the bin layer
  * should ask `ui.renderNextSteps(features, runOptions)` to
  * produce the list of follow-up commands. The runCreate
  * command itself does not own the print; it just returns the
@@ -65,7 +65,7 @@ function makeDeps() {
 }
 
 function makeEmptyDir() {
-  return mkdtempSync(path.join(tmpdir(), "wpsk-i3-nextsteps-"));
+  return mkdtempSync(path.join(tmpdir(), "wpdev-i3-nextsteps-"));
 }
 
 /* -------------------------------------------------------------------- */
@@ -113,9 +113,9 @@ describe("runCreate / ui.renderNextSteps — next-steps contract (I3.9/I3.10)", 
   test("the first step is always `cd <targetDir>`", () => {
     const steps = renderNextSteps(
       { js: "typescript", phpTest: "phpunit" },
-      { targetDir: "/var/tmp/wpsk" },
+      { targetDir: "/var/tmp/wpdev" },
     );
-    expect(steps[0]).toBe("cd /var/tmp/wpsk");
+    expect(steps[0]).toBe("cd /var/tmp/wpdev");
   });
 
   test("runCreate returns the resolved features + runOptions shape that the bin uses to drive renderNextSteps", async () => {

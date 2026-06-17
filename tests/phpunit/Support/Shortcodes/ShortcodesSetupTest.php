@@ -12,30 +12,30 @@ class ShortcodesSetupTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        wpsk_test_reset_wp_state();
+        wpdev_test_reset_wp_state();
         ShortcodesSetup::flush();
     }
 
     public function test_register_and_render_via_class_handler(): void
     {
-        ShortcodesSetup::register('wpsk_demo', DemoShortcode::class);
+        ShortcodesSetup::register('wpdev_demo', DemoShortcode::class);
         ShortcodesSetup::append_shortcodes();
 
-        $this->assertArrayHasKey('wpsk_demo', $GLOBALS['wpsk_wp_shortcodes']);
+        $this->assertArrayHasKey('wpdev_demo', $GLOBALS['wpdev_wp_shortcodes']);
 
-        $output = ShortcodesSetup::render_shortcode(['name' => 'Alice'], '', 'wpsk_demo');
+        $output = ShortcodesSetup::render_shortcode(['name' => 'Alice'], '', 'wpdev_demo');
         $this->assertStringContainsString('Hello Alice', $output);
     }
 
     public function test_escapes_output_and_sanitizes_attributes(): void
     {
-        ShortcodesSetup::register('wpsk_escape', EscapeShortcode::class);
+        ShortcodesSetup::register('wpdev_escape', EscapeShortcode::class);
         ShortcodesSetup::append_shortcodes();
 
         $output = ShortcodesSetup::render_shortcode(
             ['label' => '<script>alert(1)</script>'],
             '',
-            'wpsk_escape'
+            'wpdev_escape'
         );
 
         $this->assertStringNotContainsString('<script>', $output);

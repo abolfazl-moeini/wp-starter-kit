@@ -1,12 +1,12 @@
 /**
  * Phase 24.7 / 24.8 — `planUpdate(dir, toVersion)` dry-run contract.
  *
- * The installer runs `wpsk update` in two phases:
+ * The installer runs `wpdev update` in two phases:
  *
- *   1. `wpsk update` (default) — runs `planUpdate(dir, toVersion)`
+ *   1. `wpdev update` (default) — runs `planUpdate(dir, toVersion)`
  *      and PRINTS the plan. No disk writes. The user reads
  *      the plan and decides whether to apply.
- *   2. `wpsk update --run` — calls `runMigrations(dir, ...)`
+ *   2. `wpdev update --run` — calls `runMigrations(dir, ...)`
  *      to actually apply the plan.
  *
  * The plan is a plain object the CLI can JSON.stringify and
@@ -33,7 +33,7 @@
  *    just the "you're already there" marker.
  *
  *  - Manifest missing → returns `{ok:false, reason:"no manifest"}`.
- *    The CLI shows the user a clear "this isn't a wpsk project"
+ *    The CLI shows the user a clear "this isn't a wpdev project"
  *    message.
  *
  *  - `package.json` and/or `composer.json` missing → the
@@ -74,7 +74,7 @@ async function seedProject({
     "extra/dep": "^1.0.0", // NOT in registry → remove
   },
 } = {}) {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-plan-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-plan-"));
   const manifest = {
     schema: 1,
     kitVersion,
@@ -272,7 +272,7 @@ describe("planUpdate() — already at or past target (Phase 24.7)", () => {
 
 describe("planUpdate() — missing manifest (Phase 24.7)", () => {
   test("returns {ok:false, reason} (does NOT throw)", async () => {
-    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-plan-noman-"));
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-plan-noman-"));
     try {
       const plan = planUpdate(dir, "0.2.0");
       expect(plan.ok).toBe(false);
@@ -288,7 +288,7 @@ describe("planUpdate() — missing dep files (Phase 24.8)", () => {
   let tmpDir;
   beforeEach(async () => {
     // Seed ONLY a manifest — no package.json / composer.json.
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-plan-nodeps-"));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-plan-nodeps-"));
     const manifest = {
       schema: 1,
       kitVersion: "0.1.0",

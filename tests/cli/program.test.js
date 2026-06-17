@@ -51,7 +51,7 @@ describe("buildProgram()", () => {
 
 describe("subcommand --help text (Phase I4 smoke)", () => {
   // The 30+ feature/answer/runOptions flags live in parseFlags, so
-  // commander does not auto-list them. To make `wpsk <sub> --help`
+  // commander does not auto-list them. To make `wpdev <sub> --help`
   // discoverable, every subcommand includes a "Flags" block via
   // .addHelpText("after", ...). These tests lock that contract:
   // a user reading --help should see the flags they can pass for
@@ -63,7 +63,7 @@ describe("subcommand --help text (Phase I4 smoke)", () => {
     return sub.helpInformation();
   }
 
-  test("wpsk add --help lists the add-relevant flags", () => {
+  test("wpdev add --help lists the add-relevant flags", () => {
     const help = helpFor("add");
     for (const flag of [
       "--list",
@@ -77,7 +77,7 @@ describe("subcommand --help text (Phase I4 smoke)", () => {
     }
   });
 
-  test("wpsk remove --help lists the remove-relevant flags (no --variant, no --install)", () => {
+  test("wpdev remove --help lists the remove-relevant flags (no --variant, no --install)", () => {
     const help = helpFor("remove");
     for (const flag of ["--yes", "--force", "--verbose"]) {
       expect(help).toMatch(flag);
@@ -91,12 +91,12 @@ describe("subcommand --help text (Phase I4 smoke)", () => {
     expect(help).not.toMatch(/--install/);
   });
 
-  test("wpsk list --help mentions --json (machine output flag)", () => {
+  test("wpdev list --help mentions --json (machine output flag)", () => {
     const help = helpFor("list");
     expect(help).toMatch(/--json/);
   });
 
-  test("wpsk update --help lists the update-relevant flags", () => {
+  test("wpdev update --help lists the update-relevant flags", () => {
     // The plan I5.1–I5.4 contract: --to, --run, --force, --verbose.
     // Tests lock the surface so a future "add --update-only / etc."
     // patch is caught in review.
@@ -106,8 +106,8 @@ describe("subcommand --help text (Phase I4 smoke)", () => {
     }
   });
 
-  test("wpsk update --help mentions the [dir] positional argument (Phase I5)", () => {
-    // The user can run `wpsk update` (cwd) or `wpsk update /abs/proj`
+  test("wpdev update --help mentions the [dir] positional argument (Phase I5)", () => {
+    // The user can run `wpdev update` (cwd) or `wpdev update /abs/proj`
     // (explicit target). commander renders positional arg names
     // in brackets, so we look for the bare 'dir' in the usage
     // line.
@@ -115,17 +115,17 @@ describe("subcommand --help text (Phase I4 smoke)", () => {
     expect(help).toMatch(/\[dir\]/);
   });
 
-  test("wpsk doctor --help lists --json (machine output flag)", () => {
+  test("wpdev doctor --help lists --json (machine output flag)", () => {
     const help = helpFor("doctor");
     expect(help).toMatch(/--json/);
   });
 
-  test("wpsk doctor --help mentions the [dir] positional argument (Phase I5)", () => {
+  test("wpdev doctor --help mentions the [dir] positional argument (Phase I5)", () => {
     const help = helpFor("doctor");
     expect(help).toMatch(/\[dir\]/);
   });
 
-  test("wpsk doctor --help does NOT list --to/--run/--force (those are update-only)", () => {
+  test("wpdev doctor --help does NOT list --to/--run/--force (those are update-only)", () => {
     // Defensive: the doctor subcommand should not inherit the
     // update flags. Locking this keeps the help text honest.
     const help = helpFor("doctor");
@@ -134,13 +134,13 @@ describe("subcommand --help text (Phase I4 smoke)", () => {
     expect(help).not.toMatch(/--force/);
   });
 
-  test("wpsk info --help mentions --json (machine output flag, Phase I5)", () => {
+  test("wpdev info --help mentions --json (machine output flag, Phase I5)", () => {
     const help = helpFor("info");
     expect(help).toMatch(/--json/);
   });
 
-  test("wpsk info --help mentions the [dir] positional argument (Phase I5)", () => {
-    // The user can run `wpsk info` (cwd) or `wpsk info /abs/proj`
+  test("wpdev info --help mentions the [dir] positional argument (Phase I5)", () => {
+    // The user can run `wpdev info` (cwd) or `wpdev info /abs/proj`
     // (explicit target). commander renders positional arg names
     // in brackets, so we look for the bare 'dir' in the usage
     // line.

@@ -151,7 +151,7 @@ export async function writeManifest(dir, manifest) {
  * @param {string} dir
  * @returns {Object|null}
  */
-const LEGACY_MANIFEST_FILENAME = "wpsk-kit.json";
+const LEGACY_MANIFEST_FILENAME = "wpdev-kit.json";
 
 export function readManifest(dir) {
   if (!dir || typeof dir !== "string") {

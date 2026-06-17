@@ -2,12 +2,12 @@
  * @wpdev/create-wp-project — `planUpdate` dry-run planner.
  *
  * Phase 24 of plan.v3.md (24.7, 24.8). The installer runs
- * `wpsk update` in two phases:
+ * `wpdev update` in two phases:
  *
- *   1. `wpsk update` (default) — calls `planUpdate(dir, toVersion)`
+ *   1. `wpdev update` (default) — calls `planUpdate(dir, toVersion)`
  *      and PRINTS the plan. No disk writes. The user reads
  *      the plan and decides whether to apply.
- *   2. `wpsk update --run` — calls `runMigrations(dir, ...)`
+ *   2. `wpdev update --run` — calls `runMigrations(dir, ...)`
  *      to actually apply the plan (and bump the manifest).
  *
  * The plan is a plain JSON-serializable object. Its shape:
@@ -37,7 +37,7 @@
  *    surfaces the downgrade attempt with a stronger error).
  *
  *  - Manifest missing → `{ok:false, reason: "no manifest"}`.
- *    The CLI shows the user a clear "this isn't a wpsk
+ *    The CLI shows the user a clear "this isn't a wpdev
  *    project" message.
  *
  *  - `package.json` and/or `composer.json` missing → the

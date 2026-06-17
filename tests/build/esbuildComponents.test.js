@@ -53,7 +53,7 @@ describe("esbuild-components", () => {
   });
 
   test("buildComponents resolves when no component scripts exist", async () => {
-    const emptyDir = mkdtempSync(join(tmpdir(), "wpsk-components-"));
+    const emptyDir = mkdtempSync(join(tmpdir(), "wpdev-components-"));
     try {
       const { buildComponents } =
         await import("@wpdev/build/esbuild-components.js");

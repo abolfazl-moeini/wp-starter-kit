@@ -31,9 +31,9 @@ if ( ! function_exists( 'wpdev_color_log' ) ) {
 	}
 }
 
-if ( ! function_exists( 'wpsk_color_log' ) ) {
+if ( ! function_exists( 'wpdev_color_log' ) ) {
 	/** @deprecated Use wpdev_color_log() */
-	function wpsk_color_log( string $msg, string $color = 'n' ): void {
+	function wpdev_color_log( string $msg, string $color = 'n' ): void {
 		wpdev_color_log( $msg, $color );
 	}
 }

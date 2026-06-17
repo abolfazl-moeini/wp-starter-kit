@@ -43,7 +43,7 @@ describe("jsLib scaffold + addFeature", () => {
   let tmp;
 
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-jslib-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-jslib-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });

@@ -35,7 +35,7 @@ import { defaultFeatures } from "../../packages/create-wp-project/src/features.j
 describe("readManifest() — round-trip (Phase 20.7)", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-roundtrip-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-roundtrip-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });
@@ -86,13 +86,13 @@ describe("readManifest() — round-trip (Phase 20.7)", () => {
 
 describe("readManifest() — missing file (Phase 20.7)", () => {
   test("returns null when the file is absent", () => {
-    const dir = path.join(os.tmpdir(), "wpsk-no-such-dir-" + Date.now());
+    const dir = path.join(os.tmpdir(), "wpdev-no-such-dir-" + Date.now());
     const r = readManifest(dir);
     expect(r).toBeNull();
   });
 
   test("returns null when the file is absent (real tmp dir, no wpdev-kit.json)", () => {
-    const dir = path.join(os.tmpdir(), "wpsk-empty-dir-" + Date.now());
+    const dir = path.join(os.tmpdir(), "wpdev-empty-dir-" + Date.now());
     require("node:fs").mkdirSync(dir, { recursive: true });
     try {
       expect(readManifest(dir)).toBeNull();
@@ -105,7 +105,7 @@ describe("readManifest() — missing file (Phase 20.7)", () => {
 describe("readManifest() — malformed file (Phase 20.8)", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-malformed-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-malformed-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });

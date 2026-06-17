@@ -76,7 +76,7 @@ function defaultEngine() {
  * Orchestrate the gather pipeline.
  *
  * @param {object} opts
- * @param {string[]} opts.argv               raw argv tail (no `node wpsk`)
+ * @param {string[]} opts.argv               raw argv tail (no `node wpdev`)
  * @param {boolean}  [opts.interactive=true]  set to false to skip prompts
  *                                           (overrides --yes inside the
  *                                           flag set)

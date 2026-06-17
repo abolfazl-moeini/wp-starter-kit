@@ -12,7 +12,7 @@ class BlocksModuleTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        wpsk_test_reset_wp_state();
+        wpdev_test_reset_wp_state();
         Plugin::reset_for_tests();
     }
 

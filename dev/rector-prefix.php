@@ -9,7 +9,7 @@
  *
  * Resolution order for the `from => to` pair:
  *   1. Environment variables `WPDEV_PREFIX_FROM` / `WPDEV_PREFIX_TO`
- *      (legacy `WPSK_PREFIX_*` still accepted).
+ *      (legacy `WPDEV_PREFIX_*` still accepted).
  *   2. `dev/rector.prefix.json` (a small JSON file committed in the
  *      downstream project; the starter repo does not commit it).
  *   3. Fallback: empty mapping (no rewrite) so the pipeline is still a
@@ -39,8 +39,8 @@ return static function (RectorConfig $rector_config): void {
     // are rewritten too (they reference the old namespace).
     $shared($rector_config, ['include_vendor' => true]);
 
-    $from = (string) (getenv('WPDEV_PREFIX_FROM') ?: getenv('WPSK_PREFIX_FROM'));
-    $to   = (string) (getenv('WPDEV_PREFIX_TO') ?: getenv('WPSK_PREFIX_TO'));
+    $from = (string) (getenv('WPDEV_PREFIX_FROM') ?: getenv('WPDEV_PREFIX_FROM'));
+    $to   = (string) (getenv('WPDEV_PREFIX_TO') ?: getenv('WPDEV_PREFIX_TO'));
 
     if (($from === '' || $to === '') && is_file(__DIR__ . '/rector.prefix.json')) {
         $decoded = json_decode((string) file_get_contents(__DIR__ . '/rector.prefix.json'), true);
@@ -62,7 +62,7 @@ return static function (RectorConfig $rector_config): void {
     }
 
     // Build `from => to` mapping. `from` and `to` can be comma-separated
-    // for multi-namespace renames: `WPSK_PREFIX_FROM=OldA,OldB WPSK_PREFIX_TO=NewA,NewB`.
+    // for multi-namespace renames: `WPDEV_PREFIX_FROM=OldA,OldB WPDEV_PREFIX_TO=NewA,NewB`.
     $namespacePairs = [];
     foreach (explode(',', $from) as $i => $fromPart) {
         $toPart = trim(explode(',', $to)[$i] ?? '');

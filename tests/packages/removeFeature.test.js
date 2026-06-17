@@ -114,7 +114,7 @@ async function seedHuskyOn(tmp) {
 describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-rm-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-rm-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });

@@ -79,7 +79,7 @@ async function seedProject(
 describe("addFeature() — guards (Phase 22.5, 22.6)", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-add-guard-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-add-guard-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });

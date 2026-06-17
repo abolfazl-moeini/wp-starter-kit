@@ -68,7 +68,7 @@ function makeDeps(overrides = {}) {
  * Build a fresh empty dir under the OS tmp root. The path is
  * returned so the test can populate or remove it as needed.
  */
-function makeEmptyDir(prefix = "wpsk-i3-") {
+function makeEmptyDir(prefix = "wpdev-i3-") {
   return mkdtempSync(path.join(tmpdir(), prefix));
 }
 
@@ -78,7 +78,7 @@ function makeEmptyDir(prefix = "wpsk-i3-") {
 
 describe("runCreate — target dir: empty / new", () => {
   test("non-existent dir is OK (engine is called)", async () => {
-    const dir = path.join(tmpdir(), "wpsk-i3-nonexistent-" + Date.now());
+    const dir = path.join(tmpdir(), "wpdev-i3-nonexistent-" + Date.now());
     const deps = makeDeps();
     const out = await runCreate(
       {

@@ -1,6 +1,6 @@
 /**
  * Tests for `packages/cli/src/commands/list.js` — Phase I4
- * `wpsk list` (I4.1, I4.2).
+ * `wpdev list` (I4.1, I4.2).
  *
  * Contract (per plan.installer.md §I4.1 + I4.2):
  *   - `runList(dir, {engine, ui})` reads the manifest via

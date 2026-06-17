@@ -3,7 +3,7 @@
 use PHPUnit\Framework\TestCase;
 
 /**
- * Verifies the PSR-4 autoload entry for the WPSK production source tree
+ * Verifies the PSR-4 autoload entry for the WPDev production source tree
  * declared in `composer.json` (`"WPDev\\": "src/")` and proves that the
  * classes placed under `src/Core/` become loadable through Composer's
  * PSR-4 autoloader.
@@ -99,7 +99,7 @@ class SrcPsr4Test extends TestCase
         );
     }
 
-    public function test_WPSK_Core_Plugin_class_is_loadable(): void
+    public function test_WPDEV_Core_Plugin_class_is_loadable(): void
     {
         $this->assertTrue(
             class_exists('WPDev\\Core\\Plugin', true),

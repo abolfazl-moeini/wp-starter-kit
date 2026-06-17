@@ -2,7 +2,7 @@
  * Phase 22.3 / 22.4 — addFeature() happy path.
  *
  * `addFeature(dir, id, variant, {force?})` is the engine API the
- * installer's `wpsk add <feature>` command calls. It turns a
+ * installer's `wpdev add <feature>` command calls. It turns a
  * feature ON (or switches its variant) in an EXISTING project,
  * writing only the files the feature's generator owns and
  * updating the manifest + project.config.json to reflect the
@@ -93,8 +93,8 @@ async function seedProject(
     phpFunctionPrefix: "myprj_",
     uiFramework: "preact",
     projectType: "plugin",
-    restNamespace: "wpsk/v1",
-    vendorPrefix: "WpskVendor",
+    restNamespace: "wpdev/v1",
+    vendorPrefix: "WpdevVendor",
     phpMinVersion: "7.4",
     phpSourceVersion: "8.1",
     batchEndpoint: "/batch/v1",
@@ -116,7 +116,7 @@ async function seedProject(
 describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-add-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-add-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });
@@ -193,7 +193,7 @@ describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
     expect(cfg.globalName).toBe("MyProject");
     expect(cfg.textDomain).toBe("my-project");
     expect(cfg.hookPrefix).toBe("my-project");
-    expect(cfg.restNamespace).toBe("wpsk/v1");
+    expect(cfg.restNamespace).toBe("wpdev/v1");
   });
 
   test("works for a feature that emits a new src/Modules/* subtree (exampleFeature)", async () => {

@@ -201,7 +201,7 @@ export function parseFlags(argv) {
     }
 
     // Skip command name (when invoked through commander, argv looks
-    // like ["node", "wpsk.js", "create", ...]). Tests can pass any
+    // like ["node", "wpdev.js", "create", ...]). Tests can pass any
     // tail; we only care about the actual flags.
     if (raw.startsWith("-")) {
       const m = matchFlag(raw);

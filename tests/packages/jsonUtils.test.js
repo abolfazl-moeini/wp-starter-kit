@@ -40,7 +40,7 @@ import { updateJsonFile } from "../../packages/create-wp-project/src/json-utils.
 describe("updateJsonFile() — basic round-trip (Phase 20.11/20.12)", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-jsonutils-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-jsonutils-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });
@@ -92,7 +92,7 @@ describe("updateJsonFile() — basic round-trip (Phase 20.11/20.12)", () => {
 describe("updateJsonFile() — preserves original indentation (Phase 20.12)", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-jsonutils-indent-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-jsonutils-indent-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });

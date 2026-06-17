@@ -115,7 +115,7 @@ describe("buildManifest() — shape (Phase 20.5)", () => {
 describe("writeManifest() — writes wpdev-kit.json (Phase 20.6)", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-manifest-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-manifest-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });

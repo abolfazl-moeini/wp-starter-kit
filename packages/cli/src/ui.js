@@ -98,7 +98,9 @@ function getTinter() {
 export function renderError(input) {
   const i = input || {};
   const title =
-    typeof i.title === "string" && i.title.length > 0 ? i.title : "wpdev: error";
+    typeof i.title === "string" && i.title.length > 0
+      ? i.title
+      : "wpdev: error";
   const errors = i.errors && typeof i.errors === "object" ? i.errors : {};
 
   process.stderr.write(title + "\n");
@@ -197,7 +199,7 @@ export function renderSummary(input) {
 
 /**
  * Build the ordered list of follow-up commands the user should
- * run after a successful `wpsk create`. Returned as an array of
+ * run after a successful `wpdev create`. Returned as an array of
  * strings (the bin layer prints them; tests assert membership).
  *
  * The gating rules mirror the post-generation actions in
@@ -332,13 +334,13 @@ const ui = {
   },
 
   /**
-   * Phase I4 — `wpsk list` table renderer. Prints a 3-column
+   * Phase I4 — `wpdev list` table renderer. Prints a 3-column
    * table (FEATURE | STATE | VARIANT) with a header row and an
    * aligned body. The function is intentionally ANSI-color aware
    * (we tint the `state` column green for "on" and dim grey for
    * "off"); picocolors is already a dep, so we use it. Falls
    * back to a plain, uncolored string when stdout is not a TTY
-   * (e.g. when the user pipes to `less` or to `wpsk list --json`).
+   * (e.g. when the user pipes to `less` or to `wpdev list --json`).
    *
    * The function is async for API symmetry with the other
    * ui.render* helpers, but the work is synchronous; tests can
@@ -384,11 +386,11 @@ const ui = {
   },
 
   /**
-   * Phase I5 — `wpsk info` panel renderer. Prints the
+   * Phase I5 — `wpdev info` panel renderer. Prints the
    * kit-version / dist-mode / path / update / features block
    * that `engine.getKitStatus` returns. When `opts.json` is
    * true, prints the raw object as JSON instead (machine
-   * output for `wpsk info --json`).
+   * output for `wpdev info --json`).
    *
    * Field order is the spec's canonical order:
    *   Path:           <abs path>
@@ -463,7 +465,7 @@ const ui = {
   },
 
   /**
-   * Phase I5 — `wpsk update` plan renderer. Pretty-prints the
+   * Phase I5 — `wpdev update` plan renderer. Pretty-prints the
    * object `engine.planUpdate(dir, to)` returns.
    *
    * Layout:
@@ -587,12 +589,12 @@ const ui = {
   },
 
   /**
-   * Phase I5 — `wpsk doctor` report renderer. Pretty-prints the
+   * Phase I5 — `wpdev doctor` report renderer. Pretty-prints the
    * combined `{ system: [...], project: {ok, warnings, errors} }`
    * report.
    *
    * Layout:
-   *   wpsk doctor
+   *   wpdev doctor
    *   ───────────
    *   System:
    *     <name>   <ok/fail>  <version?>  <reason?>

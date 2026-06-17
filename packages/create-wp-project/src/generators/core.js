@@ -92,7 +92,7 @@ export function run(ctx) {
   const phpBootstrapRel = isPlugin ? `${answers.slug}.php` : "functions.php";
   // Phase 25.A2: when the theme is PHP-only (js === "none"), emit a
   // minimal functions.php that OMITS the JS bundle enqueue
-  // (wpsk_enqueue_bundle_script + wp_localize_script +
+  // (wpdev_enqueue_bundle_script + wp_localize_script +
   // wp_set_script_translations) because the consumer has no bundle
   // to load. The stylesheet enqueue is preserved (CSS is a
   // separate feature from JS).

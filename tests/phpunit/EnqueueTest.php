@@ -6,7 +6,7 @@ use PHPUnit\Framework\TestCase;
  * Tests for `wpdev_enqueue_bundle_script` and `wpdev_enqueue_bundle_style`.
  *
  * The bootstrap stubs for `wp_register_script` / `wp_enqueue_script` /
- * `wp_enqueue_style` record into `$GLOBALS['wpsk_test_wp_calls']` when the
+ * `wp_enqueue_style` record into `$GLOBALS['wpdev_test_wp_calls']` when the
  * recorder is installed. Each test installs it in `setUp`, then asserts on
  * the captured call shape.
  */
@@ -18,15 +18,15 @@ class EnqueueTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $GLOBALS['wpsk_test_wp_calls'] = [];
-        $this->tmpDir = sys_get_temp_dir() . '/wpsk-enqueue-test-' . uniqid('', true);
+        $GLOBALS['wpdev_test_wp_calls'] = [];
+        $this->tmpDir = sys_get_temp_dir() . '/wpdev-enqueue-test-' . uniqid('', true);
         mkdir($this->tmpDir, 0777, true);
     }
 
     protected function tearDown(): void
     {
         $this->rrmdir($this->tmpDir);
-        unset($GLOBALS['wpsk_test_wp_calls']);
+        unset($GLOBALS['wpdev_test_wp_calls']);
         parent::tearDown();
     }
 
@@ -62,7 +62,7 @@ class EnqueueTest extends TestCase
     private function callsFor(string $fn): array
     {
         $out = [];
-        foreach ($GLOBALS['wpsk_test_wp_calls'] as $call) {
+        foreach ($GLOBALS['wpdev_test_wp_calls'] as $call) {
             if ($call['fn'] === $fn) {
                 $out[] = $call['args'];
             }

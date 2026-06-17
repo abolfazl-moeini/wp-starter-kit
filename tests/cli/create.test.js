@@ -95,7 +95,7 @@ describe("runCreate — engine wiring (I3.1)", () => {
     const deps = defaultDeps();
     const out = await runCreate(
       {
-        dir: "/tmp/wpsk",
+        dir: "/tmp/wpdev",
         answers: { slug: "my-plugin", npmScope: "acme" },
         features: { js: "typescript", phpMinVersion: "8.1" },
         runOptions: { force: true },
@@ -104,7 +104,7 @@ describe("runCreate — engine wiring (I3.1)", () => {
     );
     expect(deps.engine.scaffoldProject).toHaveBeenCalledTimes(1);
     expect(deps.engine.scaffoldProject).toHaveBeenCalledWith(
-      "/tmp/wpsk",
+      "/tmp/wpdev",
       { slug: "my-plugin", npmScope: "acme", uiFramework: "preact" },
       { features: { js: "typescript", phpMinVersion: "8.1" }, force: true },
     );

@@ -59,12 +59,12 @@ describe("importAsGlobals — custom global mapping (tabulator pattern)", () => 
   test("multiple mappings can coexist; each is honored", async () => {
     const { onLoadCustom } = await runPlugin({
       "tabulator-tables": "WPDev.table",
-      sweetalert2: "WPSK.swal",
+      sweetalert2: "WPDev.swal",
     });
     const tab = await onLoadCustom({ path: "tabulator-tables" });
     const swal = await onLoadCustom({ path: "sweetalert2" });
     expect(tab.contents).toBe("module.exports = WPDev.table;");
-    expect(swal.contents).toBe("module.exports = WPSK.swal;");
+    expect(swal.contents).toBe("module.exports = WPDev.swal;");
   });
 
   test("unmapped imports pass through with an empty result (no namespace)", async () => {

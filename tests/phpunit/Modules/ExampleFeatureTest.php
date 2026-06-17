@@ -14,7 +14,7 @@ class ExampleFeatureTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        wpsk_test_reset_wp_state();
+        wpdev_test_reset_wp_state();
         RestSetup::flush();
         Plugin::reset_for_tests();
     }
@@ -30,7 +30,7 @@ class ExampleFeatureTest extends TestCase
         $this->assertTrue(Plugin::loader()->has('example-feature'));
 
         $routes = array_filter(
-            $GLOBALS['wpsk_wp_rest_routes'],
+            $GLOBALS['wpdev_wp_rest_routes'],
             static fn (array $route): bool => $route['route'] === 'items'
         );
 

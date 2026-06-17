@@ -1,6 +1,6 @@
 /**
  * Tests for `packages/cli/src/commands/info.js` — Phase I5
- * `wpsk info` (I5.7, I5.8).
+ * `wpdev info` (I5.7, I5.8).
  *
  * Contract (per plan.installer.md §I5.7 + §I5.8):
  *   - `runInfo(input, deps)` resolves the dir from the input

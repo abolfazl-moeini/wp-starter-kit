@@ -1,5 +1,5 @@
 /**
- * `wpsk info` — print kit version, feature states, and available
+ * `wpdev info` — print kit version, feature states, and available
  * updates for the current project.
  *
  * Phase I5 (plan.installer.md §I5.7 + §I5.8). Replaces the I1
@@ -16,7 +16,7 @@
  *      (the bin layer can decide how to print it).
  *   2. Resolve `dir` from the input. The input may be a string
  *      (the bin layer passes a string when the user ran
- *      `wpsk info /abs/proj`) or an object
+ *      `wpdev info /abs/proj`) or an object
  *      `{ dir, runOptions: { json } }` (the bin layer's
  *      commander-tail path). Missing dir → `{ok:false, reason}`.
  *   3. Resolve `--json` from two sources (in priority order):
@@ -34,7 +34,7 @@
  *      contract drift cannot crash the CLI.
  *   5. On `{ok:false}` we return the engine's reason verbatim
  *      and do NOT print the panel. The bin layer writes
- *      `wpsk info: <reason>` to stderr and exits 1.
+ *      `wpdev info: <reason>` to stderr and exits 1.
  *   6. On `{ok:true}` we delegate pretty-printing to
  *      `ui.renderKitStatus(status, { json })`. The function
  *      returns the status object so the bin layer can also
@@ -100,8 +100,8 @@ export async function runInfo(dirOrInput, deps = {}) {
     typeof d.lookupLatestKit === "function" ? d.lookupLatestKit : undefined;
 
   // 2. Resolve `dir` from the input shape. The bin layer
-  //    passes a string for `wpsk info /abs/proj` and an
-  //    object for `wpsk info --json` (where there is no
+  //    passes a string for `wpdev info /abs/proj` and an
+  //    object for `wpdev info --json` (where there is no
   //    positional arg). Both shapes are accepted.
   let dir;
   let runOptions = {};

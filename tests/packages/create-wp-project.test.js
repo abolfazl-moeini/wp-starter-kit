@@ -14,7 +14,7 @@ import { applyPreset } from "../../packages/create-wp-project/src/presets.js";
 describe("@wpdev/create-wp-project", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-scaffold-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-scaffold-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });
@@ -280,7 +280,7 @@ describe("@wpdev/create-wp-project", () => {
         path.join(tmp, "assets", "dependencies.ts"),
         "utf8",
       );
-      expect(dep).not.toMatch(/['"]wpsk-/);
+      expect(dep).not.toMatch(/['"]wpdev-/);
       expect(dep).toMatch(/['"]my-project-/);
     });
 
@@ -371,7 +371,7 @@ describe("@wpdev/create-wp-project", () => {
       expect(src).toMatch(/defined\s*\(\s*['"]ABSPATH['"]\s*\)/);
       expect(src).toMatch(/vendor-prefixed\/autoload\.php/);
       expect(src).toMatch(/require_once\s+\$vendor_autoload/);
-      // WPSK\Core\Plugin::boot can be either an add_action callback
+      // WPDev\Core\Plugin::boot can be either an add_action callback
       // (a string) or a direct call site. Either form proves the
       // plugin knows about the kit's facade.
       expect(src).toMatch(/WPDev\\Core\\Plugin::boot/);
@@ -440,7 +440,7 @@ describe("@wpdev/create-wp-project", () => {
     /* ----- src/Core/ emission (Phase 23 deps mode) ------------------- */
     // Framework sources are supplied by the wpdev/framework Composer
     // dependency. Scaffold never writes src/Core/*.php for consumers
-    // (consumer PSR-4 only maps the developer's vendor ns; the WPSK
+    // (consumer PSR-4 only maps the developer's vendor ns; the WPDev
     // references resolve from vendor/wpdev/framework after `composer install`).
 
     test("does NOT scaffold src/Core/* framework copies (deps mode)", async () => {
@@ -644,7 +644,7 @@ describe("@wpdev/create-wp-project", () => {
       // identifier) so consumers see something useful in the
       // directory listing.
       expect(shortDesc).toMatch(/my-project/);
-      expect(shortDesc).toMatch(/wp-starter-kit|WPSK|wp plugin starter kit/i);
+      expect(shortDesc).toMatch(/wp-starter-kit|WPDev|wp plugin starter kit/i);
     });
 
     test("readme.txt: preserves plugin mode contract — scaffold does not write functions.php", async () => {
@@ -717,7 +717,7 @@ describe("@wpdev/create-wp-project", () => {
       expect(cfg.sentinel).toBeUndefined();
       expect(cfg.slug).toBe("my-project");
       // In deps mode there is no src/Core/Plugin.php written by scaffold
-      // (the WPSK\Core reference in bootstrap resolves from the dep).
+      // (the WPDev\Core reference in bootstrap resolves from the dep).
       // We only assert that force wrote a fresh project.config.json.
       expect(
         await fs.readFile(path.join(tmp, "my-project.php"), "utf8"),

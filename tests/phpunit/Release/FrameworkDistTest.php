@@ -40,7 +40,7 @@ class FrameworkDistTest extends TestCase
         return [$distDir, $exitCode, $output];
     }
 
-    public function test_build_dist_emits_composer_json_that_requires_wpsk_framework(): void
+    public function test_build_dist_emits_composer_json_that_requires_wpdev_framework(): void
     {
         [$distDir, $exitCode, $output] = $this->runBuildDist();
 
@@ -76,7 +76,7 @@ class FrameworkDistTest extends TestCase
         );
     }
 
-    public function test_build_dist_emits_strauss_json_without_wpsk_exclusion(): void
+    public function test_build_dist_emits_strauss_json_without_wpdev_exclusion(): void
     {
         [$distDir, $exitCode, $output] = $this->runBuildDist();
         $this->assertSame(0, $exitCode, "build-dist failed:\n" . implode("\n", $output));
@@ -91,11 +91,11 @@ class FrameworkDistTest extends TestCase
         $this->assertNotContains(
             'WPDev',
             $excluded,
-            'dist strauss.json must NOT exclude WPSK when the framework is a dependency'
+            'dist strauss.json must NOT exclude WPDev when the framework is a dependency'
         );
     }
 
-    public function test_build_dist_installs_and_scopes_wpsk_framework(): void
+    public function test_build_dist_installs_and_scopes_wpdev_framework(): void
     {
         [$distDir, $exitCode, $output] = $this->runBuildDist();
         $this->assertSame(0, $exitCode, "build-dist failed:\n" . implode("\n", $output));

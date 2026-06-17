@@ -1,5 +1,5 @@
 /**
- * `wpsk create` — Phase I3. Scaffold a new wp-starter-kit plugin
+ * `wpdev create` — Phase I3. Scaffold a new wp-starter-kit plugin
  * end-to-end.
  *
  * Pipeline (plan.installer.md §I3):

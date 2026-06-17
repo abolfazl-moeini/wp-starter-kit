@@ -93,7 +93,7 @@ EOF
 
 (
     cd "$REPO_ROOT" || exit 1
-    WPSK_PREFIX_FROM="OldName" WPSK_PREFIX_TO="NewName" \
+    WPDEV_PREFIX_FROM="OldName" WPDEV_PREFIX_TO="NewName" \
         ./vendor/bin/rector process "$TARGET_FILE" \
         -c dev/rector-prefix.php --clear-cache --no-progress-bar > /dev/null 2>&1
     # Exit code is not asserted — see deliverable.md "open issues" for

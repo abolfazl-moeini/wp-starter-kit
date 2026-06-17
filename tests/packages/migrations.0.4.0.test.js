@@ -14,7 +14,7 @@ describe("0.4.0 migration — commitlint + husky hooks", () => {
   let tmpDir;
 
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-mig-040-"));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-mig-040-"));
   });
 
   afterEach(async () => {

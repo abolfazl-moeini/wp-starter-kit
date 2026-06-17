@@ -31,7 +31,7 @@ use WPDev\TestTools\Patch\GitPatch;
  * Helper: create `hello.txt` at the TOP LEVEL of $root (not a subdir) with
  * a single line. Used by the happy-path tests.
  */
-function wpsk_patch_test_create_hello_file_at_root(string $root, string $body): void
+function wpdev_patch_test_create_hello_file_at_root(string $root, string $body): void
 {
     file_put_contents($root . '/hello.txt', $body);
 }
@@ -40,7 +40,7 @@ function wpsk_patch_test_create_hello_file_at_root(string $root, string $body): 
  * Helper: build a patch that replaces `OLD LINE` with `NEW LINE` in
  * `hello.txt` (top level of the temp root). Returns the patch file path.
  */
-function wpsk_patch_test_make_hello_patch_at_root(string $root): string
+function wpdev_patch_test_make_hello_patch_at_root(string $root): string
 {
     $patch_file = $root . '/hello.patch';
     $patch = "diff --git a/hello.txt b/hello.txt\n"
@@ -67,7 +67,7 @@ class ReconcilePatchTest extends TestCase
         // assertion on empty/non-empty depends only on the current run.
         Cli::$errors = [];
 
-        $this->tmpRoot = sys_get_temp_dir() . '/wpsk-patch-reconcile-' . uniqid('', true);
+        $this->tmpRoot = sys_get_temp_dir() . '/wpdev-patch-reconcile-' . uniqid('', true);
         mkdir($this->tmpRoot, 0777, true);
 
         // `git apply` only enforces context matching inside a real git
@@ -84,7 +84,7 @@ class ReconcilePatchTest extends TestCase
     {
         // The temp root contains a .git directory; rrmdir handles that
         // by simply unlinking the .git symlink/dir first, then the rest.
-        $this->wpskRrmdir($this->tmpRoot);
+        $this->wpdevRrmdir($this->tmpRoot);
         Cli::$errors = [];
         parent::tearDown();
     }
@@ -104,7 +104,7 @@ class ReconcilePatchTest extends TestCase
         }
     }
 
-    private function wpskRrmdir(string $dir): void
+    private function wpdevRrmdir(string $dir): void
     {
         if (!is_dir($dir)) {
             return;
@@ -121,7 +121,7 @@ class ReconcilePatchTest extends TestCase
             }
             $path = $dir . DIRECTORY_SEPARATOR . $entry;
             if (is_dir($path)) {
-                $this->wpskRrmdir($path);
+                $this->wpdevRrmdir($path);
             } else {
                 @unlink($path);
             }
@@ -168,8 +168,8 @@ class ReconcilePatchTest extends TestCase
         // Place the file at $root_dir/hello.txt (NOT in a subdir) so the
         // patch path `a/hello.txt` resolves correctly under
         // `git -C $root_dir apply`.
-        wpsk_patch_test_create_hello_file_at_root($this->tmpRoot, "OLD LINE\n");
-        $patch_file = wpsk_patch_test_make_hello_patch_at_root($this->tmpRoot);
+        wpdev_patch_test_create_hello_file_at_root($this->tmpRoot, "OLD LINE\n");
+        $patch_file = wpdev_patch_test_make_hello_patch_at_root($this->tmpRoot);
 
         // Commit the baseline so `git apply` enforces context matching.
         $this->runInShell('git add -A');
@@ -192,7 +192,7 @@ class ReconcilePatchTest extends TestCase
         // is then written to look for "DIFFERENT OLD" which is NOT in the
         // committed file. With the committed baseline in place, `git apply`
         // fails on context matching (NOT just on file absence).
-        wpsk_patch_test_create_hello_file_at_root($this->tmpRoot, "OLD LINE\n");
+        wpdev_patch_test_create_hello_file_at_root($this->tmpRoot, "OLD LINE\n");
         $this->runInShell('git add -A');
         $this->runInShell('git commit -q -m baseline');
 

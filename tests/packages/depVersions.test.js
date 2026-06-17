@@ -178,7 +178,7 @@ describe("getDepVersions() — covers the composer (PHP) chain (Phase 24.8 part 
   // rector/...). The composer side is keyed by the composer
   // package name and the value is the same "pinned range" the
   // consumer's composer.json is expected to have after a
-  // `wpsk update`.
+  // `wpdev update`.
   //
   // We assert presence (not range equality) for the composer
   // chain because the test would otherwise need to parse the

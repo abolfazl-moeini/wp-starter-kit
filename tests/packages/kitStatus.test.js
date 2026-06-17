@@ -1,7 +1,7 @@
 /**
  * Phase 24.12 / 24.13 — `getKitStatus(dir, { lookupLatest? })` contract.
  *
- * The installer's `wpsk info` command runs this function. It
+ * The installer's `wpdev info` command runs this function. It
  * is the "tell me about this kit / project" surface.
  *
  * The contract:
@@ -58,7 +58,7 @@ async function seedProject({
   distMode = "vendored",
   features = { js: "typescript", phpTest: "phpunit" },
 } = {}) {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-status-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-status-"));
   const manifest = {
     schema: 1,
     kitVersion,
@@ -77,7 +77,7 @@ async function seedProject({
 describe("getKitStatus() — no manifest (Phase 24.12)", () => {
   let tmpDir;
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-status-no-"));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-status-no-"));
   });
   afterEach(async () => {
     await fs.rm(tmpDir, { recursive: true, force: true });

@@ -15,7 +15,7 @@ class CircuitBreakerTest extends TestCase
         if (PHP_VERSION_ID < 80100) {
             $this->markTestSkipped('Fault tolerance package requires PHP 8.1+');
         }
-        wpsk_test_reset_wp_state();
+        wpdev_test_reset_wp_state();
     }
 
     public function test_starts_closed_and_opens_after_threshold(): void

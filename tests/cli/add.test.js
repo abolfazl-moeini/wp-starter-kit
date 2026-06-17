@@ -1,6 +1,6 @@
 /**
  * Tests for `packages/cli/src/commands/add.js` — Phase I4
- * `wpsk add <feature>` (I4.3, I4.4, I4.5, I4.6).
+ * `wpdev add <feature>` (I4.3, I4.4, I4.5, I4.6).
  *
  * Contract (per plan.installer.md §I4.3–§I4.6):
  *   - `runAdd(input, deps)` validates the feature id against

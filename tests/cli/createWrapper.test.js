@@ -124,12 +124,12 @@ describe("@wpdev/create-plugin — bin argv forwarding (I7.3/I7.4)", () => {
     // The wrapper must:
     //   (a) reference @wpdev/cli (or its bin) AND
     //   (b) inject the `create` subcommand into the argv it forwards
-    //       to wpsk.
+    //       to wpdev.
     // We assert both pieces appear in the source.
     //
     // We accept any of the common patterns:
-    //   - execFileSync("wpsk", ["create", ...process.argv.slice(2)])
-    //   - spawnSync(node, [wpskBin, "create", ...args])
+    //   - execFileSync("wpdev", ["create", ...process.argv.slice(2)])
+    //   - spawnSync(node, [wpdevBin, "create", ...args])
     //   - require("@wpdev/cli")(...) — programmatic delegation
     // The invariant is: "create" is hard-coded in the source, and
     // the wrapper reads process.argv to forward user args.

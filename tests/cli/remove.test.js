@@ -1,6 +1,6 @@
 /**
  * Tests for `packages/cli/src/commands/remove.js` — Phase I4
- * `wpsk remove <feature>` (I4.7, I4.8).
+ * `wpdev remove <feature>` (I4.7, I4.8).
  *
  * Contract (per plan.installer.md §I4.7 + §I4.8):
  *   - `runRemove(input, deps)` calls

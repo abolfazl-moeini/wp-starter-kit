@@ -2,7 +2,7 @@
  * @wpdev/create-wp-project — `doctorProject` health check.
  *
  * Phase 24 of plan.v3.md (24.9, 24.10). The installer's
- * `wpsk doctor` command runs this function and prints the
+ * `wpdev doctor` command runs this function and prints the
  * result. The doctor is the installer's "is this consumer
  * project healthy?" surface.
  *
@@ -11,7 +11,7 @@
  *   doctorProject(dir) → {
  *     ok: boolean,           // true iff errors.length === 0
  *     warnings: string[],    // non-fatal drift
- *     errors: string[],      // fatal — `wpsk update` recommended
+ *     errors: string[],      // fatal — `wpdev update` recommended
  *   }
  *
  * SAFE contract: the function NEVER throws. A malformed
@@ -19,7 +19,7 @@
  * NOT a throw — the CLI shows the user the warning and
  * exits non-zero only when errors.length > 0. This is the
  * load-bearing property: the doctor is a passive observer,
- * not a fixer. The installer's auto-fix flow is `wpsk
+ * not a fixer. The installer's auto-fix flow is `wpdev
  * update`, which has its own permission/dry-run semantics.
  *
  * Checks (one per documented drift category, all
@@ -41,15 +41,15 @@
  *  3. `manifest.kitVersion` is not NEWER than the installed
  *     kit's own version. A manifest newer than the running
  *     kit is a "the kit is older than the project" mismatch
- *     — the user should `wpsk update`. WARNING, not error:
+ *     — the user should `wpdev update`. WARNING, not error:
  *     the project will still work for the features it uses,
  *     it just can't get updates. Message: "kit newer than
- *     installed deps — run wpsk update".
+ *     installed deps — run wpdev update".
  *
  *  4. If `manifest.distMode === "vendored"`, legacy projects may
  *     still have framework source copies under `src/Core/`.
  *     Doctor warns if they look hand-edited or are present
- *     (recommend `wpsk update` to migrate to deps). The
+ *     (recommend `wpdev update` to migrate to deps). The
  *     actual vendored dep install lives at vendor/wpdev/framework
  *     after composer install. Placeholder logic upgraded for
  *     the src/Core case (no heavy checksums in v3; migration

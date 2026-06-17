@@ -2,7 +2,7 @@
  * @wpdev/create-wp-project — `getKitStatus` kit/project info.
  *
  * Phase 24 of plan.v3.md (24.12, 24.13). The installer's
- * `wpsk info` command runs this function. It is the
+ * `wpdev info` command runs this function. It is the
  * "tell me about this kit / project" surface — a thin
  * adapter over the manifest plus an optional registry
  * lookup.

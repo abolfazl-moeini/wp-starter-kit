@@ -5,7 +5,7 @@ use WPDev\Support\Assets;
 
 /**
  * Tests for `WPDev\Support\Assets` — the PSR-4 class that supersedes the
- * theme-based `wpsk_*` helpers in `includes/asset-functions.php`.
+ * theme-based `wpdev_*` helpers in `includes/asset-functions.php`.
  *
  * Spec contracts verified here:
  *  - Path resolution uses `plugin_dir_path()` / `plugins_url()`, not
@@ -24,7 +24,7 @@ use WPDev\Support\Assets;
  *
  * Bootstrap stubs for `wp_register_script`, `wp_enqueue_script`,
  * `wp_enqueue_style`, `wp_set_script_translations` record every call into
- * `$GLOBALS['wpsk_test_wp_calls']` (same recorder as `EnqueueTest`).
+ * `$GLOBALS['wpdev_test_wp_calls']` (same recorder as `EnqueueTest`).
  */
 class AssetsTest extends TestCase
 {
@@ -34,15 +34,15 @@ class AssetsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $GLOBALS['wpsk_test_wp_calls'] = [];
-        $this->tmpDir = sys_get_temp_dir() . '/wpsk-assets-test-' . uniqid('', true);
+        $GLOBALS['wpdev_test_wp_calls'] = [];
+        $this->tmpDir = sys_get_temp_dir() . '/wpdev-assets-test-' . uniqid('', true);
         mkdir($this->tmpDir, 0777, true);
     }
 
     protected function tearDown(): void
     {
         $this->rrmdir($this->tmpDir);
-        unset($GLOBALS['wpsk_test_wp_calls']);
+        unset($GLOBALS['wpdev_test_wp_calls']);
         parent::tearDown();
     }
 
@@ -103,7 +103,7 @@ class AssetsTest extends TestCase
     private function callsFor(string $fn): array
     {
         $out = [];
-        foreach ($GLOBALS['wpsk_test_wp_calls'] as $call) {
+        foreach ($GLOBALS['wpdev_test_wp_calls'] as $call) {
             if ($call['fn'] === $fn) {
                 $out[] = $call['args'];
             }
@@ -287,7 +287,7 @@ class AssetsTest extends TestCase
         file_put_contents($js, '/* x */');
 
         Assets::register_bundle_script('enqueue-only', $js);
-        $GLOBALS['wpsk_test_wp_calls'] = [];
+        $GLOBALS['wpdev_test_wp_calls'] = [];
 
         Assets::enqueue_bundle_script('enqueue-only');
 

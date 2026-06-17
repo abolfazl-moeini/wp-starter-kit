@@ -67,7 +67,7 @@ const { runMigrations } = migrationsModule;
 describe("runMigrations() — happy path (Phase 24.5, 24.6)", () => {
   let tmpDir;
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-mig-"));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-mig-"));
   });
   afterEach(async () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
@@ -134,7 +134,7 @@ describe("runMigrations() — happy path (Phase 24.5, 24.6)", () => {
 describe("runMigrations() — idempotency (Phase 24.5, 24.6)", () => {
   let tmpDir;
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-mig-"));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-mig-"));
   });
   afterEach(async () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
@@ -247,7 +247,7 @@ describe("runMigrations() — idempotency (Phase 24.5, 24.6)", () => {
 describe("runMigrations() — project.config.json edit persists (Phase 24.5, 24.6)", () => {
   let tmpDir;
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-mig-"));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-mig-"));
   });
   afterEach(async () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
@@ -323,7 +323,7 @@ describe("runMigrations() — project.config.json edit persists (Phase 24.5, 24.
 describe("runMigrations() — failing migration aborts (Phase 24.6)", () => {
   let tmpDir;
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-mig-"));
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-mig-"));
   });
   afterEach(async () => {
     await fs.rm(tmpDir, { recursive: true, force: true });

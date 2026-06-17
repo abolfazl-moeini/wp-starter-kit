@@ -1,7 +1,7 @@
 /**
  * I7.5 / I7.6 — version sync between CLI and engine.
  *
- * Single source of truth: the version reported by `wpsk --version`
+ * Single source of truth: the version reported by `wpdev --version`
  * must equal the version declared in
  * `packages/create-wp-project/package.json` (the engine). Two
  * separate package versions drift apart over time — the CLI is a

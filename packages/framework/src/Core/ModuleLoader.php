@@ -26,7 +26,7 @@ namespace WPDev\Core;
  * Extensibility hooks (filter / action) follow the project's
  * `{$hook_prefix}_*` naming convention. The `hook_prefix` is supplied
  * at construction time and is typically read from
- * `project.config.json` (e.g. `wpsk_module_loader` for `wpsk`).
+ * `project.config.json` (e.g. `wpdev_module_loader` for `wpdev`).
  */
 final class ModuleLoader {
 
@@ -39,8 +39,8 @@ final class ModuleLoader {
 
 	/**
 	 * The hook prefix used to namespace the filter and action
-	 * callbacks (e.g. `wpsk` → `wpsk_module_loader`,
-	 * `wpsk_modules_loaded`).
+	 * callbacks (e.g. `wpdev` → `wpdev_module_loader`,
+	 * `wpdev_modules_loaded`).
 	 *
 	 * @var string
 	 */

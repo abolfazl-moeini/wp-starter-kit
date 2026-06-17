@@ -211,7 +211,7 @@ export async function gitInit(dir, runOpts = {}, deps) {
 }
 
 /* -------------------------------------------------------------------- */
-/* gitStatus — read-only probe for `wpsk update --run` dirty guard        */
+/* gitStatus — read-only probe for `wpdev update --run` dirty guard        */
 /* -------------------------------------------------------------------- */
 
 /**
@@ -335,7 +335,7 @@ export async function gitStatus(dir, deps = {}) {
  * warnings and the bin layer's `parseAsync` catch. Returning
  * `null` is the load-bearing contract.
  *
- * Used by `wpsk info` (Phase I5) as the production
+ * Used by `wpdev info` (Phase I5) as the production
  * `lookupLatest` argument. The bin layer wires the real
  * `npm view`; tests inject a fake.
  *

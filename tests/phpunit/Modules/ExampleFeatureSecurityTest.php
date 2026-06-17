@@ -30,7 +30,7 @@ class ExampleFeatureSecurityTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        wpsk_test_reset_wp_state();
+        wpdev_test_reset_wp_state();
     }
 
     public function test_cache_key_strips_control_characters(): void
@@ -84,8 +84,8 @@ class ExampleFeatureSecurityTest extends TestCase
         // explicitly to model a logged-in subscriber. If the controller's
         // permission gate is the `read` cap, this test would (incorrectly)
         // return true. The fix is to require a more restrictive cap.
-        unset($GLOBALS['wpsk_wp_current_user_caps']['edit_posts']);
-        $GLOBALS['wpsk_wp_current_user_caps']['read'] = true;
+        unset($GLOBALS['wpdev_wp_current_user_caps']['edit_posts']);
+        $GLOBALS['wpdev_wp_current_user_caps']['read'] = true;
 
         $controller = new ItemsController();
         $this->assertFalse(
@@ -97,8 +97,8 @@ class ExampleFeatureSecurityTest extends TestCase
     public function test_permission_allows_user_with_edit_posts_cap(): void
     {
         // Author / editor / contributor all have `edit_posts`.
-        $GLOBALS['wpsk_wp_current_user_caps']['read'] = true;
-        $GLOBALS['wpsk_wp_current_user_caps']['edit_posts'] = true;
+        $GLOBALS['wpdev_wp_current_user_caps']['read'] = true;
+        $GLOBALS['wpdev_wp_current_user_caps']['edit_posts'] = true;
 
         $controller = new ItemsController();
         $this->assertTrue(

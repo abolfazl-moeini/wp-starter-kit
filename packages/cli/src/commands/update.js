@@ -1,5 +1,5 @@
 /**
- * `wpsk update` — plan (default dry-run) or apply (with --run)
+ * `wpdev update` — plan (default dry-run) or apply (with --run)
  * a kit upgrade for the current project.
  *
  * Phase I5 of plan.installer.md (§I5.1–I5.4). Replaces the I1
@@ -28,7 +28,7 @@
  *      bin layer can chain on it.
  *   6. `runMigrations` is NEVER called on the dry-run path.
  *
- * Pipeline (apply, run:true — `wpsk update --run`):
+ * Pipeline (apply, run:true — `wpdev update --run`):
  *   1. Run the dry-run pipeline first (so the user sees the
  *      plan before it is applied).
  *   2. Before applying, call `runners.gitStatus(dir)`. If git
@@ -101,8 +101,8 @@ export async function runUpdate(dirOrInput, deps = {}) {
   }
 
   // 2. Resolve the input shape. The bin layer passes a string
-  //    for `wpsk update /abs/proj` and an object for
-  //    `wpsk update --to=0.2.0` (no positional). Both shapes
+  //    for `wpdev update /abs/proj` and an object for
+  //    `wpdev update --to=0.2.0` (no positional). Both shapes
   //    are accepted.
   let dir;
   let runOptions = {};

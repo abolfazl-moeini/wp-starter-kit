@@ -29,15 +29,18 @@ describe("esbuild-dependencies", () => {
   // full WP global-mapping logic. We only need a stable importAsGlobals
   // factory, and we need the saveAssetFile / phpFileContent / writeFile API
   // surface that buildDepsConfig touches.
-  jest.unstable_mockModule("@wpdev/dependency-extraction-esbuild-plugin", () => {
-    const importAsGlobals = jest.fn(() => ({ name: "global-imports" }));
-    const saveAssetFile = jest.fn(async () => true);
-    const phpFileContent = jest.fn(
-      (o) => `<?php return ${JSON.stringify(o)};\n`,
-    );
-    const writeFile = jest.fn(async (p, c) => `${p}|${c}`);
-    return { importAsGlobals, saveAssetFile, phpFileContent, writeFile };
-  });
+  jest.unstable_mockModule(
+    "@wpdev/dependency-extraction-esbuild-plugin",
+    () => {
+      const importAsGlobals = jest.fn(() => ({ name: "global-imports" }));
+      const saveAssetFile = jest.fn(async () => true);
+      const phpFileContent = jest.fn(
+        (o) => `<?php return ${JSON.stringify(o)};\n`,
+      );
+      const writeFile = jest.fn(async (p, c) => `${p}|${c}`);
+      return { importAsGlobals, saveAssetFile, phpFileContent, writeFile };
+    },
+  );
 
   // Mock the local build package so we don't need readBuildConfig side effects.
   jest.unstable_mockModule("@wpdev/build", () => ({
@@ -123,7 +126,7 @@ describe("esbuild-dependencies", () => {
         depsBundle: "wpdev-starter-deps.js",
         npmScope: "@wpdev",
       },
-      { globalMappings: { foo: "WPSK.foo" } },
+      { globalMappings: { foo: "WPDev.foo" } },
     );
     // Plugins should exist; globalMappings are passed to importAsGlobals inside.
     // We assert the surface (non-empty plugins) — the integration test (1.1.x)

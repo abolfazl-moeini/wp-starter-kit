@@ -22,7 +22,7 @@ describe("esbuild-styles", () => {
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
-    tmpRoot = mkdtempSync(join(tmpdir(), "wpsk-styles-"));
+    tmpRoot = mkdtempSync(join(tmpdir(), "wpdev-styles-"));
   });
 
   afterEach(() => {

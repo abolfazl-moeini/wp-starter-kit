@@ -1,5 +1,5 @@
 /**
- * `wpsk doctor` — diagnose system prerequisites and project
+ * `wpdev doctor` — diagnose system prerequisites and project
  * drift for the current project.
  *
  * Phase I5 of plan.installer.md (§I5.5 + §I5.6). Replaces the
@@ -18,7 +18,7 @@
  *   2. PROJECT: the engine's `doctorProject(dir)` returns
  *      `{ok, warnings, errors}`. The warnings are non-fatal
  *      drift (e.g. "manifest newer than installed kit — run
- *      wpsk update"); the errors are fatal (e.g. "manifest
+ *      wpdev update"); the errors are fatal (e.g. "manifest
  *      missing", "unknown feature id").
  *
  * Exit code (encoded on the result, picked up by the bin):
@@ -248,8 +248,8 @@ export async function runDoctor(dirOrInput, deps = {}) {
   const checks = d.checks || {};
 
   // 1. Resolve the input shape. The bin layer passes a
-  //    string for `wpsk doctor /abs/proj` and an object
-  //    for `wpsk doctor --json` (no positional). Both
+  //    string for `wpdev doctor /abs/proj` and an object
+  //    for `wpdev doctor --json` (no positional). Both
   //    shapes are accepted.
   let dir;
   let runOptions = {};

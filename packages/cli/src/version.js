@@ -13,7 +13,7 @@
  *   2. `WPDEV_CLI_KIT_VERSION_OVERRIDE` env var (CI / test seam).
  *   3. Read the engine's on-disk `package.json` from the
  *      kit's workspace layout (`cwd()/packages/create-wp-project/package.json`).
- *   4. Fall back to `"0.0.0"` so `wpsk --version` still prints
+ *   4. Fall back to `"0.0.0"` so `wpdev --version` still prints
  *      something useful when the engine package is missing
  *      (e.g. partial install in a downstream project).
  *

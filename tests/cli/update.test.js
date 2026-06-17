@@ -1,6 +1,6 @@
 /**
  * Tests for `packages/cli/src/commands/update.js` — Phase I5
- * `wpsk update` dry-run (I5.1, I5.2).
+ * `wpdev update` dry-run (I5.1, I5.2).
  *
  * Contract (per plan.installer.md §I5.1 + I5.2):
  *   - `runUpdate({ argv, runOptions }, deps)` with the default

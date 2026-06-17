@@ -24,7 +24,7 @@
  *
  * The map values are the exact pinned-range strings the
  * consumer's JSON files should carry after a successful
- * `wpsk update`. For a "^1.2.3" range the string is "^1.2.3";
+ * `wpdev update`. For a "^1.2.3" range the string is "^1.2.3";
  * for an aliased dep like `react: "npm:@preact/compat"` the
  * string is the full alias spec. We don't normalise — the
  * comparison in `planUpdate` is a string-equality check, so
@@ -309,7 +309,7 @@ let CACHED_REGISTRY = null;
  * Return the kit's dep-version registry. A `Map<string,string>`
  * where the key is a package name (npm OR composer) and the
  * value is the pinned range the consumer project is expected
- * to have after `wpsk update`. The on-disk reads are cached
+ * to have after `wpdev update`. The on-disk reads are cached
  * per process so they happen at most once, but every call
  * returns a fresh `Map` copy — callers may mutate their copy
  * without corrupting the cache or affecting later callers.

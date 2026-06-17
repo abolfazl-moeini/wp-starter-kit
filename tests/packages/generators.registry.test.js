@@ -105,7 +105,7 @@ describe("getGenerators(features) — registry dispatch (Phase 21.1/21.2)", () =
     expect(gens.map((g) => g.id)).not.toContain("exampleFeature");
   });
 
-  test("vendorScoping:on → vendorScoping generator is enabled (and the generated strauss.json does NOT exclude WPSK — §0.4.1)", () => {
+  test("vendorScoping:on → vendorScoping generator is enabled (and the generated strauss.json does NOT exclude WPDev — §0.4.1)", () => {
     const gens = getGenerators({ vendorScoping: "on" });
     expect(gens.map((g) => g.id)).toContain("vendorScoping");
     const vs = gens.find((g) => g.id === "vendorScoping");

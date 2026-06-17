@@ -66,7 +66,7 @@ describe("faultTolerance scaffold integration", () => {
   let tmp;
 
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-ft-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-ft-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });
@@ -96,7 +96,7 @@ describe("addFeature faultTolerance happy path", () => {
   let tmp;
 
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-ft-add-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-ft-add-"));
     const features = {
       ...defaultFeatures(),
       faultTolerance: "off",

@@ -1,6 +1,6 @@
 === {{name}} ===
 Contributors:      {{author}}
-Tags:              wp-starter-kit, wpsk, framework
+Tags:              wp-starter-kit, wpdev, framework
 Requires at least: {{wpMinVersion}}
 Tested up to:      6.5
 Requires PHP:      {{phpMinVersion}}

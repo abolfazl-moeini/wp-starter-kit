@@ -84,7 +84,7 @@ async function fileExists(p) {
 describe("addFeature() — variant switch (Phase 22.7, 22.8)", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-switch-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-switch-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });

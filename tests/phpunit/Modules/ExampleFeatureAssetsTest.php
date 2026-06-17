@@ -11,9 +11,9 @@ class ExampleFeatureAssetsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        wpsk_test_reset_wp_state();
-        $GLOBALS['wpsk_test_wp_calls'] = [];
-        $GLOBALS['wpsk_test_is_admin'] = true;
+        wpdev_test_reset_wp_state();
+        $GLOBALS['wpdev_test_wp_calls'] = [];
+        $GLOBALS['wpdev_test_is_admin'] = true;
     }
 
     public function test_register_admin_assets_registers_example_feature_bundle(): void
@@ -21,7 +21,7 @@ class ExampleFeatureAssetsTest extends TestCase
         $module = new Module();
         $module->register_admin_assets();
 
-        $calls = $GLOBALS['wpsk_test_wp_calls'] ?? [];
+        $calls = $GLOBALS['wpdev_test_wp_calls'] ?? [];
         $register = array_filter(
             $calls,
             static fn (array $call): bool => ($call['fn'] ?? '') === 'wp_register_script'
@@ -42,11 +42,11 @@ class ExampleFeatureAssetsTest extends TestCase
     {
         $module = new Module();
         $module->register_admin_assets();
-        $GLOBALS['wpsk_test_wp_calls'] = [];
+        $GLOBALS['wpdev_test_wp_calls'] = [];
 
         $module->enqueue_admin_assets('toplevel_page_example-feature');
 
-        $calls = $GLOBALS['wpsk_test_wp_calls'] ?? [];
+        $calls = $GLOBALS['wpdev_test_wp_calls'] ?? [];
         $enqueue = array_filter(
             $calls,
             static fn (array $call): bool => ($call['fn'] ?? '') === 'wp_enqueue_script'
@@ -61,11 +61,11 @@ class ExampleFeatureAssetsTest extends TestCase
     {
         $module = new Module();
         $module->register_admin_assets();
-        $GLOBALS['wpsk_test_wp_calls'] = [];
+        $GLOBALS['wpdev_test_wp_calls'] = [];
 
         $module->enqueue_admin_assets('index.php');
 
-        $calls = $GLOBALS['wpsk_test_wp_calls'] ?? [];
+        $calls = $GLOBALS['wpdev_test_wp_calls'] ?? [];
         $enqueue = array_filter(
             $calls,
             static fn (array $call): bool => ($call['fn'] ?? '') === 'wp_enqueue_script'

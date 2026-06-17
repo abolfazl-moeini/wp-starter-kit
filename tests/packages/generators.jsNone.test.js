@@ -236,7 +236,7 @@ describe("js:none — core.run() output (Phase 25.A1)", () => {
 describe("js:none — end-to-end scaffold (Phase 25.A1)", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-jsnone-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-jsnone-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });
@@ -327,7 +327,7 @@ describe("js:none — end-to-end scaffold (Phase 25.A1)", () => {
       features: phpOnlyFeatures,
     });
     expect(res.ok).toBe(true);
-    // The plugin bootstrap (references WPSK\\Core from the dep).
+    // The plugin bootstrap (references WPDev\\Core from the dep).
     const pluginPhp = await fs.readFile(
       path.join(tmp, "my-php-plugin.php"),
       "utf8",
@@ -367,7 +367,7 @@ describe("js:none — end-to-end scaffold (Phase 25.A1)", () => {
 describe("js:none — theme-mode PHP enqueue guard (Phase 25.A2)", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-jsnone-theme-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-jsnone-theme-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });

@@ -59,7 +59,7 @@ class PackageMetadataTest extends TestCase
         $this->pkg = $decoded;
     }
 
-    public function test_package_name_is_wpsk_framework(): void
+    public function test_package_name_is_wpdev_framework(): void
     {
         $this->assertSame(
             'wpdev/framework',
@@ -77,7 +77,7 @@ class PackageMetadataTest extends TestCase
         );
     }
 
-    public function test_package_declares_psr4_WPSK_to_src(): void
+    public function test_package_declares_psr4_WPDEV_to_src(): void
     {
         $psr4 = $this->pkg['autoload']['psr-4'] ?? null;
         $this->assertIsArray(

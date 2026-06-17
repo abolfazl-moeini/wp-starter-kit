@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
  * - returns `[]` for missing `.asset.php` companions
  * - includes the companion file and returns its array otherwise
  *
- * Canonical helpers use the `wpdev_*` prefix; deprecated `wpsk_*` shims
+ * Canonical helpers use the `wpdev_*` prefix; deprecated `wpdev_*` shims
  * delegate to the same implementation.
  */
 class AssetFunctionsTest extends TestCase
@@ -24,13 +24,13 @@ class AssetFunctionsTest extends TestCase
         parent::setUp();
         // Reset the WP call log so the test bootstrap's wp_enqueue_*
         // shims (which check isset() before pushing) actually record
-        // calls. Without this, $GLOBALS['wpsk_test_wp_calls'] is
+        // calls. Without this, $GLOBALS['wpdev_test_wp_calls'] is
         // never initialized in this test's process and stays empty
         // for the whole run.
-        if (function_exists('wpsk_test_reset_wp_state')) {
-            wpsk_test_reset_wp_state();
+        if (function_exists('wpdev_test_reset_wp_state')) {
+            wpdev_test_reset_wp_state();
         }
-        $this->tmpDir = sys_get_temp_dir() . '/wpsk-asset-test-' . uniqid('', true);
+        $this->tmpDir = sys_get_temp_dir() . '/wpdev-asset-test-' . uniqid('', true);
         mkdir($this->tmpDir, 0777, true);
     }
 
@@ -169,7 +169,7 @@ class AssetFunctionsTest extends TestCase
     // compatibility with theme-based installs.
     //
     // The two tests below override plugin_dir_path() through
-    // $GLOBALS['wpsk_test_plugin_dir'] (the test bootstrap honours
+    // $GLOBALS['wpdev_test_plugin_dir'] (the test bootstrap honours
     // that override). With the override set to a temp dir, "the
     // plugin location" is distinct from "the theme location" — which
     // is what we need to verify the plugin path is preferred.
@@ -179,7 +179,7 @@ class AssetFunctionsTest extends TestCase
     {
         // Simulate a plugin installed at a separate location by
         // defining WPDEV_STARTER_PLUGIN_DIR and overriding plugin_dir_path()
-        // through $GLOBALS['wpsk_test_plugin_dir']. The fake plugin
+        // through $GLOBALS['wpdev_test_plugin_dir']. The fake plugin
         // has its own assets/stylesheets/ subdir with a fixture file.
         $fakePlugin = $this->tmpDir . '/fake-plugin';
         $fakeStyles = $fakePlugin . '/assets/stylesheets/style.css';
@@ -188,8 +188,8 @@ class AssetFunctionsTest extends TestCase
         if (!defined('WPDEV_STARTER_PLUGIN_DIR')) {
             define('WPDEV_STARTER_PLUGIN_DIR', $fakePlugin);
         }
-        $GLOBALS['wpsk_test_plugin_dir'] = $fakePlugin;
-        $GLOBALS['wpsk_test_wp_calls']   = [];
+        $GLOBALS['wpdev_test_plugin_dir'] = $fakePlugin;
+        $GLOBALS['wpdev_test_wp_calls']   = [];
 
         try {
             // With the fix, the function locates the file at the plugin
@@ -211,7 +211,7 @@ class AssetFunctionsTest extends TestCase
             // string (which is what the un-fixed code would yield when
             // the file is outside the plugin root).
             $enqueues = array_values(array_filter(
-                $GLOBALS['wpsk_test_wp_calls'] ?? [],
+                $GLOBALS['wpdev_test_wp_calls'] ?? [],
                 static fn(array $c): bool => ($c['fn'] ?? '') === 'wp_enqueue_style'
             ));
             $this->assertNotEmpty($enqueues, 'wp_enqueue_style must have been called');
@@ -227,13 +227,13 @@ class AssetFunctionsTest extends TestCase
                 'enqueued URL must reference the stylesheet basename'
             );
         } finally {
-            unset($GLOBALS['wpsk_test_plugin_dir'], $GLOBALS['wpsk_test_wp_calls']);
+            unset($GLOBALS['wpdev_test_plugin_dir'], $GLOBALS['wpdev_test_wp_calls']);
         }
     }
 
     public function test_enqueue_stylesheet_falls_back_to_theme_path_when_plugin_file_missing(): void
     {
-        // No $GLOBALS['wpsk_test_plugin_dir'] override → plugin_dir_path
+        // No $GLOBALS['wpdev_test_plugin_dir'] override → plugin_dir_path
         // returns the test project root, which we deliberately do NOT
         // populate with a fixture. Theme path (get_template_directory
         // also returns the project root in the test stub) likewise has
@@ -259,15 +259,15 @@ class AssetFunctionsTest extends TestCase
         );
     }
 
-    public function test_deprecated_wpsk_shims_delegate_to_wpdev_helpers(): void
+    public function test_deprecated_wpdev_shims_delegate_to_wpdev_helpers(): void
     {
         $this->assertSame(
             wpdev_bundle_file_path('demo.js'),
-            wpsk_bundle_file_path('demo.js')
+            wpdev_bundle_file_path('demo.js')
         );
         $this->assertSame(
             wpdev_get_localize_data(),
-            wpsk_get_localize_data()
+            wpdev_get_localize_data()
         );
     }
 }

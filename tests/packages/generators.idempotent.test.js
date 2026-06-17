@@ -216,7 +216,7 @@ describe("generator purity (Phase 21.9/21.10)", () => {
       const out = g.run(ctxWide);
       for (const body of Object.values(out.files)) {
         // The kit's scaffolds intentionally include URLs with
-        // the year in the README ("wp-starter-kit (WPSK) framework"
+        // the year in the README ("wp-starter-kit (WPDev) framework"
         // — not a year). We assert the absence of an obvious
         // date-stamp pattern.
         expect(body).not.toMatch(/\b202[5-9]-\d{2}-\d{2}\b/);

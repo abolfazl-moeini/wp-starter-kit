@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 import { buildProgram } from "../../packages/cli/src/main.js";
 
-describe("wpsk --version and --help", () => {
+describe("wpdev --version and --help", () => {
   // The "version" is read from packages/cli/package.json at build
   // time, so the test asserts the live value, not a literal.
   const expectedVersion = JSON.parse(
@@ -44,7 +44,7 @@ describe("wpsk --version and --help", () => {
     // We intentionally do NOT register --verbose / --yes at the
     // commander level; gather.js owns them via parseFlags. The
     // top-level --help therefore only shows the version/help flags.
-    // Users who pass `wpsk create foo --yes` see no commander error
+    // Users who pass `wpdev create foo --yes` see no commander error
     // because the action forwards the raw argv to gather.js, which
     // does its own parsing.
     const program = buildProgram();

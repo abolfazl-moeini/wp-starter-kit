@@ -86,7 +86,7 @@ describe("feature catalog audit (TASK-24a)", () => {
     let tmp;
 
     beforeEach(async () => {
-      tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-audit-"));
+      tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-audit-"));
       await seedMinimalProject(tmp);
     });
 
@@ -112,7 +112,7 @@ describe("feature catalog audit (TASK-24a)", () => {
     let tmp;
 
     beforeEach(async () => {
-      tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-audit-"));
+      tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-audit-"));
       await seedMinimalProject(tmp, { withComposer: true });
     });
 
@@ -134,7 +134,7 @@ describe("feature catalog audit (TASK-24a)", () => {
   });
 
   test("restBatch and faultTolerance refuse invalid combos on minimal (js:none / php 7.4)", async () => {
-    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-audit-"));
+    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-audit-"));
     try {
       await seedMinimalProject(tmp);
       const rest = await addFeature(tmp, "restBatch", "on");

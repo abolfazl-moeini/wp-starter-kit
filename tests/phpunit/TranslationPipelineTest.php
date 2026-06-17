@@ -28,23 +28,23 @@ final class TranslationPipelineTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->tmp = sys_get_temp_dir() . '/wpsk-translation-' . uniqid('', true);
+        $this->tmp = sys_get_temp_dir() . '/wpdev-translation-' . uniqid('', true);
         mkdir($this->tmp, 0777, true);
     }
 
     protected function tearDown(): void
     {
-        $this->wpskRrmdir($this->tmp);
+        $this->wpdevRrmdir($this->tmp);
         parent::tearDown();
     }
 
-    private function wpskRrmdir(string $dir): void
+    private function wpdevRrmdir(string $dir): void
     {
         if (!is_dir($dir)) return;
         foreach (scandir($dir) as $e) {
             if ($e === '.' || $e === '..') continue;
             $p = $dir . '/' . $e;
-            if (is_dir($p)) $this->wpskRrmdir($p);
+            if (is_dir($p)) $this->wpdevRrmdir($p);
             else unlink($p);
         }
         rmdir($dir);
@@ -63,7 +63,7 @@ final class TranslationPipelineTest extends TestCase
 
         $args = [$op, base64_encode(json_encode($payload))];
         $cmd  = ['node', $script, ...$args];
-        $env  = ['WPSK_TMP_ROOT' => $this->tmp];
+        $env  = ['WPDEV_TMP_ROOT' => $this->tmp];
         $proc = proc_open($cmd, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, dirname($script), $env);
         $this->assertIsResource($proc, 'proc_open must succeed');
         $stdout = stream_get_contents($pipes[1]);

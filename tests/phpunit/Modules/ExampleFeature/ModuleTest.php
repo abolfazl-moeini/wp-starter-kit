@@ -18,10 +18,10 @@ class ModuleTest extends TestCase
     public function test_should_boot_is_admin_only(): void
     {
         $module = new Module();
-        $GLOBALS['wpsk_test_is_admin'] = false;
+        $GLOBALS['wpdev_test_is_admin'] = false;
         $this->assertFalse($module->should_boot());
 
-        $GLOBALS['wpsk_test_is_admin'] = true;
+        $GLOBALS['wpdev_test_is_admin'] = true;
         $this->assertTrue($module->should_boot());
     }
 }

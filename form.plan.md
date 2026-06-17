@@ -16,7 +16,7 @@
 | No submit lifecycle    | No loading / success / error state                                                                                         |
 | No TypeScript          | Plain JS with no types                                                                                                     |
 | Signals vs hooks split | Component uses hooks; store uses signals — no unified API                                                                  |
-| Hardcoded class names  | `wpsk-form`, `the-form` — consumers can't opt out                                                                          |
+| Hardcoded class names  | `wpdev-form`, `the-form` — consumers can't opt out                                                                         |
 
 ---
 

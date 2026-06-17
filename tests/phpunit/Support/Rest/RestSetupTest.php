@@ -14,7 +14,7 @@ class RestSetupTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        wpsk_test_reset_wp_state();
+        wpdev_test_reset_wp_state();
         RestSetup::flush();
         Plugin::reset_for_tests();
     }
@@ -36,9 +36,9 @@ class RestSetupTest extends TestCase
         RestSetup::register(TestRestHandler::class);
         RestSetup::rest_init();
 
-        $this->assertCount(1, $GLOBALS['wpsk_wp_rest_routes']);
-        $this->assertSame('custom/v2', $GLOBALS['wpsk_wp_rest_routes'][0]['namespace']);
-        $this->assertSame('test-items', $GLOBALS['wpsk_wp_rest_routes'][0]['route']);
+        $this->assertCount(1, $GLOBALS['wpdev_wp_rest_routes']);
+        $this->assertSame('custom/v2', $GLOBALS['wpdev_wp_rest_routes'][0]['namespace']);
+        $this->assertSame('test-items', $GLOBALS['wpdev_wp_rest_routes'][0]['route']);
     }
 
     public function test_allow_batch_is_passed_through(): void
@@ -47,7 +47,7 @@ class RestSetupTest extends TestCase
         RestSetup::register(BatchRestHandler::class);
         RestSetup::rest_init();
 
-        $args = $GLOBALS['wpsk_wp_rest_routes'][0]['args'];
+        $args = $GLOBALS['wpdev_wp_rest_routes'][0]['args'];
         $this->assertArrayHasKey('allow_batch', $args);
         $this->assertSame(['v1' => true], $args['allow_batch']);
     }
@@ -92,7 +92,7 @@ class RestSetupTest extends TestCase
             true
         );
         $merged = array_merge($base, $overrides);
-        $path = sys_get_temp_dir() . '/wpsk-rest-config-' . uniqid('', true) . '.json';
+        $path = sys_get_temp_dir() . '/wpdev-rest-config-' . uniqid('', true) . '.json';
         file_put_contents($path, json_encode($merged, JSON_THROW_ON_ERROR));
         return $path;
     }

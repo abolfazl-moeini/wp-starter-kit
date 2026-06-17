@@ -11,7 +11,7 @@ class DeferredCallTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        wpsk_test_reset_wp_state();
+        wpdev_test_reset_wp_state();
         DeferredCall::reset_for_tests();
     }
 
@@ -105,7 +105,7 @@ class DeferredCallTest extends TestCase
         ]);
         $this->assertArrayHasKey(
             5,
-            $GLOBALS['wpsk_wp_actions']['drift_hook'],
+            $GLOBALS['wpdev_wp_actions']['drift_hook'],
             'first queue() registers at priority 5'
         );
 
@@ -116,12 +116,12 @@ class DeferredCallTest extends TestCase
 
         $this->assertArrayHasKey(
             99,
-            $GLOBALS['wpsk_wp_actions']['drift_hook'],
+            $GLOBALS['wpdev_wp_actions']['drift_hook'],
             'second queue() with priority 99 must move the registration to priority 99'
         );
         $this->assertArrayNotHasKey(
             5,
-            $GLOBALS['wpsk_wp_actions']['drift_hook'],
+            $GLOBALS['wpdev_wp_actions']['drift_hook'],
             'the stale priority-5 registration must be removed — leaving both would double-fire run_queue'
         );
     }
@@ -140,10 +140,10 @@ class DeferredCallTest extends TestCase
             'priority' => 7,
         ]);
 
-        $this->assertArrayHasKey(7, $GLOBALS['wpsk_wp_actions']['same_priority_hook']);
+        $this->assertArrayHasKey(7, $GLOBALS['wpdev_wp_actions']['same_priority_hook']);
         $this->assertCount(
             1,
-            $GLOBALS['wpsk_wp_actions']['same_priority_hook'][7],
+            $GLOBALS['wpdev_wp_actions']['same_priority_hook'][7],
             'same-priority queues must not duplicate the run_queue registration'
         );
     }

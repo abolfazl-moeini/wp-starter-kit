@@ -33,7 +33,7 @@ import { gatherInputs } from "./gather.js";
 import ui from "./ui.js";
 import * as runners from "./runners.js";
 // Single source of truth: the engine's `package.json` version.
-// I7.6 wires `wpsk --version` to this so a `npm version patch`
+// I7.6 wires `wpdev --version` to this so a `npm version patch`
 // in `packages/create-wp-project` automatically propagates to
 // the CLI's reported version (no manual sync step).
 import { getKitVersion } from "./version.js";
@@ -56,7 +56,7 @@ function tailAfterSubcommand(subcmd) {
   const argv = process.argv.slice(2);
   if (!subcmd) return argv;
   // The subcommand name is the first token in argv (when the user
-  // ran `wpsk <sub> ...`). We strip it so gather.js sees only flags.
+  // ran `wpdev <sub> ...`). We strip it so gather.js sees only flags.
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === subcmd.name()) {
       return argv.slice(i + 1);
@@ -350,7 +350,7 @@ export function buildProgram() {
 }
 
 /**
- * Parse the `wpsk update` flags from the raw argv tail. The
+ * Parse the `wpdev update` flags from the raw argv tail. The
  * `update` subcommand has only four flags (see plan I5.1–I5.4):
  * `--to`, `--run`, `--force`, `--verbose`. We parse them
  * locally rather than going through `parseFlags` (which is

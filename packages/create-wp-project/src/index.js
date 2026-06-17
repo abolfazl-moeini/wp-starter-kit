@@ -59,7 +59,7 @@ import { getPresets, applyPreset } from "./presets.js";
 import { getGenerators } from "./generators/index.js";
 import { tplVars as tplVarsFromGenerators } from "./generators/_templates.js";
 // Phase 22 — additive feature mutations. The installer's
-// `wpsk add <feature>` and `wpsk remove <feature>` commands
+// `wpdev add <feature>` and `wpdev remove <feature>` commands
 // call these directly. Both honor the same in-memory-then-write
 // safety contract the scaffold path uses.
 import { addFeature } from "./addFeature.js";
@@ -89,7 +89,7 @@ import { planUpdate } from "./plan-update.js";
 import { doctorProject } from "./doctor.js";
 import { getDepVersions } from "./dep-versions.js";
 //
-// Phase 24.12–24.13 — getKitStatus. The installer's `wpsk
+// Phase 24.12–24.13 — getKitStatus. The installer's `wpdev
 // info` command runs this to surface kitVersion, distMode,
 // features, and an optional `updateAvailable` signal (driven
 // by an injected `lookupLatest` that the CLI wires to the
@@ -566,7 +566,7 @@ if (
 //   - updateJsonFile         json-utils.js
 //
 // Phase 22 exports (addFeature, removeFeature) — the installer's
-// `wpsk add <feature>` and `wpsk remove <feature>` entry points.
+// `wpdev add <feature>` and `wpdev remove <feature>` entry points.
 // Both go through the same syncFeaturesToConfig contract as the
 // scaffold path, so a consumer that calls them directly sees the
 // same on-disk shape scaffoldProject produces.
@@ -593,6 +593,6 @@ export {
   planUpdate,
   doctorProject,
   getDepVersions,
-  // Phase 24.12–24.13 — kit status (CLI wpsk info).
+  // Phase 24.12–24.13 — kit status (CLI wpdev info).
   getKitStatus,
 };

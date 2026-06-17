@@ -1,5 +1,5 @@
 /**
- * `wpsk remove <feature>` — remove a feature from an existing project.
+ * `wpdev remove <feature>` — remove a feature from an existing project.
  *
  * Phase I4 (plan.installer.md §I4.7 + §I4.8).
  *

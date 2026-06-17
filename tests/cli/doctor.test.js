@@ -1,6 +1,6 @@
 /**
  * Tests for `packages/cli/src/commands/doctor.js` — Phase I5
- * `wpsk doctor` (I5.5, I5.6).
+ * `wpdev doctor` (I5.5, I5.6).
  *
  * Contract (per plan.installer.md §I5.5 + §I5.6):
  *   - `runDoctor(input, deps)` runs system-tool checks for:

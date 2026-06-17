@@ -39,7 +39,7 @@ import { removeFeature } from "../../packages/create-wp-project/src/removeFeatur
 describe("syncFeaturesToConfig() — project.config.json sync (Phase 20.15)", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-sync-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-sync-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });
@@ -221,7 +221,7 @@ describe("syncFeaturesToConfig() — project.config.json sync (Phase 20.15)", ()
 /**
  * Phase 22.12 / 22.13 — addFeature + removeFeature sync.
  *
- * Per plan.v3.md §22.13, the installer's `wpsk add` and `wpsk remove`
+ * Per plan.v3.md §22.13, the installer's `wpdev add` and `wpdev remove`
  * commands go through `addFeature()` and `removeFeature()` — and
  * BOTH must keep `wpdev-kit.json` AND `project.config.json`'s
  * `features` key in sync (the same contract `scaffoldProject`
@@ -242,7 +242,7 @@ describe("syncFeaturesToConfig() — project.config.json sync (Phase 20.15)", ()
 describe("addFeature() / removeFeature() — keep manifest + project.config.json in sync (Phase 22.12, 22.13)", () => {
   let tmp;
   beforeEach(async () => {
-    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpsk-sync-mut-"));
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-sync-mut-"));
   });
   afterEach(async () => {
     await fs.rm(tmp, { recursive: true, force: true });

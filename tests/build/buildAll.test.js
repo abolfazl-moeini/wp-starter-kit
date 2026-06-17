@@ -23,7 +23,7 @@ describe("build-all orchestration (real subprocess, e2e)", () => {
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
-    tmpRoot = mkdtempSync(join(tmpdir(), "wpsk-buildall-"));
+    tmpRoot = mkdtempSync(join(tmpdir(), "wpdev-buildall-"));
     originalCwd = process.cwd();
   });
 

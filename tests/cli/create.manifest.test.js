@@ -73,7 +73,7 @@ function makeDeps(overrides = {}) {
 }
 
 function makeEmptyDir() {
-  return mkdtempSync(path.join(tmpdir(), "wpsk-i3-manifest-"));
+  return mkdtempSync(path.join(tmpdir(), "wpdev-i3-manifest-"));
 }
 
 /* -------------------------------------------------------------------- */

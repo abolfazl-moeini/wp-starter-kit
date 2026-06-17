@@ -145,11 +145,11 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
     expect(php).toMatch(/WPDev\\Core\\Plugin::boot/);
   });
 
-  // Phase 23: the WPSK\\Core framework classes are provided exclusively
+  // Phase 23: the WPDev\\Core framework classes are provided exclusively
   // by the "wpdev/framework" Composer dependency (see packages/framework/src/Core/*).
   // The scaffold never emits src/Core/*.php copies for consumer projects
   // (they would be dead files: consumer autoload only maps the user's
-  // vendor ns to src/, and the dep satisfies the WPSK references from
+  // vendor ns to src/, and the dep satisfies the WPDev references from
   // the plugin bootstrap and user modules). These bodies are tested
   // in the framework package's own PHPUnit suite instead.
   test("does NOT emit src/Core/* framework sources (they come from wpdev/framework dep)", () => {

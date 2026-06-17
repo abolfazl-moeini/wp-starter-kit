@@ -35,7 +35,7 @@ describe("buildAssets --dry-run mode (end-to-end with real config)", () => {
   let originalArgv;
 
   beforeEach(() => {
-    tmpRoot = mkdtempSync(join(tmpdir(), "wpsk-assets-"));
+    tmpRoot = mkdtempSync(join(tmpdir(), "wpdev-assets-"));
     originalCwd = process.cwd();
     originalArgv = process.argv;
   });
@@ -245,7 +245,7 @@ describe("validateConfig with mock config", () => {
   test("accepts valid globalMappings object", () => {
     const config = {
       assetMappings: [],
-      globalMappings: { "tabulator-tables": "WPSK.table" },
+      globalMappings: { "tabulator-tables": "WPDev.table" },
     };
     expect(() => validateConfig(config)).not.toThrow();
   });

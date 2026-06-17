@@ -34,8 +34,8 @@ jobs:
       - name: Run scaffold CLI in a temp dir
         run: |
           TMP=$(mktemp -d)
-          WPSK_TARGET="$TMP/my-project" \
-            WPSK_ANSWERS_JSON='{
+          WPDEV_TARGET="$TMP/my-project" \
+            WPDEV_ANSWERS_JSON='{
               "slug": "my-project",
               "npmScope": "myorg",
               "globalName": "MyProject",

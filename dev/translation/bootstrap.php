@@ -9,7 +9,7 @@
  * make-pot for each component, and call the JS helper to build the map
  * file.
  *
- * Canonical helpers use the `wpdev_*` prefix. Deprecated `wpsk_*` names
+ * Canonical helpers use the `wpdev_*` prefix. Deprecated `wpdev_*` names
  * at the bottom delegate to the same implementation.
  */
 declare(strict_types=1);
@@ -19,7 +19,7 @@ require_once __DIR__ . '/colors.php';
 if ( ! defined( 'SOURCE_ROOT' ) ) {
 	$source_root = getenv( 'WPDEV_SOURCE_ROOT' );
 	if ( $source_root === false || $source_root === '' ) {
-		$source_root = getenv( 'WPSK_SOURCE_ROOT' );
+		$source_root = getenv( 'WPDEV_SOURCE_ROOT' );
 	}
 	define( 'SOURCE_ROOT', ( $source_root !== false && $source_root !== '' ) ? $source_root : dirname( __DIR__, 2 ) );
 }
@@ -159,39 +159,39 @@ function wpdev_build_map_file( string $component_name, string $pot_rel ): string
 	return '/assets/map/' . $component_name . '.map.json';
 }
 
-/* Deprecated wpsk_* shims */
+/* Deprecated wpdev_* shims */
 
-if ( ! function_exists( 'wpsk_list_components' ) ) {
+if ( ! function_exists( 'wpdev_list_components' ) ) {
 	/** @deprecated Use wpdev_list_components() */
-	function wpsk_list_components(): array {
+	function wpdev_list_components(): array {
 		return wpdev_list_components();
 	}
 }
 
-if ( ! function_exists( 'wpsk_run_translation_helper' ) ) {
+if ( ! function_exists( 'wpdev_run_translation_helper' ) ) {
 	/** @deprecated Use wpdev_run_translation_helper() */
-	function wpsk_run_translation_helper( string $op, array $payload ): array {
+	function wpdev_run_translation_helper( string $op, array $payload ): array {
 		return wpdev_run_translation_helper( $op, $payload );
 	}
 }
 
-if ( ! function_exists( 'wpsk_run_wp_i18n' ) ) {
+if ( ! function_exists( 'wpdev_run_wp_i18n' ) ) {
 	/** @deprecated Use wpdev_run_wp_i18n() */
-	function wpsk_run_wp_i18n( array $argv ): array {
+	function wpdev_run_wp_i18n( array $argv ): array {
 		return wpdev_run_wp_i18n( $argv );
 	}
 }
 
-if ( ! function_exists( 'wpsk_make_script_pot' ) ) {
+if ( ! function_exists( 'wpdev_make_script_pot' ) ) {
 	/** @deprecated Use wpdev_make_script_pot() */
-	function wpsk_make_script_pot( string $component_name ): string {
+	function wpdev_make_script_pot( string $component_name ): string {
 		return wpdev_make_script_pot( $component_name );
 	}
 }
 
-if ( ! function_exists( 'wpsk_build_map_file' ) ) {
+if ( ! function_exists( 'wpdev_build_map_file' ) ) {
 	/** @deprecated Use wpdev_build_map_file() */
-	function wpsk_build_map_file( string $component_name, string $pot_rel ): string {
+	function wpdev_build_map_file( string $component_name, string $pot_rel ): string {
 		return wpdev_build_map_file( $component_name, $pot_rel );
 	}
 }

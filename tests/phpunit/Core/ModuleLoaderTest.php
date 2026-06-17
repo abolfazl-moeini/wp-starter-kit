@@ -93,7 +93,7 @@ class ModuleLoaderTest extends TestCase
 
     public function test_register_stores_module_by_slug(): void
     {
-        $loader = new ModuleLoader('wpsk');
+        $loader = new ModuleLoader('wpdev');
 
         $module = new RecordingModule('alpha');
         $loader->register($module);
@@ -104,7 +104,7 @@ class ModuleLoaderTest extends TestCase
 
     public function test_register_rejects_duplicate_slug(): void
     {
-        $loader = new ModuleLoader('wpsk');
+        $loader = new ModuleLoader('wpdev');
         $loader->register(new RecordingModule('dup'));
 
         $this->expectException(\InvalidArgumentException::class);
@@ -115,7 +115,7 @@ class ModuleLoaderTest extends TestCase
 
     public function test_boot_all_is_lazy_until_invoked(): void
     {
-        $loader = new ModuleLoader('wpsk');
+        $loader = new ModuleLoader('wpdev');
         $loader->register(new RecordingModule('lazy-1'));
         $loader->register(new RecordingModule('lazy-2'));
 
@@ -128,7 +128,7 @@ class ModuleLoaderTest extends TestCase
 
     public function test_boot_all_iterates_registered_modules_in_registration_order(): void
     {
-        $loader = new ModuleLoader('wpsk');
+        $loader = new ModuleLoader('wpdev');
         $loader->register(new RecordingModule('first'));
         $loader->register(new RecordingModule('second'));
         $loader->register(new RecordingModule('third'));
@@ -144,7 +144,7 @@ class ModuleLoaderTest extends TestCase
 
     public function test_get_returns_null_for_unknown_slug(): void
     {
-        $loader = new ModuleLoader('wpsk');
+        $loader = new ModuleLoader('wpdev');
 
         $this->assertNull(
             $loader->get('does-not-exist'),
@@ -154,7 +154,7 @@ class ModuleLoaderTest extends TestCase
 
     public function test_has_returns_false_for_unknown_slug(): void
     {
-        $loader = new ModuleLoader('wpsk');
+        $loader = new ModuleLoader('wpdev');
 
         $this->assertFalse(
             $loader->has('does-not-exist'),
@@ -164,7 +164,7 @@ class ModuleLoaderTest extends TestCase
 
     public function test_all_returns_module_map_keyed_by_slug(): void
     {
-        $loader = new ModuleLoader('wpsk');
+        $loader = new ModuleLoader('wpdev');
         $alpha = new RecordingModule('alpha');
         $beta = new RecordingModule('beta');
 
@@ -182,7 +182,7 @@ class ModuleLoaderTest extends TestCase
 
     public function test_boot_all_is_idempotent(): void
     {
-        $loader = new ModuleLoader('wpsk');
+        $loader = new ModuleLoader('wpdev');
         $loader->register(new RecordingModule('once'));
 
         $loader->boot_all();
@@ -197,7 +197,7 @@ class ModuleLoaderTest extends TestCase
 
     public function test_boot_all_skips_module_when_should_boot_returns_false(): void
     {
-        $loader = new ModuleLoader('wpsk');
+        $loader = new ModuleLoader('wpdev');
         $loader->register(new ConditionalModule('skipped', false));
         $loader->register(new ConditionalModule('allowed', true));
 
@@ -212,7 +212,7 @@ class ModuleLoaderTest extends TestCase
 
     public function test_boot_all_boots_module_when_should_boot_returns_true(): void
     {
-        $loader = new ModuleLoader('wpsk');
+        $loader = new ModuleLoader('wpdev');
         $loader->register(new ConditionalModule('always', true));
 
         $loader->boot_all();

@@ -1,5 +1,5 @@
 /**
- * `wpsk list` — print the features in the current project's
+ * `wpdev list` — print the features in the current project's
  * `wpdev-kit.json` (manifest).
  *
  * Phase I4 (plan.installer.md §I4.1 + §I4.2).

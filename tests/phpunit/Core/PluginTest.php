@@ -64,8 +64,8 @@ class PluginTest extends TestCase
         // registers callbacks on multiple hooks; without this
         // reset, PluginTest would see an `init` callback that the
         // current test never registered.
-        if (function_exists('wpsk_test_reset_wp_state')) {
-            wpsk_test_reset_wp_state();
+        if (function_exists('wpdev_test_reset_wp_state')) {
+            wpdev_test_reset_wp_state();
         }
 
         // Plugin keeps static state — reset the singleton instance and
@@ -99,7 +99,7 @@ class PluginTest extends TestCase
             $property->setValue(null, $value);
         }
 
-        $this->tmpDir = sys_get_temp_dir() . '/wpsk-plugin-test-' . bin2hex(random_bytes(4));
+        $this->tmpDir = sys_get_temp_dir() . '/wpdev-plugin-test-' . bin2hex(random_bytes(4));
         mkdir($this->tmpDir, 0777, true);
     }
 
@@ -138,7 +138,7 @@ class PluginTest extends TestCase
     {
         $path = $this->writeConfig([
             'slug' => 'wpdev-starter',
-            'hookPrefix' => 'wpsk',
+            'hookPrefix' => 'wpdev',
             'textDomain' => 'wpdev-starter',
         ]);
 
@@ -146,7 +146,7 @@ class PluginTest extends TestCase
 
         $this->assertIsArray($config, 'config() must return an associative array');
         $this->assertSame('wpdev-starter', $config['slug']);
-        $this->assertSame('wpsk', $config['hookPrefix']);
+        $this->assertSame('wpdev', $config['hookPrefix']);
         $this->assertSame('wpdev-starter', $config['textDomain']);
     }
 
@@ -175,7 +175,7 @@ class PluginTest extends TestCase
     {
         $configPath = $this->writeConfig([
             'slug' => 'wpdev-starter',
-            'hookPrefix' => 'wpsk',
+            'hookPrefix' => 'wpdev',
             'textDomain' => 'wpdev-starter',
         ]);
 
@@ -186,7 +186,7 @@ class PluginTest extends TestCase
             'Plugin::boot() must mark the plugin as booted (observable side effect)'
         );
         $this->assertSame(
-            'wpsk_plugin_loaded',
+            'wpdev_plugin_loaded',
             Plugin::last_loaded_hook(),
             'Plugin::boot() must record the hook name it fired (no real do_action observable in stub environment)'
         );
@@ -196,14 +196,14 @@ class PluginTest extends TestCase
     {
         $configPath = $this->writeConfig([
             'slug' => 'wpdev-starter',
-            'hookPrefix' => 'wpsk',
+            'hookPrefix' => 'wpdev',
             'textDomain' => 'wpdev-starter',
         ]);
 
         Plugin::boot($configPath);
 
         $this->assertSame(
-            ['slug' => 'wpdev-starter', 'hookPrefix' => 'wpsk', 'textDomain' => 'wpdev-starter'],
+            ['slug' => 'wpdev-starter', 'hookPrefix' => 'wpdev', 'textDomain' => 'wpdev-starter'],
             Plugin::loaded_config(),
             'Plugin::boot() must remember the parsed config for later inspection'
         );
@@ -323,7 +323,7 @@ class PluginTest extends TestCase
     {
         $configPath = $this->writeConfig([
             'slug' => 'wpdev-starter',
-            'hookPrefix' => 'wpsk',
+            'hookPrefix' => 'wpdev',
             'textDomain' => 'wpdev-starter',
         ]);
 
@@ -357,13 +357,13 @@ class PluginTest extends TestCase
     {
         $configPath = $this->writeConfig([
             'slug' => 'wpdev-starter',
-            'hookPrefix' => 'wpsk',
+            'hookPrefix' => 'wpdev',
             'textDomain' => 'wpdev-starter',
         ]);
 
         Plugin::boot($configPath);
 
-        $wpActions = $GLOBALS['wpsk_wp_actions'] ?? [];
+        $wpActions = $GLOBALS['wpdev_wp_actions'] ?? [];
 
         $this->assertArrayHasKey(
             'plugins_loaded',
@@ -390,7 +390,7 @@ class PluginTest extends TestCase
     {
         $configPath = $this->writeConfig([
             'slug' => 'wpdev-starter',
-            'hookPrefix' => 'wpsk',
+            'hookPrefix' => 'wpdev',
             'textDomain' => 'wpdev-starter',
         ]);
 
@@ -437,7 +437,7 @@ class PluginTest extends TestCase
     {
         $configPath = $this->writeConfig([
             'slug' => 'wpdev-starter',
-            'hookPrefix' => 'wpsk',
+            'hookPrefix' => 'wpdev',
             'textDomain' => 'wpdev-starter',
         ]);
 
