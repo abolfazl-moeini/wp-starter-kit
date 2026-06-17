@@ -127,22 +127,23 @@ sides together. See `hooks.md`.
 Runtime packages ship in the deps bundle (`assets/bundles/<slug>-deps.js`) unless
 noted as tooling-only. Build-time packages are devDependencies.
 
-| Package | Path | Installer | Role |
-|---------|------|-----------|------|
-| `@wpdev/hooks` | `packages/hooks/` | always-on | Single `getHooks()` accessor to `@wordpress/hooks` global |
-| `@wpdev/utils` | `packages/utils/` | always-on | Localize bridge, shared JS helpers |
-| `@wpdev/rest-utils` | `packages/rest-utils/` | always-on | REST/AJAX client, hook dispatch, and `createBatchRequest` batch fetch |
-| `@wpdev/html-utils` | `packages/html-utils/` | always-on | `elementProps`, `mountComponent`, form/DOM helpers |
-| `@wpdev/fetch` | `packages/fetch/` | deprecated shim | Re-exports `@wpdev/rest-utils/fetch` for one release |
-| `@wpdev/ui-components` | `packages/ui-components/` | `jsLib: preact/react` | WDForm and shared UI primitives |
-| `@wpdev/rule-engine` | `packages/rule-engine/` | always-on | Generic rule DSL (WDForm validators stay form-specific) |
-| `@wpdev/polaris-stack` | `packages/polaris-stack/` | `frontendStack: polaris` | CSS variables + layout primitives |
-| `@wpdev/build` | `core/packages/build/` | always-on (dev) | esbuild pipeline CLIs |
-| `@wpdev/dependency-extraction-esbuild-plugin` | `core/packages/dependency-extraction-esbuild-plugin/` | always-on (dev) | `importAsGlobals` + asset sidecars |
-| `@core/utils` | `core/packages/utils/` | kit-internal | `readProjectConfig()` for build scripts |
-| `@wpdev/translation` | `packages/translation/` | `i18n: on` | Translation CLI (not in runtime bundle) |
-| `@wpdev/create-wp-project` | `packages/create-wp-project/` | tooling | Scaffold / add-feature CLI |
-| `@wpdev/mcp-integration` | `packages/mcp-integration/` | `mcpAbilities: on` | MCP Abilities bridge (PHP Composer package) |
+| Package                                       | Path                                                  | Installer                | Role                                                                  |
+| --------------------------------------------- | ----------------------------------------------------- | ------------------------ | --------------------------------------------------------------------- |
+| `@wpdev/hooks`                                | `packages/hooks/`                                     | always-on                | Single `getHooks()` accessor to `@wordpress/hooks` global             |
+| `@wpdev/utils`                                | `packages/utils/`                                     | always-on                | Localize bridge, shared JS helpers                                    |
+| `@wpdev/rest-utils`                           | `packages/rest-utils/`                                | always-on                | REST/AJAX client, hook dispatch, and `createBatchRequest` batch fetch |
+| `@wpdev/html-utils`                           | `packages/html-utils/`                                | always-on                | `elementProps`, `mountComponent`, form/DOM helpers                    |
+| `@wpdev/fetch`                                | `packages/fetch/`                                     | deprecated shim          | Re-exports `@wpdev/rest-utils/fetch` for one release                  |
+| `@wpdev/ui-components`                        | `packages/ui-components/`                             | `jsLib: preact/react`    | WDForm and shared UI primitives                                       |
+| `@wpdev/rule-engine`                          | `packages/rule-engine/`                               | always-on                | Generic rule DSL (WDForm validators stay form-specific)               |
+| `@wpdev/polaris-stack`                        | `packages/polaris-stack/`                             | `frontendStack: polaris` | CSS variables + layout primitives                                     |
+| `@wpdev/build`                                | `core/packages/build/`                                | always-on (dev)          | esbuild pipeline CLIs                                                 |
+| `@wpdev/dependency-extraction-esbuild-plugin` | `core/packages/dependency-extraction-esbuild-plugin/` | always-on (dev)          | `importAsGlobals` + asset sidecars                                    |
+| `@core/utils`                                 | `core/packages/utils/`                                | kit-internal             | `readProjectConfig()` for build scripts                               |
+| `@wpdev/translation`                          | `packages/translation/`                               | `i18n: on`               | Translation CLI (not in runtime bundle)                               |
+| `@wpdev/create-wp-project`                    | `packages/create-wp-project/`                         | tooling                  | Scaffold / add-feature engine                                         |
+| `@wpdev/cli`                                  | `packages/cli/`                                       | tooling                  | Thin CLI (`wpdev create`, `wpdev add`, …)                             |
+| `@wpdev/mcp-integration`                      | `packages/mcp-integration/`                           | `mcpAbilities: on`       | MCP Abilities bridge (PHP Composer package)                           |
 
 **Boundaries (do not merge without ADR):**
 

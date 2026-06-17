@@ -784,7 +784,160 @@ describe("@wpdev/create-wp-project", () => {
       expect(existsSyncSync(path.join(tmp, "src", "polaris"))).toBe(true);
     });
   });
+
+  /* -------------------------------------------------------------------- */
+  /* preset scaffold snapshots (TASK-20)                                  */
+  /* -------------------------------------------------------------------- */
+
+  describe("preset scaffold snapshots (TASK-20)", () => {
+    const goodAnswers = {
+      slug: "my-project",
+      npmScope: "myorg",
+      globalName: "MyProject",
+      localizeVar: "MyProjectLoc",
+      textDomain: "my-project",
+      hookPrefix: "my-project",
+      depsBundle: "my-project-deps.js",
+      phpFunctionPrefix: "myprj_",
+      uiFramework: "preact",
+      projectType: "plugin",
+    };
+
+    test("standard preset: key generated files match snapshot", async () => {
+      const res = await scaffoldProject(tmp, goodAnswers, {
+        features: applyPreset("standard"),
+      });
+      expect(res.ok).toBe(true);
+
+      const pkg = JSON.parse(
+        await fs.readFile(path.join(tmp, "package.json"), "utf8"),
+      );
+      expect(snapshotPackageJson(pkg)).toMatchSnapshot("standard-package.json");
+
+      const composer = JSON.parse(
+        await fs.readFile(path.join(tmp, "composer.json"), "utf8"),
+      );
+      expect(snapshotComposerJson(composer)).toMatchSnapshot(
+        "standard-composer.json",
+      );
+
+      const cfg = JSON.parse(
+        await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+      );
+      expect(snapshotProjectConfig(cfg)).toMatchSnapshot(
+        "standard-project.config.json",
+      );
+
+      const manifest = JSON.parse(
+        await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+      );
+      expect(snapshotKitManifest(manifest)).toMatchSnapshot(
+        "standard-wpdev-kit.json",
+      );
+
+      const tsconfig = JSON.parse(
+        await fs.readFile(path.join(tmp, "tsconfig.json"), "utf8"),
+      );
+      expect(snapshotTsconfig(tsconfig)).toMatchSnapshot(
+        "standard-tsconfig.json",
+      );
+    });
+
+    test("minimal preset: key generated files match snapshot", async () => {
+      const res = await scaffoldProject(tmp, goodAnswers, {
+        features: applyPreset("minimal"),
+      });
+      expect(res.ok).toBe(true);
+
+      expect(existsSyncSync(path.join(tmp, "package.json"))).toBe(false);
+      expect(existsSyncSync(path.join(tmp, "tsconfig.json"))).toBe(false);
+
+      const composer = JSON.parse(
+        await fs.readFile(path.join(tmp, "composer.json"), "utf8"),
+      );
+      expect(snapshotComposerJson(composer)).toMatchSnapshot(
+        "minimal-composer.json",
+      );
+
+      const cfg = JSON.parse(
+        await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+      );
+      expect(snapshotProjectConfig(cfg)).toMatchSnapshot(
+        "minimal-project.config.json",
+      );
+
+      const manifest = JSON.parse(
+        await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+      );
+      expect(snapshotKitManifest(manifest)).toMatchSnapshot(
+        "minimal-wpdev-kit.json",
+      );
+    });
+  });
 });
+
+/** Stable subset of package.json for regression snapshots (TASK-20). */
+function snapshotPackageJson(pkg) {
+  return {
+    name: pkg.name,
+    scripts: Object.keys(pkg.scripts || {}).sort(),
+    dependencies: Object.keys(pkg.dependencies || {}).sort(),
+    devDependencies: Object.keys(pkg.devDependencies || {}).sort(),
+  };
+}
+
+/** Stable subset of composer.json for regression snapshots (TASK-20). */
+function snapshotComposerJson(composer) {
+  return {
+    name: composer.name,
+    type: composer.type,
+    license: composer.license,
+    require: Object.keys(composer.require || {}).sort(),
+    autoload: composer.autoload,
+    scripts: Object.keys(composer.scripts || {}).sort(),
+    strauss: composer.extra?.strauss
+      ? {
+          target_directory: composer.extra.strauss.target_directory,
+          namespace_prefix: composer.extra.strauss.namespace_prefix,
+          packages: composer.extra.strauss.packages,
+        }
+      : null,
+  };
+}
+
+/** Stable subset of project.config.json for regression snapshots (TASK-20). */
+function snapshotProjectConfig(cfg) {
+  return {
+    slug: cfg.slug,
+    globalName: cfg.globalName,
+    npmScope: cfg.npmScope,
+    projectType: cfg.projectType,
+    features: cfg.features,
+  };
+}
+
+/** Stable subset of wpdev-kit.json (drops volatile timestamps). */
+function snapshotKitManifest(manifest) {
+  return {
+    schema: manifest.schema,
+    distMode: manifest.distMode,
+    features: manifest.features,
+  };
+}
+
+/** Stable subset of tsconfig.json for regression snapshots (TASK-20). */
+function snapshotTsconfig(tsconfig) {
+  const opts = tsconfig.compilerOptions || {};
+  return {
+    jsx: opts.jsx,
+    jsxImportSource: opts.jsxImportSource,
+    module: opts.module,
+    moduleResolution: opts.moduleResolution,
+    strict: opts.strict,
+    include: tsconfig.include,
+    exclude: tsconfig.exclude,
+  };
+}
 
 /**
  * Local existsSync — avoid pulling in the whole `fs` module just for

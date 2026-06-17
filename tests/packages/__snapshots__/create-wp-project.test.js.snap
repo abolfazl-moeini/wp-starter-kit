@@ -1,0 +1,236 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal preset: key generated files match snapshot: minimal-composer.json 1`] = `
+{
+  "autoload": {
+    "psr-4": {
+      "MyProject\\": "src/",
+    },
+  },
+  "license": "GPL-2.0-or-later",
+  "name": "myproject/my-project",
+  "require": [
+    "php",
+    "wpdev/framework",
+  ],
+  "scripts": [
+    "post-install-cmd",
+    "post-update-cmd",
+    "scope:vendor",
+  ],
+  "strauss": {
+    "namespace_prefix": "WpdevVendor",
+    "packages": [
+      "wpdev/framework",
+    ],
+    "target_directory": "vendor-prefixed",
+  },
+  "type": "wordpress-plugin",
+}
+`;
+
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal preset: key generated files match snapshot: minimal-project.config.json 1`] = `
+{
+  "features": {
+    "blocks": "off",
+    "css": "none",
+    "exampleFeature": "off",
+    "faultTolerance": "off",
+    "frontendStack": "none",
+    "husky": "off",
+    "i18n": "off",
+    "js": "none",
+    "jsLib": "none",
+    "jsTest": "none",
+    "license": "gpl2",
+    "mcpAbilities": "off",
+    "phpFramework": "none",
+    "phpMinVersion": "7.4",
+    "phpTest": "phpunit",
+    "restBatch": "off",
+    "vendorScoping": "on",
+    "wpMinVersion": "6.0",
+  },
+  "globalName": "MyProject",
+  "npmScope": "@myorg",
+  "projectType": "plugin",
+  "slug": "my-project",
+}
+`;
+
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal preset: key generated files match snapshot: minimal-wpdev-kit.json 1`] = `
+{
+  "distMode": "deps",
+  "features": {
+    "blocks": "off",
+    "css": "none",
+    "exampleFeature": "off",
+    "faultTolerance": "off",
+    "frontendStack": "none",
+    "husky": "off",
+    "i18n": "off",
+    "js": "none",
+    "jsLib": "none",
+    "jsTest": "none",
+    "license": "gpl2",
+    "mcpAbilities": "off",
+    "phpFramework": "none",
+    "phpMinVersion": "7.4",
+    "phpTest": "phpunit",
+    "restBatch": "off",
+    "vendorScoping": "on",
+    "wpMinVersion": "6.0",
+  },
+  "schema": 1,
+}
+`;
+
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard preset: key generated files match snapshot: standard-composer.json 1`] = `
+{
+  "autoload": {
+    "psr-4": {
+      "MyProject\\": "src/",
+    },
+  },
+  "license": "GPL-2.0-or-later",
+  "name": "myproject/my-project",
+  "require": [
+    "php",
+    "wpdev/framework",
+  ],
+  "scripts": [
+    "post-install-cmd",
+    "post-update-cmd",
+    "scope:vendor",
+  ],
+  "strauss": {
+    "namespace_prefix": "WpdevVendor",
+    "packages": [
+      "wpdev/framework",
+    ],
+    "target_directory": "vendor-prefixed",
+  },
+  "type": "wordpress-plugin",
+}
+`;
+
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard preset: key generated files match snapshot: standard-package.json 1`] = `
+{
+  "dependencies": [
+    "@preact/compat",
+    "@preact/signals",
+    "@wordpress/dom-ready",
+    "@wordpress/hooks",
+    "@wpdev/hooks",
+    "@wpdev/html-utils",
+    "@wpdev/rest-utils",
+    "@wpdev/translation",
+    "@wpdev/utils",
+    "preact",
+    "react",
+    "react-dom",
+  ],
+  "devDependencies": [
+    "@commitlint/cli",
+    "@commitlint/config-conventional",
+    "@jest/globals",
+    "@wpdev/build",
+    "@wpdev/dependency-extraction-esbuild-plugin",
+    "babel-jest",
+    "husky",
+    "jest",
+    "lint-staged",
+  ],
+  "name": "@myorg/my-project",
+  "scripts": [
+    "build",
+    "build:assets",
+    "build:components",
+    "build:dependencies",
+    "build:styles",
+    "check",
+    "format:check",
+    "lint:js",
+    "prepare",
+    "test",
+    "typecheck",
+  ],
+}
+`;
+
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard preset: key generated files match snapshot: standard-project.config.json 1`] = `
+{
+  "features": {
+    "blocks": "off",
+    "css": "none",
+    "exampleFeature": "on",
+    "faultTolerance": "off",
+    "frontendStack": "none",
+    "husky": "on",
+    "i18n": "on",
+    "js": "typescript",
+    "jsLib": "none",
+    "jsTest": "jest",
+    "license": "gpl2",
+    "mcpAbilities": "off",
+    "phpFramework": "none",
+    "phpMinVersion": "7.4",
+    "phpTest": "phpunit",
+    "restBatch": "off",
+    "vendorScoping": "on",
+    "wpMinVersion": "6.0",
+  },
+  "globalName": "MyProject",
+  "npmScope": "@myorg",
+  "projectType": "plugin",
+  "slug": "my-project",
+}
+`;
+
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard preset: key generated files match snapshot: standard-tsconfig.json 1`] = `
+{
+  "exclude": [
+    "node_modules",
+    "vendor",
+    "build",
+    "dist",
+  ],
+  "include": [
+    "assets/**/*",
+    "core/**/*",
+    "packages/**/*",
+  ],
+  "jsx": "react-jsx",
+  "jsxImportSource": "preact",
+  "module": "ESNext",
+  "moduleResolution": "Bundler",
+  "strict": true,
+}
+`;
+
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard preset: key generated files match snapshot: standard-wpdev-kit.json 1`] = `
+{
+  "distMode": "deps",
+  "features": {
+    "blocks": "off",
+    "css": "none",
+    "exampleFeature": "on",
+    "faultTolerance": "off",
+    "frontendStack": "none",
+    "husky": "on",
+    "i18n": "on",
+    "js": "typescript",
+    "jsLib": "none",
+    "jsTest": "jest",
+    "license": "gpl2",
+    "mcpAbilities": "off",
+    "phpFramework": "none",
+    "phpMinVersion": "7.4",
+    "phpTest": "phpunit",
+    "restBatch": "off",
+    "vendorScoping": "on",
+    "wpMinVersion": "6.0",
+  },
+  "schema": 1,
+}
+`;
