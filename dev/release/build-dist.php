@@ -59,6 +59,12 @@ function wpdev_rmtree(string $dir): void
     if (!is_dir($dir)) {
         return;
     }
+    if (DIRECTORY_SEPARATOR === '/') {
+        exec('rm -rf ' . escapeshellarg($dir));
+        if (!is_dir($dir)) {
+            return;
+        }
+    }
     $items = scandir($dir);
     if ($items === false) {
         return;

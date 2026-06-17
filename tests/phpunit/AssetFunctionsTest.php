@@ -259,15 +259,4 @@ class AssetFunctionsTest extends TestCase
         );
     }
 
-    public function test_deprecated_wpdev_shims_delegate_to_wpdev_helpers(): void
-    {
-        $this->assertSame(
-            wpdev_bundle_file_path('demo.js'),
-            wpdev_bundle_file_path('demo.js')
-        );
-        $this->assertSame(
-            wpdev_get_localize_data(),
-            wpdev_get_localize_data()
-        );
-    }
 }

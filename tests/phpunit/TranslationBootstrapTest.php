@@ -103,10 +103,4 @@ final class TranslationBootstrapTest extends TestCase
         $this->assertStringNotContainsString("'i18n',\n        'make-php'", $src);
     }
 
-    public function test_deprecated_wpdev_translation_shims_delegate_to_wpdev_helpers(): void
-    {
-        require_once __DIR__ . '/../../dev/translation/bootstrap.php';
-
-        $this->assertSame(wpdev_list_components(), wpdev_list_components());
-    }
 }

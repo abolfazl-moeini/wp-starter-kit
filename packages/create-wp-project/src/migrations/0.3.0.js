@@ -22,10 +22,15 @@ const NEW_MANIFEST = "wpdev-kit.json";
 
 const LEGACY_DEFAULTS = {
   slug: "wpsk-starter",
-  globalName: "WPDev",
-  npmScope: "@wpsk",
+  globalName: "WPSK",
+  localizeVar: "WPSKLoc",
   textDomain: "wpsk-starter",
   hookPrefix: "wpsk",
+  npmScope: "@wpsk",
+  depsBundle: "wpsk-starter-deps.js",
+  phpFunctionPrefix: "wpsk_",
+  restNamespace: "wpsk/v1",
+  vendorPrefix: "WpskVendor",
 };
 
 export async function run(dir) {
@@ -41,7 +46,10 @@ export async function run(dir) {
     try {
       await fs.rename(oldPath, newPath);
     } catch (error) {
-      return { ok: false, reason: `Failed to rename manifest: ${error.message}` };
+      return {
+        ok: false,
+        reason: `Failed to rename manifest: ${error.message}`,
+      };
     }
   }
 
@@ -58,9 +66,14 @@ export async function run(dir) {
             // Map to new defaults (basic ones)
             if (k === "slug") cfg[k] = "wpdev-starter";
             else if (k === "globalName") cfg[k] = "WPDev";
-            else if (k === "npmScope") cfg[k] = "@wpdev";
+            else if (k === "localizeVar") cfg[k] = "WPDevLoc";
             else if (k === "textDomain") cfg[k] = "wpdev-starter";
             else if (k === "hookPrefix") cfg[k] = "wpdev";
+            else if (k === "npmScope") cfg[k] = "@wpdev";
+            else if (k === "depsBundle") cfg[k] = "wpdev-starter-deps.js";
+            else if (k === "phpFunctionPrefix") cfg[k] = "wpdev_";
+            else if (k === "restNamespace") cfg[k] = "wpdev/v1";
+            else if (k === "vendorPrefix") cfg[k] = "WpdevVendor";
             patched = true;
           }
         }

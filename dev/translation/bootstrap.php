@@ -159,39 +159,3 @@ function wpdev_build_map_file( string $component_name, string $pot_rel ): string
 	return '/assets/map/' . $component_name . '.map.json';
 }
 
-/* Deprecated wpdev_* shims */
-
-if ( ! function_exists( 'wpdev_list_components' ) ) {
-	/** @deprecated Use wpdev_list_components() */
-	function wpdev_list_components(): array {
-		return wpdev_list_components();
-	}
-}
-
-if ( ! function_exists( 'wpdev_run_translation_helper' ) ) {
-	/** @deprecated Use wpdev_run_translation_helper() */
-	function wpdev_run_translation_helper( string $op, array $payload ): array {
-		return wpdev_run_translation_helper( $op, $payload );
-	}
-}
-
-if ( ! function_exists( 'wpdev_run_wp_i18n' ) ) {
-	/** @deprecated Use wpdev_run_wp_i18n() */
-	function wpdev_run_wp_i18n( array $argv ): array {
-		return wpdev_run_wp_i18n( $argv );
-	}
-}
-
-if ( ! function_exists( 'wpdev_make_script_pot' ) ) {
-	/** @deprecated Use wpdev_make_script_pot() */
-	function wpdev_make_script_pot( string $component_name ): string {
-		return wpdev_make_script_pot( $component_name );
-	}
-}
-
-if ( ! function_exists( 'wpdev_build_map_file' ) ) {
-	/** @deprecated Use wpdev_build_map_file() */
-	function wpdev_build_map_file( string $component_name, string $pot_rel ): string {
-		return wpdev_build_map_file( $component_name, $pot_rel );
-	}
-}

@@ -3,7 +3,7 @@ namespace WPDev\Support;
 
 /**
  * Asset loading helpers for wp-starter-kit — the PSR-4 successor to the
- * theme-based `wpsk_*` functions in `includes/asset-functions.php`.
+ * theme-based `wpdev_*` functions in `includes/asset-functions.php`.
  *
  * The original helpers read paths from the active theme's directory
  * because wp-starter-kit historically shipped as a parent theme. It is
@@ -13,11 +13,8 @@ namespace WPDev\Support;
  * Two changes from the legacy helpers:
  *  - Path resolution is plugin-based, not theme-based.
  *  - `enqueue_bundle_script()` now wires `wp_set_script_translations()`
- *    so localized strings work out of the box. The legacy `wpsk_`
+ *    so localized strings work out of the box. The legacy `wpdev_`
  *    helpers did not — that gap is what plan.v2.md flagged.
- *
- * The legacy `wpsk_*` functions remain as thin BC wrappers in
- * `includes/asset-functions.php`; they delegate here.
  *
  * @package wp-starter-kit
  */
@@ -52,7 +49,7 @@ final class Assets {
 
 	/**
 	 * Read the companion `.asset.php` sidecar for a `.js`/`.css` file and
-	 * return its array shape. Mirrors the legacy `wpsk_asset_info()`
+	 * return its array shape. Mirrors the legacy `wpdev_asset_info()`
 	 * contract: returns `[]` when the path is not `.js`/`.css` or when
 	 * the sidecar does not exist.
 	 *
@@ -81,7 +78,7 @@ final class Assets {
 	 *
 	 * The signature is `(handle, rel_path, extra_deps)` so callers can use
 	 * a stable WP handle independently of the file name — unlike the
-	 * legacy `wpsk_enqueue_bundle_script` which derived the handle from
+	 * legacy `wpdev_enqueue_bundle_script` which derived the handle from
 	 * the file basename. The new contract is required to align with
 	 * `wp_register_script()` + `wp_enqueue_script()` + the
 	 * `wp_set_script_translations()` gap fix.
@@ -207,9 +204,9 @@ final class Assets {
 	/**
 	 * Load `project.config.json` from the plugin root (cached per request).
 	 *
-	 * Reads the file that lives next to `wp-starter-kit.php` (i.e. the
+	 * Reads the file that lives next to `wpdev-starter.php` (i.e. the
 	 * plugin's own root), NOT a theme directory. This is the plugin
-	 * equivalent of the legacy `wpsk_read_project_config()` and must
+	 * equivalent of the legacy `wpdev_read_project_config()` and must
 	 * read from the plugin root so the localize data and translation
 	 * domain stay in sync with the project.
 	 *
@@ -238,15 +235,15 @@ final class Assets {
 	}
 
 	// ------------------------------------------------------------------
-	// Legacy shims — preserve the original wpsk_* function contracts so
+	// Legacy shims — preserve the original wpdev_* function contracts so
 	// existing call-sites (and the legacy AssetFunctionsTest, EnqueueTest,
 	// LocalizeTest suites) keep working unchanged. The new front door is
 	// `enqueue_bundle_script()` / `enqueue_bundle_style()` above.
 	// ------------------------------------------------------------------
 
 	/**
-	 * Legacy shim for `wpsk_enqueue_bundle_script_at()` — the test seam
-	 * the old `wpsk_*` functions used. Derives the handle from the file
+	 * Legacy shim for `wpdev_enqueue_bundle_script_at()` — the test seam
+	 * the old `wpdev_*` functions used. Derives the handle from the file
 	 * basename and calls `wp_enqueue_script()` directly (no `register`,
 	 * no `wp_set_script_translations()`).
 	 *
@@ -271,8 +268,8 @@ final class Assets {
 	}
 
 	/**
-	 * Legacy shim for `wpsk_enqueue_bundle_style_at()` — the test seam
-	 * the old `wpsk_*` functions used. Derives the handle from the file
+	 * Legacy shim for `wpdev_enqueue_bundle_style_at()` — the test seam
+	 * the old `wpdev_*` functions used. Derives the handle from the file
 	 * basename and calls `wp_enqueue_style()` directly.
 	 *
 	 * @param string $abs_path   Absolute path to the CSS file.
@@ -301,7 +298,7 @@ final class Assets {
 
 	/**
 	 * Map an absolute filesystem path to a public URL relative to the
-	 * plugin root. Mirrors the legacy `wpsk_resolve_asset_url()` shape:
+	 * plugin root. Mirrors the legacy `wpdev_resolve_asset_url()` shape:
 	 * if the file lives inside the plugin root, the relative subpath is
 	 * preserved; otherwise fall back to a basename URL through
 	 * `plugins_url()`.
