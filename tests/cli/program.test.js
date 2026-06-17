@@ -66,6 +66,7 @@ describe("subcommand --help text (Phase I4 smoke)", () => {
   test("wpsk add --help lists the add-relevant flags", () => {
     const help = helpFor("add");
     for (const flag of [
+      "--list",
       "--variant",
       "--yes",
       "--force",

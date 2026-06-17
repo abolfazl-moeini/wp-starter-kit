@@ -60,9 +60,13 @@ function makeEngine({
   deps,
   devDeps,
   reason = "",
+  doctor = { ok: true, warnings: [], errors: [] },
+  manifest = { features: { css: "none" }, kitVersion: "0.1.0" },
 } = {}) {
   return {
     getFeatureCatalog: jest.fn(() => CATALOG),
+    readManifest: jest.fn(() => manifest),
+    doctorProject: jest.fn(() => doctor),
     addFeature: jest.fn(async (..._args) => {
       if (!ok) return { ok: false, reason };
       return {
@@ -281,6 +285,83 @@ describe("runAdd — engine error surfacing (I4.4)", () => {
 /* -------------------------------------------------------------------- */
 /* I4.5 / I4.6 — unknown id guard                                         */
 /* -------------------------------------------------------------------- */
+
+describe("runAdd — doctor gate (TASK-12a)", () => {
+  test("prompts and aborts when doctor reports errors and user declines", async () => {
+    const deps = baseDeps();
+    deps.engine = makeEngine({
+      doctor: { ok: false, warnings: [], errors: ["manifest missing"] },
+    });
+    deps.ui.confirm = jest.fn(async () => false);
+    const out = await runAdd(
+      {
+        dir: "/tmp/proj",
+        featureId: "css",
+        variant: "tailwind",
+        runOptions: {},
+      },
+      deps,
+    );
+    expect(out.ok).toBe(false);
+    expect(out.reason).toMatch(/cancelled due to doctor errors/);
+    expect(deps.engine.addFeature).not.toHaveBeenCalled();
+    expect(deps.ui.confirm).toHaveBeenCalled();
+  });
+
+  test("skips doctor prompt with --force and calls addFeature", async () => {
+    const deps = baseDeps();
+    deps.engine = makeEngine({
+      doctor: { ok: false, warnings: [], errors: ["manifest missing"] },
+    });
+    const out = await runAdd(
+      {
+        dir: "/tmp/proj",
+        featureId: "css",
+        variant: "tailwind",
+        runOptions: { force: true },
+      },
+      deps,
+    );
+    expect(out.ok).toBe(true);
+    expect(deps.engine.addFeature).toHaveBeenCalledTimes(1);
+    expect(deps.ui.confirm).not.toHaveBeenCalled();
+  });
+
+  test("continues when doctor reports errors and --yes is set", async () => {
+    const deps = baseDeps();
+    deps.engine = makeEngine({
+      doctor: { ok: false, warnings: [], errors: ["manifest missing"] },
+    });
+    const out = await runAdd(
+      {
+        dir: "/tmp/proj",
+        featureId: "css",
+        variant: "tailwind",
+        runOptions: { yes: true },
+      },
+      deps,
+    );
+    expect(out.ok).toBe(true);
+    expect(deps.engine.addFeature).toHaveBeenCalledTimes(1);
+    expect(deps.ui.confirm).not.toHaveBeenCalled();
+  });
+});
+
+describe("runAdd — feature list (TASK-12c)", () => {
+  test("runOptions.list delegates to runList without calling addFeature", async () => {
+    const deps = baseDeps();
+    deps.ui.renderFeatureTable = jest.fn(async () => {});
+    const out = await runAdd(
+      { dir: "/tmp/proj", featureId: "", runOptions: { list: true } },
+      deps,
+    );
+    expect(out.ok).toBe(true);
+    expect(out.rows).toBeDefined();
+    expect(out.rows.length).toBe(CATALOG.length);
+    expect(deps.engine.addFeature).not.toHaveBeenCalled();
+    expect(deps.ui.renderFeatureTable).toHaveBeenCalled();
+  });
+});
 
 describe("runAdd — unknown feature id (I4.5, I4.6)", () => {
   test("returns {ok:false, reason} that lists the valid ids; engine is NOT called", async () => {

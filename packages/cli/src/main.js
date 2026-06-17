@@ -194,8 +194,9 @@ export function buildProgram() {
 
   allowPassthrough(
     program
-      .command("add <feature>")
+      .command("add [feature]")
       .description("add a feature to an existing wp-starter-kit project")
+      .option("--list", "list available features and their enabled state")
       .option("--variant <variant>", "feature variant to add")
       .option("-y, --yes", "skip confirmation prompts")
       .option("--install", "run npm install / composer install after adding")
@@ -204,14 +205,23 @@ export function buildProgram() {
   ).action(async (feature) => {
     const sub = program.commands.find((c) => c.name() === "add");
     const opts = sub?.opts() || {};
-    const featureId = feature.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
     const dir = process.cwd();
+    if (!opts.list && (!feature || feature.length === 0)) {
+      process.stderr.write("wpdev add: feature id required (or pass --list)\n");
+      process.exit(1);
+      return;
+    }
+    const featureId = feature
+      ? feature.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+      : "";
     return runAdd(
       {
         dir,
         featureId,
         variant: opts.variant,
         runOptions: {
+          list: opts.list,
+          yes: opts.yes,
           force: opts.force,
           install: opts.install,
           verbose: opts.verbose,
@@ -239,8 +249,7 @@ export function buildProgram() {
       .description("list the features in the current project's wpdev-kit.json")
       .option("--json", "emit machine-readable JSON instead of a table"),
   ).action(async () => {
-    const sub = program.commands.find((c) => c.name() === "list");
-    return runList({ argv: tailAfterSubcommand(sub) });
+    return runList(process.cwd(), { engine, ui });
   });
 
   allowPassthrough(
@@ -330,7 +339,9 @@ export function buildProgram() {
       { engine, ui, lookupLatestKit: runners.lookupLatestKit },
     );
     if (!result.ok) {
-      process.stderr.write("wpdev info: " + (result.reason || "unknown") + "\n");
+      process.stderr.write(
+        "wpdev info: " + (result.reason || "unknown") + "\n",
+      );
       process.exit(1);
     }
   });

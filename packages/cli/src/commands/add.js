@@ -1,5 +1,5 @@
 /**
- * `wpsk add <feature>` — add a feature to an existing project.
+ * `wpdev add <feature>` — add a feature to an existing project.
  *
  * Phase I4 (plan.installer.md §I4.3–§I4.6).
  *
@@ -33,6 +33,8 @@
  * unit tests can wire fakes.
  */
 
+import { runList } from "./list.js";
+
 /* -------------------------------------------------------------------- */
 /* runAdd                                                                 */
 /* -------------------------------------------------------------------- */
@@ -49,6 +51,7 @@
  * @typedef {Object} AddDeps
  * @property {Object} engine          { addFeature, getFeatureCatalog }
  * @property {Object} [runners]       { npmInstall, composerInstall, gitInit }
+ * @property {Object} [ui]            { confirm, log, ... }
  */
 
 /**
@@ -75,6 +78,11 @@ export async function runAdd(input, deps = {}) {
   if (!i.dir || typeof i.dir !== "string") {
     return { ok: false, reason: "runAdd: dir is required" };
   }
+
+  if (runOptions.list === true) {
+    return runList({ dir: i.dir }, { engine, ui });
+  }
+
   if (!i.featureId || typeof i.featureId !== "string") {
     return { ok: false, reason: "runAdd: featureId is required" };
   }
@@ -120,6 +128,59 @@ export async function runAdd(input, deps = {}) {
     typeof i.variant === "string" && i.variant.length > 0
       ? i.variant
       : match.variants[0];
+
+  // 3b. Doctor gate (TASK-12a). Surface project errors before
+  //     mutating files; --force skips the check entirely.
+  if (runOptions.force !== true && typeof engine.doctorProject === "function") {
+    let doctorReport;
+    try {
+      doctorReport = engine.doctorProject(i.dir);
+    } catch (e) {
+      return {
+        ok: false,
+        reason:
+          "engine.doctorProject threw: " +
+          (e && e.message ? e.message : String(e)),
+      };
+    }
+    const errors = Array.isArray(doctorReport && doctorReport.errors)
+      ? doctorReport.errors
+      : [];
+    if (errors.length > 0) {
+      if (typeof ui.log === "function") {
+        try {
+          await ui.log("Project doctor reported errors:");
+          for (const err of errors) {
+            await ui.log("  - " + err);
+          }
+        } catch {
+          // Non-fatal — confirmation still runs.
+        }
+      }
+      if (runOptions.yes !== true) {
+        if (typeof ui.confirm !== "function") {
+          return {
+            ok: false,
+            reason:
+              "runAdd: doctor found errors (pass --force or --yes to continue); " +
+              "deps.ui.confirm is missing",
+            doctorErrors: errors,
+          };
+        }
+        const proceed = await ui.confirm({
+          message: "Your project has issues. Continue anyway?",
+          initial: false,
+        });
+        if (proceed !== true) {
+          return {
+            ok: false,
+            reason: "cancelled due to doctor errors",
+            doctorErrors: errors,
+          };
+        }
+      }
+    }
+  }
 
   // 4. Engine call. The `force` flag is forwarded as-is so
   //    tests can assert the call args literally. We do NOT
