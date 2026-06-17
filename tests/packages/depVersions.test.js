@@ -40,7 +40,11 @@ import { describe, test, expect } from "@jest/globals";
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
 
-import { getDepVersions } from "../../packages/create-wp-project/src/dep-versions.js";
+import {
+  getDepVersions,
+  CONSUMER_RUNTIME_WPDEV_PACKAGES,
+  CONSUMER_BUILD_WPDEV_PACKAGES,
+} from "../../packages/create-wp-project/src/dep-versions.js";
 
 /**
  * Resolve the absolute path of the kit's own root package.json.
@@ -141,6 +145,31 @@ describe("getDepVersions() — covers the JS/TS/build chain (Phase 24.8 part 2)"
     // Sanity: must look like a semver range (starts with ^, ~, or a digit).
     expect(ts).toMatch(/^[\^~]?\d/);
   });
+});
+
+describe("getDepVersions() — consumer @wpdev/* package list (TASK-22c)", () => {
+  test("CONSUMER_RUNTIME_WPDEV_PACKAGES omits deprecated @wpdev/fetch", () => {
+    expect(CONSUMER_RUNTIME_WPDEV_PACKAGES).not.toContain("@wpdev/fetch");
+    expect(CONSUMER_RUNTIME_WPDEV_PACKAGES).toContain("@wpdev/rest-utils");
+  });
+
+  test.each(CONSUMER_RUNTIME_WPDEV_PACKAGES)(
+    "registry has a version for consumer runtime package %s",
+    (pkg) => {
+      const m = getDepVersions();
+      expect(m.has(pkg)).toBe(true);
+      expect(typeof m.get(pkg)).toBe("string");
+    },
+  );
+
+  test.each(CONSUMER_BUILD_WPDEV_PACKAGES)(
+    "registry has a version for consumer build package %s",
+    (pkg) => {
+      const m = getDepVersions();
+      expect(m.has(pkg)).toBe(true);
+      expect(typeof m.get(pkg)).toBe("string");
+    },
+  );
 });
 
 describe("getDepVersions() — covers the composer (PHP) chain (Phase 24.8 part 2)", () => {

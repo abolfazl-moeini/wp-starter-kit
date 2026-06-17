@@ -15,7 +15,11 @@
 
 import { readFileSync, existsSync } from "node:fs";
 import * as path from "node:path";
-import { getDepVersions } from "../dep-versions.js";
+import {
+  getDepVersions,
+  CONSUMER_RUNTIME_WPDEV_PACKAGES,
+  CONSUMER_BUILD_WPDEV_PACKAGES,
+} from "../dep-versions.js";
 import { deriveUiFramework } from "../derive-ui-framework.js";
 
 /* -------------------------------------------------------------------- */
@@ -156,29 +160,11 @@ export function packageJsonForAnswers(answers, features) {
     return v.startsWith("^") || v === "*" || v.includes("npm:") ? v : `^${v}`;
   };
 
-  // The 6 @wpdev/* runtime libs (consumed at runtime by the
-  // generated plugin's JS code).
-  const WPDev_RUNTIME_DEPS = [
-    "@wpdev/hooks",
-    "@wpdev/utils",
-    "@wpdev/rest-utils",
-    "@wpdev/html-utils",
-    "@wpdev/translation",
-  ];
-  // The 2 @wpdev/* build tools (compile-time only). The
-  // dep-extraction plugin is a transitive dep of
-  // @wpdev/build, so the consumer only needs to declare
-  // @wpdev/build — but we surface it explicitly for
-  // transparency.
-  const WPDev_BUILD_DEPS = [
-    "@wpdev/build",
-    "@wpdev/dependency-extraction-esbuild-plugin",
-  ];
   const wpskDeps = Object.fromEntries(
-    WPDev_RUNTIME_DEPS.map((name) => [name, versionOf(name)]),
+    CONSUMER_RUNTIME_WPDEV_PACKAGES.map((name) => [name, versionOf(name)]),
   );
   const wpskDevDeps = Object.fromEntries(
-    WPDev_BUILD_DEPS.map((name) => [name, versionOf(name)]),
+    CONSUMER_BUILD_WPDEV_PACKAGES.map((name) => [name, versionOf(name)]),
   );
 
   return {

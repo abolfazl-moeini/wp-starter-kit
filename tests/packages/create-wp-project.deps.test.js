@@ -21,9 +21,9 @@
  *
  * The tests assert the post-23.B4 contract:
  *
- *   1. `package.json.dependencies` includes each of the 6
- *      shippable @wpdev/* lib packages (hooks, utils, rest-utils,
- *      html-utils, fetch, translation) with a non-empty version
+ *   1. `package.json.dependencies` includes each of the 5
+ *      consumer runtime @wpdev/* lib packages (hooks, utils,
+ *      rest-utils, html-utils, translation) with a non-empty version
  *      string. The test does NOT pin the version — that comes
  *      from `getDepVersions()` and the dep-versions test already
  *      cross-checks the four canonical entries.
@@ -78,7 +78,7 @@ describe("@wpdev/create-wp-project — consumer package.json deps (Phase 23.B3/B
   }
 
   /* ------------------------------------------------------------------ */
-  /* Runtime @wpdev/* deps (6 lib packages)                                */
+  /* Runtime @wpdev/* deps (5 consumer lib packages)                       */
   /* ------------------------------------------------------------------ */
 
   test.each([

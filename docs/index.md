@@ -12,8 +12,8 @@
 | [build-system.md](build-system.md)                       | The four-stage esbuild pipeline            | You're adding a new build step or debugging a build failure.                                 |
 | [build-outputs.md](build-outputs.md)                     | What's in `dist/` and `assets/`            | You need to know which file the browser will request.                                        |
 | [hooks.md](hooks.md)                                     | WordPress hook prefix convention           | You're registering a hook or filter and need the right namespace.                            |
-| [js-hooks.md](js-hooks.md)                               | JS hook inventory (`@wpdev/hooks`)         | You're subscribing to REST/WDForm events or adding a new JS hook.                              |
-| [element-props.md](element-props.md)                     | `elementProps()` DOM → props helper        | You're hydrating a Preact/React widget from `data-*` attributes.                           |
+| [js-hooks.md](js-hooks.md)                               | JS hook inventory (`@wpdev/hooks`)         | You're subscribing to REST/WDForm events or adding a new JS hook.                            |
+| [element-props.md](element-props.md)                     | `elementProps()` DOM → props helper        | You're hydrating a Preact/React widget from `data-*` attributes.                             |
 | [localize-contract.md](localize-contract.md)             | JS↔PHP localize contract                   | You're adding a new field to `wp_localize_script`.                                           |
 | [react-preact.md](react-preact.md)                       | The original Phase 5 notes (pragma-based)  | You're reading the old code that uses `/** @jsx h */`.                                       |
 | [react-preact-switch.md](react-preact-switch.md)         | The new `uiFramework` switch (alias-based) | You're picking the framework for a new project.                                              |
@@ -21,11 +21,11 @@
 | [css-variants.md](css-variants.md)                       | Sass / Tailwind / PostCSS / plain CSS      | You're picking a CSS build toolchain or switching later.                                     |
 | [blocks.md](blocks.md)                                   | Blockstudio blocks feature (`blocks:on`)   | You're adding block editor support to a generated plugin.                                    |
 | [blocks-blockstudio.md](blocks-blockstudio.md)           | Blockstudio layout, fields, and bridge     | You're authoring blocks or debugging Blockstudio registration.                               |
-| [features-and-manifest.md](features-and-manifest.md)     | Feature model + `wpdev-kit.json` manifest   | You're wiring the installer, add/update flows, or reading feature state.                     |
+| [features-and-manifest.md](features-and-manifest.md)     | Feature model + `wpdev-kit.json` manifest  | You're wiring the installer, add/update flows, or reading feature state.                     |
 | [framework-as-dependency.md](framework-as-dependency.md) | Composer/npm framework deps + `distMode`   | You're shipping or updating framework code as dependencies instead of copies.                |
 | [updating-projects.md](updating-projects.md)             | Migrations, doctor, update plan            | You're upgrading a consumer project to a newer kit version.                                  |
 | [wpdev-adapter.md](wpdev-adapter.md)                     | Optional wpdev-framework bridge            | You're integrating wpdev-framework alongside WPDev modules.                                  |
-| [scaffold.md](scaffold.md)                               | `@wpdev/create-wp-project` usage            | You're generating a new project from the starter.                                            |
+| [scaffold.md](scaffold.md)                               | `@wpdev/create-wp-project` usage           | You're generating a new project from the starter.                                            |
 | [translation.md](translation.md)                         | The JS+PHP translation pipeline            | You're adding translatable strings or running the pipeline.                                  |
 | [patch.md](patch.md)                                     | Patches and upgrades                       | You need to upgrade a consumer project to a newer starter.                                   |
 | [asset-mappings.md](asset-mappings.md)                   | How `import` paths become globals          | You're debugging "X is undefined" in a built bundle.                                         |
@@ -38,6 +38,17 @@
 | [php-core-libs.md](php-core-libs.md)                     | Reimplemented PHP support libraries        | You're extending REST, queue, or shortcode helpers.                                          |
 | [installer.md](installer.md)                             | `wpdev` CLI installer guide                | You're scaffolding a new project, adding/removing features, or upgrading to a newer kit.     |
 | [contributing.md](contributing.md)                       | Branching, commits, review                 | You want to open a PR.                                                                       |
+
+## Architecture decision records (ADRs)
+
+Recorded choices that are expensive to re-litigate. Read before proposing
+alternatives to Strauss, esbuild, or the default UI library.
+
+| ADR                                                              | Decision                                                   |
+| ---------------------------------------------------------------- | ---------------------------------------------------------- |
+| [001-strauss-vs-php-scoper.md](adr/001-strauss-vs-php-scoper.md) | Strauss for Composer vendor prefixing in WordPress plugins |
+| [002-esbuild-over-webpack.md](adr/002-esbuild-over-webpack.md)   | esbuild for the multi-entry IIFE build pipeline            |
+| [003-preact-default.md](adr/003-preact-default.md)               | Preact + `@preact/compat` as the default `jsLib`           |
 
 ## v3 / installer
 

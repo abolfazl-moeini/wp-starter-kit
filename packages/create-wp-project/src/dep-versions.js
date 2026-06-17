@@ -245,24 +245,39 @@ const REQUIRED_JS_ENTRIES = [
 ];
 
 /**
- * The list of shippable @wpdev/* package names whose versions
- * are read live from the kit's own workspace package.json
- * files (see `readKitPackageVersion` above). Adding a package
- * here without adding it to `publishable.test.js`'s list of
- * shippable packages (or vice versa) is a contract bug —
- * `depVersions.test.js` cross-checks that the two lists agree.
+ * Runtime @wpdev/* packages the scaffold and `wpdev add js` emit in
+ * consumer `package.json → dependencies`. Single source of truth —
+ * `_templates.js` imports this list so the generator and update planner
+ * stay aligned. `@wpdev/fetch` is intentionally absent: batch fetch
+ * lives in `@wpdev/rest-utils/fetch` (see TASK-22b); the fetch package
+ * is a deprecated BC shim only.
  */
-const REQUIRED_WPDEV_PACKAGES = [
-  // Runtime libs (consumer `dependencies`)
+export const CONSUMER_RUNTIME_WPDEV_PACKAGES = [
   "@wpdev/hooks",
   "@wpdev/utils",
   "@wpdev/rest-utils",
   "@wpdev/html-utils",
-  "@wpdev/fetch",
   "@wpdev/translation",
-  // Build tools (consumer `devDependencies`)
+];
+
+/**
+ * Build-time @wpdev/* packages emitted in consumer `devDependencies`.
+ */
+export const CONSUMER_BUILD_WPDEV_PACKAGES = [
   "@wpdev/build",
   "@wpdev/dependency-extraction-esbuild-plugin",
+];
+
+/**
+ * The list of shippable @wpdev/* package names whose versions
+ * are read live from the kit's own workspace package.json
+ * files (see `readKitPackageVersion` above). Consumer scaffold
+ * lists use CONSUMER_* constants above; the registry also tracks
+ * deprecated shims so `planUpdate` can report removals.
+ */
+const REQUIRED_WPDEV_PACKAGES = [
+  ...CONSUMER_RUNTIME_WPDEV_PACKAGES,
+  ...CONSUMER_BUILD_WPDEV_PACKAGES,
 ];
 
 const REQUIRED_COMPOSER_ENTRIES = [
