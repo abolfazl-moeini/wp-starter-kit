@@ -1,3 +1,6 @@
 [submodule "packages/polaris-stack"]
 	path = packages/polaris-stack
 	url = git@github.com:abolfazl-moeini/polaris-stack.git
+[submodule "packages/mcp-integration"]
+	path = packages/mcp-integration
+	url = git@github.com:abolfazl-moeini/wp-mcp-integration.git
