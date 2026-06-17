@@ -118,16 +118,33 @@ final class Plugin {
 			self::$config_cache = $config;
 		}
 
-		self::$loader    = new ModuleLoader( $hook_prefix );
+		// Preserve any loader that was created and populated BEFORE
+		// boot() ran (via Plugin::loader()->register(...) in a priority-5
+		// `plugins_loaded` closure, or in a mu-plugin / wp-cli /
+		// test-bootstrap include order). Replacing it would silently
+		// drop every module the caller already registered.
+		//
+		// The pre-existing loader's hook_prefix is used as-is. The
+		// config-derived prefix applies to the newly created loader in
+		// the (more common) case where Plugin::loader() was never
+		// touched before boot().
+		if ( null === self::$loader ) {
+			self::$loader = new ModuleLoader( $hook_prefix );
+		}
 		self::$instance  = new self();
 		self::$booted    = true;
 		self::$last_hook = $hook_prefix . '_plugin_loaded';
 
 		// Wire into WordPress. add_action is a no-op shim in the
 		// project's test bootstrap, so this is safe in unit tests.
+		//
+		// We only register on `plugins_loaded` (not `init`). Registering
+		// on both would cause `on_plugins_loaded` to fire twice on every
+		// normal request — WordPress fires `plugins_loaded` first and
+		// then `init`, and there is no scenario in our supported runtimes
+		// where `plugins_loaded` is unavailable but `init` is.
 		if ( function_exists( 'add_action' ) ) {
 			\add_action( 'plugins_loaded', array( self::class, 'on_plugins_loaded' ), 10, 0 );
-			\add_action( 'init', array( self::class, 'on_plugins_loaded' ), 10, 0 );
 		}
 
 		if ( function_exists( 'do_action' ) ) {

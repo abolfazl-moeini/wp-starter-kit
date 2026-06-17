@@ -87,16 +87,33 @@ function wpsk_starter_load_textdomain(): void {
 	);
 }
 
-add_action(
-	'plugins_loaded',
-	static function (): void {
-		WPSK\Core\Plugin::loader()->register( new WPSK\Modules\ExampleFeature\Module() );
-	},
-	5
-);
+/**
+ * Register every feature module on the active Plugin loader.
+ *
+ * Exposed as a named function (rather than an inline closure) so the
+ * late-load fallback below — which fires when `wpsk-starter.php` is
+ * included AFTER `plugins_loaded` has already happened (mu-plugins,
+ * wp-cli, test bootstrap) — can re-run registration. An inline
+ * closure cannot be called a second time by name; a function can.
+ */
+function wpsk_starter_register_modules(): void {
+	WPSK\Core\Plugin::loader()->register( new WPSK\Modules\ExampleFeature\Module() );
+}
 
+add_action( 'plugins_loaded', 'wpsk_starter_register_modules', 5 );
 add_action( 'plugins_loaded', 'WPSK\\Core\\Plugin::boot', 10, 0 );
 
-if (did_action( 'plugins_loaded' )) {
+if ( did_action( 'plugins_loaded' ) ) {
+	// Late load: wpsk-starter.php was included after `plugins_loaded`
+	// already fired, so the add_action() calls above are too late to
+	// run. Re-run both halves of the normal flow so the plugin still
+	// boots: register the modules, run Plugin::boot() (which is
+	// idempotent and preserves the pre-existing loader — see the
+	// boot() implementation), then explicitly call boot_all() on
+	// the loader. boot_all() fires the `_modules_loaded` action
+	// internally, so third-party listeners still see the signal
+	// even though `on_plugins_loaded` will not fire on this request.
 	WPSK\Core\Plugin::boot();
+	wpsk_starter_register_modules();
+	WPSK\Core\Plugin::loader()->boot_all();
 }

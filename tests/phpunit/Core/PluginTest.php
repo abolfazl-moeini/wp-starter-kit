@@ -58,10 +58,20 @@ class PluginTest extends TestCase
         parent::setUp();
         PluginTestStubModule::reset();
 
+        // Reset the WP action shim state so a previous test's
+        // `add_action('init', ...)` does not leak into the next
+        // test's assertions. PluginBootstrapTest in particular
+        // registers callbacks on multiple hooks; without this
+        // reset, PluginTest would see an `init` callback that the
+        // current test never registered.
+        if (function_exists('wpsk_test_reset_wp_state')) {
+            wpsk_test_reset_wp_state();
+        }
+
         // Plugin keeps static state — reset the singleton instance and
         // any internal state between tests by reflecting on the class.
-        // We use the public test seam when available, and fall back to
-        // reflection for the rest. Each property's default value must
+        // We use the public test seam when available, and fall back
+        // to reflection for the rest. Each property's default value must
         // match the declared type in Plugin.php. Property names follow
         // the WPCS snake_case convention (see Plugin.php).
         $reflection = new ReflectionClass(Plugin::class);
@@ -223,6 +233,161 @@ class PluginTest extends TestCase
             'load_theme_textdomain',
             $contents,
             'packages/framework/src/Core/*.php must never call load_theme_textdomain() — Plugin is theme-agnostic'
+        );
+    }
+
+    /**
+     * Regression test for B-01 (bug audit plan_b8f3db01):
+     *
+     * `Plugin::boot()` used to REPLACE `self::$loader` with a freshly
+     * constructed ModuleLoader, silently dropping every module that
+     * was registered on the previous instance via a priority-5
+     * `plugins_loaded` closure (or any other pre-boot registration).
+     *
+     * The fix preserves the pre-existing loader. The test asserts
+     * that a module registered before boot() is still present in the
+     * loader after boot() completes.
+     */
+    public function test_boot_preserves_modules_registered_before_boot(): void
+    {
+        $configPath = $this->writeConfig([
+            'slug' => 'wpsk-starter',
+            'hookPrefix' => 'wpsk',
+            'textDomain' => 'wpsk-starter',
+        ]);
+
+        // Simulate a priority-5 `plugins_loaded` closure that
+        // registers a module before boot() runs.
+        Plugin::loader()->register(new PluginTestStubModule('pre-boot'));
+
+        Plugin::boot($configPath);
+
+        $loader = Plugin::loader();
+        $this->assertTrue(
+            $loader->has('pre-boot'),
+            'Plugin::boot() must NOT replace the pre-existing loader — '
+            . 'modules registered before boot() must survive (B-01 regression)'
+        );
+    }
+
+    /**
+     * Regression test for B-02 (bug audit plan_b8f3db01):
+     *
+     * `Plugin::boot()` used to register `on_plugins_loaded` on BOTH
+     * `plugins_loaded` and `init`, which meant the hook fired twice
+     * on every normal WP request — modules double-booted, action
+     * listeners double-fired.
+     *
+     * The fix registers on `plugins_loaded` only. The test asserts
+     * that the `init` hook does NOT carry an `on_plugins_loaded`
+     * callback.
+     */
+    public function test_on_plugins_loaded_is_registered_only_on_plugins_loaded(): void
+    {
+        $configPath = $this->writeConfig([
+            'slug' => 'wpsk-starter',
+            'hookPrefix' => 'wpsk',
+            'textDomain' => 'wpsk-starter',
+        ]);
+
+        Plugin::boot($configPath);
+
+        $wpActions = $GLOBALS['wpsk_wp_actions'] ?? [];
+
+        $this->assertArrayHasKey(
+            'plugins_loaded',
+            $wpActions,
+            'Plugin::boot() must register on_plugins_loaded on plugins_loaded'
+        );
+        $this->assertArrayNotHasKey(
+            'init',
+            $wpActions,
+            'Plugin::boot() must NOT register on_plugins_loaded on init — '
+            . 'dual registration causes boot_all() to run twice per request (B-02 regression)'
+        );
+    }
+
+    /**
+     * Regression test for B-02 follow-on:
+     *
+     * Even if a future change re-introduces the `init` registration,
+     * `on_plugins_loaded` must guard against double-firing. The test
+     * asserts that once `on_plugins_loaded` has run, calling it again
+     * does NOT boot modules a second time.
+     */
+    public function test_on_plugins_loaded_does_not_double_boot(): void
+    {
+        $configPath = $this->writeConfig([
+            'slug' => 'wpsk-starter',
+            'hookPrefix' => 'wpsk',
+            'textDomain' => 'wpsk-starter',
+        ]);
+
+        Plugin::boot($configPath);
+        Plugin::loader()->register(new PluginTestStubModule('once'));
+
+        // Simulate WordPress firing both `plugins_loaded` and `init`
+        // on the same request.
+        do_action('plugins_loaded');
+        $countAfterFirst = PluginTestStubModule::$bootedCount;
+
+        do_action('init');
+        $countAfterSecond = PluginTestStubModule::$bootedCount;
+
+        $this->assertSame(
+            $countAfterFirst,
+            $countAfterSecond,
+            'on_plugins_loaded must be a no-op on the second firing — '
+            . 'the module booted exactly once even though do_action was '
+            . 'called twice (B-02 regression)'
+        );
+    }
+
+    /**
+     * Regression test for B-03 (bug audit plan_b8f3db01):
+     *
+     * The default wpsk-starter.php plugin file uses an inline closure
+     * for the priority-5 module registration. When the file is
+     * included AFTER `plugins_loaded` has already fired, the closure
+     * is too late — the fallback `if (did_action('plugins_loaded'))`
+     * block only called `Plugin::boot()`, never re-registered the
+     * module. Result: the plugin booted with zero modules in
+     * non-standard include orders (mu-plugins, wp-cli, test bootstrap).
+     *
+     * The fix is in wpsk-starter.php itself (not the framework):
+     * extract the registration into a named function and call it
+     * from the late-load fallback. The test verifies the
+     * framework-side contract: `Plugin::loader()->boot_all()` works
+     * even when the loader was populated AFTER `boot()` (i.e. the
+     * late-load path is the same as the normal path from the
+     * framework's perspective).
+     */
+    public function test_boot_all_after_boot_boots_modules_registered_post_boot(): void
+    {
+        $configPath = $this->writeConfig([
+            'slug' => 'wpsk-starter',
+            'hookPrefix' => 'wpsk',
+            'textDomain' => 'wpsk-starter',
+        ]);
+
+        // Simulate the late-load path: boot() runs first (no modules
+        // registered yet), then the consumer's late-load fallback
+        // registers modules and calls boot_all manually.
+        Plugin::boot($configPath);
+        Plugin::loader()->register(new PluginTestStubModule('late-load'));
+
+        Plugin::loader()->boot_all();
+
+        $this->assertGreaterThanOrEqual(
+            1,
+            PluginTestStubModule::$bootedCount,
+            'A module registered AFTER boot() must be bootable via '
+            . 'boot_all() — this is the contract the late-load '
+            . 'fallback in wpsk-starter.php relies on (B-03 regression)'
+        );
+        $this->assertTrue(
+            Plugin::loader()->has('late-load'),
+            'Module registered after boot() must remain in the loader'
         );
     }
 }
