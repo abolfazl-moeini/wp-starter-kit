@@ -165,32 +165,6 @@ if ( ! function_exists( 'wpsk_enqueue_bundle_style_at' ) ) {
 	}
 }
 
-if ( ! function_exists( 'wpsk_stylesheet_file_path' ) ) {
-	/**
-	 * BC shim — stylesheet file path. **Preserved theme-based behaviour**
-	 * for the same reason as `wpsk_bundle_file_path()`.
-	 *
-	 * @param string $file_name Stylesheet file name (e.g. `style.css`).
-	 * @return string
-	 */
-	function wpsk_stylesheet_file_path( $file_name ) {
-		return untrailingslashit( get_template_directory() ) . '/assets/stylesheets/' . $file_name;
-	}
-}
-
-if ( ! function_exists( 'wpsk_stylesheet_file_url' ) ) {
-	/**
-	 * BC shim — stylesheet file URL. **Preserved theme-based behaviour**
-	 * for the same reason as `wpsk_stylesheet_file_path()`.
-	 *
-	 * @param string $file_name Stylesheet file name (e.g. `style.css`).
-	 * @return string
-	 */
-	function wpsk_stylesheet_file_url( $file_name ) {
-		return untrailingslashit( get_template_directory_uri() ) . '/assets/stylesheets/' . $file_name;
-	}
-}
-
 if ( ! function_exists( 'wpsk_enqueue_stylesheet' ) ) {
 	/**
 	 * BC shim — enqueue a theme stylesheet.
@@ -204,6 +178,59 @@ if ( ! function_exists( 'wpsk_enqueue_stylesheet' ) ) {
 			wpsk_stylesheet_file_path( $file_name ),
 			$extra_deps
 		);
+	}
+}
+
+/**
+ * Helper: resolve the stylesheet base directory.
+ *
+ * Returns the active theme's directory in the original theme-mode
+ * flow (the legacy default), but switches to the plugin directory
+ * when `WPSK_STARTER_PLUGIN_DIR` is defined. The plugin-mode path
+ * lets a consumer keep `functions.php` (against the deprecation
+ * notice at functions.php:24-47) without getting a broken
+ * `<parent-theme>/assets/stylesheets/...` URL pointing at a
+ * non-existent location.
+ *
+ * @return string
+ */
+function wpsk_stylesheet_base_dir(): string {
+	if ( defined( 'WPSK_STARTER_PLUGIN_DIR' ) ) {
+		return untrailingslashit( WPSK_STARTER_PLUGIN_DIR );
+	}
+	return untrailingslashit( get_template_directory() );
+}
+
+if ( ! function_exists( 'wpsk_stylesheet_file_path' ) ) {
+	/**
+	 * BC shim — stylesheet file path. **Preserved theme-based behaviour**
+	 * for the same reason as `wpsk_bundle_file_path()`. Plugin-mode
+	 * consumers should define `WPSK_STARTER_PLUGIN_DIR` to get the
+	 * right base (see `wpsk_stylesheet_base_dir()`).
+	 *
+	 * @param string $file_name Stylesheet file name (e.g. `style.css`).
+	 * @return string
+	 */
+	function wpsk_stylesheet_file_path( $file_name ) {
+		return wpsk_stylesheet_base_dir() . '/assets/stylesheets/' . $file_name;
+	}
+}
+
+if ( ! function_exists( 'wpsk_stylesheet_file_url' ) ) {
+	/**
+	 * BC shim — stylesheet file URL. Same plugin-mode switch as
+	 * `wpsk_stylesheet_file_path()` — when `WPSK_STARTER_PLUGIN_DIR`
+	 * is defined, the URL is built from the plugin's URL, not the
+	 * active theme's URL.
+	 *
+	 * @param string $file_name Stylesheet file name (e.g. `style.css`).
+	 * @return string
+	 */
+	function wpsk_stylesheet_file_url( $file_name ) {
+		if ( defined( 'WPSK_STARTER_PLUGIN_DIR' ) && defined( 'WPSK_STARTER_PLUGIN_URL' ) ) {
+			return untrailingslashit( WPSK_STARTER_PLUGIN_URL ) . '/assets/stylesheets/' . $file_name;
+		}
+		return untrailingslashit( get_template_directory_uri() ) . '/assets/stylesheets/' . $file_name;
 	}
 }
 
