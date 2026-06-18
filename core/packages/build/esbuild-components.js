@@ -109,13 +109,14 @@ async function buildSingleComponent({
     },
     outfile: bundleFile,
     loader: { ".js": "jsx", ".ts": "ts", ".tsx": "tsx" },
-    plugins: [
-      importAsGlobals(globalMappings, internalItems),
-      assetSidecarPlugin(depsHandle, internalItems),
-    ],
+    plugins: [importAsGlobals(globalMappings, internalItems)],
   };
 
   if (watch) {
+    esbuildOptions.plugins = [
+      ...esbuildOptions.plugins,
+      assetSidecarPlugin(depsHandle, internalItems),
+    ];
     const ctx = await context(esbuildOptions);
     await ctx.watch();
     console.info(`Watching: ${bundleFile}`);

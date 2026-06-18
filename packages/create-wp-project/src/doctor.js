@@ -56,8 +56,7 @@
  *     is the supported cleanup path).
  */
 
-import { existsSync } from "node:fs";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import * as path from "node:path";
 
 import { readManifest, MANIFEST_SCHEMA } from "./manifest.js";

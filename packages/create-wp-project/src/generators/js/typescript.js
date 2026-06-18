@@ -14,8 +14,7 @@
  * answers.
  */
 
-import { renderTemplate } from "../_templates.js";
-import { TEMPLATE_DEPENDENCIES_TS } from "../_templates.js";
+import { renderTemplate, TEMPLATE_DEPENDENCIES_TS } from "../_templates.js";
 
 export function run(ctx) {
   const { answers, vars } = ctx;

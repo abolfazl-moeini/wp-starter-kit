@@ -66,7 +66,12 @@ export function createFieldArray(store, name) {
       writeRows(rows);
     },
     swap(a, b) {
-      this.move(a, b);
+      const rows = [...readRows()];
+      if (a < 0 || b < 0 || a >= rows.length || b >= rows.length) {
+        return;
+      }
+      [rows[a], rows[b]] = [rows[b], rows[a]];
+      writeRows(rows);
     },
   };
 }

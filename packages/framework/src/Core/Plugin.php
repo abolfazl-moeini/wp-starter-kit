@@ -184,11 +184,6 @@ final class Plugin {
 	}
 
 	/**
-	 * Return the module loader, creating it on demand if {@see
-	 * Plugin::boot()} has not run yet. Useful for code that needs
-	 * to register a module before boot() finishes.
-	 */
-	/**
 	 * Test seam / optional accessor for the booted singleton.
 	 *
 	 * @return self|null
@@ -197,6 +192,11 @@ final class Plugin {
 		return self::$instance;
 	}
 
+	/**
+	 * Return the module loader, creating it on demand if {@see
+	 * Plugin::boot()} has not run yet. Useful for code that needs
+	 * to register a module before boot() finishes.
+	 */
 	public static function loader(): ModuleLoader {
 		if ( null === self::$loader ) {
 			self::$loader = new ModuleLoader( 'wpdev' );

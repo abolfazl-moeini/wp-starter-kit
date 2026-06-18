@@ -213,10 +213,6 @@ function computeDepChanges(dir) {
 /* planUpdate                                                            */
 /* -------------------------------------------------------------------- */
 
-/* -------------------------------------------------------------------- */
-/* planUpdate                                                            */
-/* -------------------------------------------------------------------- */
-
 /**
  * Build the update plan for a project rooted at `dir`. NEVER
  * writes to disk. The caller is responsible for any user-

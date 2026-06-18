@@ -4,8 +4,6 @@ import {
   defaultRequestToHandle,
   internalRequestToHandle,
   defaultRequestToExternal,
-} from "./utils.js";
-import {
   onlyUnique,
   assetFilePath,
   writeFile,

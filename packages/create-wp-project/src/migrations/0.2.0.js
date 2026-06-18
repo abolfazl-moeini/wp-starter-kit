@@ -11,8 +11,7 @@
  *
  * Also updates project.config.json mirror if present.
  */
-import { existsSync } from "node:fs";
-import { promises as fs } from "node:fs";
+import { existsSync, promises as fs } from "node:fs";
 import * as path from "node:path";
 import { updateJsonFile } from "../json-utils.js";
 

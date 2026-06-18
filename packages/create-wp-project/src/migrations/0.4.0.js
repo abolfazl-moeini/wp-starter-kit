@@ -10,8 +10,7 @@
  * Idempotent: skips when husky is off; does not overwrite existing commitlint config.
  */
 
-import { existsSync } from "node:fs";
-import { promises as fs } from "node:fs";
+import { existsSync, promises as fs } from "node:fs";
 import * as path from "node:path";
 
 import { readManifest } from "../manifest.js";

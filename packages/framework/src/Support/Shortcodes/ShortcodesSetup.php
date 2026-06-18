@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace WPDev\Support\Shortcodes;
 
-use WP_Shortcode;
-
 /**
  * Registration and rendering for class-based shortcodes.
  * Reimplemented (new code).

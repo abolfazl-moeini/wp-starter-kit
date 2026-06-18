@@ -68,11 +68,6 @@ export function WDForm(props) {
 
   const store = storeRef.current;
 
-  const lastPropsRef = useRef(props);
-  useEffect(() => {
-    lastPropsRef.current = props;
-  });
-
   useEffect(() => {
     store.configure({
       rules: props.rules,

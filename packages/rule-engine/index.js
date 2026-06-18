@@ -140,7 +140,8 @@ export class RuleEngine {
         restart: () => runRule(0),
         stop: () => {
           complete = true;
-          runRule(0);
+          session.matchPath = matchPath;
+          next(() => cb(session));
         },
         next: () => {
           if (!ignore && !isEqualish(lastSession, session)) {

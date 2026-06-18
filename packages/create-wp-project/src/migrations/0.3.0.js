@@ -8,8 +8,7 @@
  * Idempotent and safe.
  */
 
-import { existsSync } from "node:fs";
-import { promises as fs } from "node:fs";
+import { existsSync, promises as fs } from "node:fs";
 import * as path from "node:path";
 import { updateJsonFile } from "../json-utils.js";
 
@@ -60,10 +59,8 @@ export async function run(dir) {
       await updateJsonFile(cfgPath, (cfg) => {
         if (!cfg || typeof cfg !== "object") return cfg;
 
-        let patched = false;
         for (const [k, oldVal] of Object.entries(LEGACY_DEFAULTS)) {
           if (cfg[k] === oldVal) {
-            // Map to new defaults (basic ones)
             if (k === "slug") cfg[k] = "wpdev-starter";
             else if (k === "globalName") cfg[k] = "WPDev";
             else if (k === "localizeVar") cfg[k] = "WPDevLoc";
@@ -74,7 +71,6 @@ export async function run(dir) {
             else if (k === "phpFunctionPrefix") cfg[k] = "wpdev_";
             else if (k === "restNamespace") cfg[k] = "wpdev/v1";
             else if (k === "vendorPrefix") cfg[k] = "WpdevVendor";
-            patched = true;
           }
         }
         return cfg;

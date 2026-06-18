@@ -37,6 +37,8 @@ function fireHook(hooksPlugin, hookPrefix, hookName, ...args) {
  * @property {(values: Record<string, *>, api: WDFormStoreApi) => void|Promise<void>} [onSubmit]
  * @property {(entityId: string|number) => void|Promise<void>} [onDelete]
  * @property {boolean} [resetAfterSubmit]
+ * @property {boolean} [autoSave] - Automatically submit after each field change (debounced).
+ * @property {number} [autoSaveDelay] - Debounce delay in ms for autoSave (default: 800).
  * @property {object} [hooksPlugin]
  * @property {string} [hookPrefix]
  */

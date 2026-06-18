@@ -21,8 +21,10 @@
  * vendorScoping toggles.
  */
 
-import { renderTemplate } from "./_templates.js";
-import { TEMPLATE_STRAUSS_JSON_NO_WPDEV_EXCLUSION } from "./_templates.js";
+import {
+  renderTemplate,
+  TEMPLATE_STRAUSS_JSON_NO_WPDEV_EXCLUSION,
+} from "./_templates.js";
 
 export function run(ctx) {
   if (ctx.features.vendorScoping !== "on") {

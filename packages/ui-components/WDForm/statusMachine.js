@@ -21,7 +21,8 @@ export function canTransitionStatus(current, next) {
   if (current === "idle" && (next === "loading" || next === "submitting")) {
     return true;
   }
-  if (current === "loading" && next === "idle") return true;
+  if (current === "loading" && (next === "idle" || next === "error"))
+    return true;
   if (current === "submitting" && (next === "success" || next === "error")) {
     return true;
   }

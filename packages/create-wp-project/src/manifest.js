@@ -151,22 +151,15 @@ export async function writeManifest(dir, manifest) {
  * @param {string} dir
  * @returns {Object|null}
  */
-const LEGACY_MANIFEST_FILENAME = "wpdev-kit.json";
-
 export function readManifest(dir) {
   if (!dir || typeof dir !== "string") {
     throw new Error("readManifest: dir is required (string)");
   }
   const file = path.join(dir, MANIFEST_FILENAME);
-  const legacyFile = path.join(dir, LEGACY_MANIFEST_FILENAME);
-  const manifestPath = existsSync(file)
-    ? file
-    : existsSync(legacyFile)
-      ? legacyFile
-      : null;
-  if (!manifestPath) {
+  if (!existsSync(file)) {
     return null;
   }
+  const manifestPath = file;
   let raw;
   try {
     raw = readFileSync(manifestPath, "utf8");

@@ -348,10 +348,10 @@ export async function runPrompts(plan, ui, prefill) {
       throw new Error("runPrompts: unknown question type: " + q.type);
     }
 
-    // Cancel = user pressed Ctrl-C. clack returns `undefined` (or
-    // a symbol in newer versions). Treat any non-string as a
-    // graceful abort.
-    if (value === undefined || value === null) {
+    // Cancel = user pressed Ctrl-C. clack returns a Symbol
+    // (Symbol.for("clack:cancel")) or undefined. Treat both as
+    // a graceful abort.
+    if (value === undefined || value === null || typeof value === "symbol") {
       const err = new Error("user cancelled");
       err.code = "WPDEV_USER_CANCELLED";
       throw err;

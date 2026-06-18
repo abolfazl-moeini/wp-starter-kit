@@ -9,8 +9,8 @@
  * modules from scratch).
  */
 
-import { renderTemplate } from "./_templates.js";
 import {
+  renderTemplate,
   TEMPLATE_EXAMPLE_FEATURE_MODULE_PHP,
   TEMPLATE_EXAMPLE_FEATURE_ITEMS_CONTROLLER,
   TEMPLATE_EXAMPLE_FEATURE_ADMIN_TS,
@@ -51,9 +51,8 @@ export function run(ctx) {
 
   const jsTest = ctx.features.jsTest || "jest";
   if (jsTest === "jest" && ctx.features.js !== "none") {
-    files[
-      "src/Modules/ExampleFeature/assets/entries/__tests__/admin.test.ts"
-    ] = TEMPLATE_EXAMPLE_FEATURE_ADMIN_TEST_TS;
+    files["src/Modules/ExampleFeature/assets/entries/__tests__/admin.test.ts"] =
+      TEMPLATE_EXAMPLE_FEATURE_ADMIN_TEST_TS;
     dirs.push("src/Modules/ExampleFeature/assets/entries/__tests__");
   }
 
