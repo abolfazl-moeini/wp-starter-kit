@@ -50,6 +50,23 @@ class WpdevAdapterTest extends TestCase
         $this->assertTrue($booted);
     }
 
+    public function test_attach_is_idempotent_per_module_slug(): void
+    {
+        $bootCount = 0;
+        $module = new class($bootCount) implements ModuleInterface {
+            private $bootCount;
+            public function __construct(&$bootCount) {
+                $this->bootCount = &$bootCount;
+            }
+            public function get_slug(): string { return 'idempotent-demo'; }
+            public function boot(): void { $this->bootCount++; }
+        };
+
+        WpdevModuleAdapter::attach($module);
+        WpdevModuleAdapter::attach($module);
+        $this->assertSame(1, $bootCount);
+    }
+
     /**
      * @runInSeparateProcess
      */

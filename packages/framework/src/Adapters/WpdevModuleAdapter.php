@@ -14,6 +14,9 @@ use WPDev\Core\ModuleInterface;
  */
 final class WpdevModuleAdapter
 {
+    /** @var array<string, true> */
+    private static $attached = [];
+
     /** @var ModuleInterface */
     private $module;
 
@@ -37,9 +40,15 @@ final class WpdevModuleAdapter
         return function_exists('wpdev_register_table'); // framework public API present
     }
 
-    /** Register a kit module to boot on the framework's `wpdev_load` hook. */
+    /** Register a kit module to boot on the framework's `wpdev_on_load` hook. */
     public static function attach(ModuleInterface $module): void
     {
+        $slug = $module->get_slug();
+        if (isset(self::$attached[$slug])) {
+            return;
+        }
+        self::$attached[$slug] = true;
+
         if (self::is_framework_active() && function_exists('wpdev_on_load')) {
             \wpdev_on_load(static function () use ($module) { $module->boot(); });
             return;

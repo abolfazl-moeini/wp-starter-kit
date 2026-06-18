@@ -83,7 +83,14 @@ describe("phpFramework:wpdev companion scaffold", () => {
     const out = phpFrameworkRun(makeCtx());
     const mod = out.files["src/Modules/WpdevDemo/Module.php"];
     expect(mod).toMatch(/wpdev_register_module_admin_pages/);
-    expect(mod).toMatch(/wpdev_register_table/);
+    expect(mod).not.toMatch(/extends\s+Base_Admin_Page/);
+  });
+
+  test("demo module is standalone-safe (no framework class references at load time)", () => {
+    const out = phpFrameworkRun(makeCtx());
+    const mod = out.files["src/Modules/WpdevDemo/Module.php"];
+    expect(mod).not.toMatch(/^\s*use WPDevFramework\\/m);
+    expect(mod).not.toMatch(/class\s+\w+\s+extends\s+/);
   });
 
   test("register file attaches demo module via WpdevModuleAdapter::attach", () => {

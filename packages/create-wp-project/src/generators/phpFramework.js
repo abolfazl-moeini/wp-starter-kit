@@ -103,7 +103,7 @@ final class FrameworkBridge
     {
         ?>
         <div class="notice notice-warning is-dismissible">
-            <p><?php echo esc_html__('This plugin works best with the WPDev Framework. Install the plugin in \`companion-plugins/wpdev/\`.', '{{textDomain}}'); ?></p>
+            <p><?php echo esc_html__('This plugin works best with the WPDev Framework. Install the plugin in companion-plugins/wpdev/.', '{{textDomain}}'); ?></p>
         </div>
         <?php
     }
@@ -117,26 +117,15 @@ namespace {{vendor}}\\Modules\\WpdevDemo;
 
 use {{frameworkNamespace}}\\Core\\ModuleInterface;
 use {{vendor}}\\Support\\FrameworkBridge;
-use WPDevFramework\\Admin_Pages\\Base_Admin_Page;
 
 /**
- * Demo module showcasing integration with the WPDev Admin Framework.
+ * Standalone-safe admin page stub for the framework module API.
+ *
+ * Extend WPDevFramework\\Admin_Pages\\Base_Admin_Page in your own modules
+ * when the companion framework is active.
  */
-final class Demo_Admin_Page extends Base_Admin_Page
+final class Demo_Admin_Page
 {
-    protected $id = 'wpdev-demo';
-    protected $title = 'WPDev Demo';
-    protected $menu_title = 'WPDev Demo';
-
-    public function output(): void
-    {
-        ?>
-        <div class="wrap">
-            <h1><?php echo esc_html__('WPDev Framework Integration', '{{textDomain}}'); ?></h1>
-            <p><?php echo esc_html__('This admin page was registered via wpdev_register_module_admin_pages().', '{{textDomain}}'); ?></p>
-        </div>
-        <?php
-    }
 }
 
 final class Module implements ModuleInterface

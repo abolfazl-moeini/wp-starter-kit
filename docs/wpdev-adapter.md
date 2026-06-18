@@ -8,7 +8,7 @@ When \`phpFramework: wpdev\` is enabled:
 
 1. The framework files are copied verbatim into the project's \`companion-plugins/wpdev/\` folder.
 2. The user installs and activates this companion plugin in WordPress.
-3. If the companion plugin is not active, the main plugin displays a non-fatal warning notice in the WP admin panel and gracefully no-ops framework integrations, preventing fatal errors.
+3. If the companion plugin is not active, the main plugin displays a non-fatal warning notice in the WP admin panel and framework-dependent modules no-op in \`boot()\`. Generated reference modules avoid extending framework classes at load time so autoloading stays fatal-free.
 
 ## Prefix Rules & Collision Validation
 
@@ -28,7 +28,7 @@ WPDev\\Adapters\\WpdevModuleAdapter::attach(new MyPlugin\\Modules\\WpdevDemo\\Mo
 
 ### Attachment Seam & Hook Ordering
 
-1. **With Framework Active**: If the framework helper function \`wpdev_on_load\` is present, \`attach()\` defers the module's \`boot()\` lifecycle, registering it to run on the framework's \`wpdev_load\` hook.
+1. **With Framework Active**: If the framework helper function \`wpdev_on_load\` is present, \`attach()\` defers the module's \`boot()\` lifecycle, registering it to run on the framework's \`wpdev_on_load\` hook.
 2. **Fallback (Without Framework)**: If the framework is not active, the module's \`boot()\` method is called sequentially during the standard kit bootstrap.
 
 ## Seam Map

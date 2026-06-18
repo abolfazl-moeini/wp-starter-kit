@@ -11,6 +11,7 @@
 
 import { existsSync, promises as fs } from "node:fs";
 import * as path from "node:path";
+import { readWpdevFrameworkVersion } from "../dep-versions.js";
 import { readManifest } from "../manifest.js";
 
 export const version = "1.0.0";
@@ -45,7 +46,7 @@ final class FrameworkBridge
     {
         ?>
         <div class="notice notice-warning is-dismissible">
-            <p><?php echo esc_html__('This plugin works best with the WPDev Framework. Install the plugin in \`companion-plugins/wpdev/\`.', '{{textDomain}}'); ?></p>
+            <p><?php echo esc_html__('This plugin works best with the WPDev Framework. Install the plugin in companion-plugins/wpdev/.', '{{textDomain}}'); ?></p>
         </div>
         <?php
     }
@@ -82,7 +83,7 @@ if (did_action('plugins_loaded')) {
 
 const TEMPLATE_NOTES_MD = `# WPDev Framework Migration Notes (v1.0.0)
 
-The WPDev Admin Framework companion plugin has been updated to v2.5.0.
+The WPDev Admin Framework companion plugin has been updated to v{{wpdevFrameworkVersion}}.
 
 Please update the companion plugin on your WordPress site:
 1. Log in to your WordPress admin panel.
@@ -160,9 +161,10 @@ export async function run(dir) {
       render(TEMPLATE_REGISTER_PHP, tpl),
       "utf8",
     );
+    const fwVersion = readWpdevFrameworkVersion() || "unknown";
     await fs.writeFile(
       path.join(dir, "MIGRATION-NOTES-1.0.0.md"),
-      TEMPLATE_NOTES_MD,
+      render(TEMPLATE_NOTES_MD, { ...tpl, wpdevFrameworkVersion: fwVersion }),
       "utf8",
     );
   } catch (error) {

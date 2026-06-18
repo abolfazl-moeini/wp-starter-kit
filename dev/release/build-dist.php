@@ -132,6 +132,10 @@ function wpdev_should_exclude(string $relative, array $exclude): bool
         if ($normalized === $pattern || str_starts_with($normalized, $pattern . '/')) {
             return true;
         }
+        $segments = explode('/', $normalized);
+        if (in_array($pattern, $segments, true)) {
+            return true;
+        }
     }
     return false;
 }

@@ -288,6 +288,10 @@ jobs:
             --scope=acme --global=Acme --domain=acme --hook=acme --php-fn=acme_
           test -f /tmp/wpdev-fw/companion-plugins/wpdev/wpdev.php
           php -l /tmp/wpdev-fw/src/Support/FrameworkBridge.php
+          php -l /tmp/wpdev-fw/src/wpdev-demo-register.php
+          php -l /tmp/wpdev-fw/src/Modules/WpdevDemo/Module.php
+          ! grep -qE '^use WPDevFramework\\' /tmp/wpdev-fw/src/Modules/WpdevDemo/Module.php
+          ! grep -qE 'class [A-Za-z0-9_]+ extends ' /tmp/wpdev-fw/src/Modules/WpdevDemo/Module.php
 
   # ============================================================
   # Job 8: Status check (fails if any required job failed)

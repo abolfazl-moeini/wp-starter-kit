@@ -47,6 +47,12 @@ class BuildDistTest extends TestCase
         $this->assertDirectoryDoesNotExist($distDir . '/tests');
         $this->assertDirectoryDoesNotExist($distDir . '/dev');
         $this->assertDirectoryDoesNotExist($distDir . '/node_modules');
+        if (is_dir($this->root . '/packages/wpdev-framework/vendor')) {
+            $this->assertDirectoryDoesNotExist(
+                $distDir . '/packages/wpdev-framework/vendor',
+                'nested vendor/ trees must be excluded from dist copies'
+            );
+        }
     }
 
     private function removeTree(string $dir): void

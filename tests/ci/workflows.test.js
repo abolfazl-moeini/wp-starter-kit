@@ -47,6 +47,9 @@ describe("CI workflow contract", () => {
     expect(ci).toMatch(/php-framework=wpdev/);
     expect(ci).toMatch(/companion-plugins\/wpdev\/wpdev\.php/);
     expect(ci).toMatch(/FrameworkBridge\.php/);
+    expect(ci).toMatch(/wpdev-demo-register\.php/);
+    expect(ci).toMatch(/Modules\/WpdevDemo\/Module\.php/);
+    expect(ci).toContain("class [A-Za-z0-9_]+ extends ");
   });
 
   test("ci.yml defines an installer-e2e job", () => {
