@@ -165,4 +165,5 @@ add_action( 'plugins_loaded', 'WPDev\\Core\\Plugin::boot', 10, 0 );
 // already fired (e.g. wp-cli, unit tests, and most test runners).
 if ( class_exists( 'WPDev\\Core\\Plugin' ) && did_action( 'plugins_loaded' ) ) {
     WPDev\Core\Plugin::boot();
+    WPDev\Core\Plugin::loader()->boot_all();
 }

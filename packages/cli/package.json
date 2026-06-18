@@ -1,6 +1,6 @@
 {
   "name": "@wpdev/cli",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "wpdev command-line installer for the wp-starter-kit framework (plan.installer.md Phases I1–I8). Thin front-end: prompts + flags, delegates all generation to @wpdev/create-wp-project.",
   "type": "module",
   "private": true,
@@ -20,6 +20,6 @@
     "commander": "^12.0.0",
     "execa": "^9.0.0",
     "picocolors": "^1.0.0",
-    "@wpdev/create-wp-project": "^0.1.0"
+    "@wpdev/create-wp-project": "^1.0.0"
   }
 }

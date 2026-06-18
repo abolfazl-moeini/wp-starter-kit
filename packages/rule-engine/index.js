@@ -119,7 +119,14 @@ export class RuleEngine {
             const ref = rule.name || `index_${idx}`;
             rule.then.ruleRef = ref;
             matchPath.push(ref);
-            rule.then.call(session, api, session);
+            try {
+              rule.then.call(session, api, session);
+            } catch (err) {
+              pending--;
+              complete = true;
+              next(() => cb(session));
+              return;
+            }
             // After firing a rule's `then`, advance to the next rule
             // in declaration order. Re-running from rule 0 only happens
             // when the rule's `then` body explicitly calls `api.restart()`
@@ -181,11 +188,10 @@ export class RuleEngine {
 
   findRules(query) {
     if (typeof query === "undefined") return this.rules;
-    Object.keys(query).forEach(
-      (k) => query[k] === undefined && delete query[k],
-    );
+    const q = { ...query };
+    Object.keys(q).forEach((k) => q[k] === undefined && delete q[k]);
     return this.rules.filter((rule) =>
-      Object.keys(query).some((k) => query[k] === rule[k]),
+      Object.keys(q).some((k) => q[k] === rule[k]),
     );
   }
 

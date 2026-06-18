@@ -233,6 +233,10 @@ export function renderNextSteps(features, runOptions) {
     steps.push("composer install");
   }
 
+  if (f.phpFramework === "wpdev") {
+    steps.push("Activate the companion plugin under companion-plugins/wpdev/.");
+  }
+
   if (f.blocks === "on" && f.phpMinVersion && f.phpMinVersion < "8.2") {
     steps.push(
       "Note: Blockstudio requires PHP 8.2+ at runtime (Rector downlevels your plugin source only).",

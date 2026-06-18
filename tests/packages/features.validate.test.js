@@ -321,3 +321,34 @@ describe("validateFeatureSet — pure function contract", () => {
     expect(a.errors).toEqual(b.errors);
   });
 });
+
+describe("validateFeatureSet — prefix collision (Phase WS-B)", () => {
+  test("phpFramework:wpdev + hookPrefix:wpdev → error", () => {
+    const r = validateFeatureSet(
+      { ...defaultFeatures(), phpFramework: "wpdev" },
+      { hookPrefix: "wpdev", phpFunctionPrefix: "acme_" },
+    );
+    expect(r.ok).toBe(false);
+    expect(r.errors.phpFramework).toMatch(/reserves the 'wpdev' hook prefix/);
+  });
+
+  test("phpFramework:wpdev + phpFunctionPrefix:wpdev_ → error", () => {
+    const r = validateFeatureSet(
+      { ...defaultFeatures(), phpFramework: "wpdev" },
+      { hookPrefix: "acme", phpFunctionPrefix: "wpdev_" },
+    );
+    expect(r.ok).toBe(false);
+    expect(r.errors.phpFunctionPrefix).toMatch(
+      /reserves the 'wpdev_' PHP function prefix/,
+    );
+  });
+
+  test("phpFramework:wpdev + custom prefix → no error", () => {
+    const r = validateFeatureSet(
+      { ...defaultFeatures(), phpFramework: "wpdev" },
+      { hookPrefix: "acme", phpFunctionPrefix: "acme_" },
+    );
+    expect(r.errors?.phpFramework).toBeUndefined();
+    expect(r.errors?.phpFunctionPrefix).toBeUndefined();
+  });
+});

@@ -79,4 +79,33 @@ describe("@wpdev/rule-engine", () => {
     expect(typeof engine.turn).toBe("function");
     expect(typeof engine.prioritize).toBe("function");
   });
+
+  test("execute(data, cb) does not hang and calls cb when rule.then throws", async () => {
+    const { RuleEngine } = await import("../../packages/rule-engine/index.js");
+    const engine = new RuleEngine();
+    engine.register({
+      condition: () => true,
+      then: () => {
+        throw new Error("test then error");
+      },
+    });
+
+    const cb = jest.fn();
+    await new Promise((resolve) => {
+      engine.execute({}, (session) => {
+        cb(session);
+        resolve();
+      });
+    });
+
+    expect(cb).toHaveBeenCalledTimes(1);
+  });
+
+  test("findRules(query) does not mutate the query object", async () => {
+    const { RuleEngine } = await import("../../packages/rule-engine/index.js");
+    const engine = new RuleEngine();
+    const query = { name: "test", priority: undefined };
+    engine.findRules(query);
+    expect(query).toEqual({ name: "test", priority: undefined });
+  });
 });

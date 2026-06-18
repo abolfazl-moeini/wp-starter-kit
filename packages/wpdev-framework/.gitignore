@@ -1,0 +1,11 @@
+/vendor/
+.phpunit.cache/
+composer.lock
+.DS_Store
+**/.DS_Store
+.idea
+.cursor/
+.kiro/
+# Release build output
+/dist/
+dist/*.zip

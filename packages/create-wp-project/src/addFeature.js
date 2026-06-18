@@ -78,22 +78,17 @@ import { refreshGlue } from "./refresh-glue.js";
  * @returns {Object|null}
  */
 function findGeneratorForVariant(id, variant) {
-  // Fast path: `findGenerator` is the id-only lookup. We need
-  // a (feature, variant) match.
   for (const g of listGenerators()) {
     if (g.feature === id) {
       if (g.variant) {
         if (g.variant === variant) return g;
       } else {
-        // Toggle — `variant` is the new state ("on"/"off"/"phpunit"/...)
+        // Toggle or feature without explicit variant descriptor:
+        // matches if descriptor id equals the feature id.
         if (g.id === id) return g;
       }
     }
   }
-  // Also try the id-only path (covers cases where the descriptor
-  // id equals the feature id, e.g. "css" → css generator).
-  const byId = findGenerator(id);
-  if (byId && byId.feature === id) return byId;
   return null;
 }
 
@@ -312,7 +307,7 @@ export async function addFeature(dir, id, variant, _opts = {}) {
   // 4. Validate the merged set BEFORE looking up the generator.
   //    This way a violation (e.g. faultTolerance=on on PHP 7.4)
   //    fails fast without any I/O.
-  const v = validateFeatureSet(newFeatures);
+  const v = validateFeatureSet(newFeatures, answers);
   if (!v.ok) {
     const first = Object.entries(v.errors)[0];
     return {

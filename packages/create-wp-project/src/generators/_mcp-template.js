@@ -124,5 +124,8 @@ if (!function_exists('add_action')) {
     },
     5
 );
+if (did_action('plugins_loaded')) {
+    Plugin::loader()->register(new Module());
+}
 `;
 }

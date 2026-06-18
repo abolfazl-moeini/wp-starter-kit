@@ -7,3 +7,4 @@ assets/bundles/*.js
 .phpunit.result.cache
 composer.lock
 package-lock.json
+packages/wpdev-framework/

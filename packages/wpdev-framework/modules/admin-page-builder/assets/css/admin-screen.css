@@ -1,0 +1,23 @@
+body.wpdev-styling:not(.wpdev-customize-admin-screen) div.postbox-header {
+  display: none;
+}
+
+body.wpdev-styling.wpdev-customize-admin-screen .wpdev-inline-widget {
+  border: dashed 1px #ccc;
+  padding: 4px 12px 12px;
+  margin: 12px 0;
+  border-radius: 3px;
+}
+
+body.wpdev-styling #wpdev-admin-screen-customize,
+body.wpdev-styling #wpdev-admin-screen-page-customize {
+  margin-left: 6px;
+  padding-right: 16px;
+}
+body.wpdev-styling #wpdev-admin-screen-customize::after,
+body.wpdev-styling #wpdev-admin-screen-page-customize::after {
+  display: none !important;
+}
+body.wpdev-styling #show-settings-link {
+  display: none;
+}

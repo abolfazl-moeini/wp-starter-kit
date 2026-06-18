@@ -23,19 +23,29 @@ if (!target || target.startsWith("--")) {
 }
 const force = process.argv.includes("--force");
 const features = parseFeaturesJson();
-const answers = process.env.WPDEV_ANSWERS_JSON
-  ? JSON.parse(process.env.WPDEV_ANSWERS_JSON)
-  : {
-      slug: "my-project",
-      npmScope: "myorg",
-      globalName: "MyProject",
-      localizeVar: "MyProjectLoc",
-      textDomain: "my-project",
-      hookPrefix: "my-project",
-      depsBundle: "my-project-deps.js",
-      phpFunctionPrefix: "myprj_",
-      uiFramework: "preact",
-    };
+let answers;
+const rawAnswers =
+  process.env.WPDEV_ANSWERS_JSON || process.env.WPSK_ANSWERS_JSON;
+if (rawAnswers) {
+  try {
+    answers = JSON.parse(rawAnswers);
+  } catch (error) {
+    console.error(`Invalid WPDEV_ANSWERS_JSON: ${error.message}`);
+    process.exit(1);
+  }
+} else {
+  answers = {
+    slug: "my-project",
+    npmScope: "myorg",
+    globalName: "MyProject",
+    localizeVar: "MyProjectLoc",
+    textDomain: "my-project",
+    hookPrefix: "my-project",
+    depsBundle: "my-project-deps.js",
+    phpFunctionPrefix: "myprj_",
+    uiFramework: "preact",
+  };
+}
 const options = { force };
 if (features) options.features = features;
 const res = await scaffoldProject(target, answers, options);

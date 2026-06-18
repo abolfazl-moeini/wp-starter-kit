@@ -28,4 +28,57 @@ class WpdevAdapterTest extends TestCase
         $adapter->boot();
         $this->assertTrue(true);
     }
+
+    public function test_is_framework_active_returns_false_when_framework_missing(): void
+    {
+        $this->assertFalse(WpdevModuleAdapter::is_framework_active());
+    }
+
+    public function test_attach_boots_immediately_when_framework_missing(): void
+    {
+        $booted = false;
+        $module = new class($booted) implements ModuleInterface {
+            private $booted;
+            public function __construct(&$booted) {
+                $this->booted = &$booted;
+            }
+            public function get_slug(): string { return 'test-missing'; }
+            public function boot(): void { $this->booted = true; }
+        };
+
+        WpdevModuleAdapter::attach($module);
+        $this->assertTrue($booted);
+    }
+
+    /**
+     * @runInSeparateProcess
+     */
+    public function test_attach_defers_to_wpdev_on_load_when_framework_active(): void
+    {
+        eval('
+            function wpdev_register_table() {}
+            function wpdev_on_load($cb) {
+                $GLOBALS["wpdev_on_load_called"] = $cb;
+            }
+        ');
+
+        $this->assertTrue(WpdevModuleAdapter::is_framework_active());
+
+        $booted = false;
+        $module = new class($booted) implements ModuleInterface {
+            private $booted;
+            public function __construct(&$booted) {
+                $this->booted = &$booted;
+            }
+            public function get_slug(): string { return 'test-active'; }
+            public function boot(): void { $this->booted = true; }
+        };
+
+        WpdevModuleAdapter::attach($module);
+        $this->assertFalse($booted); // should not boot immediately
+
+        $this->assertNotNull($GLOBALS['wpdev_on_load_called'] ?? null);
+        $GLOBALS['wpdev_on_load_called']();
+        $this->assertTrue($booted);
+    }
 }

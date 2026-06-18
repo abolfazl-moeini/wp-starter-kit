@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WPDev Framework — Developer For Developer</title>
+<meta name="description" content="A modular WordPress admin framework. Developer For Developer. Modules, examples, registry facades, lifecycle hooks, and code-first documentation." />
+<link rel="stylesheet" href="assets/styles.css" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+<body>
+<!-- Decorative grid backdrop -->
+<div class="grid-backdrop" aria-hidden="true"></div>
+<div class="noise" aria-hidden="true"></div>
+
+<!-- Sticky top bar -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#hero">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h12l12 12-12 12L4 16V4z"/>
+          <path d="M10 10h6"/>
+          <path d="M10 16h10"/>
+          <path d="M10 22h6"/>
+        </svg>
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">WPDev</span>
+        <span class="brand-sub">Framework</span>
+      </span>
+    </a>
+
+    <div class="topbar-actions">
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="Search modules, APIs, hooks…" autocomplete="off" spellcheck="false" />
+        <kbd class="kbd">/</kbd>
+        <div id="search-results" class="search-results" hidden></div>
+      </div>
+      <button id="theme-toggle" class="icon-btn" title="Toggle theme" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sun">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+        </svg>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-moon">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+      <button id="nav-toggle" class="icon-btn nav-toggle" aria-label="Toggle navigation" title="Toggle navigation">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- Sidebar navigation -->
+  <aside id="sidebar" class="sidebar">
+    <nav class="nav">
+      <div class="nav-group">
+        <div class="nav-label">Overview</div>
+        <a href="#hero" class="nav-link active">Hero</a>
+        <a href="#why" class="nav-link">Why WPDev</a>
+        <a href="#architecture" class="nav-link">Architecture</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">Modules</div>
+        <a href="#modules" class="nav-link">All 13 Modules</a>
+        <a href="#m-core" class="nav-link nav-sub">core</a>
+        <a href="#m-field-builder" class="nav-link nav-sub">field-builder</a>
+        <a href="#m-form-builder" class="nav-link nav-sub">form-builder</a>
+        <a href="#m-settings-panel-builder" class="nav-link nav-sub">settings-panel-builder</a>
+        <a href="#m-menu-builder" class="nav-link nav-sub">menu-builder</a>
+        <a href="#m-tab-navigation" class="nav-link nav-sub">tab-navigation</a>
+        <a href="#m-table-builder" class="nav-link nav-sub">table-builder</a>
+        <a href="#m-metabox-builder" class="nav-link nav-sub">metabox-builder</a>
+        <a href="#m-admin-page-builder" class="nav-link nav-sub">admin-page-builder</a>
+        <a href="#m-admin-widget-builder" class="nav-link nav-sub">admin-widget-builder</a>
+        <a href="#m-admin-custom-page" class="nav-link nav-sub">admin-custom-page</a>
+        <a href="#m-admin-setting-page" class="nav-link nav-sub">admin-setting-page</a>
+        <a href="#m-wizard" class="nav-link nav-sub">wizard</a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">Patterns</div>
+        <a href="#api-patterns" class="nav-link">API Patterns</a>
+        <a href="#examples" class="nav-link">Code Examples</a>
+        <a href="#roadmap" class="nav-link">Roadmap</a>
+        <a href="#source-of-truth" class="nav-link">Source of Truth</a>
+        <a href="#readiness" class="nav-link">Quality Gates</a>
+      </div>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="stat">
+        <span class="stat-num">13</span>
+        <span class="stat-lbl">framework modules</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">21</span>
+        <span class="stat-lbl">documented examples</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">810</span>
+        <span class="stat-lbl">manifest symbols</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="content">
+    <!-- HERO -->
+    <section id="hero" class="hero">
+      <div class="hero-stamp">
+        <span class="dot dot-1"></span>
+        <span class="dot dot-2"></span>
+        <span class="dot dot-3"></span>
+        <code>v2.5.0 · modules + examples</code>
+      </div>
+
+      <h1 class="hero-title">
+        <span class="line">WPDev</span>
+        <span class="line line-2">Framework</span>
+      </h1>
+
+      <p class="hero-slogan">
+        <span class="bracket">&lt;</span>
+        Developer For Developer
+        <span class="bracket">/&gt;</span>
+      </p>
+
+      <p class="hero-desc">
+        A modular WordPress admin framework — extracted, hardened, and re-shaped for
+        engineers who want clear module boundaries, uniform registry facades, and
+        WaaS-grade building blocks. No magic. No monolith. Just <strong>modules</strong>,
+        <strong>examples</strong>, and a public API that stays out of your way.
+      </p>
+
+      <div class="hero-meta">
+        <div class="meta-pill"><span class="meta-key">Plugin</span><span class="meta-val">wpdev.php</span></div>
+        <div class="meta-pill"><span class="meta-key">Composer</span><span class="meta-val">wpdev/wpdev-framework</span></div>
+        <div class="meta-pill"><span class="meta-key">PHP</span><span class="meta-val">7.4+</span></div>
+        <div class="meta-pill"><span class="meta-key">CI</span><span class="meta-val green">composer ci · passing</span></div>
+      </div>
+
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#modules">
+          Browse 13 modules
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M13 5l7 7-7 7"/>
+          </svg>
+        </a>
+        <a class="btn btn-ghost" href="#api-patterns">API patterns →</a>
+        <a class="btn btn-ghost" href="#roadmap">Build order →</a>
+      </div>
+
+      <div class="hero-grid">
+        <div class="hero-card">
+          <div class="hero-card-num">13</div>
+          <div class="hero-card-lbl">Required framework modules in <code>modules/</code></div>
+        </div>
+        <div class="hero-card">
+          <div class="hero-card-num">21</div>
+          <div class="hero-card-lbl">Optional WaaS / domain examples in <code>wpdev-examples</code> (sibling plugin)</div>
+        </div>
+        <div class="hero-card">
+          <div class="hero-card-num">810</div>
+          <div class="hero-card-lbl">Symbols in the generated API manifest</div>
+        </div>
+        <div class="hero-card">
+          <div class="hero-card-num">0</div>
+          <div class="hero-card-lbl">PHP runtime files in legacy <code>inc/</code></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHY -->
+    <section id="why" class="section">
+      <header class="section-head">
+        <div class="kicker">01 — Why</div>
+        <h2>Why WPDev Framework</h2>
+        <p class="lead">
+          A clean split between the framework and the optional domain layer.
+          No marketing. No &ldquo;it just works&rdquo;. The architecture is the message.
+        </p>
+      </header>
+
+      <div class="cols-2">
+        <article class="card">
+          <div class="card-eyebrow">modules/</div>
+          <h3>The framework layer</h3>
+          <p>
+            Everything in <code>modules/</code> is required. It is the spine: module
+            loading, lifecycle helpers, service registry, builders, dashboard/settings/wizard shell.
+            Removing a module folder may fatal.
+          </p>
+          <ul class="check">
+            <li>13 modules with <code>setup.php</code>, <code>API_DOC.md</code>, <code>README.md</code></li>
+            <li>Uniform <code>wpdev_register_*</code> registry facades</li>
+            <li>Autoloader + Legacy_Shim + Examples_Shim compatibility</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <div class="card-eyebrow">wpdev-examples/</div>
+          <h3>The optional WaaS layer</h3>
+          <p>
+            Domain code, playground demos, and sample panels live under
+            <code>wpdev-examples</code> (sibling plugin). It is deletion-safe by contract: removing an
+            example should only remove that example&rsquo;s admin UI/domain behavior.
+          </p>
+          <ul class="check">
+            <li>21 documented API examples (products, customers, sites, gateways, …)</li>
+            <li>Folder slug is the bare name: <code>wpdev-examples/products/</code>, not <code>wpdev-products/</code></li>
+            <li>New domains belong here — never under <code>inc/</code></li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <div class="card-eyebrow">inc/</div>
+          <h3>Legacy artifact only</h3>
+          <p>
+            <code>inc/</code> holds the legacy monolith artifact. It must stay
+            PHP-free. The old <code>modules/wpdev-*</code> paths are also gone —
+            domain code is now under <code>wpdev-examples</code> (sibling plugin).
+          </p>
+          <ul class="cross">
+            <li>Do not add PHP back under <code>inc/</code></li>
+            <li>Do not create <code>modules/wpdev-*</code> domain modules</li>
+            <li>Do not reference old monolith paths from new code</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <div class="card-eyebrow">Goal</div>
+          <h3>Built for WordPress admin</h3>
+          <p>
+            WPDev is a framework for building WordPress admin panels, CRUD
+            screens, settings pages, dashboards, forms, widgets, playground
+            panels, and optional WaaS integrations. It is multisite-first.
+          </p>
+          <ul class="check">
+            <li>Reusable base classes, builders, and facades</li>
+            <li>Production-ready dashboard, settings, wizard shells</li>
+            <li>Designed to be extended, not configured</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- ARCHITECTURE -->
+    <section id="architecture" class="section">
+      <header class="section-head">
+        <div class="kicker">02 — Architecture</div>
+        <h2>Entry points, lifecycle, module loading</h2>
+        <p class="lead">
+          Boot is deterministic. Modules are discovered, registered, and instantiated on
+          well-known hooks. No surprises.
+        </p>
+      </header>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h3>Entry points</h3>
+          <ol class="ol">
+            <li>WordPress loads <code>wpdev.php</code></li>
+            <li><code>wpdev.php</code> defines <code>WPDEV_PLUGIN_FILE</code> and requires <code>constants.php</code>, <code>autoload.php</code>, and the dependency bootstrap</li>
+            <li>It boots the dependency manager via <code>wpdev_bootstrap_dependency_manager( __DIR__ )</code></li>
+            <li>Core autoloaders (<code>Module_Autoloader</code>, <code>Legacy_Shim_Autoloader</code>, <code>Examples_Shim_Autoloader</code>, root <code>Autoloader</code>) are wired</li>
+            <li>Action Scheduler is loaded from <code>modules/core/dependencies/</code></li>
+            <li>The singleton trait and <code>WPDevFramework\Core\WPDev</code> are required</li>
+            <li>The <code>wpdev()</code> helper is defined</li>
+            <li>On <code>plugins_loaded</code>, <code>$GLOBALS['WPDev'] = wpdev()</code></li>
+            <li><code>modules/core/setup.php</code> is required, which registers the <code>core</code> module</li>
+            <li><code>wpdev-examples/wpdev-examples.php</code> loads optional WaaS modules is loaded as the backward-compatible module-loader entry</li>
+          </ol>
+        </div>
+
+        <div class="panel">
+          <h3>Core setup</h3>
+          <ul class="ul">
+            <li><code>modules/core/setup.php</code> registers the <code>core</code> module</li>
+            <li>On <code>plugins_loaded</code> priority 5, <code>Module_Loader::load_all()</code> discovers <code>modules/*/setup.php</code></li>
+            <li>On <code>wpdev_modules_loaded</code> priority 10, <code>wpdev_load_examples()</code> loads optional examples</li>
+            <li>On <code>wpdev_init</code> priority 0, <code>Service_Registry::boot()</code> boots services</li>
+            <li>When the <strong>wpdev-playground</strong> plugin is active (<code>WPDEV_PLAYGROUND_DIR</code>), it boots playground infrastructure on <code>plugins_loaded</code> priority 4</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 class="block-title">Lifecycle hooks</h3>
+      <div class="hook-table">
+        <div class="hook-row hook-head">
+          <div>Hook</div><div>Type</div><div>Purpose</div>
+        </div>
+        <div class="hook-row"><div><code>wpdev_init</code></div><div>action</div><div>Early services and singleton setup</div></div>
+        <div class="hook-row"><div><code>wpdev_load</code></div><div>action</div><div>Register entities, managers, tables, handlers, services</div></div>
+        <div class="hook-row"><div><code>wpdev_admin_pages</code></div><div>action</div><div>Instantiate admin page classes</div></div>
+        <div class="hook-row"><div><code>wpdev_register_forms</code></div><div>action</div><div>Register modal/ajax forms</div></div>
+        <div class="hook-row"><div><code>wpdev_modules_loaded</code></div><div>action</div><div>Framework modules have loaded; examples load here</div></div>
+        <div class="hook-row"><div><code>wpdev_module_enabled</code></div><div>filter</div><div>Enable / disable modules or examples by id</div></div>
+      </div>
+
+      <h3 class="block-title">Registry facade pattern</h3>
+      <p class="muted">
+        Every builder module exposes a uniform registry. This is the contract you should
+        reach for first. Examples override the entity name (<code>form</code>,
+        <code>field_type</code>, <code>settings_section</code>, …).
+      </p>
+      <pre class="code" data-lang="php"><code>wpdev_register_{entity}( $id, array $config = array(), bool $replace = true ): bool
+wpdev_get_{entity}( $id )
+wpdev_has_{entity}( $id ): bool
+wpdev_list_{entity}(): array
+wpdev_unregister_{entity}( $id ): void</code></pre>
+      <p class="muted small">
+        Metaboxes are scoped per page: <code>wpdev_register_metabox( $page_id, $metabox_id, $config )</code>.
+      </p>
+    </section>
+
+    <!-- MODULES -->
+    <section id="modules" class="section">
+      <header class="section-head">
+        <div class="kicker">03 — Modules</div>
+        <h2>13 framework modules</h2>
+        <p class="lead">
+          Each module has a purpose, declared dependencies, and a uniform registry facade.
+          Click any card to jump to its full detail panel.
+        </p>
+      </header>
+
+      <div class="filter-bar">
+        <input id="module-filter" type="search" placeholder="Filter modules…" autocomplete="off" />
+        <div class="filter-chips">
+          <button class="chip active" data-filter="all">All</button>
+          <button class="chip" data-filter="core">Foundation</button>
+          <button class="chip" data-filter="ui">UI</button>
+          <button class="chip" data-filter="data">Data</button>
+          <button class="chip" data-filter="shell">Shell</button>
+        </div>
+      </div>
+
+      <div class="module-grid" id="module-grid">
+
+        <a class="module-card" href="#m-core" data-cat="core" data-keywords="core loader lifecycle services events playground">
+          <div class="mc-top">
+            <span class="mc-tag tag-foundation">Foundation</span>
+            <span class="mc-deps">deps: —</span>
+          </div>
+          <h3>core</h3>
+          <p>Module loader, service registry, public function maps, views, capabilities, ajax, playground infra, dependency manager, base models/managers.</p>
+          <div class="mc-apis"><code>wpdev_load_module</code><code>wpdev_on_load</code><code>wpdev_services</code><code>wpdev_dispatch_event</code></div>
+          <span class="mc-arrow">→</span>
+        </a>
+
+        <a class="module-card" href="#m-field-builder" data-cat="ui" data-keywords="field field type sanitize view template">
+          <div class="mc-top">
+            <span class="mc-tag tag-ui">UI</span>
+            <span class="mc-deps">deps: core</span>
+          </div>
+          <h3>field-builder</h3>
+          <p>Field type registration, field rendering, sanitization, admin/settings/checkout field views.</p>
+          <div class="mc-apis"><code>wpdev_register_field_type</code><code>wpdev_field_view</code></div>
+          <span class="mc-arrow">→</span>
+        </a>
+
+        <a class="module-card" href="#m-form-builder" data-cat="ui" data-keywords="form modal wubox ajax modal entity picker">
+          <div class="mc-top">
+            <span class="mc-tag tag-ui">UI</span>
+            <span class="mc-deps">deps: core, field-builder</span>
+          </div>
+          <h3>form-builder</h3>
+          <p>Forms, modal forms, <code>wpdev_register_form</code>, form rendering, Wubox URLs, ajax modal payloads.</p>
+          <div class="mc-apis"><code>wpdev_register_form</code><code>wpdev_get_form_url</code><code>wpdev_register_ajax_modal</code></div>
+          <span class="mc-arrow">→</span>
+        </a>
+
+        <a class="module-card" href="#m-settings-panel-builder" data-cat="ui" data-keywords="settings section field storage save">
+          <div class="mc-top">
+            <span class="mc-tag tag-ui">UI</span>
+            <span class="mc-deps">deps: core, field-builder, form-builder, tab-navigation</span>
+          </div>
+          <h3>settings-panel-builder</h3>
+          <p>Settings storage/save, sections, fields, settings UI, side panels, save pipeline hooks.</p>
+          <div class="mc-apis"><code>wpdev_get_option</code><code>wpdev_register_settings_section</code><code>wpdev_register_settings_field</code></div>
+          <span class="mc-arrow">→</span>
+        </a>
+
+        <a class="module-card" href="#m-menu-builder" data-cat="shell" data-keywords="menu top child submenu admin">
+          <div class="mc-top">
+            <span class="mc-tag tag-shell">Shell</span>
+            <span class="mc-deps">deps: core</span>
+          </div>
+          <h3>menu-builder</h3>
+          <p>Declarative admin menu registry. Top-level and child menus registered by slug before WordPress menu hooks run.</p>
+          <div class="mc-apis"><code>wpdev_register_menu_top</code><code>wpdev_register_menu_child</code></div>
+          <span class="mc-arrow">→</span>
+        </a>
+
+        <a class="module-card" href="#m-tab-navigation" data-cat="ui" data-keywords="tab navigation list views settings wizard">
+          <div class="mc-top">
+            <span class="mc-tag tag-ui">UI</span>
+            <span class="mc-deps">deps: core</span>
+          </div>
+          <h3>tab-navigation</h3>
+          <p>Shared tab markup for settings, list views, wizard-like screens. Convert list-table views to tab definitions.</p>
+          <div class="mc-apis"><code>wpdev_render_tab_navigation</code><code>wpdev_list_table_views_as_tabs</code></div>
+          <span class="mc-arrow">→</span>
+        </a>
+
+        <a class="module-card" href="#m-table-builder" data-cat="data" data-keywords="list table bulk action playground table">
+          <div class="mc-top">
+            <span class="mc-tag tag-data">Data</span>
+            <span class="mc-deps">deps: core, tab-navigation</span>
+          </div>
+          <h3>table-builder</h3>
+          <p>Base list table, table config, playground table helpers, bulk action pipeline. Intentionally lightweight.</p>
+          <div class="mc-apis"><code>wpdev_register_list_table</code><code>wpdev_render_playground_list_table</code></div>
+          <span class="mc-arrow">→</span>
+        </a>
+
+        <a class="module-card" href="#m-metabox-builder" data-cat="ui" data-keywords="metabox postbox widget edit page">
+          <div class="mc-top">
+            <span class="mc-tag tag-ui">UI</span>
+            <span class="mc-deps">deps: core, form-builder, field-builder, tab-navigation, table-builder</span>
+          </div>
+          <h3>metabox-builder</h3>
+          <p>Edit-page widgets and metabox registry. Bridge field widgets, list-table widgets, and custom callbacks into edit pages.</p>
+          <div class="mc-apis"><code>wpdev_register_metabox</code><code>wpdev_list_metaboxes</code></div>
+          <span class="mc-arrow">→</span>
+        </a>
+
+        <a class="module-card" href="#m-admin-page-builder" data-cat="shell" data-keywords="admin page list edit base class template">
+          <div class="mc-top">
+            <span class="mc-tag tag-shell">Shell</span>
+            <span class="mc-deps">deps: core, menu-builder, tab-navigation, metabox-builder</span>
+          </div>
+          <h3>admin-page-builder</h3>
+          <p>Base/list/edit admin page classes, templates, page registry/rebinding. The composition layer for admin pages.</p>
+          <div class="mc-apis"><code>wpdev_register_module_admin_pages</code><code>wpdev_register_page_template</code></div>
+          <span class="mc-arrow">→</span>
+        </a>
+
+        <a class="module-card" href="#m-admin-widget-builder" data-cat="ui" data-keywords="dashboard widget datasource jumper command">
+          <div class="mc-top">
+            <span class="mc-tag tag-ui">UI</span>
+            <span class="mc-deps">deps: core, admin-page-builder</span>
+          </div>
+          <h3>admin-widget-builder</h3>
+          <p>Dashboard widgets, UI elements, data sources, Jumper command registries. Reusable admin blocks.</p>
+          <div class="mc-apis"><code>wpdev_register_dashboard_widget</code><code>wpdev_register_jumper_command</code></div>
+          <span class="mc-arrow">→</span>
+        </a>
+
+        <a class="module-card" href="#m-admin-custom-page" data-cat="shell" data-keywords="dashboard about top-level shell">
+          <div class="mc-top">
+            <span class="mc-tag tag-shell">Shell</span>
+            <span class="mc-deps">deps: core, admin-page-builder, admin-widget-builder</span>
+          </div>
+          <h3>admin-custom-page</h3>
+          <p>Production top-level dashboard shell. Wires dashboard hooks, filter controls, and export behavior.</p>
+          <div class="mc-apis"><code>wpdev_dashboard_widgets</code><code>wpdev_dashboard_filter_bar</code></div>
+          <span class="mc-arrow">→</span>
+        </a>
+
+        <a class="module-card" href="#m-admin-setting-page" data-cat="shell" data-keywords="settings page production shell">
+          <div class="mc-top">
+            <span class="mc-tag tag-shell">Shell</span>
+            <span class="mc-deps">deps: core, settings-panel-builder, admin-page-builder</span>
+          </div>
+          <h3>admin-setting-page</h3>
+          <p>Production settings admin page shell. Hook into the render pipeline to extend sections.</p>
+          <div class="mc-apis"><code>wpdev_settings_register_default_sections</code><code>wpdev_render_settings</code></div>
+          <span class="mc-arrow">→</span>
+        </a>
+
+        <a class="module-card" href="#m-wizard" data-cat="shell" data-keywords="wizard setup sunrise onboarding">
+          <div class="mc-top">
+            <span class="mc-tag tag-shell">Shell</span>
+            <span class="mc-deps">deps: core, admin-page-builder</span>
+          </div>
+          <h3>wizard</h3>
+          <p>Setup wizard and sunrise integration. Customize step labels, add settings values, react to sunrise loading.</p>
+          <div class="mc-apis"><code>wpdev_setup_wizard</code><code>wpdev_sunrise_loaded</code></div>
+          <span class="mc-arrow">→</span>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- MODULE DETAIL: CORE -->
+    <section id="m-core" class="section module-detail">
+      <div class="md-head">
+        <div class="md-num">01</div>
+        <div>
+          <h2>core</h2>
+          <p class="md-deps">Dependencies: <strong>none</strong> · Foundation module</p>
+        </div>
+        <a class="md-link" href="#modules">← back to grid</a>
+      </div>
+      <p class="lead">The foundation. Owns module loading, lifecycle helpers, service access, admin-page rebinding, playground infrastructure, events, public function maps, and compatibility bootstrapping.</p>
+
+      <h3 class="block-title">When to use</h3>
+      <ul class="ul">
+        <li>Load another framework module with dependencies</li>
+        <li>Register callbacks on the WPDev lifecycle</li>
+        <li>Access framework services such as ajax, form, modal, screen options, tour, or view</li>
+        <li>Rebind a production admin page under another menu / context</li>
+        <li>Register playground panels</li>
+        <li>Dispatch or listen to framework events</li>
+      </ul>
+
+      <h3 class="block-title">Key APIs</h3>
+      <ul class="api">
+        <li><code>wpdev_load_module( $module_id, $modules_dir = '' )</code> — load one module and its dependencies</li>
+        <li><code>wpdev_on_load( $callback, $priority = 10 )</code> — schedule registration on <code>wpdev_load</code></li>
+        <li><code>wpdev_on_admin_pages( $callback, $priority = 10 )</code> — schedule page instantiation on <code>wpdev_admin_pages</code></li>
+        <li><code>wpdev_services( $id = null )</code> — access <code>ajax</code>, <code>form</code>, <code>modal</code>, <code>screen_options</code>, <code>tour</code>, <code>view</code></li>
+        <li><code>wpdev_register_service( $id, $service, $replace = true )</code> — register a custom service</li>
+        <li><code>wpdev_register_admin_page( $class_name, $args = array(), $priority = 100 )</code> — rebind a page class under a different menu/context</li>
+        <li><code>wpdev_register_playground_panel( $module_id, $args = array(), $replace = true )</code> — add a dev-only playground panel</li>
+        <li><code>wpdev_dispatch_event( $slug, $payload = array() )</code> — dispatch a framework/domain event</li>
+        <li><code>wpdev_register_event_listener( $slug, $callback, $priority = 10, $accepted_args = 1 )</code></li>
+        <li><code>wpdev_register_global_event_listener( $callback, $priority = 10, $accepted_args = 2 )</code></li>
+      </ul>
+
+      <h3 class="block-title">Example — load a module and register runtime work</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-core-1">Copy</button>
+      <pre class="code" id="code-core-1" data-lang="php"><code>wpdev_load_module( 'settings-panel-builder' );
+
+wpdev_on_load(
+	static function () {
+		wpdev_register_event_listener(
+			'membership_created',
+			static function ( array $payload ) {
+				wpdev_log_add( 'Membership created: ' . ( $payload['id'] ?? 'unknown' ) );
+			}
+		);
+	}
+);</code></pre>
+      </div>
+
+      <h3 class="block-title">Example — rebind a production admin page</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-core-2">Copy</button>
+      <pre class="code" id="code-core-2" data-lang="php"><code>wpdev_register_admin_page(
+	\WPDevFramework\Admin_Pages\Product_List_Admin_Page::class,
+	array(
+		'parent'     => 'wpdev-playground',
+		'context'    => 'admin',
+		'capability' => 'wpdev_read_products',
+		'module_id'  => 'wpdev-products',
+	),
+	100
+);</code></pre>
+      </div>
+
+      <h3 class="block-title">Example — register a playground panel</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-core-3">Copy</button>
+      <pre class="code" id="code-core-3" data-lang="php"><code>if ( defined( 'WPDEV_PLAYGROUND_DIR' ) ) {
+	wpdev_register_playground_panel(
+		'my-module',
+		array(
+			'title'  => __( 'My Module', 'wpdev' ),
+			'type'   => 'render',
+			'render' => static function () {
+				echo '&lt;div class="wrap"&gt;&lt;h1&gt;My Module&lt;/h1&gt;&lt;/div&gt;';
+			},
+		)
+	);
+}</code></pre>
+      </div>
+
+      <p class="muted small">Note: register entities on <code>wpdev_load</code>; instantiate page classes on <code>wpdev_admin_pages</code>. Services and registries are rebuilt on each request. Do not bypass <code>Module_Loader</code> or add runtime PHP back under <code>inc/</code>.</p>
+    </section>
+
+    <!-- MODULE DETAIL: FIELD BUILDER -->
+    <section id="m-field-builder" class="section module-detail">
+      <div class="md-head">
+        <div class="md-num">02</div>
+        <div>
+          <h2>field-builder</h2>
+          <p class="md-deps">Dependencies: <strong>core</strong> · UI</p>
+        </div>
+        <a class="md-link" href="#modules">← back to grid</a>
+      </div>
+      <p class="lead">Field type registry and view resolution used by settings, admin pages, metaboxes, forms, and checkout fields.</p>
+
+      <h3 class="block-title">Key APIs</h3>
+      <ul class="api">
+        <li><code>wpdev_register_field_type( $type, $config = array(), $replace = true )</code></li>
+        <li><code>wpdev_get_field_type( $type )</code></li>
+        <li><code>wpdev_has_field_type( $type )</code></li>
+        <li><code>wpdev_list_field_types()</code></li>
+        <li><code>wpdev_unregister_field_type( $type )</code></li>
+        <li><code>wpdev_field_view_context_map()</code> — return context-to-view-root map</li>
+        <li><code>wpdev_field_view( $context, $type )</code> — resolve a template path for a field type</li>
+        <li><code>wpdev_checkout_field_view( $type )</code> — shortcut for checkout field templates</li>
+      </ul>
+
+      <h3 class="block-title">Example — register a custom field type</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-fb-1">Copy</button>
+      <pre class="code" id="code-fb-1" data-lang="php"><code>wpdev_on_load(
+	static function () {
+		wpdev_register_field_type(
+			'my_slug',
+			array(
+				'sanitize' =&gt; 'sanitize_key',
+				'view'     =&gt; 'admin-pages/fields/text',
+			)
+		);
+	}
+);</code></pre>
+      </div>
+
+      <h3 class="block-title">Example — resolve a field template</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-fb-2">Copy</button>
+      <pre class="code" id="code-fb-2" data-lang="php"><code>$template = wpdev_field_view( 'admin', 'text' );
+
+wpdev_get_template(
+	$template,
+	array(
+		'id'    =&gt; 'my_field',
+		'name'  =&gt; 'my_field',
+		'value' =&gt; '',
+	)
+);</code></pre>
+      </div>
+
+      <h3 class="block-title">Example — customize sanitization</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-fb-3">Copy</button>
+      <pre class="code" id="code-fb-3" data-lang="php"><code>add_filter(
+	'wpdev_field_validate_my_slug',
+	static function ( $value ) {
+		return sanitize_key( $value );
+	}
+);</code></pre>
+      </div>
+
+      <p class="muted small">The registry does not save field values; the caller saves values through settings, forms, or model handlers. Capability checks belong to the consuming page/form, not the field registry. Prefer <code>wpdev_field_view()</code> over hardcoded view paths.</p>
+    </section>
+
+    <!-- MODULE DETAIL: FORM BUILDER -->
+    <section id="m-form-builder" class="section module-detail">
+      <div class="md-head">
+        <div class="md-num">03</div>
+        <div>
+          <h2>form-builder</h2>
+          <p class="md-deps">Dependencies: <strong>core</strong>, <strong>field-builder</strong> · UI</p>
+        </div>
+        <a class="md-link" href="#modules">← back to grid</a>
+      </div>
+      <p class="lead">Registers and renders modal or inline forms. Wraps legacy form behavior behind service-aware helpers and integrates with the core ajax/modal services.</p>
+
+      <h3 class="block-title">Key APIs</h3>
+      <ul class="api">
+        <li><code>wpdev_form_api()</code> — return active form service/manager</li>
+        <li><code>wpdev_register_form( $form_id, $atts = array() )</code> — register a form definition</li>
+        <li><code>wpdev_get_form_url( $form_id, $atts = array(), $inline = false )</code> — build modal/inline URL for a registered form</li>
+        <li><code>wpdev_modal_open( $form_id, $args = array() )</code> — return modal opener markup</li>
+        <li><code>wpdev_register_ajax_modal( $id, $callback, $args = array() )</code> — register ajax modal content</li>
+        <li><code>wpdev_ajax_modal_url( $id, $args = array() )</code> — build ajax modal URL</li>
+        <li><code>wpdev_render_entity_list_modal( $entities, $args = array() )</code> — render entity picker modal</li>
+        <li><code>add_wubox()</code> — enqueue Wubox assets</li>
+      </ul>
+
+      <h3 class="block-title">Example — register a modal form</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-form-1">Copy</button>
+      <pre class="code" id="code-form-1" data-lang="php"><code>add_action(
+	'wpdev_register_forms',
+	static function () {
+		wpdev_register_form(
+			'archive_product',
+			array(
+				'title'      =&gt; __( 'Archive product', 'wpdev' ),
+				'capability' =&gt; 'wpdev_edit_products',
+				'fields'     =&gt; array(
+					'product_id' =&gt; array(
+						'type' =&gt; 'hidden',
+					),
+					'confirm'    =&gt; array(
+						'type'  =&gt; 'toggle',
+						'title' =&gt; __( 'I understand this action.', 'wpdev' ),
+					),
+				),
+				'handler'    =&gt; 'my_archive_product_handler',
+			)
+		);
+	}
+);</code></pre>
+      </div>
+
+      <h3 class="block-title">Example — open the form from a button</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-form-2">Copy</button>
+      <pre class="code" id="code-form-2" data-lang="php"><code>$url = wpdev_get_form_url(
+	'archive_product',
+	array(
+		'product_id' =&gt; absint( $product_id ),
+	)
+);
+
+printf(
+	'&lt;a class="button wubox" href="%s"&gt;%s&lt;/a&gt;',
+	esc_url( $url ),
+	esc_html__( 'Archive', 'wpdev' )
+);</code></pre>
+      </div>
+
+      <p class="muted small">Verify nonces and capabilities in form handlers. Unknown form ids return empty URLs. Use core ajax response helpers for save handlers.</p>
+    </section>
+
+    <!-- MODULE DETAIL: SETTINGS PANEL BUILDER -->
+    <section id="m-settings-panel-builder" class="section module-detail">
+      <div class="md-head">
+        <div class="md-num">04</div>
+        <div>
+          <h2>settings-panel-builder</h2>
+          <p class="md-deps">Dependencies: <strong>core</strong>, <strong>field-builder</strong>, <strong>form-builder</strong>, <strong>tab-navigation</strong> · UI</p>
+        </div>
+        <a class="md-link" href="#modules">← back to grid</a>
+      </div>
+      <p class="lead">Owns settings sections, settings fields, option helpers, storage, and the save pipeline used by the production settings page and playground settings demos.</p>
+
+      <h3 class="block-title">Key APIs</h3>
+      <ul class="api">
+        <li><code>wpdev_get_option( $option_name = 'settings', $default = array() )</code></li>
+        <li><code>wpdev_save_option( $option_name, $value )</code></li>
+        <li><code>wpdev_delete_option( $option_name )</code></li>
+        <li><code>wpdev_get_all_settings()</code></li>
+        <li><code>wpdev_get_setting( $setting, $default = false )</code></li>
+        <li><code>wpdev_save_setting( $setting, $value )</code></li>
+        <li><code>wpdev_register_settings_section( $section_slug, $atts, $replace = true )</code></li>
+        <li><code>wpdev_get_settings_section( $section_slug )</code></li>
+        <li><code>wpdev_list_settings_sections()</code></li>
+        <li><code>wpdev_register_settings_field( $section_slug, $field_slug, $atts )</code></li>
+        <li><code>wpdev_register_settings_side_panel( $section_slug, $atts )</code></li>
+      </ul>
+
+      <h3 class="block-title">Example — register a section with fields</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-sp-1">Copy</button>
+      <pre class="code" id="code-sp-1" data-lang="php"><code>wpdev_on_load(
+	static function () {
+		wpdev_register_settings_section(
+			'my_integration',
+			array(
+				'title' =&gt; __( 'My Integration', 'wpdev' ),
+				'desc'  =&gt; __( 'API credentials and behavior.', 'wpdev' ),
+			)
+		);
+
+		wpdev_register_settings_field(
+			'my_integration',
+			'enabled',
+			array(
+				'type'  =&gt; 'toggle',
+				'title' =&gt; __( 'Enable integration', 'wpdev' ),
+			)
+		);
+
+		wpdev_register_settings_field(
+			'my_integration',
+			'api_key',
+			array(
+				'type'       =&gt; 'text',
+				'title'      =&gt; __( 'API key', 'wpdev' ),
+				'capability' =&gt; 'manage_network',
+			)
+		);
+	}
+);</code></pre>
+      </div>
+
+      <h3 class="block-title">Example — read a setting</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-sp-2">Copy</button>
+      <pre class="code" id="code-sp-2" data-lang="php"><code>if ( wpdev_get_setting( 'enabled', false ) ) {
+	// Integration is enabled.
+}</code></pre>
+      </div>
+
+      <h3 class="block-title">Example — post-save side effect</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-sp-3">Copy</button>
+      <pre class="code" id="code-sp-3" data-lang="php"><code>add_action(
+	'wpdev_after_save_settings',
+	static function () {
+		delete_transient( 'my_integration_status' );
+	}
+);</code></pre>
+      </div>
+
+      <p class="muted small">Per-field capability can be set in field config. Save sanitization flows through the settings save pipeline and field sanitization rules. Production page rendering comes from <code>admin-setting-page</code>.</p>
+    </section>
+
+    <!-- MODULE DETAIL: MENU BUILDER -->
+    <section id="m-menu-builder" class="section module-detail">
+      <div class="md-head">
+        <div class="md-num">05</div>
+        <div>
+          <h2>menu-builder</h2>
+          <p class="md-deps">Dependencies: <strong>core</strong> · Shell</p>
+        </div>
+        <a class="md-link" href="#modules">← back to grid</a>
+      </div>
+      <p class="lead">Declarative registry for top-level and child admin menus. Used by admin page classes and playground routes to keep menu registration consistent.</p>
+
+      <h3 class="block-title">Key APIs</h3>
+      <ul class="api">
+        <li><code>wpdev_register_menu_page( $page_slug, $config = array(), $replace = true )</code></li>
+        <li><code>wpdev_register_menu_top( $slug, $args )</code></li>
+        <li><code>wpdev_register_menu_child( $parent_slug, $slug, $args )</code></li>
+        <li><code>wpdev_get_menu_page( $page_slug )</code></li>
+        <li><code>wpdev_has_menu_page( $page_slug )</code></li>
+        <li><code>wpdev_list_menu_pages()</code></li>
+        <li><code>wpdev_unregister_menu_page( $page_slug )</code></li>
+      </ul>
+
+      <h3 class="block-title">Example — register a top-level menu</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-mb-1">Copy</button>
+      <pre class="code" id="code-mb-1" data-lang="php"><code>wpdev_on_load(
+	static function () {
+		wpdev_register_menu_top(
+			'my-plugin',
+			array(
+				'title'      =&gt; __( 'My Plugin', 'wpdev' ),
+				'capability' =&gt; 'manage_options',
+				'callback'   =&gt; 'my_plugin_render_dashboard',
+				'icon'       =&gt; 'dashicons-admin-generic',
+				'position'   =&gt; 58,
+			)
+		);
+	}
+);</code></pre>
+      </div>
+
+      <h3 class="block-title">Example — register child menus</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-mb-2">Copy</button>
+      <pre class="code" id="code-mb-2" data-lang="php"><code>wpdev_register_menu_child(
+	'my-plugin',
+	'my-plugin-settings',
+	array(
+		'title'      =&gt; __( 'Settings', 'wpdev' ),
+		'capability' =&gt; 'manage_options',
+		'callback'   =&gt; 'my_plugin_render_settings',
+	)
+);</code></pre>
+      </div>
+
+      <p class="muted small">WordPress enforces the capability assigned to each menu node. This module does not render pages; callbacks or admin page classes do. Prefer menu-builder APIs over direct <code>add_menu_page()</code> calls in framework modules.</p>
+    </section>
+
+    <!-- MODULE DETAIL: TAB NAVIGATION -->
+    <section id="m-tab-navigation" class="section module-detail">
+      <div class="md-head">
+        <div class="md-num">06</div>
+        <div>
+          <h2>tab-navigation</h2>
+          <p class="md-deps">Dependencies: <strong>core</strong> · UI</p>
+        </div>
+        <a class="md-link" href="#modules">← back to grid</a>
+      </div>
+      <p class="lead">Renders shared tab UI for list views, settings sections, wizard-like flows, and playground panels.</p>
+
+      <h3 class="block-title">Key APIs</h3>
+      <ul class="api">
+        <li><code>wpdev_render_tab_navigation( $tabs, $options = array() )</code></li>
+        <li><code>wpdev_list_table_views_as_tabs( $views )</code> — convert list-table views to tabs</li>
+      </ul>
+
+      <h3 class="block-title">Example — render manual tabs</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-tn-1">Copy</button>
+      <pre class="code" id="code-tn-1" data-lang="php"><code>$active = sanitize_key( wpdev_request( 'tab', 'general' ) );
+
+wpdev_render_tab_navigation(
+	array(
+		array(
+			'id'      =&gt; 'general',
+			'title'   =&gt; __( 'General', 'wpdev' ),
+			'url'     =&gt; add_query_arg( 'tab', 'general' ),
+			'current' =&gt; 'general' === $active,
+		),
+		array(
+			'id'      =&gt; 'advanced',
+			'title'   =&gt; __( 'Advanced', 'wpdev' ),
+			'url'     =&gt; add_query_arg( 'tab', 'advanced' ),
+			'current' =&gt; 'advanced' === $active,
+		),
+	),
+	array(
+		'id' =&gt; 'my-module-tabs',
+	)
+);</code></pre>
+      </div>
+
+      <p class="muted small">Stateless module — callers own active tab state. Apply capability checks before adding protected tabs to the array. Prefer this renderer over bespoke tab markup.</p>
+    </section>
+
+    <!-- MODULE DETAIL: TABLE BUILDER -->
+    <section id="m-table-builder" class="section module-detail">
+      <div class="md-head">
+        <div class="md-num">07</div>
+        <div>
+          <h2>table-builder</h2>
+          <p class="md-deps">Dependencies: <strong>core</strong>, <strong>tab-navigation</strong> · Data</p>
+        </div>
+        <a class="md-link" href="#modules">← back to grid</a>
+      </div>
+      <p class="lead">Registers list-table classes and shared list-table helpers. Intentionally lightweight and depends only on <code>core</code> and <code>tab-navigation</code>.</p>
+
+      <h3 class="block-title">Key APIs</h3>
+      <ul class="api">
+        <li><code>wpdev_register_list_table( $table_id, $class_name, $config = null, $replace = true )</code></li>
+        <li><code>wpdev_get_list_table( $table_id )</code></li>
+        <li><code>wpdev_has_list_table( $table_id )</code></li>
+        <li><code>wpdev_list_list_tables()</code></li>
+        <li><code>wpdev_unregister_list_table( $table_id )</code></li>
+        <li><code>wpdev_render_table_builder_fixture_list_table( $module_id )</code></li>
+        <li><code>wpdev_render_playground_list_table( $module_id )</code></li>
+      </ul>
+
+      <h3 class="block-title">Example — register a list table</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-tb-1">Copy</button>
+      <pre class="code" id="code-tb-1" data-lang="php"><code>wpdev_on_load(
+	static function () {
+		wpdev_register_list_table(
+			'my_products',
+			\WPDevFramework\List_Tables\Product_List_Table::class
+		);
+	}
+);</code></pre>
+      </div>
+
+      <h3 class="block-title">Example — minimal list table class</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-tb-2">Copy</button>
+      <pre class="code" id="code-tb-2" data-lang="php"><code>class My_Product_List_Table extends \WPDevFramework\List_Tables\Base_List_Table {
+	public function get_columns() {
+		return array(
+			'name'   =&gt; __( 'Name', 'wpdev' ),
+			'status' =&gt; __( 'Status', 'wpdev' ),
+		);
+	}
+
+	protected function column_name( $item ) {
+		return esc_html( $item-&gt;get_name() );
+	}
+
+	protected function user_can_ajax_refresh() {
+		return current_user_can( 'wpdev_read_products' );
+	}
+}</code></pre>
+      </div>
+
+      <h3 class="block-title">Example — hook the bulk pipeline</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-tb-3">Copy</button>
+      <pre class="code" id="code-tb-3" data-lang="php"><code>add_action(
+	'wpdev_bulk_pipeline_before_process',
+	static function ( array $context ) {
+		if ( ! current_user_can( 'manage_network' ) ) {
+			wp_die( esc_html__( 'Not allowed.', 'wpdev' ) );
+		}
+	}
+);</code></pre>
+      </div>
+
+      <p class="muted small"><code>wpdev_register_table()</code> is a DB table registration API from core/domain storage, not the list-table UI registry. Override <code>user_can_ajax_refresh()</code> for customer-facing or non-network contexts. Keep heavy queries out of templates; use query classes/managers.</p>
+    </section>
+
+    <!-- MODULE DETAIL: METABOX BUILDER -->
+    <section id="m-metabox-builder" class="section module-detail">
+      <div class="md-head">
+        <div class="md-num">08</div>
+        <div>
+          <h2>metabox-builder</h2>
+          <p class="md-deps">Dependencies: <strong>core</strong>, <strong>form-builder</strong>, <strong>field-builder</strong>, <strong>tab-navigation</strong>, <strong>table-builder</strong> · UI</p>
+        </div>
+        <a class="md-link" href="#modules">← back to grid</a>
+      </div>
+      <p class="lead">Registers metabox definitions for edit screens. Bridges field widgets, list-table widgets, and custom callbacks into <code>admin-page-builder</code> edit pages.</p>
+
+      <h3 class="block-title">Key APIs</h3>
+      <ul class="api">
+        <li><code>wpdev_register_metabox( $page_id, $metabox_id, $config = array(), $replace = true )</code></li>
+        <li><code>wpdev_get_metabox( $page_id, $metabox_id )</code></li>
+        <li><code>wpdev_has_metabox( $page_id, $metabox_id )</code></li>
+        <li><code>wpdev_list_metaboxes( $page_id = '' )</code></li>
+        <li><code>wpdev_unregister_metabox( $page_id, $metabox_id )</code></li>
+      </ul>
+
+      <h3 class="block-title">Example — register a fields metabox</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-mbx-1">Copy</button>
+      <pre class="code" id="code-mbx-1" data-lang="php"><code>wpdev_on_load(
+	static function () {
+		wpdev_register_metabox(
+			'wpdev-edit-product',
+			'seo_details',
+			array(
+				'title'    =&gt; __( 'SEO details', 'wpdev' ),
+				'context'  =&gt; 'normal',
+				'priority' =&gt; 'default',
+				'fields'   =&gt; array(
+					'seo_title' =&gt; array(
+						'type'  =&gt; 'text',
+						'title' =&gt; __( 'SEO title', 'wpdev' ),
+					),
+				),
+			)
+		);
+	}
+);</code></pre>
+      </div>
+
+      <h3 class="block-title">Example — register a custom render callback</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-mbx-2">Copy</button>
+      <pre class="code" id="code-mbx-2" data-lang="php"><code>wpdev_register_metabox(
+	'wpdev-edit-product',
+	'integration_status',
+	array(
+		'title'    =&gt; __( 'Integration status', 'wpdev' ),
+		'context'  =&gt; 'side',
+		'callback' =&gt; static function ( $page ) {
+			echo '&lt;p&gt;' . esc_html__( 'Connected', 'wpdev' ) . '&lt;/p&gt;';
+		},
+	)
+);</code></pre>
+      </div>
+
+      <p class="muted small">Metabox ids are scoped by page id. The host page is responsible for object loading, saving, and capability checks. Use <code>context</code> and <code>priority</code> consistently with WordPress metabox conventions.</p>
+    </section>
+
+    <!-- MODULE DETAIL: ADMIN PAGE BUILDER -->
+    <section id="m-admin-page-builder" class="section module-detail">
+      <div class="md-head">
+        <div class="md-num">09</div>
+        <div>
+          <h2>admin-page-builder</h2>
+          <p class="md-deps">Dependencies: <strong>core</strong>, <strong>menu-builder</strong>, <strong>tab-navigation</strong>, <strong>metabox-builder</strong> · Shell</p>
+        </div>
+        <a class="md-link" href="#modules">← back to grid</a>
+      </div>
+      <p class="lead">The admin page composition layer. Provides base/list/edit page classes, template registry, layout helpers, and page-level hooks.</p>
+
+      <h3 class="block-title">Key APIs</h3>
+      <ul class="api">
+        <li><code>wpdev_register_page_template( $layout_type, $view_path, $replace = true )</code></li>
+        <li><code>wpdev_resolve_page_template( $layout_type, $default = '' )</code></li>
+        <li><code>wpdev_has_page_template( $layout_type )</code></li>
+        <li><code>wpdev_list_page_templates()</code></li>
+        <li><code>wpdev_unregister_page_template( $layout_type )</code></li>
+        <li><code>wpdev_wrap_use_container()</code></li>
+        <li><code>wpdev_responsive_table_row( $args, $first_row, $second_row )</code></li>
+        <li><code>wpdev_register_module_admin_pages( $module_id, $page_classes, $priority = 10, $overrides_map = array() )</code></li>
+        <li><code>wpdev_register_admin_page( $class_name, $args = array(), $priority = 100 )</code></li>
+      </ul>
+
+      <h3 class="block-title">Primary classes</h3>
+      <ul class="api">
+        <li><code>WPDevFramework\Admin_Pages\Base_Admin_Page</code> — custom page shell</li>
+        <li><code>WPDevFramework\Admin_Pages\List_Admin_Page</code> — list/table pages</li>
+        <li><code>WPDevFramework\Admin_Pages\Edit_Admin_Page</code> — create/edit pages with widgets/metaboxes</li>
+      </ul>
+
+      <h3 class="block-title">Example — register a list/edit pair</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-apb-1">Copy</button>
+      <pre class="code" id="code-apb-1" data-lang="php"><code>wpdev_register_module_admin_pages(
+	'wpdev-products',
+	array(
+		\WPDevFramework\Admin_Pages\Product_List_Admin_Page::class,
+		\WPDevFramework\Admin_Pages\Product_Edit_Admin_Page::class,
+	)
+);</code></pre>
+      </div>
+
+      <h3 class="block-title">Example — minimal custom page class</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-apb-2">Copy</button>
+      <pre class="code" id="code-apb-2" data-lang="php"><code>class My_Report_Admin_Page extends \WPDevFramework\Admin_Pages\Base_Admin_Page {
+	protected $id = 'my-report';
+	protected $type = 'submenu';
+	protected $parent = 'wpdev';
+
+	public function get_title() {
+		return __( 'Report', 'wpdev' );
+	}
+
+	public function render() {
+		echo '&lt;div class="wrap"&gt;&lt;h1&gt;' . esc_html( $this-&gt;get_title() ) . '&lt;/h1&gt;&lt;/div&gt;';
+	}
+}</code></pre>
+      </div>
+
+      <p class="muted small">Instantiate pages on <code>wpdev_admin_pages</code>, not on file load. Keep capabilities in page properties and ajax handlers. Use <code>wpdev_register_admin_page()</code> when you need to mirror an existing production page elsewhere.</p>
+    </section>
+
+    <!-- MODULE DETAIL: ADMIN WIDGET BUILDER -->
+    <section id="m-admin-widget-builder" class="section module-detail">
+      <div class="md-head">
+        <div class="md-num">10</div>
+        <div>
+          <h2>admin-widget-builder</h2>
+          <p class="md-deps">Dependencies: <strong>core</strong>, <strong>admin-page-builder</strong> · UI</p>
+        </div>
+        <a class="md-link" href="#modules">← back to grid</a>
+      </div>
+      <p class="lead">Registers dashboard widgets, widget datasources, UI elements, and Jumper command palette entries.</p>
+
+      <h3 class="block-title">Key APIs</h3>
+      <ul class="api">
+        <li><code>wpdev_register_dashboard_widget( $id, $config = array(), $replace = true )</code></li>
+        <li><code>wpdev_get_dashboard_widget( $id )</code></li>
+        <li><code>wpdev_list_dashboard_widgets()</code></li>
+        <li><code>wpdev_register_widget_datasource( $id, $callback, $replace = true )</code></li>
+        <li><code>wpdev_widget_datasource( $id, $context = array() )</code></li>
+        <li><code>wpdev_register_jumper_namespace( $id, $config = array(), $replace = true )</code></li>
+        <li><code>wpdev_register_jumper_command( $id, $config = array(), $replace = true )</code></li>
+        <li><code>wpdev_list_jumper_commands()</code></li>
+        <li><code>wpdev_list_jumper_namespaces()</code></li>
+      </ul>
+
+      <h3 class="block-title">Example — register a dashboard widget</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-awb-1">Copy</button>
+      <pre class="code" id="code-awb-1" data-lang="php"><code>wpdev_on_load(
+	static function () {
+		wpdev_register_widget_datasource(
+			'my_mrr',
+			static function ( array $context ) {
+				return array(
+					'value' =&gt; '$0',
+					'label' =&gt; __( 'MRR', 'wpdev' ),
+				);
+			}
+		);
+
+		wpdev_register_dashboard_widget(
+			'my-mrr',
+			array(
+				'tab'        =&gt; 'general',
+				'title'      =&gt; __( 'Monthly Recurring Revenue', 'wpdev' ),
+				'view'       =&gt; 'dashboard-statistics/widget-simple-text',
+				'datasource' =&gt; 'my_mrr',
+				'capability' =&gt; 'manage_network',
+			)
+		);
+	}
+);</code></pre>
+      </div>
+
+      <h3 class="block-title">Example — register a Jumper command</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-awb-2">Copy</button>
+      <pre class="code" id="code-awb-2" data-lang="php"><code>add_action(
+	'wpdev_register_jumper_commands',
+	static function () {
+		wpdev_register_jumper_namespace(
+			'my-tools',
+			array(
+				'plugin' =&gt; 'My Plugin',
+				'label'  =&gt; __( 'Tools', 'wpdev' ),
+			)
+		);
+
+		wpdev_register_jumper_command(
+			'my-tools/open-settings',
+			array(
+				'namespace'  =&gt; 'my-tools',
+				'title'      =&gt; __( 'Open settings', 'wpdev' ),
+				'type'       =&gt; 'link',
+				'url'        =&gt; network_admin_url( 'admin.php?page=wpdev-settings' ),
+				'capability' =&gt; 'manage_network',
+			)
+		);
+	}
+);</code></pre>
+      </div>
+
+      <p class="muted small">Widgets and commands should include explicit capabilities. Datasources should return plain arrays and avoid rendering HTML. Server-side Jumper actions re-check command capabilities.</p>
+    </section>
+
+    <!-- MODULE DETAIL: ADMIN CUSTOM PAGE -->
+    <section id="m-admin-custom-page" class="section module-detail">
+      <div class="md-head">
+        <div class="md-num">11</div>
+        <div>
+          <h2>admin-custom-page</h2>
+          <p class="md-deps">Dependencies: <strong>core</strong>, <strong>admin-page-builder</strong>, <strong>admin-widget-builder</strong> · Shell</p>
+        </div>
+        <a class="md-link" href="#modules">← back to grid</a>
+      </div>
+      <p class="lead">Production WPDev dashboard/about pages. Wires dashboard hooks, filter controls, and export behavior. Most extension work happens through <code>admin-widget-builder</code> APIs and dashboard hooks.</p>
+
+      <h3 class="block-title">Public APIs</h3>
+      <p class="muted">This module does not expose module-scoped <code>wpdev_*</code> functions. Use <code>admin-widget-builder</code> for widget registration, <code>admin-page-builder</code> for page composition/rebinding, and dashboard hooks for filters/export behavior.</p>
+
+      <h3 class="block-title">Important hooks</h3>
+      <ul class="api">
+        <li><code>wpdev_dashboard_widgets</code> — register/render dashboard widgets</li>
+        <li><code>wpdev_dashboard_filter_bar</code> — render filter controls</li>
+        <li><code>wpdev_dashboard_display_filter</code> — adjust active filter state</li>
+        <li><code>wpdev_admin_bar_menu</code> — extend WPDev admin-bar shortcuts</li>
+        <li><code>wpdev_export_data_table_action</code> — integrate export actions</li>
+      </ul>
+
+      <h3 class="block-title">Example — add a dashboard filter UI</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-acp-1">Copy</button>
+      <pre class="code" id="code-acp-1" data-lang="php"><code>add_action(
+	'wpdev_dashboard_filter_bar',
+	static function () {
+		echo '&lt;span class="description"&gt;' . esc_html__( 'Custom dashboard filter', 'wpdev' ) . '&lt;/span&gt;';
+	}
+);</code></pre>
+      </div>
+
+      <p class="muted small">The production dashboard is usually site-admin in playground parity and network-oriented in WaaS admin flows. Use widget APIs instead of injecting heavy markup into the dashboard shell. Financial widgets commonly require <code>wpdev_read_financial</code> or a stricter capability.</p>
+    </section>
+
+    <!-- MODULE DETAIL: ADMIN SETTING PAGE -->
+    <section id="m-admin-setting-page" class="section module-detail">
+      <div class="md-head">
+        <div class="md-num">12</div>
+        <div>
+          <h2>admin-setting-page</h2>
+          <p class="md-deps">Dependencies: <strong>core</strong>, <strong>settings-panel-builder</strong>, <strong>admin-page-builder</strong> · Shell</p>
+        </div>
+        <a class="md-link" href="#modules">← back to grid</a>
+      </div>
+      <p class="lead">The production WPDev settings admin page. It is a shell over <code>settings-panel-builder</code> and <code>admin-page-builder</code>.</p>
+
+      <h3 class="block-title">Public APIs</h3>
+      <p class="muted">This module does not declare module-scoped <code>wpdev_*</code> APIs. Use <code>settings-panel-builder</code> for sections, fields, side panels, storage, and save hooks; use <code>admin-page-builder</code> for page rebinding or layout-level extension.</p>
+
+      <h3 class="block-title">Important hooks</h3>
+      <ul class="api">
+        <li><code>wpdev_settings_register_default_sections</code> — register default settings sections</li>
+        <li><code>wpdev_render_settings</code> — render settings screen sections</li>
+        <li><code>wpdev_settings_domain_mapping</code> — domain mapping section rendering</li>
+        <li><code>wpdev_settings_payment_gateways</code> — payment gateway section rendering</li>
+        <li><code>wpdev_settings_site_templates</code> — site template section rendering</li>
+      </ul>
+
+      <h3 class="block-title">Example — add a settings section to the production page</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-asp-1">Copy</button>
+      <pre class="code" id="code-asp-1" data-lang="php"><code>wpdev_on_load(
+	static function () {
+		wpdev_register_settings_section(
+			'my_module',
+			array(
+				'title' =&gt; __( 'My Module', 'wpdev' ),
+			)
+		);
+
+		wpdev_register_settings_field(
+			'my_module',
+			'enabled',
+			array(
+				'type'  =&gt; 'toggle',
+				'title' =&gt; __( 'Enable My Module', 'wpdev' ),
+			)
+		);
+	}
+);</code></pre>
+      </div>
+
+      <h3 class="block-title">Example — render custom section content</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-asp-2">Copy</button>
+      <pre class="code" id="code-asp-2" data-lang="php"><code>add_action(
+	'wpdev_render_settings',
+	static function ( $args ) {
+		if ( 'my_module' !== ( $args['section'] ?? '' ) ) {
+			return;
+		}
+
+		echo '&lt;p&gt;' . esc_html__( 'Extra section content.', 'wpdev' ) . '&lt;/p&gt;';
+	}
+);</code></pre>
+      </div>
+
+      <p class="muted small">Runtime singleton assignment is <code>wpdev()-&gt;settings</code>. Save/read behavior belongs to <code>settings-panel-builder</code>. Do not edit <code>Settings_Admin_Page</code> for normal extension; use section/field hooks.</p>
+    </section>
+
+    <!-- MODULE DETAIL: WIZARD -->
+    <section id="m-wizard" class="section module-detail">
+      <div class="md-head">
+        <div class="md-num">13</div>
+        <div>
+          <h2>wizard</h2>
+          <p class="md-deps">Dependencies: <strong>core</strong>, <strong>admin-page-builder</strong> · Shell</p>
+        </div>
+        <a class="md-link" href="#modules">← back to grid</a>
+      </div>
+      <p class="lead">Owns the setup wizard page flow and sunrise update handling. Production shell built on <code>core</code> and <code>admin-page-builder</code>.</p>
+
+      <h3 class="block-title">Public APIs</h3>
+      <p class="muted">This module does not declare module-scoped <code>wpdev_*</code> functions. Extension is hook-based.</p>
+
+      <h3 class="block-title">Important hooks</h3>
+      <ul class="api">
+        <li><code>wpdev_setup_wizard</code> — render/extend wizard flow</li>
+        <li><code>wpdev_setup_get_general_settings</code> — resolve general setup-step values</li>
+        <li><code>wpdev_setup_get_payment_settings</code> — resolve payment setup-step values</li>
+        <li><code>wpdev_setup_step_done_name</code> — customize done-step labels/state</li>
+        <li><code>wpdev_sunrise_loaded</code> — runs when sunrise integration is loaded</li>
+      </ul>
+
+      <h3 class="block-title">Example — customize a step done label</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-wz-1">Copy</button>
+      <pre class="code" id="code-wz-1" data-lang="php"><code>add_filter(
+	'wpdev_setup_step_done_name',
+	static function ( $label, $step ) {
+		if ( 'payment' === $step ) {
+			return __( 'Billing configured', 'wpdev' );
+		}
+
+		return $label;
+	},
+	10,
+	2
+);</code></pre>
+      </div>
+
+      <h3 class="block-title">Example — react to sunrise loading</h3>
+      <div class="code-wrap"><button class="copy-btn" data-copy-target="code-wz-2">Copy</button>
+      <pre class="code" id="code-wz-2" data-lang="php"><code>add_action(
+	'wpdev_sunrise_loaded',
+	static function () {
+		// Keep this path light; sunrise runs very early.
+	}
+);</code></pre>
+      </div>
+
+      <p class="muted small"><code>WPDEV_SUNRISE_VERSION</code> is managed through the plugin <code>sunrise.php</code> and <code>modules/wizard/class-sunrise.php</code>. Keep sunrise callbacks lightweight and idempotent. Extend wizard behavior with hooks instead of editing wizard internals.</p>
+    </section>
+
+    <!-- API PATTERNS -->
+    <section id="api-patterns" class="section">
+      <header class="section-head">
+        <div class="kicker">04 — Patterns</div>
+        <h2>API patterns</h2>
+        <p class="lead">
+          The building blocks you reach for first. Same shape, different entities.
+        </p>
+      </header>
+
+      <div class="pattern-grid">
+        <div class="pattern-card">
+          <div class="pat-eyebrow">01 · lifecycle</div>
+          <h3>Lifecycle helpers</h3>
+          <p>Schedule work on the WPDev hooks instead of running at file load.</p>
+          <pre class="code" data-lang="php"><code>wpdev_on_load( $cb, $priority = 10 );
+wpdev_on_admin_pages( $cb, $priority = 10 );
+
+// Inside the callback:
+add_action( 'wpdev_load',        $cb );
+add_action( 'wpdev_admin_pages', $cb );</code></pre>
+        </div>
+
+        <div class="pattern-card">
+          <div class="pat-eyebrow">02 · registry facade</div>
+          <h3>Uniform registry</h3>
+          <p>Every builder module exposes a uniform five-method facade.</p>
+          <pre class="code" data-lang="php"><code>wpdev_register_{entity}( $id, array $config = [], bool $replace = true ): bool
+wpdev_get_{entity}( $id )
+wpdev_has_{entity}( $id ): bool
+wpdev_list_{entity}(): array
+wpdev_unregister_{entity}( $id ): void</code></pre>
+        </div>
+
+        <div class="pattern-card">
+          <div class="pat-eyebrow">03 · module loading</div>
+          <h3>Module loading</h3>
+          <p>One call to pull a module and its declared dependencies.</p>
+          <pre class="code" data-lang="php"><code>wpdev_load_module( 'table-builder' );
+
+// With explicit modules dir:
+wpdev_load_module( 'core', $modules_dir );</code></pre>
+        </div>
+
+        <div class="pattern-card">
+          <div class="pat-eyebrow">04 · admin pages</div>
+          <h3>Admin page registration</h3>
+          <p>Register a list/edit pair for a module, or rebind a page class.</p>
+          <pre class="code" data-lang="php"><code>wpdev_register_module_admin_pages(
+    'wpdev-products',
+    [ List_Page::class, Edit_Page::class ]
+);
+
+wpdev_register_admin_page(
+    Product_List_Admin_Page::class,
+    [ 'parent' =&gt; 'wpdev-playground', 'context' =&gt; 'admin' ],
+    100
+);</code></pre>
+        </div>
+
+        <div class="pattern-card">
+          <div class="pat-eyebrow">05 · forms</div>
+          <h3>Form registration</h3>
+          <p>Register modal/ajax forms on <code>wpdev_register_forms</code>.</p>
+          <pre class="code" data-lang="php"><code>add_action( 'wpdev_register_forms', function () {
+    wpdev_register_form( 'archive_product', [
+        'title'      =&gt; __( 'Archive product', 'wpdev' ),
+        'capability' =&gt; 'wpdev_edit_products',
+        'fields'     =&gt; [ /* ... */ ],
+        'handler'    =&gt; 'my_archive_product_handler',
+    ] );
+} );</code></pre>
+        </div>
+
+        <div class="pattern-card">
+          <div class="pat-eyebrow">06 · settings</div>
+          <h3>Settings registration</h3>
+          <p>Register sections, fields, and side panels under the production settings page.</p>
+          <pre class="code" data-lang="php"><code>wpdev_register_settings_section( 'my_integration', [
+    'title' =&gt; __( 'My Integration', 'wpdev' ),
+] );
+
+wpdev_register_settings_field( 'my_integration', 'enabled', [
+    'type'  =&gt; 'toggle',
+    'title' =&gt; __( 'Enable integration', 'wpdev' ),
+] );</code></pre>
+        </div>
+
+        <div class="pattern-card">
+          <div class="pat-eyebrow">07 · tables</div>
+          <h3>Table registration</h3>
+          <p>Register a list-table class for list pages and metabox widgets.</p>
+          <pre class="code" data-lang="php"><code>wpdev_register_list_table(
+    'my_products',
+    \WPDevFramework\List_Tables\Product_List_Table::class
+);
+
+// Playground:
+wpdev_render_playground_list_table( 'wpdev-products' );</code></pre>
+        </div>
+
+        <div class="pattern-card">
+          <div class="pat-eyebrow">08 · widgets</div>
+          <h3>Widget registration</h3>
+          <p>Register dashboard widgets with optional reusable datasources.</p>
+          <pre class="code" data-lang="php"><code>wpdev_register_widget_datasource( 'my_mrr', $cb );
+wpdev_register_dashboard_widget( 'my-mrr', [
+    'tab'        =&gt; 'general',
+    'title'      =&gt; __( 'MRR', 'wpdev' ),
+    'datasource' =&gt; 'my_mrr',
+    'capability' =&gt; 'manage_network',
+] );</code></pre>
+        </div>
+      </div>
+
+      <h3 class="block-title">Core registry families</h3>
+      <div class="hook-table">
+        <div class="hook-row hook-head"><div>Function</div><div>Module</div><div>Purpose</div></div>
+        <div class="hook-row"><div><code>wpdev_register_module_admin_pages</code></div><div>admin-page-builder</div><div>Register module page classes on <code>wpdev_admin_pages</code></div></div>
+        <div class="hook-row"><div><code>wpdev_register_admin_page</code></div><div>core</div><div>Rebind one page class under an alternate menu/context</div></div>
+        <div class="hook-row"><div><code>wpdev_register_table</code></div><div>table-builder</div><div>Register a list-table class</div></div>
+        <div class="hook-row"><div><code>wpdev_register_form</code></div><div>form-builder</div><div>Register a modal/ajax form</div></div>
+        <div class="hook-row"><div><code>wpdev_register_field_type</code></div><div>field-builder</div><div>Register a reusable field type</div></div>
+        <div class="hook-row"><div><code>wpdev_register_settings_field</code></div><div>settings-panel-builder</div><div>Register a settings field inside a section</div></div>
+        <div class="hook-row"><div><code>wpdev_register_settings_section</code></div><div>settings-panel-builder</div><div>Register a settings section</div></div>
+        <div class="hook-row"><div><code>wpdev_register_dashboard_widget</code></div><div>admin-widget-builder</div><div>Register a dashboard widget</div></div>
+        <div class="hook-row"><div><code>wpdev_register_metabox</code></div><div>metabox-builder</div><div>Register a metabox for an edit page</div></div>
+        <div class="hook-row"><div><code>wpdev_register_menu_top</code> / <code>wpdev_register_menu_child</code></div><div>menu-builder</div><div>Register a top-level or child admin menu</div></div>
+        <div class="hook-row"><div><code>wpdev_register_playground_panel</code></div><div>core</div><div>Add a dev-only playground panel</div></div>
+        <div class="hook-row"><div><code>wpdev_register_ajax_handler</code></div><div>core</div><div>Register an ajax handler with response helpers</div></div>
+      </div>
+    </section>
+
+    <!-- EXAMPLES -->
+    <section id="examples" class="section">
+      <header class="section-head">
+        <div class="kicker">05 — Examples</div>
+        <h2>Code in context</h2>
+        <p class="lead">
+          Short, runnable-looking snippets pulled straight from the module docs.
+          Use them as starting points, not copy-paste answers — always confirm in the
+          <a href="#source-of-truth">source of truth</a>.
+        </p>
+      </header>
+
+      <div class="ex-grid">
+        <div class="ex-card">
+          <div class="ex-tag">core</div>
+          <h3>Schedule runtime work on the WPDev lifecycle</h3>
+          <div class="code-wrap"><button class="copy-btn" data-copy-target="code-ex-1">Copy</button>
+          <pre class="code" id="code-ex-1" data-lang="php"><code>wpdev_on_load(
+    static function () {
+        wpdev_register_event_listener(
+            'membership_created',
+            static function ( array $payload ) {
+                wpdev_log_add( 'Membership created: ' . ( $payload['id'] ?? 'unknown' ) );
+            }
+        );
+    }
+);</code></pre>
+          </div>
+        </div>
+
+        <div class="ex-card">
+          <div class="ex-tag">admin-page-builder</div>
+          <h3>Pair a list page and an edit page</h3>
+          <div class="code-wrap"><button class="copy-btn" data-copy-target="code-ex-2">Copy</button>
+          <pre class="code" id="code-ex-2" data-lang="php"><code>wpdev_register_module_admin_pages(
+    'wpdev-products',
+    array(
+        \WPDevFramework\Admin_Pages\Product_List_Admin_Page::class,
+        \WPDevFramework\Admin_Pages\Product_Edit_Admin_Page::class,
+    )
+);</code></pre>
+          </div>
+        </div>
+
+        <div class="ex-card">
+          <div class="ex-tag">form-builder</div>
+          <h3>Open a modal form from a button</h3>
+          <div class="code-wrap"><button class="copy-btn" data-copy-target="code-ex-3">Copy</button>
+          <pre class="code" id="code-ex-3" data-lang="php"><code>$url = wpdev_get_form_url(
+    'archive_product',
+    array( 'product_id' =&gt; absint( $product_id ) )
+);
+
+printf(
+    '&lt;a class="button wubox" href="%s"&gt;%s&lt;/a&gt;',
+    esc_url( $url ),
+    esc_html__( 'Archive', 'wpdev' )
+);</code></pre>
+          </div>
+        </div>
+
+        <div class="ex-card">
+          <div class="ex-tag">settings-panel-builder</div>
+          <h3>Section + fields with capability gating</h3>
+          <div class="code-wrap"><button class="copy-btn" data-copy-target="code-ex-4">Copy</button>
+          <pre class="code" id="code-ex-4" data-lang="php"><code>wpdev_register_settings_section(
+    'my_integration',
+    [ 'title' =&gt; __( 'My Integration', 'wpdev' ) ]
+);
+
+wpdev_register_settings_field( 'my_integration', 'enabled', [
+    'type'  =&gt; 'toggle',
+    'title' =&gt; __( 'Enable integration', 'wpdev' ),
+] );
+
+wpdev_register_settings_field( 'my_integration', 'api_key', [
+    'type'       =&gt; 'text',
+    'title'      =&gt; __( 'API key', 'wpdev' ),
+    'capability' =&gt; 'manage_network',
+] );</code></pre>
+          </div>
+        </div>
+
+        <div class="ex-card">
+          <div class="ex-tag">table-builder</div>
+          <h3>Custom list table with ajax refresh guard</h3>
+          <div class="code-wrap"><button class="copy-btn" data-copy-target="code-ex-5">Copy</button>
+          <pre class="code" id="code-ex-5" data-lang="php"><code>class My_Product_List_Table extends \WPDevFramework\List_Tables\Base_List_Table {
+    public function get_columns() {
+        return [
+            'name'   =&gt; __( 'Name', 'wpdev' ),
+            'status' =&gt; __( 'Status', 'wpdev' ),
+        ];
+    }
+
+    protected function column_name( $item ) {
+        return esc_html( $item-&gt;get_name() );
+    }
+
+    protected function user_can_ajax_refresh() {
+        return current_user_can( 'wpdev_read_products' );
+    }
+}</code></pre>
+          </div>
+        </div>
+
+        <div class="ex-card">
+          <div class="ex-tag">metabox-builder</div>
+          <h3>Edit-page fields metabox with custom callback</h3>
+          <div class="code-wrap"><button class="copy-btn" data-copy-target="code-ex-6">Copy</button>
+          <pre class="code" id="code-ex-6" data-lang="php"><code>wpdev_register_metabox(
+    'wpdev-edit-product',
+    'integration_status',
+    [
+        'title'    =&gt; __( 'Integration status', 'wpdev' ),
+        'context'  =&gt; 'side',
+        'callback' =&gt; static function ( $page ) {
+            echo '&lt;p&gt;' . esc_html__( 'Connected', 'wpdev' ) . '&lt;/p&gt;';
+        },
+    ]
+);</code></pre>
+          </div>
+        </div>
+
+        <div class="ex-card">
+          <div class="ex-tag">admin-widget-builder</div>
+          <h3>Dashboard widget with reusable datasource</h3>
+          <div class="code-wrap"><button class="copy-btn" data-copy-target="code-ex-7">Copy</button>
+          <pre class="code" id="code-ex-7" data-lang="php"><code>wpdev_on_load( static function () {
+    wpdev_register_widget_datasource( 'my_mrr', static function ( array $context ) {
+        return [
+            'value' =&gt; '$0',
+            'label' =&gt; __( 'MRR', 'wpdev' ),
+        ];
+    } );
+
+    wpdev_register_dashboard_widget( 'my-mrr', [
+        'tab'        =&gt; 'general',
+        'title'      =&gt; __( 'Monthly Recurring Revenue', 'wpdev' ),
+        'view'       =&gt; 'dashboard-statistics/widget-simple-text',
+        'datasource' =&gt; 'my_mrr',
+        'capability' =&gt; 'manage_network',
+    ] );
+} );</code></pre>
+          </div>
+        </div>
+
+        <div class="ex-card">
+          <div class="ex-tag">wizard</div>
+          <h3>Customize a wizard step label</h3>
+          <div class="code-wrap"><button class="copy-btn" data-copy-target="code-ex-8">Copy</button>
+          <pre class="code" id="code-ex-8" data-lang="php"><code>add_filter(
+    'wpdev_setup_step_done_name',
+    static function ( $label, $step ) {
+        if ( 'payment' === $step ) {
+            return __( 'Billing configured', 'wpdev' );
+        }
+        return $label;
+    },
+    10,
+    2
+);</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROADMAP -->
+    <section id="roadmap" class="section">
+      <header class="section-head">
+        <div class="kicker">06 — Roadmap</div>
+        <h2>Roadmap for developers</h2>
+        <p class="lead">
+          How to build a new feature against WPDev without re-introducing monolith coupling.
+        </p>
+      </header>
+
+      <ol class="roadmap">
+        <li>
+          <div class="rm-num">01</div>
+          <div class="rm-body">
+            <h3>Read <code>context.md</code></h3>
+            <p>Get the high-level goals, the modules/examples split, the lifecycle, and the &ldquo;do / do not&rdquo; rules. The context is the contract.</p>
+          </div>
+        </li>
+        <li>
+          <div class="rm-num">02</div>
+          <div class="rm-body">
+            <h3>Choose the relevant module</h3>
+            <p>From the 13 framework modules. For an admin CRUD: <code>admin-page-builder</code> + <code>table-builder</code> + <code>metabox-builder</code> + <code>field-builder</code>.</p>
+          </div>
+        </li>
+        <li>
+          <div class="rm-num">03</div>
+          <div class="rm-body">
+            <h3>Read <code>docs/framework/modules/{module}.md</code></h3>
+            <p>Module guide: when to use, how to load, important APIs, practical examples, implementation notes.</p>
+          </div>
+        </li>
+        <li>
+          <div class="rm-num">04</div>
+          <div class="rm-body">
+            <h3>Confirm signatures in <code>docs/api/manifest.json</code></h3>
+            <p>Never guess. The manifest is generated and the raw API is the source of truth. Read the per-module <code>API_DOC.md</code> too.</p>
+          </div>
+        </li>
+        <li>
+          <div class="rm-num">05</div>
+          <div class="rm-body">
+            <h3>Build under <code>wpdev-examples/{slug}/</code></h3>
+            <p>Use the bare folder slug. The module id uses the <code>wpdev-</code> prefix, but the folder name does not. Never <code>wpdev-examples/wpdev-products/</code> — use <code>wpdev-examples/products/</code>.</p>
+          </div>
+        </li>
+        <li>
+          <div class="rm-num">06</div>
+          <div class="rm-body">
+            <h3>Register entities on <code>wpdev_load</code></h3>
+            <p>Use <code>wpdev_on_load()</code> to schedule callbacks. Register tables, settings, forms, fields, widgets, metaboxes, and ajax handlers here.</p>
+          </div>
+        </li>
+        <li>
+          <div class="rm-num">07</div>
+          <div class="rm-body">
+            <h3>Instantiate pages on <code>wpdev_admin_pages</code></h3>
+            <p>Use <code>wpdev_on_admin_pages()</code> and <code>wpdev_register_module_admin_pages()</code>. Never instantiate page classes on file load.</p>
+          </div>
+        </li>
+        <li>
+          <div class="rm-num">08</div>
+          <div class="rm-body">
+            <h3>Add playground coverage</h3>
+            <p>Ship a sandbox panel in <strong>wpdev-playground</strong> (<code>playground-{module}/playground.php</code>) when <code>WPDEV_PLAYGROUND_DIR</code> is defined. Playground demos prove the API works in isolation.</p>
+          </div>
+        </li>
+        <li>
+          <div class="rm-num">09</div>
+          <div class="rm-body">
+            <h3>Run <code>composer ci</code></h3>
+            <p>The CI-safe validation command. Includes smoke, module naming, API docs freshness, view escaping, SQL installer, WaaS example security audit, and PHPUnit (292 tests).</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <!-- SOURCE OF TRUTH -->
+    <section id="source-of-truth" class="section">
+      <header class="section-head">
+        <div class="kicker">07 — Source of truth</div>
+        <h2>Where to look first</h2>
+        <p class="lead">
+          High-level guides are the starting point. Raw API references are the contract.
+          When they disagree, the source code wins.
+        </p>
+      </header>
+
+      <div class="sot-grid">
+        <div class="sot-card">
+          <div class="sot-cat">High-level guides</div>
+          <h3>Framework documentation</h3>
+          <ul class="ul">
+            <li><code>docs/framework/README.md</code> — index of module guides</li>
+            <li><code>docs/framework/modules/{module}.md</code> — per-module guide (13 files)</li>
+            <li><code>context.md</code> — canonical project handoff for AI agents</li>
+            <li><code>skills/wpdev-panel-builder/SKILL.md</code> — panel-building workflow</li>
+            <li><code>wpdev-examples README (sibling plugin)</code> — example contract</li>
+          </ul>
+        </div>
+
+        <div class="sot-card">
+          <div class="sot-cat">Raw API references</div>
+          <h3>Generated docs and APIs</h3>
+          <ul class="ul">
+            <li><code>docs/api/index.md</code> — generated API index</li>
+            <li><code>docs/api/manifest.json</code> — generated manifest (810 symbols)</li>
+            <li><code>docs/api/framework-primitives.md</code> — framework primitives reference</li>
+            <li><code>docs/api/functions.md</code> — framework functions</li>
+            <li><code>docs/api/hooks.md</code> — framework hooks</li>
+            <li><code>modules/{module}/API_DOC.md</code> — per-module raw API (13 files)</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 class="block-title">Quick &ldquo;where is X?&rdquo;</h3>
+      <div class="hook-table">
+        <div class="hook-row hook-head"><div>Need</div><div>Path</div></div>
+        <div class="hook-row"><div>Main plugin bootstrap</div><div><code>wpdev.php</code></div></div>
+        <div class="hook-row"><div>Core loader</div><div><code>modules/core/src/class-module-loader.php</code></div></div>
+        <div class="hook-row"><div>Core setup</div><div><code>modules/core/setup.php</code></div></div>
+        <div class="hook-row"><div>WPDev singleton</div><div><code>modules/core/src/class-wpdev.php</code></div></div>
+        <div class="hook-row"><div>Public function map</div><div><code>modules/core/src/functions/module-require.php</code></div></div>
+        <div class="hook-row"><div>API lifecycle helpers</div><div><code>modules/core/src/functions/api-lifecycle.php</code></div></div>
+        <div class="hook-row"><div>Service registry</div><div><code>modules/core/src/class-service-registry.php</code></div></div>
+        <div class="hook-row"><div>Ajax service / helpers</div><div><code>modules/core/src/ajax/</code>, <code>modules/core/src/functions/ajax.php</code></div></div>
+        <div class="hook-row"><div>View helpers</div><div><code>modules/core/src/view/template-functions.php</code></div></div>
+        <div class="hook-row"><div>Admin page base classes</div><div><code>modules/admin-page-builder/src/admin-pages/</code></div></div>
+        <div class="hook-row"><div>List table base / config</div><div><code>modules/table-builder/src/</code></div></div>
+        <div class="hook-row"><div>Field builder</div><div><code>modules/field-builder/src/</code> and <code>modules/field-builder/views/</code></div></div>
+        <div class="hook-row"><div>Form builder</div><div><code>modules/form-builder/src/</code></div></div>
+        <div class="hook-row"><div>Settings builder</div><div><code>modules/settings-panel-builder/src/</code></div></div>
+        <div class="hook-row"><div>Metabox builder</div><div><code>modules/metabox-builder/src/</code></div></div>
+        <div class="hook-row"><div>Menu builder</div><div><code>modules/menu-builder/src/</code></div></div>
+        <div class="hook-row"><div>Dashboard widgets</div><div><code>modules/admin-widget-builder/src/</code></div></div>
+        <div class="hook-row"><div>Products CRUD example</div><div><code>wpdev-examples/products/</code></div></div>
+        <div class="hook-row"><div>Checkout example</div><div><code>wpdev-examples/checkout/</code></div></div>
+        <div class="hook-row"><div>Customer panel example</div><div><code>wpdev-examples/customer-panel/</code></div></div>
+        <div class="hook-row"><div>API docs manifest</div><div><code>docs/api/manifest.json</code></div></div>
+        <div class="hook-row"><div>Framework primitives</div><div><code>docs/api/framework-primitives.md</code></div></div>
+        <div class="hook-row"><div>Agent skill</div><div><code>skills/wpdev-panel-builder/SKILL.md</code></div></div>
+      </div>
+    </section>
+
+    <!-- READINESS -->
+    <section id="readiness" class="section">
+      <header class="section-head">
+        <div class="kicker">08 — Readiness</div>
+        <h2>Quality gates</h2>
+        <p class="lead">
+          What passes today, what is intentionally left for runtime/Docker validation, and
+          the warning categories that do not block CI.
+        </p>
+      </header>
+
+      <div class="gates">
+        <div class="gate pass">
+          <div class="gate-icon" aria-hidden="true">✓</div>
+          <div>
+            <h3><code>composer ci</code> · passing</h3>
+            <p>The CI-safe validation command. Includes smoke, module naming, framework wording, stale <code>modules/wpdev-*</code> paths, example API usage, playground API docs, API doc schema/order, API docs freshness and top symbols, ajax exception docs, <code>inc/</code> shim removal, legacy root class shim coverage, sunrise path audit, P3 performance heuristic audit, view escaping check, TODO audit, SQL installer audit, WaaS example security audit (no P0), and PHPUnit (292 tests, 1649 assertions).</p>
+          </div>
+        </div>
+
+        <div class="gate warn">
+          <div class="gate-icon" aria-hidden="true">!</div>
+          <div>
+            <h3>Runtime regression needs WordPress + MySQL or Docker</h3>
+            <p><code>manual WordPress multisite verification</code> in the local environment fails on WordPress bootstrap and DB-dependent checks because the configured DB host <code>mysql</code> is not resolvable. This is an environment / connectivity blocker, not a code regression. Re-run with <code>manual multisite smoke test with wpdev + wpdev-examples + wpdev-playground active</code> (or with a healthy local MySQL-backed WordPress multisite) to complete runtime sign-off.</p>
+          </div>
+        </div>
+
+        <div class="gate info">
+          <div class="gate-icon" aria-hidden="true">i</div>
+          <div>
+            <h3>Known warning categories (non-blocking)</h3>
+            <ul class="ul">
+              <li>PHPUnit reports 1 warning, 22 deprecations, 1 skipped test. These are not failures today; they should be cleaned before a polished release.</li>
+              <li>WaaS example security audit reports warning-level P1 items: nonce / capability review needed in selected example handlers (site duplication, customer-panel, membership, site, domain, email, broadcast, webhook, event, addon).</li>
+              <li>SQL installer audit: 0 real injection risks; <code>phpcs:ignore</code> lines near <code>$wpdb</code> should still be manually reviewed.</li>
+              <li><code>wp-config.php</code> in the local environment emits a warning that <code>WPDEV_PLAYGROUND_DIR</code> is already defined.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="gate pass">
+          <div class="gate-icon" aria-hidden="true">✓</div>
+          <div>
+            <h3>Docs freshness</h3>
+            <p>The generated manifest is timestamped 2026-06-04. After API changes, refresh with <code>composer docs:api-inventory</code>, <code>composer docs:api-index</code>, and <code>composer docs:api-audit</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="block-title">Final assessment</h3>
+      <p class="lead">
+        The original framework goal has largely been achieved at the code architecture level.
+        Legacy monolith runtime is gone from <code>inc/</code>. Framework primitives are
+        centralized under <code>modules/</code>. WaaS / business domains are optional
+        examples under <code>wpdev-examples</code> (sibling plugin). API docs and a manifest exist for AI and dev
+        consumption. Builder modules expose uniform registry facades. CI-safe validation
+        passes. The remaining gap is <strong>runtime release confidence</strong>, not
+        basic framework architecture — a healthy MySQL/Docker multisite run is needed to
+        finish the sign-off.
+      </p>
+    </section>
+
+    <footer class="site-foot">
+      <div class="foot-row">
+        <div>
+          <div class="foot-brand">WPDev Framework</div>
+          <div class="foot-tag">Developer For Developer</div>
+        </div>
+        <div class="foot-meta">
+          <div>Plugin <code>wpdev.php</code> · v2.5.0</div>
+          <div>Composer <code>wpdev/wpdev-framework</code></div>
+          <div>Manifest generated 2026-06-04</div>
+        </div>
+      </div>
+      <div class="foot-row foot-bottom">
+        <div>Source files: see <a href="#source-of-truth">Source of truth</a>.</div>
+        <div><span class="slogan">Developer For Developer</span> · static documentation site</div>
+      </div>
+    </footer>
+  </main>
+</div>
+
+<!-- Floating copy toast -->
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<!-- Back to top -->
+<button id="to-top" class="to-top" aria-label="Back to top" title="Back to top">
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="19" x2="12" y2="5"/>
+    <polyline points="5 12 12 5 19 12"/>
+  </svg>
+</button>
+
+<script src="assets/app.js" defer></script>
+</body>
+</html>

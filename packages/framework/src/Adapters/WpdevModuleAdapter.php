@@ -31,4 +31,20 @@ final class WpdevModuleAdapter
     {
         $this->module->boot();
     }
+
+    public static function is_framework_active(): bool
+    {
+        return function_exists('wpdev_register_table'); // framework public API present
+    }
+
+    /** Register a kit module to boot on the framework's `wpdev_load` hook. */
+    public static function attach(ModuleInterface $module): void
+    {
+        if (self::is_framework_active() && function_exists('wpdev_on_load')) {
+            \wpdev_on_load(static function () use ($module) { $module->boot(); });
+            return;
+        }
+        // Fallback: framework not active — boot on the kit's own lifecycle.
+        $module->boot();
+    }
 }

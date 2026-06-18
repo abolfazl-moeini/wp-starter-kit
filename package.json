@@ -1,6 +1,6 @@
 {
   "name": "@wpdev/starter",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "WordPress Theme/Plugin Starter Kit",
   "license": "MIT",
   "author": {
@@ -86,7 +86,7 @@
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
     "@wordpress/api-fetch": "^7.48.0",
-    "@wpdev/build": "^0.1.0",
+    "@wpdev/build": "^1.0.0",
     "@wpdev/dependency-extraction-esbuild-plugin": "^1.0.0",
     "babel-jest": "^29.7.0",
     "chalk": "^5.4.1",

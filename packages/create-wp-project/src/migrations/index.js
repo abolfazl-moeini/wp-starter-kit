@@ -3,7 +3,7 @@
  *
  * Phase 24 of plan.v3.md. The engine's "update consumer project
  * from kit version A to version B" surface. Powers the
- * installer's `wpsk update` command (Phase 24 is engine-only;
+ * installer's `wpdev update` command (Phase 24 is engine-only;
  * the CLI surfaces land in a sibling task).
  *
  * Public exports (this file):
@@ -46,6 +46,7 @@ import { updateJsonFile } from "../json-utils.js";
 import * as migration_0_2_0 from "./0.2.0.js";
 import * as migration_0_3_0 from "./0.3.0.js";
 import * as migration_0_4_0 from "./0.4.0.js";
+import * as migration_1_0_0 from "./1.0.0.js";
 
 /* -------------------------------------------------------------------- */
 /* Migration catalog                                                     */
@@ -57,7 +58,12 @@ import * as migration_0_4_0 from "./0.4.0.js";
  * returning. Order here exists for human readability (oldest
  * at the top) and as a checklist ("did you add the new one?").
  */
-const MIGRATIONS = [migration_0_2_0, migration_0_3_0, migration_0_4_0];
+const MIGRATIONS = [
+  migration_0_2_0,
+  migration_0_3_0,
+  migration_0_4_0,
+  migration_1_0_0,
+];
 
 /**
  * Return the registered migrations sorted ASCENDING by semver

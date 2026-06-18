@@ -31,7 +31,7 @@ has a stable `id`, a list of allowed `variants`, and a default
 | `jsLib`          | `none`, `preact`, `react`             | `none`       | UI library. Only meaningful when `js !== "none"`.                                             |
 | `jsTest`         | `jest`, `vitest`, `none`              | `jest`       | JS unit testing tool. Only when `js !== "none"`.                                              |
 | `phpMinVersion`  | `7.4`, `8.0`, `8.1`, `8.2`, `8.3`     | `7.4`        | Lowest PHP version to support (drives Rector downgrade).                                      |
-| `phpFramework`   | `none`, `wpdev`                       | `none`       | Use wpdev-framework? `wpdev` adds an adapter.                                                 |
+| `phpFramework`   | `none`, `wpdev`                       | `none`       | Use WPDev Admin Framework. `wpdev` adds the companion-plugin files, adapter, and bridge.      |
 | `phpTest`        | `phpunit`, `none`                     | `phpunit`    | PHP unit testing. PHPUnit on by default.                                                      |
 | `restBatch`      | `off`, `on`                           | `off`        | REST batch endpoint + `@scope/fetch` JS client.                                               |
 | `faultTolerance` | `off`, `on`                           | `off`        | PHP fault-tolerance package. Requires PHP ≥ 8.1.                                              |

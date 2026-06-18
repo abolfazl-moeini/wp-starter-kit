@@ -1,0 +1,348 @@
+.wpdev-legacy-options-panel .hndle {
+  padding: 10px;
+}
+.wpdev-legacy-options-panel .hndle span {
+  display: block;
+  line-height: 24px;
+}
+.wpdev-legacy-options-panel .hndle span span {
+  display: inline;
+  line-height: inherit;
+  vertical-align: baseline;
+}
+.wpdev-legacy-options-panel .hndle select {
+  margin: 0;
+}
+.wpdev-legacy-options-panel .hndle label {
+  padding-right: 1em;
+  font-size: 12px;
+  vertical-align: baseline;
+}
+.wpdev-legacy-options-panel .hndle label:first-child {
+  margin-right: 1em;
+  border-right: 1px solid #dfdfdf;
+}
+.wpdev-legacy-options-panel .hndle input,
+.wpdev-legacy-options-panel .hndle select {
+  margin: -3px 0 0 0.5em;
+  vertical-align: middle;
+}
+.wpdev-legacy-options-panel > .handlediv {
+  margin-top: 4px;
+}
+.wpdev-legacy-options-panel .wrap {
+  margin: 0;
+}
+
+.wpdev-legacy-options-panel,
+#wpdev-coupon-data {
+  /* stylelint-disable-next-line selector-class-pattern */
+}
+.wpdev-legacy-options-panel .panel-wrap,
+#wpdev-coupon-data .panel-wrap {
+  background: #fff;
+}
+.wpdev-legacy-options-panel .wpdev_options_panel .wc-radios,
+.wpdev-legacy-options-panel .wc-metaboxes-wrapper .wc-radios,
+#wpdev-coupon-data .wpdev_options_panel .wc-radios,
+#wpdev-coupon-data .wc-metaboxes-wrapper .wc-radios {
+  display: block;
+  float: left;
+  margin: 0;
+}
+.wpdev-legacy-options-panel .wpdev_options_panel .wc-radios li,
+.wpdev-legacy-options-panel .wc-metaboxes-wrapper .wc-radios li,
+#wpdev-coupon-data .wpdev_options_panel .wc-radios li,
+#wpdev-coupon-data .wc-metaboxes-wrapper .wc-radios li {
+  display: block;
+  padding: 0 0 10px;
+}
+.wpdev-legacy-options-panel .wpdev_options_panel .wc-radios li input,
+.wpdev-legacy-options-panel .wc-metaboxes-wrapper .wc-radios li input,
+#wpdev-coupon-data .wpdev_options_panel .wc-radios li input,
+#wpdev-coupon-data .wc-metaboxes-wrapper .wc-radios li input {
+  width: auto;
+}
+
+.wpdev-legacy-options-panel .panel-wrap,
+#wpdev-coupon-data .panel-wrap,
+.wu .panel-wrap {
+  overflow: hidden;
+}
+.wpdev-legacy-options-panel ul.wc-tabs,
+#wpdev-coupon-data ul.wc-tabs,
+.wu ul.wc-tabs {
+  margin: 0;
+  width: 20%;
+  float: left;
+  padding: 0 0 10px;
+  position: relative;
+  background-color: #fafafa;
+  border-right: 1px solid #eee;
+  box-sizing: border-box;
+}
+.wpdev-legacy-options-panel ul.wc-tabs::after,
+#wpdev-coupon-data ul.wc-tabs::after,
+.wu ul.wc-tabs::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 9999em;
+  position: absolute;
+  bottom: -9999em;
+  left: 0;
+  background-color: #fafafa;
+  border-right: 1px solid #eee;
+}
+.wpdev-legacy-options-panel ul.wc-tabs li,
+#wpdev-coupon-data ul.wc-tabs li,
+.wu ul.wc-tabs li {
+  margin: 0;
+  padding: 0;
+  display: block;
+  position: relative;
+}
+.wpdev-legacy-options-panel ul.wc-tabs li a,
+#wpdev-coupon-data ul.wc-tabs li a,
+.wu ul.wc-tabs li a {
+  margin: 0;
+  padding: 10px;
+  display: block;
+  box-shadow: none;
+  text-decoration: none;
+  line-height: 20px !important;
+  border-bottom: 1px solid #eee;
+}
+.wpdev-legacy-options-panel ul.wc-tabs li.active a,
+#wpdev-coupon-data ul.wc-tabs li.active a,
+.wu ul.wc-tabs li.active a {
+  color: #555;
+  position: relative;
+  background-color: #eee;
+}
+
+/**
+* Shipping
+*/
+/* stylelint-disable-next-line selector-class-pattern */
+.wpdev_page_wc-settings .shippingrows th.check-column {
+  padding-top: 20px;
+}
+.wpdev_page_wc-settings .shippingrows tfoot th {
+  padding-left: 10px;
+}
+.wpdev_page_wc-settings h3.wc-settings-sub-title {
+  font-size: 1.2em;
+}
+
+.wpdev-legacy-options-panel .inside,
+#wpdev-product-type-options .inside,
+#wpdev-order-data .inside,
+#wpdev-order-downloads .inside,
+#wpdev-coupon-data .inside {
+  margin: 0;
+  padding: 0;
+}
+
+/* stylelint-disable-next-line selector-class-pattern */
+.wpdev_options_panel,
+.panel {
+  padding: 9px;
+  color: #555;
+  display: block !important;
+}
+
+/* stylelint-disable-next-line selector-class-pattern */
+.wpdev_page_settings .wpdev_options_panel,
+.panel {
+  padding: 0;
+}
+
+#wpdev-product-type-options .panel,
+#wpdev-product-specs .inside {
+  margin: 0;
+  padding: 9px;
+}
+
+/* stylelint-disable-next-line selector-class-pattern */
+.wpdev_options_panel p,
+#wpdev-product-type-options .panel p,
+.wpdev_options_panel fieldset.form-field { /* stylelint-disable-line selector-class-pattern */
+  margin: 0 0 9px;
+  font-size: 12px;
+  padding: 5px 9px;
+  line-height: 24px;
+}
+.wpdev_options_panel p::after,
+#wpdev-product-type-options .panel p::after,
+.wpdev_options_panel fieldset.form-field::after {
+  content: ".";
+  display: block;
+  height: 0;
+  clear: both;
+  visibility: hidden;
+}
+
+/* stylelint-disable-next-line selector-class-pattern */
+.wpdev_options_panel .checkbox,
+.wpdev_variable_attributes .checkbox { /* stylelint-disable-line selector-class-pattern */
+  width: auto;
+  margin: 3px 0;
+  vertical-align: middle;
+}
+
+.wpdev_options_panel { /* stylelint-disable-line selector-class-pattern */
+  box-sizing: border-box;
+}
+.wpdev_options_panel p {
+  margin: 9px 0;
+}
+.wpdev_options_panel p.form-field,
+.wpdev_options_panel fieldset.form-field {
+  padding: 5px 20px 5px 162px !important; /** Padding for aligning labels left - 12px + 150 label width **/
+}
+.wpdev_options_panel .sale_price_dates_fields { /* stylelint-disable-line selector-class-pattern */ }
+.wpdev_options_panel .sale_price_dates_fields .short:first-of-type {
+  margin-bottom: 1em;
+}
+.wpdev_options_panel .sale_price_dates_fields .short:nth-of-type(2) {
+  clear: left;
+}
+.wpdev_options_panel label,
+.wpdev_options_panel legend {
+  float: left;
+  width: 150px;
+  padding: 0;
+  margin: 0 0 0 -150px;
+}
+.wpdev_options_panel label.form-field-full {
+  width: auto;
+}
+.wpdev_options_panel .description {
+  padding: 0;
+  margin: 0 0 0 7px;
+  clear: none;
+}
+.wpdev_options_panel .description-block {
+  margin-left: 0;
+  display: block;
+}
+.wpdev_options_panel textarea,
+.wpdev_options_panel input,
+.wpdev_options_panel select {
+  margin: 0;
+}
+.wpdev_options_panel textarea {
+  height: 3.5em;
+  vertical-align: top;
+  width: 100%;
+}
+.wpdev_options_panel input[type=text],
+.wpdev_options_panel input[type=email],
+.wpdev_options_panel input[type=number],
+.wpdev_options_panel input[type=password] {
+  width: 100%;
+  float: left;
+}
+.wpdev_options_panel input.button {
+  width: auto;
+  margin-left: 8px;
+}
+.wpdev_options_panel select {
+  float: left;
+  width: 100%;
+}
+.wpdev_options_panel input[type=text].short,
+.wpdev_options_panel input[type=email].short,
+.wpdev_options_panel input[type=number].short,
+.wpdev_options_panel input[type=password].short,
+.wpdev_options_panel .short {
+  width: 100%;
+}
+.wpdev_options_panel .sized {
+  width: auto !important;
+  margin-right: 6px;
+}
+.wpdev_options_panel .options_group { /* stylelint-disable-line selector-class-pattern */
+  border-top: 1px solid #fff;
+  border-bottom: 1px solid #eee;
+}
+.wpdev_options_panel .options_group:first-child {
+  border-top: 0;
+}
+.wpdev_options_panel .options_group:last-child {
+  border-bottom: 0;
+}
+.wpdev_options_panel .options_group fieldset {
+  margin: 9px 0;
+  font-size: 12px;
+  padding: 5px 9px;
+  line-height: 24px;
+}
+.wpdev_options_panel .options_group fieldset label {
+  width: auto;
+  float: none;
+}
+.wpdev_options_panel .options_group fieldset ul {
+  float: left;
+  width: 50%;
+  margin: 0;
+  padding: 0;
+}
+.wpdev_options_panel .options_group fieldset ul li {
+  margin: 0;
+  width: auto;
+}
+.wpdev_options_panel .options_group fieldset ul li input {
+  width: auto;
+  float: none;
+  margin-right: 4px;
+}
+.wpdev_options_panel .options_group fieldset ul.wc-radios label {
+  margin-left: 0;
+}
+.wpdev_options_panel .dimensions_field { /* stylelint-disable-line selector-class-pattern */ }
+.wpdev_options_panel .dimensions_field .wrap {
+  display: block;
+  width: 50%;
+}
+.wpdev_options_panel .dimensions_field .wrap input {
+  width: 30.75%;
+  margin-right: 3.8%;
+}
+.wpdev_options_panel .dimensions_field .wrap .last {
+  margin-right: 0;
+}
+.wpdev_options_panel.padded {
+  padding: 1em;
+}
+.wpdev_options_panel .select2-container {
+  float: left;
+}
+
+.wpdev-legacy-options-panel input.dp-applied {
+  float: left;
+}
+
+/* stylelint-disable-next-line selector-id-pattern */
+#virtual_product_options,
+#grouped_product_options,
+#simple_product_options { /* stylelint-disable-line selector-id-pattern */
+  padding: 12px;
+  font-style: italic;
+  color: #666;
+}
+
+/**
+ * Optimisation for screens 900px and smaller
+ */
+@media only screen and (max-width: 900px) {
+  .wpdev-legacy-options-panel ul.wc-tabs,
+  #wpdev-coupon-data ul.wc-tabs,
+  .wu ul.wc-tabs {
+    width: 10%;
+  }
+  .wpdev-legacy-options-panel .panel {
+    width: 90%;
+  }
+}

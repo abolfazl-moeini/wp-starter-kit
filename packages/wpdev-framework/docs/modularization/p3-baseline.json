@@ -1,0 +1,5 @@
+{
+  "module_count_min": 14,
+  "module_load_ms_max": 2000,
+  "note": "Profiled via bin/profile-module-load.php in Docker multisite (~5.5ms load, 14 framework modules + optional examples). Ceiling allows slower hosts."
+}

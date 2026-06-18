@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bundle name="WPDev">
+  <domain name="wpdev">
+    <project name="WPDev" slug="wpdev">
+      <source>
+        <directory>.</directory>
+      </source>
+      <target>
+        <directory>lang</directory>
+      </target>
+      <template>
+        <file>lang/wpdev.pot</file>
+      </template>
+    </project>
+  </domain>
+  <exclude>
+    <directory>node_modules</directory>
+    <directory>vendor</directory>
+    <directory>dependencies</directory>
+  </exclude>
+</bundle>

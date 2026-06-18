@@ -1,6 +1,6 @@
 {
   "name": "@wpdev/rest-utils",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "WordPress REST helpers and batch fetch client for wp-starter-kit consumers.",
   "type": "module",
   "main": "index.js",
@@ -13,9 +13,9 @@
     "src/fetch"
   ],
   "dependencies": {
-    "@wpdev/utils": "^0.1.0",
-    "@wpdev/hooks": "^0.1.0",
-    "@wpdev/html-utils": "^0.1.0",
+    "@wpdev/utils": "^1.0.0",
+    "@wpdev/hooks": "^1.0.0",
+    "@wpdev/html-utils": "^1.0.0",
     "@wordpress/url": "^3.55.0",
     "@wordpress/api-fetch": "^7.0.0"
   },

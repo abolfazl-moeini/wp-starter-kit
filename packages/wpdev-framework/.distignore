@@ -1,0 +1,36 @@
+# Excluded from release zip (bin/build-release-zip.sh)
+# WordPress.org and GitHub release packaging
+
+.git
+.github
+.gitignore
+.distignore
+.cursor
+.cursorignore
+.idea
+.kiro
+.phpunit.cache
+.DS_Store
+**/.DS_Store
+
+# Dev tooling
+bin
+tests
+vendor
+composer.json
+composer.lock
+phpunit.xml.dist
+
+# Agent / local context (runtime-safe to omit)
+skills
+context.md
+
+# Planning / historical docs (ship api + framework only)
+docs/code-review/
+docs/modularization/
+docs/refactor-plan-review.md
+docs/RELEASE-PREP.md
+docs/site/
+
+# Optional: ship docs separately or include by removing lines below
+# docs

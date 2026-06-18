@@ -65,7 +65,12 @@ function isTranslationValid(label) {
 
 function extractTranslation(contents, format) {
   if (format === "json") {
-    const parsed = JSON.parse(contents);
+    let parsed;
+    try {
+      parsed = JSON.parse(contents);
+    } catch (e) {
+      throw new Error(`Invalid translation JSON: ${e.message}`);
+    }
     const messages = parsed?.locale_data?.messages ?? {};
     const out = {};
     for (const k of Object.keys(messages)) {
@@ -93,7 +98,12 @@ function extractTranslation(contents, format) {
 
 function updateTranslation(existing, additions, format) {
   if (format === "json") {
-    const parsed = JSON.parse(existing);
+    let parsed;
+    try {
+      parsed = JSON.parse(existing);
+    } catch (e) {
+      throw new Error(`Invalid translation JSON: ${e.message}`);
+    }
     parsed.locale_data = parsed.locale_data ?? {};
     parsed.locale_data.messages = parsed.locale_data.messages ?? {};
 
@@ -150,13 +160,29 @@ function mergeTranslationFiles(mainPath, otherPaths, format) {
     );
   }
 
-  const main = JSON.parse(fs.readFileSync(mainPath, "utf8"));
+  let main;
+  try {
+    const mainContent = fs.readFileSync(mainPath, "utf8");
+    main = JSON.parse(mainContent);
+  } catch (e) {
+    throw new Error(
+      `Failed to read/parse main file '${mainPath}': ${e.message}`,
+    );
+  }
   main.locale_data = main.locale_data ?? {};
   main.locale_data.messages = main.locale_data.messages ?? {};
 
   for (const other of otherPaths) {
     if (!other) continue;
-    const o = JSON.parse(fs.readFileSync(other, "utf8"));
+    let o;
+    try {
+      const otherContent = fs.readFileSync(other, "utf8");
+      o = JSON.parse(otherContent);
+    } catch (e) {
+      throw new Error(
+        `Failed to read/parse other file '${other}': ${e.message}`,
+      );
+    }
     const msgs = o?.locale_data?.messages ?? {};
     for (const k of Object.keys(msgs)) {
       if (!isTranslationValid(msgs[k])) continue;

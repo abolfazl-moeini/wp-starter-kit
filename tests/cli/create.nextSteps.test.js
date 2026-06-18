@@ -118,6 +118,20 @@ describe("runCreate / ui.renderNextSteps — next-steps contract (I3.9/I3.10)", 
     expect(steps[0]).toBe("cd /var/tmp/wpdev");
   });
 
+  test("renderNextSteps lists companion plugin activation when phpFramework is wpdev", () => {
+    const steps = renderNextSteps(
+      { js: "none", husky: "off", phpTest: "none", phpFramework: "wpdev" },
+      { targetDir: "/tmp/proj" },
+    );
+    expect(
+      steps.some((s) =>
+        /Activate the companion plugin under companion-plugins\/wpdev\//.test(
+          s,
+        ),
+      ),
+    ).toBe(true);
+  });
+
   test("runCreate returns the resolved features + runOptions shape that the bin uses to drive renderNextSteps", async () => {
     // The bin layer (main.js) is responsible for invoking
     // `ui.renderNextSteps(resolved.features, resolved.runOptions)`

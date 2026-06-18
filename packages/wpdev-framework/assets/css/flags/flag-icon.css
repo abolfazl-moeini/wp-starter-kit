@@ -1,0 +1,1825 @@
+@charset "UTF-8";
+.wpdev-flag-icon-background, .wpdev-flag-icon {
+  background-size: contain;
+  background-position: 50%;
+  background-repeat: no-repeat;
+}
+
+.wpdev-flag-icon {
+  position: relative;
+  display: inline-block;
+  width: 1.3333333333em;
+  line-height: 1;
+}
+.wpdev-flag-icon::before {
+  content: " ";
+}
+.wpdev-flag-icon.wpdev-flag-icon-squared {
+  width: 1em;
+}
+
+.wpdev-flag-icon-ad {
+  background-image: url(../img/flags/4x3/ad.svg);
+}
+.wpdev-flag-icon-ad.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ad.svg);
+}
+
+.wpdev-flag-icon-ae {
+  background-image: url(../img/flags/4x3/ae.svg);
+}
+.wpdev-flag-icon-ae.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ae.svg);
+}
+
+.wpdev-flag-icon-af {
+  background-image: url(../img/flags/4x3/af.svg);
+}
+.wpdev-flag-icon-af.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/af.svg);
+}
+
+.wpdev-flag-icon-ag {
+  background-image: url(../img/flags/4x3/ag.svg);
+}
+.wpdev-flag-icon-ag.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ag.svg);
+}
+
+.wpdev-flag-icon-ai {
+  background-image: url(../img/flags/4x3/ai.svg);
+}
+.wpdev-flag-icon-ai.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ai.svg);
+}
+
+.wpdev-flag-icon-al {
+  background-image: url(../img/flags/4x3/al.svg);
+}
+.wpdev-flag-icon-al.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/al.svg);
+}
+
+.wpdev-flag-icon-am {
+  background-image: url(../img/flags/4x3/am.svg);
+}
+.wpdev-flag-icon-am.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/am.svg);
+}
+
+.wpdev-flag-icon-ao {
+  background-image: url(../img/flags/4x3/ao.svg);
+}
+.wpdev-flag-icon-ao.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ao.svg);
+}
+
+.wpdev-flag-icon-aq {
+  background-image: url(../img/flags/4x3/aq.svg);
+}
+.wpdev-flag-icon-aq.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/aq.svg);
+}
+
+.wpdev-flag-icon-ar {
+  background-image: url(../img/flags/4x3/ar.svg);
+}
+.wpdev-flag-icon-ar.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ar.svg);
+}
+
+.wpdev-flag-icon-as {
+  background-image: url(../img/flags/4x3/as.svg);
+}
+.wpdev-flag-icon-as.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/as.svg);
+}
+
+.wpdev-flag-icon-at {
+  background-image: url(../img/flags/4x3/at.svg);
+}
+.wpdev-flag-icon-at.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/at.svg);
+}
+
+.wpdev-flag-icon-au {
+  background-image: url(../img/flags/4x3/au.svg);
+}
+.wpdev-flag-icon-au.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/au.svg);
+}
+
+.wpdev-flag-icon-aw {
+  background-image: url(../img/flags/4x3/aw.svg);
+}
+.wpdev-flag-icon-aw.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/aw.svg);
+}
+
+.wpdev-flag-icon-ax {
+  background-image: url(../img/flags/4x3/ax.svg);
+}
+.wpdev-flag-icon-ax.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ax.svg);
+}
+
+.wpdev-flag-icon-az {
+  background-image: url(../img/flags/4x3/az.svg);
+}
+.wpdev-flag-icon-az.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/az.svg);
+}
+
+.wpdev-flag-icon-ba {
+  background-image: url(../img/flags/4x3/ba.svg);
+}
+.wpdev-flag-icon-ba.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ba.svg);
+}
+
+.wpdev-flag-icon-bb {
+  background-image: url(../img/flags/4x3/bb.svg);
+}
+.wpdev-flag-icon-bb.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bb.svg);
+}
+
+.wpdev-flag-icon-bd {
+  background-image: url(../img/flags/4x3/bd.svg);
+}
+.wpdev-flag-icon-bd.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bd.svg);
+}
+
+.wpdev-flag-icon-be {
+  background-image: url(../img/flags/4x3/be.svg);
+}
+.wpdev-flag-icon-be.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/be.svg);
+}
+
+.wpdev-flag-icon-bf {
+  background-image: url(../img/flags/4x3/bf.svg);
+}
+.wpdev-flag-icon-bf.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bf.svg);
+}
+
+.wpdev-flag-icon-bg {
+  background-image: url(../img/flags/4x3/bg.svg);
+}
+.wpdev-flag-icon-bg.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bg.svg);
+}
+
+.wpdev-flag-icon-bh {
+  background-image: url(../img/flags/4x3/bh.svg);
+}
+.wpdev-flag-icon-bh.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bh.svg);
+}
+
+.wpdev-flag-icon-bi {
+  background-image: url(../img/flags/4x3/bi.svg);
+}
+.wpdev-flag-icon-bi.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bi.svg);
+}
+
+.wpdev-flag-icon-bj {
+  background-image: url(../img/flags/4x3/bj.svg);
+}
+.wpdev-flag-icon-bj.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bj.svg);
+}
+
+.wpdev-flag-icon-bl {
+  background-image: url(../img/flags/4x3/bl.svg);
+}
+.wpdev-flag-icon-bl.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bl.svg);
+}
+
+.wpdev-flag-icon-bm {
+  background-image: url(../img/flags/4x3/bm.svg);
+}
+.wpdev-flag-icon-bm.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bm.svg);
+}
+
+.wpdev-flag-icon-bn {
+  background-image: url(../img/flags/4x3/bn.svg);
+}
+.wpdev-flag-icon-bn.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bn.svg);
+}
+
+.wpdev-flag-icon-bo {
+  background-image: url(../img/flags/4x3/bo.svg);
+}
+.wpdev-flag-icon-bo.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bo.svg);
+}
+
+.wpdev-flag-icon-bq {
+  background-image: url(../img/flags/4x3/bq.svg);
+}
+.wpdev-flag-icon-bq.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bq.svg);
+}
+
+.wpdev-flag-icon-br {
+  background-image: url(../img/flags/4x3/br.svg);
+}
+.wpdev-flag-icon-br.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/br.svg);
+}
+
+.wpdev-flag-icon-bs {
+  background-image: url(../img/flags/4x3/bs.svg);
+}
+.wpdev-flag-icon-bs.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bs.svg);
+}
+
+.wpdev-flag-icon-bt {
+  background-image: url(../img/flags/4x3/bt.svg);
+}
+.wpdev-flag-icon-bt.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bt.svg);
+}
+
+.wpdev-flag-icon-bv {
+  background-image: url(../img/flags/4x3/bv.svg);
+}
+.wpdev-flag-icon-bv.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bv.svg);
+}
+
+.wpdev-flag-icon-bw {
+  background-image: url(../img/flags/4x3/bw.svg);
+}
+.wpdev-flag-icon-bw.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bw.svg);
+}
+
+.wpdev-flag-icon-by {
+  background-image: url(../img/flags/4x3/by.svg);
+}
+.wpdev-flag-icon-by.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/by.svg);
+}
+
+.wpdev-flag-icon-bz {
+  background-image: url(../img/flags/4x3/bz.svg);
+}
+.wpdev-flag-icon-bz.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/bz.svg);
+}
+
+.wpdev-flag-icon-ca {
+  background-image: url(../img/flags/4x3/ca.svg);
+}
+.wpdev-flag-icon-ca.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ca.svg);
+}
+
+.wpdev-flag-icon-cc {
+  background-image: url(../img/flags/4x3/cc.svg);
+}
+.wpdev-flag-icon-cc.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/cc.svg);
+}
+
+.wpdev-flag-icon-cd {
+  background-image: url(../img/flags/4x3/cd.svg);
+}
+.wpdev-flag-icon-cd.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/cd.svg);
+}
+
+.wpdev-flag-icon-cf {
+  background-image: url(../img/flags/4x3/cf.svg);
+}
+.wpdev-flag-icon-cf.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/cf.svg);
+}
+
+.wpdev-flag-icon-cg {
+  background-image: url(../img/flags/4x3/cg.svg);
+}
+.wpdev-flag-icon-cg.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/cg.svg);
+}
+
+.wpdev-flag-icon-ch {
+  background-image: url(../img/flags/4x3/ch.svg);
+}
+.wpdev-flag-icon-ch.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ch.svg);
+}
+
+.wpdev-flag-icon-ci {
+  background-image: url(../img/flags/4x3/ci.svg);
+}
+.wpdev-flag-icon-ci.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ci.svg);
+}
+
+.wpdev-flag-icon-ck {
+  background-image: url(../img/flags/4x3/ck.svg);
+}
+.wpdev-flag-icon-ck.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ck.svg);
+}
+
+.wpdev-flag-icon-cl {
+  background-image: url(../img/flags/4x3/cl.svg);
+}
+.wpdev-flag-icon-cl.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/cl.svg);
+}
+
+.wpdev-flag-icon-cm {
+  background-image: url(../img/flags/4x3/cm.svg);
+}
+.wpdev-flag-icon-cm.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/cm.svg);
+}
+
+.wpdev-flag-icon-cn {
+  background-image: url(../img/flags/4x3/cn.svg);
+}
+.wpdev-flag-icon-cn.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/cn.svg);
+}
+
+.wpdev-flag-icon-co {
+  background-image: url(../img/flags/4x3/co.svg);
+}
+.wpdev-flag-icon-co.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/co.svg);
+}
+
+.wpdev-flag-icon-cr {
+  background-image: url(../img/flags/4x3/cr.svg);
+}
+.wpdev-flag-icon-cr.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/cr.svg);
+}
+
+.wpdev-flag-icon-cu {
+  background-image: url(../img/flags/4x3/cu.svg);
+}
+.wpdev-flag-icon-cu.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/cu.svg);
+}
+
+.wpdev-flag-icon-cv {
+  background-image: url(../img/flags/4x3/cv.svg);
+}
+.wpdev-flag-icon-cv.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/cv.svg);
+}
+
+.wpdev-flag-icon-cw {
+  background-image: url(../img/flags/4x3/cw.svg);
+}
+.wpdev-flag-icon-cw.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/cw.svg);
+}
+
+.wpdev-flag-icon-cx {
+  background-image: url(../img/flags/4x3/cx.svg);
+}
+.wpdev-flag-icon-cx.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/cx.svg);
+}
+
+.wpdev-flag-icon-cy {
+  background-image: url(../img/flags/4x3/cy.svg);
+}
+.wpdev-flag-icon-cy.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/cy.svg);
+}
+
+.wpdev-flag-icon-cz {
+  background-image: url(../img/flags/4x3/cz.svg);
+}
+.wpdev-flag-icon-cz.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/cz.svg);
+}
+
+.wpdev-flag-icon-de {
+  background-image: url(../img/flags/4x3/de.svg);
+}
+.wpdev-flag-icon-de.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/de.svg);
+}
+
+.wpdev-flag-icon-dj {
+  background-image: url(../img/flags/4x3/dj.svg);
+}
+.wpdev-flag-icon-dj.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/dj.svg);
+}
+
+.wpdev-flag-icon-dk {
+  background-image: url(../img/flags/4x3/dk.svg);
+}
+.wpdev-flag-icon-dk.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/dk.svg);
+}
+
+.wpdev-flag-icon-dm {
+  background-image: url(../img/flags/4x3/dm.svg);
+}
+.wpdev-flag-icon-dm.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/dm.svg);
+}
+
+.wpdev-flag-icon-do {
+  background-image: url(../img/flags/4x3/do.svg);
+}
+.wpdev-flag-icon-do.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/do.svg);
+}
+
+.wpdev-flag-icon-dz {
+  background-image: url(../img/flags/4x3/dz.svg);
+}
+.wpdev-flag-icon-dz.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/dz.svg);
+}
+
+.wpdev-flag-icon-ec {
+  background-image: url(../img/flags/4x3/ec.svg);
+}
+.wpdev-flag-icon-ec.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ec.svg);
+}
+
+.wpdev-flag-icon-ee {
+  background-image: url(../img/flags/4x3/ee.svg);
+}
+.wpdev-flag-icon-ee.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ee.svg);
+}
+
+.wpdev-flag-icon-eg {
+  background-image: url(../img/flags/4x3/eg.svg);
+}
+.wpdev-flag-icon-eg.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/eg.svg);
+}
+
+.wpdev-flag-icon-eh {
+  background-image: url(../img/flags/4x3/eh.svg);
+}
+.wpdev-flag-icon-eh.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/eh.svg);
+}
+
+.wpdev-flag-icon-er {
+  background-image: url(../img/flags/4x3/er.svg);
+}
+.wpdev-flag-icon-er.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/er.svg);
+}
+
+.wpdev-flag-icon-es {
+  background-image: url(../img/flags/4x3/es.svg);
+}
+.wpdev-flag-icon-es.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/es.svg);
+}
+
+.wpdev-flag-icon-et {
+  background-image: url(../img/flags/4x3/et.svg);
+}
+.wpdev-flag-icon-et.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/et.svg);
+}
+
+.wpdev-flag-icon-fi {
+  background-image: url(../img/flags/4x3/fi.svg);
+}
+.wpdev-flag-icon-fi.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/fi.svg);
+}
+
+.wpdev-flag-icon-fj {
+  background-image: url(../img/flags/4x3/fj.svg);
+}
+.wpdev-flag-icon-fj.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/fj.svg);
+}
+
+.wpdev-flag-icon-fk {
+  background-image: url(../img/flags/4x3/fk.svg);
+}
+.wpdev-flag-icon-fk.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/fk.svg);
+}
+
+.wpdev-flag-icon-fm {
+  background-image: url(../img/flags/4x3/fm.svg);
+}
+.wpdev-flag-icon-fm.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/fm.svg);
+}
+
+.wpdev-flag-icon-fo {
+  background-image: url(../img/flags/4x3/fo.svg);
+}
+.wpdev-flag-icon-fo.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/fo.svg);
+}
+
+.wpdev-flag-icon-fr {
+  background-image: url(../img/flags/4x3/fr.svg);
+}
+.wpdev-flag-icon-fr.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/fr.svg);
+}
+
+.wpdev-flag-icon-ga {
+  background-image: url(../img/flags/4x3/ga.svg);
+}
+.wpdev-flag-icon-ga.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ga.svg);
+}
+
+.wpdev-flag-icon-gb {
+  background-image: url(../img/flags/4x3/gb.svg);
+}
+.wpdev-flag-icon-gb.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gb.svg);
+}
+
+.wpdev-flag-icon-gd {
+  background-image: url(../img/flags/4x3/gd.svg);
+}
+.wpdev-flag-icon-gd.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gd.svg);
+}
+
+.wpdev-flag-icon-ge {
+  background-image: url(../img/flags/4x3/ge.svg);
+}
+.wpdev-flag-icon-ge.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ge.svg);
+}
+
+.wpdev-flag-icon-gf {
+  background-image: url(../img/flags/4x3/gf.svg);
+}
+.wpdev-flag-icon-gf.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gf.svg);
+}
+
+.wpdev-flag-icon-gg {
+  background-image: url(../img/flags/4x3/gg.svg);
+}
+.wpdev-flag-icon-gg.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gg.svg);
+}
+
+.wpdev-flag-icon-gh {
+  background-image: url(../img/flags/4x3/gh.svg);
+}
+.wpdev-flag-icon-gh.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gh.svg);
+}
+
+.wpdev-flag-icon-gi {
+  background-image: url(../img/flags/4x3/gi.svg);
+}
+.wpdev-flag-icon-gi.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gi.svg);
+}
+
+.wpdev-flag-icon-gl {
+  background-image: url(../img/flags/4x3/gl.svg);
+}
+.wpdev-flag-icon-gl.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gl.svg);
+}
+
+.wpdev-flag-icon-gm {
+  background-image: url(../img/flags/4x3/gm.svg);
+}
+.wpdev-flag-icon-gm.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gm.svg);
+}
+
+.wpdev-flag-icon-gn {
+  background-image: url(../img/flags/4x3/gn.svg);
+}
+.wpdev-flag-icon-gn.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gn.svg);
+}
+
+.wpdev-flag-icon-gp {
+  background-image: url(../img/flags/4x3/gp.svg);
+}
+.wpdev-flag-icon-gp.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gp.svg);
+}
+
+.wpdev-flag-icon-gq {
+  background-image: url(../img/flags/4x3/gq.svg);
+}
+.wpdev-flag-icon-gq.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gq.svg);
+}
+
+.wpdev-flag-icon-gr {
+  background-image: url(../img/flags/4x3/gr.svg);
+}
+.wpdev-flag-icon-gr.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gr.svg);
+}
+
+.wpdev-flag-icon-gs {
+  background-image: url(../img/flags/4x3/gs.svg);
+}
+.wpdev-flag-icon-gs.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gs.svg);
+}
+
+.wpdev-flag-icon-gt {
+  background-image: url(../img/flags/4x3/gt.svg);
+}
+.wpdev-flag-icon-gt.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gt.svg);
+}
+
+.wpdev-flag-icon-gu {
+  background-image: url(../img/flags/4x3/gu.svg);
+}
+.wpdev-flag-icon-gu.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gu.svg);
+}
+
+.wpdev-flag-icon-gw {
+  background-image: url(../img/flags/4x3/gw.svg);
+}
+.wpdev-flag-icon-gw.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gw.svg);
+}
+
+.wpdev-flag-icon-gy {
+  background-image: url(../img/flags/4x3/gy.svg);
+}
+.wpdev-flag-icon-gy.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gy.svg);
+}
+
+.wpdev-flag-icon-hk {
+  background-image: url(../img/flags/4x3/hk.svg);
+}
+.wpdev-flag-icon-hk.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/hk.svg);
+}
+
+.wpdev-flag-icon-hm {
+  background-image: url(../img/flags/4x3/hm.svg);
+}
+.wpdev-flag-icon-hm.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/hm.svg);
+}
+
+.wpdev-flag-icon-hn {
+  background-image: url(../img/flags/4x3/hn.svg);
+}
+.wpdev-flag-icon-hn.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/hn.svg);
+}
+
+.wpdev-flag-icon-hr {
+  background-image: url(../img/flags/4x3/hr.svg);
+}
+.wpdev-flag-icon-hr.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/hr.svg);
+}
+
+.wpdev-flag-icon-ht {
+  background-image: url(../img/flags/4x3/ht.svg);
+}
+.wpdev-flag-icon-ht.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ht.svg);
+}
+
+.wpdev-flag-icon-hu {
+  background-image: url(../img/flags/4x3/hu.svg);
+}
+.wpdev-flag-icon-hu.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/hu.svg);
+}
+
+.wpdev-flag-icon-id {
+  background-image: url(../img/flags/4x3/id.svg);
+}
+.wpdev-flag-icon-id.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/id.svg);
+}
+
+.wpdev-flag-icon-ie {
+  background-image: url(../img/flags/4x3/ie.svg);
+}
+.wpdev-flag-icon-ie.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ie.svg);
+}
+
+.wpdev-flag-icon-il {
+  background-image: url(../img/flags/4x3/il.svg);
+}
+.wpdev-flag-icon-il.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/il.svg);
+}
+
+.wpdev-flag-icon-im {
+  background-image: url(../img/flags/4x3/im.svg);
+}
+.wpdev-flag-icon-im.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/im.svg);
+}
+
+.wpdev-flag-icon-in {
+  background-image: url(../img/flags/4x3/in.svg);
+}
+.wpdev-flag-icon-in.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/in.svg);
+}
+
+.wpdev-flag-icon-io {
+  background-image: url(../img/flags/4x3/io.svg);
+}
+.wpdev-flag-icon-io.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/io.svg);
+}
+
+.wpdev-flag-icon-iq {
+  background-image: url(../img/flags/4x3/iq.svg);
+}
+.wpdev-flag-icon-iq.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/iq.svg);
+}
+
+.wpdev-flag-icon-ir {
+  background-image: url(../img/flags/4x3/ir.svg);
+}
+.wpdev-flag-icon-ir.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ir.svg);
+}
+
+.wpdev-flag-icon-is {
+  background-image: url(../img/flags/4x3/is.svg);
+}
+.wpdev-flag-icon-is.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/is.svg);
+}
+
+.wpdev-flag-icon-it {
+  background-image: url(../img/flags/4x3/it.svg);
+}
+.wpdev-flag-icon-it.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/it.svg);
+}
+
+.wpdev-flag-icon-je {
+  background-image: url(../img/flags/4x3/je.svg);
+}
+.wpdev-flag-icon-je.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/je.svg);
+}
+
+.wpdev-flag-icon-jm {
+  background-image: url(../img/flags/4x3/jm.svg);
+}
+.wpdev-flag-icon-jm.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/jm.svg);
+}
+
+.wpdev-flag-icon-jo {
+  background-image: url(../img/flags/4x3/jo.svg);
+}
+.wpdev-flag-icon-jo.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/jo.svg);
+}
+
+.wpdev-flag-icon-jp {
+  background-image: url(../img/flags/4x3/jp.svg);
+}
+.wpdev-flag-icon-jp.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/jp.svg);
+}
+
+.wpdev-flag-icon-ke {
+  background-image: url(../img/flags/4x3/ke.svg);
+}
+.wpdev-flag-icon-ke.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ke.svg);
+}
+
+.wpdev-flag-icon-kg {
+  background-image: url(../img/flags/4x3/kg.svg);
+}
+.wpdev-flag-icon-kg.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/kg.svg);
+}
+
+.wpdev-flag-icon-kh {
+  background-image: url(../img/flags/4x3/kh.svg);
+}
+.wpdev-flag-icon-kh.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/kh.svg);
+}
+
+.wpdev-flag-icon-ki {
+  background-image: url(../img/flags/4x3/ki.svg);
+}
+.wpdev-flag-icon-ki.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ki.svg);
+}
+
+.wpdev-flag-icon-km {
+  background-image: url(../img/flags/4x3/km.svg);
+}
+.wpdev-flag-icon-km.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/km.svg);
+}
+
+.wpdev-flag-icon-kn {
+  background-image: url(../img/flags/4x3/kn.svg);
+}
+.wpdev-flag-icon-kn.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/kn.svg);
+}
+
+.wpdev-flag-icon-kp {
+  background-image: url(../img/flags/4x3/kp.svg);
+}
+.wpdev-flag-icon-kp.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/kp.svg);
+}
+
+.wpdev-flag-icon-kr {
+  background-image: url(../img/flags/4x3/kr.svg);
+}
+.wpdev-flag-icon-kr.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/kr.svg);
+}
+
+.wpdev-flag-icon-kw {
+  background-image: url(../img/flags/4x3/kw.svg);
+}
+.wpdev-flag-icon-kw.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/kw.svg);
+}
+
+.wpdev-flag-icon-ky {
+  background-image: url(../img/flags/4x3/ky.svg);
+}
+.wpdev-flag-icon-ky.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ky.svg);
+}
+
+.wpdev-flag-icon-kz {
+  background-image: url(../img/flags/4x3/kz.svg);
+}
+.wpdev-flag-icon-kz.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/kz.svg);
+}
+
+.wpdev-flag-icon-la {
+  background-image: url(../img/flags/4x3/la.svg);
+}
+.wpdev-flag-icon-la.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/la.svg);
+}
+
+.wpdev-flag-icon-lb {
+  background-image: url(../img/flags/4x3/lb.svg);
+}
+.wpdev-flag-icon-lb.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/lb.svg);
+}
+
+.wpdev-flag-icon-lc {
+  background-image: url(../img/flags/4x3/lc.svg);
+}
+.wpdev-flag-icon-lc.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/lc.svg);
+}
+
+.wpdev-flag-icon-li {
+  background-image: url(../img/flags/4x3/li.svg);
+}
+.wpdev-flag-icon-li.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/li.svg);
+}
+
+.wpdev-flag-icon-lk {
+  background-image: url(../img/flags/4x3/lk.svg);
+}
+.wpdev-flag-icon-lk.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/lk.svg);
+}
+
+.wpdev-flag-icon-lr {
+  background-image: url(../img/flags/4x3/lr.svg);
+}
+.wpdev-flag-icon-lr.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/lr.svg);
+}
+
+.wpdev-flag-icon-ls {
+  background-image: url(../img/flags/4x3/ls.svg);
+}
+.wpdev-flag-icon-ls.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ls.svg);
+}
+
+.wpdev-flag-icon-lt {
+  background-image: url(../img/flags/4x3/lt.svg);
+}
+.wpdev-flag-icon-lt.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/lt.svg);
+}
+
+.wpdev-flag-icon-lu {
+  background-image: url(../img/flags/4x3/lu.svg);
+}
+.wpdev-flag-icon-lu.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/lu.svg);
+}
+
+.wpdev-flag-icon-lv {
+  background-image: url(../img/flags/4x3/lv.svg);
+}
+.wpdev-flag-icon-lv.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/lv.svg);
+}
+
+.wpdev-flag-icon-ly {
+  background-image: url(../img/flags/4x3/ly.svg);
+}
+.wpdev-flag-icon-ly.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ly.svg);
+}
+
+.wpdev-flag-icon-ma {
+  background-image: url(../img/flags/4x3/ma.svg);
+}
+.wpdev-flag-icon-ma.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ma.svg);
+}
+
+.wpdev-flag-icon-mc {
+  background-image: url(../img/flags/4x3/mc.svg);
+}
+.wpdev-flag-icon-mc.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mc.svg);
+}
+
+.wpdev-flag-icon-md {
+  background-image: url(../img/flags/4x3/md.svg);
+}
+.wpdev-flag-icon-md.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/md.svg);
+}
+
+.wpdev-flag-icon-me {
+  background-image: url(../img/flags/4x3/me.svg);
+}
+.wpdev-flag-icon-me.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/me.svg);
+}
+
+.wpdev-flag-icon-mf {
+  background-image: url(../img/flags/4x3/mf.svg);
+}
+.wpdev-flag-icon-mf.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mf.svg);
+}
+
+.wpdev-flag-icon-mg {
+  background-image: url(../img/flags/4x3/mg.svg);
+}
+.wpdev-flag-icon-mg.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mg.svg);
+}
+
+.wpdev-flag-icon-mh {
+  background-image: url(../img/flags/4x3/mh.svg);
+}
+.wpdev-flag-icon-mh.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mh.svg);
+}
+
+.wpdev-flag-icon-mk {
+  background-image: url(../img/flags/4x3/mk.svg);
+}
+.wpdev-flag-icon-mk.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mk.svg);
+}
+
+.wpdev-flag-icon-ml {
+  background-image: url(../img/flags/4x3/ml.svg);
+}
+.wpdev-flag-icon-ml.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ml.svg);
+}
+
+.wpdev-flag-icon-mm {
+  background-image: url(../img/flags/4x3/mm.svg);
+}
+.wpdev-flag-icon-mm.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mm.svg);
+}
+
+.wpdev-flag-icon-mn {
+  background-image: url(../img/flags/4x3/mn.svg);
+}
+.wpdev-flag-icon-mn.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mn.svg);
+}
+
+.wpdev-flag-icon-mo {
+  background-image: url(../img/flags/4x3/mo.svg);
+}
+.wpdev-flag-icon-mo.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mo.svg);
+}
+
+.wpdev-flag-icon-mp {
+  background-image: url(../img/flags/4x3/mp.svg);
+}
+.wpdev-flag-icon-mp.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mp.svg);
+}
+
+.wpdev-flag-icon-mq {
+  background-image: url(../img/flags/4x3/mq.svg);
+}
+.wpdev-flag-icon-mq.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mq.svg);
+}
+
+.wpdev-flag-icon-mr {
+  background-image: url(../img/flags/4x3/mr.svg);
+}
+.wpdev-flag-icon-mr.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mr.svg);
+}
+
+.wpdev-flag-icon-ms {
+  background-image: url(../img/flags/4x3/ms.svg);
+}
+.wpdev-flag-icon-ms.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ms.svg);
+}
+
+.wpdev-flag-icon-mt {
+  background-image: url(../img/flags/4x3/mt.svg);
+}
+.wpdev-flag-icon-mt.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mt.svg);
+}
+
+.wpdev-flag-icon-mu {
+  background-image: url(../img/flags/4x3/mu.svg);
+}
+.wpdev-flag-icon-mu.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mu.svg);
+}
+
+.wpdev-flag-icon-mv {
+  background-image: url(../img/flags/4x3/mv.svg);
+}
+.wpdev-flag-icon-mv.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mv.svg);
+}
+
+.wpdev-flag-icon-mw {
+  background-image: url(../img/flags/4x3/mw.svg);
+}
+.wpdev-flag-icon-mw.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mw.svg);
+}
+
+.wpdev-flag-icon-mx {
+  background-image: url(../img/flags/4x3/mx.svg);
+}
+.wpdev-flag-icon-mx.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mx.svg);
+}
+
+.wpdev-flag-icon-my {
+  background-image: url(../img/flags/4x3/my.svg);
+}
+.wpdev-flag-icon-my.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/my.svg);
+}
+
+.wpdev-flag-icon-mz {
+  background-image: url(../img/flags/4x3/mz.svg);
+}
+.wpdev-flag-icon-mz.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/mz.svg);
+}
+
+.wpdev-flag-icon-na {
+  background-image: url(../img/flags/4x3/na.svg);
+}
+.wpdev-flag-icon-na.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/na.svg);
+}
+
+.wpdev-flag-icon-nc {
+  background-image: url(../img/flags/4x3/nc.svg);
+}
+.wpdev-flag-icon-nc.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/nc.svg);
+}
+
+.wpdev-flag-icon-ne {
+  background-image: url(../img/flags/4x3/ne.svg);
+}
+.wpdev-flag-icon-ne.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ne.svg);
+}
+
+.wpdev-flag-icon-nf {
+  background-image: url(../img/flags/4x3/nf.svg);
+}
+.wpdev-flag-icon-nf.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/nf.svg);
+}
+
+.wpdev-flag-icon-ng {
+  background-image: url(../img/flags/4x3/ng.svg);
+}
+.wpdev-flag-icon-ng.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ng.svg);
+}
+
+.wpdev-flag-icon-ni {
+  background-image: url(../img/flags/4x3/ni.svg);
+}
+.wpdev-flag-icon-ni.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ni.svg);
+}
+
+.wpdev-flag-icon-nl {
+  background-image: url(../img/flags/4x3/nl.svg);
+}
+.wpdev-flag-icon-nl.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/nl.svg);
+}
+
+.wpdev-flag-icon-no {
+  background-image: url(../img/flags/4x3/no.svg);
+}
+.wpdev-flag-icon-no.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/no.svg);
+}
+
+.wpdev-flag-icon-np {
+  background-image: url(../img/flags/4x3/np.svg);
+}
+.wpdev-flag-icon-np.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/np.svg);
+}
+
+.wpdev-flag-icon-nr {
+  background-image: url(../img/flags/4x3/nr.svg);
+}
+.wpdev-flag-icon-nr.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/nr.svg);
+}
+
+.wpdev-flag-icon-nu {
+  background-image: url(../img/flags/4x3/nu.svg);
+}
+.wpdev-flag-icon-nu.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/nu.svg);
+}
+
+.wpdev-flag-icon-nz {
+  background-image: url(../img/flags/4x3/nz.svg);
+}
+.wpdev-flag-icon-nz.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/nz.svg);
+}
+
+.wpdev-flag-icon-om {
+  background-image: url(../img/flags/4x3/om.svg);
+}
+.wpdev-flag-icon-om.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/om.svg);
+}
+
+.wpdev-flag-icon-pa {
+  background-image: url(../img/flags/4x3/pa.svg);
+}
+.wpdev-flag-icon-pa.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/pa.svg);
+}
+
+.wpdev-flag-icon-pe {
+  background-image: url(../img/flags/4x3/pe.svg);
+}
+.wpdev-flag-icon-pe.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/pe.svg);
+}
+
+.wpdev-flag-icon-pf {
+  background-image: url(../img/flags/4x3/pf.svg);
+}
+.wpdev-flag-icon-pf.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/pf.svg);
+}
+
+.wpdev-flag-icon-pg {
+  background-image: url(../img/flags/4x3/pg.svg);
+}
+.wpdev-flag-icon-pg.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/pg.svg);
+}
+
+.wpdev-flag-icon-ph {
+  background-image: url(../img/flags/4x3/ph.svg);
+}
+.wpdev-flag-icon-ph.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ph.svg);
+}
+
+.wpdev-flag-icon-pk {
+  background-image: url(../img/flags/4x3/pk.svg);
+}
+.wpdev-flag-icon-pk.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/pk.svg);
+}
+
+.wpdev-flag-icon-pl {
+  background-image: url(../img/flags/4x3/pl.svg);
+}
+.wpdev-flag-icon-pl.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/pl.svg);
+}
+
+.wpdev-flag-icon-pm {
+  background-image: url(../img/flags/4x3/pm.svg);
+}
+.wpdev-flag-icon-pm.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/pm.svg);
+}
+
+.wpdev-flag-icon-pn {
+  background-image: url(../img/flags/4x3/pn.svg);
+}
+.wpdev-flag-icon-pn.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/pn.svg);
+}
+
+.wpdev-flag-icon-pr {
+  background-image: url(../img/flags/4x3/pr.svg);
+}
+.wpdev-flag-icon-pr.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/pr.svg);
+}
+
+.wpdev-flag-icon-ps {
+  background-image: url(../img/flags/4x3/ps.svg);
+}
+.wpdev-flag-icon-ps.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ps.svg);
+}
+
+.wpdev-flag-icon-pt {
+  background-image: url(../img/flags/4x3/pt.svg);
+}
+.wpdev-flag-icon-pt.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/pt.svg);
+}
+
+.wpdev-flag-icon-pw {
+  background-image: url(../img/flags/4x3/pw.svg);
+}
+.wpdev-flag-icon-pw.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/pw.svg);
+}
+
+.wpdev-flag-icon-py {
+  background-image: url(../img/flags/4x3/py.svg);
+}
+.wpdev-flag-icon-py.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/py.svg);
+}
+
+.wpdev-flag-icon-qa {
+  background-image: url(../img/flags/4x3/qa.svg);
+}
+.wpdev-flag-icon-qa.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/qa.svg);
+}
+
+.wpdev-flag-icon-re {
+  background-image: url(../img/flags/4x3/re.svg);
+}
+.wpdev-flag-icon-re.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/re.svg);
+}
+
+.wpdev-flag-icon-ro {
+  background-image: url(../img/flags/4x3/ro.svg);
+}
+.wpdev-flag-icon-ro.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ro.svg);
+}
+
+.wpdev-flag-icon-rs {
+  background-image: url(../img/flags/4x3/rs.svg);
+}
+.wpdev-flag-icon-rs.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/rs.svg);
+}
+
+.wpdev-flag-icon-ru {
+  background-image: url(../img/flags/4x3/ru.svg);
+}
+.wpdev-flag-icon-ru.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ru.svg);
+}
+
+.wpdev-flag-icon-rw {
+  background-image: url(../img/flags/4x3/rw.svg);
+}
+.wpdev-flag-icon-rw.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/rw.svg);
+}
+
+.wpdev-flag-icon-sa {
+  background-image: url(../img/flags/4x3/sa.svg);
+}
+.wpdev-flag-icon-sa.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sa.svg);
+}
+
+.wpdev-flag-icon-sb {
+  background-image: url(../img/flags/4x3/sb.svg);
+}
+.wpdev-flag-icon-sb.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sb.svg);
+}
+
+.wpdev-flag-icon-sc {
+  background-image: url(../img/flags/4x3/sc.svg);
+}
+.wpdev-flag-icon-sc.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sc.svg);
+}
+
+.wpdev-flag-icon-sd {
+  background-image: url(../img/flags/4x3/sd.svg);
+}
+.wpdev-flag-icon-sd.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sd.svg);
+}
+
+.wpdev-flag-icon-se {
+  background-image: url(../img/flags/4x3/se.svg);
+}
+.wpdev-flag-icon-se.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/se.svg);
+}
+
+.wpdev-flag-icon-sg {
+  background-image: url(../img/flags/4x3/sg.svg);
+}
+.wpdev-flag-icon-sg.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sg.svg);
+}
+
+.wpdev-flag-icon-sh {
+  background-image: url(../img/flags/4x3/sh.svg);
+}
+.wpdev-flag-icon-sh.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sh.svg);
+}
+
+.wpdev-flag-icon-si {
+  background-image: url(../img/flags/4x3/si.svg);
+}
+.wpdev-flag-icon-si.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/si.svg);
+}
+
+.wpdev-flag-icon-sj {
+  background-image: url(../img/flags/4x3/sj.svg);
+}
+.wpdev-flag-icon-sj.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sj.svg);
+}
+
+.wpdev-flag-icon-sk {
+  background-image: url(../img/flags/4x3/sk.svg);
+}
+.wpdev-flag-icon-sk.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sk.svg);
+}
+
+.wpdev-flag-icon-sl {
+  background-image: url(../img/flags/4x3/sl.svg);
+}
+.wpdev-flag-icon-sl.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sl.svg);
+}
+
+.wpdev-flag-icon-sm {
+  background-image: url(../img/flags/4x3/sm.svg);
+}
+.wpdev-flag-icon-sm.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sm.svg);
+}
+
+.wpdev-flag-icon-sn {
+  background-image: url(../img/flags/4x3/sn.svg);
+}
+.wpdev-flag-icon-sn.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sn.svg);
+}
+
+.wpdev-flag-icon-so {
+  background-image: url(../img/flags/4x3/so.svg);
+}
+.wpdev-flag-icon-so.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/so.svg);
+}
+
+.wpdev-flag-icon-sr {
+  background-image: url(../img/flags/4x3/sr.svg);
+}
+.wpdev-flag-icon-sr.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sr.svg);
+}
+
+.wpdev-flag-icon-ss {
+  background-image: url(../img/flags/4x3/ss.svg);
+}
+.wpdev-flag-icon-ss.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ss.svg);
+}
+
+.wpdev-flag-icon-st {
+  background-image: url(../img/flags/4x3/st.svg);
+}
+.wpdev-flag-icon-st.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/st.svg);
+}
+
+.wpdev-flag-icon-sv {
+  background-image: url(../img/flags/4x3/sv.svg);
+}
+.wpdev-flag-icon-sv.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sv.svg);
+}
+
+.wpdev-flag-icon-sx {
+  background-image: url(../img/flags/4x3/sx.svg);
+}
+.wpdev-flag-icon-sx.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sx.svg);
+}
+
+.wpdev-flag-icon-sy {
+  background-image: url(../img/flags/4x3/sy.svg);
+}
+.wpdev-flag-icon-sy.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sy.svg);
+}
+
+.wpdev-flag-icon-sz {
+  background-image: url(../img/flags/4x3/sz.svg);
+}
+.wpdev-flag-icon-sz.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/sz.svg);
+}
+
+.wpdev-flag-icon-tc {
+  background-image: url(../img/flags/4x3/tc.svg);
+}
+.wpdev-flag-icon-tc.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/tc.svg);
+}
+
+.wpdev-flag-icon-td {
+  background-image: url(../img/flags/4x3/td.svg);
+}
+.wpdev-flag-icon-td.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/td.svg);
+}
+
+.wpdev-flag-icon-tf {
+  background-image: url(../img/flags/4x3/tf.svg);
+}
+.wpdev-flag-icon-tf.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/tf.svg);
+}
+
+.wpdev-flag-icon-tg {
+  background-image: url(../img/flags/4x3/tg.svg);
+}
+.wpdev-flag-icon-tg.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/tg.svg);
+}
+
+.wpdev-flag-icon-th {
+  background-image: url(../img/flags/4x3/th.svg);
+}
+.wpdev-flag-icon-th.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/th.svg);
+}
+
+.wpdev-flag-icon-tj {
+  background-image: url(../img/flags/4x3/tj.svg);
+}
+.wpdev-flag-icon-tj.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/tj.svg);
+}
+
+.wpdev-flag-icon-tk {
+  background-image: url(../img/flags/4x3/tk.svg);
+}
+.wpdev-flag-icon-tk.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/tk.svg);
+}
+
+.wpdev-flag-icon-tl {
+  background-image: url(../img/flags/4x3/tl.svg);
+}
+.wpdev-flag-icon-tl.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/tl.svg);
+}
+
+.wpdev-flag-icon-tm {
+  background-image: url(../img/flags/4x3/tm.svg);
+}
+.wpdev-flag-icon-tm.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/tm.svg);
+}
+
+.wpdev-flag-icon-tn {
+  background-image: url(../img/flags/4x3/tn.svg);
+}
+.wpdev-flag-icon-tn.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/tn.svg);
+}
+
+.wpdev-flag-icon-to {
+  background-image: url(../img/flags/4x3/to.svg);
+}
+.wpdev-flag-icon-to.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/to.svg);
+}
+
+.wpdev-flag-icon-tr {
+  background-image: url(../img/flags/4x3/tr.svg);
+}
+.wpdev-flag-icon-tr.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/tr.svg);
+}
+
+.wpdev-flag-icon-tt {
+  background-image: url(../img/flags/4x3/tt.svg);
+}
+.wpdev-flag-icon-tt.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/tt.svg);
+}
+
+.wpdev-flag-icon-tv {
+  background-image: url(../img/flags/4x3/tv.svg);
+}
+.wpdev-flag-icon-tv.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/tv.svg);
+}
+
+.wpdev-flag-icon-tw {
+  background-image: url(../img/flags/4x3/tw.svg);
+}
+.wpdev-flag-icon-tw.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/tw.svg);
+}
+
+.wpdev-flag-icon-tz {
+  background-image: url(../img/flags/4x3/tz.svg);
+}
+.wpdev-flag-icon-tz.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/tz.svg);
+}
+
+.wpdev-flag-icon-ua {
+  background-image: url(../img/flags/4x3/ua.svg);
+}
+.wpdev-flag-icon-ua.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ua.svg);
+}
+
+.wpdev-flag-icon-ug {
+  background-image: url(../img/flags/4x3/ug.svg);
+}
+.wpdev-flag-icon-ug.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ug.svg);
+}
+
+.wpdev-flag-icon-um {
+  background-image: url(../img/flags/4x3/um.svg);
+}
+.wpdev-flag-icon-um.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/um.svg);
+}
+
+.wpdev-flag-icon-us {
+  background-image: url(../img/flags/4x3/us.svg);
+}
+.wpdev-flag-icon-us.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/us.svg);
+}
+
+.wpdev-flag-icon-uy {
+  background-image: url(../img/flags/4x3/uy.svg);
+}
+.wpdev-flag-icon-uy.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/uy.svg);
+}
+
+.wpdev-flag-icon-uz {
+  background-image: url(../img/flags/4x3/uz.svg);
+}
+.wpdev-flag-icon-uz.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/uz.svg);
+}
+
+.wpdev-flag-icon-va {
+  background-image: url(../img/flags/4x3/va.svg);
+}
+.wpdev-flag-icon-va.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/va.svg);
+}
+
+.wpdev-flag-icon-vc {
+  background-image: url(../img/flags/4x3/vc.svg);
+}
+.wpdev-flag-icon-vc.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/vc.svg);
+}
+
+.wpdev-flag-icon-ve {
+  background-image: url(../img/flags/4x3/ve.svg);
+}
+.wpdev-flag-icon-ve.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ve.svg);
+}
+
+.wpdev-flag-icon-vg {
+  background-image: url(../img/flags/4x3/vg.svg);
+}
+.wpdev-flag-icon-vg.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/vg.svg);
+}
+
+.wpdev-flag-icon-vi {
+  background-image: url(../img/flags/4x3/vi.svg);
+}
+.wpdev-flag-icon-vi.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/vi.svg);
+}
+
+.wpdev-flag-icon-vn {
+  background-image: url(../img/flags/4x3/vn.svg);
+}
+.wpdev-flag-icon-vn.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/vn.svg);
+}
+
+.wpdev-flag-icon-vu {
+  background-image: url(../img/flags/4x3/vu.svg);
+}
+.wpdev-flag-icon-vu.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/vu.svg);
+}
+
+.wpdev-flag-icon-wf {
+  background-image: url(../img/flags/4x3/wf.svg);
+}
+.wpdev-flag-icon-wf.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/wf.svg);
+}
+
+.wpdev-flag-icon-ws {
+  background-image: url(../img/flags/4x3/ws.svg);
+}
+.wpdev-flag-icon-ws.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ws.svg);
+}
+
+.wpdev-flag-icon-ye {
+  background-image: url(../img/flags/4x3/ye.svg);
+}
+.wpdev-flag-icon-ye.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/ye.svg);
+}
+
+.wpdev-flag-icon-yt {
+  background-image: url(../img/flags/4x3/yt.svg);
+}
+.wpdev-flag-icon-yt.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/yt.svg);
+}
+
+.wpdev-flag-icon-za {
+  background-image: url(../img/flags/4x3/za.svg);
+}
+.wpdev-flag-icon-za.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/za.svg);
+}
+
+.wpdev-flag-icon-zm {
+  background-image: url(../img/flags/4x3/zm.svg);
+}
+.wpdev-flag-icon-zm.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/zm.svg);
+}
+
+.wpdev-flag-icon-zw {
+  background-image: url(../img/flags/4x3/zw.svg);
+}
+.wpdev-flag-icon-zw.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/zw.svg);
+}
+
+.wpdev-flag-icon-es-ca {
+  background-image: url(../img/flags/4x3/es-ca.svg);
+}
+.wpdev-flag-icon-es-ca.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/es-ca.svg);
+}
+
+.wpdev-flag-icon-es-ga {
+  background-image: url(../img/flags/4x3/es-ga.svg);
+}
+.wpdev-flag-icon-es-ga.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/es-ga.svg);
+}
+
+.wpdev-flag-icon-eu {
+  background-image: url(../img/flags/4x3/eu.svg);
+}
+.wpdev-flag-icon-eu.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/eu.svg);
+}
+
+.wpdev-flag-icon-gb-eng {
+  background-image: url(../img/flags/4x3/gb-eng.svg);
+}
+.wpdev-flag-icon-gb-eng.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gb-eng.svg);
+}
+
+.wpdev-flag-icon-gb-nir {
+  background-image: url(../img/flags/4x3/gb-nir.svg);
+}
+.wpdev-flag-icon-gb-nir.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gb-nir.svg);
+}
+
+.wpdev-flag-icon-gb-sct {
+  background-image: url(../img/flags/4x3/gb-sct.svg);
+}
+.wpdev-flag-icon-gb-sct.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gb-sct.svg);
+}
+
+.wpdev-flag-icon-gb-wls {
+  background-image: url(../img/flags/4x3/gb-wls.svg);
+}
+.wpdev-flag-icon-gb-wls.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/gb-wls.svg);
+}
+
+.wpdev-flag-icon-un {
+  background-image: url(../img/flags/4x3/un.svg);
+}
+.wpdev-flag-icon-un.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/un.svg);
+}
+
+.wpdev-flag-icon-xk {
+  background-image: url(../img/flags/4x3/xk.svg);
+}
+.wpdev-flag-icon-xk.wpdev-flag-icon-squared {
+  background-image: url(../img/flags/1x1/xk.svg);
+}

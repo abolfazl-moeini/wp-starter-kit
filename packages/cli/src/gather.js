@@ -120,7 +120,10 @@ export async function gatherInputs(opts) {
     ...engine.defaultFeatures(),
     ...flagInput.features,
   };
-  const flagValidation = engine.validateFeatureSet(flagFeaturesMerged);
+  const flagValidation = engine.validateFeatureSet(
+    flagFeaturesMerged,
+    flagInput.answers,
+  );
   if (!flagValidation.ok) {
     const err = new Error(
       "Invalid feature combination from flags: " +
@@ -173,7 +176,10 @@ export async function gatherInputs(opts) {
   // 5. Final validation. Catches anything the prompt-derived set
   //    introduced (a bad combination the user picked at the
   //    terminal).
-  const finalValidation = engine.validateFeatureSet(merged.features);
+  const finalValidation = engine.validateFeatureSet(
+    merged.features,
+    merged.answers,
+  );
   return {
     ...merged,
     preset: presetName,

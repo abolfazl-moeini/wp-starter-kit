@@ -128,7 +128,7 @@ const SCOPE_RE = /^[a-z0-9][a-z0-9-]*$/; // npmScope is the part after '@'
 const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]*$/; // JS identifier
 const DOMAIN_RE = /^[a-z0-9][a-z0-9-]*$/; // text-domain / hook-prefix slug
 
-export function validateAnswers(a) {
+export function validateAnswers(a, features = {}) {
   const errors = {};
 
   if (!a || typeof a !== "object") {
@@ -175,6 +175,16 @@ export function validateAnswers(a) {
   ) {
     errors.projectType =
       'projectType must be "plugin" or "theme" (default: "plugin")';
+  }
+  if (features.phpFramework === "wpdev") {
+    if (a.hookPrefix === "wpdev") {
+      errors.hookPrefix =
+        "phpFramework=wpdev reserves the 'wpdev' hook prefix for the framework. Choose a project-unique hookPrefix (e.g. your slug).";
+    }
+    if (a.phpFunctionPrefix === "wpdev_") {
+      errors.phpFunctionPrefix =
+        "phpFramework=wpdev reserves the 'wpdev_' PHP function prefix for the framework. Choose a project-unique phpFunctionPrefix.";
+    }
   }
   return { ok: Object.keys(errors).length === 0, errors };
 }
@@ -294,7 +304,7 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   };
 
   // 2. Validate answers.
-  const v = validateAnswers(answersForValidation);
+  const v = validateAnswers(answersForValidation, features);
   if (!v.ok) {
     return {
       ok: false,
@@ -304,7 +314,7 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
 
   // 3. Validate the feature set. A violation must NOT write
   //    anything to disk (per the generator migration test).
-  const fv = validateFeatureSet(features);
+  const fv = validateFeatureSet(features, answersForValidation);
   if (!fv.ok) {
     const first = Object.entries(fv.errors)[0];
     return {

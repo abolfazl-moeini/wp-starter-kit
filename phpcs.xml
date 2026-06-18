@@ -17,6 +17,7 @@
     <exclude-pattern>wpdev-starter.php</exclude-pattern>
     <exclude-pattern>packages/php-fault-tolerance/*</exclude-pattern>
     <exclude-pattern>assets/*</exclude-pattern>
+    <exclude-pattern>packages/wpdev-framework/*</exclude-pattern>
     <!--
         Dev tooling (rector configs, dev scripts, php-test-tools), tests,
         and the new PSR-4 src/ tree follow their own conventions

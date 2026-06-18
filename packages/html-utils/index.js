@@ -175,7 +175,7 @@ export function SwitchableFocusElement(context, switchableName) {
   const targetElement = changedElement
     .closest(".switchable-input")
     ?.querySelector(".conditional-field")
-    ?.querySelector("input,selector");
+    ?.querySelector("input,select");
   targetElement && targetElement.focus();
 }
 

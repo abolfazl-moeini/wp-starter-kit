@@ -75,7 +75,8 @@ const FEATURE_CATALOG = [
     id: "restBatch",
     variants: ["off", "on"],
     default: "off",
-    notes: "REST batch endpoint + batch client in @scope/rest-utils (not a separate fetch dep).",
+    notes:
+      "REST batch endpoint + batch client in @scope/rest-utils (not a separate fetch dep).",
   },
   {
     id: "faultTolerance",
@@ -228,7 +229,7 @@ function comparePhpVersion(a, b) {
  * @param {Record<string, string>|null|undefined} features
  * @returns {{ ok: boolean, errors: Record<string,string>, warnings: Record<string,string> }}
  */
-export function validateFeatureSet(features) {
+export function validateFeatureSet(features, answers = {}) {
   const errors = {};
   const warnings = {};
   if (!features || typeof features !== "object") {
@@ -373,6 +374,19 @@ export function validateFeatureSet(features) {
       `license=mit is GPL-compatible, but the WordPress.org plugin ` +
       `directory requires hosted plugins to be GPL-2.0-or-later (or later). ` +
       `The scaffold will still emit MIT, but the plugin may be rejected at .org review time.`;
+  }
+
+  if (features.phpFramework === "wpdev") {
+    const hookPrefix = answers.hookPrefix || "wpdev";
+    const phpFunctionPrefix = answers.phpFunctionPrefix || "wpdev_";
+    if (hookPrefix === "wpdev") {
+      errors.phpFramework =
+        "phpFramework=wpdev reserves the 'wpdev' hook prefix for the framework. Choose a project-unique hookPrefix (e.g. your slug).";
+    }
+    if (phpFunctionPrefix === "wpdev_") {
+      errors.phpFunctionPrefix =
+        "phpFramework=wpdev reserves the 'wpdev_' PHP function prefix for the framework. Choose a project-unique phpFunctionPrefix.";
+    }
   }
 
   if (features.mcpAbilities === "on") {

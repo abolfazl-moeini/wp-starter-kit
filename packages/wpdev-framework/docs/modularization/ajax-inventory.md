@@ -1,0 +1,46 @@
+# Ajax Actions Inventory (A-006)
+
+- `wpdev_modal_targets_display` — examples/broadcasts/src/admin/class-broadcast-list-admin-page.php (via `wpdev_register_ajax_modal()`)
+- `wpdev_modal_product_targets_display` — examples/broadcasts/src/admin/class-broadcast-list-admin-page.php (via `wpdev_register_ajax_modal()`)
+- `wp_ajax_wpdev_toggle_container` — modules/core/src/class-scripts.php
+- `wpdev_ajax_wpdev_form_display` — modules/core/src/form/class-form-manager.php
+- `wpdev_ajax_wpdev_form_handler` — modules/core/src/form/class-form-manager.php
+- `wp_ajax_wpdev_dismiss_admin_notice` — modules/core/src/class-admin-notices.php
+- `wp_ajax_wpdev_mark_tour_as_finished` — modules/core/src/tour/class-tours.php
+- `wpdev_ajax_toggle_maintenance_mode` — modules/core/src/class-maintenance-mode.php
+- `wpdev_ajax_nopriv_` — modules/core/src/Services/class-ajax-service.php
+- `wpdev_ajax_wpdev_search` — modules/core/src/ajax/class-ajax.php
+- `wp_ajax_wpdev_list_table_fetch_ajax_results` — modules/core/src/ajax/class-ajax.php
+- `wp_ajax_wpdev_async_call_listener_{$id}` — modules/core/src/ajax/class-async-calls.php
+- `wp_ajax_wpdev_send_test_event` — examples/webhooks/src/managers/class-webhook-manager.php
+- `wp_ajax_wpdev_resend_verification_email` — examples/customers/src/managers/class-customer-manager.php
+- `wp_ajax_wpdev_handle_view_logs` — examples/system/src/admin/class-view-logs-admin-page.php
+- `wp_ajax_wpdev_generate_text_file_system_info` — examples/system/src/admin/class-system-info-admin-page.php
+- `wp_ajax_wpdev_setup_install` — modules/wizard/class-setup-wizard-admin-page.php
+- `wp_ajax_wpdev_get_event_payload_preview` — examples/events/src/managers/class-event-manager.php
+- `wp_ajax_wpdev_get_tax_rates` — examples/taxes/src/class-tax.php
+- `wp_ajax_wpdev_save_tax_rates` — examples/taxes/src/class-tax.php
+- `wpdev_ajax_nopriv_wpdev_render_field_template` — examples/checkout/src/managers/class-field-templates-manager.php
+- `wpdev_ajax_wpdev_render_field_template` — examples/checkout/src/managers/class-field-templates-manager.php
+- `wp_ajax_wpdev_save_editor_session` — examples/checkout/src/admin/class-checkout-form-edit-admin-page.php
+- `wpdev_ajax_wpdev_create_order` — examples/checkout/src/checkout/class-checkout.php
+- `wpdev_ajax_nopriv_wpdev_create_order` — examples/checkout/src/checkout/class-checkout.php
+- `wpdev_ajax_wpdev_validate_form` — examples/checkout/src/checkout/class-checkout.php
+- `wpdev_ajax_nopriv_wpdev_validate_form` — examples/checkout/src/checkout/class-checkout.php
+- `wpdev_ajax_wpdev_switch_template` — examples/customer-panel/src/ui/class-template-switching-element.php
+- `wp_ajax_nopriv_wpdev_count_visits` — examples/platform/src/managers/class-visits-manager.php
+- `wp_ajax_wpdev_get_screenshot` — examples/sites/src/managers/class-site-manager.php
+- `wp_ajax_wpdev_get_placeholders` — examples/sites/src/site-templates/class-template-placeholders.php
+- `wp_ajax_wpdev_save_placeholders` — examples/sites/src/site-templates/class-template-placeholders.php
+- `wp_ajax_wpdev_fetch_rss` — modules/admin-widget-builder/src/class-dashboard-widgets.php
+- `wp_ajax_wpdev_fetch_activity` — modules/admin-widget-builder/src/class-dashboard-widgets.php
+- `wp_ajax_wpdev_generate_csv` — modules/admin-widget-builder/src/class-dashboard-widgets.php
+- `wp_ajax_wpdev_publish_pending_site` — examples/memberships/src/managers/class-membership-manager.php
+- `wp_ajax_wpdev_check_pending_site_created` — examples/memberships/src/managers/class-membership-manager.php
+- `wp_ajax_wpdev_get_event_payload_placeholders` — examples/emails/src/managers/class-email-manager.php
+- `wp_ajax_wpdev-preview-invoice` — examples/emails/src/admin/class-invoice-template-customize-admin-page.php
+- `wp_ajax_wpdev-email-template-preview` — examples/emails/src/admin/class-invoice-template-customize-admin-page.php
+- `wp_ajax_wpdev_test_hosting_integration` — examples/domains/src/managers/class-domain-manager.php
+- `wp_ajax_wpdev_get_dns_records` — examples/domains/src/managers/class-domain-manager.php
+- `wp_ajax_serve_addons_list` — examples/addons/src/admin/class-addons-admin-page.php
+- `wp_ajax_wpdev_playground_load_sample_data` — modules/core/src/playground/class-playground-seeder.php (playground parity empty list pages; `WPDEV_PLAYGROUND_RUN`)

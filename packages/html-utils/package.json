@@ -1,6 +1,6 @@
 {
   "name": "@wpdev/html-utils",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "DOM/HTML helpers for wp-starter-kit consumers (Preact-aware).",
   "type": "module",
   "main": "index.js",

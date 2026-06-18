@@ -1,0 +1,376 @@
+{
+    "meta": {
+        "generated_at": "2026-05-31T19:52:14+00:00",
+        "source": "examples/",
+        "file_count": 2583,
+        "function_count": 445,
+        "hook_count": 350,
+        "class_count": 15
+    },
+    "classes": [
+        {
+            "name": "WPDev\\UI\\Base_Element",
+            "short": "Base_Element",
+            "category": "base-class",
+            "count": 35,
+            "usage_types": [
+                "extends",
+                "fqcn"
+            ],
+            "owners": [
+                "checkout",
+                "customer-panel",
+                "metabox-post-type",
+                "system"
+            ],
+            "files": [
+                "examples/checkout/src/ui/class-checkout-element.php",
+                "examples/checkout/src/ui/class-login-form-element.php",
+                "examples/checkout/src/ui/class-simple-text-element.php",
+                "examples/checkout/src/ui/class-thank-you-element.php",
+                "examples/customer-panel/src/ui/class-account-summary-element.php",
+                "examples/customer-panel/src/ui/class-billing-info-element.php",
+                "examples/customer-panel/src/ui/class-current-membership-element.php",
+                "examples/customer-panel/src/ui/class-current-site-element.php"
+            ]
+        },
+        {
+            "name": "WPDev\\Managers\\Base_Manager",
+            "short": "Base_Manager",
+            "category": "base-class",
+            "count": 34,
+            "usage_types": [
+                "extends",
+                "fqcn"
+            ],
+            "owners": [
+                "broadcasts",
+                "checkout",
+                "customers",
+                "discount-codes",
+                "domains",
+                "emails",
+                "events",
+                "gateways",
+                "memberships",
+                "payments",
+                "platform",
+                "products",
+                "sites",
+                "webhooks"
+            ],
+            "files": [
+                "examples/broadcasts/src/managers/class-broadcast-manager.php",
+                "examples/checkout/src/managers/class-checkout-form-manager.php",
+                "examples/checkout/src/managers/class-field-templates-manager.php",
+                "examples/checkout/src/managers/class-signup-fields-manager.php",
+                "examples/customers/src/managers/class-customer-manager.php",
+                "examples/discount-codes/src/managers/class-discount-code-manager.php",
+                "examples/domains/src/managers/class-domain-manager.php",
+                "examples/emails/src/managers/class-email-manager.php"
+            ]
+        },
+        {
+            "name": "WPDev\\Database\\Engine\\Table",
+            "short": "Table",
+            "category": "base-class",
+            "count": 34,
+            "usage_types": [
+                "extends",
+                "fqcn"
+            ],
+            "owners": [
+                "checkout",
+                "customers",
+                "discount-codes",
+                "domains",
+                "events",
+                "memberships",
+                "payments",
+                "products",
+                "sites",
+                "webhooks"
+            ],
+            "files": [
+                "examples/checkout/src/Database/checkout-forms/class-checkout-forms-meta-table.php",
+                "examples/checkout/src/Database/checkout-forms/class-checkout-forms-table.php",
+                "examples/customers/src/Database/customers/class-customers-meta-table.php",
+                "examples/customers/src/Database/customers/class-customers-table.php",
+                "examples/discount-codes/src/Database/discount-codes/class-discount-codes-meta-table.php",
+                "examples/discount-codes/src/Database/discount-codes/class-discount-codes-table.php",
+                "examples/domains/src/Database/domains/class-domains-table.php",
+                "examples/events/src/Database/events/class-events-table.php"
+            ]
+        },
+        {
+            "name": "WPDev\\Models\\Base_Model",
+            "short": "Base_Model",
+            "category": "base-class",
+            "count": 22,
+            "usage_types": [
+                "extends",
+                "fqcn"
+            ],
+            "owners": [
+                "checkout",
+                "customers",
+                "discount-codes",
+                "domains",
+                "emails",
+                "events",
+                "memberships",
+                "payments",
+                "products",
+                "sites",
+                "webhooks"
+            ],
+            "files": [
+                "examples/checkout/src/Models/class-checkout-form.php",
+                "examples/customers/src/Models/class-customer.php",
+                "examples/discount-codes/src/Models/class-discount-code.php",
+                "examples/domains/src/Models/class-domain.php",
+                "examples/emails/src/managers/class-email-manager.php",
+                "examples/events/src/Models/class-event.php",
+                "examples/events/src/managers/class-event-manager.php",
+                "examples/memberships/src/Models/class-membership.php"
+            ]
+        },
+        {
+            "name": "WPDev\\Admin_Pages\\Edit_Admin_Page",
+            "short": "Edit_Admin_Page",
+            "category": "base-class",
+            "count": 13,
+            "usage_types": [
+                "extends"
+            ],
+            "owners": [
+                "broadcasts",
+                "checkout",
+                "customers",
+                "discount-codes",
+                "domains",
+                "emails",
+                "events",
+                "memberships",
+                "payments",
+                "products",
+                "sites",
+                "system",
+                "webhooks"
+            ],
+            "files": [
+                "examples/broadcasts/src/admin/class-broadcast-edit-admin-page.php",
+                "examples/checkout/src/admin/class-checkout-form-edit-admin-page.php",
+                "examples/customers/src/admin/class-customer-edit-admin-page.php",
+                "examples/discount-codes/src/admin/class-discount-code-edit-admin-page.php",
+                "examples/domains/src/admin/class-domain-edit-admin-page.php",
+                "examples/emails/src/admin/class-email-edit-admin-page.php",
+                "examples/events/src/admin/class-event-view-admin-page.php",
+                "examples/memberships/src/admin/class-membership-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "WPDev\\Admin_Pages\\List_Admin_Page",
+            "short": "List_Admin_Page",
+            "category": "base-class",
+            "count": 12,
+            "usage_types": [
+                "extends"
+            ],
+            "owners": [
+                "broadcasts",
+                "checkout",
+                "customers",
+                "discount-codes",
+                "domains",
+                "emails",
+                "events",
+                "memberships",
+                "payments",
+                "products",
+                "sites",
+                "webhooks"
+            ],
+            "files": [
+                "examples/broadcasts/src/admin/class-broadcast-list-admin-page.php",
+                "examples/checkout/src/admin/class-checkout-form-list-admin-page.php",
+                "examples/customers/src/admin/class-customer-list-admin-page.php",
+                "examples/discount-codes/src/admin/class-discount-code-list-admin-page.php",
+                "examples/domains/src/admin/class-domain-list-admin-page.php",
+                "examples/emails/src/admin/class-email-list-admin-page.php",
+                "examples/events/src/admin/class-event-list-admin-page.php",
+                "examples/memberships/src/admin/class-membership-list-admin-page.php"
+            ]
+        },
+        {
+            "name": "WPDev\\Form\\Base_Field_Template",
+            "short": "Base_Field_Template",
+            "category": "base-class",
+            "count": 12,
+            "usage_types": [
+                "extends"
+            ],
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/signup-fields/field-templates/order-bump/class-simple-order-bump-field-template.php",
+                "examples/checkout/src/checkout/signup-fields/field-templates/order-summary/class-clean-order-summary-field-template.php",
+                "examples/checkout/src/checkout/signup-fields/field-templates/period-selection/class-clean-period-selection-field-template.php",
+                "examples/checkout/src/checkout/signup-fields/field-templates/period-selection/class-legacy-period-selection-field-template.php",
+                "examples/checkout/src/checkout/signup-fields/field-templates/pricing-table/class-legacy-pricing-table-field-template.php",
+                "examples/checkout/src/checkout/signup-fields/field-templates/pricing-table/class-list-pricing-table-field-template.php",
+                "examples/checkout/src/checkout/signup-fields/field-templates/steps/class-clean-steps-field-template.php",
+                "examples/checkout/src/checkout/signup-fields/field-templates/steps/class-legacy-steps-field-template.php"
+            ]
+        },
+        {
+            "name": "WPDev\\Admin_Pages\\Base_Admin_Page",
+            "short": "Base_Admin_Page",
+            "category": "base-class",
+            "count": 11,
+            "usage_types": [
+                "extends",
+                "fqcn"
+            ],
+            "owners": [
+                "emails",
+                "sites",
+                "system",
+                "taxes"
+            ],
+            "files": [
+                "examples/emails/src/admin/class-email-edit-admin-page.php",
+                "examples/emails/src/admin/class-email-list-admin-page.php",
+                "examples/sites/src/admin/class-placeholders-admin-page.php",
+                "examples/system/src/admin/class-jobs-list-admin-page.php",
+                "examples/system/src/admin/class-rollback-admin-page.php",
+                "examples/system/src/admin/class-shortcodes-admin-page.php",
+                "examples/system/src/admin/class-system-info-admin-page.php",
+                "examples/system/src/admin/debug/class-debug-admin-page.php"
+            ]
+        },
+        {
+            "name": "WPDev\\Models\\Post_Base_Model",
+            "short": "Post_Base_Model",
+            "category": "base-class",
+            "count": 4,
+            "usage_types": [
+                "extends",
+                "fqcn"
+            ],
+            "owners": [
+                "broadcasts",
+                "emails"
+            ],
+            "files": [
+                "examples/broadcasts/src/Models/class-broadcast.php",
+                "examples/emails/src/Models/class-email.php"
+            ]
+        },
+        {
+            "name": "WPDev\\Current",
+            "short": "Current",
+            "category": "framework-class",
+            "count": 4,
+            "usage_types": [
+                "fqcn",
+                "static"
+            ],
+            "owners": [
+                "customer-panel"
+            ],
+            "files": [
+                "examples/customer-panel/src/ui/class-account-summary-element.php",
+                "examples/customer-panel/src/ui/class-my-sites-element.php"
+            ]
+        },
+        {
+            "name": "WPDev\\Scripts",
+            "short": "Scripts",
+            "category": "framework-class",
+            "count": 4,
+            "usage_types": [
+                "fqcn",
+                "static"
+            ],
+            "owners": [
+                "events",
+                "system"
+            ],
+            "files": [
+                "examples/events/src/admin/class-event-view-admin-page.php",
+                "examples/system/src/admin/class-view-logs-admin-page.php"
+            ]
+        },
+        {
+            "name": "WPDev\\Settings",
+            "short": "Settings",
+            "category": "framework-class",
+            "count": 4,
+            "usage_types": [
+                "fqcn",
+                "static"
+            ],
+            "owners": [
+                "gateways",
+                "playground-settings-panel-builder",
+                "system"
+            ],
+            "files": [
+                "examples/gateways/dependencies/stripe/stripe-php/lib/Util/ObjectTypes.php",
+                "examples/playground-settings-panel-builder/functions-playground-settings.php",
+                "examples/system/src/admin/class-system-info-admin-page.php"
+            ]
+        },
+        {
+            "name": "WPDev\\Admin_Pages\\Wizard_Admin_Page",
+            "short": "Wizard_Admin_Page",
+            "category": "base-class",
+            "count": 2,
+            "usage_types": [
+                "extends"
+            ],
+            "owners": [
+                "addons",
+                "system"
+            ],
+            "files": [
+                "examples/addons/src/admin/class-addons-admin-page.php",
+                "examples/system/src/admin/class-hosting-integration-wizard-admin-page.php"
+            ]
+        },
+        {
+            "name": "WPDev\\Database\\Post_Query",
+            "short": "Post_Query",
+            "category": "base-class",
+            "count": 2,
+            "usage_types": [
+                "extends"
+            ],
+            "owners": [
+                "broadcasts",
+                "emails"
+            ],
+            "files": [
+                "examples/broadcasts/src/Database/broadcasts/class-broadcast-query.php",
+                "examples/emails/src/Database/emails/class-email-query.php"
+            ]
+        },
+        {
+            "name": "WPDev\\Database\\Posts\\Posts_Meta_Table",
+            "short": "Posts_Meta_Table",
+            "category": "base-class",
+            "count": 1,
+            "usage_types": [
+                "fqcn"
+            ],
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/setup.php"
+            ]
+        }
+    ]
+}

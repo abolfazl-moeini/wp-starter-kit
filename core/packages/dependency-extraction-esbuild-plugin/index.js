@@ -135,15 +135,14 @@ export async function saveAssetFile(
   if (!buildResponse?.metafile?.outputs) {
     return false;
   }
-  const assetsInfo = assetFileInfo(buildResponse, forceAssets, internalItems);
-
-  if (!assetsInfo) {
+  const bundle = bundleFilePath(buildResponse);
+  if (!bundle) {
     return false;
   }
-
+  const assetsInfo = assetFileInfo(buildResponse, forceAssets, internalItems);
   const fileContent = phpFileContent(assetsInfo);
 
-  return writeFile(assetFilePath(bundleFilePath(buildResponse)), fileContent);
+  return writeFile(assetFilePath(bundle), fileContent);
 }
 
 export function phpFileContent(theObject) {

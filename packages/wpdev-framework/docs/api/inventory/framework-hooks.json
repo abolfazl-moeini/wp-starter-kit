@@ -1,0 +1,4019 @@
+{
+    "meta": {
+        "generated_at": "2026-05-31T19:52:14+00:00",
+        "source": "examples/",
+        "file_count": 2583,
+        "function_count": 445,
+        "hook_count": 350,
+        "class_count": 15
+    },
+    "hooks": [
+        {
+            "name": "wpdev_load",
+            "type": "action",
+            "count": 54,
+            "owners": [
+                "addons",
+                "admin-custom-page-dashboard-widgets",
+                "broadcasts",
+                "checkout",
+                "customer-panel",
+                "customers",
+                "dashboard",
+                "discount-codes",
+                "domains",
+                "emails",
+                "events",
+                "gateways",
+                "memberships",
+                "metabox-post-type",
+                "payments",
+                "platform",
+                "playground-admin-custom-page",
+                "playground-admin-widget-builder",
+                "playground-core",
+                "playground-field-builder",
+                "playground-form-builder",
+                "playground-menu-builder",
+                "playground-metabox-builder",
+                "playground-settings-panel-builder",
+                "playground-tab-navigation",
+                "playground-table-builder",
+                "products",
+                "sites",
+                "system",
+                "taxes",
+                "webhooks",
+                "wpdev-dev-mock"
+            ],
+            "files": [
+                "examples/addons/playground.php",
+                "examples/admin-custom-page-dashboard-widgets/setup.php",
+                "examples/broadcasts/playground.php",
+                "examples/broadcasts/setup.php",
+                "examples/checkout/setup.php",
+                "examples/customer-panel/playground.php",
+                "examples/customer-panel/setup.php",
+                "examples/customers/playground.php"
+            ]
+        },
+        {
+            "name": "wpdev_module_enabled",
+            "type": "filter",
+            "count": 6,
+            "owners": [
+                "checkout",
+                "customer-panel",
+                "sites",
+                "system",
+                "taxes"
+            ],
+            "files": [
+                "examples/checkout/setup.php",
+                "examples/customer-panel/setup.php",
+                "examples/sites/setup.php",
+                "examples/system/setup.php",
+                "examples/taxes/setup.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_scripts",
+            "type": "action",
+            "count": 5,
+            "owners": [
+                "checkout",
+                "customer-panel",
+                "gateways"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php",
+                "examples/checkout/src/ui/class-checkout-element.php",
+                "examples/checkout/views/legacy/signup/signup-main.php",
+                "examples/customer-panel/src/admin/class-checkout-admin-page.php",
+                "examples/gateways/src/managers/class-gateway-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_setup_checkout",
+            "type": "action",
+            "count": 4,
+            "owners": [
+                "checkout",
+                "customer-panel"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php",
+                "examples/checkout/src/ui/class-checkout-element.php",
+                "examples/customer-panel/src/admin/class-checkout-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_{$this->id}_get_items",
+            "type": "filter",
+            "count": 4,
+            "owners": [
+                "emails",
+                "memberships",
+                "payments",
+                "sites"
+            ],
+            "files": [
+                "examples/emails/src/tables/class-email-list-table.php",
+                "examples/memberships/src/tables/class-membership-list-table-widget.php",
+                "examples/payments/src/tables/class-payment-list-table-widget.php",
+                "examples/sites/src/tables/class-site-list-table.php"
+            ]
+        },
+        {
+            "name": "wpdev_register_gateways",
+            "type": "action",
+            "count": 4,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/playground.php",
+                "examples/gateways/src/managers/class-gateway-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_register_field_types",
+            "type": "action",
+            "count": 3,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/playground.php",
+                "examples/checkout/src/managers/class-signup-fields-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_apply_signup_fee",
+            "type": "filter",
+            "count": 3,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_gateway_payment_processed",
+            "type": "action",
+            "count": 3,
+            "owners": [
+                "discount-codes",
+                "gateways",
+                "payments"
+            ],
+            "files": [
+                "examples/discount-codes/src/managers/class-discount-code-manager.php",
+                "examples/gateways/src/gateways/class-base-gateway.php",
+                "examples/payments/src/managers/class-payment-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_pending_site_published",
+            "type": "action",
+            "count": 3,
+            "owners": [
+                "memberships",
+                "sites"
+            ],
+            "files": [
+                "examples/memberships/src/Models/class-membership.php",
+                "examples/sites/src/admin/class-site-list-admin-page.php",
+                "examples/sites/src/managers/class-site-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_membership_options_sections",
+            "type": "filter",
+            "count": 3,
+            "owners": [
+                "memberships",
+                "platform"
+            ],
+            "files": [
+                "examples/memberships/src/admin/class-membership-edit-admin-page.php",
+                "examples/platform/src/managers/class-limitation-manager.php",
+                "examples/platform/src/managers/class-notes-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_site_options_sections",
+            "type": "filter",
+            "count": 3,
+            "owners": [
+                "platform",
+                "sites"
+            ],
+            "files": [
+                "examples/platform/src/managers/class-limitation-manager.php",
+                "examples/platform/src/managers/class-notes-manager.php",
+                "examples/sites/src/admin/class-site-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_admin_pages",
+            "type": "action",
+            "count": 3,
+            "owners": [
+                "playground-admin-page-builder",
+                "playground-admin-setting-page",
+                "taxes"
+            ],
+            "files": [
+                "examples/playground-admin-page-builder/playground.php",
+                "examples/playground-admin-setting-page/playground.php",
+                "examples/taxes/setup.php"
+            ]
+        },
+        {
+            "name": "wpdev_register_forms",
+            "type": "action",
+            "count": 3,
+            "owners": [
+                "playground-admin-page-builder",
+                "playground-form-builder",
+                "playground-table-builder"
+            ],
+            "files": [
+                "examples/playground-admin-page-builder/playground.php",
+                "examples/playground-form-builder/playground.php",
+                "examples/playground-table-builder/playground.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_handle",
+            "type": "action",
+            "count": 3,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_init",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "admin-setting-page-defaults",
+                "playground-wizard"
+            ],
+            "files": [
+                "examples/admin-setting-page-defaults/setup.php",
+                "examples/playground-wizard/playground.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_credit_line_item_params",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_cart_get_recurring_total",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_cart_get_extra_params",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "checkout",
+                "platform"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php",
+                "examples/platform/src/limits/class-site-template-limits.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_errors",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php",
+                "examples/checkout/views/checkout/form.php"
+            ]
+        },
+        {
+            "name": "wpdev_before_handle_order_submission",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "checkout",
+                "sites"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php",
+                "examples/sites/src/managers/class-site-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_maybe_create_customer",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "checkout",
+                "customers"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php",
+                "examples/customers/src/managers/class-customer-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_before_process_checkout",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "checkout",
+                "sites"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php",
+                "examples/sites/src/managers/class-site-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_done",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "checkout",
+                "platform"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php",
+                "examples/platform/src/limits/class-plugin-limits.php"
+            ]
+        },
+        {
+            "name": "wpdev_cart_parameters",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_template_id",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "checkout",
+                "platform"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php",
+                "examples/platform/src/limits/class-site-template-limits.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_validation_rules",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_enqueue_scripts",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php",
+                "examples/checkout/views/legacy/signup/signup-main.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_field_types",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/functions/checkout.php",
+                "examples/checkout/src/managers/class-signup-fields-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_field_templates",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/functions/checkout.php",
+                "examples/checkout/src/managers/class-field-templates-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_bypass_checkout_form",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "checkout",
+                "gateways"
+            ],
+            "files": [
+                "examples/checkout/src/ui/class-checkout-element.php",
+                "examples/gateways/src/managers/class-gateway-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_conversion_placeholders",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "checkout",
+                "metabox-post-type"
+            ],
+            "files": [
+                "examples/checkout/src/ui/class-thank-you-element.php",
+                "examples/metabox-post-type/My_Custom_Element.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_gateway_fields",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "checkout",
+                "gateways"
+            ],
+            "files": [
+                "examples/checkout/views/checkout/fields/field-payment-methods.php",
+                "examples/gateways/src/managers/class-gateway-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_featured_plan_label",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/views/checkout/templates/pricing-table/legacy.php",
+                "examples/checkout/views/legacy/signup/pricing-table/plan.php"
+            ]
+        },
+        {
+            "name": "wpdev_plan_contact_us_price_line",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/views/checkout/templates/pricing-table/legacy.php",
+                "examples/checkout/views/legacy/signup/pricing-table/plan.php"
+            ]
+        },
+        {
+            "name": "wpdev_domain_created",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "customer-panel",
+                "domains"
+            ],
+            "files": [
+                "examples/customer-panel/src/ui/class-domain-mapping-element.php",
+                "examples/domains/src/managers/class-domain-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_element_get_site_actions",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "customer-panel",
+                "gateways"
+            ],
+            "files": [
+                "examples/customer-panel/src/ui/class-site-actions-element.php",
+                "examples/gateways/src/gateways/class-base-stripe-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_page_edit_redirect_handlers",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "customers",
+                "emails"
+            ],
+            "files": [
+                "examples/customers/src/admin/class-customer-edit-admin-page.php",
+                "examples/emails/src/admin/class-email-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_customer_options_sections",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "customers",
+                "platform"
+            ],
+            "files": [
+                "examples/customers/src/admin/class-customer-edit-admin-page.php",
+                "examples/platform/src/managers/class-notes-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_customer_payment_methods",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "customers",
+                "gateways"
+            ],
+            "files": [
+                "examples/customers/src/admin/class-customer-edit-admin-page.php",
+                "examples/gateways/src/gateways/class-stripe-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_async_remove_old_primary_domains",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/admin/class-domain-list-admin-page.php",
+                "examples/domains/src/managers/class-domain-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_site_allowed_domains",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "domains",
+                "system"
+            ],
+            "files": [
+                "examples/domains/src/class-domain-mapping.php",
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_domain_mapping_register_filters",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/class-domain-mapping.php"
+            ]
+        },
+        {
+            "name": "wpdev_domain_mapping_load",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/class-domain-mapping.php",
+                "examples/domains/src/domain-mapping/class-primary-domain.php"
+            ]
+        },
+        {
+            "name": "wpdev_get_network_public_ip",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/domain-mapping/class-helper.php"
+            ]
+        },
+        {
+            "name": "wpdev_domain_manager_dns_propagation_finished",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "domains",
+                "system"
+            ],
+            "files": [
+                "examples/domains/src/managers/class-domain-manager.php",
+                "examples/system/src/integrations/host-providers/class-cloudways-host-provider.php"
+            ]
+        },
+        {
+            "name": "wpdev_domain_manager_get_integrations",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "domains",
+                "system"
+            ],
+            "files": [
+                "examples/domains/src/managers/class-domain-manager.php",
+                "examples/system/src/integrations/host-providers/class-base-host-provider.php"
+            ]
+        },
+        {
+            "name": "wpdev_async_process_domain_stage_max_tries",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "domains",
+                "system"
+            ],
+            "files": [
+                "examples/domains/src/managers/class-domain-manager.php",
+                "examples/system/src/integrations/host-providers/class-wpmudev-host-provider.php"
+            ]
+        },
+        {
+            "name": "wpdev_domain_dns_get_record",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "domains",
+                "system"
+            ],
+            "files": [
+                "examples/domains/src/managers/class-domain-manager.php",
+                "examples/system/src/integrations/host-providers/class-cloudflare-host-provider.php"
+            ]
+        },
+        {
+            "name": "wpdev_event",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "emails",
+                "events"
+            ],
+            "files": [
+                "examples/emails/src/managers/class-email-manager.php",
+                "examples/events/src/managers/class-event-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_model_post_save",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "events",
+                "sites"
+            ],
+            "files": [
+                "examples/events/src/managers/class-event-manager.php",
+                "examples/sites/src/Models/class-site.php"
+            ]
+        },
+        {
+            "name": "wpdev_daily",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "events",
+                "sites"
+            ],
+            "files": [
+                "examples/events/src/managers/class-event-manager.php",
+                "examples/sites/src/managers/class-site-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_events_list_table_get_columns",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "events",
+                "products"
+            ],
+            "files": [
+                "examples/events/src/tables/class-event-list-table.php",
+                "examples/products/src/admin/class-product-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_after_save_settings",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-base-stripe-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_stripe_checkout_allowed_payment_method_types",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-base-stripe-gateway.php",
+                "examples/gateways/src/gateways/class-stripe-checkout-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_{$gateway_id}_process_webhooks",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/managers/class-gateway-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_{$gateway_id}_remote_payment_url",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "gateways",
+                "payments"
+            ],
+            "files": [
+                "examples/gateways/src/managers/class-gateway-manager.php",
+                "examples/payments/src/admin/class-payment-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_{$gateway_id}_remote_subscription_url",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "gateways",
+                "memberships"
+            ],
+            "files": [
+                "examples/gateways/src/managers/class-gateway-manager.php",
+                "examples/memberships/src/admin/class-membership-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_{$gateway_id}_remote_customer_url",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "gateways",
+                "memberships"
+            ],
+            "files": [
+                "examples/gateways/src/managers/class-gateway-manager.php",
+                "examples/memberships/src/admin/class-membership-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_transition_membership_status",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/managers/class-membership-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_payments_options_sections",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "payments",
+                "platform"
+            ],
+            "files": [
+                "examples/payments/src/admin/class-payment-edit-admin-page.php",
+                "examples/platform/src/managers/class-notes-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_sunrise_loaded",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/limits/class-plugin-limits.php",
+                "examples/platform/src/limits/class-theme-limits.php"
+            ]
+        },
+        {
+            "name": "wpdev_product_options_sections",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "platform",
+                "products"
+            ],
+            "files": [
+                "examples/platform/src/managers/class-limitation-manager.php",
+                "examples/products/src/admin/class-product-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_handle_bulk_action_form_",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "playground-wpdev"
+            ],
+            "files": [
+                "examples/playground-wpdev/functions-playground-wpdev-interactive.php"
+            ]
+        },
+        {
+            "name": "wpdev_page_{$this->id}_load",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "products",
+                "sites"
+            ],
+            "files": [
+                "examples/products/src/admin/class-product-edit-admin-page.php",
+                "examples/sites/src/admin/class-site-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_site_created",
+            "type": "action",
+            "count": 2,
+            "owners": [
+                "sites"
+            ],
+            "files": [
+                "examples/sites/src/Models/class-site.php",
+                "examples/sites/src/managers/class-site-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_search_and_replace_on_duplication",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "sites"
+            ],
+            "files": [
+                "examples/sites/src/Models/class-site.php",
+                "examples/sites/src/managers/class-site-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_auth_redirect",
+            "type": "filter",
+            "count": 2,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/auth-functions.php",
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_form_scripts",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "addons"
+            ],
+            "files": [
+                "examples/addons/src/admin/class-addons-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_addons_use_legacy_list_ajax",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "addons"
+            ],
+            "files": [
+                "examples/addons/src/admin/class-addons-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_addons_use_ajax_tabs",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "addons"
+            ],
+            "files": [
+                "examples/addons/src/admin/class-addons-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_settings_register_default_sections",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "admin-setting-page-defaults"
+            ],
+            "files": [
+                "examples/admin-setting-page-defaults/setup.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_form_meta_fields_list",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/Models/class-checkout-form.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_form_single_step_template",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/Models/class-checkout-form.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_form_multi_step_template",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/Models/class-checkout-form.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_form_finish_checkout_form_fields",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/Models/class-checkout-form.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_form_membership_change_form_fields",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/Models/class-checkout-form.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_form_add_new_site_form_fields",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/Models/class-checkout-form.php"
+            ]
+        },
+        {
+            "name": "wpdev_edit_{$screen->id}_after_normal",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/admin/class-checkout-form-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_is_jumper_enabled",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/admin/class-checkout-form-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_is_toolbox_enabled",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/admin/class-checkout-form-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_form_field_{$type}_id",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/admin/class-checkout-form-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_cart_setup",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_cart_after_setup",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_cart_is_tax_exempt",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_cart_set_payment_allowed_status",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_calculate_prorate_credits",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_cart_should_collect_payment",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_add_product_line_item",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_add_product_setup_fee_line_item",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_cart_get_total_fees",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_cart_get_proration_fees",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_cart_get_total_discounts",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_cart_get_subtotal",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_cart_get_total",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_cart_applicable_tax_rates",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-cart.php"
+            ]
+        },
+        {
+            "name": "wpdev_thank_you_site_block",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout-pages.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_pages_error_messages",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout-pages.php"
+            ]
+        },
+        {
+            "name": "wpdev_maybe_redirect_to_admin_panel_exclusion_list",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout-pages.php"
+            ]
+        },
+        {
+            "name": "wpdev_ajax_wpdev_create_order",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_ajax_nopriv_wpdev_create_order",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_ajax_wpdev_validate_form",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_ajax_nopriv_wpdev_validate_form",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_after_handle_order_submission",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_after_process_order",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_handle_customer_meta_fields",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_handle_user_meta_fields",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_request",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_template_selection_rewrite_rule_slug",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_get_checkout_from_query_vars",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_get_auto_submittable_fields",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_get_checkout_variables",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_validation_aliases",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_redirect_url_after_signup",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_custom_css",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_registration_step_plans_save",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_registration_step_domain_save",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_geolocation_error_message",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_step_handler_$this->step",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_replace_signup_urls_exclude",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_current_step",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_fields_domain",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_site_title_label",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_site_title_tooltip",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_site_url_label",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_site_url_tooltip",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_username_label",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_username_tooltip",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_email_label",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_email_tooltip",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_password_label",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_password_tooltip",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_password_conf_label",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_password_conf_tooltip",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_fields_account",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_registration_steps",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_registration_step_plans_save_transient",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/class-legacy-checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_get_pricing_table_templates",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/checkout/signup-fields/class-signup-field-site-url.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_add_field_{$field_class->get_type()}",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/functions/checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_stripe_generate_idempotency_key",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/functions/checkout.php"
+            ]
+        },
+        {
+            "name": "wpdev_ajax_nopriv_wpdev_render_field_template",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/managers/class-field-templates-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_ajax_wpdev_render_field_template",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/managers/class-field-templates-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_register_field_templates",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/managers/class-field-templates-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_{$key}_render_attributes",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/managers/class-field-templates-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_pending_payment_error_message",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/ui/class-checkout-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_membership_status_error_message",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/ui/class-checkout-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_get_membership_allowed_forms",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/ui/class-checkout-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_single_membership_message",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/ui/class-checkout-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_customer_error_message",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/ui/class-checkout-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_membership_limit_message",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/ui/class-checkout-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_payment_login_error_message",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/ui/class-checkout-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_form_final_fields",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/ui/class-checkout-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_membership_update_form",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/ui/class-checkout-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_membership_new_site_form",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/ui/class-checkout-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_membership_update_forms",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/src/ui/class-checkout-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_{$checkout_form_name}_after_form",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/views/checkout/form.php"
+            ]
+        },
+        {
+            "name": "wpdev_checkout_after_form",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/views/checkout/form.php"
+            ]
+        },
+        {
+            "name": "wpdev_step_template_display_header",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/views/checkout/templates/template-selection/legacy.php"
+            ]
+        },
+        {
+            "name": "wpdev_pricing_table_plan",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/views/legacy/signup/pricing-table/plan.php"
+            ]
+        },
+        {
+            "name": "wpdev_plan_select_button_attributes",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/views/legacy/signup/pricing-table/plan.php"
+            ]
+        },
+        {
+            "name": "wpdev_plan_select_button_label",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/views/legacy/signup/pricing-table/plan.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_header",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/views/legacy/signup/signup-main.php"
+            ]
+        },
+        {
+            "name": "wpdev_before_signup_form",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/views/legacy/signup/signup-main.php"
+            ]
+        },
+        {
+            "name": "wpdev_after_signup_form",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/views/legacy/signup/signup-main.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_footer",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/views/legacy/signup/signup-main.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_page_title",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/views/legacy/signup/signup-main.php"
+            ]
+        },
+        {
+            "name": "wpdev_signup_form_nav_links",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "checkout"
+            ],
+            "files": [
+                "examples/checkout/views/legacy/signup/signup-nav-links.php"
+            ]
+        },
+        {
+            "name": "wpdev_account_update_message",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "customer-panel"
+            ],
+            "files": [
+                "examples/customer-panel/src/admin/class-account-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_template_switching_admin_page_scripts",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "customer-panel"
+            ],
+            "files": [
+                "examples/customer-panel/src/admin/class-template-switching-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_template_switching_admin_page",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "customer-panel"
+            ],
+            "files": [
+                "examples/customer-panel/src/admin/class-template-switching-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_current_site_actions",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "customer-panel"
+            ],
+            "files": [
+                "examples/customer-panel/src/ui/class-current-site-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_form_edit_site",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "customer-panel"
+            ],
+            "files": [
+                "examples/customer-panel/src/ui/class-current-site-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_get_post_types",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "customer-panel"
+            ],
+            "files": [
+                "examples/customer-panel/src/ui/class-limits-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_pre_my_sites_sites",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "customer-panel"
+            ],
+            "files": [
+                "examples/customer-panel/src/ui/class-my-sites-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_after_my_sites_sites",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "customer-panel"
+            ],
+            "files": [
+                "examples/customer-panel/src/ui/class-my-sites-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_element_get_danger_zone_site_actions",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "customer-panel"
+            ],
+            "files": [
+                "examples/customer-panel/src/ui/class-site-actions-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_ajax_wpdev_switch_template",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "customer-panel"
+            ],
+            "files": [
+                "examples/customer-panel/src/ui/class-template-switching-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_after_switch_template",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "customer-panel"
+            ],
+            "files": [
+                "examples/customer-panel/src/ui/class-template-switching-element.php"
+            ]
+        },
+        {
+            "name": "wpdev_is_online_minutes_interval",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "customers"
+            ],
+            "files": [
+                "examples/customers/src/Models/class-customer.php"
+            ]
+        },
+        {
+            "name": "wpdev_after_delete_customer_modal",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "customers"
+            ],
+            "files": [
+                "examples/customers/src/admin/class-customer-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_form_fields_delete_customer_modal",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "customers"
+            ],
+            "files": [
+                "examples/customers/src/admin/class-customer-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_form_attributes_delete_customer_modal",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "customers"
+            ],
+            "files": [
+                "examples/customers/src/admin/class-customer-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_generated_username_from_email",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "customers"
+            ],
+            "files": [
+                "examples/customers/src/functions/customer.php"
+            ]
+        },
+        {
+            "name": "wpdev_username_from_email",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "customers"
+            ],
+            "files": [
+                "examples/customers/src/functions/customer.php"
+            ]
+        },
+        {
+            "name": "wpdev_transition_customer_email_verification",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "customers"
+            ],
+            "files": [
+                "examples/customers/src/managers/class-customer-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_data_json_success_delete_discount_code_modal",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "discount-codes"
+            ],
+            "files": [
+                "examples/discount-codes/src/admin/class-discount-code-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_discount_code_options_sections",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "discount-codes"
+            ],
+            "files": [
+                "examples/discount-codes/src/admin/class-discount-code-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_domain_has_correct_dns",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/Models/class-domain.php"
+            ]
+        },
+        {
+            "name": "wpdev_after_delete_domain_modal",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/admin/class-domain-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_form_fields_delete_domain_modal",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/admin/class-domain-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_handle_add_new_domain_modal",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/admin/class-domain-list-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_use_domain_mapping",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/class-domain-mapping.php"
+            ]
+        },
+        {
+            "name": "wpdev_is_development_mode",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/domain-mapping/class-helper.php"
+            ]
+        },
+        {
+            "name": "wpdev_should_redirect_to_primary_domain",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/domain-mapping/class-primary-domain.php"
+            ]
+        },
+        {
+            "name": "wpdev_async_process_domain_stage",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/managers/class-domain-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_transition_domain_domain",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/managers/class-domain-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_settings_domain_mapping",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/managers/class-domain-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_settings_sso",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/managers/class-domain-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_domain_post_delete",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/managers/class-domain-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_host_providers_load",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/managers/class-domain-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_get_domain_mapping_instructions",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/managers/class-domain-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_async_process_domains_try_again_time",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "domains"
+            ],
+            "files": [
+                "examples/domains/src/managers/class-domain-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_page_list_redirect_handlers",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "emails"
+            ],
+            "files": [
+                "examples/emails/src/admin/class-email-list-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_settings_emails",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "emails"
+            ],
+            "files": [
+                "examples/emails/src/managers/class-email-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_send_schedule_system_email",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "emails"
+            ],
+            "files": [
+                "examples/emails/src/managers/class-email-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_system_emails_after_register",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "emails"
+            ],
+            "files": [
+                "examples/emails/src/managers/class-email-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_get_default_system_messages",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "events"
+            ],
+            "files": [
+                "examples/events/src/Models/class-event.php"
+            ]
+        },
+        {
+            "name": "wpdev_data_json_success_delete_event_modal",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "events"
+            ],
+            "files": [
+                "examples/events/src/admin/class-event-view-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_{$model}_post_save",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "events"
+            ],
+            "files": [
+                "examples/events/src/managers/class-event-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_event_{$slug}",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "events"
+            ],
+            "files": [
+                "examples/events/src/managers/class-event-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_register_all_events",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "events"
+            ],
+            "files": [
+                "examples/events/src/managers/class-event-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_exclude_transitions_keys",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "events"
+            ],
+            "files": [
+                "examples/events/src/managers/class-event-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_events_threshold_days",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "events"
+            ],
+            "files": [
+                "examples/events/src/managers/class-event-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_gateway_{$gateway_id}_as_option_title",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/class-payment-gateway-resolver.php"
+            ]
+        },
+        {
+            "name": "wpdev_get_active_gateways",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/functions/gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_gateway_{$gateway_slug}_as_option_title",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/functions/gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_return_url",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-base-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_webhook_recurring_payment_profile_created",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-base-stripe-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_recurring_payment_failed",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-base-stripe-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_stripe_charge_failed",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-base-stripe-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_pre_save_settings",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-base-stripe-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_stripe_customer_create_args",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-base-stripe-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_stripe_create_subscription_args",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-base-stripe-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_stripe_create_subscription_options",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-base-stripe-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_stripe_webhook_membership",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-base-stripe-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_stripe_existing_plan_id",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-base-stripe-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_stripe_existing_product_id",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-base-stripe-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_thank_you_before_info_blocks",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-manual-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_ipn_post",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-paypal-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_stripe_create_payment_intent_args",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/gateways/class-stripe-gateway.php"
+            ]
+        },
+        {
+            "name": "wpdev_{$gateway}_process_webhooks",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "gateways"
+            ],
+            "files": [
+                "examples/gateways/src/managers/class-gateway-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_membership_delete_scheduled_swap",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/Models/class-membership.php"
+            ]
+        },
+        {
+            "name": "wpdev_before_pending_site_published",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/Models/class-membership.php"
+            ]
+        },
+        {
+            "name": "wpdev_membership_pre_renew",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/Models/class-membership.php"
+            ]
+        },
+        {
+            "name": "wpdev_membership_post_renew",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/Models/class-membership.php"
+            ]
+        },
+        {
+            "name": "wpdev_membership_pre_cancel",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/Models/class-membership.php"
+            ]
+        },
+        {
+            "name": "wpdev_membership_post_cancel",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/Models/class-membership.php"
+            ]
+        },
+        {
+            "name": "wpdev_membership_is_customer_allowed",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/Models/class-membership.php"
+            ]
+        },
+        {
+            "name": "wpdev_membership_calculated_date_expiration",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/Models/class-membership.php"
+            ]
+        },
+        {
+            "name": "wpdev_membership_is_active",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/Models/class-membership.php"
+            ]
+        },
+        {
+            "name": "wpdev_membership_renewal_expiration_date",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/Models/class-membership.php"
+            ]
+        },
+        {
+            "name": "wpdev_data_json_success_delete_membership_modal",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/admin/class-membership-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_async_transfer_membership",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/managers/class-membership-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_async_delete_membership",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/managers/class-membership-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_async_membership_swap",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/managers/class-membership-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_async_publish_pending_site",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "memberships"
+            ],
+            "files": [
+                "examples/memberships/src/managers/class-membership-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_payments_gateway_unavailable",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "payments"
+            ],
+            "files": [
+                "examples/payments/src/Gateways/class-null-gateway-resolver.php"
+            ]
+        },
+        {
+            "name": "wpdev_gateway_{$gateway}_as_option_title",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "payments"
+            ],
+            "files": [
+                "examples/payments/src/Models/class-payment.php"
+            ]
+        },
+        {
+            "name": "wpdev_payment_payable_statuses",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "payments"
+            ],
+            "files": [
+                "examples/payments/src/Models/class-payment.php"
+            ]
+        },
+        {
+            "name": "wpdev_data_json_success_delete_payment_modal",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "payments"
+            ],
+            "files": [
+                "examples/payments/src/admin/class-payment-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_allowed_line_item_types",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "payments"
+            ],
+            "files": [
+                "examples/payments/src/admin/class-payment-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_get_refundable_payment_type",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "payments"
+            ],
+            "files": [
+                "examples/payments/src/functions/payment.php"
+            ]
+        },
+        {
+            "name": "wpdev_async_transfer_payment",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "payments"
+            ],
+            "files": [
+                "examples/payments/src/managers/class-payment-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_async_delete_payment",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "payments"
+            ],
+            "files": [
+                "examples/payments/src/managers/class-payment-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_transition_payment_status",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "payments"
+            ],
+            "files": [
+                "examples/payments/src/managers/class-payment-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_pending_payment_message",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "payments"
+            ],
+            "files": [
+                "examples/payments/src/managers/class-payment-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_limit_classes",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/functions/limitations.php"
+            ]
+        },
+        {
+            "name": "wpdev_upgrade_to_unlock_url",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/functions/limitations.php"
+            ]
+        },
+        {
+            "name": "wpdev_limits_is_post_above_limit",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/limitations/class-limit-post-types.php"
+            ]
+        },
+        {
+            "name": "wpdev_post_count_statuses",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/limitations/class-limit-post-types.php"
+            ]
+        },
+        {
+            "name": "wpdev_post_count",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/limitations/class-limit-post-types.php"
+            ]
+        },
+        {
+            "name": "wpdev_{$this->id}_limit_setup",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/limitations/class-limit.php"
+            ]
+        },
+        {
+            "name": "wpdev_limit_{$this->id}_{$type}_allowed",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/limitations/class-limit.php"
+            ]
+        },
+        {
+            "name": "wpdev_async_after_membership_update_products",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/limits/class-customer-user-role-limits.php"
+            ]
+        },
+        {
+            "name": "wpdev_users_membership_limit_message",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/limits/class-customer-user-role-limits.php"
+            ]
+        },
+        {
+            "name": "wpdev_apply_plan_limits",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/limits/class-disk-space-limits.php"
+            ]
+        },
+        {
+            "name": "wpdev_site_post_save",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/limits/class-plugin-limits.php"
+            ]
+        },
+        {
+            "name": "wpdev_template_selection_render_attributes",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/limits/class-site-template-limits.php"
+            ]
+        },
+        {
+            "name": "wpdev_flush_known_caches",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/managers/class-cache-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_async_handle_plugins",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/managers/class-limitation-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_async_switch_theme",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/managers/class-limitation-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_limitations_get_object_type",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/managers/class-limitation-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_limitations_get_sites_fields",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/managers/class-limitation-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_limitations_plugin_exclusion_list",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/managers/class-limitation-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_limitations_theme_exclusion_list",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/managers/class-limitation-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_notes_options_section_fields",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/managers/class-notes-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_hide_notifications_exclude_list",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "platform"
+            ],
+            "files": [
+                "examples/platform/src/managers/class-notification-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_register_jumper_commands",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "playground-admin-widget-builder"
+            ],
+            "files": [
+                "examples/playground-admin-widget-builder/playground.php"
+            ]
+        },
+        {
+            "name": "wpdev_render_settings",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "playground-field-builder"
+            ],
+            "files": [
+                "examples/playground-field-builder/functions-playground-fields.php"
+            ]
+        },
+        {
+            "name": "wpdev_handle_bulk_action_form_pg_delete",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "playground-table-builder"
+            ],
+            "files": [
+                "examples/playground-table-builder/functions-playground-table-interactive.php"
+            ]
+        },
+        {
+            "name": "wpdev_handle_bulk_action_form_pg_archive",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "playground-table-builder"
+            ],
+            "files": [
+                "examples/playground-table-builder/functions-playground-table-interactive.php"
+            ]
+        },
+        {
+            "name": "wpdev_admin_page_table-builder_load",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "playground-table-builder"
+            ],
+            "files": [
+                "examples/playground-table-builder/functions-playground-table-interactive.php"
+            ]
+        },
+        {
+            "name": "wpdev_should_use_saved_currency",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "products"
+            ],
+            "files": [
+                "examples/products/src/Models/class-product.php"
+            ]
+        },
+        {
+            "name": "wpdev_product_is_taxable",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "products"
+            ],
+            "files": [
+                "examples/products/src/Models/class-product.php"
+            ]
+        },
+        {
+            "name": "wpdev_product_tax_category",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "products"
+            ],
+            "files": [
+                "examples/products/src/Models/class-product.php"
+            ]
+        },
+        {
+            "name": "wpdev_get_as_variation_price_variation",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "products"
+            ],
+            "files": [
+                "examples/products/src/Models/class-product.php"
+            ]
+        },
+        {
+            "name": "wpdev_product_get_price_variation",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "products"
+            ],
+            "files": [
+                "examples/products/src/Models/class-product.php"
+            ]
+        },
+        {
+            "name": "wpdev_after_delete_product_modal",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "products"
+            ],
+            "files": [
+                "examples/products/src/admin/class-product-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_form_fields_delete_product_modal",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "products"
+            ],
+            "files": [
+                "examples/products/src/admin/class-product-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_product_edit_save_widget",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "products"
+            ],
+            "files": [
+                "examples/products/src/admin/class-product-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_{$this->model}_pre_delete",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "sites"
+            ],
+            "files": [
+                "examples/sites/src/Models/class-site.php"
+            ]
+        },
+        {
+            "name": "wpdev_{$this->model}_post_delete",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "sites"
+            ],
+            "files": [
+                "examples/sites/src/Models/class-site.php"
+            ]
+        },
+        {
+            "name": "wpdev_{$this->model}_post_save",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "sites"
+            ],
+            "files": [
+                "examples/sites/src/Models/class-site.php"
+            ]
+        },
+        {
+            "name": "wpdev_site_featured_image_size",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "sites"
+            ],
+            "files": [
+                "examples/sites/src/Models/class-site.php"
+            ]
+        },
+        {
+            "name": "wpdev_site_is_customer_allowed",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "sites"
+            ],
+            "files": [
+                "examples/sites/src/Models/class-site.php"
+            ]
+        },
+        {
+            "name": "wpdev_load_edit_placeholders_list_page",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "sites"
+            ],
+            "files": [
+                "examples/sites/src/admin/class-placeholders-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_edit_placeholders_columns",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "sites"
+            ],
+            "files": [
+                "examples/sites/src/admin/class-placeholders-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_data_json_success_delete_site_modal",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "sites"
+            ],
+            "files": [
+                "examples/sites/src/admin/class-site-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_handle_bulk_action_form_site_screenshot",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "sites"
+            ],
+            "files": [
+                "examples/sites/src/admin/class-site-list-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_get_site_domain_and_path",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "sites"
+            ],
+            "files": [
+                "examples/sites/src/functions/site.php"
+            ]
+        },
+        {
+            "name": "wpdev_async_take_screenshot",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "sites"
+            ],
+            "files": [
+                "examples/sites/src/managers/class-site-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_handle_bulk_action_form_site_delete-pending",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "sites"
+            ],
+            "files": [
+                "examples/sites/src/managers/class-site-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_edit_placeholders_screen_additional_actions",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "sites"
+            ],
+            "files": [
+                "examples/sites/views/sites/edit-placeholders.php"
+            ]
+        },
+        {
+            "name": "wpdev_system_info_data",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/admin/class-system-info-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_header_left",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/debug/class-debug.php"
+            ]
+        },
+        {
+            "name": "wpdev_page_added",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/debug/class-debug.php"
+            ]
+        },
+        {
+            "name": "wpdev_DEBUG",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/debug/class-debug.php"
+            ]
+        },
+        {
+            "name": "wpdev_tour_finished",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/debug/class-debug.php"
+            ]
+        },
+        {
+            "name": "wpdev_add_domain",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/integrations/host-providers/class-base-host-provider.php"
+            ]
+        },
+        {
+            "name": "wpdev_remove_domain",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/integrations/host-providers/class-base-host-provider.php"
+            ]
+        },
+        {
+            "name": "wpdev_add_subdomain",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/integrations/host-providers/class-base-host-provider.php"
+            ]
+        },
+        {
+            "name": "wpdev_remove_subdomain",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/integrations/host-providers/class-base-host-provider.php"
+            ]
+        },
+        {
+            "name": "wpdev_hosting_support_supports",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/integrations/host-providers/class-base-host-provider.php"
+            ]
+        },
+        {
+            "name": "wpdev_cloudflare_should_add_www",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/integrations/host-providers/class-cloudflare-host-provider.php"
+            ]
+        },
+        {
+            "name": "wpdev_cloudflare_should_proxy",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/integrations/host-providers/class-cloudflare-host-provider.php"
+            ]
+        },
+        {
+            "name": "wpdev_cloudflare_on_add_domain_data",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/integrations/host-providers/class-cloudflare-host-provider.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_handle_sso_grant",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_handle_sso",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_loaded",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_loaded_on_init",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_handle_{$action}",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_enabled",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_get_strategy",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_salt",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_cache",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_server_request",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_logger",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_get_server",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_get_broker",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_sso_get_url_path",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/src/sso/class-sso.php"
+            ]
+        },
+        {
+            "name": "wpdev_page_rollback_after_title",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "system"
+            ],
+            "files": [
+                "examples/system/views/rollback/rollback.php"
+            ]
+        },
+        {
+            "name": "wpdev_load_tax_rates_list_page",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "taxes"
+            ],
+            "files": [
+                "examples/taxes/src/admin/class-tax-rates-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_tax_rates_columns",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "taxes"
+            ],
+            "files": [
+                "examples/taxes/src/admin/class-tax-rates-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_dashboard_taxes_widgets",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "taxes"
+            ],
+            "files": [
+                "examples/taxes/src/class-dashboard-taxes-tab.php"
+            ]
+        },
+        {
+            "name": "wpdev_dash_before_metaboxes",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "taxes"
+            ],
+            "files": [
+                "examples/taxes/src/class-dashboard-taxes-tab.php"
+            ]
+        },
+        {
+            "name": "wpdev_dashboard_filter_bar",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "taxes"
+            ],
+            "files": [
+                "examples/taxes/src/class-dashboard-taxes-tab.php"
+            ]
+        },
+        {
+            "name": "wpdev_dashboard_display_filter",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "taxes"
+            ],
+            "files": [
+                "examples/taxes/src/class-dashboard-taxes-tab.php"
+            ]
+        },
+        {
+            "name": "wpdev_dashboard_display_widgets",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "taxes"
+            ],
+            "files": [
+                "examples/taxes/src/class-dashboard-taxes-tab.php"
+            ]
+        },
+        {
+            "name": "wpdev_page_get_title_links",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "taxes"
+            ],
+            "files": [
+                "examples/taxes/src/class-dashboard-taxes-tab.php"
+            ]
+        },
+        {
+            "name": "wpdev_page_wpdev-settings_load",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "taxes"
+            ],
+            "files": [
+                "examples/taxes/src/class-tax.php"
+            ]
+        },
+        {
+            "name": "wpdev_before_search_models",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "taxes"
+            ],
+            "files": [
+                "examples/taxes/src/class-tax.php"
+            ]
+        },
+        {
+            "name": "wpdev_enable_taxes",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "taxes"
+            ],
+            "files": [
+                "examples/taxes/src/class-tax.php"
+            ]
+        },
+        {
+            "name": "wpdev_get_tax_rate_types",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "taxes"
+            ],
+            "files": [
+                "examples/taxes/src/class-tax.php"
+            ]
+        },
+        {
+            "name": "wpdev_get_tax_rate_defaults",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "taxes"
+            ],
+            "files": [
+                "examples/taxes/src/class-tax.php"
+            ]
+        },
+        {
+            "name": "wpdev_get_tax_rates",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "taxes"
+            ],
+            "files": [
+                "examples/taxes/src/class-tax.php"
+            ]
+        },
+        {
+            "name": "wpdev_tax_rates_screen_additional_actions",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "taxes"
+            ],
+            "files": [
+                "examples/taxes/views/taxes/list.php"
+            ]
+        },
+        {
+            "name": "wpdev_data_json_success_delete_webhook_modal",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "webhooks"
+            ],
+            "files": [
+                "examples/webhooks/src/admin/class-webhook-edit-admin-page.php"
+            ]
+        },
+        {
+            "name": "wpdev_event_",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "webhooks"
+            ],
+            "files": [
+                "examples/webhooks/src/managers/class-webhook-manager.php"
+            ]
+        },
+        {
+            "name": "wpdev_mock_site",
+            "type": "filter",
+            "count": 1,
+            "owners": [
+                "wpdev-dev-mock"
+            ],
+            "files": [
+                "examples/wpdev-dev-mock/src/functions/mock.php"
+            ]
+        },
+        {
+            "name": "wpdev_modules_loaded",
+            "type": "action",
+            "count": 1,
+            "owners": [
+                "wpdev-playground-sample"
+            ],
+            "files": [
+                "examples/wpdev-playground-sample/wpdev-playground-sample.php"
+            ]
+        }
+    ]
+}

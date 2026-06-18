@@ -1,41 +1,40 @@
-# wpdev-framework Adapter
+# WPDev Framework Adapter
 
-The optional `phpFramework:wpdev` feature lets a consumer use
-[wpdev-framework-core](https://github.com/wpdev-framework/wpdev-framework-core)
-alongside the kit without copying wpdev source into the project.
+The \`phpFramework: wpdev\` feature integrates the project with the WPDev Admin Framework using the companion-plugin model. Instead of embedding the framework directly, it runs alongside the framework as a separate plugin on the WordPress site.
 
-## wpdev module convention
+## Companion Plugin Model
 
-wpdev-framework boots via:
+When \`phpFramework: wpdev\` is enabled:
 
-1. `wpdev.php` requires `modules/core/setup.php`
-2. On `plugins_loaded` (priority 5), `Module_Loader::load_all()` loads
-   every `modules/*/setup.php`
-3. Modules register admin pages, managers, and tables via helpers such as
-   `wpdev_register_module_admin_pages()` and `wpdev_boot_module_manager()`
+1. The framework files are copied verbatim into the project's \`companion-plugins/wpdev/\` folder.
+2. The user installs and activates this companion plugin in WordPress.
+3. If the companion plugin is not active, the main plugin displays a non-fatal warning notice in the WP admin panel and gracefully no-ops framework integrations, preventing fatal errors.
 
-See `wpdev-framework/wpdev-framework-core/modules/README.md` for the
-full layout (core, builders, production shell).
+## Prefix Rules & Collision Validation
 
-## What the kit bridges
+To avoid namespace and function conflicts:
 
-| wpdev seam                  | Kit equivalent                |
-| --------------------------- | ----------------------------- |
-| `modules/*/setup.php` entry | `ModuleInterface::boot()`     |
-| Module slug                 | `ModuleInterface::get_slug()` |
-| `Module_Loader::load_all()` | `WPDev\Core\ModuleLoader`     |
+- The WPDev framework reserves the \`wpdev\` hook prefix and the \`wpdev\_\` PHP function prefix.
+- The CLI installer validates that your project's custom \`hookPrefix\` is not \`wpdev\` and your \`phpFunctionPrefix\` is not \`wpdev\_\`.
+- Colliding prefixes will cause validation failure and prompt for a correct prefix (in interactive mode) or fail-fast (in non-interactive mode).
 
-The adapter class `WPDev\Adapters\WpdevModuleAdapter` (shipped in
-`wpdev/framework`) wraps a kit `ModuleInterface` instance so you can
-register it in wpdev's loader lifecycle without rewriting your module.
+## Bridging Module Lifecycles via \`WpdevModuleAdapter\`
 
-## Consumer wiring
+The adapter class \`WPDev\\Adapters\\WpdevModuleAdapter\` wraps your kit's \`ModuleInterface\` modules:
 
-When `phpFramework:wpdev`:
+\`\`\`php
+WPDev\\Adapters\\WpdevModuleAdapter::attach(new MyPlugin\\Modules\\WpdevDemo\\Module());
+\`\`\`
 
-1. `composer.json` gains a `suggest` entry for `wpdev/framework-core`
-2. `docs/wpdev-integration.md` is emitted in the consumer project
-3. Install wpdev-framework-core as a separate plugin on the site
+### Attachment Seam & Hook Ordering
 
-The adapter is **optional** — `phpFramework:none` (the default) never
-requires wpdev.
+1. **With Framework Active**: If the framework helper function \`wpdev_on_load\` is present, \`attach()\` defers the module's \`boot()\` lifecycle, registering it to run on the framework's \`wpdev_load\` hook.
+2. **Fallback (Without Framework)**: If the framework is not active, the module's \`boot()\` method is called sequentially during the standard kit bootstrap.
+
+## Seam Map
+
+| WPDev Seam                     | Kit Equivalent                  |
+| ------------------------------ | ------------------------------- |
+| \`modules/\*/setup.php\` entry | \`ModuleInterface::boot()\`     |
+| Module slug                    | \`ModuleInterface::get_slug()\` |
+| \`Module_Loader::load_all()\`  | \`WPDev\\Core\\ModuleLoader\`   |

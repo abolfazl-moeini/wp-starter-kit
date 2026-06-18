@@ -97,6 +97,14 @@ final class Plugin {
 	private static bool $booted = false;
 
 	/**
+	 * Whether feature modules have been booted.
+	 *
+	 * @var bool
+	 */
+	private static bool $modules_booted = false;
+
+
+	/**
 	 * Disable instantiation — the class is used statically.
 	 */
 	private function __construct() {
@@ -177,9 +185,13 @@ final class Plugin {
 	 * registered modules and fire the `_modules_loaded` action.
 	 */
 	public static function on_plugins_loaded(): void {
+		if ( true === self::$modules_booted ) {
+			return;
+		}
 		if ( null === self::$loader ) {
 			return;
 		}
+		self::$modules_booted = true;
 		self::$loader->boot_all();
 	}
 
@@ -291,13 +303,14 @@ final class Plugin {
 	 * @internal
 	 */
 	public static function reset_for_tests(): void {
-		self::$instance     = null;
-		self::$loader       = null;
-		self::$config_path  = null;
-		self::$config_cache = null;
-		self::$last_hook    = null;
-		self::$booted       = false;
-		self::$plugin_dir   = null;
+		self::$instance       = null;
+		self::$loader         = null;
+		self::$config_path    = null;
+		self::$config_cache   = null;
+		self::$last_hook      = null;
+		self::$booted         = false;
+		self::$modules_booted = false;
+		self::$plugin_dir     = null;
 	}
 
 	/**
@@ -342,9 +355,27 @@ final class Plugin {
 		if ( null !== self::$config_path ) {
 			return self::$config_path;
 		}
-		// __DIR__ === src/Core (this file lives there)
-		// dirname(__DIR__, 2) === plugin root in the in-tree layout
-		$plugin_root = self::$plugin_dir ?? dirname( __DIR__, 2 );
-		return $plugin_root . '/project.config.json';
+
+		$plugin_root = self::$plugin_dir;
+
+		if ( null === $plugin_root ) {
+			$constants = get_defined_constants( true );
+			$user_constants = $constants['user'] ?? [];
+			foreach ( $user_constants as $name => $val ) {
+				if ( substr( $name, -11 ) === '_PLUGIN_DIR' && is_string( $val ) ) {
+					$candidate = rtrim( $val, '/\\' ) . '/project.config.json';
+					if ( is_file( $candidate ) ) {
+						$plugin_root = $val;
+						break;
+					}
+				}
+			}
+		}
+
+		if ( null === $plugin_root ) {
+			$plugin_root = dirname( __DIR__, 2 );
+		}
+
+		return rtrim( $plugin_root, '/\\' ) . '/project.config.json';
 	}
 }

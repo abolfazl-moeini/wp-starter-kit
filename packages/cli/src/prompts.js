@@ -108,7 +108,7 @@ const FEATURE_QUESTIONS = {
   jsTest: "JS test runner?",
   css: "CSS toolchain?",
   phpMinVersion: "Minimum PHP version to support?",
-  phpFramework: "Use wpdev/framework as a Composer dependency?",
+  phpFramework: "Use WPDev Admin Framework?",
   phpTest: "PHP unit tests (PHPUnit)?",
   license: "License?",
   wpMinVersion: "Minimum WordPress version?",
@@ -160,7 +160,14 @@ function featureQuestion(feature) {
     target: "features",
     message,
     options: feature.variants.map((v) => ({
-      label: v,
+      label:
+        feature.id === "phpFramework"
+          ? v === "none"
+            ? "No, stand-alone"
+            : v === "wpdev"
+              ? "Yes, companion-plugin model"
+              : v
+          : v,
       value: v,
     })),
     initialValue: feature.default,
@@ -360,6 +367,73 @@ export async function runPrompts(plan, ui, prefill) {
     if (q.target === "answers") collected.answers[q.id] = value;
     else if (q.target === "features") collected.features[q.id] = value;
     else if (q.target === "runOptions") collected.runOptions[q.id] = value;
+
+    if (q.id === "phpFramework" && value === "wpdev") {
+      if (collected.answers.hookPrefix === "wpdev") {
+        await u.log(
+          "phpFramework=wpdev reserves the 'wpdev' hook prefix. Please choose a different hook prefix.",
+        );
+        const suggested = collected.answers.slug || "my-plugin";
+        let newHook;
+        do {
+          newHook = await u.text({
+            message: "Hook prefix",
+            placeholder: suggested,
+            validate: (val) => {
+              if (!val) return "Hook prefix is required";
+              if (val === "wpdev") return "Cannot use 'wpdev' as hook prefix";
+              return undefined;
+            },
+          });
+          if (
+            newHook === undefined ||
+            newHook === null ||
+            typeof newHook === "symbol"
+          ) {
+            const err = new Error("user cancelled");
+            err.code = "WPDEV_USER_CANCELLED";
+            throw err;
+          }
+        } while (newHook === "wpdev");
+        collected.answers.hookPrefix = newHook;
+      }
+
+      if (collected.answers.phpFunctionPrefix === "wpdev_") {
+        await u.log(
+          "phpFramework=wpdev reserves the 'wpdev_' PHP function prefix. Please choose a different function prefix.",
+        );
+        const slugUnderscore = (collected.answers.slug || "my-plugin").replace(
+          /-/g,
+          "_",
+        );
+        const suggestedFn = slugUnderscore + "_";
+        let newFn;
+        do {
+          newFn = await u.text({
+            message: "PHP function prefix (must end with _)",
+            placeholder: suggestedFn,
+            validate: (val) => {
+              if (!val) return "PHP function prefix is required";
+              if (val === "wpdev_")
+                return "Cannot use 'wpdev_' as function prefix";
+              if (!/^[a-z][a-z0-9_]*_$/.test(val))
+                return "PHP function prefix must end with an underscore";
+              return undefined;
+            },
+          });
+          if (
+            newFn === undefined ||
+            newFn === null ||
+            typeof newFn === "symbol"
+          ) {
+            const err = new Error("user cancelled");
+            err.code = "WPDEV_USER_CANCELLED";
+            throw err;
+          }
+        } while (newFn === "wpdev_");
+        collected.answers.phpFunctionPrefix = newFn;
+      }
+    }
   }
 
   return collected;

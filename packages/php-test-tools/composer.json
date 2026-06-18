@@ -2,7 +2,7 @@
   "name": "wpdev/php-test-tools",
   "description": "PHPUnit config parser, patch tools for wp-starter-kit",
   "type": "library",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "autoload": {
     "psr-4": {
       "WPDev\\TestTools\\": "src/"

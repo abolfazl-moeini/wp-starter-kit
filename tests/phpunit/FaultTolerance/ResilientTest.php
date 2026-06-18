@@ -36,4 +36,20 @@ class ResilientTest extends TestCase
         $this->assertTrue(function_exists('resilient'));
         $this->assertSame('done', resilient(static fn (): string => 'done'));
     }
+
+    public function test_honors_delay_ms(): void
+    {
+        $attempts = 0;
+        $start = microtime(true);
+        try {
+            Resilient::resilient(static function () use (&$attempts): string {
+                $attempts++;
+                throw new \RuntimeException('retry');
+            }, ['retries' => 2, 'delayMs' => 10]);
+        } catch (\Throwable $e) {
+            // expected
+        }
+        $elapsed = (microtime(true) - $start) * 1000;
+        $this->assertGreaterThanOrEqual(20, $elapsed);
+    }
 }

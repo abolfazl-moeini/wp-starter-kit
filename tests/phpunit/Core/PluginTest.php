@@ -461,4 +461,23 @@ class PluginTest extends TestCase
             'Module registered after boot() must remain in the loader'
         );
     }
+
+    public function test_resolves_config_via_constant(): void
+    {
+        $tempDir = sys_get_temp_dir() . '/wpdev_constant_test_' . uniqid();
+        mkdir($tempDir, 0777, true);
+        $configPath = $tempDir . '/project.config.json';
+        file_put_contents($configPath, json_encode([
+            'slug' => 'wpdev-starter-constant',
+            'hookPrefix' => 'wpdev',
+            'textDomain' => 'wpdev-starter',
+        ]));
+
+        define('TEST_WPDEV_CONSTANT_PLUGIN_DIR', $tempDir);
+
+        Plugin::boot();
+
+        $config = Plugin::loaded_config();
+        $this->assertSame('wpdev-starter-constant', $config['slug'] ?? '');
+    }
 }

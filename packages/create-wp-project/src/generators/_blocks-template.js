@@ -204,5 +204,8 @@ foreach ($blockstudioCandidates as $blockstudioFile) {
     },
     5
 );
+if (did_action('plugins_loaded')) {
+    Plugin::loader()->register(new Module());
+}
 `;
 }
