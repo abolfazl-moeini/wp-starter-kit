@@ -181,55 +181,6 @@ function findFeatureGenerators(id, currentVariant) {
 }
 
 /**
- * Collect the union of `owns` globs across every still-ON
- * feature's generator EXCEPT the one being removed. The walker
- * uses this union as a "do-not-delete" filter — a file matched
- * by the union is owned by something else, so removing it
- * would clobber another feature's territory.
- *
- * Variant features (js, css) have multiple descriptors per
- * feature id; we include all of them so a js:typescript project
- * still has the js:typescript owns list protected when removing
- * an unrelated feature (e.g. exampleFeature).
- *
- * @param {Object} allFeatures  the project's current feature set
- * @param {string} skipId       the feature id being removed
- *                              (its owns are still included —
- *                              we're computing "what stays")
- * @returns {string[]}
- */
-function collectOtherOwns(allFeatures, skipId) {
-  const out = [];
-  for (const f of getFeatureCatalog()) {
-    if (f.id === skipId) continue;
-    let variant;
-    if (f.id === "core") {
-      // core is always on — there's no entry in allFeatures for
-      // it (the catalog has it but the manifest doesn't carry a
-      // features.core field), so we synthesize the "current variant"
-      // as undefined and let findFeatureGenerators return the
-      // core descriptor by id.
-      variant = undefined;
-    } else {
-      variant = allFeatures[f.id];
-      if (variant === undefined) continue;
-    }
-    // Include every still-relevant feature's owns — even OFF
-    // features' owns — so the shared-owned protection is
-    // conservative. An OFF feature's owned file isn't on disk
-    // to begin with, so the protection is theoretical, but it
-    // costs nothing and makes the safety story easier to
-    // reason about ("never clobber another feature's owns,
-    // period").
-    const gens = findFeatureGenerators(f.id, variant);
-    for (const g of gens) {
-      if (g.owns) out.push(...g.owns);
-    }
-  }
-  return out;
-}
-
-/**
  * Check whether a path is matched by ANY glob in the list.
  *
  * @param {string} filePath

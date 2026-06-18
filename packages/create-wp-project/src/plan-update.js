@@ -79,7 +79,6 @@ import * as path from "node:path";
 
 import { readManifest } from "./manifest.js";
 import {
-  CONSUMER_BUILD_WPDEV_PACKAGES,
   CONSUMER_RUNTIME_WPDEV_PACKAGES,
   getDepVersions,
 } from "./dep-versions.js";
