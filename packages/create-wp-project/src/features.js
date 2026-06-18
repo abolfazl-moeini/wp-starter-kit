@@ -63,7 +63,9 @@ const FEATURE_CATALOG = [
     id: "phpFramework",
     variants: ["none", "wpdev"],
     default: "none",
-    notes: "Use wpdev-framework? `wpdev` adds an adapter + dependency.",
+    notes:
+      "WPDev Admin Framework (companion plugin). `wpdev` scaffolds companion-plugins/wpdev/, " +
+      "FrameworkBridge, and WpdevDemo. Reserves the wpdev_* hook/function prefix for the framework.",
   },
   {
     id: "phpTest",

@@ -42,6 +42,7 @@ import * as path from "node:path";
 
 import {
   getDepVersions,
+  readWpdevFrameworkVersion,
   CONSUMER_RUNTIME_WPDEV_PACKAGES,
   CONSUMER_BUILD_WPDEV_PACKAGES,
 } from "../../packages/create-wp-project/src/dep-versions.js";
@@ -201,4 +202,12 @@ describe("getDepVersions() — covers the composer (PHP) chain (Phase 24.8 part 
       expect(v.length).toBeGreaterThan(0);
     },
   );
+
+  test("registry includes vendored wpdevFramework version", () => {
+    const m = getDepVersions();
+    const fromRegistry = m.get("wpdevFramework");
+    const fromConstants = readWpdevFrameworkVersion();
+    expect(fromConstants).toBeTruthy();
+    expect(fromRegistry).toBe(fromConstants);
+  });
 });

@@ -11,3 +11,12 @@ parameters:
         - dist/*
         - packages/php-fault-tolerance/*
         - tests/*
+        - packages/wpdev-framework/*
+        - wp-content/*
+        - blockstudio/*
+        - packages/*/vendor/*
+        - core/packages/*/vendor/*
+        - packages/mcp-integration/*
+
+
+

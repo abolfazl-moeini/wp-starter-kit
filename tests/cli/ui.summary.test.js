@@ -92,6 +92,15 @@ describe("renderSummary()", () => {
     expect(out).toMatch(/tailwind/i);
   });
 
+  test("includes WPDev companion label when phpFramework:wpdev", () => {
+    const out = renderSummary({
+      answers: { slug: "x" },
+      features: { phpFramework: "wpdev" },
+      runOptions: {},
+    });
+    expect(out).toMatch(/PHP framework:\s*WPDev \(companion plugin\)/i);
+  });
+
   test("includes Blockstudio label when blocks:on", () => {
     const out = renderSummary({
       answers: { slug: "x" },

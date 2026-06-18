@@ -242,5 +242,10 @@ export function parseFlags(argv) {
     }
   }
 
+  // Back-compat alias: docs once used `wpdev-framework`; normalize to `wpdev`.
+  if (features.phpFramework === "wpdev-framework") {
+    features.phpFramework = "wpdev";
+  }
+
   return { answers, features, runOptions };
 }

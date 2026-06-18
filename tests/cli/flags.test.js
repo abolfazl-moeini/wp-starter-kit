@@ -78,6 +78,12 @@ describe("parseFlags()", () => {
     );
   });
 
+  test("normalizes --php-framework=wpdev-framework alias to wpdev", () => {
+    expect(
+      parseFlags(["--php-framework=wpdev-framework"]).features.phpFramework,
+    ).toBe("wpdev");
+  });
+
   test("parses --php-framework= → features.phpFramework", () => {
     expect(parseFlags(["--php-framework=wpdev"]).features.phpFramework).toBe(
       "wpdev",

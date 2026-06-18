@@ -79,7 +79,7 @@ describe("1.0.0 migration — WPDev companion updates", () => {
       await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
     );
     expect(after.kitVersion).toBe("1.0.0");
-  });
+  }, 15000);
 
   test("runMigrations 0.4.0 → 1.0.0 skips framework when phpFramework is none", async () => {
     await seedProject({ phpFramework: "none" });

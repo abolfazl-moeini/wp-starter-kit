@@ -79,6 +79,13 @@ describe("phpFramework:wpdev companion scaffold", () => {
     expect(bridge).toContain("is_framework_active");
   });
 
+  test("demo module registers admin pages via wpdev_register_module_admin_pages", () => {
+    const out = phpFrameworkRun(makeCtx());
+    const mod = out.files["src/Modules/WpdevDemo/Module.php"];
+    expect(mod).toMatch(/wpdev_register_module_admin_pages/);
+    expect(mod).toMatch(/wpdev_register_table/);
+  });
+
   test("register file attaches demo module via WpdevModuleAdapter::attach", () => {
     const out = phpFrameworkRun(makeCtx());
     const reg = out.files["src/wpdev-demo-register.php"];

@@ -24,6 +24,11 @@
       `assets/translations/` folder (no stale `.json` files).
 - [ ] Smoke test: spin up a local WP, activate the theme/plugin,
       verify all components render.
+- [ ] Vendored framework version recorded in `getDepVersions()` (`wpdevFramework`
+      key matches `packages/wpdev-framework/constants.php`).
+- [ ] Companion-plugin installer smoke passes:
+      `wpdev create --yes --js=none --php-framework=wpdev` writes
+      `companion-plugins/wpdev/wpdev.php` and `FrameworkBridge.php` lint clean.
 
 ## Rector namespace rename (if scope changed)
 

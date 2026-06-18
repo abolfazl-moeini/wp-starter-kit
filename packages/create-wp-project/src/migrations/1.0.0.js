@@ -199,7 +199,10 @@ export async function run(dir) {
         file === ".git" ||
         file === ".cursor" ||
         file === ".kiro" ||
-        file === "context.md"
+        file === "context.md" ||
+        file === "vendor" ||
+        file === "dist" ||
+        file === "node_modules"
       ) {
         continue;
       }

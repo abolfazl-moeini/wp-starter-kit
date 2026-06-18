@@ -26,6 +26,7 @@ module.exports = {
     'assets/map/',
     'examples/',
     'packages/wpdev-framework/',
+    'wp-content/',
     '*.min.js',
   ],
   rules: {

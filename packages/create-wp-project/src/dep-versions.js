@@ -299,6 +299,29 @@ const REQUIRED_COMPOSER_ENTRIES = [
   "symfony/process",
 ];
 
+/**
+ * Read the vendored WPDev Admin Framework version from
+ * `packages/wpdev-framework/constants.php` (`WPDEV_VERSION`).
+ *
+ * @returns {string|null}
+ */
+export function readWpdevFrameworkVersion() {
+  const constantsPath = modulePath(
+    "..",
+    "..",
+    "wpdev-framework",
+    "constants.php",
+  );
+  if (!existsSync(constantsPath)) {
+    return null;
+  }
+  const raw = readFileSync(constantsPath, "utf8");
+  const match = raw.match(
+    /define\s*\(\s*['"]WPDEV_VERSION['"]\s*,\s*['"]([^'"]+)['"]\s*\)/,
+  );
+  return match ? match[1] : null;
+}
+
 /* -------------------------------------------------------------------- */
 /* getDepVersions                                                          */
 /* -------------------------------------------------------------------- */
@@ -330,6 +353,10 @@ export function getDepVersions() {
     for (const name of REQUIRED_COMPOSER_ENTRIES) {
       const v = readKitComposerDep(name);
       if (v) m.set(name, v);
+    }
+    const fw = readWpdevFrameworkVersion();
+    if (fw) {
+      m.set("wpdevFramework", fw);
     }
     CACHED_REGISTRY = m;
   }

@@ -75,7 +75,7 @@ prompt has a matching flag so the command runs in CI with `--yes`.
 | `--blocks=<on\|off>`          | `features.blocks`           | Gutenberg blocks via Blockstudio 7 (PHP-first; PHP 8.2+ runtime).                            |
 | `--php-min=<ver>`             | `features.phpMinVersion`    | `7.4` … `8.3`.                                                                               |
 | `--php-source=<ver>`          | `features.phpSourceVersion` | `8.1` / `8.2` / `8.3`.                                                                       |
-| `--php-framework=<opt>`       | `features.phpFramework`     | `none` / `wpdev-framework`.                                                                  |
+| `--php-framework=<opt>`       | `features.phpFramework`     | `none` / `wpdev` (`wpdev-framework` accepted as alias). Companion plugin model.              |
 | `--php-test=<opt>`            | `features.phpTest`          | `phpunit` / `none`.                                                                          |
 | `--license=<id>`              | `features.license`          | `gpl2` / `gpl3` / `mit`.                                                                     |
 | `--wp-min=<ver>`              | `features.wpMinVersion`     | `5.8` / `6.0` / `6.2` / `6.4` / `6.6`.                                                       |
@@ -205,7 +205,7 @@ questions first, then each catalog feature whose `when()` gate is open:
 5. **`jsTest`** — only when `js ≠ none` (`jest` / `vitest` / `none`).
 6. **`css`** — only when `js ≠ none`.
 7. **`phpMinVersion`** — `7.4` … `8.3`.
-8. **`phpFramework`** — `none` / `wpdev` (Composer dependency vs no framework package).
+8. **`phpFramework`** — `none` / `wpdev` (companion plugin under `companion-plugins/wpdev/`; reserves `wpdev_*` prefix).
 9. **Optional toggles** (one prompt each): **`blocks`**, **`mcpAbilities`**,
    **`phpTest`**, **`license`**, **`wpMinVersion`**, **`restBatch`**,
    **`faultTolerance`** (only when `phpMinVersion ≥ 8.1`), **`vendorScoping`**,

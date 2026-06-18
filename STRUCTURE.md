@@ -104,4 +104,4 @@ git submodule update --init --recursive
 - `js-core-libs/` → `packages/rest-utils/` (batch client; `packages/fetch/` is a shim)
 - `php-core-libs/` → `src/Support/` + `docs/php-core-libs.md`
 - `WordPress Concurrency & Fault Tolerance/` → `packages/php-fault-tolerance/`
-- `mrlogistic-laravel/`, `sample-plugin/`, `wpdev-framework/` → build pipeline, Rector, patch tools, optional adapter
+- `mrlogistic-laravel/`, `sample-plugin/`, `packages/wpdev-framework/` → vendored WPDev Admin Framework core (companion plugin source); generated projects get `companion-plugins/wpdev/` when `phpFramework:wpdev`

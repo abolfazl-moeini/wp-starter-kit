@@ -3,7 +3,7 @@
  * Plugin Name:       WPDev Starter
  * Plugin URI:        https://github.com/abolfazl-moeini/wp-plugin-starter-kit
  * Description:       WordPress plugin starter kit — modular monolith reference implementation.
- * Version:           0.1.0
+ * Version:           1.0.0
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Author:            wp-starter-kit
@@ -19,7 +19,7 @@
 defined( 'ABSPATH' ) || exit;
 
 if ( ! defined( 'WPDEV_STARTER_VERSION' )) {
-	define( 'WPDEV_STARTER_VERSION', '0.1.0' );
+	define( 'WPDEV_STARTER_VERSION', '1.0.0' );
 }
 if ( ! defined( 'WPDEV_STARTER_PLUGIN_FILE' )) {
 	define( 'WPDEV_STARTER_PLUGIN_FILE', __FILE__ );

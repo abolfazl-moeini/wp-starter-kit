@@ -9,10 +9,10 @@ describe("@wpdev/cli package contract", () => {
     expect(existsSync(pkgPath)).toBe(true);
   });
 
-  test("package name is @wpdev/cli with version 0.1.0", () => {
+  test("package name is @wpdev/cli with version 1.0.0", () => {
     const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
     expect(pkg.name).toBe("@wpdev/cli");
-    expect(pkg.version).toBe("0.1.0");
+    expect(pkg.version).toBe("1.0.0");
   });
 
   test("package is ESM with engines.node >= 18", () => {

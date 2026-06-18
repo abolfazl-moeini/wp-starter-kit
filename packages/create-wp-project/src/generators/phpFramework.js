@@ -46,7 +46,10 @@ function getFrameworkFiles() {
         file === ".git" ||
         file === ".cursor" ||
         file === ".kiro" ||
-        file === "context.md"
+        file === "context.md" ||
+        file === "vendor" ||
+        file === "dist" ||
+        file === "node_modules"
       ) {
         continue;
       }
@@ -114,10 +117,28 @@ namespace {{vendor}}\\Modules\\WpdevDemo;
 
 use {{frameworkNamespace}}\\Core\\ModuleInterface;
 use {{vendor}}\\Support\\FrameworkBridge;
+use WPDevFramework\\Admin_Pages\\Base_Admin_Page;
 
 /**
  * Demo module showcasing integration with the WPDev Admin Framework.
  */
+final class Demo_Admin_Page extends Base_Admin_Page
+{
+    protected $id = 'wpdev-demo';
+    protected $title = 'WPDev Demo';
+    protected $menu_title = 'WPDev Demo';
+
+    public function output(): void
+    {
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html__('WPDev Framework Integration', '{{textDomain}}'); ?></h1>
+            <p><?php echo esc_html__('This admin page was registered via wpdev_register_module_admin_pages().', '{{textDomain}}'); ?></p>
+        </div>
+        <?php
+    }
+}
+
 final class Module implements ModuleInterface
 {
     public function get_slug(): string
@@ -131,24 +152,16 @@ final class Module implements ModuleInterface
             return;
         }
 
-        // Register a demo menu page using the framework's public API.
-        if (function_exists('wpdev_register_menu_top')) {
-            \\wpdev_register_menu_top('wpdev-demo-page', [
-                'title'      => __('WPDev Demo', '{{textDomain}}'),
-                'capability' => 'manage_options',
-                'callback'   => [$this, 'render_demo_page'],
-            ]);
+        // Register admin pages via the framework module API.
+        if (function_exists('wpdev_register_module_admin_pages')) {
+            \\wpdev_register_module_admin_pages(
+                '{{slug}}-demo',
+                [Demo_Admin_Page::class]
+            );
         }
-    }
 
-    public function render_demo_page(): void
-    {
-        ?>
-        <div class="wrap">
-            <h1><?php echo esc_html__('WPDev Framework Integration', '{{textDomain}}'); ?></h1>
-            <p><?php echo esc_html__('This admin page was registered via the WPDev Admin Framework companion plugin API.', '{{textDomain}}'); ?></p>
-        </div>
-        <?php
+        // For list tables, register factories with wpdev_register_table() on wpdev_load.
+        // See the framework docs/api/manifest.json and docs/wpdev-integration.md.
     }
 }
 `;

@@ -37,8 +37,16 @@ describe("CI workflow contract", () => {
   });
 
   test("release.yml names archives wpdev-starter", () => {
-    expect(release).toMatch(/wpdev-starter-\$\{\{ github\.ref_name \}\}\.tar\.gz/);
+    expect(release).toMatch(
+      /wpdev-starter-\$\{\{ github\.ref_name \}\}\.tar\.gz/,
+    );
     expect(release).not.toMatch(/wpsk-starter-/);
+  });
+
+  test("ci.yml installer-e2e includes php-framework companion smoke", () => {
+    expect(ci).toMatch(/php-framework=wpdev/);
+    expect(ci).toMatch(/companion-plugins\/wpdev\/wpdev\.php/);
+    expect(ci).toMatch(/FrameworkBridge\.php/);
   });
 
   test("ci.yml defines an installer-e2e job", () => {

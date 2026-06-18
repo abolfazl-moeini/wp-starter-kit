@@ -280,6 +280,15 @@ jobs:
         run: |
           node packages/cli/bin/wpdev.js info /tmp/wpdev-installer-e2e
 
+      - name: "E2E: php-framework=wpdev companion scaffold smoke"
+        run: |
+          test -f packages/wpdev-framework/wpdev.php
+          node packages/cli/bin/wpdev.js create /tmp/wpdev-fw \
+            --yes --js=none --php-framework=wpdev \
+            --scope=acme --global=Acme --domain=acme --hook=acme --php-fn=acme_
+          test -f /tmp/wpdev-fw/companion-plugins/wpdev/wpdev.php
+          php -l /tmp/wpdev-fw/src/Support/FrameworkBridge.php
+
   # ============================================================
   # Job 8: Status check (fails if any required job failed)
   # ============================================================

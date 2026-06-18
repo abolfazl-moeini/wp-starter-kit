@@ -14,7 +14,7 @@
   "author": "Moeini",
   "dependencies": {
     "json2php": "^0.0.12",
-    "@core/utils": "^0.1.0"
+    "@core/utils": "^1.0.0"
   },
   "license": "MIT"
 }

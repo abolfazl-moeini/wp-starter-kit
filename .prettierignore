@@ -8,3 +8,4 @@ assets/bundles/*.js
 composer.lock
 package-lock.json
 packages/wpdev-framework/
+wp-content/

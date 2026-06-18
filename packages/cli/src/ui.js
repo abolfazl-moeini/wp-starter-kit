@@ -177,7 +177,10 @@ export function renderSummary(input) {
   }
   // 4. PHP min + framework + test.
   push("PHP min", f.phpMinVersion);
-  push("PHP framework", f.phpFramework);
+  push(
+    "PHP framework",
+    f.phpFramework === "wpdev" ? "WPDev (companion plugin)" : f.phpFramework,
+  );
   push("PHP test", f.phpTest);
   // 5. License + WP min.
   push("License", f.license);
