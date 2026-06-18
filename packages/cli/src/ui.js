@@ -206,8 +206,11 @@ export function renderSummary(input) {
  * `commands/create.js`:
  *   - npm install: included when `js !== 'none'` OR `husky === 'on'`
  *     (i.e. a package.json was emitted by the engine).
- *   - composer install: included when `phpTest === 'phpunit'`
- *     (i.e. a composer.json was emitted by the engine).
+ *   - composer install: included when `phpTest === 'phpunit'` OR
+ *     `blocks === 'on'` (Blockstudio is a Composer dependency).
+ *   - When `blocks:on` and `phpMinVersion < 8.2`, an advisory line
+ *     reminds that Rector downlevels plugin source only — Blockstudio
+ *     still requires PHP 8.2+ at runtime.
  *
  * @param {Record<string,string>} [features]
  * @param {object} [runOptions]
@@ -222,19 +225,25 @@ export function renderNextSteps(features, runOptions) {
 
   const needsNpm = f.js !== "none" || f.husky === "on";
   if (needsNpm) {
-    steps.push(`${dir === "." ? "" : " "}npm install`);
+    steps.push("npm install");
   }
 
-  const needsComposer = f.phpTest === "phpunit";
+  const needsComposer = f.phpTest === "phpunit" || f.blocks === "on";
   if (needsComposer) {
-    steps.push(`${dir === "." ? "" : " "}composer install`);
+    steps.push("composer install");
+  }
+
+  if (f.blocks === "on" && f.phpMinVersion && f.phpMinVersion < "8.2") {
+    steps.push(
+      "Note: Blockstudio requires PHP 8.2+ at runtime (Rector downlevels your plugin source only).",
+    );
   }
 
   // Advisory: if JS is on, the user can run tests. We add this
   // ONLY when the project has JS — a PHP-only project has no
   // `npm test` to run.
   if (f.js && f.js !== "none") {
-    steps.push(`${dir === "." ? "" : " "}npm test`);
+    steps.push("npm test");
   }
 
   return steps;

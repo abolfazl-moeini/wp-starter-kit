@@ -117,7 +117,7 @@ describe("generator purity (Phase 21.9/21.10)", () => {
     features.blocks = "on";
     // restBatch is gated on js != none + restBatch == "on" — ✓
     // css is gated on js != none + css != "none" — ✓
-    // blocks is gated on js != none + wpMinVersion >= 5.8 — ✓
+    // blocks is gated on blocks === "on" only (PHP-first; no js gate) — ✓
     const ctx = makeCtx({}, {}, features);
     const gens = getGenerators(features);
 

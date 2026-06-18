@@ -223,6 +223,22 @@ describe("renderNextSteps()", () => {
     expect(steps.some((s) => /composer install/.test(s))).toBe(false);
   });
 
+  test("blocks:on → 'composer install' step even when phpTest:none", () => {
+    const steps = renderNextSteps(
+      { blocks: "on", phpTest: "none", js: "none" },
+      { targetDir: "/tmp/proj" },
+    );
+    expect(steps.some((s) => /composer install/.test(s))).toBe(true);
+  });
+
+  test("blocks:on + phpMinVersion < 8.2 → runtime PHP advisory", () => {
+    const steps = renderNextSteps(
+      { blocks: "on", phpMinVersion: "7.4", phpTest: "none", js: "none" },
+      { targetDir: "/tmp/proj" },
+    );
+    expect(steps.some((s) => /PHP 8\.2\+ at runtime/.test(s))).toBe(true);
+  });
+
   test("the dir is taken from runOptions.targetDir", () => {
     const steps = renderNextSteps({}, { targetDir: "/some/custom/path" });
     expect(steps[0]).toMatch(/cd\s+\/some\/custom\/path/);

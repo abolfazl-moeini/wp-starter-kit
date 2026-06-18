@@ -37,6 +37,8 @@ export function run(ctx) {
   const files = {
     "blockstudio.json": blockstudioConfig(ctx) + "\n",
     [`${BRIDGE_DIR}/Module.php`]: renderTemplate(blocksBridgeModule(ctx), tpl),
+    [`${BRIDGE_DIR}/index.ts`]:
+      "// Blocks are managed by Blockstudio. See blockstudio/ directory.\n",
     [REGISTER_FILE]: renderTemplate(blocksRegisterBootstrap(ctx), tpl),
   };
 
