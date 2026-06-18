@@ -70,7 +70,7 @@ export function exampleHeroFiles(ctx) {
         null,
         2,
       ) + "\n",
-    "example-hero/index.php": `<section <?php echo wp_kses_data( get_block_wrapper_attributes( [ 'class' => 'example-hero' ] ) ); ?>>
+    "example-hero/index.php": `<section <?php echo get_block_wrapper_attributes( [ 'class' => 'example-hero' ] ); ?>>
 \t<h2><?php echo esc_html( $a['heading'] ?? '' ); ?></h2>
 \t<?php if ( ! empty( $a['intro'] ) ) : ?>
 \t\t<p><?php echo esc_html( $a['intro'] ); ?></p>

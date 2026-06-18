@@ -1,4 +1,4 @@
-<section <?php echo wp_kses_data( get_block_wrapper_attributes( [ 'class' => 'example-hero' ] ) ); ?>>
+<section <?php echo get_block_wrapper_attributes( [ 'class' => 'example-hero' ] ); ?>>
 	<h2><?php echo esc_html( $a['heading'] ?? '' ); ?></h2>
 	<?php if ( ! empty( $a['intro'] ) ) : ?>
 		<p><?php echo esc_html( $a['intro'] ); ?></p>
