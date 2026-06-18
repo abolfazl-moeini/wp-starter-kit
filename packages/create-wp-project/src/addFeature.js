@@ -41,7 +41,7 @@ import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import minimatch from "minimatch";
 
-import { listGenerators, findGenerator } from "./generators/index.js";
+import { listGenerators } from "./generators/index.js";
 import { validateFeatureSet } from "./features.js";
 import {
   readManifest,

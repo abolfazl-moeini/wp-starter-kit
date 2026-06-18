@@ -3,6 +3,7 @@
   "description": "WordPress Theme/Plugin Starter Kit",
   "type": "project",
   "license": "MIT",
+  "version": "1.0.0",
   "repositories": [
     {
       "type": "path",
