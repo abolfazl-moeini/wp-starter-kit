@@ -212,6 +212,31 @@ function comparePhpVersion(a, b) {
 }
 
 /* -------------------------------------------------------------------- */
+/* normalizeFeatureSet                                                   */
+/* -------------------------------------------------------------------- */
+
+/**
+ * Coerce JS-dependent features when `js:none` so flag/preset merges
+ * do not leave stale `jsTest`/`jsLib`/`css` values behind.
+ *
+ * @param {Record<string, string>} features
+ * @returns {Record<string, string>}
+ */
+export function normalizeFeatureSet(features) {
+  const f = { ...features };
+  if (f.js === "none") {
+    f.jsLib = "none";
+    f.jsTest = "none";
+    f.css = "none";
+    f.restBatch = "off";
+    if (f.frontendStack && f.frontendStack !== "none") {
+      f.frontendStack = "none";
+    }
+  }
+  return f;
+}
+
+/* -------------------------------------------------------------------- */
 /* validateFeatureSet                                                    */
 /* -------------------------------------------------------------------- */
 

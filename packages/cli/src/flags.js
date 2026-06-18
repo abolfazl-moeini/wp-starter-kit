@@ -21,6 +21,8 @@
  *    valid flag so the user can fix typos without re-reading docs.
  */
 
+import * as path from "node:path";
+
 import { sanitizeSlug } from "./slug.js";
 
 /**
@@ -228,17 +230,18 @@ export function parseFlags(argv) {
   }
 
   // --slug=... wins over the positional. Without --slug, the
-  // positional is the slug, sanitized.
+  // positional is the slug, sanitized. Path-like positionals (e.g.
+  // `/tmp/wpdev-fw`) keep the raw path as targetDir and derive the
+  // slug from the basename.
   if (positional !== null) {
-    const cleaned = sanitizeSlug(positional);
+    const looksLikePath = positional.includes("/") || positional.includes("\\");
+    const slugSource = looksLikePath ? path.basename(positional) : positional;
+    const cleaned = sanitizeSlug(slugSource);
     if (answers.slug === undefined) {
       answers.slug = cleaned;
     }
-    // Also seed the target directory from the slug when --dir is
-    // absent. gather.js / runCreate may still override this with
-    // a default like the cwd.
     if (runOptions.targetDir === undefined) {
-      runOptions.targetDir = cleaned;
+      runOptions.targetDir = looksLikePath ? positional : cleaned;
     }
   }
 

@@ -95,6 +95,29 @@ describe("--yes / -y non-interactive (I2.10, I2.11)", () => {
     expect(out.validation.ok).toBe(true);
   });
 
+  test("--yes --js=none coerces stale JS dependents from the standard preset", async () => {
+    const ui = makeRecordingUi();
+    const out = await gatherInputs({
+      argv: [
+        "my-plugin",
+        "--yes",
+        "--js=none",
+        "--php-framework=wpdev",
+        "--hook=acme",
+        "--php-fn=acme_",
+      ],
+      interactive: true,
+      engine: engineStub,
+      ui,
+    });
+    expect(out.validation.ok).toBe(true);
+    expect(out.features.js).toBe("none");
+    expect(out.features.jsTest).toBe("none");
+    expect(out.features.jsLib).toBe("none");
+    expect(out.features.css).toBe("none");
+    expect(out.features.phpFramework).toBe("wpdev");
+  });
+
   test("--preset=minimal applies the minimal feature set", async () => {
     const ui = makeRecordingUi();
     const out = await gatherInputs({

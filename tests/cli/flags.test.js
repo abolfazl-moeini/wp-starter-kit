@@ -19,6 +19,12 @@ describe("parseFlags()", () => {
     expect(r.answers.slug).toBe("my-plugin-name");
   });
 
+  test("path-like positional keeps targetDir and derives slug from basename", () => {
+    const r = parseFlags(["/tmp/wpdev-fw"]);
+    expect(r.runOptions.targetDir).toBe("/tmp/wpdev-fw");
+    expect(r.answers.slug).toBe("wpdev-fw");
+  });
+
   test("parses --scope= → answers.npmScope", () => {
     expect(parseFlags(["--scope=myorg"]).answers.npmScope).toBe("myorg");
   });

@@ -41,6 +41,7 @@ import * as path from "node:path";
 import {
   getFeatureCatalog,
   defaultFeatures,
+  normalizeFeatureSet,
   validateFeatureSet,
 } from "./features.js";
 import {
@@ -584,6 +585,7 @@ if (
 export {
   getFeatureCatalog,
   defaultFeatures,
+  normalizeFeatureSet,
   validateFeatureSet,
   buildManifest,
   readManifest,

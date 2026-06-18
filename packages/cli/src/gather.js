@@ -116,10 +116,10 @@ export async function gatherInputs(opts) {
   //    engine's defaults under the flag-derived set so a
   //    minimal flag set like `--yes --scope=acme` is still a
   //    valid (defaults-filled) feature set.
-  const flagFeaturesMerged = {
+  const flagFeaturesMerged = engine.normalizeFeatureSet({
     ...engine.defaultFeatures(),
     ...flagInput.features,
-  };
+  });
   const flagValidation = engine.validateFeatureSet(
     flagFeaturesMerged,
     flagInput.answers,
@@ -172,6 +172,7 @@ export async function gatherInputs(opts) {
       ? engine.applyPreset(presetName)
       : engine.defaultFeatures();
   const merged = mergeInputs(flagInput, prompted, featureDefaults);
+  merged.features = engine.normalizeFeatureSet(merged.features);
 
   // 5. Final validation. Catches anything the prompt-derived set
   //    introduced (a bad combination the user picked at the

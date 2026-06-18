@@ -1,6 +1,7 @@
 import { describe, test, expect } from "@jest/globals";
 import {
   validateFeatureSet,
+  normalizeFeatureSet,
   defaultFeatures,
 } from "../../packages/create-wp-project/src/features.js";
 
@@ -350,5 +351,22 @@ describe("validateFeatureSet — prefix collision (Phase WS-B)", () => {
     );
     expect(r.errors?.phpFramework).toBeUndefined();
     expect(r.errors?.phpFunctionPrefix).toBeUndefined();
+  });
+});
+
+describe("normalizeFeatureSet — js:none coercion", () => {
+  test("js:none coerces jsTest/jsLib/css dependents to none", () => {
+    const normalized = normalizeFeatureSet({
+      ...defaultFeatures(),
+      js: "none",
+      jsTest: "jest",
+      jsLib: "preact",
+      css: "sass",
+      restBatch: "on",
+    });
+    expect(normalized.jsTest).toBe("none");
+    expect(normalized.jsLib).toBe("none");
+    expect(normalized.css).toBe("none");
+    expect(normalized.restBatch).toBe("off");
   });
 });
