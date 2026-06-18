@@ -255,4 +255,11 @@ PHP;
         $this->assertSame('Mundo', $merged['locale_data']['messages']['World']);
         $this->assertSame('Bar', $merged['locale_data']['messages']['Foo']);
     }
+
+    public function test_wpdev_list_components_finds_example_feature_entry(): void
+    {
+        require_once dirname(__DIR__, 2) . '/dev/translation/bootstrap.php';
+        $components = wpdev_list_components();
+        $this->assertContains('ExampleFeature-admin', $components);
+    }
 }

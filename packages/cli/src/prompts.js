@@ -21,7 +21,7 @@
  *    so we can react to choices made earlier in the plan.
  */
 
-import { getFeatureCatalog } from "@wpdev/create-wp-project";
+import { getFeatureCatalog, getPresets } from "@wpdev/create-wp-project";
 
 /* -------------------------------------------------------------------- */
 /* Branding questions (always first; asked before features)              */
@@ -187,6 +187,52 @@ function needsJsSubQuestions(state) {
 }
 
 /**
+ * @param {object} state
+ * @param {Record<string,string>} [buildTimeFeatures]
+ * @returns {string}
+ */
+function resolvePresetChoice(state, buildTimeFeatures) {
+  if (state.runOptions?.preset) return state.runOptions.preset;
+  if (buildTimeFeatures?.__preset) return buildTimeFeatures.__preset;
+  return "custom";
+}
+
+/**
+ * @param {object} state
+ * @param {Record<string,string>} [buildTimeFeatures]
+ * @returns {boolean}
+ */
+function presetIsCustom(state, buildTimeFeatures) {
+  return resolvePresetChoice(state, buildTimeFeatures) === "custom";
+}
+
+/**
+ * @param {object} engine
+ * @returns {object}
+ */
+function buildPresetQuestion(engine) {
+  const eng = engine || { getPresets };
+  const presets =
+    typeof eng.getPresets === "function" ? eng.getPresets() : getPresets();
+  const options = presets.map((p) => ({
+    label: `${p.id} — ${p.description}`,
+    value: p.id,
+  }));
+  options.push({
+    label: "Custom — choose features individually",
+    value: "custom",
+  });
+  return {
+    id: "preset",
+    type: "select",
+    target: "runOptions",
+    message: "Choose a starter preset",
+    options,
+    initialValue: "standard",
+  };
+}
+
+/**
  * Should `faultTolerance` be asked? The plan says: hide it when
  * `phpMinVersion < 8.1`.
  */
@@ -208,48 +254,46 @@ function canAskFaultTolerance(state) {
  * @returns {Array<object>}  ordered question descriptors
  */
 export function buildPromptPlan(currentFeatures, engine) {
-  const eng = engine || { getFeatureCatalog };
+  const eng = engine || { getFeatureCatalog, getPresets };
   const catalog = eng.getFeatureCatalog();
-  const preset = (currentFeatures && currentFeatures.__preset) || "custom";
+  const buildTimePreset = (currentFeatures && currentFeatures.__preset) || null;
+  const skipPresetQuestion = buildTimePreset && buildTimePreset !== "custom";
+  const skipFeaturesAtBuild = buildTimePreset && buildTimePreset !== "custom";
 
-  // Preset short-circuit (I2.6): when the user already chose a
-  // preset (--preset=full etc.), no per-feature prompts are asked.
-  // We still ask branding questions because the preset does not
-  // pin them.
-  const skipFeatures = preset && preset !== "custom";
+  const wrapWhen = (originalWhen) => (s) => {
+    if (!presetIsCustom(s, currentFeatures)) return false;
+    if (typeof originalWhen === "function") return originalWhen(s);
+    return true;
+  };
 
   const plan = [];
 
-  // 1. Branding always first.
+  if (!skipPresetQuestion) {
+    plan.push({ ...buildPresetQuestion(eng), when: () => true });
+  }
+
   for (const q of BRANDING_QUESTIONS) {
     plan.push({ ...q, when: () => true });
   }
 
-  if (skipFeatures) {
+  if (skipFeaturesAtBuild) {
     return plan;
   }
 
-  // 2. JS feature first so its variants gate the rest.
   const js = catalog.find((f) => f.id === "js");
   if (js) {
     plan.push({
       ...featureQuestion(js),
-      when: () => true,
+      when: wrapWhen(() => true),
     });
   }
 
-  // 3. JS sub-features. Each `when` re-checks state.features.js.
   for (const id of ["jsLib", "jsTest", "css"]) {
     const f = catalog.find((x) => x.id === id);
     if (!f) continue;
     plan.push({
       ...featureQuestion(f),
-      when: (s) => {
-        // Update the running state with the latest `js` choice
-        // (the prompt loop will populate s.features before
-        // evaluating `when`).
-        return needsJsSubQuestions(s);
-      },
+      when: wrapWhen((s) => needsJsSubQuestions(s)),
     });
 
     if (id === "jsLib") {
@@ -257,22 +301,22 @@ export function buildPromptPlan(currentFeatures, engine) {
       if (frontendStack) {
         plan.push({
           ...featureQuestion(frontendStack),
-          when: (s) =>
-            s.features.js === "typescript" &&
-            (s.features.jsLib === "react" || s.features.jsLib === "preact"),
+          when: wrapWhen(
+            (s) =>
+              s.features.js === "typescript" &&
+              (s.features.jsLib === "react" || s.features.jsLib === "preact"),
+          ),
         });
       }
     }
   }
 
-  // 4. PHP baseline (TASK-24b): min version, then framework dep mode.
   for (const id of ["phpMinVersion", "phpFramework"]) {
     const f = catalog.find((x) => x.id === id);
     if (!f) continue;
-    plan.push({ ...featureQuestion(f), when: () => true });
+    plan.push({ ...featureQuestion(f), when: wrapWhen(() => true) });
   }
 
-  // 5. Optional features (multi-select style — one prompt per feature).
   for (const id of [
     "blocks",
     "mcpAbilities",
@@ -291,10 +335,15 @@ export function buildPromptPlan(currentFeatures, engine) {
     if (id === "faultTolerance") {
       plan.push({
         ...featureQuestion(f),
-        when: (s) => canAskFaultTolerance(s),
+        when: wrapWhen((s) => canAskFaultTolerance(s)),
+      });
+    } else if (id === "restBatch") {
+      plan.push({
+        ...featureQuestion(f),
+        when: wrapWhen((s) => needsJsSubQuestions(s)),
       });
     } else {
-      plan.push({ ...featureQuestion(f), when: () => true });
+      plan.push({ ...featureQuestion(f), when: wrapWhen(() => true) });
     }
   }
 

@@ -19,6 +19,7 @@ import {
   applyComposerPatches,
   mergeComposerPatchAccumulator,
 } from "./composer-patches.js";
+import { deriveUiFramework } from "./derive-ui-framework.js";
 import {
   readProjectConfigFromDir,
   projectConfigToAnswers,
@@ -124,7 +125,12 @@ export async function refreshGlue(dir, features) {
   // stamp the current features so the manifest stays in sync.
   if ("project.config.json" in files) {
     const templateCfg = JSON.parse(files["project.config.json"]);
-    const merged = { ...cfg, ...templateCfg, features: { ...features } };
+    const merged = {
+      ...templateCfg,
+      ...cfg,
+      features: { ...features },
+      uiFramework: deriveUiFramework(features, cfg),
+    };
     files["project.config.json"] = JSON.stringify(merged, null, 2) + "\n";
   }
 

@@ -134,11 +134,27 @@ export function findGenerator(id) {
  * @param {Record<string,string>|null|undefined} features
  * @returns {GeneratorDescriptor[]}
  */
+/**
+ * Return the `owns` globs for a feature at a given variant.
+ *
+ * @param {string} id
+ * @param {string} variant
+ * @returns {string[]}
+ */
+export function getOwnedPathsForFeature(id, variant) {
+  const out = [];
+  for (const g of ALL) {
+    if (g.feature !== id) continue;
+    if (g.variant !== undefined && g.variant !== variant) continue;
+    if (g.owns) out.push(...g.owns);
+  }
+  return out;
+}
+
 export function getGenerators(features) {
   const f = features || {};
   const js = f.js || "none";
   const jsEnabled = js !== "none";
-  const wpMin = f.wpMinVersion || "0";
 
   const enabled = [];
   for (const g of ALL) {
@@ -170,6 +186,7 @@ export function getGenerators(features) {
       enabled.push(g);
     else if (
       g.id === "ci" &&
+      f.ci !== "off" &&
       (f.phpTest === "phpunit" || (f.jsTest && f.jsTest !== "none"))
     )
       enabled.push(g);
@@ -181,35 +198,6 @@ export function getGenerators(features) {
       enabled.push(g);
   }
   return enabled;
-}
-
-/* -------------------------------------------------------------------- */
-/* Helpers                                                               */
-/* -------------------------------------------------------------------- */
-
-/**
- * Compare two dotted WP version strings (e.g. "5.8", "6.0", "6.2.3").
- * Returns negative if a < b, 0 if equal, positive if a > b. The
- * (no special gate for blocks beyond `blocks === "on"`)
- */
-function compareWpVersion(a, b) {
-  const parse = (v) => {
-    if (typeof v !== "string") return [Infinity];
-    const parts = v.split(".").map((p) => {
-      const n = parseInt(p, 10);
-      return Number.isNaN(n) ? -1 : n;
-    });
-    return parts;
-  };
-  const pa = parse(a);
-  const pb = parse(b);
-  const len = Math.max(pa.length, pb.length);
-  for (let i = 0; i < len; i++) {
-    const av = pa[i] ?? 0;
-    const bv = pb[i] ?? 0;
-    if (av !== bv) return av - bv;
-  }
-  return 0;
 }
 
 /* -------------------------------------------------------------------- */

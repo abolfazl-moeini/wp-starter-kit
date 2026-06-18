@@ -20,6 +20,12 @@ const requiredDocs = [
   "wpdev-adapter.md",
   "blocks.md",
   "css-variants.md",
+  "cli-reference.md",
+  "features-reference.md",
+  "packages-overview.md",
+  "module-guide.md",
+  "api/php-reference.md",
+  "api/js-reference.md",
 ];
 
 describe("docs index contract", () => {

@@ -40,8 +40,15 @@
 import { existsSync } from "node:fs";
 import * as path from "node:path";
 
-import { readManifest, writeManifest, buildManifest } from "../manifest.js";
+import {
+  readManifest,
+  writeManifest,
+  buildManifest,
+  withMigrationTrail,
+  MANIFEST_SCHEMA,
+} from "../manifest.js";
 import { updateJsonFile } from "../json-utils.js";
+import { applyDepChanges, computeDepChanges } from "../plan-update.js";
 
 import * as migration_0_2_0 from "./0.2.0.js";
 import * as migration_0_3_0 from "./0.3.0.js";
@@ -64,6 +71,31 @@ const MIGRATIONS = [
   migration_0_4_0,
   migration_1_0_0,
 ];
+
+/** Schema migrations run before version migrations (newest kit schema first). */
+const SCHEMA_MIGRATIONS = [
+  {
+    fromSchema: 0,
+    toSchema: 1,
+    async run(dir) {
+      const manifest = readManifest(dir);
+      if (!manifest) return { ok: false, reason: "no manifest" };
+      await updateJsonFile(path.join(dir, "wpdev-kit.json"), (m) => {
+        m.schema = 1;
+        return m;
+      });
+      return { ok: true };
+    },
+  },
+];
+
+export function getSchemaMigrations() {
+  return SCHEMA_MIGRATIONS.slice();
+}
+
+export function getMaxKnownSchema() {
+  return MANIFEST_SCHEMA;
+}
 
 /**
  * Return the registered migrations sorted ASCENDING by semver
@@ -272,10 +304,41 @@ export async function runMigrations(dir, { from, to } = {}) {
     };
   }
 
-  // 5. Select the migrations to run.
+  const warnings = [];
+
+  // 5. Schema migrations (if manifest schema is behind kit).
+  const currentSchema =
+    typeof manifest.schema === "number" ? manifest.schema : MANIFEST_SCHEMA;
+  for (const sm of SCHEMA_MIGRATIONS) {
+    if (currentSchema !== sm.fromSchema) continue;
+    let result;
+    try {
+      result = await sm.run(dir);
+    } catch (error) {
+      return {
+        ok: false,
+        failedAt: `schema:${sm.fromSchema}->${sm.toSchema}`,
+        reason: error && error.message ? error.message : String(error),
+        from: effectiveFrom,
+        to,
+      };
+    }
+    if (result && result.ok === false) {
+      return {
+        ok: false,
+        failedAt: `schema:${sm.fromSchema}->${sm.toSchema}`,
+        reason: result.reason || "schema migration returned ok:false",
+        from: effectiveFrom,
+        to,
+      };
+    }
+    if (result && result.warning) warnings.push(result.warning);
+  }
+
+  // 6. Select the version migrations to run.
   const toRun = selectMigrations(effectiveFrom, to);
 
-  // 6. Apply them sequentially. On any throw or {ok:false}, halt
+  // 7. Apply them sequentially. On any throw or {ok:false}, halt
   //    and report the failed version. The manifest is NOT bumped
   //    in this case.
   for (const m of toRun) {
@@ -300,25 +363,50 @@ export async function runMigrations(dir, { from, to } = {}) {
         to,
       };
     }
-    // result is either undefined (migration returned nothing —
-    // we treat that as success) or {ok:true} / any truthy.
+    if (result && result.warning) warnings.push(result.warning);
   }
 
-  // 7. All migrations succeeded — bump the manifest's kitVersion.
+  // 8. Apply dependency version bumps from the kit registry.
+  let appliedDepChanges = {
+    package: { add: {}, remove: {}, bump: {} },
+    composer: { add: {}, remove: {}, bump: {} },
+  };
+  try {
+    const depChanges = computeDepChanges(dir);
+    appliedDepChanges = await applyDepChanges(dir, depChanges, {
+      applyRemoves: false,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      reason: `depChanges apply failed: ${error.message}`,
+      from: effectiveFrom,
+      to,
+    };
+  }
+
+  // 9. All migrations succeeded — bump the manifest's kitVersion.
   //    We rebuild the manifest to preserve the existing shape
   //    (features, distMode) and only swap kitVersion + generatedAt.
   //    Re-read after migrations in case a migration (e.g. 0.2.0
   //    vendored->deps) patched distMode or other glue on disk.
   const after = readManifest(dir) || manifest;
-  const nextManifest = buildManifest({
-    kitVersion: to,
-    features: after.features || manifest.features || {},
-    distMode: after.distMode || manifest.distMode || "deps",
-    generatedAt: new Date().toISOString(),
-  });
+  const migratedAt = new Date().toISOString();
+  const nextManifest = withMigrationTrail(
+    buildManifest({
+      kitVersion: to,
+      features: after.features || manifest.features || {},
+      distMode: after.distMode || manifest.distMode || "deps",
+      generatedAt: migratedAt,
+    }),
+    {
+      previousKitVersion: manifest.kitVersion,
+      migratedAt,
+    },
+  );
   await writeManifest(dir, nextManifest);
 
-  // 8. Mirror the kitVersion into project.config.json if it
+  // 10. Mirror the kitVersion into project.config.json if it
   //    exists. The manifest is the source of truth; the mirror
   //    is for pre-Phase 20 readers (the kit's PHP classes, the
   //    JS asset bundle) that haven't discovered wpdev-kit.json.
@@ -344,6 +432,8 @@ export async function runMigrations(dir, { from, to } = {}) {
         ran: toRun.map((m) => m.version),
         from: effectiveFrom,
         to,
+        appliedDepChanges,
+        warnings,
         warning: `manifest updated, but project.config.json mirror failed: ${error.message}`,
       };
     }
@@ -354,5 +444,7 @@ export async function runMigrations(dir, { from, to } = {}) {
     ran: toRun.map((m) => m.version),
     from: effectiveFrom,
     to,
+    appliedDepChanges,
+    warnings: warnings.length > 0 ? warnings : undefined,
   };
 }

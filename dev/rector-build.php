@@ -20,7 +20,23 @@ return static function (RectorConfig $rector_config): void {
     $shared = include __DIR__ . '/rector-config.php';
     $shared($rector_config);
 
-    $rector_config->sets([
-        DowngradeLevelSetList::DOWN_TO_PHP_72,
-    ]);
+    $phpMin = '7.4';
+    $cfgPath = dirname(__DIR__) . '/project.config.json';
+    if (is_readable($cfgPath)) {
+        $cfg = json_decode((string) file_get_contents($cfgPath), true);
+        if (is_array($cfg) && ! empty($cfg['phpMinVersion'])) {
+            $phpMin = (string) $cfg['phpMinVersion'];
+        }
+    }
+
+    $downgradeSets = [
+        '7.4' => DowngradeLevelSetList::DOWN_TO_PHP_74,
+        '8.0' => DowngradeLevelSetList::DOWN_TO_PHP_80,
+        '8.1' => DowngradeLevelSetList::DOWN_TO_PHP_81,
+        '8.2' => DowngradeLevelSetList::DOWN_TO_PHP_82,
+        '8.3' => DowngradeLevelSetList::DOWN_TO_PHP_83,
+    ];
+    $target = $downgradeSets[$phpMin] ?? DowngradeLevelSetList::DOWN_TO_PHP_74;
+
+    $rector_config->sets([$target]);
 };

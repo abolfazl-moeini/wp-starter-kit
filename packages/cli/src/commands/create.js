@@ -258,7 +258,30 @@ export async function runCreate(input, deps) {
 
   // 6. Post-generation actions. Each is gated and best-effort.
   //    We collect warnings; the run continues regardless.
-  if (i.runOptions?.install === true) {
+  const ui = d.ui || {};
+  let postRunOptions = { ...(i.runOptions || {}) };
+  if (
+    postRunOptions.interactive !== false &&
+    postRunOptions.yes !== true &&
+    typeof ui.confirm === "function"
+  ) {
+    if (postRunOptions.install !== true) {
+      const installNow = await ui.confirm({
+        message: "Install dependencies now? (npm + composer)",
+        initial: false,
+      });
+      if (installNow === true) postRunOptions.install = true;
+    }
+    if (postRunOptions.git !== true) {
+      const initGit = await ui.confirm({
+        message: "Initialize a git repository?",
+        initial: false,
+      });
+      if (initGit === true) postRunOptions.git = true;
+    }
+  }
+
+  if (postRunOptions.install === true) {
     // 6a. npm install — only if the project has (or might have) a
     //     package.json. Per the §I3.7 rule: when js is 'none' AND
     //     husky is 'off' the engine does NOT emit a package.json
@@ -273,7 +296,9 @@ export async function runCreate(input, deps) {
       existsSync(path.join(dir, "package.json"));
     if (needsNpm && typeof runners.npmInstall === "function") {
       const r = await safeRunner(() =>
-        runners.npmInstall(dir, { verbose: i.runOptions?.verbose === true }),
+        runners.npmInstall(dir, {
+          verbose: postRunOptions.verbose === true,
+        }),
       );
       if (!r.ok && r.warning) warnings.push(r.warning);
     }
@@ -285,16 +310,16 @@ export async function runCreate(input, deps) {
     if (needsComposer && typeof runners.composerInstall === "function") {
       const r = await safeRunner(() =>
         runners.composerInstall(dir, {
-          verbose: i.runOptions?.verbose === true,
+          verbose: postRunOptions.verbose === true,
         }),
       );
       if (!r.ok && r.warning) warnings.push(r.warning);
     }
   }
 
-  if (i.runOptions?.git === true && typeof runners.gitInit === "function") {
+  if (postRunOptions.git === true && typeof runners.gitInit === "function") {
     const r = await safeRunner(() =>
-      runners.gitInit(dir, { verbose: i.runOptions?.verbose === true }),
+      runners.gitInit(dir, { verbose: postRunOptions.verbose === true }),
     );
     if (!r.ok && r.warning) warnings.push(r.warning);
   }

@@ -42,7 +42,12 @@ import * as path from "node:path";
 import minimatch from "minimatch";
 
 import { listGenerators } from "./generators/index.js";
-import { validateFeatureSet } from "./features.js";
+import {
+  isFeatureOffVariant,
+  normalizeFeatureSet,
+  validateFeatureSet,
+} from "./features.js";
+import { deleteOwnedFilesForTurnedOff } from "./removeFeature.js";
 import {
   readManifest,
   writeManifest,
@@ -288,25 +293,84 @@ export async function addFeature(dir, id, variant, _opts = {}) {
   // 1. Read the manifest. A missing manifest is a hard error —
   //    the caller is asking us to mutate a project that does not
   //    exist (or was never a wp-starter-kit project).
-  const manifest = readManifest(dir);
+  let manifest;
+  try {
+    manifest = readManifest(dir);
+  } catch (error) {
+    return {
+      ok: false,
+      reason: error.message,
+      written: [],
+    };
+  }
   if (!manifest) {
-    throw new Error(
-      `addFeature: no wpdev-kit.json at ${dir} — ` +
+    return {
+      ok: false,
+      reason:
+        `addFeature: no wpdev-kit.json at ${dir} — ` +
         "is this a wp-starter-kit project?",
-    );
+      written: [],
+    };
   }
   const currentFeatures = manifest.features || {};
 
   // 2. Read project.config.json + reconstruct answers.
-  const { cfg } = await readProjectConfigFromDir(dir, "addFeature");
-  const answers = projectConfigToAnswers(cfg);
+  let cfg;
+  let answers;
+  try {
+    ({ cfg } = await readProjectConfigFromDir(dir, "addFeature"));
+    answers = projectConfigToAnswers(cfg);
+  } catch (error) {
+    return {
+      ok: false,
+      reason: error.message,
+      written: [],
+    };
+  }
 
-  // 3. Compute the new feature set.
-  const newFeatures = { ...currentFeatures, [id]: variant };
+  // 3. Compute the requested set. When turning js off, normalization
+  //    coerces dependents — validate after. Otherwise validate the
+  //    explicit request first so restBatch:on cannot noop on js:none.
+  const requestedFeatures = {
+    ...currentFeatures,
+    [id]: variant,
+  };
+  const turningJsOff = id === "js" && isFeatureOffVariant("js", variant);
+  if (!turningJsOff) {
+    const pre = validateFeatureSet(requestedFeatures, answers);
+    if (!pre.ok) {
+      const first = Object.entries(pre.errors)[0];
+      return {
+        ok: false,
+        reason: `invalid feature set: ${first[0]}=${JSON.stringify(first[1])}`,
+        written: [],
+      };
+    }
+  }
+  const newFeatures = normalizeFeatureSet(requestedFeatures);
 
-  // 4. Validate the merged set BEFORE looking up the generator.
-  //    This way a violation (e.g. faultTolerance=on on PHP 7.4)
-  //    fails fast without any I/O.
+  // 4. Idempotency — skip generator I/O when the normalized set is unchanged.
+  const currentNormalized = normalizeFeatureSet(currentFeatures);
+  if (
+    Object.keys(newFeatures).every(
+      (k) => newFeatures[k] === currentNormalized[k],
+    ) &&
+    Object.keys(currentNormalized).every(
+      (k) => currentNormalized[k] === newFeatures[k],
+    )
+  ) {
+    return {
+      ok: true,
+      noop: true,
+      written: [],
+      deleted: [],
+      deps: {},
+      devDeps: {},
+      manifest,
+    };
+  }
+
+  // 5. Validate the merged set BEFORE looking up the generator.
   const v = validateFeatureSet(newFeatures, answers);
   if (!v.ok) {
     const first = Object.entries(v.errors)[0];
@@ -317,7 +381,7 @@ export async function addFeature(dir, id, variant, _opts = {}) {
     };
   }
 
-  // 5. Find the generator. core is always-on; addFeature for
+  // 6. Find the generator. core is always-on; addFeature for
   //    core is a no-op (caller is misusing the API — core is
   //    owned by the scaffold path, not by addFeature).
   if (id === "core") {
@@ -328,7 +392,8 @@ export async function addFeature(dir, id, variant, _opts = {}) {
     };
   }
   const gen = findGeneratorForVariant(id, variant);
-  if (!gen) {
+  const turningOff = isFeatureOffVariant(id, variant);
+  if (!gen && !turningOff) {
     return {
       ok: false,
       reason: `addFeature: no generator found for id="${id}" variant="${variant}"`,
@@ -336,52 +401,28 @@ export async function addFeature(dir, id, variant, _opts = {}) {
     };
   }
 
-  // 6. Run the generator. The context's features are the merged
-  //    set (so any per-generator gate that depends on another
-  //    feature — e.g. `js !== "none"` for restBatch — sees the
-  //    post-add state). The ctx is built from the existing
-  //    answers/cfg + the new features; the registry's own
-  //    getGenerators() is NOT used here (addFeature drives
-  //    exactly one feature at a time).
   const ctx = {
     answers,
     cfg,
     features: newFeatures,
-    vars: undefined, // generators fall back to { answers, cfg } if missing
+    vars: undefined,
   };
-  let contribution;
-  try {
-    contribution = gen.run(ctx);
-  } catch (error) {
-    return {
-      ok: false,
-      reason: `addFeature: generator "${gen.id}" failed: ${error.message}`,
-      written: [],
-    };
+  let contribution = { files: {}, deps: {}, devDeps: {} };
+  if (gen) {
+    try {
+      contribution = gen.run(ctx);
+    } catch (error) {
+      return {
+        ok: false,
+        reason: `addFeature: generator "${gen.id}" failed: ${error.message}`,
+        written: [],
+      };
+    }
   }
 
-  // 7. Filter to owned files. A leak throws — we do NOT
-  //    silently touch user code.
-  const filesToWrite = filterToOwned(gen.id, contribution, gen.owns);
+  const filesToWrite = gen ? filterToOwned(gen.id, contribution, gen.owns) : {};
 
-  // 8. Idempotency check: if the manifest already records the
-  //    feature as on with the same variant, the call is a no-op.
-  //    We do NOT byte-compare the files — that's the job of
-  //    migrations / `update` (Phase 24). addFeature's contract
-  //    is "make the manifest match the requested state"; if the
-  //    manifest is already there, nothing to do.
-  if (currentFeatures[id] === variant) {
-    return {
-      ok: true,
-      noop: true,
-      written: [],
-      deps: contribution.deps || {},
-      devDeps: contribution.devDeps || {},
-      manifest,
-    };
-  }
-
-  // 8b. Variant switch: write NEW files first, then delete OLD
+  // 9. Variant switch: write NEW files first, then delete OLD
   //     variant exclusives so a mid-write failure does not leave
   //     the project without assets the manifest still claims.
   const written = [];
@@ -394,7 +435,12 @@ export async function addFeature(dir, id, variant, _opts = {}) {
 
   let deleted = [];
   const currentVariant = currentFeatures[id];
-  if (currentVariant !== undefined) {
+  if (
+    gen &&
+    currentVariant !== undefined &&
+    currentVariant !== newFeatures[id] &&
+    !turningOff
+  ) {
     const oldGen = findGeneratorForCurrentVariant(id, currentVariant);
     if (oldGen) {
       const toDelete = await computeDeleteSet(dir, oldGen.owns, gen.owns);
@@ -408,6 +454,13 @@ export async function addFeature(dir, id, variant, _opts = {}) {
       }
     }
   }
+
+  const { removed: turnedOffRemoved } = await deleteOwnedFilesForTurnedOff(
+    dir,
+    currentFeatures,
+    newFeatures,
+  );
+  deleted.push(...turnedOffRemoved);
 
   // 10. Update the manifest. The manifest's `features` is the
   //     merged set; kitVersion is the existing version (a

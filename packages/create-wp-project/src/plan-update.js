@@ -78,7 +78,12 @@ import { existsSync, readFileSync } from "node:fs";
 import * as path from "node:path";
 
 import { readManifest } from "./manifest.js";
-import { getDepVersions } from "./dep-versions.js";
+import {
+  CONSUMER_BUILD_WPDEV_PACKAGES,
+  CONSUMER_RUNTIME_WPDEV_PACKAGES,
+  getDepVersions,
+} from "./dep-versions.js";
+import { updateJsonFile } from "./json-utils.js";
 import { selectMigrations } from "./migrations/index.js";
 
 /* -------------------------------------------------------------------- */
@@ -174,7 +179,7 @@ function diffDeps(projectDeps, registry) {
  *   composer: { add: Object, remove: Object, bump: Object }
  * }}
  */
-function computeDepChanges(dir) {
+export function computeDepChanges(dir) {
   const registry = getDepVersions();
 
   const pkg = readJsonOrNull(path.join(dir, PACKAGE_JSON_FILENAME));
@@ -207,6 +212,121 @@ function computeDepChanges(dir) {
     package: diffDeps(pkgDeps, registry),
     composer: diffDeps(composerDeps, registry),
   };
+}
+
+/**
+ * @param {string} name
+ * @returns {"package"|"composer"|null}
+ */
+function depKind(name) {
+  if (name === "wpdevFramework") return null;
+  if (name.includes("/") && !name.startsWith("@")) return "composer";
+  return "package";
+}
+
+/**
+ * @param {string} name
+ * @returns {"dependencies"|"devDependencies"}
+ */
+function npmSectionFor(name) {
+  if (CONSUMER_RUNTIME_WPDEV_PACKAGES.includes(name)) return "dependencies";
+  return "devDependencies";
+}
+
+/**
+ * @param {string} name
+ * @returns {"require"|"require-dev"}
+ */
+function composerSectionFor() {
+  return "require-dev";
+}
+
+/**
+ * Apply depChanges to consumer package.json / composer.json.
+ *
+ * @param {string} dir
+ * @param {{ package: Object, composer: Object }} depChanges
+ * @returns {Promise<{ package: Object, composer: Object }>}
+ */
+export async function applyDepChanges(dir, depChanges, options = {}) {
+  const applyRemoves = options.applyRemoves !== false;
+  const applied = {
+    package: { add: {}, remove: {}, bump: {} },
+    composer: { add: {}, remove: {}, bump: {} },
+  };
+  if (!depChanges) return applied;
+
+  const pkgPath = path.join(dir, PACKAGE_JSON_FILENAME);
+  if (existsSync(pkgPath)) {
+    const side = depChanges.package || { add: {}, remove: {}, bump: {} };
+    await updateJsonFile(pkgPath, (pkg) => {
+      for (const [name, range] of Object.entries(side.add || {})) {
+        if (depKind(name) !== "package") continue;
+        const section = npmSectionFor(name);
+        if (!pkg[section]) pkg[section] = {};
+        pkg[section][name] = range;
+        applied.package.add[name] = range;
+      }
+      for (const [name, change] of Object.entries(side.bump || {})) {
+        if (depKind(name) !== "package") continue;
+        for (const section of ["dependencies", "devDependencies"]) {
+          if (pkg[section] && name in pkg[section]) {
+            pkg[section][name] = change.to;
+            applied.package.bump[name] = change;
+          }
+        }
+      }
+      if (applyRemoves) {
+        for (const name of Object.keys(side.remove || {})) {
+          if (depKind(name) !== "package") continue;
+          for (const section of ["dependencies", "devDependencies"]) {
+            if (pkg[section] && name in pkg[section]) {
+              applied.package.remove[name] = pkg[section][name];
+              delete pkg[section][name];
+            }
+          }
+        }
+      }
+      return pkg;
+    });
+  }
+
+  const composerPath = path.join(dir, COMPOSER_JSON_FILENAME);
+  if (existsSync(composerPath)) {
+    const side = depChanges.composer || { add: {}, remove: {}, bump: {} };
+    await updateJsonFile(composerPath, (composer) => {
+      for (const [name, range] of Object.entries(side.add || {})) {
+        if (depKind(name) !== "composer") continue;
+        const section = composerSectionFor(name);
+        if (!composer[section]) composer[section] = {};
+        composer[section][name] = range;
+        applied.composer.add[name] = range;
+      }
+      for (const [name, change] of Object.entries(side.bump || {})) {
+        if (depKind(name) !== "composer") continue;
+        for (const section of ["require", "require-dev"]) {
+          if (composer[section] && name in composer[section]) {
+            composer[section][name] = change.to;
+            applied.composer.bump[name] = change;
+          }
+        }
+      }
+      if (applyRemoves) {
+        for (const name of Object.keys(side.remove || {})) {
+          if (depKind(name) !== "composer") continue;
+          for (const section of ["require", "require-dev"]) {
+            if (composer[section] && name in composer[section]) {
+              applied.composer.remove[name] = composer[section][name];
+              delete composer[section][name];
+            }
+          }
+        }
+      }
+      return composer;
+    });
+  }
+
+  return applied;
 }
 
 /* -------------------------------------------------------------------- */

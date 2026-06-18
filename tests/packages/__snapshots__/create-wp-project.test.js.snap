@@ -33,6 +33,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal pr
 {
   "features": {
     "blocks": "off",
+    "ci": "auto",
     "css": "none",
     "exampleFeature": "off",
     "faultTolerance": "off",
@@ -63,6 +64,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal pr
   "distMode": "deps",
   "features": {
     "blocks": "off",
+    "ci": "auto",
     "css": "none",
     "exampleFeature": "off",
     "faultTolerance": "off",
@@ -162,6 +164,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
 {
   "features": {
     "blocks": "off",
+    "ci": "auto",
     "css": "none",
     "exampleFeature": "on",
     "faultTolerance": "off",
@@ -213,6 +216,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
   "distMode": "deps",
   "features": {
     "blocks": "off",
+    "ci": "auto",
     "css": "none",
     "exampleFeature": "on",
     "faultTolerance": "off",

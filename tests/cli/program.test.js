@@ -18,6 +18,7 @@ describe("buildProgram()", () => {
       "create",
       "add",
       "remove",
+      "set",
       "list",
       "update",
       "doctor",

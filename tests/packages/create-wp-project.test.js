@@ -243,6 +243,7 @@ describe("@wpdev/create-wp-project", () => {
           i18n: "on",
           frontendStack: "none",
           mcpAbilities: "off",
+          ci: "auto",
         },
       });
     });

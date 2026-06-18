@@ -44,6 +44,11 @@ has a stable `id`, a list of allowed `variants`, and a default
 | `exampleFeature` | `on`, `off`                           | `on`         | Include the ExampleFeature demo module.                                                       |
 | `i18n`           | `on`, `off`                           | `on`         | Translation pipeline.                                                                         |
 | `frontendStack`  | `none`, `polaris`                     | `none`       | Optional Polaris Stack design foundation. Requires `js=typescript` and `jsLib=react\|preact`. |
+| `mcpAbilities`   | `off`, `on`                           | `off`        | WordPress Abilities API (WP 6.9+).                                                            |
+| `ci`             | `auto`, `off`                         | `auto`       | CI workflow generation. Set via `wpdev set ci`.                                               |
+
+For the full per-feature reference (owned paths, toggle commands, conflicts),
+see [features-reference.md](features-reference.md).
 
 The catalog is the **single source of truth** — adding a new
 feature id here without updating `plan.v3.md §1` is a contract
@@ -67,7 +72,9 @@ Shape:
 ```json
 {
   "schema": 1,
-  "kitVersion": "0.1.0",
+  "kitVersion": "1.0.0",
+  "previousKitVersion": "0.4.0",
+  "migratedAt": "2026-06-18T12:00:00.000Z",
   "distMode": "deps",
   "generatedAt": "2026-06-15T12:34:56.789Z",
   "features": {

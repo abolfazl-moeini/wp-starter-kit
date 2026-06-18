@@ -102,6 +102,23 @@ describe("refreshGlue after feature mutations", () => {
     expect(await fileExists(path.join(tmp, "vitest.config.ts"))).toBe(true);
   });
 
+  test("addFeature preserves user-customized project.config.json keys", async () => {
+    const features = { ...defaultFeatures(), blocks: "off" };
+    await seedProject(tmp, features);
+    await refreshGlue(tmp, features);
+
+    const cfgPath = path.join(tmp, "project.config.json");
+    const cfg = JSON.parse(await fs.readFile(cfgPath, "utf8"));
+    cfg.restNamespace = "custom/v1";
+    await fs.writeFile(cfgPath, JSON.stringify(cfg, null, 2) + "\n", "utf8");
+
+    await addFeature(tmp, "blocks", "on");
+
+    const after = JSON.parse(await fs.readFile(cfgPath, "utf8"));
+    expect(after.restNamespace).toBe("custom/v1");
+    expect(after.features.blocks).toBe("on");
+  });
+
   test("removeFeature(js) drops package.json and tsconfig.json when husky is off", async () => {
     const features = {
       ...defaultFeatures(),

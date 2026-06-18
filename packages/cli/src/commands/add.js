@@ -129,6 +129,16 @@ export async function runAdd(input, deps = {}) {
       ? i.variant
       : match.variants[0];
 
+  if (runOptions.yes !== true && typeof ui.confirm === "function") {
+    const proceed = await ui.confirm({
+      message: `Add feature '${i.featureId}' to ${i.dir}?`,
+      initial: true,
+    });
+    if (proceed !== true) {
+      return { ok: false, reason: "cancelled" };
+    }
+  }
+
   // 3b. Doctor gate (TASK-12a). Surface project errors before
   //     mutating files; --force skips the check entirely.
   if (runOptions.force !== true && typeof engine.doctorProject === "function") {

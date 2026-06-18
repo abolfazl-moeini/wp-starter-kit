@@ -66,14 +66,64 @@ migrations listed, no dep changes. The dry-run step is
 **fail-soft**: a missing manifest is `{ ok: false, reason:
 "no manifest" }`, never a throw.
 
+## Migration trail
+
+After a successful `wpdev update --run`, the manifest records:
+
+| Field                | Purpose                                        |
+| -------------------- | ---------------------------------------------- |
+| `kitVersion`         | Current kit version (e.g. `1.0.0`)             |
+| `previousKitVersion` | Version before the last migration              |
+| `migratedAt`         | ISO timestamp of the last successful migration |
+| `schema`             | Manifest schema number (currently `1`)         |
+
+The trail lets `wpdev doctor` detect version skew and gives you an
+audit log in `wpdev-kit.json` without reading git history.
+
+## Schema migrations
+
+Schema bumps run **before** version migrations. The kit ships a
+`SCHEMA_MIGRATIONS` registry in `migrations/index.js`:
+
+1. Read manifest `schema` field.
+2. Apply every schema migration with `fromSchema < current < toSchema`.
+3. Then run version migrations in `(from, to]` order.
+
+Current schema path: `0 → 1` (adds/normalizes the `schema` field).
+
+If a consumer manifest has an **unsupported** schema (newer than the
+running kit knows), `readManifest()` and `doctorProject()` report a
+clear "upgrade the kit first" error — never a silent crash.
+
+## Dependency changes
+
+The dry-run plan includes `depChanges` computed by `computeDepChanges()`:
+
+```json
+{
+  "depChanges": {
+    "package": {
+      "add": {},
+      "remove": {},
+      "bump": { "typescript": { "from": "^5.0.0", "to": "^5.6.0" } }
+    },
+    "composer": { "add": {}, "remove": {}, "bump": {} }
+  }
+}
+```
+
+On `wpdev update --run`, `applyDepChanges()` patches `package.json` and
+`composer.json`. During migrations, removes are skipped (`applyRemoves: false`)
+so migration-added deps (e.g. commitlint) are not clobbered. Run
+`--install` to apply lockfile changes after the migration.
+
 ## Migrations
 
 A **migration** is a small script under
 `packages/create-wp-project/src/migrations/<version>.js` that
 patches the consumer project's **glue files** to move from one
-kit version to the next. The current shipping example is the
-0.2.0 baseline (a no-op that gives the registry a non-empty
-catalog).
+kit version to the next. Registered versions include `0.2.0`, `0.3.0`,
+`0.4.0`, and `1.0.0` (framework-as-dependency path resolution).
 
 ### Registry
 
@@ -163,20 +213,25 @@ The result is a small object:
 }
 ```
 
-Checks (one per documented drift category):
+Checks include:
 
-| Check | What it detects                                                          | Severity |
-| ----- | ------------------------------------------------------------------------ | -------- |
-| 1     | `wpdev-kit.json` is missing                                               | error    |
-| 2     | A feature id in `manifest.features` is not in the catalog                | error    |
-| 3     | `manifest.kitVersion` is NEWER than the installed kit's own version      | warning  |
-| 4     | `manifest.distMode === "vendored"` and the framework files were modified | warning  |
+| Check              | What it detects                             | Severity |
+| ------------------ | ------------------------------------------- | -------- |
+| Missing manifest   | `wpdev-kit.json` absent                     | error    |
+| Unknown features   | Feature id not in catalog (strict mode)     | error    |
+| Forward-compat     | Unknown future feature ids from a newer kit | warning  |
+| Variant drift      | Manifest variant not in catalog variants    | error    |
+| Kit version skew   | `kitVersion` newer than installed kit       | warning  |
+| Owned-file drift   | Generator-owned files modified on disk      | warning  |
+| Vendored shim      | `distMode:vendored` framework files changed | warning  |
+| Unsupported schema | Manifest schema newer than kit supports     | error    |
 
-A **warning** is informational — the project still works, it
-just has drift. An **error** is fatal — the project is not in
-a state the engine can reason about. The CLI's default exit
-code is non-zero when `errors.length > 0`; the `--strict`
-flag promotes warnings to errors.
+**Forward-compat:** An older kit reading a manifest written by a newer kit
+warns on unknown feature ids (`allowUnknown: true` in validation) rather
+than hard-failing. Upgrade the kit to understand new features.
+
+A **warning** is informational — the project still works. An **error**
+is fatal. Exit code `1` on errors; `--strict` promotes warnings to errors.
 
 ## Rollback
 
@@ -259,10 +314,44 @@ no `package.json`) contributes an empty `projectDeps` to the
 diff — every registry entry shows up as `add`. The dry-run
 step does not crash on missing dep files.
 
+## 1.0.0 framework migration
+
+The `1.0.0` migration moves consumer projects to framework-as-dependency
+(`distMode: deps`). It:
+
+- Resolves the framework path via Composer (`vendor/wpdev/framework/`)
+- Sets `frameworkNamespace` from `project.config.json`
+- Writes `MIGRATION-NOTES-1.0.0.md` with manual steps for custom edits
+
+Override the framework source during migration with:
+
+```bash
+WPDEV_FRAMEWORK_SRC=/path/to/wpdev-framework wpdev update --run
+```
+
+## Complete update workflow
+
+```bash
+# 1. Commit current state
+git add -A && git commit -m "pre-update snapshot"
+
+# 2. Dry-run — read the plan
+wpdev update
+wpdev update --to 1.0.0
+
+# 3. Apply
+wpdev update --run --to 1.0.0 --install
+
+# 4. Verify
+wpdev doctor
+composer test && npm test
+```
+
+Re-running step 3 with the same target is idempotent (`alreadyCurrent: true`).
+
 ## See also
 
-- `docs/features-and-manifest.md` — what the manifest is, the
-  feature set, and the `addFeature` / `removeFeature` API.
-- `docs/framework-as-dependency.md` — how the kit ships
-  (Phase 23), the `distMode` flip from `vendored` → `deps`.
-- `plan.v3.md` §24 — the design notes this document implements.
+- [features-and-manifest.md](features-and-manifest.md) — manifest schema
+- [features-reference.md](features-reference.md) — full feature catalog
+- [cli-reference.md](cli-reference.md) — `wpdev update` flags
+- [framework-as-dependency.md](framework-as-dependency.md) — `distMode` model

@@ -255,6 +255,12 @@ describe("addFeature() — guards (Phase 22.5, 22.6)", () => {
     expect(entries.sort()).toEqual(["project.config.json", "wpdev-kit.json"]);
   });
 
+  test("returns { ok:false, reason } when wpdev-kit.json is missing (no throw)", async () => {
+    const res = await addFeature(tmp, "husky", "on");
+    expect(res.ok).toBe(false);
+    expect(res.reason).toMatch(/wpdev-kit\.json/i);
+  });
+
   test("returns { ok:false, reason } for an unknown feature id", async () => {
     await seedProject(tmp, { features: defaultFeatures() });
 

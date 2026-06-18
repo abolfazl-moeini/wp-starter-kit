@@ -59,6 +59,7 @@ function makeDeps(overrides = {}) {
       renderSummary: jest.fn(),
       renderNextSteps: jest.fn(() => []),
       log: jest.fn(),
+      confirm: jest.fn(async () => false),
     },
     readEnginePackageVersion: jest.fn(() => "0.1.0"),
     ...overrides,
@@ -365,6 +366,59 @@ describe("runCreate — verbose forwarded; runner failure is a warning (I3.8)", 
       expect(out.warnings).toEqual(
         expect.arrayContaining([expect.stringMatching(/git exploded/)]),
       );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("runCreate — interactive install/git prompts (G-002, G-003)", () => {
+  test("interactive, decline both prompts → install/git NOT run", async () => {
+    const dir = makeEmptyDir();
+    try {
+      const deps = makeDeps();
+      deps.ui.confirm = jest
+        .fn()
+        .mockResolvedValueOnce(false)
+        .mockResolvedValueOnce(false);
+      await runCreate(
+        {
+          dir,
+          answers: { slug: "x" },
+          features: { js: "typescript", phpTest: "phpunit" },
+          runOptions: { interactive: true },
+        },
+        deps,
+      );
+      expect(deps.ui.confirm).toHaveBeenCalledTimes(2);
+      expect(deps.runners.npmInstall).not.toHaveBeenCalled();
+      expect(deps.runners.composerInstall).not.toHaveBeenCalled();
+      expect(deps.runners.gitInit).not.toHaveBeenCalled();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("interactive, accept both prompts → install/git run", async () => {
+    const dir = makeEmptyDir();
+    try {
+      const deps = makeDeps();
+      deps.ui.confirm = jest
+        .fn()
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(true);
+      await runCreate(
+        {
+          dir,
+          answers: { slug: "x" },
+          features: { js: "typescript", phpTest: "phpunit" },
+          runOptions: { interactive: true },
+        },
+        deps,
+      );
+      expect(deps.runners.npmInstall).toHaveBeenCalledTimes(1);
+      expect(deps.runners.composerInstall).toHaveBeenCalledTimes(1);
+      expect(deps.runners.gitInit).toHaveBeenCalledTimes(1);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

@@ -1,7 +1,15 @@
 import { describe, test, expect } from "@jest/globals";
-import { readFileSync, mkdtempSync, rmSync } from "node:fs";
+import {
+  readFileSync,
+  mkdtempSync,
+  rmSync,
+  existsSync,
+  mkdirSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { execSync } from "node:child_process";
 
 describe("esbuild-components", () => {
   test("uses Promise.all to await parallel component builds", () => {
@@ -50,6 +58,47 @@ describe("esbuild-components", () => {
       "utf8",
     );
     expect(source).toMatch(/moduleName.*entryName|ExampleFeature-admin/);
+  });
+
+  test("npm run build:components emits ExampleFeature-admin bundle in kit", () => {
+    execSync("npm run build:components", {
+      cwd: process.cwd(),
+      stdio: "pipe",
+    });
+    expect(
+      existsSync(join(process.cwd(), "assets/bundles/ExampleFeature-admin.js")),
+    ).toBe(true);
+    expect(
+      existsSync(
+        join(process.cwd(), "assets/bundles/ExampleFeature-admin.asset.php"),
+      ),
+    ).toBe(true);
+  });
+
+  test("throws a clear error when depsBundle is missing", async () => {
+    const { buildComponents } =
+      await import("@wpdev/build/esbuild-components.js");
+    const emptyDir = mkdtempSync(join(tmpdir(), "wpdev-components-"));
+    const entryDir = join(emptyDir, "src/Modules/Demo/assets/entries");
+    mkdirSync(entryDir, { recursive: true });
+    writeFileSync(join(entryDir, "admin.ts"), "export {};\n", "utf8");
+    try {
+      await expect(
+        buildComponents({
+          projectConfig: {
+            globalName: "Test",
+            hookPrefix: "test",
+            npmScope: "@test",
+            localizeVar: "TestLoc",
+            slug: "test",
+          },
+          buildConfig: { globalMappings: {}, styleEntryPoints: [] },
+          cwd: emptyDir,
+        }),
+      ).rejects.toThrow(/missing 'depsBundle'/);
+    } finally {
+      rmSync(emptyDir, { recursive: true, force: true });
+    }
   });
 
   test("buildComponents resolves when no component scripts exist", async () => {

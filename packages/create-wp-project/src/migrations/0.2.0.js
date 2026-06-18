@@ -70,16 +70,10 @@ export async function run(dir) {
   const manifestPath = path.join(dir, "wpdev-kit.json");
   if (existsSync(manifestPath)) {
     try {
-      const raw = await fs.readFile(manifestPath, "utf8");
-      const m = JSON.parse(raw);
-      if (m && typeof m === "object") {
-        m.distMode = "deps";
-        await fs.writeFile(
-          manifestPath,
-          JSON.stringify(m, null, 2) + "\n",
-          "utf8",
-        );
-      }
+      await updateJsonFile(manifestPath, (m) => {
+        if (m && typeof m === "object") m.distMode = "deps";
+        return m;
+      });
     } catch {
       // non-fatal; runner will still bump version
     }

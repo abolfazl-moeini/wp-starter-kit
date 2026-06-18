@@ -152,7 +152,43 @@ const FEATURE_CATALOG = [
     notes:
       "WordPress Abilities API integration (wp-mcp-integration). Registers abilities the MCP Adapter can expose as tools. Requires WordPress 6.9+ at runtime.",
   },
+  {
+    id: "ci",
+    variants: ["auto", "off"],
+    default: "auto",
+    notes:
+      "CI workflow generation. `auto` emits `.github/workflows/ci.yml` when any test runner is on; `off` suppresses CI files.",
+  },
 ];
+
+/**
+ * Merge catalog defaults into a partial feature set (older manifests
+ * may omit newly-added ids such as `ci`).
+ *
+ * @param {Record<string, string>|null|undefined} features
+ * @returns {Record<string, string>}
+ */
+export function fillFeatureDefaults(features) {
+  return { ...defaultFeatures(), ...(features || {}) };
+}
+
+/** New catalog ids backfilled when absent (older manifests / partial sets). */
+const BACKFILL_ON_VALIDATE = ["ci"];
+
+/**
+ * @param {Record<string, string>} features
+ * @returns {Record<string, string>}
+ */
+function backfillNewCatalogFeatures(features) {
+  const out = { ...features };
+  const defaults = defaultFeatures();
+  for (const id of BACKFILL_ON_VALIDATE) {
+    if (out[id] === undefined || out[id] === null || out[id] === "") {
+      out[id] = defaults[id];
+    }
+  }
+  return out;
+}
 
 /**
  * Return the feature catalog (read-only). Order matches the
@@ -236,6 +272,37 @@ export function normalizeFeatureSet(features) {
   return f;
 }
 
+/**
+ * @param {string} _id
+ * @param {string} variant
+ * @returns {boolean}
+ */
+export function isFeatureOffVariant(_id, variant) {
+  return variant === "off" || variant === "none";
+}
+
+/**
+ * Feature ids whose variant moved from on → off/none after normalization.
+ *
+ * @param {Record<string, string>} before
+ * @param {Record<string, string>} after
+ * @returns {string[]}
+ */
+export function findFeaturesTurnedOff(before, after) {
+  const turnedOff = [];
+  for (const entry of FEATURE_CATALOG) {
+    const id = entry.id;
+    if (id === "core") continue;
+    const prev = before[id];
+    const next = after[id];
+    if (prev === undefined || next === undefined || prev === next) continue;
+    if (!isFeatureOffVariant(id, prev) && isFeatureOffVariant(id, next)) {
+      turnedOff.push(id);
+    }
+  }
+  return turnedOff;
+}
+
 /* -------------------------------------------------------------------- */
 /* validateFeatureSet                                                    */
 /* -------------------------------------------------------------------- */
@@ -256,7 +323,7 @@ export function normalizeFeatureSet(features) {
  * @param {Record<string, string>|null|undefined} features
  * @returns {{ ok: boolean, errors: Record<string,string>, warnings: Record<string,string> }}
  */
-export function validateFeatureSet(features, answers = {}) {
+export function validateFeatureSet(features, answers = {}, options = {}) {
   const errors = {};
   const warnings = {};
   if (!features || typeof features !== "object") {
@@ -267,12 +334,23 @@ export function validateFeatureSet(features, answers = {}) {
     };
   }
 
+  const filled = backfillNewCatalogFeatures(features);
+
   // 0. Shape check — every catalog id must be present, and every
   //    value must be one of the catalog's allowed variants. We
   //    collect shape errors first because the dependency rules below
   //    assume a well-formed set.
   for (const f of FEATURE_CATALOG) {
-    const v = features[f.id];
+    const v = features[f.id] ?? filled[f.id];
+    if (
+      (features[f.id] === undefined ||
+        features[f.id] === null ||
+        features[f.id] === "") &&
+      !BACKFILL_ON_VALIDATE.includes(f.id)
+    ) {
+      errors[f.id] = `${f.id} is required`;
+      continue;
+    }
     if (v === undefined || v === null || v === "") {
       errors[f.id] = `${f.id} is required`;
       continue;
@@ -289,8 +367,10 @@ export function validateFeatureSet(features, answers = {}) {
   //    The decision: STRICT — unknown keys are errors in Phase 20;
   //    `syncFeaturesToConfig` in Phase 21 will be the place that
   //    tolerates them when reading older projects.
+  const allowUnknown = options.allowUnknown === true;
   for (const k of Object.keys(features)) {
     if (!FEATURE_CATALOG.some((f) => f.id === k)) {
+      if (allowUnknown) continue;
       errors[k] = `${k} is not a known feature id`;
     }
   }
@@ -304,9 +384,9 @@ export function validateFeatureSet(features, answers = {}) {
   }
 
   // 1. `jsLib`, `jsTest`, `restBatch`, `css` require `js` ≠ none.
-  if (features.js === "none") {
+  if (filled.js === "none") {
     for (const f of ["jsLib", "jsTest", "restBatch", "css"]) {
-      const v = features[f];
+      const v = filled[f];
       // Only complain when the dependent feature is actually set
       // to a "real" value. `jsLib: "none"` is a no-op; `jsLib: "preact"`
       // is the violation.
@@ -319,35 +399,34 @@ export function validateFeatureSet(features, answers = {}) {
       if (f === "restBatch" && v === "on") {
         errors.restBatch =
           "restBatch=on requires js ≠ none (currently js=none)";
-      } else if (v !== undefined && v !== f && v !== "none" && v !== "off") {
-        // For jsLib / jsTest / css: "real" value = not "none".
+      } else if (v !== undefined && v !== "none" && v !== "off") {
         errors[f] = `${f}="${v}" requires js ≠ none (currently js=none)`;
       }
     }
   }
 
   // 2. `faultTolerance: on` requires `phpMinVersion` ≥ 8.1.
-  if (features.faultTolerance === "on") {
-    if (comparePhpVersion(features.phpMinVersion, "8.1") < 0) {
+  if (filled.faultTolerance === "on") {
+    if (comparePhpVersion(filled.phpMinVersion, "8.1") < 0) {
       errors.faultTolerance =
         `faultTolerance=on requires phpMinVersion ≥ 8.1 ` +
-        `(currently phpMinVersion=${features.phpMinVersion})`;
+        `(currently phpMinVersion=${filled.phpMinVersion})`;
     }
   }
 
   // 2.5. `frontendStack: polaris` requires TypeScript + React/Preact.
-  if (features["frontendStack"] === "polaris") {
-    const needsTs = features["js"] !== "typescript";
+  if (filled["frontendStack"] === "polaris") {
+    const needsTs = filled["js"] !== "typescript";
     const needsLib =
-      features["jsLib"] !== "react" && features["jsLib"] !== "preact";
+      filled["jsLib"] !== "react" && filled["jsLib"] !== "preact";
     if (needsTs || needsLib) {
       const msgs = [];
       if (needsTs) {
-        msgs.push(`js must be typescript (currently js=${features["js"]})`);
+        msgs.push(`js must be typescript (currently js=${filled["js"]})`);
       }
       if (needsLib) {
         msgs.push(
-          `jsLib must be react or preact (currently jsLib=${features["jsLib"]})`,
+          `jsLib must be react or preact (currently jsLib=${filled["jsLib"]})`,
         );
       }
       errors["frontendStack"] =
@@ -356,27 +435,24 @@ export function validateFeatureSet(features, answers = {}) {
   }
 
   // 2.6. Polaris conflicts with Tailwind in v1.
-  if (
-    features["frontendStack"] === "polaris" &&
-    features["css"] === "tailwind"
-  ) {
+  if (filled["frontendStack"] === "polaris" && filled["css"] === "tailwind") {
     errors["frontendStack"] =
       "frontendStack=polaris is not compatible with css=tailwind in v1. " +
       "Polaris uses global BEM CSS + design tokens; Tailwind conflicts with the layout/style separation rule.";
   }
 
   // 3. blocks:on — Blockstudio runtime requirements (warnings only in v1).
-  if (features.blocks === "on") {
-    if (comparePhpVersion(features.wpMinVersion, "6.7") < 0) {
+  if (filled.blocks === "on") {
+    if (comparePhpVersion(filled.wpMinVersion, "6.7") < 0) {
       warnings.blocks =
         "blocks=on uses Blockstudio, which targets WordPress 6.7+ (7.0 recommended for Block API v3 iframe editor). " +
-        `Current wpMinVersion=${features.wpMinVersion}.`;
+        `Current wpMinVersion=${filled.wpMinVersion}.`;
     }
 
-    if (comparePhpVersion(features.phpMinVersion, "8.2") < 0) {
+    if (comparePhpVersion(filled.phpMinVersion, "8.2") < 0) {
       warnings.blocksPhp =
         "blocks=on requires Blockstudio (PHP 8.2+ at runtime on the server). " +
-        `Your phpMinVersion=${features.phpMinVersion} enables Rector to downgrade YOUR plugin PHP source, ` +
+        `Your phpMinVersion=${filled.phpMinVersion} enables Rector to downgrade YOUR plugin PHP source, ` +
         "but Blockstudio itself cannot run on PHP < 8.2. " +
         "Recommend phpMinVersion 8.2 when using blocks, or omit blocks for PHP 7.4-only hosts.";
     } else {
@@ -396,14 +472,14 @@ export function validateFeatureSet(features, answers = {}) {
   //    We do NOT block — the developer may intentionally pick MIT for
   //    a self-hosted, non-.org-distributed plugin. We SURFACE the
   //    warning so the CLI can flag it before scaffold.
-  if (features.license === "mit") {
+  if (filled.license === "mit") {
     warnings.license =
       `license=mit is GPL-compatible, but the WordPress.org plugin ` +
       `directory requires hosted plugins to be GPL-2.0-or-later (or later). ` +
       `The scaffold will still emit MIT, but the plugin may be rejected at .org review time.`;
   }
 
-  if (features.phpFramework === "wpdev") {
+  if (filled.phpFramework === "wpdev") {
     const hookPrefix = answers.hookPrefix || "wpdev";
     const phpFunctionPrefix = answers.phpFunctionPrefix || "wpdev_";
     if (hookPrefix === "wpdev") {
@@ -416,7 +492,7 @@ export function validateFeatureSet(features, answers = {}) {
     }
   }
 
-  if (features.mcpAbilities === "on") {
+  if (filled.mcpAbilities === "on") {
     warnings.mcpAbilities =
       "mcpAbilities=on requires WordPress 6.9+ at runtime (the Abilities API). " +
       "The generated plugin shows an admin notice and registers nothing when the API is missing.";

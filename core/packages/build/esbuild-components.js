@@ -89,6 +89,11 @@ async function buildSingleComponent({
     [`${projectConfig.npmScope}/utils`]: `${projectConfig.globalName}.utils`,
   };
 
+  if (!projectConfig.depsBundle) {
+    throw new Error(
+      "project.config.json is missing 'depsBundle' (required for component builds)",
+    );
+  }
   const depsHandle = projectConfig.depsBundle.replace(/\.js$/, "");
   const internalItems = [];
 

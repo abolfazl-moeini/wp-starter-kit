@@ -19,16 +19,13 @@ final class HttpClient
         }
 
         $mh = curl_multi_init();
-        if (!$mh) {
-            return self::sequential_fallback($requests);
-        }
 
         $handles = [];
         $responses = [];
 
         try {
             foreach ($requests as $index => $request) {
-                $url = self::sanitize_url((string) ($request['url'] ?? ''));
+                $url = self::sanitize_url($request['url']);
                 if ($url === '') {
                     $responses[$index] = new \WP_Error('invalid_url', 'Blocked empty URL');
                     continue;
@@ -244,13 +241,13 @@ final class HttpClient
      * Applies the same SSRF hygiene as the pool path.
      *
      * @param list<array{url:string,args?:array<string,mixed>}> $requests
-     * @return list<array<string,mixed>|WP_Error>
+     * @return list<array<string,mixed>|\WP_Error>
      */
     public static function batch(array $requests): array
     {
         $responses = [];
         foreach ($requests as $request) {
-            $url = self::sanitize_url((string) ($request['url'] ?? ''));
+            $url = self::sanitize_url($request['url']);
             if ($url === '') {
                 $responses[] = new \WP_Error('invalid_url', 'Blocked empty URL');
                 continue;

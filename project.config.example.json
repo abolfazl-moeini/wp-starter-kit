@@ -6,6 +6,6 @@
   "hookPrefix": "my-project",
   "npmScope": "@my-org",
   "depsBundle": "my-project-deps.js",
-  "phpFunctionPrefix": "wpdev_",
+  "phpFunctionPrefix": "myproject_",
   "uiFramework": "preact"
 }

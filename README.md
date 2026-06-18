@@ -19,7 +19,8 @@ npm run dev
 That uses the `wpdev` CLI under the hood. The wrapper
 (`@wpdev/create-plugin`) just forwards to `wpdev create`.
 
-Non-interactive form (for CI / scripts):
+**Interactive by default** — `wpdev create` shows a preset picker,
+then branding questions, then feature prompts. Use `--yes` to skip:
 
 ```bash
 npm create @wpdev/plugin@latest my-plugin -- --yes
@@ -27,8 +28,15 @@ npm create @wpdev/plugin@latest my-plugin -- --yes
 wpdev create my-plugin --yes
 ```
 
-For the full flag table, presets, troubleshooting, and the
-`add` / `remove` / `update` / `doctor` / `info` commands, see
+Config-only features use `wpdev set` (not add/remove):
+
+```bash
+wpdev set phpMinVersion 8.2
+wpdev set license mit
+```
+
+For the full flag table, presets, and every command, see
+[docs/cli-reference.md](docs/cli-reference.md). Getting started:
 [docs/installer.md](docs/installer.md).
 
 ## What's in the box
@@ -74,15 +82,19 @@ feature set, and hands it to the engine.
 Every doc has a one-line summary in [docs/index.md](docs/index.md).
 Pick by what you're trying to do:
 
-| If you want to…                  | Read                                                                  |
-| -------------------------------- | --------------------------------------------------------------------- |
-| Understand the architecture      | [docs/architecture.md](docs/architecture.md)                          |
-| Scaffold a new project           | [docs/installer.md](docs/installer.md)                                |
-| Add a feature module             | [docs/modules.md](docs/modules.md)                                    |
-| Wire a build step                | [docs/build-system.md](docs/build-system.md)                          |
-| Upgrade an existing project      | [docs/installer.md](docs/installer.md#wpdev-update--wpdev-doctor--wpdev-info) |
-| Ship a plugin with Composer deps | [docs/vendor-scoping.md](docs/vendor-scoping.md)                      |
-| Open a PR                        | [docs/contributing.md](docs/contributing.md)                          |
+| If you want to…             | Read                                                     |
+| --------------------------- | -------------------------------------------------------- |
+| Understand the architecture | [docs/architecture.md](docs/architecture.md)             |
+| Scaffold a new project      | [docs/installer.md](docs/installer.md)                   |
+| CLI commands and flags      | [docs/cli-reference.md](docs/cli-reference.md)           |
+| Feature catalog             | [docs/features-reference.md](docs/features-reference.md) |
+| Build a new module          | [docs/module-guide.md](docs/module-guide.md)             |
+| PHP API signatures          | [docs/api/php-reference.md](docs/api/php-reference.md)   |
+| JS package APIs             | [docs/api/js-reference.md](docs/api/js-reference.md)     |
+| Package map                 | [docs/packages-overview.md](docs/packages-overview.md)   |
+| Upgrade an existing project | [docs/updating-projects.md](docs/updating-projects.md)   |
+| Ship with Composer deps     | [docs/vendor-scoping.md](docs/vendor-scoping.md)         |
+| Open a PR                   | [docs/contributing.md](docs/contributing.md)             |
 
 ## Contributing
 

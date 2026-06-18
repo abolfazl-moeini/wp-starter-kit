@@ -12,6 +12,19 @@ function createWpProjectSrcDir() {
   if (typeof __dirname !== "undefined" && __dirname) {
     return path.dirname(__dirname);
   }
+  const anchors = [process.argv[1], process.cwd()].filter(Boolean);
+  for (const anchor of anchors) {
+    let dir = path.resolve(path.dirname(anchor));
+    for (let depth = 0; depth < 10; depth++) {
+      const candidate = path.join(dir, "packages/create-wp-project/src");
+      if (existsSync(path.join(candidate, "generators/_templates.js"))) {
+        return candidate;
+      }
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  }
   return path.join(process.cwd(), "packages/create-wp-project/src");
 }
 
@@ -19,6 +32,11 @@ function polarisSrcRoot() {
   const srcDir = createWpProjectSrcDir();
   const candidates = [
     path.join(path.dirname(path.dirname(srcDir)), "polaris-stack", "src"),
+    path.join(
+      path.dirname(path.dirname(path.dirname(srcDir))),
+      "polaris-stack",
+      "src",
+    ),
     path.join(process.cwd(), "packages/polaris-stack/src"),
   ];
   for (const candidate of candidates) {

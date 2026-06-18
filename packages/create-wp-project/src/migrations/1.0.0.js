@@ -112,16 +112,28 @@ export async function run(dir) {
     return { ok: true };
   }
 
-  // 1. Resolve framework source directory (same logic as phpFramework generator)
-  const frameworkSrcDir =
-    typeof __dirname !== "undefined" && __dirname
-      ? path.resolve(__dirname, "../../../wpdev-framework")
-      : path.resolve(process.cwd(), "packages/wpdev-framework");
+  // 1. Resolve framework source directory (kit dev, npm, or env override).
+  const candidates = [];
+  if (process.env.WPDEV_FRAMEWORK_SRC) {
+    candidates.push(path.resolve(process.env.WPDEV_FRAMEWORK_SRC));
+  }
+  if (typeof __dirname !== "undefined" && __dirname) {
+    candidates.push(path.resolve(__dirname, "../../../wpdev-framework"));
+    candidates.push(
+      path.resolve(__dirname, "../../../node_modules/@wpdev/wpdev-framework"),
+    );
+  }
+  candidates.push(path.resolve(process.cwd(), "packages/wpdev-framework"));
+  candidates.push(
+    path.resolve(process.cwd(), "node_modules/@wpdev/wpdev-framework"),
+  );
 
-  if (!existsSync(frameworkSrcDir)) {
+  const frameworkSrcDir = candidates.find((p) => existsSync(p));
+  if (!frameworkSrcDir) {
     return {
       ok: false,
-      reason: `WPDev Framework source not found at ${frameworkSrcDir}`,
+      reason:
+        "WPDev Framework source not found; set WPDEV_FRAMEWORK_SRC or install @wpdev/wpdev-framework",
     };
   }
 
@@ -142,7 +154,7 @@ export async function run(dir) {
   const tpl = {
     ...cfg,
     vendor: cfg.globalName || "WPDev",
-    frameworkNamespace: "WPDev",
+    frameworkNamespace: cfg.frameworkNamespace || cfg.globalName || "WPDev",
     slug: cfg.slug || "my-plugin",
     slug_underscore: String(cfg.slug || "my-plugin").replace(/-/g, "_"),
     textDomain: cfg.textDomain || cfg.slug || "my-plugin",

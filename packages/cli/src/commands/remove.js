@@ -83,6 +83,24 @@ export async function runRemove(input, deps = {}) {
     };
   }
 
+  // 2b. Config-only features have no off/none variant — guide
+  //     the user to `wpdev set` instead (exit 0, not an error).
+  if (typeof engine.getFeatureCatalog === "function") {
+    const catalog = engine.getFeatureCatalog();
+    const entry = catalog.find((f) => f.id === i.featureId);
+    if (entry) {
+      const hasOff =
+        entry.variants.includes("off") || entry.variants.includes("none");
+      if (!hasOff) {
+        const reason =
+          i.featureId === "license"
+            ? "license is not removable; use 'wpdev set license <gpl2|gpl3|mit>'"
+            : `${i.featureId} has no off variant; use 'wpdev set ${i.featureId} <variant>'`;
+        return { ok: true, skipped: true, reason };
+      }
+    }
+  }
+
   // 3. Confirmation gate. --yes (or -y) bypasses the prompt.
   //    When the user has NOT confirmed, we return a soft
   //    "cancelled" — the bin layer prints a friendly message

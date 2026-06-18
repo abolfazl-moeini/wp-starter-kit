@@ -6,9 +6,7 @@ export {
   createCache,
   type CacheDriver,
   type CacheStore,
-} from "../../rest-utils/src/fetch/Cache";
-export {
   createBatchRequest,
   type BatchRequestConfig,
   type BatchResult,
-} from "../../rest-utils/src/fetch/handler";
+} from "@wpdev/rest-utils/fetch";

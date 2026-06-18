@@ -29,8 +29,8 @@ if (!is_dir($composer_dir)) {
     exit(0);
 }
 
-$from = (string) (getenv('WPDEV_PREFIX_FROM') ?: getenv('WPDEV_PREFIX_FROM'));
-$to   = (string) (getenv('WPDEV_PREFIX_TO') ?: getenv('WPDEV_PREFIX_TO'));
+$from = (string) (getenv('WPDEV_PREFIX_FROM') ?: getenv('WPSK_PREFIX_FROM'));
+$to   = (string) (getenv('WPDEV_PREFIX_TO') ?: getenv('WPSK_PREFIX_TO'));
 
 if (($from === '' || $to === '') && is_file(__DIR__ . '/rector.prefix.json')) {
     $decoded = json_decode((string) file_get_contents(__DIR__ . '/rector.prefix.json'), true);

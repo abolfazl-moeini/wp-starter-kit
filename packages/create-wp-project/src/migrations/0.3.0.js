@@ -79,7 +79,6 @@ export async function run(dir) {
       // Non-fatal for config mirror
       return {
         ok: true,
-        ran: true,
         warning: `manifest renamed, but project.config.json patch failed: ${error.message}`,
       };
     }

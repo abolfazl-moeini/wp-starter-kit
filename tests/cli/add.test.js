@@ -106,6 +106,41 @@ const baseDeps = () => ({
 /* I4.3 — engine wiring                                                   */
 /* -------------------------------------------------------------------- */
 
+describe("runAdd — confirmation gate (G-005)", () => {
+  test("interactive decline → engine.addFeature NOT called", async () => {
+    const deps = baseDeps();
+    deps.ui.confirm = jest.fn(async () => false);
+    const out = await runAdd(
+      {
+        dir: "/tmp/proj",
+        featureId: "husky",
+        variant: "on",
+        runOptions: {},
+      },
+      deps,
+    );
+    expect(out.ok).toBe(false);
+    expect(out.reason).toMatch(/cancelled/i);
+    expect(deps.engine.addFeature).not.toHaveBeenCalled();
+  });
+
+  test("--yes skips the general confirm", async () => {
+    const deps = baseDeps();
+    deps.ui.confirm = jest.fn(async () => false);
+    await runAdd(
+      {
+        dir: "/tmp/proj",
+        featureId: "husky",
+        variant: "on",
+        runOptions: { yes: true },
+      },
+      deps,
+    );
+    expect(deps.ui.confirm).not.toHaveBeenCalled();
+    expect(deps.engine.addFeature).toHaveBeenCalled();
+  });
+});
+
 describe("runAdd — engine wiring (I4.3)", () => {
   test("calls engine.addFeature(dir, id, variant, {force}) once with a known id and explicit variant", async () => {
     const deps = baseDeps();
@@ -292,7 +327,10 @@ describe("runAdd — doctor gate (TASK-12a)", () => {
     deps.engine = makeEngine({
       doctor: { ok: false, warnings: [], errors: ["manifest missing"] },
     });
-    deps.ui.confirm = jest.fn(async () => false);
+    deps.ui.confirm = jest
+      .fn()
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(false);
     const out = await runAdd(
       {
         dir: "/tmp/proj",
@@ -313,6 +351,7 @@ describe("runAdd — doctor gate (TASK-12a)", () => {
     deps.engine = makeEngine({
       doctor: { ok: false, warnings: [], errors: ["manifest missing"] },
     });
+    deps.ui.confirm = jest.fn(async () => true);
     const out = await runAdd(
       {
         dir: "/tmp/proj",
@@ -324,7 +363,7 @@ describe("runAdd — doctor gate (TASK-12a)", () => {
     );
     expect(out.ok).toBe(true);
     expect(deps.engine.addFeature).toHaveBeenCalledTimes(1);
-    expect(deps.ui.confirm).not.toHaveBeenCalled();
+    expect(deps.ui.confirm).toHaveBeenCalledTimes(1);
   });
 
   test("continues when doctor reports errors and --yes is set", async () => {

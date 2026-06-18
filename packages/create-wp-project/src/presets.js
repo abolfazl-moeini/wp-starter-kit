@@ -70,6 +70,7 @@ function buildMinimal() {
     mcpAbilities: "off",
     license: "gpl2",
     wpMinVersion: "6.0",
+    ci: "auto",
   };
 }
 

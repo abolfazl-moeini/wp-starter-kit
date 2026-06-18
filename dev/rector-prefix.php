@@ -39,8 +39,8 @@ return static function (RectorConfig $rector_config): void {
     // are rewritten too (they reference the old namespace).
     $shared($rector_config, ['include_vendor' => true]);
 
-    $from = (string) (getenv('WPDEV_PREFIX_FROM') ?: getenv('WPDEV_PREFIX_FROM'));
-    $to   = (string) (getenv('WPDEV_PREFIX_TO') ?: getenv('WPDEV_PREFIX_TO'));
+    $from = (string) (getenv('WPDEV_PREFIX_FROM') ?: getenv('WPSK_PREFIX_FROM'));
+    $to   = (string) (getenv('WPDEV_PREFIX_TO') ?: getenv('WPSK_PREFIX_TO'));
 
     if (($from === '' || $to === '') && is_file(__DIR__ . '/rector.prefix.json')) {
         $decoded = json_decode((string) file_get_contents(__DIR__ . '/rector.prefix.json'), true);

@@ -12,13 +12,35 @@ function planIds(plan) {
   return plan.map((q) => q.id);
 }
 
+describe("buildPromptPlan() — interactive preset picker (G-001)", () => {
+  test("when no --preset flag, the first question is preset", () => {
+    const plan = buildPromptPlan(defaultFeatures());
+    expect(planIds(plan)[0]).toBe("preset");
+  });
+
+  test("choosing minimal skips feature questions; custom includes them", () => {
+    const plan = buildPromptPlan(defaultFeatures());
+    const presetQ = plan.find((q) => q.id === "preset");
+    expect(presetQ).toBeDefined();
+    const stateMinimal = { runOptions: { preset: "minimal" }, features: {} };
+    const stateCustom = { runOptions: { preset: "custom" }, features: {} };
+    expect(plan.find((q) => q.id === "js").when(stateMinimal)).toBe(false);
+    expect(plan.find((q) => q.id === "js").when(stateCustom)).toBe(true);
+  });
+
+  test("when __preset is set from --preset= flag, preset question is omitted", () => {
+    const plan = buildPromptPlan({ __preset: "full" });
+    expect(planIds(plan)).not.toContain("preset");
+  });
+});
+
 describe("buildPromptPlan() — conditional omissions (I2.5)", () => {
-  test("default plan includes every branding question first", () => {
+  test("default plan includes every branding question after preset", () => {
     const plan = buildPromptPlan(defaultFeatures());
     const ids = planIds(plan);
-    // Branding ids are at the front, in the order they appear in
-    // BRANDING_QUESTIONS.
-    expect(ids.slice(0, 7)).toEqual([
+    expect(ids[0]).toBe("preset");
+    // Branding ids follow the preset question.
+    expect(ids.slice(1, 8)).toEqual([
       "slug",
       "npmScope",
       "globalName",
@@ -62,63 +84,91 @@ describe("buildPromptPlan() — conditional omissions (I2.5)", () => {
   test("mcpAbilities prompt is always available (no js gate)", () => {
     const plan = buildPromptPlan({ js: "none" });
     const q = plan.find((item) => item.id === "mcpAbilities");
+    const custom = { runOptions: { preset: "custom" }, features: {} };
     expect(q).toBeDefined();
-    expect(q.when({ features: { js: "none" } })).toBe(true);
-    expect(q.when({ features: { js: "typescript" } })).toBe(true);
+    expect(q.when({ ...custom, features: { js: "none" } })).toBe(true);
+    expect(q.when({ ...custom, features: { js: "typescript" } })).toBe(true);
   });
 
   test("frontendStack prompt only when js=typescript and jsLib is react/preact", () => {
     const plan = buildPromptPlan({ js: "typescript" });
     const q = plan.find((item) => item.id === "frontendStack");
+    const custom = { runOptions: { preset: "custom" }, features: {} };
     expect(q).toBeDefined();
-    expect(q.when({ features: { js: "typescript", jsLib: "preact" } })).toBe(
-      true,
-    );
-    expect(q.when({ features: { js: "typescript", jsLib: "none" } })).toBe(
-      false,
-    );
-    expect(q.when({ features: { js: "pure", jsLib: "preact" } })).toBe(false);
+    expect(
+      q.when({ ...custom, features: { js: "typescript", jsLib: "preact" } }),
+    ).toBe(true);
+    expect(
+      q.when({ ...custom, features: { js: "typescript", jsLib: "none" } }),
+    ).toBe(false);
+    expect(
+      q.when({ ...custom, features: { js: "pure", jsLib: "preact" } }),
+    ).toBe(false);
   });
 
-  test("when js=none, omits jsLib, jsTest, css but still asks blocks", () => {
+  test("when js=none, omits jsLib, jsTest, css, restBatch but still asks blocks", () => {
     const plan = buildPromptPlan({ js: "none" });
     const findQ = (id) => plan.find((q) => q.id === id);
-    expect(findQ("jsLib").when({ features: { js: "none" } })).toBe(false);
-    expect(findQ("jsTest").when({ features: { js: "none" } })).toBe(false);
-    expect(findQ("css").when({ features: { js: "none" } })).toBe(false);
-    expect(findQ("blocks").when({ features: { js: "none" } })).toBe(true);
+    const custom = {
+      runOptions: { preset: "custom" },
+      features: { js: "none" },
+    };
+    expect(findQ("jsLib").when(custom)).toBe(false);
+    expect(findQ("jsTest").when(custom)).toBe(false);
+    expect(findQ("css").when(custom)).toBe(false);
+    expect(findQ("restBatch").when(custom)).toBe(false);
+    expect(findQ("blocks").when(custom)).toBe(true);
   });
 
-  test("when js=typescript, includes jsLib, jsTest, css", () => {
+  test("when js=typescript, includes jsLib, jsTest, css, restBatch", () => {
     const plan = buildPromptPlan({ js: "typescript" });
     const findQ = (id) => plan.find((q) => q.id === id);
-    expect(findQ("jsLib").when({ features: { js: "typescript" } })).toBe(true);
-    expect(findQ("jsTest").when({ features: { js: "typescript" } })).toBe(true);
-    expect(findQ("css").when({ features: { js: "typescript" } })).toBe(true);
+    const custom = {
+      runOptions: { preset: "custom" },
+      features: { js: "typescript" },
+    };
+    expect(findQ("jsLib").when(custom)).toBe(true);
+    expect(findQ("jsTest").when(custom)).toBe(true);
+    expect(findQ("css").when(custom)).toBe(true);
+    expect(findQ("restBatch").when(custom)).toBe(true);
   });
 
   test("blocks prompt is always available and mentions Blockstudio", () => {
     const plan = buildPromptPlan({});
     const blocksQ = plan.find((q) => q.id === "blocks");
+    const custom = { runOptions: { preset: "custom" }, features: {} };
     expect(blocksQ).toBeDefined();
     expect(blocksQ.message).toMatch(/Blockstudio/i);
-    expect(blocksQ.when({ features: { js: "none" } })).toBe(true);
+    expect(blocksQ.when({ ...custom, features: { js: "none" } })).toBe(true);
   });
 
   test("when phpMinVersion < 8.1, omits faultTolerance via when()", () => {
     const plan = buildPromptPlan({ phpMinVersion: "7.4" });
     const findQ = (id) => plan.find((q) => q.id === id);
+    const custom = { runOptions: { preset: "custom" }, features: {} };
     expect(
-      findQ("faultTolerance").when({ features: { phpMinVersion: "7.4" } }),
+      findQ("faultTolerance").when({
+        ...custom,
+        features: { phpMinVersion: "7.4" },
+      }),
     ).toBe(false);
     expect(
-      findQ("faultTolerance").when({ features: { phpMinVersion: "8.0" } }),
+      findQ("faultTolerance").when({
+        ...custom,
+        features: { phpMinVersion: "8.0" },
+      }),
     ).toBe(false);
     expect(
-      findQ("faultTolerance").when({ features: { phpMinVersion: "8.1" } }),
+      findQ("faultTolerance").when({
+        ...custom,
+        features: { phpMinVersion: "8.1" },
+      }),
     ).toBe(true);
     expect(
-      findQ("faultTolerance").when({ features: { phpMinVersion: "8.2" } }),
+      findQ("faultTolerance").when({
+        ...custom,
+        features: { phpMinVersion: "8.2" },
+      }),
     ).toBe(true);
   });
 });
@@ -164,9 +214,10 @@ describe("buildPromptPlan() — preset short-circuit (I2.6)", () => {
 });
 
 describe("buildPromptPlan() — branding comes before features (I2.6)", () => {
-  test("every branding question precedes every feature question", () => {
+  test("preset precedes branding; every branding question precedes every feature question", () => {
     const plan = buildPromptPlan(defaultFeatures());
     const ids = planIds(plan);
+    expect(ids.indexOf("preset")).toBe(0);
     const lastBrandingIndex = ids.indexOf("phpSourceVersion");
     const firstFeatureIndex = ids.indexOf("js");
     expect(lastBrandingIndex).toBeGreaterThanOrEqual(0);

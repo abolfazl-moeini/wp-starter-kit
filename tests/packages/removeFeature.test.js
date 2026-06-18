@@ -181,6 +181,53 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
     expect(cfg.features.husky).toBe("off");
   });
 
+  test("removeFeature(js) coerces dependents and succeeds on a full JS project", async () => {
+    const features = {
+      ...defaultFeatures(),
+      js: "typescript",
+      jsLib: "preact",
+      jsTest: "jest",
+      css: "sass",
+      restBatch: "on",
+      husky: "off",
+    };
+    await seedProject(tmp, features);
+    await fs.mkdir(path.join(tmp, "assets"), { recursive: true });
+    await fs.writeFile(
+      path.join(tmp, "assets", "dependencies.ts"),
+      "// js\n",
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(tmp, "jest.config.js"),
+      "module.exports = {};\n",
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(tmp, "postcss.config.js"),
+      "module.exports = {};\n",
+      "utf8",
+    );
+
+    const res = await removeFeature(tmp, "js");
+    expect(res.ok).toBe(true);
+    expect(res.removed).toEqual(
+      expect.arrayContaining([
+        "assets/dependencies.ts",
+        "jest.config.js",
+        "postcss.config.js",
+      ]),
+    );
+
+    const manifest = JSON.parse(
+      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+    );
+    expect(manifest.features.js).toBe("none");
+    expect(manifest.features.jsTest).toBe("none");
+    expect(manifest.features.css).toBe("none");
+    expect(manifest.features.restBatch).toBe("off");
+  });
+
   test("removeFeature preserves v2 fields in project.config.json (no data loss)", async () => {
     await seedProject(tmp, defaultFeatures());
     await seedHuskyOn(tmp);
@@ -328,6 +375,14 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
       "utf8",
     );
     expect(huskyAfter).toBe(huskyBefore);
+  });
+
+  test("returns helpful message for license (not removable)", async () => {
+    await seedProject(tmp, defaultFeatures());
+    const res = await removeFeature(tmp, "license");
+    expect(res.ok).toBe(false);
+    expect(res.reason).toMatch(/license is not removable.*wpdev set license/i);
+    expect(res.removed).toEqual([]);
   });
 
   /* -- guard: project missing manifest -- */

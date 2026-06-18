@@ -148,10 +148,11 @@ export async function gatherInputs(opts) {
     presetName = "standard";
   }
   if (presetName && presetName !== "custom") {
-    currentFeatures = engine.applyPreset(presetName);
-    // Flags still win — override the preset with anything the user
-    // explicitly set on the command line.
-    currentFeatures = { ...currentFeatures, ...flagInput.features };
+    currentFeatures = {
+      ...engine.applyPreset(presetName),
+      ...flagInput.features,
+      __preset: presetName,
+    };
   }
 
   let prompted = { answers: {}, features: {}, runOptions: {} };
@@ -163,10 +164,13 @@ export async function gatherInputs(opts) {
     prompted = await runPrompts(plan, ui, { answers: flagInput.answers });
   }
 
+  if (!presetName && prompted.runOptions?.preset) {
+    presetName = prompted.runOptions.preset;
+  }
+
   // 4. mergeInputs — flags > prompted > defaults (from the engine).
-  //    When --preset= is set, the preset's feature map is the
-  //    baseline instead of defaultFeatures() so non-interactive
-  //    runs (--yes) honour the chosen preset.
+  //    When a preset was chosen (flag or prompt), its feature map is
+  //    the baseline instead of defaultFeatures().
   const featureDefaults =
     presetName && presetName !== "custom"
       ? engine.applyPreset(presetName)

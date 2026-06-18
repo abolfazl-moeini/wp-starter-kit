@@ -1,5 +1,4 @@
 import { existsSync, watch as fsWatch } from "node:fs";
-import { dirname } from "node:path";
 import {
   fileCheckSum,
   phpFileContent,
@@ -70,7 +69,10 @@ export async function buildStyles(options = {}) {
         const assetPath = await buildStyleAssetFile(cssFilePath);
         console.info(`Rebuilt: ${assetPath}`);
       } catch (error) {
-        console.error(`Style rebuild failed for ${cssFilePath}:`, error.message);
+        console.error(
+          `Style rebuild failed for ${cssFilePath}:`,
+          error.message,
+        );
       }
     });
     watchers.push(watcher);

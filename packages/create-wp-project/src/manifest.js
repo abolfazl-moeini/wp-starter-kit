@@ -31,6 +31,7 @@ import { promises as fs, readFileSync, existsSync } from "node:fs";
 import * as path from "node:path";
 import { updateJsonFile } from "./json-utils.js";
 import { deriveUiFramework } from "./derive-ui-framework.js";
+import { getFeatureCatalog } from "./features.js";
 
 /* -------------------------------------------------------------------- */
 /* Constants                                                             */
@@ -81,13 +82,35 @@ export function buildManifest({
   if (!features || typeof features !== "object") {
     throw new Error("buildManifest: features is required (object)");
   }
+  const sortedFeatures = {};
+  const catalogOrder = getFeatureCatalog().map((f) => f.id);
+  for (const id of catalogOrder) {
+    if (features[id] !== undefined) sortedFeatures[id] = features[id];
+  }
+  for (const id of Object.keys(features)) {
+    if (!(id in sortedFeatures)) sortedFeatures[id] = features[id];
+  }
   return {
     schema: MANIFEST_SCHEMA,
     kitVersion,
     distMode,
     generatedAt,
-    features: { ...features },
+    features: sortedFeatures,
   };
+}
+
+/**
+ * @param {Object} manifest
+ * @param {Object} [opts]
+ * @param {string} [opts.previousKitVersion]
+ * @param {string} [opts.migratedAt]
+ * @returns {Object}
+ */
+export function withMigrationTrail(manifest, opts = {}) {
+  const out = { ...manifest };
+  if (opts.previousKitVersion) out.previousKitVersion = opts.previousKitVersion;
+  if (opts.migratedAt) out.migratedAt = opts.migratedAt;
+  return out;
 }
 
 /* -------------------------------------------------------------------- */

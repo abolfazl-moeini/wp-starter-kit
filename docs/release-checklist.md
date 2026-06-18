@@ -3,6 +3,24 @@
 > Pre-release steps for cutting a new version of a project based on
 > the wp-starter-kit.
 
+## npm publish (kit CLI packages)
+
+The `npm create @wpdev/plugin@latest` wrapper requires these packages to
+be published to npm **before** cutting a kit release:
+
+| Package                    | Role                                                                     |
+| -------------------------- | ------------------------------------------------------------------------ |
+| `@wpdev/create-plugin`     | `npm create` entry shim (`create-wpdev-plugin.js` → `@wpdev/cli`)        |
+| `@wpdev/cli`               | `wpdev` binary (`create`, `add`, `remove`, `set`, `update`, `doctor`, …) |
+| `@wpdev/create-wp-project` | Installer engine (features, generators, migrations)                      |
+
+Publish order: `create-wp-project` → `cli` → `create-plugin` (the shim
+depends on the CLI). Bump versions in lockstep with `KIT_VERSION` in
+`packages/create-wp-project/package.json`. Other `@wpdev/*` packages
+(`hooks`, `utils`, `rest-utils`, `rule-engine`, `ui-components`, …) ship
+on their own cadence but must resolve from the public registry when a
+consumer project runs `npm install`.
+
 ## Pre-release
 
 - [ ] All tests pass: `composer test` AND `npm test` (CI does this,

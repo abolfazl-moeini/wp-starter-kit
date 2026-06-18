@@ -97,6 +97,7 @@ import { getDepVersions } from "./dep-versions.js";
 // npm registry).
 import { getKitStatus } from "./kit-status.js";
 import { deriveUiFramework } from "./derive-ui-framework.js";
+import { setConfigValue, isConfigSettable } from "./config-set.js";
 
 /* -------------------------------------------------------------------- */
 /* Types                                                                */
@@ -607,4 +608,6 @@ export {
   getDepVersions,
   // Phase 24.12–24.13 — kit status (CLI wpdev info).
   getKitStatus,
+  setConfigValue,
+  isConfigSettable,
 };

@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Tiny shim for `npm create @wpdev/plugin` (plan.installer.md Phase I7 — I7.4). Forwards argv to the @wpdev/cli `create` subcommand. The real scaffolder lives in @wpdev/create-wp-project.",
   "type": "module",
-  "private": true,
   "license": "MIT",
   "bin": {
     "create-wpdev-plugin": "bin/create-wpdev-plugin.js"

@@ -28,7 +28,7 @@ final class CircuitBreaker
     public function state(): CircuitState
     {
         $data = $this->read();
-        if (($data['opened_at'] ?? 0) > 0) {
+        if ((int) $data['opened_at'] > 0) {
             $elapsed = time() - (int) $data['opened_at'];
             if ($elapsed >= $this->cooldownSeconds) {
                 return CircuitState::HalfOpen;
@@ -53,13 +53,13 @@ final class CircuitBreaker
 
         try {
             $result = $operation();
-            if ($state === CircuitState::HalfOpen || ($this->read()['failures'] ?? 0) > 0) {
+            if ($state === CircuitState::HalfOpen || $this->read()['failures'] > 0) {
                 $this->write(['failures' => 0, 'opened_at' => 0]);
             }
             return $result;
         } catch (\Throwable $e) {
             $data = $this->read();
-            $failures = (int) ($data['failures'] ?? 0) + 1;
+            $failures = $data['failures'] + 1;
             $openedAt = $failures >= $this->failureThreshold ? time() : 0;
             $this->write(['failures' => $failures, 'opened_at' => $openedAt]);
 

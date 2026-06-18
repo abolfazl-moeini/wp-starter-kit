@@ -241,10 +241,58 @@ describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
     expect(manifest.features.restBatch).toBe("on");
   });
 
-  test("throws when called on a directory with no manifest (not a wpdev project)", async () => {
-    // Empty tmp — no wpdev-kit.json, no project.config.json.
-    await expect(addFeature(tmp, "husky", "on")).rejects.toThrow(
-      /wpdev-kit\.json|manifest/i,
+  test("returns { ok:false } when called on a directory with no manifest", async () => {
+    const res = await addFeature(tmp, "husky", "on");
+    expect(res.ok).toBe(false);
+    expect(res.reason).toMatch(/wpdev-kit\.json|manifest/i);
+  });
+
+  test("addFeature(js, none) coerces dependents and deletes their owned files", async () => {
+    const features = {
+      ...defaultFeatures(),
+      js: "typescript",
+      jsLib: "preact",
+      jsTest: "jest",
+      css: "sass",
+      restBatch: "on",
+      husky: "off",
+    };
+    await seedProject(tmp, { features });
+    await fs.mkdir(path.join(tmp, "assets"), { recursive: true });
+    await fs.writeFile(
+      path.join(tmp, "assets", "dependencies.ts"),
+      "// js\n",
+      "utf8",
     );
+    await fs.writeFile(
+      path.join(tmp, "jest.config.js"),
+      "module.exports = {};\n",
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(tmp, "postcss.config.js"),
+      "module.exports = {};\n",
+      "utf8",
+    );
+
+    const res = await addFeature(tmp, "js", "none");
+    expect(res.ok).toBe(true);
+
+    const manifest = JSON.parse(
+      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+    );
+    expect(manifest.features.js).toBe("none");
+    expect(manifest.features.jsLib).toBe("none");
+    expect(manifest.features.jsTest).toBe("none");
+    expect(manifest.features.css).toBe("none");
+    expect(manifest.features.restBatch).toBe("off");
+
+    await expect(
+      fs.access(path.join(tmp, "assets", "dependencies.ts")),
+    ).rejects.toThrow();
+    await expect(fs.access(path.join(tmp, "jest.config.js"))).rejects.toThrow();
+    await expect(
+      fs.access(path.join(tmp, "postcss.config.js")),
+    ).rejects.toThrow();
   });
 });

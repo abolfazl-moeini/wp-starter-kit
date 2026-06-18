@@ -1,7 +1,14 @@
 {
   "name": "@wpdev/rule-engine",
   "version": "1.0.0",
-  "private": true,
+  "description": "Signal-tuple rule engine for wp-starter-kit admin UIs.",
   "type": "module",
-  "main": "index.js"
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "license": "MIT"
 }

@@ -405,6 +405,107 @@ describe("runMigrations() — failing migration aborts (Phase 24.6)", () => {
   });
 });
 
+describe("runMigrations() — depChanges apply (Phase 4)", () => {
+  let tmpDir;
+
+  beforeEach(async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-mig-dep-"));
+  });
+  afterEach(async () => {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  test("applies package.json dep bumps and returns appliedDepChanges", async () => {
+    const { getDepVersions } =
+      await import("../../packages/create-wp-project/src/dep-versions.js");
+    const registry = getDepVersions();
+    const jestRange = registry.get("jest");
+    const esbuildRange = registry.get("esbuild");
+    if (!jestRange || !esbuildRange) return;
+
+    const manifest = {
+      schema: 1,
+      kitVersion: "0.1.0",
+      distMode: "deps",
+      generatedAt: "2026-01-01T00:00:00.000Z",
+      features: {},
+    };
+    await fs.writeFile(
+      path.join(tmpDir, "wpdev-kit.json"),
+      JSON.stringify(manifest, null, 2) + "\n",
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(tmpDir, "package.json"),
+      JSON.stringify(
+        {
+          name: "fixture",
+          version: "1.0.0",
+          devDependencies: { jest: "^0.0.1-old" },
+        },
+        null,
+        2,
+      ) + "\n",
+      "utf8",
+    );
+
+    const res = await runMigrations(tmpDir, { from: "0.1.0", to: "0.2.0" });
+    expect(res.ok).toBe(true);
+    expect(res.appliedDepChanges).toBeDefined();
+    expect(
+      res.appliedDepChanges.package.add.esbuild ||
+        res.appliedDepChanges.package.bump.jest,
+    ).toBeTruthy();
+
+    const pkg = JSON.parse(
+      await fs.readFile(path.join(tmpDir, "package.json"), "utf8"),
+    );
+    expect(pkg.devDependencies.jest).toBe(jestRange);
+    expect(pkg.devDependencies.esbuild).toBe(esbuildRange);
+
+    const afterManifest = JSON.parse(
+      await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+    );
+    expect(afterManifest.migratedAt).toBeDefined();
+    expect(afterManifest.previousKitVersion).toBe("0.1.0");
+  });
+});
+
+describe("runMigrations() — schema migration (Phase 8)", () => {
+  let tmpDir;
+
+  beforeEach(async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-mig-schema-"));
+  });
+  afterEach(async () => {
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  test("bumps manifest schema 0→1 before version migrations", async () => {
+    const manifest = {
+      schema: 0,
+      kitVersion: "0.1.0",
+      distMode: "deps",
+      generatedAt: "2026-01-01T00:00:00.000Z",
+      features: {},
+    };
+    await fs.writeFile(
+      path.join(tmpDir, "wpdev-kit.json"),
+      JSON.stringify(manifest, null, 2) + "\n",
+      "utf8",
+    );
+
+    const res = await runMigrations(tmpDir, { from: "0.1.0", to: "0.2.0" });
+    expect(res.ok).toBe(true);
+
+    const after = JSON.parse(
+      await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+    );
+    expect(after.schema).toBe(1);
+    expect(after.kitVersion).toBe("0.2.0");
+  });
+});
+
 describe("runMigrations() — argument validation (Phase 24.6)", () => {
   test("throws on missing dir", async () => {
     await expect(runMigrations("", { to: "0.2.0" })).rejects.toThrow();

@@ -1,13 +1,17 @@
 {
   "name": "@wpdev/ui-components",
   "version": "1.0.0",
-  "private": true,
+  "description": "Shared Preact UI components (WDForm, etc.) for wp-starter-kit consumers.",
   "type": "module",
   "main": "index.js",
   "exports": {
     ".": "./index.js",
     "./WDForm": "./WDForm/index.js"
   },
+  "files": [
+    "index.js",
+    "WDForm"
+  ],
   "peerDependencies": {
     "preact": ">=10",
     "@preact/signals": ">=1"
@@ -19,5 +23,6 @@
   },
   "dependencies": {
     "preact": "^10.0.0"
-  }
+  },
+  "license": "MIT"
 }

@@ -36,9 +36,18 @@ if ( ! defined( 'TRANSLATION_HELPER' ) ) {
  */
 function wpdev_list_components(): array {
 	$out = [];
-	foreach ( glob( SOURCE_ROOT . '/components/*/script.js' ) ?: [] as $file ) {
-		$out[] = basename( dirname( $file ) );
+	$patterns = [
+		SOURCE_ROOT . '/src/Modules/*/assets/entries/*.ts',
+		SOURCE_ROOT . '/src/Modules/*/assets/entries/*.js',
+	];
+	foreach ( $patterns as $pattern ) {
+		foreach ( glob( $pattern ) ?: [] as $file ) {
+			$module = basename( dirname( dirname( dirname( $file ) ) ) );
+			$entry  = pathinfo( $file, PATHINFO_FILENAME );
+			$out[]  = $module . '-' . $entry;
+		}
 	}
+	$out = array_values( array_unique( $out ) );
 	sort( $out );
 	return $out;
 }

@@ -84,10 +84,11 @@ function makeRunners() {
   };
 }
 
-function makeUi() {
+function makeUi({ confirm = undefined } = {}) {
   return {
     renderSummary: jest.fn(async () => {}),
     log: jest.fn(async () => {}),
+    confirm: confirm !== undefined ? jest.fn(async () => confirm) : undefined,
     // The new plan renderer — tests assert it was called with
     // the right shape on success and was NOT called on errors.
     renderPlan: jest.fn(async (plan) => {
@@ -261,5 +262,38 @@ describe("runUpdate — ui.renderPlan wiring (I5.2)", () => {
     // inspect it. The render error is reported as a warning.
     expect(out.ok).toBe(true);
     expect(out.warning).toMatch(/TTY closed/);
+  });
+});
+
+describe("runUpdate — interactive apply confirm (G-004)", () => {
+  test("interactive without --run, decline → runMigrations NOT called", async () => {
+    const deps = baseDeps();
+    deps.ui = makeUi({ confirm: false });
+    await runUpdate(
+      {
+        dir: "/tmp/proj",
+        runOptions: { to: "0.2.0", interactive: true },
+      },
+      deps,
+    );
+    expect(deps.engine.runMigrations).not.toHaveBeenCalled();
+  });
+
+  test("interactive without --run, accept → runMigrations applied", async () => {
+    const deps = baseDeps();
+    deps.ui = makeUi({ confirm: true });
+    deps.runners.gitStatus = jest.fn(async () => ({
+      ok: true,
+      dirty: false,
+      files: [],
+    }));
+    await runUpdate(
+      {
+        dir: "/tmp/proj",
+        runOptions: { to: "0.2.0", interactive: true },
+      },
+      deps,
+    );
+    expect(deps.engine.runMigrations).toHaveBeenCalledTimes(1);
   });
 });

@@ -76,6 +76,11 @@ describe("@wpdev/create-plugin — package shape (I7.3/I7.4)", () => {
     expect(binNames.length).toBeGreaterThan(0);
   });
 
+  test("package is not private (must be publishable for npm create)", () => {
+    const pkg = loadWrapperPkg();
+    expect(pkg.private).not.toBe(true);
+  });
+
   test("package is ESM and ships at least the bin directory in `files`", () => {
     const pkg = loadWrapperPkg();
     expect(pkg.type).toBe("module");

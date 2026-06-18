@@ -133,6 +133,30 @@ describe("--yes / -y non-interactive (I2.10, I2.11)", () => {
     expect(out.preset).toBe("minimal");
   });
 
+  test("interactive run asks preset first and applies minimal when selected", async () => {
+    const ui = makeRecordingUi();
+    ui.select = jest.fn(async (opts) => {
+      ui.calls.push({ kind: "select", opts });
+      if (opts.message && opts.message.match(/preset/i)) return "minimal";
+      return opts.initialValue || (opts.options[0] && opts.options[0].value);
+    });
+    const out = await gatherInputs({
+      argv: ["my-plugin"],
+      interactive: true,
+      engine: engineStub,
+      ui,
+    });
+    const presetCall = ui.calls.find(
+      (c) => c.kind === "select" && c.opts.message.match(/preset/i),
+    );
+    expect(presetCall).toBeDefined();
+    const minimal = applyPreset("minimal");
+    for (const [k, v] of Object.entries(minimal)) {
+      expect(out.features[k]).toBe(v);
+    }
+    expect(out.preset).toBe("minimal");
+  });
+
   test("explicit `interactive: false` also skips prompts (no --yes needed)", async () => {
     const ui = makeRecordingUi();
     const out = await gatherInputs({

@@ -170,6 +170,26 @@ describe("runRemove — always-on `core` guard (I4.7)", () => {
 /* I4.8 — confirmation gate (--yes)                                       */
 /* -------------------------------------------------------------------- */
 
+describe("runRemove — config-only pre-filter (Phase 3)", () => {
+  test("license returns skipped with helpful set message (exit 0 path)", async () => {
+    const catalog = [
+      ...CATALOG,
+      { id: "license", variants: ["gpl2", "gpl3", "mit"], default: "gpl2" },
+      { id: "phpMinVersion", variants: ["7.4", "8.2"], default: "7.4" },
+    ];
+    const deps = baseDeps();
+    deps.engine.getFeatureCatalog = jest.fn(() => catalog);
+    const out = await runRemove(
+      { dir: "/tmp/proj", featureId: "license", runOptions: { yes: true } },
+      deps,
+    );
+    expect(out.ok).toBe(true);
+    expect(out.skipped).toBe(true);
+    expect(out.reason).toMatch(/wpdev set license/i);
+    expect(deps.engine.removeFeature).not.toHaveBeenCalled();
+  });
+});
+
 describe("runRemove — confirmation gate (I4.8)", () => {
   test("with runOptions.yes=true, ui.confirm is NOT called and the engine IS called", async () => {
     const deps = baseDeps();

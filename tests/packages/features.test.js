@@ -47,6 +47,7 @@ describe("getFeatureCatalog() — feature data model (Phase 20.1/20.2)", () => {
       "i18n",
       "frontendStack",
       "mcpAbilities",
+      "ci",
     ];
     for (const id of expected) {
       expect(ids).toContain(id);
@@ -122,6 +123,7 @@ describe("getFeatureCatalog() — feature data model (Phase 20.1/20.2)", () => {
     expect(byId.i18n.variants).toEqual(["on", "off"]);
     expect(byId.frontendStack.variants).toEqual(["none", "polaris"]);
     expect(byId.mcpAbilities.variants).toEqual(["off", "on"]);
+    expect(byId.ci.variants).toEqual(["auto", "off"]);
   });
 
   test("feature descriptors carry an id, variants, and a default (variant[0])", () => {
@@ -181,6 +183,7 @@ describe("defaultFeatures() — all-default feature set (Phase 20.2)", () => {
       i18n: "on",
       frontendStack: "none",
       mcpAbilities: "off",
+      ci: "auto",
     });
   });
 });

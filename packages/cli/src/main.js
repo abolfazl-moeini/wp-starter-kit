@@ -29,6 +29,7 @@ import { runList } from "./commands/list.js";
 import { runUpdate } from "./commands/update.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runInfo } from "./commands/info.js";
+import { runSet } from "./commands/set.js";
 import { gatherInputs } from "./gather.js";
 import ui from "./ui.js";
 import * as runners from "./runners.js";
@@ -240,7 +241,44 @@ export function buildProgram() {
       .option("-v, --verbose", "verbose runner output"),
   ).action(async (feature) => {
     const sub = program.commands.find((c) => c.name() === "remove");
-    return runRemove({ feature, argv: tailAfterSubcommand(sub) });
+    const opts = sub?.opts() || {};
+    const featureId = feature.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    const result = await runRemove(
+      {
+        dir: process.cwd(),
+        featureId,
+        runOptions: {
+          yes: opts.yes,
+          force: opts.force,
+          verbose: opts.verbose,
+        },
+      },
+      { engine, runners, ui },
+    );
+    if (result.skipped) {
+      process.stdout.write(result.reason + "\n");
+      return;
+    }
+    if (!result.ok) {
+      process.stderr.write(
+        "wpdev remove: " + (result.reason || "unknown") + "\n",
+      );
+      process.exit(result.reason === "cancelled" ? 0 : 1);
+    }
+  });
+
+  allowPassthrough(
+    program
+      .command("set <key> <value>")
+      .description(
+        "set a config-only feature variant (phpMinVersion, wpMinVersion, license, ci)",
+      ),
+  ).action(async (key, value) => {
+    const result = await runSet({ dir: process.cwd(), key, value }, { engine });
+    if (!result.ok) {
+      process.stderr.write("wpdev set: " + (result.reason || "unknown") + "\n");
+      process.exit(1);
+    }
   });
 
   allowPassthrough(

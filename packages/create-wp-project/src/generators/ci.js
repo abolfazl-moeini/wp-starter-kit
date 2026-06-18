@@ -47,6 +47,9 @@ jobs:
 `;
 
 export function run(ctx) {
+  if (ctx.features.ci === "off") {
+    return { files: {}, dirs: [], deps: {}, devDeps: {} };
+  }
   const hasPhp = ctx.features.phpTest === "phpunit";
   const hasJs =
     ctx.features.js !== "none" &&
@@ -67,7 +70,7 @@ export function run(ctx) {
 
 export const descriptor = {
   id: "ci",
-  feature: null,
+  feature: "ci",
   owns: [".github/workflows/ci.yml"],
   run,
 };

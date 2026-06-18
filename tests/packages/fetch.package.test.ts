@@ -19,7 +19,7 @@ describe("@wpdev/fetch package contract", () => {
       "utf8",
     );
     expect(index).toMatch(/createBatchRequest/);
-    expect(index).toMatch(/rest-utils\/src\/fetch/);
+    expect(index).toMatch(/@wpdev\/rest-utils\/fetch/);
     expect(pkg.dependencies["@wpdev/rest-utils"]).toBeDefined();
   });
 });

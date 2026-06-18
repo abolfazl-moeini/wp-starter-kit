@@ -187,9 +187,21 @@ export async function runUpdate(dirOrInput, deps = {}) {
     }
   }
 
-  // 6. Dry-run short-circuit. The plan has been printed; do
-  //    NOT call runMigrations. The bin layer exits 0.
-  if (runOptions.run !== true) {
+  let shouldRun = runOptions.run === true;
+  if (
+    !shouldRun &&
+    runOptions.yes !== true &&
+    runOptions.interactive !== false &&
+    typeof ui.confirm === "function"
+  ) {
+    const proceed = await ui.confirm({
+      message: "Apply this update plan?",
+      initial: false,
+    });
+    if (proceed === true) shouldRun = true;
+  }
+
+  if (!shouldRun) {
     return plan;
   }
 

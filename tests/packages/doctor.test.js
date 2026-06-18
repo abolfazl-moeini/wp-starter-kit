@@ -75,11 +75,7 @@ import { getFeatureCatalog } from "../../packages/create-wp-project/src/features
  * installed kit's own version (so the "kit newer than
  * installed" warning stays silent).
  */
-async function seedHealthy({
-  kitVersion,
-  distMode = "vendored",
-  features,
-} = {}) {
+async function seedHealthy({ kitVersion, distMode = "deps", features } = {}) {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-doctor-"));
   // Default kitVersion to a value the test can reason about
   // (the registered "0.1.0" baseline). Tests that need a
@@ -167,12 +163,19 @@ describe("doctorProject() — check 2: unknown feature ids (Phase 24.9)", () => 
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  test("every unknown feature id is reported as a separate error", () => {
+  test("every unknown feature id is reported as a warning (newer-kit forward compat)", () => {
     const res = doctorProject(tmpDir);
-    expect(res.ok).toBe(false);
-    // Both typo'd ids surface, with a clear "unknown feature:" prefix.
-    expect(res.errors).toContain("unknown feature: bogusFeature");
-    expect(res.errors).toContain("unknown feature: anotherTypo");
+    expect(res.ok).toBe(true);
+    expect(
+      res.warnings.some((w) =>
+        /feature bogusFeature is from a newer kit/.test(w),
+      ),
+    ).toBe(true);
+    expect(
+      res.warnings.some((w) =>
+        /feature anotherTypo is from a newer kit/.test(w),
+      ),
+    ).toBe(true);
   });
 });
 
@@ -219,32 +222,42 @@ describe("doctorProject() — check 4: vendored framework checksum (Phase 24.10)
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  test("a placeholder checksum-check function exists and is invoked (no files = no warning)", async () => {
-    // The doctor reads `vendor/wp-framework/*` and checksums
-    // it. With no files present, the check is a no-op (the
-    // contract is "skip if not present"). The test asserts:
-    //  - the doctor returns ok:true with no errors for a
-    //    healthy project with no vendor files
-    //  - the doctor doesn't crash on missing files
+  test("vendored mode without Plugin.php surfaces a migration warning", async () => {
     const res = doctorProject(tmpDir);
     expect(res.errors).toEqual([]);
-    // The "kit newer" warning is also absent (manifest at
-    // 0.1.0, which is the kit's own version).
-    expect(res.warnings).toEqual([]);
+    expect(
+      res.warnings.some((w) => /src\/Core\/Plugin\.php is missing/.test(w)),
+    ).toBe(true);
   });
 
-  test("legacy src/Core/ presence under vendored manifest produces a migration warning (Phase 23/24 fix)", async () => {
+  test("non-shim src/Core/Plugin.php under vendored manifest produces a stale-copy warning", async () => {
     const corePhp = path.join(tmpDir, "src", "Core", "Plugin.php");
     await fs.mkdir(path.join(tmpDir, "src", "Core"), { recursive: true });
     await fs.writeFile(
       corePhp,
-      "<?php namespace WPDev\\Core; class Plugin {}",
+      "<?php namespace WPDev\\Core; class Plugin { public static function boot() {} public static function config() {} }",
       "utf8",
     );
     const res = doctorProject(tmpDir);
     expect(
-      res.warnings.some((w) => /Legacy vendored framework sources/.test(w)),
+      res.warnings.some((w) =>
+        /stale non-shim Plugin\.php|Legacy vendored/.test(w),
+      ),
     ).toBe(true);
+  });
+
+  test("shim src/Core/Plugin.php under vendored manifest produces no framework warning", async () => {
+    const corePhp = path.join(tmpDir, "src", "Core", "Plugin.php");
+    await fs.mkdir(path.join(tmpDir, "src", "Core"), { recursive: true });
+    await fs.writeFile(
+      corePhp,
+      "<?php // shim\nrequire_once __DIR__ . '/../../vendor/wpdev/framework/src/Core/Plugin.php';\n",
+      "utf8",
+    );
+    const res = doctorProject(tmpDir);
+    expect(
+      res.warnings.some((w) => /stale non-shim|Legacy vendored/.test(w)),
+    ).toBe(false);
   });
 });
 
@@ -257,11 +270,10 @@ describe("doctorProject() — happy path (Phase 24.10)", () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  test("a healthy project returns ok:true with no errors and no warnings", () => {
+  test("a healthy deps-mode manifest returns ok:true with no errors", () => {
     const res = doctorProject(tmpDir);
     expect(res.ok).toBe(true);
     expect(res.errors).toEqual([]);
-    expect(res.warnings).toEqual([]);
   });
 });
 
@@ -291,6 +303,83 @@ describe("doctorProject() — malformed manifest (Phase 24.10)", () => {
     expect(Array.isArray(res.warnings)).toBe(true);
     expect(
       res.warnings.some((w) => /manifest|unreadable|malformed|json/i.test(w)),
+    ).toBe(true);
+  });
+});
+
+describe("doctorProject() — validateFeatureSet + variant checks (Phase 3)", () => {
+  let tmpDir;
+
+  afterEach(async () => {
+    if (tmpDir) await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  test('faultTolerance:"on" + phpMinVersion:"7.4" surfaces a validation error', async () => {
+    tmpDir = await seedHealthy({
+      features: {
+        ...defaultFeatureSet(),
+        faultTolerance: "on",
+        phpMinVersion: "7.4",
+      },
+    });
+    const res = doctorProject(tmpDir);
+    expect(res.ok).toBe(false);
+    expect(
+      res.errors.some((e) => /faultTolerance|phpMinVersion/i.test(e)),
+    ).toBe(true);
+  });
+
+  test('js:"coffeescript" surfaces invalid value error', async () => {
+    tmpDir = await seedHealthy({
+      features: {
+        ...defaultFeatureSet(),
+        js: "coffeescript",
+      },
+    });
+    const res = doctorProject(tmpDir);
+    expect(res.ok).toBe(false);
+    expect(
+      res.errors.some((e) =>
+        /feature js has invalid value coffeescript/.test(e),
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("doctorProject() — owned file drift (Phase 3)", () => {
+  let tmpDir;
+
+  afterEach(async () => {
+    if (tmpDir) await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  test("feature on but owned files missing → warning", async () => {
+    tmpDir = await seedHealthy({
+      features: { ...defaultFeatureSet(), husky: "on" },
+    });
+    const res = doctorProject(tmpDir);
+    expect(
+      res.warnings.some((w) =>
+        /feature husky is on but its files are missing/.test(w),
+      ),
+    ).toBe(true);
+  });
+
+  test("feature off but orphan owned files remain → warning", async () => {
+    tmpDir = await seedHealthy({
+      features: { ...defaultFeatureSet(), husky: "off" },
+    });
+    await fs.mkdir(path.join(tmpDir, ".husky"), { recursive: true });
+    await fs.writeFile(
+      path.join(tmpDir, ".husky", "pre-commit"),
+      "#!/bin/sh\n",
+      "utf8",
+    );
+    const res = doctorProject(tmpDir);
+    expect(
+      res.warnings.some((w) =>
+        /feature husky is off but orphan files remain/.test(w),
+      ),
     ).toBe(true);
   });
 });

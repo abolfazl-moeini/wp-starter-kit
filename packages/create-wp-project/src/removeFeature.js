@@ -53,7 +53,13 @@ import * as path from "node:path";
 import minimatch from "minimatch";
 
 import { listGenerators } from "./generators/index.js";
-import { getFeatureCatalog, validateFeatureSet } from "./features.js";
+import {
+  findFeaturesTurnedOff,
+  getFeatureCatalog,
+  isFeatureOffVariant,
+  normalizeFeatureSet,
+  validateFeatureSet,
+} from "./features.js";
 import {
   readManifest,
   writeManifest,
@@ -103,7 +109,7 @@ function findCatalogEntry(id) {
  * code path — there's no way for them to drift.
  *
  * @param {string} id
- * @returns {string}
+ * @returns {string|null}
  */
 function pickOffVariant(id) {
   const entry = findCatalogEntry(id);
@@ -114,10 +120,18 @@ function pickOffVariant(id) {
   }
   if (entry.variants.includes("off")) return "off";
   if (entry.variants.includes("none")) return "none";
-  throw new Error(
-    `removeFeature: feature "${id}" has no OFF/none variant ` +
-      `(allowed: ${entry.variants.join(", ")}) — cannot be turned off`,
-  );
+  return null;
+}
+
+/**
+ * @param {string} id
+ * @returns {string}
+ */
+export function noOffVariantMessage(id) {
+  if (id === "license") {
+    return "license is not removable; use 'wpdev set license <gpl2|gpl3|mit>'";
+  }
+  return `${id} has no off variant; use 'wpdev set ${id} <variant>'`;
 }
 
 /**
@@ -227,6 +241,73 @@ function isMatchedByAny(filePath, globs) {
     if (minimatch(filePath, glob, { dot: true })) return true;
   }
   return false;
+}
+
+/**
+ * Owns globs for features that remain on after a mutation.
+ *
+ * @param {Record<string, string>} afterFeatures
+ * @param {string[]} turnedOffIds
+ * @returns {string[]}
+ */
+function collectRemainingOwns(afterFeatures, turnedOffIds) {
+  const out = [];
+  for (const f of getFeatureCatalog()) {
+    if (turnedOffIds.includes(f.id)) continue;
+    let variant;
+    if (f.id === "core") {
+      variant = undefined;
+    } else {
+      variant = afterFeatures[f.id];
+      if (variant === undefined || isFeatureOffVariant(f.id, variant)) continue;
+    }
+    const gens = findFeatureGenerators(f.id, variant);
+    for (const g of gens) {
+      if (g.owns) out.push(...g.owns);
+    }
+  }
+  return out;
+}
+
+/**
+ * Delete owned files for every feature that normalization turned off.
+ *
+ * @param {string} dir
+ * @param {Record<string, string>} beforeFeatures
+ * @param {Record<string, string>} afterFeatures
+ * @returns {Promise<{ removed: string[], turnedOff: string[] }>}
+ */
+export async function deleteOwnedFilesForTurnedOff(
+  dir,
+  beforeFeatures,
+  afterFeatures,
+) {
+  const turnedOff = findFeaturesTurnedOff(beforeFeatures, afterFeatures);
+  const otherOwns = collectRemainingOwns(afterFeatures, turnedOff);
+  const removedRel = [];
+  const ownGlobs = [];
+
+  for (const featureId of turnedOff) {
+    const gens = findFeatureGenerators(featureId, beforeFeatures[featureId]);
+    for (const g of gens) {
+      if (g.owns) ownGlobs.push(...g.owns);
+    }
+  }
+
+  if (ownGlobs.length > 0) {
+    for await (const { rel, abs } of walkFiles(dir)) {
+      if (isMatchedByAny(rel, ownGlobs) && !isMatchedByAny(rel, otherOwns)) {
+        try {
+          await fs.unlink(abs);
+          removedRel.push(rel);
+        } catch (error) {
+          if (error.code !== "ENOENT") throw error;
+        }
+      }
+    }
+  }
+
+  return { removed: removedRel, turnedOff };
 }
 
 /**
@@ -372,7 +453,13 @@ export async function removeFeature(dir, id, _opts = {}) {
   } catch (error) {
     return { ok: false, reason: error.message, removed: [] };
   }
-  const newFeatures = { ...currentFeatures, [id]: offVariant };
+  if (offVariant === null) {
+    return { ok: false, reason: noOffVariantMessage(id), removed: [] };
+  }
+  const newFeatures = normalizeFeatureSet({
+    ...currentFeatures,
+    [id]: offVariant,
+  });
 
   // 5. Validate the merged set BEFORE looking at the project
   //    tree. Turning a feature off should never violate a
@@ -397,38 +484,11 @@ export async function removeFeature(dir, id, _opts = {}) {
   //    generator (theoretical — every catalog id maps to at
   //    least one), `gens` is empty and the walk below
   //    deletes nothing.
-  const currentVariant = currentFeatures[id];
-  const gens = findFeatureGenerators(id, currentVariant);
-  const ownGlobs = [];
-  for (const g of gens) {
-    if (g.owns) ownGlobs.push(...g.owns);
-  }
-
-  // 7. Walk the project tree and delete every file matched by
-  //    the removed feature's owns AND not matched by any other
-  //    still-ON feature's owns. The latter filter is the
-  //    "shared-owned protection" — if a future refactor makes
-  //    husky and exampleFeature both claim a file, removing
-  //    one does not clobber the other.
-  const otherOwns = collectOtherOwns(currentFeatures, id);
-  const removedAbs = [];
-  const removedRel = [];
-  if (ownGlobs.length > 0) {
-    for await (const { rel, abs } of walkFiles(dir)) {
-      if (isMatchedByAny(rel, ownGlobs) && !isMatchedByAny(rel, otherOwns)) {
-        try {
-          await fs.unlink(abs);
-          removedAbs.push(abs);
-          removedRel.push(rel);
-        } catch (error) {
-          // A file that disappeared between the walk and the
-          // unlink is not a failure (someone else cleaned it
-          // up). Re-throw on real I/O errors.
-          if (error.code !== "ENOENT") throw error;
-        }
-      }
-    }
-  }
+  const { removed: removedRel } = await deleteOwnedFilesForTurnedOff(
+    dir,
+    currentFeatures,
+    newFeatures,
+  );
 
   // 8. Update the manifest. The manifest's `features` is the
   //    merged set; kitVersion is the existing version (a

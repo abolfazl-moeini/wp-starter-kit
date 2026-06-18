@@ -304,21 +304,28 @@ function scriptsForVariant(variant, defaults) {
  * base path is the parent of __dirname (or, in CLI / jest contexts,
  * the cwd-relative `packages/create-wp-project/src`).
  */
-function modulePath(relPath) {
-  let here;
+function resolveEngineSrcDir() {
   if (typeof __dirname !== "undefined" && __dirname) {
-    // __dirname = .../packages/create-wp-project/src/generators
-    // we want .../packages/create-wp-project/src
-    here = path.dirname(__dirname);
-  } else if (
-    process.argv[1] &&
-    process.argv[1].endsWith("create-wp-project/src/index.js")
-  ) {
-    here = path.dirname(process.argv[1]);
-  } else {
-    here = path.join(process.cwd(), "packages/create-wp-project/src");
+    return path.dirname(__dirname);
   }
-  return path.join(here, relPath);
+  const anchors = [process.argv[1], process.cwd()].filter(Boolean);
+  for (const anchor of anchors) {
+    let dir = path.resolve(path.dirname(anchor));
+    for (let depth = 0; depth < 10; depth++) {
+      const candidate = path.join(dir, "packages/create-wp-project/src");
+      if (existsSync(path.join(candidate, "generators/_templates.js"))) {
+        return candidate;
+      }
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  }
+  return path.join(process.cwd(), "packages/create-wp-project/src");
+}
+
+function modulePath(relPath) {
+  return path.join(resolveEngineSrcDir(), relPath);
 }
 
 let PLUGIN_FILE_TEMPLATE = null;

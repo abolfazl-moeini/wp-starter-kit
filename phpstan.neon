@@ -9,14 +9,15 @@ parameters:
         - assets/*
         - node_modules/*
         - dist/*
-        - packages/php-fault-tolerance/*
-        - tests/*
+        # Vendored third-party framework — analysed upstream, not in kit CI.
         - packages/wpdev-framework/*
+        - tests/*
         - wp-content/*
         - blockstudio/*
         - packages/*/vendor/*
         - core/packages/*/vendor/*
-        - packages/mcp-integration/*
+        - packages/mcp-integration/tests/*
+        - packages/php-fault-tolerance/tests/*
 
 
 

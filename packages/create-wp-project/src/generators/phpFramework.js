@@ -256,6 +256,7 @@ export const descriptor = {
     "src/Modules/WpdevDemo/Module.php",
     REGISTER_FILE,
     "docs/wpdev-integration.md",
+    "MIGRATION-NOTES-1.0.0.md",
   ],
   run,
 };
