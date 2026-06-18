@@ -1,5 +1,9 @@
 <?php
+declare(strict_types=1);
+
 namespace WPDev\Support;
+
+use WPDev\Core\Plugin;
 
 /**
  * Asset loading helpers for wp-starter-kit — the PSR-4 successor to the
@@ -16,30 +20,90 @@ namespace WPDev\Support;
  *    so localized strings work out of the box. The legacy `wpdev_`
  *    helpers did not — that gap is what plan.v2.md flagged.
  *
+ * IMPORTANT — plugin root resolution
+ * ------------------------------------
+ * When the framework is loaded as a Composer dependency (vendor/wpdev/…)
+ * this file is NOT at the plugin root, so `plugin_dir_path(__FILE__)` and
+ * `plugins_url('', __FILE__)` would return paths inside the vendor tree
+ * rather than the consumer plugin's root.
+ *
+ * Consumer plugins MUST call {@see Assets::set_plugin_dir()} from their
+ * main plugin file BEFORE any Assets method is used:
+ *
+ *     \WPDev\Support\Assets::set_plugin_dir(
+ *         plugin_dir_path( __FILE__ ),
+ *         plugins_url( '', __FILE__ )
+ *     );
+ *
+ * The wp-starter-kit bootstrap (`wpdev-starter.php`) does this automatically.
+ * Omitting the call in a Composer consumer causes all asset URL resolution
+ * to silently return empty strings.
+ *
  * @package wp-starter-kit
  */
 final class Assets {
 
 	/**
+	 * Consumer-supplied plugin root directory path (trailing slash).
+	 * Null until {@see Assets::set_plugin_dir()} is called.
+	 *
+	 * @var string|null
+	 */
+	private static ?string $plugin_dir = null;
+
+	/**
+	 * Consumer-supplied plugin root public URL (trailing slash).
+	 * Null until {@see Assets::set_plugin_dir()} is called.
+	 *
+	 * @var string|null
+	 */
+	private static ?string $plugin_url = null;
+
+	/**
+	 * Set the plugin root so Assets can resolve paths and URLs correctly.
+	 *
+	 * Call from the consumer plugin's main file:
+	 *
+	 *     \WPDev\Support\Assets::set_plugin_dir(
+	 *         plugin_dir_path( __FILE__ ),
+	 *         plugins_url( '', __FILE__ )
+	 *     );
+	 *
+	 * Pass null for both arguments to restore the (broken) default behaviour
+	 * (useful only for unit tests that mock the WordPress functions).
+	 *
+	 * @param string|null $dir  Absolute filesystem path to the plugin root,
+	 *                          with or without a trailing slash.
+	 * @param string|null $url  Public URL of the plugin root,
+	 *                          with or without a trailing slash.
+	 */
+	public static function set_plugin_dir( ?string $dir, ?string $url = null ): void {
+		self::$plugin_dir = ( null !== $dir && '' !== $dir )
+			? rtrim( $dir, '/\\' ) . '/'
+			: null;
+		self::$plugin_url = ( null !== $url && '' !== $url )
+			? rtrim( $url, '/\\' ) . '/'
+			: null;
+	}
+
+	/**
 	 * Plugin-side base paths for asset files.
 	 *
 	 * Returned shape:
-	 *   base_path : filesystem root of the plugin (trailing slash, from
-	 *               `plugin_dir_path()`).
-	 *   base_url  : public URL prefix of the plugin (trailing slash, from
-	 *               `plugins_url('')`).
+	 *   base_path : filesystem root of the plugin (trailing slash).
+	 *   base_url  : public URL prefix of the plugin (trailing slash).
+	 *
+	 * When {@see Assets::set_plugin_dir()} has not been called the fallback
+	 * uses `plugin_dir_path(__FILE__)` / `plugins_url('')`, which are only
+	 * correct when this file sits at the plugin root — i.e. in the kit's
+	 * own dev layout where `src/Support/Assets.php` is the entry point.
+	 * Composer consumers must always call `set_plugin_dir()` explicitly.
 	 *
 	 * @return array{base_path: string, base_url: string}
 	 */
 	public static function resolve_paths(): array {
-		// __FILE__ resolves to src/Support/Assets.php inside the plugin;
-		// plugin_dir_path() strips the file path and returns the plugin
-		// root with a trailing slash — that is what we want for base_path.
-		$base_path = plugin_dir_path( __FILE__ );
-
-		// plugins_url('') returns the plugin's public URL prefix with a
-		// trailing slash, e.g. http://example.test/wp-content/plugins/wp-starter-kit/.
-		$base_url = plugins_url( '' );
+		$base_path = self::$plugin_dir ?? plugin_dir_path( __FILE__ );
+		$base_url  = self::$plugin_url ?? plugins_url( '' );
 
 		return [
 			'base_path' => $base_path,
@@ -84,8 +148,7 @@ final class Assets {
 	 * `wp_set_script_translations()` gap fix.
 	 *
 	 * @param string $handle     WP script handle.
-	 * @param string $rel_path   Path to the `.js` file (absolute or
-	 *                           plugin-relative).
+	 * @param string $rel_path   Absolute path to the `.js` file.
 	 * @param array  $extra_deps Extra WP-script handles to merge with the
 	 *                           sidecar's `dependencies`.
 	 * @return bool              `true` once the script is registered and
@@ -126,7 +189,7 @@ final class Assets {
 	 * already be registered via {@see self::register_bundle_script()}.
 	 *
 	 * @param string $handle     WP script handle.
-	 * @param string $rel_path   Path to the `.js` file, or empty to enqueue only.
+	 * @param string $rel_path   Absolute path to the `.js` file, or empty to enqueue only.
 	 * @param array  $extra_deps Extra WP-script handles (register path only).
 	 * @return bool              `true` once the script is enqueued.
 	 */
@@ -149,7 +212,7 @@ final class Assets {
 	 * and dependency merging.
 	 *
 	 * @param string $handle     WP style handle.
-	 * @param string $rel_path   Path to the `.css` file.
+	 * @param string $rel_path   Absolute path to the `.css` file.
 	 * @param array  $extra_deps Extra WP-style handles to merge with the
 	 *                           sidecar's `dependencies`.
 	 * @return bool              `true` once the style is registered and
@@ -202,36 +265,20 @@ final class Assets {
 	}
 
 	/**
-	 * Load `project.config.json` from the plugin root (cached per request).
+	 * Load `project.config.json` (cached per request).
 	 *
-	 * Reads the file that lives next to `wpdev-starter.php` (i.e. the
-	 * plugin's own root), NOT a theme directory. This is the plugin
-	 * equivalent of the legacy `wpdev_read_project_config()` and must
-	 * read from the plugin root so the localize data and translation
-	 * domain stay in sync with the project.
+	 * Delegates to {@see Plugin::config()} which has proper path resolution
+	 * via {@see Plugin::set_plugin_dir()}. Returns `[]` when the config
+	 * cannot be read (e.g. before WordPress is fully bootstrapped).
 	 *
 	 * @return array<string, mixed>
 	 */
 	public static function read_project_config(): array {
-		static $cache = null;
-
-		if (null !== $cache) {
-			return $cache;
+		try {
+			return Plugin::config();
+		} catch ( \RuntimeException $e ) {
+			return [];
 		}
-
-		$paths       = self::resolve_paths();
-		$config_path = rtrim( $paths['base_path'], '/\\' ) . '/project.config.json';
-
-		if ( ! is_readable( $config_path )) {
-			$cache = [];
-			return $cache;
-		}
-
-        // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents -- reading a local JSON config, not a remote URL.
-		$decoded = json_decode( (string) file_get_contents( $config_path ), true );
-		$cache   = is_array( $decoded ) ? $decoded : [];
-
-		return $cache;
 	}
 
 	// ------------------------------------------------------------------

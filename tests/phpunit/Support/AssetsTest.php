@@ -1,6 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
+use WPDev\Core\Plugin;
 use WPDev\Support\Assets;
 
 /**
@@ -34,15 +35,25 @@ class AssetsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Plugin::reset_for_tests();
         $GLOBALS['wpdev_test_wp_calls'] = [];
         $this->tmpDir = sys_get_temp_dir() . '/wpdev-assets-test-' . uniqid('', true);
         mkdir($this->tmpDir, 0777, true);
+
+        // Assets::read_project_config() delegates to Plugin::config(), which
+        // resolves project.config.json from the consumer plugin root — not from
+        // packages/framework/. Mirror wpdev-starter.php bootstrap wiring.
+        $root = $this->pluginRootPath();
+        Plugin::set_plugin_dir($root);
+        Assets::set_plugin_dir($root, $this->pluginRootUrl());
     }
 
     protected function tearDown(): void
     {
         $this->rrmdir($this->tmpDir);
         unset($GLOBALS['wpdev_test_wp_calls']);
+        Plugin::reset_for_tests();
+        Assets::set_plugin_dir(null, null);
         parent::tearDown();
     }
 
@@ -89,7 +100,9 @@ class AssetsTest extends TestCase
      */
     private function pluginRootPath(): string
     {
-        return dirname(__DIR__, 2);
+        // AssetsTest lives at tests/phpunit/Support/ — three levels below
+        // the plugin root (same anchor bootstrap.php uses from phpunit/).
+        return dirname(__DIR__, 3);
     }
 
     private function pluginRootUrl(): string

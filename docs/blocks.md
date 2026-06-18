@@ -5,7 +5,9 @@ The `blocks` feature (`blocks:on`) scaffolds [Blockstudio 7](https://blockstudio
 - `blockstudio.json` — global Blockstudio settings
 - `blockstudio/example-hero/` — example block with `apiVersion: 3`
 - `src/Modules/Blocks/Module.php` — bridge that boots Blockstudio
-- `src/blocks-register.php` — early `plugins_loaded` registration
+
+The **kit reference** registers the bridge in `wpdev-starter.php` (`wpdev_starter_register_modules`).
+**Scaffolded projects** also get `src/blocks-register.php` for early `plugins_loaded` registration.
 
 See [blocks-blockstudio.md](blocks-blockstudio.md) for layout, adding blocks, and Blockstudio capabilities.
 

@@ -73,7 +73,7 @@ jobs:
           restore-keys: ${{ runner.os }}-php-${{ matrix.php }}-
 
       - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer install --prefer-dist --no-progress --ignore-platform-req=php --no-scripts --ignore-platform-req=php --no-scripts
 
       - name: Run PHPUnit
         run: composer test
@@ -109,7 +109,7 @@ jobs:
           cache: "npm"
 
       - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer install --prefer-dist --no-progress --ignore-platform-req=php --no-scripts
 
       - name: Install npm dependencies
         run: npm ci
@@ -146,7 +146,7 @@ jobs:
           extensions: mbstring, intl, mysqli
 
       - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer install --prefer-dist --no-progress --ignore-platform-req=php --no-scripts
 
       - name: Build distribution tree
         run: composer release:dist
@@ -177,7 +177,7 @@ jobs:
           cache: "npm"
 
       - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer install --prefer-dist --no-progress --ignore-platform-req=php --no-scripts
 
       - name: Install npm dependencies
         run: npm ci
@@ -266,7 +266,7 @@ jobs:
         run: npm ci
 
       - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer install --prefer-dist --no-progress --ignore-platform-req=php --no-scripts
 
       - name: Run CLI unit tests
         run: npm test -- cli

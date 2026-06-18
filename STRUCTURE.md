@@ -55,6 +55,27 @@ submodule** of [github.com/abolfazl-moeini/polaris-stack](https://github.com/abo
 
 Agent context and implementation rules live in `packages/polaris-stack/context.md`. Generated consumer projects receive a copy of the runtime files under `src/polaris/`.
 
+## Blockstudio (Gutenberg blocks)
+
+[Blockstudio 7](https://blockstudio.dev) powers the kit reference blocks module. Composer
+installs `blockstudio/blockstudio` into `wp-content/plugins/blockstudio/` (WordPress
+plugin installer). Block definitions live at `blockstudio/{block-name}/`; global settings
+in `blockstudio.json`; bridge at `src/Modules/Blocks/Module.php`.
+
+- **Runtime:** PHP **8.2+** (Blockstudio vendor); WordPress **6.7+** (7.0 recommended).
+- **Docs:** `docs/blocks-blockstudio.md`, `docs/blocks.md`.
+- **Scaffold:** `blocks:on` in `@wpdev/create-wp-project` mirrors this layout (see
+  `blockstudio.integration.md`).
+
+Kit dev install when `config.platform.php` is 7.4:
+
+```bash
+composer install --ignore-platform-req=php --no-scripts
+```
+
+Blockstudio is **not** Strauss-prefixed in the kit reference tree — consumers run
+`composer install` on PHP 8.2+ hosts.
+
 ## MCP Integration
 
 Self-contained Abilities API library at `packages/mcp-integration/` (`wpdev/mcp-integration`). Selectable via the `wpdev` installer (`--mcp-abilities=on`).

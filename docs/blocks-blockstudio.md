@@ -34,6 +34,21 @@ Blockstudio discovers and registers blocks from disk — do not call `register_b
 
 Rector can downlevel **your** plugin PHP source per `phpMinVersion`, but Blockstudio itself requires PHP 8.2 on the server.
 
+## Composer install (kit + generated projects)
+
+```bash
+composer require blockstudio/blockstudio
+composer install
+```
+
+In this kit repo, Composer's `composer/installers` places Blockstudio under
+`wp-content/plugins/blockstudio/`. `wpdev-starter.php` loads that bootstrap before
+modules boot. Generated projects use the same Composer package; the blocks generator
+also emits `src/blocks-register.php` for early `plugins_loaded` registration.
+
+**Release / Strauss:** do not prefix Blockstudio into `vendor-prefixed/` — ship it as a
+Composer dependency and run `composer install` on deploy (PHP 8.2+).
+
 ## Bridge module
 
 `src/Modules/Blocks/Module.php`:

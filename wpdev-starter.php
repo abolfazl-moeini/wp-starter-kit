@@ -51,6 +51,15 @@ foreach ($blockstudioCandidates as $blockstudio) {
 	}
 }
 
+// Inform Assets of the plugin root so path/URL resolution works correctly
+// regardless of whether the framework lives in packages/ (dev) or vendor/ (Composer).
+if ( class_exists( 'WPDev\\Support\\Assets' ) ) {
+	\WPDev\Support\Assets::set_plugin_dir(
+		WPDEV_STARTER_PLUGIN_DIR,
+		plugins_url( '', WPDEV_STARTER_PLUGIN_FILE )
+	);
+}
+
 if ( ! class_exists( 'WPDev\\Core\\Plugin' )) {
 	add_action(
 		'admin_notices',
