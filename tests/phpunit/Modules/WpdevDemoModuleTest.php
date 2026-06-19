@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\Modules;
 
-use PHPUnit\Framework\TestCase;
 use WPDev\Modules\WpdevDemo\Module as KitWpdevDemoModule;
 
 /**
@@ -12,7 +11,7 @@ use WPDev\Modules\WpdevDemo\Module as KitWpdevDemoModule;
  * The kit reference project does not ship WpdevDemo; these tests exercise
  * the generator output shape via a minimal fixture that mirrors boot() logic.
  */
-class WpdevDemoModuleTest extends TestCase
+class WpdevDemoModuleTest extends \WPDevTest\TestCases\TestCase
 {
     public function test_boot_is_no_op_when_framework_inactive(): void
     {
@@ -36,11 +35,10 @@ class WpdevDemoModuleTest extends TestCase
 
         $registered = [];
         if (!function_exists('wpdev_register_module_admin_pages')) {
-            eval('
-                function wpdev_register_module_admin_pages($module_id, array $page_classes) {
-                    $GLOBALS["wpdev_demo_registered"] = [$module_id, $page_classes];
-                }
-            ');
+            function wpdev_register_module_admin_pages($module_id, array $page_classes): void
+            {
+                $GLOBALS['wpdev_demo_registered'] = [$module_id, $page_classes];
+            }
         }
 
         $module = new \WPDev\Tests\Fixtures\WpdevDemoModuleFixture(true);

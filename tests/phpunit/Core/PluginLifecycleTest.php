@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-use PHPUnit\Framework\TestCase;
 use WPDev\Core\ModuleInterface;
 use WPDev\Core\Plugin;
 
@@ -26,18 +25,15 @@ final class PluginLifecycleTestStubModule implements ModuleInterface
     }
 }
 
-class PluginLifecycleTest extends TestCase
+class PluginLifecycleTest extends \WPDevTest\TestCases\TestCase
 {
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
         Plugin::reset_for_tests();
-        if (function_exists('wpdev_test_reset_wp_state')) {
-            wpdev_test_reset_wp_state();
-        }
     }
 
-    protected function tearDown(): void
+    public function tearDown(): void
     {
         Plugin::reset_for_tests();
         parent::tearDown();

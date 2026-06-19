@@ -3,11 +3,10 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\FaultTolerance;
 
-use PHPUnit\Framework\TestCase;
 use WPDev\FaultTolerance\FaultTolerance;
 use WPDev\FaultTolerance\HttpClient;
 
-class FaultToleranceFacadeTest extends TestCase
+class FaultToleranceFacadeTest extends \WPDevTest\TestCases\TestCase
 {
     public function test_fault_tolerance_function_returns_facade_instance(): void
     {

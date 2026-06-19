@@ -19,20 +19,19 @@
 
 declare(strict_types=1);
 
-use PHPUnit\Framework\TestCase;
 
-final class TranslationPipelineTest extends TestCase
+final class TranslationPipelineTest extends \WPDevTest\TestCases\TestCase
 {
     private string $tmp;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
         $this->tmp = sys_get_temp_dir() . '/wpdev-translation-' . uniqid('', true);
         mkdir($this->tmp, 0777, true);
     }
 
-    protected function tearDown(): void
+    public function tearDown(): void
     {
         $this->wpdevRrmdir($this->tmp);
         parent::tearDown();

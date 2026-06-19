@@ -1,6 +1,5 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 
 /**
  * Tests for the `wpdev_asset_info`, `wpdev_bundle_file_path`, and
@@ -14,27 +13,19 @@ use PHPUnit\Framework\TestCase;
  * Canonical helpers use the `wpdev_*` prefix; deprecated `wpdev_*` shims
  * delegate to the same implementation.
  */
-class AssetFunctionsTest extends TestCase
+class AssetFunctionsTest extends \WPDevTest\TestCases\TestCase
 {
     /** @var string */
     private $tmpDir;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
-        // Reset the WP call log so the test bootstrap's wp_enqueue_*
-        // shims (which check isset() before pushing) actually record
-        // calls. Without this, $GLOBALS['wpdev_test_wp_calls'] is
-        // never initialized in this test's process and stays empty
-        // for the whole run.
-        if (function_exists('wpdev_test_reset_wp_state')) {
-            wpdev_test_reset_wp_state();
-        }
         $this->tmpDir = sys_get_temp_dir() . '/wpdev-asset-test-' . uniqid('', true);
         mkdir($this->tmpDir, 0777, true);
     }
 
-    protected function tearDown(): void
+    public function tearDown(): void
     {
         $this->rrmdir($this->tmpDir);
         parent::tearDown();
@@ -143,8 +134,11 @@ class AssetFunctionsTest extends TestCase
 
     public function test_stylesheet_file_path_resolves_under_assets_stylesheets(): void
     {
+        $base = defined('WPDEV_STARTER_PLUGIN_DIR')
+            ? untrailingslashit(WPDEV_STARTER_PLUGIN_DIR)
+            : untrailingslashit(get_template_directory());
         $this->assertSame(
-            get_template_directory() . '/assets/stylesheets/style.css',
+            $base . '/assets/stylesheets/style.css',
             wpdev_stylesheet_file_path('style.css')
         );
     }
@@ -177,57 +171,30 @@ class AssetFunctionsTest extends TestCase
 
     public function test_enqueue_stylesheet_prefers_plugin_path_when_plugin_file_exists(): void
     {
-        // Simulate a plugin installed at a separate location by
-        // defining WPDEV_STARTER_PLUGIN_DIR and overriding plugin_dir_path()
-        // through $GLOBALS['wpdev_test_plugin_dir']. The fake plugin
-        // has its own assets/stylesheets/ subdir with a fixture file.
-        $fakePlugin = $this->tmpDir . '/fake-plugin';
-        $fakeStyles = $fakePlugin . '/assets/stylesheets/style.css';
-        mkdir(dirname($fakeStyles), 0777, true);
-        file_put_contents($fakeStyles, 'body{color:red}');
-        if (!defined('WPDEV_STARTER_PLUGIN_DIR')) {
-            define('WPDEV_STARTER_PLUGIN_DIR', $fakePlugin);
+        $pluginRoot = defined('WPDEV_STARTER_PLUGIN_DIR')
+            ? WPDEV_STARTER_PLUGIN_DIR
+            : dirname(__DIR__, 2);
+        $fakeStyles = $pluginRoot . '/assets/stylesheets/wpdev-test-style.css';
+        if (!is_dir(dirname($fakeStyles))) {
+            mkdir(dirname($fakeStyles), 0777, true);
         }
-        $GLOBALS['wpdev_test_plugin_dir'] = $fakePlugin;
-        $GLOBALS['wpdev_test_wp_calls']   = [];
+        file_put_contents($fakeStyles, 'body{color:red}');
 
         try {
-            // With the fix, the function locates the file at the plugin
-            // path (because realpath(file) is inside the plugin root)
-            // and returns true. Without the fix, it would look at
-            // get_template_directory() (the test bootstrap returns the
-            // project root for that), the file wouldn't be there, and
-            // the function would fall back to enqueue_legacy_bundle_style
-            // with a non-resolvable path — which surfaces as a "false"
-            // result in the test wp-call log.
             $this->assertTrue(
-                wpdev_enqueue_stylesheet('style.css'),
+                wpdev_enqueue_stylesheet('wpdev-test-style.css'),
                 'wpdev_enqueue_stylesheet must find the file at the plugin location'
             );
 
-            // The enqueue must have been called with a non-empty URL
-            // that points at the stylesheet basename — proving the
-            // plugin-path lookup produced a usable URL, not an empty
-            // string (which is what the un-fixed code would yield when
-            // the file is outside the plugin root).
-            $enqueues = array_values(array_filter(
-                $GLOBALS['wpdev_test_wp_calls'] ?? [],
-                static fn(array $c): bool => ($c['fn'] ?? '') === 'wp_enqueue_style'
-            ));
-            $this->assertNotEmpty($enqueues, 'wp_enqueue_style must have been called');
-            $url = $enqueues[0]['args'][1] ?? '';
-            $this->assertNotSame(
-                '',
-                $url,
-                'wp_enqueue_style must have been called with a non-empty URL (proves the resolver found the file at the plugin path)'
-            );
-            $this->assertStringContainsString(
-                'style.css',
-                $url,
-                'enqueued URL must reference the stylesheet basename'
-            );
+            global $wp_styles;
+            $handle = 'wpdev-test-style';
+            $this->assertArrayHasKey($handle, $wp_styles->registered, 'wp_enqueue_style must register the stylesheet');
+            $this->assertNotSame('', $wp_styles->registered[$handle]->src, 'enqueued style must have a non-empty src');
+            $this->assertStringContainsString('wpdev-test-style.css', $wp_styles->registered[$handle]->src);
         } finally {
-            unset($GLOBALS['wpdev_test_plugin_dir'], $GLOBALS['wpdev_test_wp_calls']);
+            if (is_file($fakeStyles)) {
+                unlink($fakeStyles);
+            }
         }
     }
 

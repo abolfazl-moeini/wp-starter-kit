@@ -7,14 +7,7 @@
   "repositories": [
     {
       "type": "path",
-      "url": "packages/framework",
-      "options": {
-        "symlink": true
-      }
-    },
-    {
-      "type": "path",
-      "url": "packages/mcp-integration",
+      "url": "packages/*",
       "options": {
         "symlink": true
       }
@@ -40,7 +33,9 @@
     "wp-cli/wp-cli-bundle": "^2.11",
     "laminas/laminas-code": "^4.7",
     "wpdev/framework": "*@dev",
-    "wpdev/mcp-integration": "*@dev"
+    "wpdev/mcp-integration": "*@dev",
+    "wpdev/plugin-core-test": "^1.2",
+    "yoast/phpunit-polyfills": "^2.0"
   },
   "autoload": {
     "files": [
@@ -54,6 +49,11 @@
       "WPDev\\": "src/",
       "WPDev\\TestTools\\": "packages/php-test-tools/src/",
       "WPDev\\FaultTolerance\\": "packages/php-fault-tolerance/src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "WPDev\\Tests\\": "tests/phpunit/"
     }
   },
   "scripts": {

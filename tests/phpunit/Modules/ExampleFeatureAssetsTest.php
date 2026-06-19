@@ -3,17 +3,14 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\Modules;
 
-use PHPUnit\Framework\TestCase;
 use WPDev\Modules\ExampleFeature\Module;
 
-class ExampleFeatureAssetsTest extends TestCase
+class ExampleFeatureAssetsTest extends \WPDevTest\TestCases\TestCase
 {
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
-        wpdev_test_reset_wp_state();
-        $GLOBALS['wpdev_test_wp_calls'] = [];
-        $GLOBALS['wpdev_test_is_admin'] = true;
+        set_current_screen('index');
     }
 
     public function test_register_admin_assets_registers_example_feature_bundle(): void
@@ -21,56 +18,33 @@ class ExampleFeatureAssetsTest extends TestCase
         $module = new Module();
         $module->register_admin_assets();
 
-        $calls = $GLOBALS['wpdev_test_wp_calls'] ?? [];
-        $register = array_filter(
-            $calls,
-            static fn (array $call): bool => ($call['fn'] ?? '') === 'wp_register_script'
-        );
-        $enqueue = array_filter(
-            $calls,
-            static fn (array $call): bool => ($call['fn'] ?? '') === 'wp_enqueue_script'
-        );
-
-        $this->assertNotEmpty($register);
-        $this->assertEmpty($enqueue, 'register_admin_assets must not enqueue');
-
-        $first = array_values($register)[0];
-        $this->assertSame('example-feature-admin', $first['args'][0]);
+        global $wp_scripts;
+        $handle = 'example-feature-admin';
+        $this->assertArrayHasKey($handle, $wp_scripts->registered, 'register_admin_assets must register the script');
+        $this->assertFalse(wp_script_is($handle, 'enqueued'), 'register_admin_assets must not enqueue');
     }
 
     public function test_enqueue_admin_assets_enqueues_on_matching_admin_screen(): void
     {
         $module = new Module();
         $module->register_admin_assets();
-        $GLOBALS['wpdev_test_wp_calls'] = [];
-
+        wp_dequeue_script('example-feature-admin');
         $module->enqueue_admin_assets('toplevel_page_example-feature');
 
-        $calls = $GLOBALS['wpdev_test_wp_calls'] ?? [];
-        $enqueue = array_filter(
-            $calls,
-            static fn (array $call): bool => ($call['fn'] ?? '') === 'wp_enqueue_script'
-        );
-
-        $this->assertNotEmpty($enqueue);
-        $first = array_values($enqueue)[0];
-        $this->assertSame('example-feature-admin', $first['args'][0]);
+        global $wp_scripts;
+        $handle = 'example-feature-admin';
+        $this->assertTrue(wp_script_is($handle, 'enqueued'), 'enqueue_admin_assets must enqueue on matching screen');
     }
 
     public function test_enqueue_admin_assets_skips_unrelated_admin_screen(): void
     {
         $module = new Module();
         $module->register_admin_assets();
-        $GLOBALS['wpdev_test_wp_calls'] = [];
-
+        wp_dequeue_script('example-feature-admin');
         $module->enqueue_admin_assets('index.php');
 
-        $calls = $GLOBALS['wpdev_test_wp_calls'] ?? [];
-        $enqueue = array_filter(
-            $calls,
-            static fn (array $call): bool => ($call['fn'] ?? '') === 'wp_enqueue_script'
-        );
-
-        $this->assertEmpty($enqueue);
+        global $wp_scripts;
+        $handle = 'example-feature-admin';
+        $this->assertFalse(wp_script_is($handle, 'enqueued'), 'enqueue_admin_assets must skip unrelated screens');
     }
 }

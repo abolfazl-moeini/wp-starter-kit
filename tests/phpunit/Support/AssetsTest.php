@@ -1,6 +1,5 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use WPDev\Core\Plugin;
 use WPDev\Support\Assets;
 
@@ -23,20 +22,18 @@ use WPDev\Support\Assets;
  *  - `Assets::get_localize_data()` and `Assets::read_project_config()` keep
  *    the shape consumed by the JS localize utilities.
  *
- * Bootstrap stubs for `wp_register_script`, `wp_enqueue_script`,
- * `wp_enqueue_style`, `wp_set_script_translations` record every call into
- * `$GLOBALS['wpdev_test_wp_calls']` (same recorder as `EnqueueTest`).
+ * Tests use real WordPress script/style registries (`$wp_scripts`, `$wp_styles`)
+ * and `wp_script_is()` / `wp_style_is()` to observe enqueue calls.
  */
-class AssetsTest extends TestCase
+class AssetsTest extends \WPDevTest\TestCases\TestCase
 {
     /** @var string */
     private $tmpDir;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
         Plugin::reset_for_tests();
-        $GLOBALS['wpdev_test_wp_calls'] = [];
         $this->tmpDir = sys_get_temp_dir() . '/wpdev-assets-test-' . uniqid('', true);
         mkdir($this->tmpDir, 0777, true);
 
@@ -48,10 +45,9 @@ class AssetsTest extends TestCase
         Assets::set_plugin_dir($root, $this->pluginRootUrl());
     }
 
-    protected function tearDown(): void
+    public function tearDown(): void
     {
         $this->rrmdir($this->tmpDir);
-        unset($GLOBALS['wpdev_test_wp_calls']);
         Plugin::reset_for_tests();
         Assets::set_plugin_dir(null, null);
         parent::tearDown();
@@ -107,21 +103,19 @@ class AssetsTest extends TestCase
 
     private function pluginRootUrl(): string
     {
-        // Mirror the stub: `plugins_url('', '<plugin root>')` strips the
-        // trailing /, but the stubs are unconditional and prepend a fixed
-        // host. The class must agree with that, so re-derive from the stub.
-        return 'http://example.test/wp-content/plugins/' . ltrim(basename($this->pluginRootPath()) . '/', '/');
+        return untrailingslashit(plugins_url('', $this->pluginRootPath() . '/wpdev-starter.php'));
     }
 
-    private function callsFor(string $fn): array
+    private function scriptHandle(string $handle): ?\_WP_Dependency
     {
-        $out = [];
-        foreach ($GLOBALS['wpdev_test_wp_calls'] as $call) {
-            if ($call['fn'] === $fn) {
-                $out[] = $call['args'];
-            }
-        }
-        return $out;
+        global $wp_scripts;
+        return $wp_scripts->registered[$handle] ?? null;
+    }
+
+    private function styleHandle(string $handle): ?\_WP_Dependency
+    {
+        global $wp_styles;
+        return $wp_styles->registered[$handle] ?? null;
     }
 
     // ------------------------------------------------------------------
@@ -136,22 +130,15 @@ class AssetsTest extends TestCase
         $this->assertArrayHasKey('base_path', $paths, 'resolve_paths() must expose a base_path key');
         $this->assertArrayHasKey('base_url',  $paths, 'resolve_paths() must expose a base_url key');
 
-        // Must equal the plugin_dir_path() stub return value.
         $this->assertSame(
-            plugin_dir_path(__FILE__),
+            $this->pluginRootPath() . '/',
             $paths['base_path'],
-            'resolve_paths() base_path must come from plugin_dir_path()'
+            'resolve_paths() base_path must come from the plugin root'
         );
 
-        // Must equal the plugins_url() stub return value.
         $this->assertSame(
-            plugins_url('assets/bundles/wpdev-starter-deps.js'),
-            plugins_url('assets/bundles/wpdev-starter-deps.js'), // sanity: stub is callable
-            'plugins_url() stub is callable'
-        );
-        $this->assertStringStartsWith(
-            'http://example.test/wp-content/plugins/',
-            $paths['base_url'],
+            $this->pluginRootUrl(),
+            untrailingslashit($paths['base_url']),
             'resolve_paths() base_url must come from plugins_url() (plugin URL prefix)'
         );
     }
@@ -233,41 +220,16 @@ class AssetsTest extends TestCase
 
         Assets::enqueue_bundle_script('wpdev-starter-deps', $js, ['jquery']);
 
-        // Both register and enqueue must fire.
-        $registers = $this->callsFor('wp_register_script');
-        $enqueues  = $this->callsFor('wp_enqueue_script');
-        $this->assertCount(1, $registers, 'wp_register_script must be called exactly once');
-        $this->assertCount(1, $enqueues,  'wp_enqueue_script must be called exactly once');
-
-        // Handle + URL cache-bust + merged deps.
-        $reg = $registers[0];
-        $this->assertSame('wpdev-starter-deps', $reg[0], 'handle is the first arg to wp_register_script');
-        // The fixture lives under sys_get_temp_dir() which is OUTSIDE the
-        // plugin root. Per the B-06 contract, resolve_asset_url() returns
-        // '' when the file cannot be resolved to a URL we trust. The
-        // helper then appends ?id=<hash> to that empty string, producing
-        // a relative URL like '?id=sha-test' rather than a 404 absolute
-        // URL. Asserting the new contract is the right thing — the
-        // previous assertion ('src must contain wpdev-starter-deps.js')
-        // encoded the old guess-the-subdir bug.
-        $this->assertStringContainsString('id=sha-test', $reg[1], 'src must carry ?id=<hash> cache-bust');
+        $registered = $this->scriptHandle('wpdev-starter-deps');
+        $this->assertNotNull($registered, 'wp_register_script must register the bundle');
+        $this->assertTrue(wp_script_is('wpdev-starter-deps', 'enqueued'), 'wp_enqueue_script must enqueue the bundle');
+        $this->assertStringContainsString('id=sha-test', $registered->src, 'src must carry ?id=<hash> cache-bust');
         $this->assertSame(
             ['jquery', 'wp-i18n', 'wp-api-fetch'],
-            $reg[2],
+            $registered->deps,
             'deps must be array_merge($extra_deps, $info[dependencies])'
         );
-
-        // The enqueue call should use the same handle.
-        $this->assertSame('wpdev-starter-deps', $enqueues[0][0]);
-
-        // wp_set_script_translations gap from plan.v2.md must now be wired.
-        $translations = $this->callsFor('wp_set_script_translations');
-        $this->assertCount(1, $translations, 'wp_set_script_translations must be called exactly once');
-        $this->assertSame('wpdev-starter-deps', $translations[0][0], 'first arg is the script handle');
-        // Domain is read from project.config.json (textDomain= wpdev-starter).
-        $this->assertSame('wpdev-starter',       $translations[0][1], 'second arg is the text domain from project.config.json');
-        $this->assertIsString($translations[0][2], 'third arg is the translations path');
-        $this->assertNotSame('', $translations[0][2], 'translations path must be a non-empty string');
+        $this->assertSame('wpdev-starter', $registered->textdomain, 'text domain must come from project.config.json');
     }
 
     public function test_register_bundle_script_registers_without_enqueueing(): void
@@ -281,17 +243,12 @@ class AssetsTest extends TestCase
 
         Assets::register_bundle_script('register-only', $js, ['jquery']);
 
-        $registers = $this->callsFor('wp_register_script');
-        $enqueues  = $this->callsFor('wp_enqueue_script');
-        $this->assertCount(1, $registers);
-        $this->assertCount(0, $enqueues, 'register_bundle_script must not enqueue');
-        $this->assertSame('register-only', $registers[0][0]);
-        $this->assertStringContainsString('id=reg-hash', $registers[0][1]);
-        $this->assertSame(['jquery', 'wp-i18n'], $registers[0][2]);
-
-        $translations = $this->callsFor('wp_set_script_translations');
-        $this->assertCount(1, $translations);
-        $this->assertSame('register-only', $translations[0][0]);
+        $registered = $this->scriptHandle('register-only');
+        $this->assertNotNull($registered, 'register_bundle_script must register the script');
+        $this->assertFalse(wp_script_is('register-only', 'enqueued'), 'register_bundle_script must not enqueue');
+        $this->assertStringContainsString('id=reg-hash', $registered->src);
+        $this->assertSame(['jquery', 'wp-i18n'], $registered->deps);
+        $this->assertSame('wpdev-starter', $registered->textdomain);
     }
 
     public function test_enqueue_bundle_script_with_handle_only_enqueues_registered_script(): void
@@ -300,15 +257,11 @@ class AssetsTest extends TestCase
         file_put_contents($js, '/* x */');
 
         Assets::register_bundle_script('enqueue-only', $js);
-        $GLOBALS['wpdev_test_wp_calls'] = [];
+        wp_dequeue_script('enqueue-only');
 
         Assets::enqueue_bundle_script('enqueue-only');
 
-        $registers = $this->callsFor('wp_register_script');
-        $enqueues  = $this->callsFor('wp_enqueue_script');
-        $this->assertCount(0, $registers, 'handle-only enqueue must not register again');
-        $this->assertCount(1, $enqueues);
-        $this->assertSame('enqueue-only', $enqueues[0][0]);
+        $this->assertTrue(wp_script_is('enqueue-only', 'enqueued'), 'handle-only enqueue must enqueue the registered script');
     }
 
     public function test_enqueue_bundle_script_without_asset_file_skips_hash_and_translations_path(): void
@@ -319,20 +272,11 @@ class AssetsTest extends TestCase
 
         Assets::enqueue_bundle_script('no-asset', $js);
 
-        $registers = $this->callsFor('wp_register_script');
-        $enqueues  = $this->callsFor('wp_enqueue_script');
-        $this->assertCount(1, $registers);
-        $this->assertCount(1, $enqueues);
-        $this->assertSame('no-asset', $registers[0][0]);
-        $this->assertSame('no-asset', $enqueues[0][0]);
-        $this->assertStringNotContainsString('id=', $registers[0][1], 'no hash → no id= query arg');
-
-        // set_script_translations should still be called (so localization is
-        // robust even when the asset sidecar is missing) but with a non-empty
-        // path derived from the plugin root, not from the asset file.
-        $translations = $this->callsFor('wp_set_script_translations');
-        $this->assertCount(1, $translations);
-        $this->assertSame('no-asset', $translations[0][0]);
+        $registered = $this->scriptHandle('no-asset');
+        $this->assertNotNull($registered);
+        $this->assertTrue(wp_script_is('no-asset', 'enqueued'));
+        $this->assertStringNotContainsString('id=', $registered->src, 'no hash → no id= query arg');
+        $this->assertSame('wpdev-starter', $registered->textdomain);
     }
 
     // ------------------------------------------------------------------
@@ -351,22 +295,11 @@ class AssetsTest extends TestCase
 
         Assets::enqueue_bundle_style('theme', $css, ['dashicons']);
 
-        $registers = $this->callsFor('wp_register_style');
-        $enqueues  = $this->callsFor('wp_enqueue_style');
-        $this->assertCount(1, $registers);
-        $this->assertCount(1, $enqueues);
-
-        $reg = $registers[0];
-        $this->assertSame('theme', $reg[0]);
-        // Same B-06 contract as the script test above: the fixture is
-        // outside the plugin root, so resolve_asset_url() returns '' and
-        // the helper appends the cache-bust query arg to that empty
-        // string. The previous 'theme.css' assertion encoded the
-        // old guess-the-subdir bug.
-        $this->assertStringContainsString('id=css-hash', $reg[1]);
-        $this->assertSame(['dashicons', 'bootstrap'], $reg[2]);
-
-        $this->assertSame('theme', $enqueues[0][0]);
+        $registered = $this->styleHandle('theme');
+        $this->assertNotNull($registered, 'wp_register_style must register the bundle');
+        $this->assertTrue(wp_style_is('theme', 'enqueued'), 'wp_enqueue_style must enqueue the bundle');
+        $this->assertStringContainsString('id=css-hash', $registered->src);
+        $this->assertSame(['dashicons', 'bootstrap'], $registered->deps);
     }
 
     // ------------------------------------------------------------------

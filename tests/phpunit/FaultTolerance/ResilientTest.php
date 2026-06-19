@@ -3,12 +3,11 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\FaultTolerance;
 
-use PHPUnit\Framework\TestCase;
 use WPDev\FaultTolerance\Resilient;
 
-class ResilientTest extends TestCase
+class ResilientTest extends \WPDevTest\TestCases\TestCase
 {
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
         if (PHP_VERSION_ID < 80100) {

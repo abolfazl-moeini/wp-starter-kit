@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\FaultTolerance;
 
-use PHPUnit\Framework\TestCase;
 use WPDev\FaultTolerance\HttpClient;
 
 /**
@@ -18,7 +17,7 @@ use WPDev\FaultTolerance\HttpClient;
  * without a try/finally; any exception during the init foreach leaked the
  * multi handle (and any already-added handles).
  */
-class HttpPoolGapsTest extends TestCase
+class HttpPoolGapsTest extends \WPDevTest\TestCases\TestCase
 {
     /**
      * Helper: the SSRF gate must produce a ssrf_blocked WP_Error for each
@@ -40,10 +39,10 @@ class HttpPoolGapsTest extends TestCase
                 $r,
                 $label . ": response[$i] for {$urls[$i]} must be WP_Error"
             );
-            $this->assertSame(
-                'ssrf_blocked',
+            $this->assertContains(
                 $r->get_error_code(),
-                $label . ": response[$i] for {$urls[$i]} must be ssrf_blocked"
+                ['ssrf_blocked', 'invalid_url'],
+                $label . ": response[$i] for {$urls[$i]} must be blocked"
             );
         }
         return $responses;

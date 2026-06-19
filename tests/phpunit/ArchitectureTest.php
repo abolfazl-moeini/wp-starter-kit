@@ -1,12 +1,11 @@
 <?php
 declare(strict_types=1);
 
-use PHPUnit\Framework\TestCase;
 
 /**
  * Locks the composer test:architecture contract for feature modules.
  */
-class ArchitectureTest extends TestCase
+class ArchitectureTest extends \WPDevTest\TestCases\TestCase
 {
     public function test_every_src_module_has_a_phpunit_test(): void
     {

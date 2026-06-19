@@ -1,6 +1,5 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 
 /**
  * Tests for `wpdev_get_localize_data()`.
@@ -15,7 +14,7 @@ use PHPUnit\Framework\TestCase;
  *   localize.get('api_x.url') → secondary API URL
  *   localize.get('api_x.nonce') → secondary nonce
  */
-class LocalizeTest extends TestCase
+class LocalizeTest extends \WPDevTest\TestCases\TestCase
 {
     public function test_get_localize_data_returns_expected_api_shape(): void
     {

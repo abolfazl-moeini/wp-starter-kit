@@ -1,6 +1,5 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use WPDev\Core\AbstractModule;
 use WPDev\Core\ModuleInterface;
 use WPDev\Core\ModuleLoader;
@@ -83,9 +82,9 @@ final class ConditionalModule extends AbstractModule
  *    registration order
  *  - get() / has() / all() are pure lookups
  */
-class ModuleLoaderTest extends TestCase
+class ModuleLoaderTest extends \WPDevTest\TestCases\TestCase
 {
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
         RecordingModule::$bootLog = [];

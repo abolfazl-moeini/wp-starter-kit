@@ -1,6 +1,5 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 
 /**
  * Tests for the scaffolded `{slug}.php` plugin bootstrap template.
@@ -31,7 +30,7 @@ use PHPUnit\Framework\TestCase;
  * which is enough to prove the RED→GREEN contract: the test file
  * fails before the template is written and passes once it is.
  */
-class PluginBootstrapTest extends TestCase
+class PluginBootstrapTest extends \WPDevTest\TestCases\TestCase
 {
     /**
      * Absolute path to the template file under test.

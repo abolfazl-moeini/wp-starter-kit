@@ -3,13 +3,12 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\Release;
 
-use PHPUnit\Framework\TestCase;
 
-class VendorScopingIntegrationTest extends TestCase
+class VendorScopingIntegrationTest extends \WPDevTest\TestCases\TestCase
 {
     private string $fixtures;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
         $this->fixtures = dirname(__DIR__, 2) . '/fixtures/conflict-plugins';

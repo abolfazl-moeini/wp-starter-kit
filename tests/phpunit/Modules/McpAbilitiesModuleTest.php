@@ -3,10 +3,9 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\Modules;
 
-use PHPUnit\Framework\TestCase;
 use WPDev\Modules\McpAbilities\Module;
 
-class McpAbilitiesModuleTest extends TestCase
+class McpAbilitiesModuleTest extends \WPDevTest\TestCases\TestCase
 {
     public function test_slug_is_non_empty_kebab_case(): void
     {

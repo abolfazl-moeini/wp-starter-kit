@@ -1,6 +1,5 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use WPDev\Core\ModuleInterface;
 
 /**
@@ -15,7 +14,7 @@ use WPDev\Core\ModuleInterface;
  * RED — these tests fail until `src/Core/ModuleInterface.php` exists
  * with the expected `boot(): void` and `get_slug(): string` shape.
  */
-class ModuleInterfaceTest extends TestCase
+class ModuleInterfaceTest extends \WPDevTest\TestCases\TestCase
 {
     public function test_module_interface_exists(): void
     {

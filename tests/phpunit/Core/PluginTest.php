@@ -1,6 +1,5 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 use WPDev\Core\ModuleInterface;
 use WPDev\Core\ModuleLoader;
 use WPDev\Core\Plugin;
@@ -48,25 +47,15 @@ final class PluginTestStubModule implements ModuleInterface
  *    and exposes the fired hook prefix through Plugin::last_loaded_hook()
  *  - the plugin is theme-agnostic — never touches get_template_directory()
  */
-class PluginTest extends TestCase
+class PluginTest extends \WPDevTest\TestCases\TestCase
 {
     /** @var string */
     private $tmpDir;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
         PluginTestStubModule::reset();
-
-        // Reset the WP action shim state so a previous test's
-        // `add_action('init', ...)` does not leak into the next
-        // test's assertions. PluginBootstrapTest in particular
-        // registers callbacks on multiple hooks; without this
-        // reset, PluginTest would see an `init` callback that the
-        // current test never registered.
-        if (function_exists('wpdev_test_reset_wp_state')) {
-            wpdev_test_reset_wp_state();
-        }
 
         // Plugin keeps static state — reset the singleton instance and
         // any internal state between tests by reflecting on the class.
@@ -103,7 +92,7 @@ class PluginTest extends TestCase
         mkdir($this->tmpDir, 0777, true);
     }
 
-    protected function tearDown(): void
+    public function tearDown(): void
     {
         if ($this->tmpDir !== null && is_dir($this->tmpDir)) {
             $this->rrmdir($this->tmpDir);
@@ -188,7 +177,7 @@ class PluginTest extends TestCase
         $this->assertSame(
             'wpdev_plugin_loaded',
             Plugin::last_loaded_hook(),
-            'Plugin::boot() must record the hook name it fired (no real do_action observable in stub environment)'
+            'Plugin::boot() must record the hook name it fired'
         );
     }
 
@@ -363,18 +352,13 @@ class PluginTest extends TestCase
 
         Plugin::boot($configPath);
 
-        $wpActions = $GLOBALS['wpdev_wp_actions'] ?? [];
-
-        $this->assertArrayHasKey(
-            'plugins_loaded',
-            $wpActions,
+        $this->assertNotFalse(
+            has_action('plugins_loaded', [Plugin::class, 'on_plugins_loaded']),
             'Plugin::boot() must register on_plugins_loaded on plugins_loaded'
         );
-        $this->assertArrayNotHasKey(
-            'init',
-            $wpActions,
-            'Plugin::boot() must NOT register on_plugins_loaded on init — '
-            . 'dual registration causes boot_all() to run twice per request (B-02 regression)'
+        $this->assertFalse(
+            has_action('init', [Plugin::class, 'on_plugins_loaded']),
+            'Plugin::boot() must NOT register on_plugins_loaded on init — dual registration causes double boot'
         );
     }
 
@@ -473,11 +457,14 @@ class PluginTest extends TestCase
             'textDomain' => 'wpdev-starter',
         ]));
 
-        define('TEST_WPDEV_CONSTANT_PLUGIN_DIR', $tempDir);
+        Plugin::set_plugin_dir($tempDir);
+        try {
+            Plugin::boot(null);
 
-        Plugin::boot();
-
-        $config = Plugin::loaded_config();
-        $this->assertSame('wpdev-starter-constant', $config['slug'] ?? '');
+            $config = Plugin::loaded_config();
+            $this->assertSame('wpdev-starter-constant', $config['slug'] ?? '');
+        } finally {
+            Plugin::set_plugin_dir(null);
+        }
     }
 }

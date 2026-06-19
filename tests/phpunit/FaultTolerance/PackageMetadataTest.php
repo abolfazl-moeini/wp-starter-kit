@@ -3,13 +3,12 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\FaultTolerance;
 
-use PHPUnit\Framework\TestCase;
 
-class PackageMetadataTest extends TestCase
+class PackageMetadataTest extends \WPDevTest\TestCases\TestCase
 {
     private string $root;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
         if (PHP_VERSION_ID < 80100) {

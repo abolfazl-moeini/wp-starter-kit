@@ -3,13 +3,12 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\Release;
 
-use PHPUnit\Framework\TestCase;
 
-class StraussConfigTest extends TestCase
+class StraussConfigTest extends \WPDevTest\TestCases\TestCase
 {
     private string $root;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
         $this->root = dirname(__DIR__, 3);

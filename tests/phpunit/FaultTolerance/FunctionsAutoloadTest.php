@@ -1,9 +1,8 @@
 <?php
 declare(strict_types=1);
 
-use PHPUnit\Framework\TestCase;
 
-final class FunctionsAutoloadTest extends TestCase
+final class FunctionsAutoloadTest extends \WPDevTest\TestCases\TestCase
 {
     public function test_functions_file_noops_below_php_81(): void
     {

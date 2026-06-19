@@ -1,6 +1,5 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
 
 /**
  * Verifies the PSR-4 autoload entry for the WPDev production source tree
@@ -13,7 +12,7 @@ use PHPUnit\Framework\TestCase;
  * autoloader is regenerated, and a class is dropped under
  * `src/Core/`.
  */
-class SrcPsr4Test extends TestCase
+class SrcPsr4Test extends \WPDevTest\TestCases\TestCase
 {
     /** @var string */
     private $composerJsonPath;
@@ -21,7 +20,7 @@ class SrcPsr4Test extends TestCase
     /** @var array<string,mixed> */
     private $composer;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
 

@@ -3,19 +3,17 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\FaultTolerance;
 
-use PHPUnit\Framework\TestCase;
 use WPDev\FaultTolerance\CircuitBreaker;
 use WPDev\FaultTolerance\CircuitState;
 
-class CircuitBreakerTest extends TestCase
+class CircuitBreakerTest extends \WPDevTest\TestCases\TestCase
 {
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
         if (PHP_VERSION_ID < 80100) {
             $this->markTestSkipped('Fault tolerance package requires PHP 8.1+');
         }
-        wpdev_test_reset_wp_state();
     }
 
     public function test_starts_closed_and_opens_after_threshold(): void

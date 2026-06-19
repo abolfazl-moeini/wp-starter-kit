@@ -3,20 +3,19 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\Support\Rest;
 
-use PHPUnit\Framework\TestCase;
 use WPDev\Core\Plugin;
 use WPDev\Support\Rest\AllowBatch;
 use WPDev\Support\Rest\RestHandler;
 use WPDev\Support\Rest\RestSetup;
 
-class RestSetupTest extends TestCase
+class RestSetupTest extends \WPDevTest\TestCases\TestCase
 {
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
-        wpdev_test_reset_wp_state();
         RestSetup::flush();
         Plugin::reset_for_tests();
+        $this->reset_rest_server();
     }
 
     public function test_register_prevents_duplicate_handlers(): void
@@ -34,22 +33,22 @@ class RestSetupTest extends TestCase
         Plugin::boot($configPath);
 
         RestSetup::register(TestRestHandler::class);
-        RestSetup::rest_init();
+        $this->init_rest_server();
 
-        $this->assertCount(1, $GLOBALS['wpdev_wp_rest_routes']);
-        $this->assertSame('custom/v2', $GLOBALS['wpdev_wp_rest_routes'][0]['namespace']);
-        $this->assertSame('test-items', $GLOBALS['wpdev_wp_rest_routes'][0]['route']);
+        $routes = rest_get_server()->get_routes();
+        $this->assertArrayHasKey('/custom/v2/test-items', $routes, 'REST route must be registered');
     }
 
     public function test_allow_batch_is_passed_through(): void
     {
         Plugin::boot(dirname(__DIR__, 4) . '/project.config.json');
         RestSetup::register(BatchRestHandler::class);
-        RestSetup::rest_init();
+        $this->init_rest_server();
 
-        $args = $GLOBALS['wpdev_wp_rest_routes'][0]['args'];
-        $this->assertArrayHasKey('allow_batch', $args);
-        $this->assertSame(['v1' => true], $args['allow_batch']);
+        $routes = rest_get_server()->get_routes();
+        $route_args = $routes['/wpdev/v1/test-items'][0] ?? $routes['/wpdev/v1/test-items'][1] ?? [];
+        $this->assertArrayHasKey('allow_batch', $route_args, 'allow_batch must be in route args');
+        $this->assertSame(['v1' => true], $route_args['allow_batch']);
     }
 
     /**
@@ -83,6 +82,20 @@ class RestSetupTest extends TestCase
         $handler = new TestRestHandler();
         $this->assertTrue(RestSetup::register($handler));
         $this->assertCount(1, RestSetup::routes());
+    }
+
+    private function reset_rest_server(): void
+    {
+        global $wp_rest_server, $wp_actions;
+
+        $wp_rest_server = null;
+        unset($wp_actions['rest_api_init']);
+    }
+
+    private function init_rest_server(): void
+    {
+        $this->reset_rest_server();
+        rest_get_server();
     }
 
     private function writeTempConfig(array $overrides): string

@@ -23,16 +23,15 @@
  *       the committed file, so context matching actually fails.
  */
 
-use PHPUnit\Framework\TestCase;
 use WPDev\TestTools\Patch\Cli;
 use WPDev\TestTools\Patch\GitPatch;
 
-class PatchApplyTest extends TestCase
+class PatchApplyTest extends \WPDevTest\TestCases\TestCase
 {
     /** @var string */
     private $tmpRoot;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -52,7 +51,7 @@ class PatchApplyTest extends TestCase
         $this->runInShell('git config user.name test');
     }
 
-    protected function tearDown(): void
+    public function tearDown(): void
     {
         $this->wpdevRrmdir($this->tmpRoot);
         Cli::$errors = [];

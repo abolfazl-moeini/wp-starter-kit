@@ -25,9 +25,8 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\Framework;
 
-use PHPUnit\Framework\TestCase;
 
-class PackageMetadataTest extends TestCase
+class PackageMetadataTest extends \WPDevTest\TestCases\TestCase
 {
     /** @var string */
     private $pkgComposerPath;
@@ -35,7 +34,7 @@ class PackageMetadataTest extends TestCase
     /** @var array<string,mixed> */
     private $pkg;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
 

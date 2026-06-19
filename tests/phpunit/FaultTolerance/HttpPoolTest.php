@@ -3,10 +3,9 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\FaultTolerance;
 
-use PHPUnit\Framework\TestCase;
 use WPDev\FaultTolerance\HttpClient;
 
-class HttpPoolTest extends TestCase
+class HttpPoolTest extends \WPDevTest\TestCases\TestCase
 {
     public function test_http_pool_blocks_private_hosts(): void
     {

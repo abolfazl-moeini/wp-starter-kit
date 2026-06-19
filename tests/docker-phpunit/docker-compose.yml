@@ -1,0 +1,56 @@
+services:
+  wpdev-starter-phpunit-db:
+    container_name: wpdev-starter-phpunit-db
+    image: arm64v8/mysql
+    platform: linux/arm64/v8
+    networks:
+      shared_net:
+        aliases:
+          - db
+    restart: "no"
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-wp_tests}
+      MYSQL_USER: ${DB_USER:-wp_test_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-wp_test_pass}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    volumes:
+      - wpdev-starter-phpunit-db-data:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${DB_ROOT_PASSWORD:-root}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  wpdev-starter-phpunit-php:
+    container_name: wpdev-starter-phpunit-php
+    image: arm64v8/wordpress:php8.1-apache
+    platform: linux/arm64/v8
+    networks: [shared_net]
+    restart: "no"
+    depends_on:
+      wpdev-starter-phpunit-db:
+        condition: service_healthy
+    volumes:
+      - ${PLUGIN_ROOT}:/var/www/plugin
+      - ${WORDPRESS_DEVELOP_ROOT}:/var/www/wordpress-develop
+      - ${DOCKER_PHPUNIT_DIR}:/var/www/docker-phpunit
+    working_dir: /var/www/plugin
+    command: ["bash", "-c", "tail -f /dev/null"]
+
+volumes:
+  wpdev-starter-phpunit-db-data:
+
+networks:
+  shared_net:
+    external: true

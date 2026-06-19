@@ -3,10 +3,9 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\Support\Rest;
 
-use PHPUnit\Framework\TestCase;
 use WPDev\Support\Rest\RestHandler;
 
-class RestHandlerTest extends TestCase
+class RestHandlerTest extends \WPDevTest\TestCases\TestCase
 {
     public function test_rest_response_wraps_handler_and_returns_payload(): void
     {
@@ -33,8 +32,8 @@ class RestHandlerTest extends TestCase
         };
 
         $response = $handler->rest_response(new \WP_REST_Request());
-        $this->assertSame(['value' => 42], $response->data);
-        $this->assertSame(200, $response->status);
+        $this->assertSame(['value' => 42], $response->get_data());
+        $this->assertSame(200, $response->get_status());
     }
 
     public function test_rest_response_converts_throwables_to_safe_error_payload(): void
@@ -62,9 +61,9 @@ class RestHandlerTest extends TestCase
         };
 
         $response = $handler->rest_response(new \WP_REST_Request());
-        $this->assertFalse($response->data['success']);
-        $this->assertSame('boom', $response->data['message']);
-        $this->assertSame(403, $response->status);
+        $this->assertFalse($response->get_data()['success']);
+        $this->assertSame('boom', $response->get_data()['message']);
+        $this->assertSame(403, $response->get_status());
     }
 
     public function test_rest_response_defaults_to_500_for_out_of_range_exception_codes(): void
@@ -92,8 +91,8 @@ class RestHandlerTest extends TestCase
         };
 
         $response = $handler->rest_response(new \WP_REST_Request());
-        $this->assertSame(500, $response->status);
-        $this->assertSame(500, $response->data['code']);
+        $this->assertSame(500, $response->get_status());
+        $this->assertSame(500, $response->get_data()['code']);
     }
 
     /**
@@ -134,24 +133,24 @@ class RestHandlerTest extends TestCase
 
         $response = $handler->rest_response(new \WP_REST_Request());
 
-        $this->assertSame(500, $response->status, '5xx status is preserved');
+        $this->assertSame(500, $response->get_status(), '5xx status is preserved');
         $this->assertIsString(
-            $response->data['message'],
+            $response->get_data()['message'],
             'A message field is still present (so the client can react)'
         );
         $this->assertStringNotContainsString(
             'PDOException',
-            $response->data['message'],
+            $response->get_data()['message'],
             '5xx message must NOT echo the raw exception text (information disclosure)'
         );
         $this->assertStringNotContainsString(
             '/var/www/secret',
-            $response->data['message'],
+            $response->get_data()['message'],
             '5xx message must NOT echo filesystem paths from the exception'
         );
         $this->assertStringNotContainsString(
             'SQLSTATE',
-            $response->data['message'],
+            $response->get_data()['message'],
             '5xx message must NOT echo SQL fragments from the exception'
         );
     }
@@ -189,10 +188,10 @@ class RestHandlerTest extends TestCase
 
         $response = $handler->rest_response(new \WP_REST_Request());
 
-        $this->assertSame(422, $response->status);
+        $this->assertSame(422, $response->get_status());
         $this->assertSame(
             'Validation failed: missing field "email"',
-            $response->data['message'],
+            $response->get_data()['message'],
             '4xx messages are safe to pass through (handler is the source of truth)'
         );
     }

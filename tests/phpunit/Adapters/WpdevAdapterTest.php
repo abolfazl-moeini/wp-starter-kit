@@ -3,11 +3,10 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\Adapters;
 
-use PHPUnit\Framework\TestCase;
 use WPDev\Adapters\WpdevModuleAdapter;
 use WPDev\Core\ModuleInterface;
 
-class WpdevAdapterTest extends TestCase
+class WpdevAdapterTest extends \WPDevTest\TestCases\TestCase
 {
     public function test_adapter_bridges_module_interface_slug_and_boot(): void
     {
@@ -69,15 +68,19 @@ class WpdevAdapterTest extends TestCase
 
     /**
      * @runInSeparateProcess
+     * @preserveGlobalState disabled
      */
     public function test_attach_defers_to_wpdev_on_load_when_framework_active(): void
     {
-        eval('
-            function wpdev_register_table() {}
-            function wpdev_on_load($cb) {
-                $GLOBALS["wpdev_on_load_called"] = $cb;
+        if (!function_exists('wpdev_register_table')) {
+            function wpdev_register_table(): void {}
+        }
+        if (!function_exists('wpdev_on_load')) {
+            function wpdev_on_load($cb): void
+            {
+                $GLOBALS['wpdev_on_load_called'] = $cb;
             }
-        ');
+        }
 
         $this->assertTrue(WpdevModuleAdapter::is_framework_active());
 

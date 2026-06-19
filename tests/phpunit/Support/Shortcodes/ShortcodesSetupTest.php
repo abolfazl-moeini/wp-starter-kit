@@ -3,16 +3,14 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\Support\Shortcodes;
 
-use PHPUnit\Framework\TestCase;
 use WPDev\Support\Shortcodes\Shortcode;
 use WPDev\Support\Shortcodes\ShortcodesSetup;
 
-class ShortcodesSetupTest extends TestCase
+class ShortcodesSetupTest extends \WPDevTest\TestCases\TestCase
 {
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
-        wpdev_test_reset_wp_state();
         ShortcodesSetup::flush();
     }
 
@@ -21,7 +19,7 @@ class ShortcodesSetupTest extends TestCase
         ShortcodesSetup::register('wpdev_demo', DemoShortcode::class);
         ShortcodesSetup::append_shortcodes();
 
-        $this->assertArrayHasKey('wpdev_demo', $GLOBALS['wpdev_wp_shortcodes']);
+        $this->assertTrue(shortcode_exists('wpdev_demo'), 'wpdev_demo shortcode must be registered');
 
         $output = ShortcodesSetup::render_shortcode(['name' => 'Alice'], '', 'wpdev_demo');
         $this->assertStringContainsString('Hello Alice', $output);

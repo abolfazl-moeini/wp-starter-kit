@@ -26,9 +26,8 @@
 
 declare(strict_types=1);
 
-use PHPUnit\Framework\TestCase;
 
-final class TranslationBootstrapTest extends TestCase
+final class TranslationBootstrapTest extends \WPDevTest\TestCases\TestCase
 {
     public function test_node_helper_file_exists(): void
     {

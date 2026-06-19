@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    bootstrap="tests/phpunit/bootstrap.php"
+    backupGlobals="false"
+    colors="true"
+    verbose="true"
+>
+    <testsuites>
+        <testsuite name="wp-starter-kit">
+            <directory suffix=".php">./tests/phpunit</directory>
+            <exclude>./tests/phpunit/TestCases</exclude>
+            <exclude>./tests/phpunit/fixtures</exclude>
+        </testsuite>
+    </testsuites>
+
+    <php>
+        <!-- Container paths set by run-phpunit.sh via WP_TESTS_DIR env override -->
+        <env name="WP_TESTS_DIR"    value="/var/www/wordpress-tests-lib"/>
+        <env name="BOOTSTRAP_FILE"  value="/var/www/plugin/wpdev-starter.php"/>
+        <env name="PLUGIN_ROOT"     value="/var/www/plugin"/>
+    </php>
+</phpunit>

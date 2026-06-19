@@ -3,16 +3,14 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\Modules;
 
-use PHPUnit\Framework\TestCase;
 use WPDev\Core\Plugin;
 use WPDev\Modules\Blocks\Module;
 
-class BlocksModuleTest extends TestCase
+class BlocksModuleTest extends \WPDevTest\TestCases\TestCase
 {
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
-        wpdev_test_reset_wp_state();
         Plugin::reset_for_tests();
     }
 
@@ -50,8 +48,9 @@ class BlocksModuleTest extends TestCase
         Plugin::loader()->register($module);
         Plugin::on_plugins_loaded();
 
-        $this->assertTrue(
-            has_action('admin_notices', [Module::class, 'missing_blockstudio_notice'])
+        $this->assertNotFalse(
+            has_action('admin_notices', [Module::class, 'missing_blockstudio_notice']),
+            'admin_notices hook must register missing_blockstudio_notice when Blockstudio is absent'
         );
     }
 

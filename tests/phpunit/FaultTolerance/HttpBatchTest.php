@@ -3,13 +3,27 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\FaultTolerance;
 
-use PHPUnit\Framework\TestCase;
 use WPDev\FaultTolerance\HttpClient;
 
-class HttpBatchTest extends TestCase
+class HttpBatchTest extends \WPDevTest\TestCases\TestCase
 {
     public function test_http_batch_returns_sequential_responses(): void
     {
+        add_filter(
+            'pre_http_request',
+            static function ($pre, $args, $url) {
+                return [
+                    'headers'  => [],
+                    'body'     => 'ok',
+                    'response' => ['code' => 200, 'message' => 'OK'],
+                    'cookies'  => [],
+                    'filename' => null,
+                ];
+            },
+            10,
+            3
+        );
+
         $responses = HttpClient::batch([
             ['url' => 'https://example.test/a'],
             ['url' => 'https://example.test/b'],
@@ -38,7 +52,7 @@ class HttpBatchTest extends TestCase
 
         $this->assertCount(1, $responses);
         $this->assertInstanceOf(\WP_Error::class, $responses[0]);
-        $this->assertSame('ssrf_blocked', $responses[0]->get_error_code());
+        $this->assertSame('invalid_url', $responses[0]->get_error_code(), 'sanitize_url() strips non-http schemes before SSRF check');
     }
 
     public function test_http_batch_blocks_empty_url(): void

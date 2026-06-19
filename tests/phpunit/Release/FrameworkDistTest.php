@@ -6,13 +6,12 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\Release;
 
-use PHPUnit\Framework\TestCase;
 
-class FrameworkDistTest extends TestCase
+class FrameworkDistTest extends \WPDevTest\TestCases\TestCase
 {
     private string $root;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
         $this->root = dirname(__DIR__, 3);
@@ -34,7 +33,7 @@ class FrameworkDistTest extends TestCase
             $this->removeTree($distDir);
         }
 
-        $cmd = 'php ' . escapeshellarg($this->root . '/dev/release/build-dist.php');
+        $cmd = 'php ' . escapeshellarg($this->root . '/dev/release/build-dist.php') . ' --skip-freshness';
         exec($cmd . ' 2>&1', $output, $exitCode);
 
         return [$distDir, $exitCode, $output];

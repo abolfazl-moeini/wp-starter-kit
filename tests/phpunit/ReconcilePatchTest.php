@@ -23,7 +23,6 @@
  *       the committed file, so context matching actually fails.
  */
 
-use PHPUnit\Framework\TestCase;
 use WPDev\TestTools\Patch\Cli;
 use WPDev\TestTools\Patch\GitPatch;
 
@@ -54,12 +53,12 @@ function wpdev_patch_test_make_hello_patch_at_root(string $root): string
     return $patch_file;
 }
 
-class ReconcilePatchTest extends TestCase
+class ReconcilePatchTest extends \WPDevTest\TestCases\TestCase
 {
     /** @var string */
     private $tmpRoot;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
 
@@ -80,7 +79,7 @@ class ReconcilePatchTest extends TestCase
         $this->runInShell('git config user.name test');
     }
 
-    protected function tearDown(): void
+    public function tearDown(): void
     {
         // The temp root contains a .git directory; rrmdir handles that
         // by simply unlinking the .git symlink/dir first, then the rest.

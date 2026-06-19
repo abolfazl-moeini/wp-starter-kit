@@ -3,15 +3,13 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\Support\Queue;
 
-use PHPUnit\Framework\TestCase;
 use WPDev\Support\Queue\DeferredCall;
 
-class DeferredCallTest extends TestCase
+class DeferredCallTest extends \WPDevTest\TestCases\TestCase
 {
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
-        wpdev_test_reset_wp_state();
         DeferredCall::reset_for_tests();
     }
 
@@ -26,18 +24,22 @@ class DeferredCallTest extends TestCase
 
     public function test_supports_priority(): void
     {
-        DeferredCall::queue('wp_loaded', [
+        DeferredCall::queue('deferred_priority_hook', [
             'callback' => static fn () => null,
             'priority' => 5,
         ]);
 
-        $this->assertTrue(has_action('wp_loaded', [DeferredCall::class, 'run_queue']));
+        $this->assertSame(
+            5,
+            has_action('deferred_priority_hook', [DeferredCall::class, 'run_queue']),
+            'queue() must register run_queue at the requested priority'
+        );
     }
 
     public function test_validates_callback(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        DeferredCall::queue('wp_loaded', ['callback' => 'not-a-callable']);
+        DeferredCall::queue('deferred_validate_hook', ['callback' => 'not-a-callable']);
     }
 
     public function test_run_queue_executes_queued_callbacks(): void
@@ -101,12 +103,12 @@ class DeferredCallTest extends TestCase
     {
         DeferredCall::queue('drift_hook', [
             'callback' => static fn () => null,
-            'priority' => 5,
+            'priority' => 10,
         ]);
-        $this->assertArrayHasKey(
-            5,
-            $GLOBALS['wpdev_wp_actions']['drift_hook'],
-            'first queue() registers at priority 5'
+        $this->assertSame(
+            10,
+            has_action('drift_hook', [DeferredCall::class, 'run_queue']),
+            'first queue() registers at priority 10'
         );
 
         DeferredCall::queue('drift_hook', [
@@ -114,15 +116,16 @@ class DeferredCallTest extends TestCase
             'priority' => 99,
         ]);
 
-        $this->assertArrayHasKey(
+        $this->assertSame(
             99,
-            $GLOBALS['wpdev_wp_actions']['drift_hook'],
+            has_action('drift_hook', [DeferredCall::class, 'run_queue']),
             'second queue() with priority 99 must move the registration to priority 99'
         );
+        global $wp_filter;
         $this->assertArrayNotHasKey(
-            5,
-            $GLOBALS['wpdev_wp_actions']['drift_hook'],
-            'the stale priority-5 registration must be removed — leaving both would double-fire run_queue'
+            10,
+            $wp_filter['drift_hook']->callbacks ?? [],
+            'the stale priority-10 registration must be removed — leaving both would double-fire run_queue'
         );
     }
 
@@ -140,10 +143,11 @@ class DeferredCallTest extends TestCase
             'priority' => 7,
         ]);
 
-        $this->assertArrayHasKey(7, $GLOBALS['wpdev_wp_actions']['same_priority_hook']);
+        global $wp_filter;
+        $this->assertArrayHasKey(7, $wp_filter['same_priority_hook']->callbacks ?? []);
         $this->assertCount(
             1,
-            $GLOBALS['wpdev_wp_actions']['same_priority_hook'][7],
+            $wp_filter['same_priority_hook']->callbacks[7],
             'same-priority queues must not duplicate the run_queue registration'
         );
     }

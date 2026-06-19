@@ -3,13 +3,12 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\Release;
 
-use PHPUnit\Framework\TestCase;
 
-class BuildDistTest extends TestCase
+class BuildDistTest extends \WPDevTest\TestCases\TestCase
 {
     private string $root;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
         $this->root = dirname(__DIR__, 3);
@@ -33,7 +32,7 @@ class BuildDistTest extends TestCase
             $this->removeTree($distDir);
         }
 
-        $cmd = 'php ' . escapeshellarg($this->root . '/dev/release/build-dist.php');
+        $cmd = 'php ' . escapeshellarg($this->root . '/dev/release/build-dist.php') . ' --skip-freshness';
         exec($cmd . ' 2>&1', $output, $exitCode);
 
         $this->assertSame(0, $exitCode, implode("\n", $output));

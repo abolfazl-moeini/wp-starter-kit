@@ -3,9 +3,8 @@ declare(strict_types=1);
 
 namespace WPDev\Tests\Release;
 
-use PHPUnit\Framework\TestCase;
 
-class ReleaseScriptTest extends TestCase
+class ReleaseScriptTest extends \WPDevTest\TestCases\TestCase
 {
     public function test_release_script_runs_rector_prefix_and_fix_autoloader(): void
     {

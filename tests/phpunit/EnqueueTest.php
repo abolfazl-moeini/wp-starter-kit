@@ -1,32 +1,23 @@
 <?php
 
-use PHPUnit\Framework\TestCase;
-
 /**
  * Tests for `wpdev_enqueue_bundle_script` and `wpdev_enqueue_bundle_style`.
- *
- * The bootstrap stubs for `wp_register_script` / `wp_enqueue_script` /
- * `wp_enqueue_style` record into `$GLOBALS['wpdev_test_wp_calls']` when the
- * recorder is installed. Each test installs it in `setUp`, then asserts on
- * the captured call shape.
  */
-class EnqueueTest extends TestCase
+class EnqueueTest extends \WPDevTest\TestCases\TestCase
 {
     /** @var string */
     private $tmpDir;
 
-    protected function setUp(): void
+    public function setUp(): void
     {
         parent::setUp();
-        $GLOBALS['wpdev_test_wp_calls'] = [];
         $this->tmpDir = sys_get_temp_dir() . '/wpdev-enqueue-test-' . uniqid('', true);
         mkdir($this->tmpDir, 0777, true);
     }
 
-    protected function tearDown(): void
+    public function tearDown(): void
     {
         $this->rrmdir($this->tmpDir);
-        unset($GLOBALS['wpdev_test_wp_calls']);
         parent::tearDown();
     }
 
@@ -59,17 +50,6 @@ class EnqueueTest extends TestCase
         file_put_contents($assetPath, '<?php return ' . var_export($data, true) . ';');
     }
 
-    private function callsFor(string $fn): array
-    {
-        $out = [];
-        foreach ($GLOBALS['wpdev_test_wp_calls'] as $call) {
-            if ($call['fn'] === $fn) {
-                $out[] = $call['args'];
-            }
-        }
-        return $out;
-    }
-
     public function test_enqueue_bundle_script_uses_hash_version_and_merged_deps(): void
     {
         $js = $this->tmpDir . '/bundles/wpdev-starter-deps.js';
@@ -85,19 +65,12 @@ class EnqueueTest extends TestCase
         $result = wpdev_enqueue_bundle_script_at($js, ['jquery']);
 
         $this->assertTrue($result);
-        $calls = $this->callsFor('wp_enqueue_script');
-        $this->assertCount(1, $calls);
-        $args = $calls[0];
-        $this->assertSame('wpdev-starter-deps', $args[0]);                                  // handle
-        // The fixture lives under sys_get_temp_dir() which is OUTSIDE the
-        // plugin root. Per the B-06 contract, resolve_asset_url() returns
-        // '' when the file cannot be resolved to a URL we trust. The BC
-        // shim then appends '?id=<hash>' to that empty string, producing
-        // a relative URL like '?id=sha-test' rather than an absolute 404
-        // URL. The previous 'must reference the file name' assertion
-        // encoded the old guess-the-subdir bug.
-        $this->assertStringContainsString('id=sha-test', $args[1]);                       // cache-bust
-        $this->assertSame(['jquery', 'wp-i18n', 'wp-api-fetch'], $args[2]);              // merged deps
+        global $wp_scripts;
+        $handle = 'wpdev-starter-deps';
+        $this->assertArrayHasKey($handle, $wp_scripts->registered, 'Script must be registered');
+        $registered = $wp_scripts->registered[$handle];
+        $this->assertStringContainsString('id=sha-test', $registered->src, 'Script src must contain cache-bust id');
+        $this->assertSame(['jquery', 'wp-i18n', 'wp-api-fetch'], $registered->deps, 'Script deps must be merged');
     }
 
     public function test_enqueue_bundle_style_uses_hash_version_and_merged_deps(): void
@@ -115,17 +88,12 @@ class EnqueueTest extends TestCase
         $result = wpdev_enqueue_bundle_style_at($css, ['dashicons']);
 
         $this->assertTrue($result);
-        $calls = $this->callsFor('wp_enqueue_style');
-        $this->assertCount(1, $calls);
-        $args = $calls[0];
-        $this->assertSame('theme', $args[0]);                                              // handle (no .css)
-        // Same B-06 contract as the script test above: the fixture is
-        // outside the plugin root, so resolve_asset_url() returns '' and
-        // the helper appends the cache-bust query arg to that empty
-        // string. The previous 'theme.css' assertion encoded the old
-        // guess-the-subdir bug.
-        $this->assertStringContainsString('id=css-hash', $args[1]);
-        $this->assertSame(['dashicons', 'bootstrap'], $args[2]);
+        global $wp_styles;
+        $handle = 'theme';
+        $this->assertArrayHasKey($handle, $wp_styles->registered, 'Style must be registered');
+        $registered = $wp_styles->registered[$handle];
+        $this->assertStringContainsString('id=css-hash', $registered->src, 'Style src must contain cache-bust id');
+        $this->assertSame(['dashicons', 'bootstrap'], $registered->deps, 'Style deps must be merged');
     }
 
     public function test_enqueue_bundle_script_without_asset_file_still_returns_true(): void
@@ -135,14 +103,13 @@ class EnqueueTest extends TestCase
             mkdir(dirname($js), 0777, true);
         }
         file_put_contents($js, '/* no asset */');
-        // intentionally do NOT write the .asset.php companion
 
         $result = wpdev_enqueue_bundle_script_at($js);
 
         $this->assertTrue($result);
-        $calls = $this->callsFor('wp_enqueue_script');
-        $this->assertCount(1, $calls);
-        $this->assertSame('no-asset', $calls[0][0]);
-        $this->assertStringNotContainsString('id=', $calls[0][1]); // no version → no id param
+        global $wp_scripts;
+        $handle = 'no-asset';
+        $this->assertArrayHasKey($handle, $wp_scripts->registered, 'Script must be registered even without asset file');
+        $this->assertStringNotContainsString('id=', $wp_scripts->registered[$handle]->src, 'No asset file → no id= cache-bust');
     }
 }
