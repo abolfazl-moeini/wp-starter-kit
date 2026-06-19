@@ -229,6 +229,27 @@ describe("runUpdate — ui.renderPlan wiring (I5.2)", () => {
     expect(deps.engine.runMigrations).not.toHaveBeenCalled();
   });
 
+  test("on a noop plan with --run, skips runMigrations and returns ok:true", async () => {
+    const deps = baseDeps();
+    deps.engine.planUpdate = jest.fn(() => ({
+      ok: true,
+      noop: true,
+      current: "1.0.0",
+      migrations: [],
+      depChanges: {
+        package: { add: {}, remove: {}, bump: {} },
+        composer: { add: {}, remove: {}, bump: {} },
+      },
+    }));
+    const out = await runUpdate(
+      { dir: "/tmp/proj", runOptions: { run: true, force: true } },
+      deps,
+    );
+    expect(out.ok).toBe(true);
+    expect(out.noop).toBe(true);
+    expect(deps.engine.runMigrations).not.toHaveBeenCalled();
+  });
+
   test("returns the plan object in the result so the bin layer can chain (e.g. detect updateAvailable)", async () => {
     const deps = baseDeps();
     const PLAN = {

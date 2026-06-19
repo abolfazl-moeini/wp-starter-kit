@@ -311,6 +311,113 @@ and seam map.
 
 ---
 
+## Quick-start: creating a module
+
+1. Create `src/Modules/MyFeature/Module.php` implementing `ModuleInterface`:
+
+```php
+<?php
+declare(strict_types=1);
+
+namespace MyPlugin\Modules\MyFeature;
+
+use WPDev\Core\ModuleInterface;
+
+final class Module implements ModuleInterface {
+    public function get_slug(): string {
+        return 'my-feature';
+    }
+
+    public function boot(): void {
+        add_action( 'admin_menu', array( $this, 'register_menu' ) );
+    }
+
+    public function register_menu(): void {
+        // ...
+    }
+}
+```
+
+2. Register before or during bootstrap:
+
+```php
+\WPDev\Core\Plugin::set_plugin_dir( plugin_dir_path( __FILE__ ) );
+\WPDev\Core\Plugin::loader()->register( new \MyPlugin\Modules\MyFeature\Module() );
+\WPDev\Core\Plugin::boot();
+```
+
+3. Optional: extend `AbstractModule` and gate admin-only boot:
+
+```php
+public function should_boot(): bool {
+    return is_admin();
+}
+```
+
+4. Fire custom hooks after your module registers routes — prefer listening on
+   `{hookPrefix}_modules_loaded` (see [api/hooks-reference.md](hooks-reference.md)).
+
+---
+
+## Security checklist
+
+Apply on every module that handles HTTP, forms, or output:
+
+| Concern            | PHP pattern                                                                                  |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| **Capability**     | `CapabilityPolicy::can( 'manage_options' )` or `rest_permission()`                           |
+| **REST**           | Implement `rest_permission()` on every `RestHandler`; never omit `permission_callback`       |
+| **Nonces**         | `wp_verify_nonce()` for form/AJAX actions; localize nonces via `Assets::get_localize_data()` |
+| **Sanitize input** | `sanitize_text_field()`, `absint()`, typed REST schema validation                            |
+| **Escape output**  | `esc_html()`, `esc_attr()`, `wp_kses_post()` in render paths                                 |
+| **Batch**          | Use `AllowBatch` only when responses are cache-safe; validate cache keys                     |
+
+`RestHandler::rest_response()` catches exceptions and returns a generic internal
+error message — do not leak stack traces to clients.
+
+---
+
+## `RestHandler` helpers (additional detail)
+
+| Method              | Returns            | Purpose                                     |
+| ------------------- | ------------------ | ------------------------------------------- |
+| `rest_response()`   | `WP_REST_Response` | Wraps `rest_handler()` with try/catch       |
+| `rest_handler()`    | `WP_REST_Response` | **Abstract** — implement business logic     |
+| `rest_permission()` | `bool`             | **Abstract** — cap check for route          |
+| `rest_end_point()`  | `string`           | **Abstract** — route suffix under namespace |
+| `methods()`         | `string`           | **Abstract** — HTTP method(s)               |
+
+Register handlers with `RestSetup::register( new ItemsController() )` during
+module `boot()`, then call `RestSetup::setup()` once (often deferred to
+`rest_api_init`).
+
+---
+
+## `Assets` method notes
+
+| Method                     | Security / usage notes                                                           |
+| -------------------------- | -------------------------------------------------------------------------------- |
+| `get_localize_data()`      | Exposes REST root URLs and nonces to JS — only enqueue on screens that need them |
+| `enqueue_bundle_script()`  | Reads `.asset.php` for dependencies; never hardcode script handles               |
+| `register_bundle_script()` | Register without enqueue for block editor or conditional screens                 |
+| `set_plugin_dir()`         | Required when framework loads from `vendor/` so bundle paths resolve             |
+
+---
+
+## `DeferredCall` usage pattern
+
+Queue expensive work to run later on a named hook:
+
+```php
+DeferredCall::queue( 'my_plugin_deferred_sync', array( 'id' => 42 ) );
+// Later, on that hook:
+DeferredCall::run_queue();
+```
+
+`can_queue()` returns false when the hook is not registered — check before queueing.
+
+---
+
 ## Namespace map
 
 | Namespace         | Package path            | Role                                       |
@@ -319,3 +426,12 @@ and seam map.
 | `WPDev\Support\`  | `src/Support/`          | REST, assets, shortcodes, queue, auth      |
 | `WPDev\Adapters\` | `src/Adapters/`         | Framework integration bridges              |
 | `WPDev\Modules\`  | Consumer `src/Modules/` | Feature modules (not in framework package) |
+
+---
+
+## See also
+
+- [php-core-libs.md](../php-core-libs.md) — Support class usage examples
+- [api/hooks-reference.md](hooks-reference.md) — framework WordPress hooks
+- [modules.md](../modules.md) — module architecture
+- [module-guide.md](../module-guide.md) — step-by-step module authoring

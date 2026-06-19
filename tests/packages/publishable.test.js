@@ -41,7 +41,7 @@
  * code resolves at runtime".
  */
 import { describe, test, expect } from "@jest/globals";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import * as path from "node:path";
 
 /* -------------------------------------------------------------------- */
@@ -128,6 +128,24 @@ function readPkg(relDir) {
   return { pkg: JSON.parse(readFileSync(pkgPath, "utf8")), pkgPath };
 }
 
+function readReadme(relDir) {
+  const readmePath = path.join(process.cwd(), relDir, "README.md");
+  return { readme: readFileSync(readmePath, "utf8"), readmePath };
+}
+
+const README_REQUIRED_SECTIONS = [
+  "## Install",
+  "## Usage",
+  "## API",
+  "## Part of wp-starter-kit",
+];
+
+const FORBIDDEN_FILES_ENTRIES = [
+  /^tests\/?$/,
+  /^node_modules\/?$/,
+  /\.test\.js$/,
+];
+
 /* -------------------------------------------------------------------- */
 /* Tests                                                                 */
 /* -------------------------------------------------------------------- */
@@ -200,6 +218,34 @@ describe("@wpdev/* packages — publishable metadata (Phase 23.B1)", () => {
           const files = load().files;
           expect(Array.isArray(files)).toBe(true);
           expect(files.length).toBeGreaterThanOrEqual(minFiles);
+        });
+
+        test("files whitelist excludes tests, node_modules, and *.test.js", () => {
+          const files = load().files;
+          for (const entry of files) {
+            for (const forbidden of FORBIDDEN_FILES_ENTRIES) {
+              expect(entry).not.toMatch(forbidden);
+            }
+          }
+        });
+
+        test("has README.md on disk", () => {
+          const readmePath = path.join(process.cwd(), dir, "README.md");
+          expect(existsSync(readmePath)).toBe(true);
+        });
+
+        test("README.md has required publish sections", () => {
+          const { readme } = readReadme(dir);
+          expect(readme).toMatch(
+            new RegExp(`^# ${expectedName.replace("/", "\\/")}`, "m"),
+          );
+          for (const section of README_REQUIRED_SECTIONS) {
+            expect(readme).toContain(section);
+          }
+          expect(readme).toMatch(
+            /js-reference\.md|php-reference\.md|build-system\.md|asset-mappings\.md/,
+          );
+          expect(readme).toMatch(/wp-starter-kit.*README\.md/i);
         });
 
         test("is not private:true (must be publishable)", () => {

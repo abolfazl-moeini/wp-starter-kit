@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "description": "wpdev command-line installer for the wp-starter-kit framework (plan.installer.md Phases I1–I8). Thin front-end: prompts + flags, delegates all generation to @wpdev/create-wp-project.",
   "type": "module",
-  "private": true,
   "license": "MIT",
+  "scripts": {
+    "test": "echo 'covered by tests/cli/*.test.js'",
+    "prepublishOnly": "npm test"
+  },
   "bin": {
     "wpdev": "bin/wpdev.js"
   },

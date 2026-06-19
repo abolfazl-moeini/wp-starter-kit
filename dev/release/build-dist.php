@@ -328,6 +328,14 @@ function wpdev_run(string $cmd, string $cwd): array
     return [$exit, $out];
 }
 
+require_once __DIR__ . '/freshness.php';
+
+$skipFreshness = in_array('--skip-freshness', $argv, true);
+if (!$skipFreshness && !wpdev_check_build_freshness($root)) {
+    fwrite(STDERR, "Build outputs are stale. Run 'npm run build' first.\n");
+    exit(1);
+}
+
 /* -------------------------------------------------------------------- */
 /* Step 1: prepare dist tree (clean + copy)                              */
 /* -------------------------------------------------------------------- */

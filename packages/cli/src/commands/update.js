@@ -205,6 +205,16 @@ export async function runUpdate(dirOrInput, deps = {}) {
     return plan;
   }
 
+  if (plan.noop === true) {
+    return {
+      ok: true,
+      plan,
+      noop: true,
+      from: plan.current || plan.from,
+      to: plan.to || plan.current,
+    };
+  }
+
   // ----------------------------------------------------------------
   // 7. Apply path (--run).
   // ----------------------------------------------------------------

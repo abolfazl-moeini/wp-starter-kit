@@ -69,6 +69,40 @@ function getTinter() {
 }
 
 /* -------------------------------------------------------------------- */
+/* humanizeValidationErrors — feature id → label in engine messages       */
+/* -------------------------------------------------------------------- */
+
+/**
+ * @param {{ errors?: Record<string,string>, warnings?: Record<string,string> }} result
+ * @param {Array<{id: string, label?: string}>} catalog
+ * @returns {{ errors: string[], warnings: string[] }}
+ */
+export function humanizeValidationErrors(result, catalog) {
+  const entries = (catalog || [])
+    .map((f) => ({ id: f.id, label: f.label || f.id }))
+    .sort((a, b) => b.id.length - a.id.length);
+
+  const humanizeMessage = (msg) => {
+    let out = String(msg);
+    for (const { id, label } of entries) {
+      const re = new RegExp(id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g");
+      out = out.replace(re, label);
+    }
+    return out;
+  };
+
+  const errors = [];
+  const warnings = [];
+  for (const msg of Object.values(result?.errors || {})) {
+    errors.push(humanizeMessage(msg));
+  }
+  for (const msg of Object.values(result?.warnings || {})) {
+    warnings.push(humanizeMessage(msg));
+  }
+  return { errors, warnings };
+}
+
+/* -------------------------------------------------------------------- */
 /* renderError — the "validation failed" panel                            */
 /* -------------------------------------------------------------------- */
 

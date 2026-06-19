@@ -81,16 +81,41 @@ async function seedHealthy({ kitVersion, distMode = "deps", features } = {}) {
   // (the registered "0.1.0" baseline). Tests that need a
   // different version pass it explicitly.
   const kv = kitVersion !== undefined ? kitVersion : "0.1.0";
+  const featureSet = features
+    ? { ...features }
+    : { ...defaultFeatureSet(), jsLib: "preact" };
   const manifest = {
     schema: 1,
     kitVersion: kv,
     distMode,
     generatedAt: "2026-01-01T00:00:00.000Z",
-    features: features || defaultFeatureSet(),
+    features: featureSet,
   };
   await fs.writeFile(
     path.join(dir, "wpdev-kit.json"),
     JSON.stringify(manifest, null, 2) + "\n",
+    "utf8",
+  );
+  const projectConfig = {
+    slug: "test-plugin",
+    globalName: "TestPlugin",
+    localizeVar: "TestPluginLoc",
+    textDomain: "test-plugin",
+    hookPrefix: "test_plugin",
+    npmScope: "@test",
+    depsBundle: "test-plugin-deps.js",
+    restNamespace: "test-plugin/v1",
+    batchEndpoint: "/batch/v1",
+    vendorPrefix: "TestPluginVendor",
+    phpMinVersion: featureSet.phpMinVersion || "7.4",
+    phpSourceVersion: "8.1",
+  };
+  if (featureSet.jsLib === "react" || featureSet.jsLib === "preact") {
+    projectConfig.uiFramework = featureSet.jsLib;
+  }
+  await fs.writeFile(
+    path.join(dir, "project.config.json"),
+    JSON.stringify(projectConfig, null, 2) + "\n",
     "utf8",
   );
   return dir;
@@ -381,6 +406,78 @@ describe("doctorProject() — owned file drift (Phase 3)", () => {
         /feature husky is off but orphan files remain/.test(w),
       ),
     ).toBe(true);
+  });
+});
+
+describe("doctorProject() — config consistency (P1-T1 / P1-T3)", () => {
+  let tmpDir;
+
+  afterEach(async () => {
+    if (tmpDir) await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  test("missing slug in project.config.json is reported", async () => {
+    tmpDir = await seedHealthy();
+    const cfgPath = path.join(tmpDir, "project.config.json");
+    const cfg = {
+      globalName: "Test",
+      localizeVar: "TestLoc",
+      textDomain: "test",
+      hookPrefix: "test",
+      npmScope: "@test",
+      depsBundle: "test-deps.js",
+      restNamespace: "test/v1",
+      batchEndpoint: "/batch/v1",
+      vendorPrefix: "TestVendor",
+      uiFramework: "preact",
+      phpMinVersion: "7.4",
+      phpSourceVersion: "8.1",
+    };
+    await fs.writeFile(cfgPath, JSON.stringify(cfg, null, 2) + "\n", "utf8");
+    const res = doctorProject(tmpDir);
+    expect(res.ok).toBe(false);
+    expect(
+      res.errors.some((e) => /Config consistency: missing field slug/.test(e)),
+    ).toBe(true);
+  });
+
+  test("phpMinVersion drift between manifest and project.config is reported", async () => {
+    tmpDir = await seedHealthy();
+    const cfgPath = path.join(tmpDir, "project.config.json");
+    await fs.writeFile(
+      cfgPath,
+      JSON.stringify(
+        {
+          slug: "test-plugin",
+          globalName: "TestPlugin",
+          localizeVar: "TestPluginLoc",
+          textDomain: "test-plugin",
+          hookPrefix: "test_plugin",
+          npmScope: "@test",
+          depsBundle: "test-plugin-deps.js",
+          restNamespace: "test-plugin/v1",
+          batchEndpoint: "/batch/v1",
+          vendorPrefix: "TestPluginVendor",
+          uiFramework: "preact",
+          phpMinVersion: "7.4",
+          phpSourceVersion: "8.1",
+        },
+        null,
+        2,
+      ) + "\n",
+      "utf8",
+    );
+    const manifestPath = path.join(tmpDir, "wpdev-kit.json");
+    const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8"));
+    manifest.features = { ...manifest.features, phpMinVersion: "8.1" };
+    await fs.writeFile(
+      manifestPath,
+      JSON.stringify(manifest, null, 2) + "\n",
+      "utf8",
+    );
+    const res = doctorProject(tmpDir);
+    expect(res.ok).toBe(false);
+    expect(res.errors.some((e) => /phpMinVersion drift/i.test(e))).toBe(true);
   });
 });
 

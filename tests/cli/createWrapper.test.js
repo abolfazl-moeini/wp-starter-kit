@@ -33,11 +33,13 @@
  *       prepended to argv
  */
 import { describe, test, expect } from "@jest/globals";
+import { execFileSync } from "node:child_process";
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const WRAPPER_ROOT = join(process.cwd(), "packages/cli/create-plugin");
 const WRAPPER_PKG_JSON = join(WRAPPER_ROOT, "package.json");
+const CLI_PKG_JSON = join(process.cwd(), "packages/cli/package.json");
 
 function loadWrapperPkg() {
   return JSON.parse(readFileSync(WRAPPER_PKG_JSON, "utf8"));
@@ -86,6 +88,37 @@ describe("@wpdev/create-plugin — package shape (I7.3/I7.4)", () => {
     expect(pkg.type).toBe("module");
     expect(Array.isArray(pkg.files)).toBe(true);
     expect(pkg.files.length).toBeGreaterThan(0);
+  });
+
+  test("package version is 1.0.0", () => {
+    const pkg = loadWrapperPkg();
+    expect(pkg.version).toBe("1.0.0");
+  });
+});
+
+describe("@wpdev/cli — publishability for wrapper dependency (GP-020)", () => {
+  function loadCliPkg() {
+    return JSON.parse(readFileSync(CLI_PKG_JSON, "utf8"));
+  }
+
+  test("packages/cli/package.json exists", () => {
+    expect(existsSync(CLI_PKG_JSON)).toBe(true);
+  });
+
+  test("@wpdev/cli is not private (must be publishable)", () => {
+    const pkg = loadCliPkg();
+    expect(pkg.private).not.toBe(true);
+  });
+
+  test("@wpdev/cli version is 1.0.0", () => {
+    const pkg = loadCliPkg();
+    expect(pkg.version).toBe("1.0.0");
+  });
+
+  test("@wpdev/cli declares bin.wpdev and files whitelist", () => {
+    const pkg = loadCliPkg();
+    expect(pkg.bin?.wpdev).toBeDefined();
+    expect(pkg.files).toEqual(expect.arrayContaining(["bin", "src"]));
   });
 });
 
@@ -144,5 +177,31 @@ describe("@wpdev/create-plugin — bin argv forwarding (I7.3/I7.4)", () => {
     // it's a thin shim.
     expect(body).not.toMatch(/@clack\/prompts/);
     expect(body).not.toMatch(/gatherInputs/);
+  });
+});
+
+describe("@wpdev/create-plugin — workspace exec (--help does not throw)", () => {
+  function wrapperBinPath() {
+    const pkg = loadWrapperPkg();
+    const target = pkg.bin[Object.keys(pkg.bin)[0]];
+    return join(WRAPPER_ROOT, target);
+  }
+
+  test("running wrapper with --help resolves @wpdev/cli and does not throw", () => {
+    const binPath = wrapperBinPath();
+    expect(() => {
+      execFileSync(process.execPath, [binPath, "--help"], {
+        encoding: "utf8",
+        stdio: ["pipe", "pipe", "pipe"],
+        timeout: 15000,
+      });
+    }).not.toThrow();
+  });
+
+  test("wrapper source resolves @wpdev/cli package.json for bin lookup", () => {
+    const body = readFileSync(wrapperBinPath(), "utf8");
+    expect(body).toMatch(/@wpdev\/cli/);
+    expect(body).toMatch(/package\.json/);
+    expect(body).toMatch(/bin\.wpdev|cliPkg\.bin/);
   });
 });

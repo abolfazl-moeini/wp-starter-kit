@@ -166,8 +166,14 @@ export function validateAnswers(a, features = {}) {
     errors.phpFunctionPrefix =
       "phpFunctionPrefix must be lowercase letters/digits/underscores, ending with underscore";
   }
-  if (a.uiFramework !== "preact" && a.uiFramework !== "react") {
-    errors.uiFramework = 'uiFramework must be "preact" or "react"';
+  const derivedUi = deriveUiFramework(features, a);
+  if (derivedUi) {
+    if (a.uiFramework !== "preact" && a.uiFramework !== "react") {
+      errors.uiFramework = 'uiFramework must be "preact" or "react"';
+    }
+  } else if (a.uiFramework === "preact" || a.uiFramework === "react") {
+    errors.uiFramework =
+      "uiFramework must not be set when the project has no UI library (jsLib is none)";
   }
   if (
     a.projectType !== undefined &&
@@ -205,7 +211,6 @@ export function answersToProjectConfig(a) {
     npmScope: "@" + a.npmScope,
     depsBundle: a.depsBundle || `${a.slug}-deps.js`,
     phpFunctionPrefix: a.phpFunctionPrefix || "wpdev_",
-    uiFramework: a.uiFramework,
     projectType: a.projectType || "plugin",
     // Phase 11 v2 defaults — present in every scaffolded
     // project.config.json so consumers (readProjectConfig, REST
@@ -218,6 +223,9 @@ export function answersToProjectConfig(a) {
     phpSourceVersion: a.phpSourceVersion || "8.1",
     batchEndpoint: a.batchEndpoint || "/batch/v1",
   };
+  if (a.uiFramework === "preact" || a.uiFramework === "react") {
+    cfg.uiFramework = a.uiFramework;
+  }
   return cfg;
 }
 
@@ -302,7 +310,7 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   const uiFramework = deriveUiFramework(features, answers);
   const answersForValidation = {
     ...answers,
-    ...(uiFramework ? { uiFramework } : { uiFramework: "preact" }),
+    ...(uiFramework ? { uiFramework } : {}),
   };
 
   // 2. Validate answers.

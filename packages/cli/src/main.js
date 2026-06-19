@@ -215,7 +215,7 @@ export function buildProgram() {
     const featureId = feature
       ? feature.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
       : "";
-    return runAdd(
+    const result = await runAdd(
       {
         dir,
         featureId,
@@ -230,6 +230,10 @@ export function buildProgram() {
       },
       { engine, runners, ui },
     );
+    if (!result.ok) {
+      process.stderr.write("wpdev add: " + (result.reason || "unknown") + "\n");
+      process.exit(result.reason === "cancelled" ? 0 : 1);
+    }
   });
 
   allowPassthrough(

@@ -26,6 +26,10 @@ const requiredDocs = [
   "module-guide.md",
   "api/php-reference.md",
   "api/js-reference.md",
+  "api/cli-engine-reference.md",
+  "api/hooks-reference.md",
+  "troubleshooting.md",
+  "mcp-integration.md",
 ];
 
 describe("docs index contract", () => {

@@ -15,5 +15,8 @@
   },
   "dependencies": {
     "@wpdev/cli": "^1.0.0"
+  },
+  "scripts": {
+    "prepublishOnly": "node -e \"console.log('Verify: @wpdev/cli is published first');\""
   }
 }

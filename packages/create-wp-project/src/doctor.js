@@ -35,6 +35,7 @@ import { getDepVersions } from "./dep-versions.js";
 import { getOwnedPathsForFeature } from "./generators/index.js";
 import { getMaxKnownSchema } from "./migrations/index.js";
 import { projectConfigToAnswers } from "./project-config-io.js";
+import { validateProjectConfig } from "./validate-config.js";
 
 /* -------------------------------------------------------------------- */
 /* Constants                                                             */
@@ -307,6 +308,14 @@ export function doctorProject(dir) {
     } catch {
       // Answers are optional for validation; prefix rules may be skipped.
     }
+  }
+
+  const configCheck = validateProjectConfig(dir);
+  for (const msg of configCheck.errors || []) {
+    if (!result.errors.includes(msg)) result.errors.push(msg);
+  }
+  for (const msg of configCheck.warnings || []) {
+    if (!result.warnings.includes(msg)) result.warnings.push(msg);
   }
 
   const validation = validateFeatureSet(features, answers, {

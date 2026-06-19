@@ -1,10 +1,29 @@
 # @wpdev/fetch
 
-**Deprecated.** Use [`@wpdev/rest-utils/fetch`](../rest-utils/README.md) instead.
+> ⚠️ Deprecated. Use @wpdev/rest-utils instead.
 
-This package is a backward-compatibility shim that re-exports the batch fetch
-client from `@wpdev/rest-utils`. New code should import directly:
+Backward-compatibility shim that re-exports the batch fetch client from `@wpdev/rest-utils`.
 
-```ts
+## Install
+
+```bash
+npm install @wpdev/fetch
+```
+
+New projects should install `@wpdev/rest-utils` directly.
+
+## Usage
+
+```js
 import { createBatchRequest } from "@wpdev/rest-utils/fetch";
 ```
+
+Do not add new imports from `@wpdev/fetch`; use `@wpdev/rest-utils/fetch`.
+
+## API
+
+See [docs/api/js-reference.md](../../docs/api/js-reference.md#wpdevfetch-deprecated).
+
+## Part of wp-starter-kit
+
+This package is part of [wp-starter-kit](../../README.md).

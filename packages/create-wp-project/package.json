@@ -11,8 +11,14 @@
   "bin": {
     "create-wp-project": "src/index.js"
   },
+  "files": [
+    "src",
+    "templates"
+  ],
   "scripts": {
-    "test": "echo 'covered by tests/packages/create-wp-project.test.js'"
+    "test": "echo 'covered by tests/packages/create-wp-project.test.js'",
+    "check": "echo 'covered by root npm run check'",
+    "prepublishOnly": "npm test && npm run check"
   },
   "license": "MIT"
 }

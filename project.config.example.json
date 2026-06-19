@@ -7,5 +7,10 @@
   "npmScope": "@my-org",
   "depsBundle": "my-project-deps.js",
   "phpFunctionPrefix": "myproject_",
-  "uiFramework": "preact"
+  "uiFramework": "preact",
+  "restNamespace": "my-project/v1",
+  "batchEndpoint": "/batch/v1",
+  "vendorPrefix": "MyProjectVendor",
+  "phpMinVersion": "7.4",
+  "phpSourceVersion": "8.1"
 }

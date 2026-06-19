@@ -1,3 +1,5 @@
+import { buildValidationOutputLines } from "../format-validation.js";
+
 /**
  * `wpdev set <key> <value>` — set a config-only feature variant.
  *
@@ -78,9 +80,19 @@ export async function runSet(input, deps = {}) {
   }
 
   if (!result || result.ok !== true) {
+    const rawReason =
+      (result && result.reason) || "engine.setConfigValue failed";
+    const catalog =
+      typeof engine.getFeatureCatalog === "function"
+        ? engine.getFeatureCatalog()
+        : [];
+    const lines = buildValidationOutputLines(rawReason, catalog, {
+      key: i.key,
+    });
     return {
       ok: false,
-      reason: (result && result.reason) || "engine.setConfigValue failed",
+      reason: lines.join("\n"),
+      rawReason,
     };
   }
 

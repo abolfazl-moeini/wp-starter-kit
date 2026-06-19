@@ -105,7 +105,7 @@ describe("runCreate — engine wiring (I3.1)", () => {
     expect(deps.engine.scaffoldProject).toHaveBeenCalledTimes(1);
     expect(deps.engine.scaffoldProject).toHaveBeenCalledWith(
       "/tmp/wpdev",
-      { slug: "my-plugin", npmScope: "acme", uiFramework: "preact" },
+      { slug: "my-plugin", npmScope: "acme" },
       { features: { js: "typescript", phpMinVersion: "8.1" }, force: true },
     );
     expect(out.ok).toBe(true);
@@ -191,7 +191,7 @@ describe("runCreate — engine wiring (I3.1)", () => {
     expect(answers.uiFramework).toBe("preact");
   });
 
-  test("derives answers.uiFramework='preact' as the safe default when jsLib:none", async () => {
+  test("omits answers.uiFramework when jsLib is none (PHP-only project)", async () => {
     const deps = defaultDeps();
     const features = { js: "none", jsLib: "none" };
     await runCreate(
@@ -204,7 +204,7 @@ describe("runCreate — engine wiring (I3.1)", () => {
       deps,
     );
     const answers = deps.engine.scaffoldProject.mock.calls[0][1];
-    expect(answers.uiFramework).toBe("preact");
+    expect(answers.uiFramework).toBeUndefined();
   });
 });
 

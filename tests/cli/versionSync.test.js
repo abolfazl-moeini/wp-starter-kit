@@ -28,6 +28,50 @@ import { join } from "node:path";
 
 import { getKitVersion } from "../../packages/cli/src/version.js";
 
+const ROOT_PKG = join(process.cwd(), "package.json");
+const CLI_PKG = join(process.cwd(), "packages/cli/package.json");
+const ENGINE_PKG = join(
+  process.cwd(),
+  "packages/create-wp-project/package.json",
+);
+const WRAPPER_PKG = join(
+  process.cwd(),
+  "packages/cli/create-plugin/package.json",
+);
+
+function readVersion(pkgPath) {
+  return JSON.parse(readFileSync(pkgPath, "utf8")).version;
+}
+
+describe("publishable package version alignment (P0-T2)", () => {
+  test("root, cli, engine, and wrapper packages are version 1.0.0", () => {
+    expect(readVersion(ROOT_PKG)).toBe("1.0.0");
+    expect(readVersion(CLI_PKG)).toBe("1.0.0");
+    expect(readVersion(ENGINE_PKG)).toBe("1.0.0");
+    expect(readVersion(WRAPPER_PKG)).toBe("1.0.0");
+  });
+
+  test("@wpdev/cli depends on @wpdev/create-wp-project ^1.0.0", () => {
+    const cli = JSON.parse(readFileSync(CLI_PKG, "utf8"));
+    expect(cli.dependencies["@wpdev/create-wp-project"]).toMatch(/^\^1\.0\.0/);
+  });
+
+  test("wrapper depends on @wpdev/cli ^1.0.0", () => {
+    const wrapper = JSON.parse(readFileSync(WRAPPER_PKG, "utf8"));
+    expect(wrapper.dependencies["@wpdev/cli"]).toMatch(/^\^1\.0\.0/);
+  });
+
+  test("@wpdev/cli is publishable (private:true absent — GP-020)", () => {
+    const cli = JSON.parse(readFileSync(CLI_PKG, "utf8"));
+    expect(cli.private).not.toBe(true);
+  });
+
+  test("@wpdev/cli has prepublishOnly safety script", () => {
+    const cli = JSON.parse(readFileSync(CLI_PKG, "utf8"));
+    expect(cli.scripts?.prepublishOnly).toBe("npm test");
+  });
+});
+
 describe("getKitVersion() — I7.5/I7.6 (CLI <-> engine version sync)", () => {
   const ENV_VAR = "WPDEV_CLI_KIT_VERSION_OVERRIDE";
   const ENGINE_PKG = join(

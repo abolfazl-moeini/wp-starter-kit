@@ -362,6 +362,97 @@ import { Stack, Box, Button, Text } from "@wpdev/polaris-stack";
 
 ---
 
+## Import map / WordPress globals
+
+Admin bundles do not bundle `@wordpress/*` packages. The build pipeline maps them
+to globals on `window.wp` via `importAsGlobals` in `build.config.json` and
+`assets/dependencies.ts`.
+
+| Import in source       | Runtime global                      |
+| ---------------------- | ----------------------------------- |
+| `@wordpress/hooks`     | `window.wp.hooks` (via deps bundle) |
+| `@wordpress/i18n`      | `window.wp.i18n`                    |
+| `@wordpress/api-fetch` | `window.wp.apiFetch`                |
+| `@wpdev/hooks`         | `globalThis[{globalName}].hooks`    |
+
+**Why:** WordPress ships these packages; duplicating them inflates bundles and
+breaks version alignment with core.
+
+**Deps bundle:** `assets/bundles/{slug}-deps.js` is built first and registered as a
+script dependency for every module entry. See [asset-mappings.md](../asset-mappings.md)
+and [build-outputs.md](../build-outputs.md).
+
+**`__WPDEV_HOOK_PREFIX__`:** Injected at build time from `project.config.json`
+`hookPrefix`. Use in hook names: `` `${__WPDEV_HOOK_PREFIX__}.form.submit` ``.
+
+---
+
+## Writing a module admin entry
+
+Minimal `src/Modules/MyFeature/assets/entries/admin.ts`:
+
+```ts
+import { mountComponent } from "@wpdev/html-utils";
+import { h, render } from "preact";
+import { MyAdminApp } from "../components/MyAdminApp";
+
+const root = document.getElementById("my-feature-admin-root");
+if (root) {
+  mountComponent("my-feature-admin-root", MyAdminApp, {});
+}
+```
+
+PHP enqueues the bundle via `Assets::enqueue_bundle_script()` in the module's
+`boot()` method. The DOM node id must match `mountComponent`'s first argument.
+
+For WDForm CRUD screens, use `@wpdev/ui-components` — see
+[element-props.md](../element-props.md) for `data-*` hydration.
+
+---
+
+## Testing JS modules
+
+Jest (default `jsTest:jest`) resolves `@wpdev/*` via workspace/package.json
+`moduleNameMapper`. Example test:
+
+```ts
+import { describe, test, expect } from "@jest/globals";
+import { elementProps } from "@wpdev/html-utils";
+
+describe("elementProps", () => {
+  test("maps data attributes to camelCase", () => {
+    const el = document.createElement("div");
+    el.dataset.itemId = "42";
+    expect(elementProps(el)).toMatchObject({ itemId: "42" });
+  });
+});
+```
+
+Run from project root: `npm test` or `npx jest path/to/test`.
+
+Vitest (`jsTest:vitest`) uses the same `@wpdev/*` aliases in `vitest.config.*`.
+
+---
+
+## `@wpdev/hooks` — WordPress re-exports
+
+The deps bundle exposes the same API as `@wordpress/hooks` `createHooks()`:
+
+| Method                                  | Signature (conceptual)                   | When to use               |
+| --------------------------------------- | ---------------------------------------- | ------------------------- |
+| `addAction`                             | `(hook, namespace, callback, priority?)` | Side effects after events |
+| `removeAction`                          | `(hook, namespace, callback)`            | Cleanup                   |
+| `doAction`                              | `(hook, ...args)`                        | Dispatch actions          |
+| `addFilter`                             | `(hook, namespace, callback, priority?)` | Transform values          |
+| `removeFilter`                          | `(hook, namespace, callback)`            | Cleanup                   |
+| `applyFilters`                          | `(hook, value, ...args)`                 | Run filter chain          |
+| `hasAction` / `hasFilter`               | `(hook, namespace?)`                     | Introspection             |
+| `removeAllActions` / `removeAllFilters` | `(hook)`                                 | Test isolation            |
+
+Prefer `getHooks()` from `@wpdev/hooks` so the correct global is used per project.
+
+---
+
 ## Package dependency graph
 
 ```
@@ -376,7 +467,11 @@ import { Stack, Box, Button, Text } from "@wpdev/polaris-stack";
 @wpdev/polaris-stack  → preact/react
 ```
 
+---
+
 ## See also
 
 - [packages-overview.md](../packages-overview.md) — where each package lives
 - [asset-mappings.md](../asset-mappings.md) — how imports become globals in bundles
+- [react-preact.md](../react-preact.md) — UI framework choice
+- [js-hooks.md](../js-hooks.md) — hook naming inventory

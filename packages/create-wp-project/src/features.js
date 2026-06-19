@@ -31,36 +31,42 @@
  *                                the default — see plan §1 "first = default".
  * @property {string} default      Mirrors variants[0] for convenience.
  * @property {string} [notes]      Free-form description (informational).
+ * @property {string} [label]      Human-readable name for CLI output.
  */
 
 /** @type {FeatureDescriptor[]} */
 const FEATURE_CATALOG = [
   {
     id: "js",
+    label: "JavaScript",
     variants: ["typescript", "pure", "flow", "none"],
     default: "typescript",
     notes: "JavaScript pipeline. `none` = PHP-only plugin.",
   },
   {
     id: "jsLib",
+    label: "JavaScript Library",
     variants: ["none", "preact", "react"],
     default: "none",
     notes: "UI library. Only meaningful when js ≠ none.",
   },
   {
     id: "jsTest",
+    label: "JavaScript Testing",
     variants: ["jest", "vitest", "none"],
     default: "jest",
     notes: "JS unit testing tool. Only when js ≠ none.",
   },
   {
     id: "phpMinVersion",
+    label: "PHP",
     variants: ["7.4", "8.0", "8.1", "8.2", "8.3"],
     default: "7.4",
     notes: "Lowest PHP version to support (drives Rector downgrade).",
   },
   {
     id: "phpFramework",
+    label: "PHP Framework",
     variants: ["none", "wpdev"],
     default: "none",
     notes:
@@ -69,12 +75,14 @@ const FEATURE_CATALOG = [
   },
   {
     id: "phpTest",
+    label: "PHP Testing",
     variants: ["phpunit", "none"],
     default: "phpunit",
     notes: "PHP unit testing. PHPUnit on by default.",
   },
   {
     id: "restBatch",
+    label: "REST Batch",
     variants: ["off", "on"],
     default: "off",
     notes:
@@ -82,30 +90,35 @@ const FEATURE_CATALOG = [
   },
   {
     id: "faultTolerance",
+    label: "Fault Tolerance",
     variants: ["off", "on"],
     default: "off",
     notes: "PHP fault-tolerance package. Requires phpMinVersion ≥ 8.1.",
   },
   {
     id: "vendorScoping",
+    label: "Vendor Scoping",
     variants: ["on", "off"],
     default: "on",
     notes: "Strauss vendor scoping on release.",
   },
   {
     id: "husky",
+    label: "Husky",
     variants: ["on", "off"],
     default: "on",
     notes: "Git pre-commit hooks via husky.",
   },
   {
     id: "css",
+    label: "CSS",
     variants: ["none", "sass", "tailwind", "postcss"],
     default: "none",
     notes: "CSS framework. Requires js ≠ none for the build pipeline.",
   },
   {
     id: "blocks",
+    label: "Blocks",
     variants: ["off", "on"],
     default: "off",
     notes:
@@ -116,30 +129,35 @@ const FEATURE_CATALOG = [
   },
   {
     id: "license",
+    label: "License",
     variants: ["gpl2", "gpl3", "mit"],
     default: "gpl2",
     notes: "License. GPL-2.0-or-later, GPL-3.0-or-later, or MIT.",
   },
   {
     id: "wpMinVersion",
+    label: "WordPress",
     variants: ["6.0", "5.8", "6.2", "6.4", "6.6"],
     default: "6.0",
     notes: "Minimum WordPress version. Drives `Requires at least` header.",
   },
   {
     id: "exampleFeature",
+    label: "Example Feature",
     variants: ["on", "off"],
     default: "on",
     notes: "Include the ExampleFeature demo module. Off = empty src/Modules/.",
   },
   {
     id: "i18n",
+    label: "Internationalization",
     variants: ["on", "off"],
     default: "on",
     notes: "Translation pipeline.",
   },
   {
     id: "frontendStack",
+    label: "Frontend Stack",
     variants: ["none", "polaris"],
     default: "none",
     notes:
@@ -147,6 +165,7 @@ const FEATURE_CATALOG = [
   },
   {
     id: "mcpAbilities",
+    label: "MCP Abilities",
     variants: ["off", "on"],
     default: "off",
     notes:
@@ -154,6 +173,7 @@ const FEATURE_CATALOG = [
   },
   {
     id: "ci",
+    label: "CI",
     variants: ["auto", "off"],
     default: "auto",
     notes:

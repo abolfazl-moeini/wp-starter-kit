@@ -34,6 +34,7 @@
  */
 
 import { runList } from "./list.js";
+import { buildValidationOutputLines } from "../format-validation.js";
 
 /* -------------------------------------------------------------------- */
 /* runAdd                                                                 */
@@ -210,9 +211,15 @@ export async function runAdd(input, deps = {}) {
   }
 
   if (!result || result.ok !== true) {
+    const rawReason = (result && result.reason) || "engine.addFeature failed";
+    const catalog = engine.getFeatureCatalog() || [];
+    const lines = buildValidationOutputLines(rawReason, catalog, {
+      verbose: runOptions.verbose === true,
+    });
     return {
       ok: false,
-      reason: (result && result.reason) || "engine.addFeature failed",
+      reason: lines.join("\n"),
+      rawReason,
     };
   }
 

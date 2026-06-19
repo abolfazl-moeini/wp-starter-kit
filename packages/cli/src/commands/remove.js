@@ -24,6 +24,8 @@
  * unit tests can wire fakes.
  */
 
+import { buildValidationOutputLines } from "../format-validation.js";
+
 /* -------------------------------------------------------------------- */
 /* runRemove                                                              */
 /* -------------------------------------------------------------------- */
@@ -141,9 +143,19 @@ export async function runRemove(input, deps = {}) {
   }
 
   if (!result || result.ok !== true) {
+    const rawReason =
+      (result && result.reason) || "engine.removeFeature failed";
+    const catalog =
+      typeof engine.getFeatureCatalog === "function"
+        ? engine.getFeatureCatalog()
+        : [];
+    const lines = buildValidationOutputLines(rawReason, catalog, {
+      verbose: runOptions.verbose === true,
+    });
     return {
       ok: false,
-      reason: (result && result.reason) || "engine.removeFeature failed",
+      reason: lines.join("\n"),
+      rawReason,
     };
   }
 

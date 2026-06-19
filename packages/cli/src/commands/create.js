@@ -185,11 +185,11 @@ export async function runCreate(input, deps) {
   const uiFramework =
     features.jsLib === "preact" || features.jsLib === "react"
       ? features.jsLib
-      : "preact";
+      : undefined;
   const answersWithSlug = {
     ...(i.answers || {}),
     slug,
-    uiFramework,
+    ...(uiFramework ? { uiFramework } : {}),
   };
   const forceValue = i.runOptions?.force;
   const engineOpts = { features };
