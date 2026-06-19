@@ -282,6 +282,40 @@ function presetIsCustom(state, buildTimeFeatures) {
 }
 
 /**
+ * @param {object} state
+ * @param {Record<string,string>} [buildTimeFeatures]
+ * @returns {boolean}
+ */
+function presetIsMinimal(state, buildTimeFeatures) {
+  return resolvePresetChoice(state, buildTimeFeatures) === "minimal";
+}
+
+/**
+ * Minimal scaffolds still ask whether PHPUnit is wanted; every
+ * other preset feature stays pinned by the preset map.
+ *
+ * @param {Array<object>} plan
+ * @param {Array<object>} catalog
+ * @param {Record<string,string>} buildTimeFeatures
+ */
+function appendMinimalExtraQuestions(plan, catalog, buildTimeFeatures) {
+  const phpTest = catalog.find((f) => f.id === "phpTest");
+  if (!phpTest) return;
+  plan.push({
+    id: "phpTest",
+    type: "select",
+    target: "features",
+    message: FEATURE_QUESTIONS.phpTest,
+    options: [
+      { label: "Yes", value: "phpunit" },
+      { label: "No", value: "none" },
+    ],
+    initialValue: phpTest.default || "phpunit",
+    when: (s) => presetIsMinimal(s, buildTimeFeatures),
+  });
+}
+
+/**
  * @param {object} engine
  * @returns {object}
  */
@@ -365,6 +399,8 @@ export function buildPromptPlan(currentFeatures, engine, options) {
     const baseWhen = typeof q.when === "function" ? q.when : () => true;
     plan.push({ ...q, when: (s) => baseWhen(s) });
   }
+
+  appendMinimalExtraQuestions(plan, catalog, currentFeatures);
 
   if (skipFeaturesAtBuild) {
     return plan;

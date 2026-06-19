@@ -180,6 +180,10 @@ describe("--yes / -y non-interactive (I2.10, I2.11)", () => {
       (c) => c.kind === "select" && c.opts.message.match(/preset/i),
     );
     expect(presetCall).toBeDefined();
+    const phpTestCall = ui.calls.find(
+      (c) => c.kind === "select" && c.opts.message.match(/PHPUnit/i),
+    );
+    expect(phpTestCall).toBeDefined();
     const minimal = applyPreset("minimal");
     for (const [k, v] of Object.entries(minimal)) {
       expect(out.features[k]).toBe(v);

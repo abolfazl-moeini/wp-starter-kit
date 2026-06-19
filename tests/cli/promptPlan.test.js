@@ -195,13 +195,24 @@ describe("buildPromptPlan() — preset short-circuit (I2.6)", () => {
     }
   });
 
-  test("when preset is 'woocommerce' or 'minimal', still no per-feature questions", () => {
-    for (const p of ["woocommerce", "minimal"]) {
-      const plan = buildPromptPlan({ __preset: p });
-      const ids = planIds(plan);
-      expect(ids).not.toContain("js");
-      expect(ids).not.toContain("license");
-    }
+  test("when preset is 'woocommerce', still no per-feature questions", () => {
+    const plan = buildPromptPlan({ __preset: "woocommerce" });
+    const ids = planIds(plan);
+    expect(ids).not.toContain("js");
+    expect(ids).not.toContain("license");
+  });
+
+  test("when preset is 'minimal', asks phpTest but skips other features", () => {
+    const plan = buildPromptPlan({ __preset: "minimal" });
+    const ids = planIds(plan);
+    expect(ids).toContain("phpTest");
+    expect(ids).not.toContain("js");
+    expect(ids).not.toContain("license");
+    const phpTestQ = plan.find((q) => q.id === "phpTest");
+    expect(phpTestQ.options).toEqual([
+      { label: "Yes", value: "phpunit" },
+      { label: "No", value: "none" },
+    ]);
   });
 
   test("when preset is unset / 'custom', all features are asked", () => {

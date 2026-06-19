@@ -116,6 +116,33 @@ describe("runPrompts() — branding defaults", () => {
     expect(out.answers.globalName).toBe("MySamplePlugin");
   });
 
+  test("asks phpTest for minimal preset with Yes/No options", async () => {
+    const plan = buildPromptPlan(
+      { __preset: "minimal" },
+      { getFeatureCatalog, applyPreset },
+      { dirBasename: "my-sample-plugin" },
+    );
+    expect(planIds(plan)).toContain("phpTest");
+
+    const ui = makeUi({
+      text: ["", "", "", ""],
+      select: ["7.4", "none"],
+    });
+    const out = await runPrompts(plan, ui, {
+      brandingDefaults: deriveBrandingDefaults("my-sample-plugin"),
+      runOptions: { preset: "minimal" },
+      phpSourceVersionOptions: {
+        versions: ["8.1"],
+        defaultVersion: "7.4",
+        options: [
+          { label: "8.1", value: "8.1" },
+          { label: "Other (type a version)", value: "__other__" },
+        ],
+      },
+    });
+    expect(out.features.phpTest).toBe("none");
+  });
+
   test("skips globalName prompt for minimal preset", () => {
     const plan = buildPromptPlan(
       { __preset: "minimal" },
