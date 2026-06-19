@@ -17,6 +17,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal pr
     "post-install-cmd",
     "post-update-cmd",
     "scope:vendor",
+    "test",
   ],
   "strauss": {
     "namespace_prefix": "WpdevVendor",
@@ -104,6 +105,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
     "post-install-cmd",
     "post-update-cmd",
     "scope:vendor",
+    "test",
   ],
   "strauss": {
     "namespace_prefix": "WpdevVendor",

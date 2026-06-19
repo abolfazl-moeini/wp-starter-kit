@@ -630,19 +630,34 @@ declare(strict_types=1);
 
 namespace {{vendor}}\\Tests\\Modules\\ExampleFeature;
 
-use PHPUnit\\Framework\\TestCase;
 use {{vendor}}\\Modules\\ExampleFeature\\Module;
+use {{vendor}}\\Tests\\TestCases\\PluginBaseTestCase;
 
 /**
  * TDD stub — extend with behavior tests as you implement ExampleFeature.
  */
-final class ModuleTest extends TestCase
+final class ModuleTest extends PluginBaseTestCase
 {
-    public function test_slug_is_non_empty_kebab_case(): void
+    /** @test */
+    public function itShouldExposeExampleFeatureSlug(): void
     {
         $module = new Module();
-        $this->assertNotEmpty($module->get_slug());
-        $this->assertMatchesRegularExpression('/^[a-z][a-z0-9-]*$/', $module->get_slug());
+        $this->assertSame('example-feature', $module->get_slug(), 'Example feature slug must stay stable');
+        $this->assertMatchesRegularExpression(
+            '/^[a-z][a-z0-9-]*$/',
+            $module->get_slug(),
+            'Slug must be kebab-case'
+        );
+    }
+
+    /** @test */
+    public function itShouldBootOnlyInAdmin(): void
+    {
+        $module = new Module();
+        $this->assertFalse($module->should_boot(), 'should_boot must be false outside admin');
+
+        set_current_screen('index');
+        $this->assertTrue($module->should_boot(), 'should_boot must be true in admin context');
     }
 }
 `;

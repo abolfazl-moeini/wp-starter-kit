@@ -113,7 +113,7 @@ function firstOverlap(a, b) {
     ".sassrc",
     "tailwind.config.js",
     "postcss.config.js",
-    "phpunit.xml",
+    "phpunit.xml.dist",
     // src/Core/* deliberately not owned (Phase 23: framework lives in wpdev/framework dep)
     "src/Modules/ExampleFeature/Module.php",
     "src/Modules/ExampleFeature/Rest/ItemsController.php",

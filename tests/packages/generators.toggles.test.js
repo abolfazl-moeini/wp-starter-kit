@@ -210,18 +210,30 @@ describe("i18n generator (Phase 21.7/21.8)", () => {
 });
 
 describe("phpTest generator (Phase 21.7/21.8)", () => {
-  test("emits phpunit.xml + tests/phpunit/bootstrap.php when phpTest=phpunit", () => {
-    const out = phpTestRun(makeCtx({}, {}, { phpTest: "phpunit" }));
-    expect(out.files["phpunit.xml"]).toBeDefined();
+  test("emits plugin-core-test harness when phpTest=phpunit", () => {
+    const out = phpTestRun(
+      makeCtx({ globalName: "AcmePlugin" }, {}, { phpTest: "phpunit" }),
+    );
+    expect(out.files["phpunit.xml.dist"]).toBeDefined();
     expect(out.files["tests/phpunit/bootstrap.php"]).toBeDefined();
-    // Body sanity: phpunit.xml must reference the tests directory.
-    expect(out.files["phpunit.xml"]).toMatch(
-      /<directory>tests\/phpunit<\/directory>/,
+    expect(out.files["tests/phpunit/TestCases/PluginBaseTestCase.php"]).toMatch(
+      /WPDevTest\\TestCases\\TestCase/,
     );
-    // bootstrap must require the autoloader.
+    expect(out.files["packages/plugin-core-test/composer.json"]).toMatch(
+      /wpdev\/plugin-core-test/,
+    );
+    expect(out.files["phpunit.xml.dist"]).toMatch(
+      /<directory suffix=".php">\.\/tests\/phpunit<\/directory>/,
+    );
     expect(out.files["tests/phpunit/bootstrap.php"]).toMatch(
-      /vendor\/autoload\.php/,
+      /WPDevTest\\Setup::setup/,
     );
+    expect(out.composerPatches["require-dev"]["wpdev/plugin-core-test"]).toBe(
+      "^1.2",
+    );
+    expect(
+      out.composerPatches["autoload-dev"]["psr-4"]["AcmePluginTest\\"],
+    ).toBe("tests/phpunit/");
   });
 
   test("emits nothing when phpTest=none", () => {

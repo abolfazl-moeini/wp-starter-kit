@@ -779,6 +779,9 @@ describe("@wpdev/create-wp-project", () => {
       expect(existsSyncSync(phpTest)).toBe(true);
       const phpContents = await fs.readFile(phpTest, "utf8");
       expect(phpContents).toMatch(/get_slug\(\)/);
+      expect(phpContents).toMatch(/PluginBaseTestCase/);
+      expect(phpContents).toMatch(/@test/);
+      expect(phpContents).toMatch(/itShould/);
 
       const jsTest = path.join(
         tmp,

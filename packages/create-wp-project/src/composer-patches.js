@@ -8,13 +8,19 @@
 export function mergeComposerPatchAccumulator(accumulator, patch) {
   const next = accumulator || {
     require: {},
+    "require-dev": {},
     repositories: [],
     suggest: {},
     autoload: {},
+    "autoload-dev": {},
+    scripts: {},
     extra: {},
   };
   if (patch.require) {
     Object.assign(next.require, patch.require);
+  }
+  if (patch["require-dev"]) {
+    Object.assign(next["require-dev"], patch["require-dev"]);
   }
   if (patch.suggest) {
     Object.assign(next.suggest, patch.suggest);
@@ -35,6 +41,17 @@ export function mergeComposerPatchAccumulator(accumulator, patch) {
         ...patch.autoload.files,
       ];
     }
+  }
+  if (patch["autoload-dev"]) {
+    if (patch["autoload-dev"]["psr-4"]) {
+      next["autoload-dev"]["psr-4"] = {
+        ...(next["autoload-dev"]["psr-4"] || {}),
+        ...patch["autoload-dev"]["psr-4"],
+      };
+    }
+  }
+  if (patch.scripts) {
+    Object.assign(next.scripts, patch.scripts);
   }
   if (patch.extra) {
     next.extra = { ...(next.extra || {}), ...patch.extra };
@@ -60,6 +77,12 @@ export function applyComposerPatches(composer, patch) {
   const next = { ...composer };
   if (patch.require) {
     next.require = { ...(next.require || {}), ...patch.require };
+  }
+  if (patch["require-dev"]) {
+    next["require-dev"] = {
+      ...(next["require-dev"] || {}),
+      ...patch["require-dev"],
+    };
   }
   if (patch.suggest) {
     next.suggest = { ...(next.suggest || {}), ...patch.suggest };
@@ -98,6 +121,18 @@ export function applyComposerPatches(composer, patch) {
       }
       next.autoload.files = merged;
     }
+  }
+  if (patch["autoload-dev"]) {
+    next["autoload-dev"] = { ...(next["autoload-dev"] || {}) };
+    if (patch["autoload-dev"]["psr-4"]) {
+      next["autoload-dev"]["psr-4"] = {
+        ...(next["autoload-dev"]["psr-4"] || {}),
+        ...patch["autoload-dev"]["psr-4"],
+      };
+    }
+  }
+  if (patch.scripts) {
+    next.scripts = { ...(next.scripts || {}), ...patch.scripts };
   }
   if (patch.extra) {
     next.extra = { ...(next.extra || {}) };

@@ -12,7 +12,7 @@
  *     by syncFeaturesToConfig)
  *   - `composer.json`, `.gitignore`, `.editorconfig`
  *   - `LICENSE` (gpl2 default)
- *   - `phpunit.xml` + `tests/phpunit/bootstrap.php` (phpunit
+ *   - `phpunit.xml.dist` + `tests/phpunit/bootstrap.php` (phpunit
  *     default)
  *   - `languages/.gitkeep` (i18n default)
  *
@@ -107,13 +107,13 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     expect(res.ok).toBe(true);
     const written = new Set(res.written || []);
     // v3 additions: composer.json, .gitignore, .editorconfig, LICENSE,
-    // phpunit.xml, tests/phpunit/bootstrap.php, languages/.gitkeep,
+    // phpunit.xml.dist, tests/phpunit/bootstrap.php, languages/.gitkeep,
     // wpdev-kit.json (manifest).
     expect(written.has("composer.json")).toBe(true);
     expect(written.has(".gitignore")).toBe(true);
     expect(written.has(".editorconfig")).toBe(true);
     expect(written.has("LICENSE")).toBe(true);
-    expect(written.has("phpunit.xml")).toBe(true);
+    expect(written.has("phpunit.xml.dist")).toBe(true);
     expect(written.has("tests/phpunit/bootstrap.php")).toBe(true);
     expect(written.has("languages/.gitkeep")).toBe(true);
     expect(written.has("wpdev.json")).toBe(true);

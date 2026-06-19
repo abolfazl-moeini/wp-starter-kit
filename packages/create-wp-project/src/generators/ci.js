@@ -38,7 +38,7 @@ jobs:
         run: npm ci
 
       - name: Run PHP tests
-        if: hashFiles('phpunit.xml') != ''
+        if: hashFiles('phpunit.xml.dist') != ''
         run: vendor/bin/phpunit
 
       - name: Run JS tests

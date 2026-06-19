@@ -1,81 +1,157 @@
 /**
- * @wpdev/create-wp-project — phpTest generator (Phase 21).
+ * @wpdev/create-wp-project — phpTest generator.
  *
- * PHPUnit scaffolding: phpunit.xml at the project root +
- * tests/phpunit/bootstrap.php. Phase 21 emits a minimal
- * PHPUnit 10 configuration that points at `tests/phpunit/`
- * for the test suite and a bootstrap that pulls in the kit's
- * test helpers (mirroring the kit's own phpunit.xml).
- *
- * The full PHPUnit wiring (config block, groups, coverage,
- * fixtures) lands in Phase 25. The `phpTest: phpunit` variant
- * is the only one the generator handles — the `phpTest: none`
- * variant is a no-op (the generator is filtered out by the
- * registry).
- *
- * NOTE: this generator only ships the SCAFFOLD side of the
- * PHPUnit story. The kit's own `tests/phpunit/` is the test
- * harness for the kit's own classes; the consumer's
- * `tests/phpunit/` is a separate directory the user owns.
- * The generator does NOT copy the kit's tests into the
- * consumer — it emits a minimal bootstrap that the consumer
- * extends with their own tests.
+ * PHPUnit scaffolding aligned with wpdev/plugin-core-test and the kit's
+ * tests/phpunit/ conventions (PluginBaseTestCase, WPDevTest\Setup, @test).
  */
+
+import { pluginCoreTestPackageFiles } from "./_plugin-core-test-template.js";
+
+const PACKAGE_PREFIX = "packages/plugin-core-test/";
+
+function testNamespaceRoot(vendorNamespace) {
+  return `${vendorNamespace}Test\\`;
+}
+
+function phpunitXmlDist(tpl) {
+  const wpRoot = tpl.wpTestsRoot || "/Users/moeini/Dev/wordpress-develop";
+  const pluginRoot = `${wpRoot}/wp-content/plugins/${tpl.slug}`;
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<phpunit
+    bootstrap="tests/phpunit/bootstrap.php"
+    backupGlobals="false"
+    colors="true"
+    verbose="true"
+>
+    <testsuites>
+        <testsuite name="${tpl.slug}">
+            <directory suffix=".php">./tests/phpunit</directory>
+            <exclude>./tests/phpunit/TestCases</exclude>
+            <exclude>./tests/phpunit/fixtures</exclude>
+        </testsuite>
+    </testsuites>
+
+    <php>
+        <env name="WP_TESTS_DIR" value="${wpRoot}/tests/phpunit"/>
+        <env name="BOOTSTRAP_FILE" value="${pluginRoot}/${tpl.slug}.php"/>
+        <env name="PLUGIN_ROOT" value="${pluginRoot}"/>
+    </php>
+</phpunit>
+`;
+}
+
+function pluginBaseTestCasePhp(vendorNamespace) {
+  return `<?php
+declare(strict_types=1);
+
+namespace ${vendorNamespace}\\Tests\\TestCases;
+
+abstract class PluginBaseTestCase extends \\WPDevTest\\TestCases\\TestCase
+{
+}
+`;
+}
+
+function restTestCasePhp(vendorNamespace) {
+  return `<?php
+declare(strict_types=1);
+
+namespace ${vendorNamespace}\\Tests\\TestCases;
+
+abstract class RestTestCase extends PluginBaseTestCase
+{
+    public function setUp(): void
+    {
+        parent::setUp();
+        global $wp_rest_server, $wp_actions;
+        $wp_rest_server = null;
+        unset($wp_actions['rest_api_init']);
+        rest_get_server();
+    }
+}
+`;
+}
 
 export function run(ctx) {
   if (ctx.features.phpTest !== "phpunit") {
     return { files: {}, dirs: [], deps: {}, devDeps: {} };
   }
-  return {
-    files: {
-      "phpunit.xml": `<?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
-         bootstrap="tests/phpunit/bootstrap.php"
-         colors="true"
-         cacheDirectory=".phpunit.cache">
-  <testsuites>
-    <testsuite name="project">
-      <directory>tests/phpunit</directory>
-    </testsuite>
-  </testsuites>
-  <source>
-    <include>
-      <directory>src</directory>
-    </include>
-  </source>
-</phpunit>
-`,
-      "tests/phpunit/bootstrap.php": `<?php
-/**
- * PHPUnit bootstrap — minimal WordPress-free loader.
- *
- * Phase 21 stub. Replace with the kit's full bootstrap (see
- * the kit's own tests/phpunit/bootstrap.php) when integrating
- * the wp-starter-kit test harness.
- */
 
+  const tpl = ctx.vars || { ...ctx.answers, ...(ctx.cfg || {}) };
+  const vendorNamespace = tpl.vendor || tpl.globalName || "WPDev";
+
+  const files = {
+    "phpunit.xml.dist": phpunitXmlDist(tpl),
+    "tests/phpunit/bootstrap.php": `<?php
 declare(strict_types=1);
 
-// Pull in Composer's autoloader for the project itself.
-\$autoload = __DIR__ . '/../../vendor/autoload.php';
-if (!file_exists(\$autoload)) {
-    throw new RuntimeException(
-        'vendor/autoload.php not found. Run composer install first.'
-    );
+$root = dirname(__DIR__, 2);
+
+require $root . '/vendor/autoload.php';
+
+if (!defined('WP_TESTS_PHPUNIT_POLYFILLS_PATH')) {
+    define('WP_TESTS_PHPUNIT_POLYFILLS_PATH', $root . '/vendor/yoast/phpunit-polyfills');
 }
-require \$autoload;
+
+WPDevTest\\Setup::setup();
 `,
-    },
-    dirs: ["tests/phpunit"],
+    "tests/phpunit/TestCases/PluginBaseTestCase.php":
+      pluginBaseTestCasePhp(vendorNamespace),
+    "tests/phpunit/TestCases/RestTestCase.php":
+      restTestCasePhp(vendorNamespace),
+  };
+
+  for (const [rel, body] of Object.entries(pluginCoreTestPackageFiles())) {
+    files[`${PACKAGE_PREFIX}${rel}`] = body;
+  }
+
+  const dirs = [
+    "tests/phpunit",
+    "tests/phpunit/TestCases",
+    "packages/plugin-core-test",
+  ];
+
+  return {
+    files,
+    dirs,
     deps: {},
     devDeps: {},
+    composerPatches: {
+      repositories: [
+        {
+          type: "path",
+          url: "packages/*",
+          options: {
+            monorepo: true,
+            symlink: false,
+          },
+        },
+      ],
+      "require-dev": {
+        "wpdev/plugin-core-test": "^1.2",
+        "phpunit/phpunit": "^9.6",
+        "yoast/phpunit-polyfills": "^2.0",
+      },
+      "autoload-dev": {
+        "psr-4": {
+          [testNamespaceRoot(vendorNamespace)]: "tests/phpunit/",
+        },
+      },
+      scripts: {
+        test: "phpunit",
+      },
+    },
   };
 }
 
 export const descriptor = {
   id: "phpTest",
   feature: "phpTest",
-  owns: ["phpunit.xml", "tests/phpunit/bootstrap.php"],
+  owns: [
+    "phpunit.xml.dist",
+    "tests/phpunit/bootstrap.php",
+    "tests/phpunit/TestCases/**",
+    "packages/plugin-core-test/**",
+  ],
   run,
 };
