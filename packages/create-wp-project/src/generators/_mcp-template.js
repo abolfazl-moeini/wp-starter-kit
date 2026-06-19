@@ -6,29 +6,20 @@
  * Runtime namespace stays WPDev\MCP so the vendored copy is drop-in.
  */
 
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
-
-function createWpProjectSrcDir() {
-  if (typeof __dirname !== "undefined" && __dirname) {
-    return path.dirname(__dirname);
-  }
-  return path.join(process.cwd(), "packages/create-wp-project/src");
-}
+import { resolveKitPackageSrc } from "../resolve-kit-paths.js";
 
 function mcpSrcRoot() {
-  const srcDir = createWpProjectSrcDir();
-  const candidates = [
-    path.join(path.dirname(path.dirname(srcDir)), "mcp-integration", "src"),
-    path.join(process.cwd(), "packages/mcp-integration/src"),
-  ];
-  for (const candidate of candidates) {
-    if (existsSync(path.join(candidate, "Core", "Plugin.php"))) {
-      return candidate;
-    }
+  const root = resolveKitPackageSrc(
+    "mcp-integration",
+    path.join("Core", "Plugin.php"),
+  );
+  if (root) {
+    return root;
   }
   throw new Error(
-    "wp-mcp-integration source not found. Expected packages/mcp-integration/src beside create-wp-project.",
+    "wp-mcp-integration source not found. Expected packages/mcp-integration/src beside create-wp-project (or set npm config wpdev-kit-root to your kit checkout).",
   );
 }
 
