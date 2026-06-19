@@ -40,12 +40,11 @@ describe("buildPromptPlan() — conditional omissions (I2.5)", () => {
     const ids = planIds(plan);
     expect(ids[0]).toBe("preset");
     // Branding ids follow the preset question.
-    expect(ids.slice(1, 8)).toEqual([
+    expect(ids.slice(1, 7)).toEqual([
       "slug",
       "npmScope",
       "globalName",
       "textDomain",
-      "hookPrefix",
       "phpFunctionPrefix",
       "phpSourceVersion",
     ]);
@@ -210,6 +209,27 @@ describe("buildPromptPlan() — preset short-circuit (I2.6)", () => {
     const ids = planIds(plan);
     expect(ids).toContain("js");
     expect(ids).toContain("license");
+  });
+});
+
+describe("buildPromptPlan() — dynamic PHP source versions", () => {
+  test("phpSourceVersion select includes fetched options and Other", () => {
+    const phpSourceVersionOptions = {
+      versions: ["7.4", "8.0", "8.1"],
+      defaultVersion: "7.4",
+      options: [
+        { label: "7.4", value: "7.4" },
+        { label: "8.0", value: "8.0" },
+        { label: "8.1", value: "8.1" },
+        { label: "Other (type a version)", value: "__other__" },
+      ],
+    };
+    const plan = buildPromptPlan(defaultFeatures(), undefined, {
+      phpSourceVersionOptions,
+    });
+    const q = plan.find((item) => item.id === "phpSourceVersion");
+    expect(q.options).toEqual(phpSourceVersionOptions.options);
+    expect(q.initialValue).toBe("7.4");
   });
 });
 

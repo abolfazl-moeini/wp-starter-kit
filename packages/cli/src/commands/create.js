@@ -30,6 +30,10 @@ import * as path from "node:path";
 import { readFileSync, existsSync } from "node:fs";
 
 import { sanitizeSlug } from "../slug.js";
+import {
+  formatCreateTargetDirConflictReason,
+  isCreateTargetDirNonEmpty,
+} from "../resolveTargetDir.js";
 
 /* -------------------------------------------------------------------- */
 /* Default dependency wiring (used by the bin; tests inject)            */
@@ -157,14 +161,11 @@ export async function runCreate(input, deps) {
   //    more than zero files), refuse unless --force is set.
   const force = i.runOptions?.force === true;
   if (!force) {
-    const conflict = await detectNonEmptyDir(dir);
+    const conflict = await isCreateTargetDirNonEmpty(dir);
     if (conflict) {
       return {
         ok: false,
-        reason:
-          "target directory is not empty: " +
-          dir +
-          " — pass --force to overwrite, or pick an empty directory",
+        reason: formatCreateTargetDirConflictReason(dir),
       };
     }
   }
@@ -335,46 +336,6 @@ export async function runCreate(input, deps) {
 /* -------------------------------------------------------------------- */
 /* Helpers                                                               */
 /* -------------------------------------------------------------------- */
-
-/**
- * Return true when the target directory exists and has contents.
- * - existsSync:false → empty (OK).
- * - existsSync:true + readdir:[] → empty (OK).
- * - existsSync:true + readdir:[…] → not empty (refuse).
- *
- * We do NOT refuse on the basis of a single sentinel like
- * project.config.json because the user may be scaffolding into
- * a directory that contains unrelated files. The rule per
- * plan.installer.md §I3.3 is "non-empty dir without --force
- * refuses" — "non-empty" is a directory-level property, not a
- * project-sentinel check.
- */
-async function detectNonEmptyDir(dir) {
-  // First check existence (does the path resolve to a real dir?).
-  let stat;
-  try {
-    stat = await fsStat(dir);
-  } catch {
-    return false; // does not exist → empty
-  }
-  if (!stat || !stat.isDirectory()) {
-    // Treat an existing file as a conflict too — the user
-    // probably typed the wrong path.
-    return true;
-  }
-  const entries = await fsReaddir(dir);
-  return Array.isArray(entries) && entries.length > 0;
-}
-
-async function fsStat(dir) {
-  const { stat } = await import("node:fs/promises");
-  return stat(dir);
-}
-
-async function fsReaddir(dir) {
-  const { readdir } = await import("node:fs/promises");
-  return readdir(dir);
-}
 
 /**
  * Run a runner and translate its result into a uniform

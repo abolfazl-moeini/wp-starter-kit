@@ -21,8 +21,13 @@
  * `engine` option; the bin wires the real engine.
  */
 
+import * as path from "node:path";
+
 import { parseFlags } from "./flags.js";
+import { validateCreateTargetDir } from "./resolveTargetDir.js";
 import { buildPromptPlan, runPrompts } from "./prompts.js";
+import { deriveBrandingDefaults, fillDerivedBranding } from "./branding.js";
+import { fetchPhpSourceVersionOptions } from "./php-source-versions.js";
 import * as realEngine from "@wpdev/create-wp-project";
 
 /**
@@ -108,6 +113,23 @@ export async function gatherInputs(opts) {
   // 1. parseFlags
   const flagInput = parseFlags(o.argv);
 
+  if (o.validateTargetDir === true) {
+    const dirCheck = await validateCreateTargetDir({
+      cwd: o.cwd || process.cwd(),
+      runOptions: flagInput.runOptions,
+      positionalSlug: o.positionalSlug,
+      force: flagInput.runOptions?.force === true,
+    });
+    if (!dirCheck.ok) {
+      const err = new Error(dirCheck.reason);
+      err.code = "WPDEV_TARGET_DIR_NOT_EMPTY";
+      err.targetDir = dirCheck.targetDir;
+      err.hint =
+        "Pass --force to overwrite, or scaffold into an empty directory.";
+      throw err;
+    }
+  }
+
   // 2. fail-fast validation of flag-derived features (no prompts yet).
   //    This is the I2.8 contract: an invalid combo (e.g. --fault-
   //    tolerance=on --php-min=7.4) errors before any prompt runs.
@@ -155,13 +177,31 @@ export async function gatherInputs(opts) {
     };
   }
 
+  const dirBasename = path.basename(o.cwd || process.cwd());
+  const brandingDefaults = deriveBrandingDefaults(dirBasename);
+  const buildTimePreset = (currentFeatures && currentFeatures.__preset) || null;
+
   let prompted = { answers: {}, features: {}, runOptions: {} };
   if (wantPrompts) {
-    const plan = buildPromptPlan(currentFeatures, engine);
+    const phpSourceVersionOptions = await fetchPhpSourceVersionOptions({
+      fetch: o.fetch,
+    });
+    const plan = buildPromptPlan(currentFeatures, engine, {
+      dirBasename,
+      phpSourceVersionOptions,
+    });
     // runPrompts(plan, ui) drives clack for every question whose
     // `when()` returns true. It returns the same {answers, features,
     // runOptions} shape with only the prompted keys filled.
-    prompted = await runPrompts(plan, ui, { answers: flagInput.answers });
+    prompted = await runPrompts(plan, ui, {
+      answers: flagInput.answers,
+      brandingDefaults,
+      dirBasename,
+      ...(buildTimePreset && buildTimePreset !== "custom"
+        ? { runOptions: { preset: buildTimePreset } }
+        : {}),
+      phpSourceVersionOptions,
+    });
   }
 
   if (!presetName && prompted.runOptions?.preset) {
@@ -178,16 +218,45 @@ export async function gatherInputs(opts) {
   const merged = mergeInputs(flagInput, prompted, featureDefaults);
   merged.features = engine.normalizeFeatureSet(merged.features);
 
+  if (!merged.answers.slug) {
+    merged.answers.slug = brandingDefaults.slug;
+  }
+  if (!merged.answers.textDomain) {
+    merged.answers.textDomain = brandingDefaults.textDomain;
+  }
+  fillDerivedBranding(merged.answers);
+
+  if (
+    (merged.features.jsLib === "preact" || merged.features.jsLib === "react") &&
+    !merged.answers.uiFramework
+  ) {
+    merged.answers.uiFramework = merged.features.jsLib;
+  }
+
   // 5. Final validation. Catches anything the prompt-derived set
   //    introduced (a bad combination the user picked at the
   //    terminal).
-  const finalValidation = engine.validateFeatureSet(
+  const featureValidation = engine.validateFeatureSet(
     merged.features,
     merged.answers,
   );
+  const answersValidation =
+    typeof engine.validateAnswers === "function"
+      ? engine.validateAnswers(merged.answers, merged.features)
+      : { ok: true, errors: {} };
+
+  const validation = {
+    ok: featureValidation.ok && answersValidation.ok,
+    errors: {
+      ...(featureValidation.errors || {}),
+      ...(answersValidation.errors || {}),
+    },
+    warnings: featureValidation.warnings || {},
+  };
+
   return {
     ...merged,
     preset: presetName,
-    validation: finalValidation,
+    validation,
   };
 }

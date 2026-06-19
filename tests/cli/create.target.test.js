@@ -96,6 +96,28 @@ describe("runCreate — target dir: empty / new", () => {
     );
   });
 
+  test("dir with only dotfiles is OK (engine is called)", async () => {
+    const dir = makeEmptyDir();
+    writeFileSync(path.join(dir, ".DS_Store"), "");
+    writeFileSync(path.join(dir, ".gitignore"), "vendor/\n");
+    try {
+      const deps = makeDeps();
+      const out = await runCreate(
+        {
+          dir,
+          answers: { slug: "my-plugin" },
+          features: {},
+          runOptions: {},
+        },
+        deps,
+      );
+      expect(out.ok).toBe(true);
+      expect(deps.engine.scaffoldProject).toHaveBeenCalledTimes(1);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   test("fresh empty dir is OK (engine is called)", async () => {
     const dir = makeEmptyDir();
     try {

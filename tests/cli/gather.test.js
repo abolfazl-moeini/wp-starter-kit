@@ -1,4 +1,7 @@
 import { describe, test, expect } from "@jest/globals";
+import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import * as path from "node:path";
 
 import { gatherInputs } from "../../packages/cli/src/gather.js";
 import * as engineStub from "@wpdev/create-wp-project";
@@ -37,6 +40,33 @@ function makeRecordingUi() {
   ui.calls = calls;
   return ui;
 }
+
+describe("gatherInputs() — target dir guard (I3.3)", () => {
+  test("refuses non-empty target dir before any prompt runs", async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "wpdev-gather-guard-"));
+    writeFileSync(path.join(dir, "leftover.txt"), "x");
+    const ui = makeRecordingUi();
+    try {
+      await expect(
+        gatherInputs({
+          argv: [],
+          cwd: dir,
+          validateTargetDir: true,
+          engine: engineStub,
+          ui,
+        }),
+      ).rejects.toMatchObject({
+        code: "WPDEV_TARGET_DIR_NOT_EMPTY",
+      });
+      const promptCalls = ui.calls.filter(
+        (c) => c.kind === "text" || c.kind === "select" || c.kind === "confirm",
+      );
+      expect(promptCalls).toEqual([]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
 
 describe("--yes / -y non-interactive (I2.10, I2.11)", () => {
   test("--yes: no prompt function is ever called", async () => {

@@ -18,15 +18,12 @@
  * the side-effect (stderr output) and the return value (exit
  * code).
  */
-import {
-  describe,
-  test,
-  expect,
-  beforeEach,
-  afterEach,
-} from "@jest/globals";
+import { describe, test, expect, beforeEach, afterEach } from "@jest/globals";
 
-import ui, { renderError } from "../../packages/cli/src/ui.js";
+import ui, {
+  renderError,
+  renderFatalError,
+} from "../../packages/cli/src/ui.js";
 
 /* -------------------------------------------------------------------- */
 /* stderr capture                                                        */
@@ -169,6 +166,41 @@ describe("ui.renderError()", () => {
 /* default `ui` export — exposes renderError                              */
 /* -------------------------------------------------------------------- */
 
+describe("ui.renderFatalError()", () => {
+  test("returns a non-zero exit code", async () => {
+    const result = await renderFatalError({
+      title: "Directory is not empty",
+      body: "/tmp/my-plugin",
+      hint: "Pass --force to overwrite.",
+      footer: "Scaffold cancelled",
+    });
+    expect(result.code).toBe(1);
+    expect(result.title).toBe("Directory is not empty");
+  });
+
+  test("writes clack-styled output to stdout", async () => {
+    await renderFatalError({
+      title: "Directory is not empty",
+      body: "/tmp/my-plugin",
+      hint: "Pass --force to overwrite.",
+      footer: "Scaffold cancelled",
+    });
+    const out = stdoutChunks.join("");
+    expect(out).toMatch(/Directory is not empty/);
+    expect(out).toMatch(/\/tmp\/my-plugin/);
+    expect(out).toMatch(/--force/);
+    expect(out).toMatch(/Scaffold cancelled/);
+  });
+
+  test("never writes to stderr", async () => {
+    await renderFatalError({
+      title: "Scaffold failed",
+      body: "engine error",
+    });
+    expect(stderrChunks.join("")).toBe("");
+  });
+});
+
 describe("default ui export — renderError", () => {
   test("ui.renderError is the same function shape (callable, returns code)", async () => {
     expect(typeof ui.renderError).toBe("function");
@@ -177,5 +209,14 @@ describe("default ui export — renderError", () => {
       errors: { slug: "bad" },
     });
     expect(result.code).not.toBe(0);
+  });
+
+  test("ui.renderFatalError is exposed on the default export", async () => {
+    expect(typeof ui.renderFatalError).toBe("function");
+    const result = await ui.renderFatalError({
+      title: "Directory is not empty",
+      body: "/tmp/proj",
+    });
+    expect(result.code).toBe(1);
   });
 });

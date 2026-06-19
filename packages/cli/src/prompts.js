@@ -23,83 +23,158 @@
 
 import { getFeatureCatalog, getPresets } from "@wpdev/create-wp-project";
 
+import {
+  deriveBrandingDefaults,
+  fillDerivedBranding,
+  needsGlobalNamePrompt,
+  slugToPhpFunctionPrefix,
+} from "./branding.js";
+import {
+  FALLBACK_PHP_SOURCE_VERSIONS,
+  normalizePhpMinor,
+  toPhpSourceVersionSelectOptions,
+  validatePhpSourceVersionInput,
+} from "./php-source-versions.js";
+
 /* -------------------------------------------------------------------- */
 /* Branding questions (always first; asked before features)              */
 /* -------------------------------------------------------------------- */
 
-const BRANDING_QUESTIONS = [
-  {
-    id: "slug",
-    type: "text",
-    target: "answers",
-    message: "Project name (slug)",
-    placeholder: "my-plugin",
-    validate: (s) =>
-      typeof s === "string" && /^[a-z0-9][a-z0-9-]*$/.test(s) && s.length > 0
-        ? undefined
-        : "slug must be lowercase kebab-case (a-z, 0-9, dashes)",
-  },
-  {
-    id: "npmScope",
-    type: "text",
-    target: "answers",
-    message: "npm scope (no @)",
-    placeholder: "myorg",
-    validate: (s) =>
-      typeof s === "string" && /^[a-z0-9][a-z0-9-]*$/.test(s)
-        ? undefined
-        : "npm scope must be lowercase kebab-case (no @)",
-  },
-  {
-    id: "globalName",
-    type: "text",
-    target: "answers",
-    message: "Global JS name",
-    placeholder: "MyPlugin",
-    validate: (s) =>
-      typeof s === "string" && /^[A-Za-z_][A-Za-z0-9_]*$/.test(s)
-        ? undefined
-        : "global name must be a valid JS identifier",
-  },
-  {
-    id: "textDomain",
-    type: "text",
-    target: "answers",
-    message: "Text domain",
-    placeholder: "my-plugin",
-  },
-  {
-    id: "hookPrefix",
-    type: "text",
-    target: "answers",
-    message: "Hook prefix",
-    placeholder: "my-plugin",
-  },
-  {
-    id: "phpFunctionPrefix",
-    type: "text",
-    target: "answers",
-    message: "PHP function prefix (must end with _)",
-    placeholder: "myprj_",
-    validate: (s) =>
-      typeof s === "string" && /^[a-z][a-z0-9_]*_$/.test(s)
-        ? undefined
-        : "PHP function prefix must end with an underscore",
-  },
-  {
-    id: "phpSourceVersion",
-    type: "select",
-    target: "answers",
-    message:
-      "PHP version you write source code in (Rector downgrades on release)",
-    options: [
-      { label: "8.1", value: "8.1" },
-      { label: "8.2", value: "8.2" },
-      { label: "8.3", value: "8.3" },
-    ],
-    initialValue: "8.1",
-  },
-];
+/**
+ * @param {{ slug: string, textDomain: string, globalName: string, phpFunctionPrefix: string, npmScope: string }} defaults
+ * @param {object} [engine]
+ * @returns {Array<object>}
+ */
+function buildBrandingQuestions(
+  defaults,
+  engine,
+  buildTimePreset,
+  phpSourceVersionOptions,
+) {
+  const d = defaults || deriveBrandingDefaults("my-plugin");
+  const eng = engine || { getPresets, applyPreset: undefined };
+  const phpOpts = phpSourceVersionOptions || {
+    versions: [...FALLBACK_PHP_SOURCE_VERSIONS],
+    defaultVersion: FALLBACK_PHP_SOURCE_VERSIONS[0] || "7.4",
+    options: toPhpSourceVersionSelectOptions(FALLBACK_PHP_SOURCE_VERSIONS),
+  };
+
+  return [
+    {
+      id: "slug",
+      type: "text",
+      target: "answers",
+      message: "Project name (slug)",
+      placeholder: d.slug,
+      defaultValue: d.slug,
+      validate: (s) =>
+        typeof s === "string" && /^[a-z0-9][a-z0-9-]*$/.test(s) && s.length > 0
+          ? undefined
+          : "slug must be lowercase kebab-case (a-z, 0-9, dashes)",
+    },
+    {
+      id: "npmScope",
+      type: "text",
+      target: "answers",
+      message: "npm scope (no @) — usually your brand or org name",
+      placeholder: d.npmScope,
+      defaultValue: d.npmScope,
+      validate: (s) =>
+        typeof s === "string" && /^[a-z0-9][a-z0-9-]*$/.test(s)
+          ? undefined
+          : "npm scope must be lowercase kebab-case (no @)",
+    },
+    {
+      id: "globalName",
+      type: "text",
+      target: "answers",
+      message:
+        "Global JS name (window.* object exposed by script bundles; auto-filled for PHP-only)",
+      placeholder: d.globalName,
+      defaultValue: d.globalName,
+      when: (s) => {
+        if (
+          buildTimePreset &&
+          buildTimePreset !== "custom" &&
+          typeof eng.applyPreset === "function"
+        ) {
+          const presetFeatures = eng.applyPreset(buildTimePreset);
+          if (presetFeatures?.js === "none") return false;
+        }
+        return needsGlobalNamePrompt(s, eng);
+      },
+      validate: (s) =>
+        typeof s === "string" && /^[A-Za-z_][A-Za-z0-9_]*$/.test(s)
+          ? undefined
+          : "global name must be a valid JS identifier",
+    },
+    {
+      id: "textDomain",
+      type: "text",
+      target: "answers",
+      message: "Text domain (for translations)",
+      placeholder: d.textDomain,
+      defaultValue: d.textDomain,
+    },
+    {
+      id: "phpFunctionPrefix",
+      type: "text",
+      target: "answers",
+      message: "PHP function prefix (must end with _)",
+      placeholder: (collected) =>
+        slugToPhpFunctionPrefix(collected.answers.slug || d.slug),
+      defaultValue: (collected) =>
+        slugToPhpFunctionPrefix(collected.answers.slug || d.slug),
+      validate: (s) =>
+        typeof s === "string" && /^[a-z][a-z0-9_]*_$/.test(s)
+          ? undefined
+          : "PHP function prefix must end with an underscore",
+    },
+    {
+      id: "phpSourceVersion",
+      type: "select",
+      target: "answers",
+      message:
+        "PHP version you write source code in (Rector downgrades on release)",
+      options: phpOpts.options,
+      initialValue: phpOpts.defaultVersion,
+    },
+  ];
+}
+
+/**
+ * @param {object} q
+ * @param {object} collected
+ * @param {object} brandingDefaults
+ * @returns {string|undefined}
+ */
+function resolveQuestionDefault(q, collected, brandingDefaults) {
+  if (typeof q.defaultValue === "function") {
+    return q.defaultValue(collected, brandingDefaults);
+  }
+  if (q.defaultValue !== undefined && q.defaultValue !== null) {
+    return q.defaultValue;
+  }
+  return undefined;
+}
+
+/**
+ * @param {object} q
+ * @param {string|undefined} defaultValue
+ * @returns {((value: string) => string|undefined)|undefined}
+ */
+function wrapTextValidate(q, defaultValue) {
+  if (typeof q.validate !== "function") {
+    return undefined;
+  }
+  return (raw) => {
+    const value =
+      raw === "" || raw === undefined || raw === null
+        ? defaultValue || ""
+        : raw;
+    return q.validate(value);
+  };
+}
 
 /** Human labels for catalog features (catalog rows use `notes`, not prompts). */
 const FEATURE_QUESTIONS = {
@@ -253,8 +328,17 @@ function canAskFaultTolerance(state) {
  *   the engine stub.
  * @returns {Array<object>}  ordered question descriptors
  */
-export function buildPromptPlan(currentFeatures, engine) {
-  const eng = engine || { getFeatureCatalog, getPresets };
+export function buildPromptPlan(currentFeatures, engine, options) {
+  const eng = engine || {
+    getFeatureCatalog,
+    getPresets,
+    applyPreset: undefined,
+  };
+  const opts = options || {};
+  const brandingDefaults = deriveBrandingDefaults(
+    opts.dirBasename || "my-plugin",
+  );
+  const phpSourceVersionOptions = opts.phpSourceVersionOptions;
   const catalog = eng.getFeatureCatalog();
   const buildTimePreset = (currentFeatures && currentFeatures.__preset) || null;
   const skipPresetQuestion = buildTimePreset && buildTimePreset !== "custom";
@@ -272,8 +356,14 @@ export function buildPromptPlan(currentFeatures, engine) {
     plan.push({ ...buildPresetQuestion(eng), when: () => true });
   }
 
-  for (const q of BRANDING_QUESTIONS) {
-    plan.push({ ...q, when: () => true });
+  for (const q of buildBrandingQuestions(
+    brandingDefaults,
+    eng,
+    buildTimePreset,
+    phpSourceVersionOptions,
+  )) {
+    const baseWhen = typeof q.when === "function" ? q.when : () => true;
+    plan.push({ ...q, when: (s) => baseWhen(s) });
   }
 
   if (skipFeaturesAtBuild) {
@@ -364,11 +454,14 @@ export function buildPromptPlan(currentFeatures, engine) {
 export async function runPrompts(plan, ui, prefill) {
   const u = ui || (await import("./ui.js")).default;
   const prefilled = prefill || {};
+  const brandingDefaults =
+    prefilled.brandingDefaults ||
+    deriveBrandingDefaults(prefilled.dirBasename || "my-plugin");
 
   const collected = {
     answers: { ...(prefilled.answers || {}) },
     features: {},
-    runOptions: {},
+    runOptions: { ...(prefilled.runOptions || {}) },
   };
 
   for (const q of plan) {
@@ -387,15 +480,35 @@ export async function runPrompts(plan, ui, prefill) {
 
     let value;
     if (q.type === "text") {
+      const defaultValue = resolveQuestionDefault(
+        q,
+        collected,
+        brandingDefaults,
+      );
+      const placeholder =
+        typeof q.placeholder === "function"
+          ? q.placeholder(collected, brandingDefaults)
+          : (q.placeholder ?? defaultValue);
       value = await u.text({
         message: q.message,
-        placeholder: q.placeholder,
-        validate: q.validate,
+        placeholder,
+        defaultValue,
+        validate: wrapTextValidate(q, defaultValue),
       });
+      if (
+        (value === "" || value === undefined || value === null) &&
+        defaultValue
+      ) {
+        value = defaultValue;
+      }
     } else if (q.type === "select") {
+      const options =
+        typeof q.options === "function"
+          ? q.options(collected, brandingDefaults)
+          : q.options;
       value = await u.select({
         message: q.message,
-        options: q.options,
+        options,
         initialValue: q.initialValue,
       });
     } else if (q.type === "confirm") {
@@ -413,38 +526,65 @@ export async function runPrompts(plan, ui, prefill) {
       throw err;
     }
 
+    if (q.id === "phpSourceVersion" && value === "__other__") {
+      const custom = await u.text({
+        message: "PHP source version (e.g. 8.2)",
+        validate: validatePhpSourceVersionInput,
+      });
+      if (
+        custom === undefined ||
+        custom === null ||
+        typeof custom === "symbol"
+      ) {
+        const err = new Error("user cancelled");
+        err.code = "WPDEV_USER_CANCELLED";
+        throw err;
+      }
+      value = normalizePhpMinor(custom.trim()) || custom.trim();
+    }
+
     if (q.target === "answers") collected.answers[q.id] = value;
     else if (q.target === "features") collected.features[q.id] = value;
     else if (q.target === "runOptions") collected.runOptions[q.id] = value;
 
+    if (q.id === "npmScope" && value) {
+      collected.answers.hookPrefix = value;
+    }
+
     if (q.id === "phpFramework" && value === "wpdev") {
+      fillDerivedBranding(collected.answers);
       if (collected.answers.hookPrefix === "wpdev") {
         await u.log(
-          "phpFramework=wpdev reserves the 'wpdev' hook prefix. Please choose a different hook prefix.",
+          "phpFramework=wpdev reserves the 'wpdev' hook prefix. Choose a different npm scope.",
         );
-        const suggested = collected.answers.slug || "my-plugin";
-        let newHook;
+        const suggested = collected.answers.slug || brandingDefaults.slug;
+        let newScope;
         do {
-          newHook = await u.text({
-            message: "Hook prefix",
+          newScope = await u.text({
+            message: "npm scope (no @) — usually your brand or org name",
             placeholder: suggested,
+            defaultValue: suggested,
             validate: (val) => {
-              if (!val) return "Hook prefix is required";
-              if (val === "wpdev") return "Cannot use 'wpdev' as hook prefix";
+              if (!val) return "npm scope is required";
+              if (val === "wpdev") return "Cannot use 'wpdev' as npm scope";
+              if (!/^[a-z0-9][a-z0-9-]*$/.test(val)) {
+                return "npm scope must be lowercase kebab-case (no @)";
+              }
               return undefined;
             },
           });
           if (
-            newHook === undefined ||
-            newHook === null ||
-            typeof newHook === "symbol"
+            newScope === undefined ||
+            newScope === null ||
+            typeof newScope === "symbol"
           ) {
             const err = new Error("user cancelled");
             err.code = "WPDEV_USER_CANCELLED";
             throw err;
           }
-        } while (newHook === "wpdev");
-        collected.answers.hookPrefix = newHook;
+        } while (newScope === "wpdev");
+        collected.answers.npmScope = newScope;
+        collected.answers.hookPrefix = newScope;
       }
 
       if (collected.answers.phpFunctionPrefix === "wpdev_") {
@@ -484,6 +624,8 @@ export async function runPrompts(plan, ui, prefill) {
       }
     }
   }
+
+  fillDerivedBranding(collected.answers);
 
   return collected;
 }

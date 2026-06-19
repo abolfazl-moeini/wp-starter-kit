@@ -148,6 +148,48 @@ export function renderError(input) {
 }
 
 /* -------------------------------------------------------------------- */
+/* renderFatalError — clack-styled terminal fatal errors                  */
+/* -------------------------------------------------------------------- */
+
+/**
+ * Print a fatal error using @clack/prompts panels (note / log / cancel)
+ * so early exits match the interactive prompt styling.
+ *
+ * @param {{
+ *   title?: string,
+ *   body?: string,
+ *   message?: string,
+ *   hint?: string,
+ *   footer?: string,
+ * }} [input]
+ * @returns {Promise<{ code: number, title: string }>}
+ */
+export async function renderFatalError(input) {
+  const i = input || {};
+  const clack = await getClack();
+  const title =
+    typeof i.title === "string" && i.title.length > 0 ? i.title : "Error";
+  const body = [i.body, i.message].filter(Boolean).join("\n\n");
+  const hint = typeof i.hint === "string" ? i.hint : "";
+  const footer =
+    typeof i.footer === "string" && i.footer.length > 0
+      ? i.footer
+      : "Cancelled";
+
+  if (body || hint) {
+    const noteBody = [body, hint].filter(Boolean).join("\n\n");
+    clack.note(noteBody, title);
+  } else {
+    clack.log.error(title);
+    if (hint) {
+      clack.log.info(hint);
+    }
+  }
+  clack.cancel(footer);
+  return { code: 1, title };
+}
+
+/* -------------------------------------------------------------------- */
 /* renderSummary — the "your project" panel                             */
 /* -------------------------------------------------------------------- */
 
@@ -296,12 +338,31 @@ export function renderNextSteps(features, runOptions) {
 
 const ui = {
   /**
-   * @param {{message: string, placeholder?: string, validate?: Function}} opts
+   * @param {{message: string, placeholder?: string, defaultValue?: string, validate?: Function}} opts
    * @returns {Promise<string>}
    */
   async text(opts) {
     const clack = await getClack();
-    return clack.text(opts);
+    const o = opts || {};
+    const defaultValue = o.defaultValue;
+    const validate =
+      typeof o.validate === "function"
+        ? (raw) => {
+            const value =
+              raw === "" || raw === undefined || raw === null
+                ? (defaultValue ?? "")
+                : raw;
+            return o.validate(value);
+          }
+        : undefined;
+    let result = await clack.text({ ...o, validate });
+    if (
+      (result === "" || result === undefined || result === null) &&
+      defaultValue
+    ) {
+      result = defaultValue;
+    }
+    return result;
   },
 
   /**
@@ -381,6 +442,14 @@ const ui = {
    */
   async renderError(err) {
     return renderError(err);
+  },
+
+  /**
+   * @param {{title?: string, body?: string, message?: string, hint?: string, footer?: string}} [input]
+   * @returns {Promise<{code: number, title: string}>}
+   */
+  async renderFatalError(input) {
+    return renderFatalError(input);
   },
 
   /**

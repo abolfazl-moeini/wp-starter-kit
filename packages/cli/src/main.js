@@ -23,6 +23,10 @@
 import { Command } from "commander";
 
 import { runCreate } from "./commands/create.js";
+import {
+  normalizePositionalSlug,
+  resolveCreateTargetDir,
+} from "./resolveTargetDir.js";
 import { runAdd } from "./commands/add.js";
 import { runRemove } from "./commands/remove.js";
 import { runList } from "./commands/list.js";
@@ -120,7 +124,27 @@ export function buildProgram() {
     // 1. Gather the resolved { answers, features, runOptions }
     //    (gatherInputs handles prompts, defaults, flag-merge,
     //    and validation — including the fail-fast I2.8 gate).
-    const resolved = await gatherInputs({ argv });
+    const positionalSlug = normalizePositionalSlug(slug);
+    let resolved;
+    try {
+      resolved = await gatherInputs({
+        argv,
+        cwd: process.cwd(),
+        positionalSlug,
+        validateTargetDir: true,
+      });
+    } catch (err) {
+      if (err && err.code === "WPDEV_TARGET_DIR_NOT_EMPTY") {
+        const fatal = await ui.renderFatalError({
+          title: "Directory is not empty",
+          body: err.targetDir || err.message,
+          hint: err.hint,
+          footer: "Scaffold cancelled",
+        });
+        process.exit(fatal.code);
+      }
+      throw err;
+    }
 
     if (!resolved.validation.ok) {
       // Re-emit a clean error line + exit 1. The gather
@@ -137,17 +161,27 @@ export function buildProgram() {
       process.exit(1);
     }
 
-    // 2. Resolve the target dir: --dir= if set, else the
-    //    positional slug, else the sanitized answers.slug.
-    const targetDir =
-      resolved.runOptions.targetDir || slug || resolved.answers.slug || ".";
+    // 2. Resolve the target dir: --dir= if set, else the positional
+    //    slug as a subdirectory, else the current working directory
+    //    (scaffold in-place when no slug was passed).
+    const targetDir = resolveCreateTargetDir({
+      cwd: process.cwd(),
+      runOptions: resolved.runOptions,
+      positionalSlug,
+    });
 
     // 3. Drive runCreate. The bin layer wires the real
     //    engine + runners + ui; runCreate stays pure and
     //    unit-testable with fakes.
+    const spinner =
+      typeof ui.spinner === "function"
+        ? await ui.spinner({ message: "Scaffolding project…" })
+        : null;
+    spinner?.start?.();
+
     const result = await runCreate(
       {
-        slug: slug || resolved.answers.slug,
+        slug: positionalSlug || resolved.answers.slug,
         dir: targetDir,
         answers: resolved.answers,
         features: resolved.features,
@@ -167,11 +201,26 @@ export function buildProgram() {
     // 4. Render the summary + next-steps panels, then exit
     //    0/1 based on the result.
     if (!result.ok) {
-      process.stderr.write(
-        "wpdev create failed: " + (result.reason || "unknown") + "\n",
+      spinner?.stop?.("Scaffold failed", 1);
+      const reason = result.reason || "unknown";
+      const fatal = await ui.renderFatalError(
+        reason.includes("not empty")
+          ? {
+              title: "Directory is not empty",
+              body: targetDir,
+              hint: "Pass --force to overwrite, or scaffold into an empty directory.",
+              footer: "Scaffold cancelled",
+            }
+          : {
+              title: "Scaffold failed",
+              body: reason,
+              footer: "Scaffold cancelled",
+            },
       );
-      process.exit(1);
+      process.exit(fatal.code);
     }
+
+    spinner?.stop?.("Project scaffolded");
 
     if (result.warnings && result.warnings.length > 0) {
       process.stderr.write("\nwarnings:\n");
