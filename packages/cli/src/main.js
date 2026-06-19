@@ -223,10 +223,7 @@ export function buildProgram() {
     spinner?.stop?.("Project scaffolded");
 
     if (result.warnings && result.warnings.length > 0) {
-      process.stderr.write("\nwarnings:\n");
-      for (const w of result.warnings) {
-        process.stderr.write("  - " + w + "\n");
-      }
+      await ui.renderWarnings(result.warnings);
     }
 
     // Print the summary panel + the next-steps panel. The ui

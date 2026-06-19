@@ -272,6 +272,74 @@ export function renderSummary(input) {
   return lines.join("\n");
 }
 
+/**
+ * @param {string} text
+ * @returns {string}
+ */
+export function formatSummaryNoteBody(text) {
+  const lines = String(text || "")
+    .split("\n")
+    .filter((line) => line.trim().length > 0);
+  if (lines.length === 0) return "";
+  const [headline, ...rest] = lines;
+  const project = headline.replace(/^Summary:\s*/, "").trim();
+  const details = rest.map((line) => line.trim()).join("\n");
+  return details ? `${project}\n\n${details}` : project;
+}
+
+/**
+ * @param {string[]} steps
+ * @returns {string}
+ */
+export function formatNextStepsNoteBody(steps) {
+  return (steps || [])
+    .filter((step) => typeof step === "string" && step.length > 0)
+    .map((step, index) => `${index + 1}. ${step}`)
+    .join("\n");
+}
+
+/**
+ * Print the post-scaffold summary using clack's note panel.
+ *
+ * @param {{answers?:object, features?:object, runOptions?:object}} input
+ * @returns {Promise<void>}
+ */
+export async function renderSummaryPanel(input) {
+  const text = renderSummary(input);
+  const body = formatSummaryNoteBody(text);
+  if (!body) return;
+  const clack = await getClack();
+  clack.note(body, "Project summary");
+}
+
+/**
+ * Print follow-up commands using clack's note panel.
+ *
+ * @param {Record<string,string>} [features]
+ * @param {object} [runOptions]
+ * @returns {Promise<void>}
+ */
+export async function renderNextStepsPanel(features, runOptions) {
+  const steps = renderNextSteps(features, runOptions);
+  const body = formatNextStepsNoteBody(steps);
+  if (!body) return;
+  const clack = await getClack();
+  clack.note(body, "Next steps");
+}
+
+/**
+ * @param {string[]} warnings
+ * @returns {Promise<void>}
+ */
+export async function renderWarnings(warnings) {
+  const items = Array.isArray(warnings)
+    ? warnings.filter((w) => typeof w === "string" && w.length > 0)
+    : [];
+  if (items.length === 0) return;
+  const clack = await getClack();
+  clack.log.warn(items.join("\n"));
+}
+
 /* -------------------------------------------------------------------- */
 /* renderNextSteps — the "what's next" panel                            */
 /* -------------------------------------------------------------------- */
@@ -407,11 +475,7 @@ const ui = {
    * @param {{answers?:object, features?:object, runOptions?:object}} input
    */
   async renderSummary(input) {
-    const text = renderSummary(input);
-    // Print to stdout (process.stdout.write so we don't depend
-    // on clack's log panel — this is the "summary" phase, not
-    // an interactive step).
-    process.stdout.write(text + "\n");
+    return renderSummaryPanel(input);
   },
 
   /**
@@ -422,12 +486,14 @@ const ui = {
    * @param {object} runOptions
    */
   async renderNextSteps(features, runOptions) {
-    const steps = renderNextSteps(features, runOptions);
-    if (steps.length === 0) return;
-    process.stdout.write("\nNext steps:\n");
-    for (const s of steps) {
-      process.stdout.write("  " + s + "\n");
-    }
+    return renderNextStepsPanel(features, runOptions);
+  },
+
+  /**
+   * @param {string[]} warnings
+   */
+  async renderWarnings(warnings) {
+    return renderWarnings(warnings);
   },
 
   /**

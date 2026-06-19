@@ -24,7 +24,15 @@
  */
 import { describe, test, expect } from "@jest/globals";
 
-import { renderSummary, renderNextSteps } from "../../packages/cli/src/ui.js";
+import {
+  formatNextStepsNoteBody,
+  formatSummaryNoteBody,
+  renderNextSteps,
+  renderNextStepsPanel,
+  renderSummary,
+  renderSummaryPanel,
+  renderWarnings,
+} from "../../packages/cli/src/ui.js";
 
 /* -------------------------------------------------------------------- */
 /* renderSummary                                                          */
@@ -173,6 +181,88 @@ describe("renderSummary()", () => {
 /* -------------------------------------------------------------------- */
 /* renderNextSteps                                                       */
 /* -------------------------------------------------------------------- */
+
+describe("formatSummaryNoteBody()", () => {
+  test("combines headline and detail lines for clack note", () => {
+    const body = formatSummaryNoteBody(
+      "Summary: my-plugin\n  JS: none\n  PHP test: phpunit",
+    );
+    expect(body).toMatch(/my-plugin/);
+    expect(body).toMatch(/JS: none/);
+    expect(body).toMatch(/PHP test: phpunit/);
+  });
+});
+
+describe("formatNextStepsNoteBody()", () => {
+  test("numbers each follow-up command", () => {
+    const body = formatNextStepsNoteBody(["cd /tmp/proj", "composer install"]);
+    expect(body).toBe("1. cd /tmp/proj\n2. composer install");
+  });
+});
+
+describe("renderSummaryPanel()", () => {
+  test("writes clack-styled project summary to stdout", async () => {
+    const chunks = [];
+    const originalWrite = process.stdout.write.bind(process.stdout);
+    process.stdout.write = (chunk) => {
+      chunks.push(String(chunk));
+      return true;
+    };
+    try {
+      await renderSummaryPanel({
+        answers: { slug: "my-plugin" },
+        features: { js: "none", phpTest: "phpunit" },
+        runOptions: {},
+      });
+      const out = chunks.join("");
+      expect(out).toMatch(/Project summary/);
+      expect(out).toMatch(/my-plugin/);
+      expect(out).toMatch(/phpunit/);
+    } finally {
+      process.stdout.write = originalWrite;
+    }
+  });
+});
+
+describe("renderNextStepsPanel()", () => {
+  test("writes clack-styled next steps to stdout", async () => {
+    const chunks = [];
+    const originalWrite = process.stdout.write.bind(process.stdout);
+    process.stdout.write = (chunk) => {
+      chunks.push(String(chunk));
+      return true;
+    };
+    try {
+      await renderNextStepsPanel(
+        { phpTest: "phpunit" },
+        { targetDir: "/tmp/proj" },
+      );
+      const out = chunks.join("");
+      expect(out).toMatch(/Next steps/);
+      expect(out).toMatch(/cd \/tmp\/proj/);
+      expect(out).toMatch(/composer install/);
+    } finally {
+      process.stdout.write = originalWrite;
+    }
+  });
+});
+
+describe("renderWarnings()", () => {
+  test("writes clack-styled warnings to stdout", async () => {
+    const chunks = [];
+    const originalWrite = process.stdout.write.bind(process.stdout);
+    process.stdout.write = (chunk) => {
+      chunks.push(String(chunk));
+      return true;
+    };
+    try {
+      await renderWarnings(["composer install failed"]);
+      expect(chunks.join("")).toMatch(/composer install failed/);
+    } finally {
+      process.stdout.write = originalWrite;
+    }
+  });
+});
 
 describe("renderNextSteps()", () => {
   test("returns an array of strings", () => {
