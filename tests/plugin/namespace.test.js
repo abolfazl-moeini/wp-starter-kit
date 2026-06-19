@@ -10,7 +10,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
-const CONFIG_PATH = join(ROOT, "project.config.json");
+const CONFIG_PATH = join(ROOT, "wpdev.json");
 let originalConfig;
 
 function requiredConfig(npmScope) {

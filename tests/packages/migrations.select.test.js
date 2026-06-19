@@ -120,10 +120,8 @@ describe("selectMigrations() — range selection (Phase 24.3, 24.4)", () => {
 
   test("empty registry range: a range with no registered migration returns []", () => {
     // A range that no migration falls into returns an empty
-    // array (not a throw). This is the "downgrade-via-empty"
-    // case: from > to would throw, but from < to with no
-    // intermediate migration is just "nothing to do".
-    const list = selectMigrations("1.0.0", "9.9.9");
+    // array (not a throw). Use a range above all known migrations.
+    const list = selectMigrations("99.0.0", "99.9.9");
     expect(list).toEqual([]);
   });
 

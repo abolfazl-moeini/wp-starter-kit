@@ -4,7 +4,7 @@
  * Phase 20 of plan.v3.md. The manifest is the consumer project's
  * durable record of "which kit version generated this project,
  * which features are on, in which distMode". It lives at
- * `<projectRoot>/wpdev-kit.json` and is the single source of truth
+ * `<projectRoot>/wpdev.json` and is the single source of truth
  * for every later phase that needs to ask "what is in this project".
  *
  * Three contracts (locked by tests/packages/manifest*.test.js):
@@ -12,7 +12,7 @@
  *    `{ schema:1, kitVersion, distMode, generatedAt, features }`.
  *    `distMode` defaults to "deps" (Phase 23+). Legacy projects may
  *    carry "vendored"; migrations + doctor handle the upgrade path.
- *  - writeManifest(dir, manifest) writes `wpdev-kit.json` with
+ *  - writeManifest(dir, manifest) writes `wpdev.json` with
  *    stable key order + trailing newline + 2-space indent (so
  *    diffs stay readable). Creates the directory if missing.
  *  - readManifest(dir) returns the parsed object or `null` if
@@ -29,16 +29,14 @@
 
 import { promises as fs, readFileSync, existsSync } from "node:fs";
 import * as path from "node:path";
-import { updateJsonFile } from "./json-utils.js";
-import { deriveUiFramework } from "./derive-ui-framework.js";
 import { getFeatureCatalog } from "./features.js";
 
 /* -------------------------------------------------------------------- */
 /* Constants                                                             */
 /* -------------------------------------------------------------------- */
 
-export const MANIFEST_FILENAME = "wpdev-kit.json";
-export const MANIFEST_SCHEMA = 1;
+export const MANIFEST_FILENAME = "wpdev.json";
+export const MANIFEST_SCHEMA = 2;
 export const DEFAULT_DIST_MODE = "deps";
 
 /* -------------------------------------------------------------------- */
@@ -62,19 +60,31 @@ export const DEFAULT_DIST_MODE = "deps";
  * @param {string} [args.generatedAt]  ISO-8601 timestamp; defaults
  *                                    to `new Date().toISOString()`.
  *                                    Tests inject a frozen value.
- * @returns {{
- *   schema: number,
- *   kitVersion: string,
- *   distMode: string,
- *   generatedAt: string,
- *   features: Record<string,string>,
- * }}
+ * @returns {Object} manifest with schema, kit metadata, branding fields, features, optional build
  */
 export function buildManifest({
   kitVersion,
   features,
   distMode = DEFAULT_DIST_MODE,
   generatedAt = new Date().toISOString(),
+  // branding fields (from wpdev.json — now merged)
+  slug,
+  globalName,
+  localizeVar,
+  textDomain,
+  hookPrefix,
+  npmScope,
+  depsBundle,
+  phpFunctionPrefix,
+  uiFramework,
+  restNamespace,
+  vendorPrefix,
+  phpMinVersion,
+  phpSourceVersion,
+  batchEndpoint,
+  projectType,
+  // build section (from wpdev.json build — now nested)
+  build,
 } = {}) {
   if (typeof kitVersion !== "string" || kitVersion.length === 0) {
     throw new Error("buildManifest: kitVersion is required (string)");
@@ -90,13 +100,43 @@ export function buildManifest({
   for (const id of Object.keys(features)) {
     if (!(id in sortedFeatures)) sortedFeatures[id] = features[id];
   }
-  return {
+
+  const manifest = {
     schema: MANIFEST_SCHEMA,
     kitVersion,
     distMode,
     generatedAt,
-    features: sortedFeatures,
   };
+
+  // Branding fields (only include if provided)
+  const brandingFields = {
+    slug,
+    globalName,
+    localizeVar,
+    textDomain,
+    hookPrefix,
+    npmScope,
+    depsBundle,
+    phpFunctionPrefix,
+    uiFramework,
+    restNamespace,
+    vendorPrefix,
+    phpMinVersion,
+    phpSourceVersion,
+    batchEndpoint,
+    projectType,
+  };
+  for (const [k, v] of Object.entries(brandingFields)) {
+    if (v !== undefined) manifest[k] = v;
+  }
+
+  manifest.features = sortedFeatures;
+
+  if (build && typeof build === "object") {
+    manifest.build = build;
+  }
+
+  return manifest;
 }
 
 /**
@@ -118,7 +158,7 @@ export function withMigrationTrail(manifest, opts = {}) {
 /* -------------------------------------------------------------------- */
 
 /**
- * Write a manifest to `<dir>/wpdev-kit.json`. Creates the directory
+ * Write a manifest to `<dir>/wpdev.json`. Creates the directory
  * if it doesn't exist. The output is JSON with 2-space indent
  * and a trailing newline (so POSIX tools that expect a final '\n'
  * are happy, and so byte-for-byte idempotency is achievable).
@@ -143,7 +183,17 @@ export async function writeManifest(dir, manifest) {
   }
   await fs.mkdir(dir, { recursive: true });
   const file = path.join(dir, MANIFEST_FILENAME);
-  const json = JSON.stringify(manifest, null, 2) + "\n";
+  // Merge with existing file so branding fields written separately are preserved.
+  let existing = {};
+  if (existsSync(file)) {
+    try {
+      existing = JSON.parse(readFileSync(file, "utf8"));
+    } catch {
+      existing = {};
+    }
+  }
+  const merged = { ...existing, ...manifest };
+  const json = JSON.stringify(merged, null, 2) + "\n";
   await fs.writeFile(file, json, "utf8");
 }
 
@@ -152,7 +202,7 @@ export async function writeManifest(dir, manifest) {
 /* -------------------------------------------------------------------- */
 
 /**
- * Read a manifest from `<dir>/wpdev-kit.json`.
+ * Read a manifest from `<dir>/wpdev.json`.
  *
  *  - File absent → returns `null`. The installer treats `null` as
  *    "not a wp-starter-kit project" and decides whether that's
@@ -198,109 +248,4 @@ export function readManifest(dir) {
       `${manifestPath}: malformed JSON in manifest (${error.message})`,
     );
   }
-}
-
-/* -------------------------------------------------------------------- */
-/* syncFeaturesToConfig                                                  */
-/* -------------------------------------------------------------------- */
-
-const PROJECT_CONFIG_FILENAME = "project.config.json";
-
-/**
- * Minimal v2 branding defaults used when project.config.json
- * does not exist yet. Mirrors the v2 default set in
- * `answersToProjectConfig()` (kit's `index.js`) and the
- * `OPTIONAL_DEFAULTS` in `core/packages/utils/readProjectConfig.js`
- * so a freshly-scaffolded project — or a hand-written minimal
- * project — sees the same shape.
- *
- * The values are deliberately generic: a real scaffold will
- * overwrite them with the user's answers-based branding. The
- * sync helper's job is just to make a valid skeleton that won't
- * break readProjectConfig on the first read.
- */
-const MINIMAL_V2_BRANDING = {
-  slug: "wpdev-project",
-  globalName: "WPDevProject",
-  localizeVar: "WPDevProjectLoc",
-  textDomain: "wpdev-project",
-  hookPrefix: "wpdev-project",
-  npmScope: "@wpdev",
-  phpFunctionPrefix: "wpdev_",
-  uiFramework: "preact",
-  projectType: "plugin",
-  restNamespace: "wpdev/v1",
-  vendorPrefix: "WpdevVendor",
-  phpMinVersion: "7.4",
-  phpSourceVersion: "8.1",
-  batchEndpoint: "/batch/v1",
-};
-
-/**
- * Write the same `features` object to BOTH `wpdev-kit.json` and
- * a `features` key in `project.config.json`.
- *
- * This helper does ONLY the project.config.json half — the
- * manifest half is `writeManifest`. The scaffold (Phase 21)
- * calls them in sequence:
- *
- *   1. writeManifest(dir, buildManifest({ kitVersion, features }))
- *   2. syncFeaturesToConfig(dir, features)
- *
- * Why duplicate? `wpdev-kit.json` is the durable kit state
- * (kitVersion, distMode, generatedAt, features). Putting
- * `features` ALSO in `project.config.json` means:
- *
- *  - Pre-Phase 20 readers of project.config.json (the kit's
- *    PHP classes, the JS asset bundle) can answer
- *    "which features are on?" without discovering
- *    wpdev-kit.json.
- *  - The kit's own state is self-contained — `wpdev-kit.json`
- *    can be read in isolation.
- *
- * project.config.json is updated via `updateJsonFile`, so the
- * existing file's indentation and trailing-newline state are
- * preserved. If the file does not exist, a minimal v2-valid
- * config is created (so the sync never throws ENOENT) and
- * populated with the v2 defaults + the `features` key.
- *
- * @param {string} dir
- * @param {Record<string,string>} features
- * @returns {Promise<void>}
- */
-export async function syncFeaturesToConfig(dir, features) {
-  if (!dir || typeof dir !== "string") {
-    throw new Error("syncFeaturesToConfig: dir is required (string)");
-  }
-  if (!features || typeof features !== "object") {
-    throw new Error("syncFeaturesToConfig: features is required (object)");
-  }
-
-  await fs.mkdir(dir, { recursive: true });
-  const cfgPath = path.join(dir, PROJECT_CONFIG_FILENAME);
-
-  if (!existsSync(cfgPath)) {
-    // Bootstrap path — create a minimal v2-valid config + features.
-    const minimal = { ...MINIMAL_V2_BRANDING, features: { ...features } };
-    const ui = deriveUiFramework(features, minimal);
-    if (ui) minimal.uiFramework = ui;
-    await fs.writeFile(
-      cfgPath,
-      JSON.stringify(minimal, null, 2) + "\n",
-      "utf8",
-    );
-    return;
-  }
-
-  // Update path — preserve existing shape, set/replace `features`.
-  await updateJsonFile(cfgPath, (cfg) => {
-    cfg.features = { ...features };
-    const ui = deriveUiFramework(features, cfg);
-    if (ui) {
-      cfg.uiFramework = ui;
-    } else if ("uiFramework" in cfg) {
-      delete cfg.uiFramework;
-    }
-    return cfg;
-  });
 }

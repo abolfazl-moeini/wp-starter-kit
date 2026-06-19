@@ -160,11 +160,9 @@ describe("readProjectConfig", () => {
       "utf8",
     );
     // Source may use either single or double quotes — accept both.
-    expect(source).toMatch(
-      /join\(getRootPath\(\),\s*['"]project\.config\.json['"]\)/,
-    );
+    expect(source).toMatch(/join\(getRootPath\(\),\s*['"]wpdev\.json['"]\)/);
     expect(source).not.toMatch(
-      /join\(process\.cwd\(\),\s*['"]project\.config\.json['"]\)/,
+      /join\(process\.cwd\(\),\s*['"]wpdev\.json['"]\)/,
     );
   });
 

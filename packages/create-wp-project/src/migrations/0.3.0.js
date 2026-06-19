@@ -1,8 +1,8 @@
 /**
- * 0.3.0 migration — wpdev-kit.json → wpdev-kit.json rebrand.
+ * 0.3.0 migration — wpdev.json → wpdev.json rebrand.
  *
  * Renames the legacy manifest for consumers upgrading from pre-rebrand kits.
- * Optionally patches project.config.json only if it still has old default
+ * Optionally patches wpdev.json only if it still has old default
  * branding (to avoid clobbering user customizations).
  *
  * Idempotent and safe.
@@ -14,10 +14,10 @@ import { updateJsonFile } from "../json-utils.js";
 
 export const version = "0.3.0";
 export const description =
-  "Rename wpsk-kit.json → wpdev-kit.json (rebrand) and patch legacy default branding in project.config.json if present";
+  "Rename wpsk-kit.json → wpdev.json (rebrand) and patch legacy default branding in wpdev.json if present";
 
 const OLD_MANIFEST = "wpsk-kit.json";
-const NEW_MANIFEST = "wpdev-kit.json";
+const NEW_MANIFEST = "wpdev.json";
 
 const LEGACY_DEFAULTS = {
   slug: "wpsk-starter",
@@ -52,8 +52,8 @@ export async function run(dir) {
     }
   }
 
-  // 2. Optionally patch project.config.json ONLY if values still match legacy defaults.
-  const cfgPath = path.join(dir, "project.config.json");
+  // 2. Optionally patch wpdev.json ONLY if values still match legacy defaults.
+  const cfgPath = path.join(dir, "wpdev.json");
   if (existsSync(cfgPath)) {
     try {
       await updateJsonFile(cfgPath, (cfg) => {
@@ -79,7 +79,7 @@ export async function run(dir) {
       // Non-fatal for config mirror
       return {
         ok: true,
-        warning: `manifest renamed, but project.config.json patch failed: ${error.message}`,
+        warning: `manifest renamed, but wpdev.json patch failed: ${error.message}`,
       };
     }
   }

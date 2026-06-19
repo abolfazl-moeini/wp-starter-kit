@@ -9,7 +9,7 @@
  *   3. Call `engine.scaffoldProject(dir, answers, {features, force})`.
  *   4. If engine.scaffoldProject returns {ok:false} → return
  *      `{ok:false, reason}` (no post-gen actions).
- *   5. Build + write the manifest (`wpdev-kit.json`) using
+ *   5. Build + write the manifest (`wpdev.json`) using
  *      `kitVersion` from `readEnginePackageVersion()` (or the
  *      `runOptions.kitVersion` override for tests).
  *   6. Run post-generation actions, gated by runOptions:
@@ -227,33 +227,26 @@ export async function runCreate(input, deps) {
   //    package.json unless `runOptions.kitVersion` overrides
   //    (test seam only).
   const kitVersion = i.runOptions?.kitVersion || readVersion();
-  const manifestPath = path.join(dir, "wpdev-kit.json");
+  const manifestPath = path.join(dir, "wpdev.json");
   try {
     const manifest =
       typeof engine.buildManifest === "function"
         ? engine.buildManifest({ kitVersion, features: i.features || {} })
         : {
-            schema: 1,
+            schema: 2,
             kitVersion,
-            distMode: "vendored",
+            distMode: "deps",
             generatedAt: new Date().toISOString(),
             features: { ...(i.features || {}) },
           };
     if (typeof engine.writeManifest === "function") {
       await engine.writeManifest(dir, manifest);
     } else {
-      // Defensive fallback: if the engine is from a future
-      // version that removed writeManifest, the caller still
-      // gets a useful result. We don't try to write the file
-      // ourselves — that's the engine's job.
-      warnings.push(
-        "engine.writeManifest is missing — wpdev-kit.json NOT written",
-      );
+      warnings.push("engine.writeManifest is missing — wpdev.json NOT written");
     }
   } catch (e) {
     warnings.push(
-      "failed to write wpdev-kit.json: " +
-        (e && e.message ? e.message : String(e)),
+      "failed to write wpdev.json: " + (e && e.message ? e.message : String(e)),
     );
   }
 

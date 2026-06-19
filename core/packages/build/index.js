@@ -50,18 +50,25 @@ export function validateConfig(config) {
 }
 
 export async function readBuildConfig() {
-  const configPath = join(getRootPath(), "build.config.json");
-
+  const configPath = join(getRootPath(), "wpdev.json");
+  let configData;
   try {
-    const configData = await readFile(configPath, "utf8");
-    return JSON.parse(configData);
+    configData = await readFile(configPath, "utf8");
   } catch (error) {
     if (error.code === "ENOENT") {
-      throw new Error("build.config.json not found. Path:" + configPath);
-    } else if (error instanceof SyntaxError) {
-      throw new Error("build.config.json is malformed or invalid JSON");
-    } else {
-      throw new Error(`Failed to read build.config.json: ${error.message}`);
+      throw new Error("wpdev.json not found. Path: " + configPath);
     }
+    throw new Error(`Failed to read wpdev.json: ${error.message}`);
   }
+  let parsed;
+  try {
+    parsed = JSON.parse(configData);
+  } catch {
+    throw new Error("wpdev.json is malformed or invalid JSON");
+  }
+  const build = parsed.build;
+  if (!build || typeof build !== "object") {
+    throw new Error("wpdev.json is missing the 'build' section");
+  }
+  return build;
 }

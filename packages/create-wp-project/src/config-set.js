@@ -13,7 +13,6 @@ import {
   readManifest,
   writeManifest,
   buildManifest,
-  syncFeaturesToConfig,
   DEFAULT_DIST_MODE,
 } from "./manifest.js";
 import { findGenerator } from "./generators/index.js";
@@ -104,7 +103,7 @@ export async function setConfigValue(dir, key, value) {
     return {
       ok: false,
       reason:
-        `setConfigValue: no wpdev-kit.json at ${dir} — ` +
+        `setConfigValue: no wpdev.json at ${dir} — ` +
         "is this a wp-starter-kit project?",
     };
   }
@@ -117,7 +116,7 @@ export async function setConfigValue(dir, key, value) {
     const { cfg } = await readProjectConfigFromDir(dir, "setConfigValue");
     answers = projectConfigToAnswers(cfg);
   } catch {
-    // project.config.json may be missing on hand-edited projects;
+    // wpdev.json may be missing on hand-edited projects;
     // validation still runs with empty answers.
   }
 
@@ -130,14 +129,29 @@ export async function setConfigValue(dir, key, value) {
     };
   }
 
+  const existing = manifest || {};
   const nextManifest = buildManifest({
-    kitVersion: manifest.kitVersion,
+    kitVersion: existing.kitVersion,
     features: newFeatures,
-    distMode: manifest.distMode || DEFAULT_DIST_MODE,
-    generatedAt: new Date().toISOString(),
+    distMode: existing.distMode,
+    slug: existing.slug,
+    globalName: existing.globalName,
+    localizeVar: existing.localizeVar,
+    textDomain: existing.textDomain,
+    hookPrefix: existing.hookPrefix,
+    npmScope: existing.npmScope,
+    depsBundle: existing.depsBundle,
+    phpFunctionPrefix: existing.phpFunctionPrefix,
+    uiFramework: existing.uiFramework,
+    restNamespace: existing.restNamespace,
+    vendorPrefix: existing.vendorPrefix,
+    phpMinVersion: existing.phpMinVersion,
+    phpSourceVersion: existing.phpSourceVersion,
+    batchEndpoint: existing.batchEndpoint,
+    projectType: existing.projectType,
+    build: existing.build,
   });
   await writeManifest(dir, nextManifest);
-  await syncFeaturesToConfig(dir, newFeatures);
 
   const written = [];
 

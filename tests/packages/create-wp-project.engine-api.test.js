@@ -33,7 +33,6 @@
  *     - getFeatureCatalog, defaultFeatures, validateFeatureSet
  *     - getPresets, applyPreset
  *     - buildManifest, readManifest, writeManifest
- *     - syncFeaturesToConfig
  *   Phase 21 — generator + scaffold (BC)
  *     - scaffoldProject, validateAnswers, answersToProjectConfig,
  *       renderTemplate
@@ -78,7 +77,6 @@ const APPENDIX_C_EXPORTS = [
   ["buildManifest", "function"],
   ["readManifest", "function"],
   ["writeManifest", "function"],
-  ["syncFeaturesToConfig", "function"],
   // Phase 21 — scaffold (BC) + generator pipeline
   ["scaffoldProject", "function"],
   ["validateAnswers", "function"],

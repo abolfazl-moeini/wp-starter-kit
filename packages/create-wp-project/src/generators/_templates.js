@@ -370,31 +370,12 @@ export function loadReadmeTxtTemplate() {
 /* Inline template strings (all moved from src/index.js verbatim)        */
 /* -------------------------------------------------------------------- */
 
-export const TEMPLATE_PROJECT_CONFIG = `{
-  "slug": "{{slug}}",
-  "globalName": "{{globalName}}",
-  "localizeVar": "{{localizeVar}}",
-  "textDomain": "{{textDomain}}",
-  "hookPrefix": "{{hookPrefix}}",
-  "npmScope": "{{npmScope}}",
-  "depsBundle": "{{depsBundle}}",
-  "phpFunctionPrefix": "{{phpFunctionPrefix}}",
-  "uiFramework": "{{uiFramework}}",
-  "projectType": "{{projectType}}",
-  "restNamespace": "{{restNamespace}}",
-  "vendorPrefix": "{{vendorPrefix}}",
-  "phpMinVersion": "{{phpMinVersion}}",
-  "phpSourceVersion": "{{phpSourceVersion}}",
-  "batchEndpoint": "{{batchEndpoint}}"
-}
-`;
-
 export const TEMPLATE_FUNCTIONS_PHP = `<?php
 /**
  * Theme bootstrap for the {{slug}} WordPress theme.
  *
  * Scaffolded from wp-starter-kit. The project's own functions use the
- * {{phpFunctionPrefix}} (from project.config.json). Calls to the asset
+ * {{phpFunctionPrefix}} (from wpdev.json). Calls to the asset
  * helpers (enqueue, get_localize_data, asset_info, etc.) use the stable
  * framework names (wpdev_*) because wp-starter-kit ships a single
  * implementation of the PHP asset layer (in includes/asset-functions.php
@@ -412,7 +393,7 @@ export const TEMPLATE_FUNCTIONS_PHP = `<?php
  *      headers, ABSPATH guard, vendor/autoload.php, and lifecycle
  *      hooks).
  *   2. \`functions.php\` is kept ONLY for projects that explicitly
- *      opt-in via \`projectType: 'theme'\` in project.config.json.
+ *      opt-in via \`projectType: 'theme'\` in wpdev.json.
  *   3. New projects should NOT ship a \`functions.php\`. The file
  *      will be removed in the next major release.
  *
@@ -484,7 +465,7 @@ export const TEMPLATE_FUNCTIONS_PHP_NO_JS = `<?php
  *      headers, ABSPATH guard, vendor/autoload.php, and lifecycle
  *      hooks).
  *   2. \`functions.php\` is kept ONLY for projects that explicitly
- *      opt-in via \`projectType: 'theme'\` in project.config.json.
+ *      opt-in via \`projectType: 'theme'\` in wpdev.json.
  *   3. New projects should NOT ship a \`functions.php\`. The file
  *      will be removed in the next major release.
  *
@@ -543,41 +524,6 @@ domReady(() => {
     }
   );
 });
-`;
-
-export const TEMPLATE_STRAUSS_JSON = `{
-  "target_directory": "vendor-prefixed",
-  "namespace_prefix": "{{vendorPrefix}}",
-  "classmap_prefix": "{{vendorPrefix}}_",
-  "constant_prefix": "{{vendorPrefixUpper}}_",
-  "delete_vendor_files": false,
-  "exclude_from_prefix": {
-    "namespaces": ["WPDev"],
-    "file_patterns": []
-  }
-}
-`;
-
-/**
- * Phase 21 — vendorScoping generator overrides the WPDev exclusion
- * (plan §0.4.1). The CORE template keeps the WPDev exclusion (the
- * kit's own `strauss.json` does the same; local src/Core copies
- * still need the exclusion to scope correctly at release time
- * while Phase 23 lands). The vendorScoping generator (when ON)
- * emits a strauss.json WITHOUT the WPDev exclusion — that is the
- * template consumed by the `run()` of vendorScoping.js.
- */
-export const TEMPLATE_STRAUSS_JSON_NO_WPDEV_EXCLUSION = `{
-  "target_directory": "vendor-prefixed",
-  "namespace_prefix": "{{vendorPrefix}}",
-  "classmap_prefix": "{{vendorPrefix}}_",
-  "constant_prefix": "{{vendorPrefixUpper}}_",
-  "delete_vendor_files": false,
-  "exclude_from_prefix": {
-    "namespaces": [],
-    "file_patterns": []
-  }
-}
 `;
 
 export const TEMPLATE_HUSKY_PRE_COMMIT = `#!/usr/bin/env sh
@@ -708,12 +654,32 @@ describe('ExampleFeature admin entry', () => {
 });
 `;
 
-export const TEMPLATE_BUILD_CONFIG = `{
-  "assetMappings": [],
-  "globalMappings": {},
-  "styleEntryPoints": [
-    "assets/stylesheets/style.css"
-  ]
+export const TEMPLATE_WPDEV_JSON = `{
+  "schema": 2,
+  "kitVersion": "{{kitVersion}}",
+  "distMode": "deps",
+  "slug": "{{slug}}",
+  "globalName": "{{globalName}}",
+  "localizeVar": "{{localizeVar}}",
+  "textDomain": "{{textDomain}}",
+  "hookPrefix": "{{hookPrefix}}",
+  "npmScope": "{{npmScope}}",
+  "depsBundle": "{{depsBundle}}",
+  "phpFunctionPrefix": "{{phpFunctionPrefix}}",
+  "uiFramework": "{{uiFramework}}",
+  "restNamespace": "{{restNamespace}}",
+  "vendorPrefix": "{{vendorPrefix}}",
+  "phpMinVersion": "{{phpMinVersion}}",
+  "phpSourceVersion": "{{phpSourceVersion}}",
+  "batchEndpoint": "{{batchEndpoint}}",
+  "features": {},
+  "build": {
+    "assetMappings": [],
+    "globalMappings": {},
+    "styleEntryPoints": [
+      "assets/stylesheets/style.css"
+    ]
+  }
 }
 `;
 
@@ -731,7 +697,7 @@ export const TEMPLATE_README = `# {{slug}}
 
 WordPress plugin scaffolded from [wp-starter-kit](https://github.com/abolfazl-moeini/wp-plugin-starter-kit).
 
-## Branding (all from \`project.config.json\`)
+## Branding (all from \`wpdev.json\`)
 
 - npm scope: \`{{npmScope}}\`
 - Global JS name: \`{{globalName}}\`
@@ -766,7 +732,7 @@ namespace WPDev\\Core;
  *
  * Responsibilities:
  *  - Locate and cache the project configuration JSON
- *    (\`project.config.json\` in the plugin root).
+ *    (\`wpdev.json\` in the plugin root).
  *  - Hold a single {@see ModuleLoader} instance for the lifetime of
  *    the request / CLI run / unit test.
  *  - Hook into WordPress at \`plugins_loaded\` (or \`init\` if the
@@ -792,13 +758,13 @@ final class Plugin
     private static ?ModuleLoader \$loader = null;
 
     /**
-     * Override path for \`project.config.json\`. Resolved at boot
+     * Override path for \`wpdev.json\`. Resolved at boot
      * time and cached for the rest of the request.
      */
     private static ?string \$configPath = null;
 
     /**
-     * Parsed contents of \`project.config.json\`.
+     * Parsed contents of \`wpdev.json\`.
      *
      * @var array<string,mixed>|null
      */
@@ -833,12 +799,12 @@ final class Plugin
      * and the \`plugin_loaded\` hook is recorded for later inspection.
      *
      * @param string|null \$configPath Optional override for the
-     *                                project.config.json location.
+     *                                wpdev.json location.
      *                                Production code lets this be
      *                                null and the file is resolved
      *                                from the plugin root.
      *
-     * @throws \\RuntimeException when project.config.json cannot be
+     * @throws \\RuntimeException when wpdev.json cannot be
      *                           located or read.
      */
     public static function boot(?string \$configPath = null): void
@@ -897,21 +863,21 @@ final class Plugin
 
         if (!is_file(\$path) || !is_readable(\$path)) {
             throw new \\RuntimeException(
-                sprintf('project.config.json not found at %s', \$path)
+                sprintf('wpdev.json not found at %s', \$path)
             );
         }
 
         \$raw = file_get_contents(\$path);
         if (\$raw === false) {
             throw new \\RuntimeException(
-                sprintf('Failed to read project.config.json at %s', \$path)
+                sprintf('Failed to read wpdev.json at %s', \$path)
             );
         }
 
         \$decoded = json_decode(\$raw, true);
         if (!is_array(\$decoded)) {
             throw new \\RuntimeException(
-                sprintf('project.config.json at %s did not decode as an object/array', \$path)
+                sprintf('wpdev.json at %s did not decode as an object/array', \$path)
             );
         }
 
@@ -952,7 +918,7 @@ final class Plugin
             return self::\$configPath;
         }
         \$pluginRoot = dirname(__DIR__, 2);
-        return \$pluginRoot . '/project.config.json';
+        return \$pluginRoot . '/wpdev.json';
     }
 }
 `;
@@ -1018,7 +984,7 @@ namespace WPDev\\Core;
  * Extensibility hooks (filter / action) follow the project's
  * \`{\$hookPrefix}_*\` naming convention. The \`hookPrefix\` is supplied
  * at construction time and is typically read from
- * \`project.config.json\` (e.g. \`wpdev_module_loader\` for \`wpdev\`).
+ * \`wpdev.json\` (e.g. \`wpdev_module_loader\` for \`wpdev\`).
  */
 final class ModuleLoader
 {

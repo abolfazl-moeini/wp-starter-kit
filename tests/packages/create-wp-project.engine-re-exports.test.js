@@ -38,7 +38,6 @@ const EXPECTED_EXPORTS = {
   buildManifest: "function",
   readManifest: "function",
   writeManifest: "function",
-  syncFeaturesToConfig: "function",
   updateJsonFile: "function",
   getPresets: "function",
   applyPreset: "function",

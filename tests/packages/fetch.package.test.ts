@@ -8,7 +8,7 @@ describe("@wpdev/fetch package contract", () => {
 
   test("package name uses npmScope from project config", () => {
     const rootConfig = JSON.parse(
-      readFileSync(join(process.cwd(), "project.config.json"), "utf8"),
+      readFileSync(join(process.cwd(), "wpdev.json"), "utf8"),
     );
     expect(pkg.name).toBe(`${rootConfig.npmScope}/fetch`);
   });

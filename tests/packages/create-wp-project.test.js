@@ -96,7 +96,7 @@ describe("@wpdev/create-wp-project", () => {
   /* -------------------------------------------------------------------- */
 
   describe("answersToProjectConfig", () => {
-    test("returns the canonical project.config.json shape", () => {
+    test("returns the canonical wpdev.json shape", () => {
       const cfg = answersToProjectConfig({
         slug: "my-project",
         npmScope: "myorg",
@@ -197,11 +197,11 @@ describe("@wpdev/create-wp-project", () => {
     // @ts-expect-error -- type assertion for test shape (unused var is intentional for coverage of typed path)
     const goodAnswersTyped = goodAnswers; // eslint-disable-line @typescript-eslint/no-unused-vars
 
-    test("writes project.config.json with the expected shape", async () => {
+    test("writes wpdev.json with the expected shape", async () => {
       const res = await scaffoldProject(tmp, goodAnswers);
       expect(res.ok).toBe(true);
       const cfg = JSON.parse(
-        await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+        await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
       );
       // Phase 21+22: `features` is now synced from the catalog's defaults
       // via syncFeaturesToConfig(). The test deliberately enumerates the
@@ -209,6 +209,10 @@ describe("@wpdev/create-wp-project", () => {
       // future addition/removal of a default feature id is caught here
       // as a snapshot of the catalog's first variant for every id.
       expect(cfg).toEqual({
+        schema: 2,
+        kitVersion: expect.any(String),
+        distMode: "deps",
+        generatedAt: expect.any(String),
         slug: "my-project",
         globalName: "MyProject",
         localizeVar: "MyProjectLoc",
@@ -244,6 +248,11 @@ describe("@wpdev/create-wp-project", () => {
           frontendStack: "none",
           mcpAbilities: "off",
           ci: "auto",
+        },
+        build: {
+          assetMappings: [],
+          globalMappings: {},
+          styleEntryPoints: ["assets/stylesheets/style.css"],
         },
       });
     });
@@ -305,12 +314,13 @@ describe("@wpdev/create-wp-project", () => {
       expect(readme).toContain("MyProject");
     });
 
-    test("writes build.config.json and default stylesheet for style hashing", async () => {
+    test("writes wpdev.json and default stylesheet for style hashing", async () => {
       const res = await scaffoldProject(tmp, goodAnswers);
       expect(res.ok).toBe(true);
-      const buildConfig = JSON.parse(
-        await fs.readFile(path.join(tmp, "build.config.json"), "utf8"),
+      const wpdev = JSON.parse(
+        await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
       );
+      const buildConfig = wpdev.build || wpdev;
       expect(buildConfig.styleEntryPoints).toEqual([
         "assets/stylesheets/style.css",
       ]);
@@ -321,20 +331,14 @@ describe("@wpdev/create-wp-project", () => {
       expect(css).toMatch(/body\s*\{/);
     });
 
-    test("returns ok=false (does not throw) when target dir already has project.config.json", async () => {
-      // Pre-populate a sentinel project.config.json
-      await fs.writeFile(
-        path.join(tmp, "project.config.json"),
-        '{"sentinel": true}',
-      );
+    test("returns ok=false (does not throw) when target dir already has wpdev.json", async () => {
+      // Pre-populate a sentinel wpdev.json
+      await fs.writeFile(path.join(tmp, "wpdev.json"), '{"sentinel": true}');
       const res = await scaffoldProject(tmp, goodAnswers);
       expect(res.ok).toBe(false);
       expect(res.reason).toMatch(/already exists/i);
       // Sentinel must not have been overwritten
-      const after = await fs.readFile(
-        path.join(tmp, "project.config.json"),
-        "utf8",
-      );
+      const after = await fs.readFile(path.join(tmp, "wpdev.json"), "utf8");
       expect(after).toContain("sentinel");
     });
 
@@ -478,13 +482,9 @@ describe("@wpdev/create-wp-project", () => {
       expect(adminTs).toMatch(/domReady/);
     });
 
-    test("scaffolds strauss.json and husky pre-commit", async () => {
+    test("scaffolds husky pre-commit (strauss config is in composer.json only)", async () => {
       const res = await scaffoldProject(tmp, goodAnswers);
       expect(res.ok).toBe(true);
-      const strauss = JSON.parse(
-        await fs.readFile(path.join(tmp, "strauss.json"), "utf8"),
-      );
-      expect(strauss.namespace_prefix).toBe("WpdevVendor");
       const hook = await fs.readFile(
         path.join(tmp, ".husky", "pre-commit"),
         "utf8",
@@ -507,14 +507,15 @@ describe("@wpdev/create-wp-project", () => {
       expect(dep).toMatch(/my-project-/);
     });
 
-    /* ----- build.config.json + project.config.json shape ------------- */
+    /* ----- wpdev.json + wpdev.json shape ------------- */
 
-    test("scaffolds build.config.json with styleEntryPoints", async () => {
+    test("scaffolds wpdev.json with styleEntryPoints", async () => {
       const res = await scaffoldProject(tmp, goodAnswers);
       expect(res.ok).toBe(true);
-      const buildConfig = JSON.parse(
-        await fs.readFile(path.join(tmp, "build.config.json"), "utf8"),
+      const wpdev = JSON.parse(
+        await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
       );
+      const buildConfig = wpdev.build || wpdev;
       expect(Array.isArray(buildConfig.styleEntryPoints)).toBe(true);
       // Default entrypoint points at the style.css that the scaffold
       // also emits under assets/stylesheets/.
@@ -523,11 +524,11 @@ describe("@wpdev/create-wp-project", () => {
       );
     });
 
-    test("scaffolds project.config.json with Phase 11 v2 default fields", async () => {
+    test("scaffolds wpdev.json with Phase 11 v2 default fields", async () => {
       const res = await scaffoldProject(tmp, goodAnswers);
       expect(res.ok).toBe(true);
       const cfg = JSON.parse(
-        await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+        await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
       );
       // v2 defaults must be present in the scaffold output so that
       // consumers (e.g. readProjectConfig) can rely on them without
@@ -607,7 +608,7 @@ describe("@wpdev/create-wp-project", () => {
       expect(readme).toMatch(/^Tested up to:\s+\d+\.\d+/m);
 
       // 6. Requires PHP:  — minimum PHP version. Must be rendered
-      //    from project.config.json's phpMinVersion field.
+      //    from wpdev.json's phpMinVersion field.
       const phpMinMatch = readme.match(/^Requires PHP:\s+(\S+)/m);
       expect(phpMinMatch).not.toBeNull();
       // The default phpMinVersion in answersToProjectConfig is '7.4'.
@@ -626,7 +627,7 @@ describe("@wpdev/create-wp-project", () => {
       //    before the first `== Section ==` heading. WP.org
       //    requires it; without it the directory shows an empty
       //    description. The scaffold populates it from
-      //    project.config.json (or, by default, from
+      //    wpdev.json (or, by default, from
       //    tplVars.description).
       //    Locate the short description as the first non-empty,
       //    non-comment line after the metadata block.
@@ -671,14 +672,11 @@ describe("@wpdev/create-wp-project", () => {
 
     /* ----- refuse to clobber ---------------------------------------- */
 
-    test("refuses to clobber existing project.config.json without --force", async () => {
-      // Pre-populate a sentinel project.config.json AND a sentinel
+    test("refuses to clobber existing wpdev.json without --force", async () => {
+      // Pre-populate a sentinel wpdev.json AND a sentinel
       // src/Core/Plugin.php so we can prove neither was overwritten.
       await fs.mkdir(path.join(tmp, "src", "Core"), { recursive: true });
-      await fs.writeFile(
-        path.join(tmp, "project.config.json"),
-        '{"sentinel": true}',
-      );
+      await fs.writeFile(path.join(tmp, "wpdev.json"), '{"sentinel": true}');
       await fs.writeFile(
         path.join(tmp, "src", "Core", "Plugin.php"),
         "<?php // sentinel",
@@ -687,10 +685,7 @@ describe("@wpdev/create-wp-project", () => {
       expect(res.ok).toBe(false);
       expect(res.reason).toMatch(/already exists|clobber|exists/i);
       // Both sentinels must still be intact.
-      const cfg = await fs.readFile(
-        path.join(tmp, "project.config.json"),
-        "utf8",
-      );
+      const cfg = await fs.readFile(path.join(tmp, "wpdev.json"), "utf8");
       expect(cfg).toContain("sentinel");
       const plugin = await fs.readFile(
         path.join(tmp, "src", "Core", "Plugin.php"),
@@ -699,27 +694,24 @@ describe("@wpdev/create-wp-project", () => {
       expect(plugin).toContain("sentinel");
     });
 
-    test("overwrites with --force: refreshes project.config.json (no src/Core in deps mode)", async () => {
+    test("overwrites with --force: refreshes wpdev.json (no src/Core in deps mode)", async () => {
       await fs.mkdir(path.join(tmp, "src", "Core"), { recursive: true });
-      await fs.writeFile(
-        path.join(tmp, "project.config.json"),
-        '{"sentinel": true}',
-      );
+      await fs.writeFile(path.join(tmp, "wpdev.json"), '{"sentinel": true}');
       await fs.writeFile(
         path.join(tmp, "src", "Core", "Plugin.php"),
         "<?php // sentinel",
       );
       const res = await scaffoldProject(tmp, goodAnswers, { force: true });
       expect(res.ok).toBe(true);
-      // The new project.config.json must NOT contain the sentinel.
+      // The new wpdev.json must NOT contain the sentinel.
       const cfg = JSON.parse(
-        await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+        await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
       );
       expect(cfg.sentinel).toBeUndefined();
       expect(cfg.slug).toBe("my-project");
       // In deps mode there is no src/Core/Plugin.php written by scaffold
       // (the WPDev\Core reference in bootstrap resolves from the dep).
-      // We only assert that force wrote a fresh project.config.json.
+      // We only assert that force wrote a fresh wpdev.json.
       expect(
         await fs.readFile(path.join(tmp, "my-project.php"), "utf8"),
       ).toMatch(/my-project/);
@@ -846,17 +838,15 @@ describe("@wpdev/create-wp-project", () => {
       );
 
       const cfg = JSON.parse(
-        await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+        await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
       );
-      expect(snapshotProjectConfig(cfg)).toMatchSnapshot(
-        "standard-project.config.json",
-      );
+      expect(snapshotProjectConfig(cfg)).toMatchSnapshot("standard-wpdev.json");
 
       const manifest = JSON.parse(
-        await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+        await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
       );
       expect(snapshotKitManifest(manifest)).toMatchSnapshot(
-        "standard-wpdev-kit.json",
+        "standard-wpdev.json",
       );
 
       const tsconfig = JSON.parse(
@@ -884,17 +874,15 @@ describe("@wpdev/create-wp-project", () => {
       );
 
       const cfg = JSON.parse(
-        await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+        await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
       );
-      expect(snapshotProjectConfig(cfg)).toMatchSnapshot(
-        "minimal-project.config.json",
-      );
+      expect(snapshotProjectConfig(cfg)).toMatchSnapshot("minimal-wpdev.json");
 
       const manifest = JSON.parse(
-        await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+        await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
       );
       expect(snapshotKitManifest(manifest)).toMatchSnapshot(
-        "minimal-wpdev-kit.json",
+        "minimal-wpdev.json",
       );
     });
   });
@@ -929,7 +917,7 @@ function snapshotComposerJson(composer) {
   };
 }
 
-/** Stable subset of project.config.json for regression snapshots (TASK-20). */
+/** Stable subset of wpdev.json for regression snapshots (TASK-20). */
 function snapshotProjectConfig(cfg) {
   return {
     slug: cfg.slug,
@@ -940,7 +928,7 @@ function snapshotProjectConfig(cfg) {
   };
 }
 
-/** Stable subset of wpdev-kit.json (drops volatile timestamps). */
+/** Stable subset of wpdev.json (drops volatile timestamps). */
 function snapshotKitManifest(manifest) {
   return {
     schema: manifest.schema,

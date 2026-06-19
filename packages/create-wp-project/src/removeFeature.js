@@ -4,7 +4,7 @@
  * Phase 22.9+. The engine API the installer's `wpdev remove <feature>`
  * command calls. The mirror of addFeature(): turn a feature OFF
  * in an EXISTING project, deleting only the files the feature's
- * generator OWNS and updating the manifest + project.config.json
+ * generator OWNS and updating the manifest (wpdev.json)
  * to reflect the new state.
  *
  * Safety contract (per plan.v3.md §22):
@@ -14,7 +14,7 @@
  *    to refuse removal of always-on `core`.
  *  - No partial writes on failure: the new feature set is computed
  *    in-memory first, validation runs, and only then are deletes
- *    issued and the manifest + project.config.json updated. A
+ *    issued and the manifest (wpdev.json) updated. A
  *    failure leaves the on-disk state untouched.
  *  - A generator's `owns` globs are the only paths removeFeature
  *    deletes. A file matched by ANY other still-ON feature's owns
@@ -64,7 +64,6 @@ import {
   readManifest,
   writeManifest,
   buildManifest,
-  syncFeaturesToConfig,
   DEFAULT_DIST_MODE,
 } from "./manifest.js";
 import { refreshGlue } from "./refresh-glue.js";
@@ -331,10 +330,7 @@ async function* walkFiles(root, dir = root, depth = 0) {
  *  7. Walk the project tree; for every file matched by the
  *     removed feature's owns that is NOT matched by any other
  *     still-ON feature's owns, delete it.
- *  8. Update wpdev-kit.json (via `writeManifest` +
- *     `buildManifest`).
- *  9. Update project.config.json's `features` key (via
- *     `syncFeaturesToConfig`).
+ *  8. Update wpdev.json (via `writeManifest` + `buildManifest`).
  *
  * @param {string} dir
  * @param {string} id           feature id (e.g. "husky", "js", "exampleFeature")
@@ -369,7 +365,7 @@ export async function removeFeature(dir, id, _opts = {}) {
     return {
       ok: false,
       reason:
-        `removeFeature: no wpdev-kit.json at ${dir} — ` +
+        `removeFeature: no wpdev.json at ${dir} — ` +
         "is this a wp-starter-kit project?",
       removed: [],
     };
@@ -441,20 +437,31 @@ export async function removeFeature(dir, id, _opts = {}) {
     newFeatures,
   );
 
-  // 8. Update the manifest. The manifest's `features` is the
-  //    merged set; kitVersion is the existing version (a
-  //    removeFeature does NOT bump kitVersion — that's
-  //    migrations' job); distMode is the existing mode.
+  // 8. Update the manifest (wpdev.json). Preserve branding + build.
+  const existingManifest = manifest || {};
   const nextManifest = buildManifest({
-    kitVersion: manifest.kitVersion,
+    kitVersion: existingManifest.kitVersion,
     features: newFeatures,
-    distMode: manifest.distMode || DEFAULT_DIST_MODE,
-    generatedAt: new Date().toISOString(),
+    distMode: existingManifest.distMode,
+    // preserve existing branding
+    slug: existingManifest.slug,
+    globalName: existingManifest.globalName,
+    localizeVar: existingManifest.localizeVar,
+    textDomain: existingManifest.textDomain,
+    hookPrefix: existingManifest.hookPrefix,
+    npmScope: existingManifest.npmScope,
+    depsBundle: existingManifest.depsBundle,
+    phpFunctionPrefix: existingManifest.phpFunctionPrefix,
+    uiFramework: existingManifest.uiFramework,
+    restNamespace: existingManifest.restNamespace,
+    vendorPrefix: existingManifest.vendorPrefix,
+    phpMinVersion: existingManifest.phpMinVersion,
+    phpSourceVersion: existingManifest.phpSourceVersion,
+    batchEndpoint: existingManifest.batchEndpoint,
+    projectType: existingManifest.projectType,
+    build: existingManifest.build,
   });
   await writeManifest(dir, nextManifest);
-
-  // 9. Update project.config.json's `features` key.
-  await syncFeaturesToConfig(dir, newFeatures);
 
   const glueWritten = await refreshGlue(dir, newFeatures);
 

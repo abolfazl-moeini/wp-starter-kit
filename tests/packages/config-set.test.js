@@ -35,7 +35,7 @@ async function seedProject(tmp, features = {}) {
     features: { ...allFeatures },
   };
   await fs.writeFile(
-    path.join(tmp, "project.config.json"),
+    path.join(tmp, "wpdev.json"),
     JSON.stringify(cfg, null, 2) + "\n",
     "utf8",
   );
@@ -65,12 +65,12 @@ describe("setConfigValue()", () => {
     expect(result.ok).toBe(true);
 
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
     );
     expect(manifest.features.phpMinVersion).toBe("8.2");
 
     const cfg = JSON.parse(
-      await fs.readFile(path.join(tmpDir, "project.config.json"), "utf8"),
+      await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
     );
     expect(cfg.features.phpMinVersion).toBe("8.2");
   });
@@ -111,7 +111,7 @@ describe("setConfigValue()", () => {
     const result = await setConfigValue(tmpDir, "ci", "off");
     expect(result.ok).toBe(true);
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
     );
     expect(manifest.features.ci).toBe("off");
   });

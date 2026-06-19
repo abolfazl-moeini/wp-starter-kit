@@ -20,7 +20,7 @@ jest.mock("@core/utils", () => {
     readProjectConfig: ({ path: customPath } = {}) => {
       const { existsSync, readFileSync } = require("node:fs");
       const { resolve } = require("node:path");
-      const configPath = customPath || resolve(rootDir, "project.config.json");
+      const configPath = customPath || resolve(rootDir, "wpdev.json");
       if (!existsSync(configPath)) {
         throw new Error("project.config.json not found at: " + configPath);
       }

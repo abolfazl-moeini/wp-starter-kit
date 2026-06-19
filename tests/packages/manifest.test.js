@@ -37,12 +37,12 @@ import { defaultFeatures } from "../../packages/create-wp-project/src/features.j
  * files live in manifest.roundtrip.test.js (Phase 20.7/20.8).
  */
 describe("buildManifest() — shape (Phase 20.5)", () => {
-  test("returns { schema:1, kitVersion, distMode, generatedAt, features }", () => {
+  test("returns { schema:2, kitVersion, distMode, generatedAt, features }", () => {
     const m = buildManifest({
       kitVersion: "0.2.0",
       features: defaultFeatures(),
     });
-    expect(m.schema).toBe(1);
+    expect(m.schema).toBe(2);
     expect(m.kitVersion).toBe("0.2.0");
     expect(typeof m.distMode).toBe("string");
     expect(typeof m.generatedAt).toBe("string");
@@ -130,7 +130,7 @@ describe("writeManifest() — writes wpdev-kit.json (Phase 20.6)", () => {
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: defaultFeatures(),
     });
-    const stat = await fs.stat(path.join(nested, "wpdev-kit.json"));
+    const stat = await fs.stat(path.join(nested, "wpdev.json"));
     expect(stat.isFile()).toBe(true);
   });
 
@@ -142,7 +142,7 @@ describe("writeManifest() — writes wpdev-kit.json (Phase 20.6)", () => {
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: defaultFeatures(),
     });
-    const raw = await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8");
+    const raw = await fs.readFile(path.join(tmp, "wpdev.json"), "utf8");
     expect(raw.endsWith("\n")).toBe(true);
   });
 
@@ -154,10 +154,10 @@ describe("writeManifest() — writes wpdev-kit.json (Phase 20.6)", () => {
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: defaultFeatures(),
     });
-    const raw = await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8");
+    const raw = await fs.readFile(path.join(tmp, "wpdev.json"), "utf8");
     // 2-space indent is the kit default — project.config.json uses
     // the same. Stable formatting keeps diffs clean.
-    expect(raw).toMatch(/^{\n {2}"schema": 1,/);
+    expect(raw).toMatch(/^{\n {2}"schema": \d+,/);
   });
 
   test("uses stable key order: schema, kitVersion, distMode, generatedAt, features", async () => {
@@ -173,7 +173,7 @@ describe("writeManifest() — writes wpdev-kit.json (Phase 20.6)", () => {
       generatedAt: "2026-06-15T00:00:00.000Z",
       features: defaultFeatures(),
     });
-    const raw = await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8");
+    const raw = await fs.readFile(path.join(tmp, "wpdev.json"), "utf8");
     const keys = [];
     for (const m of raw.matchAll(/^ {2}"([^"]+)":/gm)) keys.push(m[1]);
     expect(keys.slice(0, 5)).toEqual([
@@ -195,7 +195,7 @@ describe("writeManifest() — writes wpdev-kit.json (Phase 20.6)", () => {
       features: defaultFeatures(),
     };
     await writeManifest(tmp, m1);
-    const first = await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8");
+    const first = await fs.readFile(path.join(tmp, "wpdev.json"), "utf8");
 
     // Second run: a fresh manifest object with the same fields,
     // forced to the SAME generatedAt so the bytes should match.
@@ -207,7 +207,7 @@ describe("writeManifest() — writes wpdev-kit.json (Phase 20.6)", () => {
       features: defaultFeatures(),
     };
     await writeManifest(tmp, m2);
-    const second = await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8");
+    const second = await fs.readFile(path.join(tmp, "wpdev.json"), "utf8");
     expect(second).toBe(first);
   });
 });

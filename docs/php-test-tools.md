@@ -142,9 +142,9 @@ Plus a few **WPDev-specific rules** (defined in `ruleset.xml`):
 
 - `WPDev.NamingConventions.FunctionPrefix` — every function in
   `core/php/` must start with the project's `phpFunctionPrefix`
-  (read from `project.config.json`).
+  (read from `wpdev.json`).
 - `WPDev.I18n.TextDomain` — every `__()` / `_e()` / `esc_html__()`
-  must use the project's `textDomain` (read from `project.config.json`).
+  must use the project's `textDomain` (read from `wpdev.json`).
 - `WPDev.Files.ClassFileName` — class files must be `class-<name>.php`
   (PSR-4-ish).
 

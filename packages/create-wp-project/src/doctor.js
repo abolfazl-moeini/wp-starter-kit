@@ -300,7 +300,7 @@ export function doctorProject(dir) {
   const features = fillFeatureDefaults(rawFeatures);
 
   let answers = {};
-  const cfgPath = path.join(dir, "project.config.json");
+  const cfgPath = path.join(dir, "wpdev.json");
   if (existsSync(cfgPath)) {
     try {
       const cfg = JSON.parse(readFileSync(cfgPath, "utf8"));

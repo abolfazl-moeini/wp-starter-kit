@@ -18,7 +18,7 @@ const ROOT = "/mock/root";
 
 function createDeps() {
   const readProjectConfig = () => {
-    const configPath = join(ROOT, "project.config.json");
+    const configPath = join(ROOT, "wpdev.json");
     if (!existsSync(configPath)) {
       throw new Error(`project.config.json not found at: ${configPath}`);
     }
@@ -44,7 +44,7 @@ describe("checkProject", () => {
   test("returns empty array when project.config.json is valid and package is scoped", () => {
     mockFs({
       [ROOT]: {
-        "project.config.json": JSON.stringify(validConfig),
+        "wpdev.json": JSON.stringify(validConfig),
         "package.json": JSON.stringify({ name: "@my-org/starter" }),
       },
     });
@@ -69,7 +69,7 @@ describe("checkProject", () => {
 
     mockFs({
       [ROOT]: {
-        "project.config.json": JSON.stringify(validConfig),
+        "wpdev.json": JSON.stringify(validConfig),
         "package.json": JSON.stringify({ name: "unscoped-starter" }),
       },
     });
@@ -85,7 +85,7 @@ describe("checkProject", () => {
 
     mockFs({
       [ROOT]: {
-        "project.config.json": JSON.stringify(validConfig),
+        "wpdev.json": JSON.stringify(validConfig),
         "package.json": JSON.stringify({ name: "unscoped-starter" }),
       },
     });

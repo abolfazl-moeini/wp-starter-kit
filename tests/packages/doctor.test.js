@@ -16,7 +16,7 @@
  *
  * Checks (one per test, 4 total):
  *
- *  1. `wpdev-kit.json` (the manifest) is present. Missing →
+ *  1. `wpdev.json` (the manifest) is present. Missing →
  *     `errors.push("manifest missing")`. This is the only
  *     FATAL check that doesn't need a manifest to detect.
  *
@@ -77,25 +77,10 @@ import { getFeatureCatalog } from "../../packages/create-wp-project/src/features
  */
 async function seedHealthy({ kitVersion, distMode = "deps", features } = {}) {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-doctor-"));
-  // Default kitVersion to a value the test can reason about
-  // (the registered "0.1.0" baseline). Tests that need a
-  // different version pass it explicitly.
   const kv = kitVersion !== undefined ? kitVersion : "0.1.0";
   const featureSet = features
     ? { ...features }
     : { ...defaultFeatureSet(), jsLib: "preact" };
-  const manifest = {
-    schema: 1,
-    kitVersion: kv,
-    distMode,
-    generatedAt: "2026-01-01T00:00:00.000Z",
-    features: featureSet,
-  };
-  await fs.writeFile(
-    path.join(dir, "wpdev-kit.json"),
-    JSON.stringify(manifest, null, 2) + "\n",
-    "utf8",
-  );
   const projectConfig = {
     slug: "test-plugin",
     globalName: "TestPlugin",
@@ -113,9 +98,17 @@ async function seedHealthy({ kitVersion, distMode = "deps", features } = {}) {
   if (featureSet.jsLib === "react" || featureSet.jsLib === "preact") {
     projectConfig.uiFramework = featureSet.jsLib;
   }
+  const merged = {
+    schema: 2,
+    kitVersion: kv,
+    distMode,
+    generatedAt: "2026-01-01T00:00:00.000Z",
+    ...projectConfig,
+    features: featureSet,
+  };
   await fs.writeFile(
-    path.join(dir, "project.config.json"),
-    JSON.stringify(projectConfig, null, 2) + "\n",
+    path.join(dir, "wpdev.json"),
+    JSON.stringify(merged, null, 2) + "\n",
     "utf8",
   );
   return dir;
@@ -139,7 +132,7 @@ describe("doctorProject() — check 1: manifest present (Phase 24.9)", () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  test("when wpdev-kit.json is missing, errors contains 'manifest missing'", () => {
+  test("when wpdev.json is missing, errors contains 'manifest missing'", () => {
     const res = doctorProject(tmpDir);
     expect(res.ok).toBe(false);
     expect(res.errors).toContain("manifest missing");
@@ -151,11 +144,11 @@ describe("doctorProject() — check 1b: unsupported manifest schema", () => {
   beforeEach(async () => {
     tmpDir = await seedHealthy();
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
     );
     manifest.schema = 99;
     await fs.writeFile(
-      path.join(tmpDir, "wpdev-kit.json"),
+      path.join(tmpDir, "wpdev.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -307,7 +300,7 @@ describe("doctorProject() — malformed manifest (Phase 24.10)", () => {
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-doctor-bad-"));
     await fs.writeFile(
-      path.join(tmpDir, "wpdev-kit.json"),
+      path.join(tmpDir, "wpdev.json"),
       '{ "schema": 1, "kit',
       "utf8",
     );
@@ -316,7 +309,7 @@ describe("doctorProject() — malformed manifest (Phase 24.10)", () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  test("malformed JSON in wpdev-kit.json surfaces as a warning (NOT a throw)", () => {
+  test("malformed JSON in wpdev.json surfaces as a warning (NOT a throw)", () => {
     // The contract: doctorProject NEVER throws. A broken
     // manifest is a warning the user can act on, not a
     // fatal error.
@@ -416,9 +409,9 @@ describe("doctorProject() — config consistency (P1-T1 / P1-T3)", () => {
     if (tmpDir) await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  test("missing slug in project.config.json is reported", async () => {
+  test("missing slug in wpdev.json is reported", async () => {
     tmpDir = await seedHealthy();
-    const cfgPath = path.join(tmpDir, "project.config.json");
+    const cfgPath = path.join(tmpDir, "wpdev.json");
     const cfg = {
       globalName: "Test",
       localizeVar: "TestLoc",
@@ -443,7 +436,7 @@ describe("doctorProject() — config consistency (P1-T1 / P1-T3)", () => {
 
   test("phpMinVersion drift between manifest and project.config is reported", async () => {
     tmpDir = await seedHealthy();
-    const cfgPath = path.join(tmpDir, "project.config.json");
+    const cfgPath = path.join(tmpDir, "wpdev.json");
     await fs.writeFile(
       cfgPath,
       JSON.stringify(
@@ -467,7 +460,7 @@ describe("doctorProject() — config consistency (P1-T1 / P1-T3)", () => {
       ) + "\n",
       "utf8",
     );
-    const manifestPath = path.join(tmpDir, "wpdev-kit.json");
+    const manifestPath = path.join(tmpDir, "wpdev.json");
     const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8"));
     manifest.features = { ...manifest.features, phpMinVersion: "8.1" };
     await fs.writeFile(

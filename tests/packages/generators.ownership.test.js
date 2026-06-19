@@ -100,10 +100,10 @@ function firstOverlap(a, b) {
     "tsconfig.json",
     "LICENSE",
     "readme.txt",
-    "build.config.json",
-    "project.config.json",
+    "wpdev.json",
+    "wpdev.json",
     "README.md",
-    "wpdev-kit.json",
+    "wpdev.json",
     ".gitignore",
     ".editorconfig",
     ".husky/pre-commit",
@@ -140,12 +140,17 @@ function firstOverlap(a, b) {
 }
 
 describe("generator ownership — owned-paths map (Phase 22.1, 22.2)", () => {
-  test("every registered generator declares a non-empty owns[]", () => {
+  test("every registered generator declares a non-empty owns[] (or is a config-only generator with empty owns)", () => {
     const all = listGenerators();
     expect(all.length).toBeGreaterThan(0);
+    // config-only generators (e.g. vendorScoping) configure composer.json
+    // extra/strauss rather than owning standalone files — they may have owns: []
+    const CONFIG_ONLY_GENERATORS = ["vendorScoping"];
     for (const g of all) {
       expect(Array.isArray(g.owns)).toBe(true);
-      expect(g.owns.length).toBeGreaterThan(0);
+      if (!CONFIG_ONLY_GENERATORS.includes(g.id)) {
+        expect(g.owns.length).toBeGreaterThan(0);
+      }
       for (const own of g.owns) {
         expect(typeof own).toBe("string");
         expect(own.length).toBeGreaterThan(0);
@@ -192,7 +197,7 @@ describe("generator ownership — owned-paths map (Phase 22.1, 22.2)", () => {
     }
   });
 
-  test("core owns the always-on files (project.config.json, composer.json, ...; no src/Core in deps)", () => {
+  test("core owns the always-on files (wpdev.json, composer.json, ...; no src/Core in deps)", () => {
     const core = listGenerators().find((g) => g.id === "core");
     expect(core).toBeDefined();
     // The core descriptor MUST claim each of these — addFeature /
@@ -201,10 +206,9 @@ describe("generator ownership — owned-paths map (Phase 22.1, 22.2)", () => {
     // src/Core/* are deliberately NOT claimed (Phase 23 deps mode:
     // framework code lives only in the wpdev/framework dep).
     const expected = [
-      "project.config.json",
+      "wpdev.json",
       "composer.json",
       "readme.txt",
-      "build.config.json",
       "README.md",
       ".gitignore",
       ".editorconfig",

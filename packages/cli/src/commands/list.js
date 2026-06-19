@@ -1,6 +1,6 @@
 /**
  * `wpdev list` — print the features in the current project's
- * `wpdev-kit.json` (manifest).
+ * `wpdev.json` (manifest).
  *
  * Phase I4 (plan.installer.md §I4.1 + §I4.2).
  *
@@ -32,7 +32,7 @@
 
 /**
  * @typedef {Object} ListInput
- * @property {string} dir       target project dir (must contain wpdev-kit.json)
+ * @property {string} dir       target project dir (must contain wpdev.json)
  */
 
 /**
@@ -96,7 +96,7 @@ export async function runList(dirOrInput, deps = {}) {
     return {
       ok: false,
       reason:
-        "no manifest (wpdev-kit.json) at " +
+        "no manifest (wpdev.json) at " +
         dir +
         " — is this a wp-starter-kit project?",
     };

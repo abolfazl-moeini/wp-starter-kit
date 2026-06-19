@@ -32,13 +32,13 @@ function makeEngine({ ok = true, manifestFails = false } = {}) {
     calls,
     scaffoldProject: jest.fn(async () => ({
       ok,
-      written: ["project.config.json"],
+      written: ["wpdev.json"],
       reason: ok ? undefined : "engine error",
     })),
     buildManifest: jest.fn((args) => {
       calls.buildManifest.push(args);
       return {
-        schema: 1,
+        schema: 2,
         kitVersion: args.kitVersion,
         distMode: "deps",
         generatedAt: "2026-06-15T00:00:00.000Z",
@@ -143,9 +143,7 @@ describe("runCreate — manifest write (I3.5)", () => {
         },
         deps,
       );
-      expect(out.manifestPath).toBe(
-        path.join(path.resolve(dir), "wpdev-kit.json"),
-      );
+      expect(out.manifestPath).toBe(path.join(path.resolve(dir), "wpdev.json"));
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -252,7 +250,7 @@ describe("runCreate — manifest write failure is a warning", () => {
       );
       expect(out.ok).toBe(true);
       expect(out.warnings.length).toBeGreaterThan(0);
-      expect(out.warnings[0]).toMatch(/wpdev-kit.json/);
+      expect(out.warnings[0]).toMatch(/wpdev\.json/);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

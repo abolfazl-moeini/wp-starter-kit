@@ -40,7 +40,7 @@ async function seedProject(tmp, features) {
     batchEndpoint: "/batch/v1",
   };
   await fs.writeFile(
-    path.join(tmp, "project.config.json"),
+    path.join(tmp, "wpdev.json"),
     JSON.stringify({ ...cfg, features: { ...features } }, null, 2) + "\n",
     "utf8",
   );
@@ -107,7 +107,7 @@ describe("refreshGlue after feature mutations", () => {
     await seedProject(tmp, features);
     await refreshGlue(tmp, features);
 
-    const cfgPath = path.join(tmp, "project.config.json");
+    const cfgPath = path.join(tmp, "wpdev.json");
     const cfg = JSON.parse(await fs.readFile(cfgPath, "utf8"));
     cfg.restNamespace = "custom/v1";
     await fs.writeFile(cfgPath, JSON.stringify(cfg, null, 2) + "\n", "utf8");

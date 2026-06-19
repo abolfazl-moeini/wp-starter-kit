@@ -103,7 +103,7 @@ describe("addFeature faultTolerance happy path", () => {
       phpMinVersion: "8.1",
     };
     await fs.writeFile(
-      path.join(tmp, "project.config.json"),
+      path.join(tmp, "wpdev.json"),
       JSON.stringify(
         {
           slug: "my-project",

@@ -4,7 +4,7 @@
  * Phase 22.3+. The engine API the installer's `wpdev add <feature>`
  * command calls. Turns a feature ON (or switches its variant) in
  * an EXISTING project, writing only the files the feature's
- * generator OWNS and updating the manifest + project.config.json
+ * generator OWNS and updating the manifest (wpdev.json)
  * to reflect the new state.
  *
  * Safety contract (per plan.v3.md §22):
@@ -16,10 +16,9 @@
  *  - No partial writes on failure: the merge is computed
  *    in-memory first, the validation runs, and only then are
  *    the writes issued. If validation fails, NOTHING is written.
- *  - The manifest + project.config.json are the source of
- *    truth for "is this feature on?" — both are updated after
- *    the generator runs, via the existing `writeManifest` +
- *    `syncFeaturesToConfig` helpers.
+ *  - The manifest (wpdev.json) is the source of
+ *    truth for "is this feature on?" — it is updated after
+ *    the generator runs via `writeManifest`.
  *
  * The `(id, variant)` lookup walks the full catalog
  * (`listGenerators()`) and matches by either:
@@ -52,7 +51,6 @@ import {
   readManifest,
   writeManifest,
   buildManifest,
-  syncFeaturesToConfig,
   DEFAULT_DIST_MODE,
 } from "./manifest.js";
 import { updateJsonFile } from "./json-utils.js";
@@ -242,7 +240,7 @@ function filterToOwned(id, contribution, owns) {
  *
  *  1. Read the manifest (error if missing — the project is not
  *     a wp-starter-kit project).
- *  2. Read project.config.json + reconstruct `answers`.
+ *  2. Read wpdev.json + reconstruct `answers`.
  *  3. Compute the new feature set: `{...current, [id]: variant}`.
  *  4. `validateFeatureSet` the merged set — a violation returns
  *     `{ok:false, reason}` and writes nothing.
@@ -256,9 +254,7 @@ function filterToOwned(id, contribution, owns) {
  *     filtered to only the generator's `owns` files; a leak
  *     throws.
  *  7. Write each owned file to disk.
- *  8. Update wpdev-kit.json (via `writeManifest` + `buildManifest`).
- *  9. Update project.config.json's `features` key (via
- *     `syncFeaturesToConfig`).
+ *  8. Update wpdev.json (via `writeManifest` + `buildManifest`).
  *
  * @param {string} dir
  * @param {string} id           feature id (e.g. "husky", "js", "exampleFeature")
@@ -307,14 +303,14 @@ export async function addFeature(dir, id, variant, _opts = {}) {
     return {
       ok: false,
       reason:
-        `addFeature: no wpdev-kit.json at ${dir} — ` +
+        `addFeature: no wpdev.json at ${dir} — ` +
         "is this a wp-starter-kit project?",
       written: [],
     };
   }
   const currentFeatures = manifest.features || {};
 
-  // 2. Read project.config.json + reconstruct answers.
+  // 2. Read wpdev.json + reconstruct answers.
   let cfg;
   let answers;
   try {
@@ -462,20 +458,32 @@ export async function addFeature(dir, id, variant, _opts = {}) {
   );
   deleted.push(...turnedOffRemoved);
 
-  // 10. Update the manifest. The manifest's `features` is the
-  //     merged set; kitVersion is the existing version (a
-  //     manual addFeature does NOT bump kitVersion — that's
-  //     migrations' job); distMode is the existing mode.
+  // 10. Update the manifest (wpdev.json). Preserve branding + build from
+  //     the existing merged config.
+  const existingManifest = manifest || {};
   const nextManifest = buildManifest({
-    kitVersion: manifest.kitVersion,
+    kitVersion: existingManifest.kitVersion,
     features: newFeatures,
-    distMode: manifest.distMode || DEFAULT_DIST_MODE,
-    generatedAt: new Date().toISOString(),
+    distMode: existingManifest.distMode,
+    // preserve existing branding
+    slug: existingManifest.slug,
+    globalName: existingManifest.globalName,
+    localizeVar: existingManifest.localizeVar,
+    textDomain: existingManifest.textDomain,
+    hookPrefix: existingManifest.hookPrefix,
+    npmScope: existingManifest.npmScope,
+    depsBundle: existingManifest.depsBundle,
+    phpFunctionPrefix: existingManifest.phpFunctionPrefix,
+    uiFramework: existingManifest.uiFramework,
+    restNamespace: existingManifest.restNamespace,
+    vendorPrefix: existingManifest.vendorPrefix,
+    phpMinVersion: existingManifest.phpMinVersion,
+    phpSourceVersion: existingManifest.phpSourceVersion,
+    batchEndpoint: existingManifest.batchEndpoint,
+    projectType: existingManifest.projectType,
+    build: existingManifest.build,
   });
   await writeManifest(dir, nextManifest);
-
-  // 11. Update project.config.json's `features` key.
-  await syncFeaturesToConfig(dir, newFeatures);
 
   // 12. Apply composer patches (require / repositories) and suggest
   //     entries when the generator declares them (e.g. faultTolerance,

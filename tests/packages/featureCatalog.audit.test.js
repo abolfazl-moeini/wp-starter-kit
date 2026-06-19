@@ -37,22 +37,11 @@ async function seedMinimalProject(tmp, { withComposer = false } = {}) {
     features,
     distMode: "deps",
     generatedAt: new Date().toISOString(),
+    slug: "audit-plugin",
+    globalName: "AuditPlugin",
+    vendorPrefix: "AuditVendor",
   });
   await writeManifest(tmp, manifest);
-  await fs.writeFile(
-    path.join(tmp, "project.config.json"),
-    JSON.stringify(
-      {
-        slug: "audit-plugin",
-        globalName: "AuditPlugin",
-        vendorPrefix: "AuditVendor",
-        features,
-      },
-      null,
-      2,
-    ) + "\n",
-    "utf8",
-  );
   if (withComposer) {
     await fs.writeFile(
       path.join(tmp, "composer.json"),

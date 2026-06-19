@@ -54,6 +54,7 @@ import * as migration_0_2_0 from "./0.2.0.js";
 import * as migration_0_3_0 from "./0.3.0.js";
 import * as migration_0_4_0 from "./0.4.0.js";
 import * as migration_1_0_0 from "./1.0.0.js";
+import * as migration_2_0_0 from "./2.0.0.js";
 
 /* -------------------------------------------------------------------- */
 /* Migration catalog                                                     */
@@ -70,6 +71,7 @@ const MIGRATIONS = [
   migration_0_3_0,
   migration_0_4_0,
   migration_1_0_0,
+  migration_2_0_0,
 ];
 
 /** Schema migrations run before version migrations (newest kit schema first). */
@@ -80,8 +82,23 @@ const SCHEMA_MIGRATIONS = [
     async run(dir) {
       const manifest = readManifest(dir);
       if (!manifest) return { ok: false, reason: "no manifest" };
-      await updateJsonFile(path.join(dir, "wpdev-kit.json"), (m) => {
+      await updateJsonFile(path.join(dir, "wpdev.json"), (m) => {
         m.schema = 1;
+        return m;
+      });
+      return { ok: true };
+    },
+  },
+  {
+    fromSchema: 1,
+    toSchema: 2,
+    async run(dir) {
+      // ponytail: schema 2 = merged wpdev.json. Migration 2.0.0 handles
+      // the actual file merge; this just bumps the schema field.
+      const manifest = readManifest(dir);
+      if (!manifest) return { ok: false, reason: "no manifest" };
+      await updateJsonFile(path.join(dir, "wpdev.json"), (m) => {
+        m.schema = 2;
         return m;
       });
       return { ok: true };
@@ -198,8 +215,6 @@ export function selectMigrations(from, to) {
 /* -------------------------------------------------------------------- */
 /* runMigrations                                                          */
 /* -------------------------------------------------------------------- */
-
-const PROJECT_CONFIG_FILENAME = "project.config.json";
 
 /**
  * Apply every migration in `(from, to]` to a project rooted at
@@ -405,39 +420,6 @@ export async function runMigrations(dir, { from, to } = {}) {
     },
   );
   await writeManifest(dir, nextManifest);
-
-  // 10. Mirror the kitVersion into project.config.json if it
-  //    exists. The manifest is the source of truth; the mirror
-  //    is for pre-Phase 20 readers (the kit's PHP classes, the
-  //    JS asset bundle) that haven't discovered wpdev-kit.json.
-  //    We use `updateJsonFile` so the file's existing indent
-  //    and trailing-newline state are preserved.
-  const cfgPath = path.join(dir, PROJECT_CONFIG_FILENAME);
-  if (existsSync(cfgPath)) {
-    try {
-      await updateJsonFile(cfgPath, (cfg) => {
-        if (cfg && typeof cfg === "object") {
-          cfg.kitVersion = to;
-        }
-        return cfg;
-      });
-    } catch (error) {
-      // project.config.json is a mirror, not a source of truth.
-      // A failure here is reported but does NOT roll back the
-      // manifest bump — the consumer's durable state is the
-      // manifest. The error is included in the response so the
-      // caller (CLI) can warn the user.
-      return {
-        ok: true,
-        ran: toRun.map((m) => m.version),
-        from: effectiveFrom,
-        to,
-        appliedDepChanges,
-        warnings,
-        warning: `manifest updated, but project.config.json mirror failed: ${error.message}`,
-      };
-    }
-  }
 
   return {
     ok: true,

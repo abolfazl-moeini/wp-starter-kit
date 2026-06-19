@@ -46,14 +46,14 @@ composer release                  # rector:prefix + fix-autoloader
 
 ### Config-driven: two source-of-truth files
 
-**`project.config.json`** drives all branding and runtime behavior. Key fields:
+**`wpdev.json`** drives all branding, kit metadata, features, and runtime behavior (merged single source of truth). Key fields:
 
 - `slug`, `globalName`, `localizeVar`, `textDomain`, `hookPrefix`, `npmScope` — plugin identity
 - `uiFramework` — `preact` or `react` (aliased via `package.json` `react → @preact/compat`)
 - `phpMinVersion` / `phpSourceVersion` — Rector downgrade targets (default 7.4 / 8.1)
 - `vendorPrefix` — Strauss namespace prefix for dist
 
-**`build.config.json`** — `globalMappings` (npm → WP global), `assetMappings` (node_modules → `assets/libraries`), `styleEntryPoints`.
+Build settings live under the `build` key inside `wpdev.json`.
 
 ### PHP module system
 

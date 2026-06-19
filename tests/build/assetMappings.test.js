@@ -49,14 +49,16 @@ describe("buildAssets --dry-run mode (end-to-end with real config)", () => {
   });
 
   test("does not call cp() and reports planned copies (--dry-run)", async () => {
-    // Write a real build.config.json in a temp dir
+    // Write a real wpdev.json (with build section) in a temp dir
     writeFileSync(
-      join(tmpRoot, "build.config.json"),
+      join(tmpRoot, "wpdev.json"),
       JSON.stringify({
-        assetMappings: [
-          { source: "mock/from-a", destination: "mock/to-a" },
-          { source: "mock/from-b", destination: "mock/to-b" },
-        ],
+        build: {
+          assetMappings: [
+            { source: "mock/from-a", destination: "mock/to-a" },
+            { source: "mock/from-b", destination: "mock/to-b" },
+          ],
+        },
       }),
     );
     process.chdir(tmpRoot);
@@ -94,8 +96,8 @@ describe("buildAssets --dry-run mode (end-to-end with real config)", () => {
 
   test("falls back to --validate semantics (validateConfig invoked, no copy)", async () => {
     writeFileSync(
-      join(tmpRoot, "build.config.json"),
-      JSON.stringify({ assetMappings: [] }),
+      join(tmpRoot, "wpdev.json"),
+      JSON.stringify({ build: { assetMappings: [] } }),
     );
     process.chdir(tmpRoot);
     process.argv = ["node", "build-assets.js", "--validate"];
@@ -116,8 +118,8 @@ describe("buildAssets --dry-run mode (end-to-end with real config)", () => {
     }
   });
 
-  test("buildAssets rejects when build.config.json is missing", async () => {
-    // No build.config.json in tmpRoot
+  test("buildAssets rejects when wpdev.json is missing", async () => {
+    // No wpdev.json in tmpRoot
     process.chdir(tmpRoot);
     process.argv = ["node", "build-assets.js", "--dry-run"];
 

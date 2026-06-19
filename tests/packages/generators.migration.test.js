@@ -74,8 +74,8 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     // Post-Phase 23 golden list (deps mode): framework Core classes
     // come from wpdev/framework dep, not copied into src/Core.
     const legacyGolden = [
-      "project.config.json",
-      "build.config.json",
+      "wpdev.json",
+      "wpdev.json",
       "tsconfig.json",
       "readme.txt",
       "my-project.php",
@@ -84,7 +84,7 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
       "src/Modules/ExampleFeature/assets/entries/admin.ts",
       "tests/phpunit/Modules/ExampleFeature/ModuleTest.php",
       "src/Modules/ExampleFeature/assets/entries/__tests__/admin.test.ts",
-      "strauss.json",
+      "composer.json",
       ".husky/pre-commit",
       "assets/dependencies.ts",
       "assets/stylesheets/style.css",
@@ -116,18 +116,15 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     expect(written.has("phpunit.xml")).toBe(true);
     expect(written.has("tests/phpunit/bootstrap.php")).toBe(true);
     expect(written.has("languages/.gitkeep")).toBe(true);
-    expect(written.has("wpdev-kit.json")).toBe(true);
+    expect(written.has("wpdev.json")).toBe(true);
   });
 
   test("the manifest wpdev-kit.json carries the default feature set + kitVersion + distMode='deps'", async () => {
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(true);
-    const manifestRaw = await fs.readFile(
-      path.join(tmp, "wpdev-kit.json"),
-      "utf8",
-    );
+    const manifestRaw = await fs.readFile(path.join(tmp, "wpdev.json"), "utf8");
     const manifest = JSON.parse(manifestRaw);
-    expect(manifest.schema).toBe(1);
+    expect(manifest.schema).toBe(2);
     expect(typeof manifest.kitVersion).toBe("string");
     expect(manifest.distMode).toBe("deps"); // Phase 23 default
     expect(typeof manifest.generatedAt).toBe("string");
@@ -140,10 +137,10 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(true);
     const cfg = JSON.parse(
-      await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(cfg.features).toEqual(manifest.features);
   });
@@ -214,7 +211,7 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     expect(written.has("src/Core/Plugin.php")).toBe(false); // Phase 23: not emitted in deps mode
     // The manifest reflects the supplied features.
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(manifest.features.js).toBe("none");
   });
@@ -242,30 +239,21 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
   });
 
   test("scaffoldProject refuses to clobber an existing project.config.json without force:true", async () => {
-    await fs.writeFile(
-      path.join(tmp, "project.config.json"),
-      '{"sentinel": true}',
-    );
+    await fs.writeFile(path.join(tmp, "wpdev.json"), '{"sentinel": true}');
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(false);
     expect(res.reason).toMatch(/already exists|clobber|exists/i);
     // The sentinel survives.
-    const after = await fs.readFile(
-      path.join(tmp, "project.config.json"),
-      "utf8",
-    );
+    const after = await fs.readFile(path.join(tmp, "wpdev.json"), "utf8");
     expect(after).toContain("sentinel");
   });
 
   test("scaffoldProject with force:true DOES clobber — re-run yields fresh content", async () => {
-    await fs.writeFile(
-      path.join(tmp, "project.config.json"),
-      '{"sentinel": true}',
-    );
+    await fs.writeFile(path.join(tmp, "wpdev.json"), '{"sentinel": true}');
     const res = await scaffoldProject(tmp, goodAnswers, { force: true });
     expect(res.ok).toBe(true);
     const cfg = JSON.parse(
-      await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(cfg.sentinel).toBeUndefined();
     expect(cfg.slug).toBe("my-project");
@@ -298,14 +286,14 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
     // Every file in run #1 must be present in run #2 with the same body,
     // EXCEPT wpdev-kit.json (the only timestamped file).
     for (const rel of written1) {
-      if (rel === "wpdev-kit.json") continue;
+      if (rel === "wpdev.json") continue;
       const onDisk = await fs.readFile(path.join(tmp, rel), "utf8");
       expect(onDisk).toBe(files1[rel]);
     }
     // The manifest's generatedAt must differ (sanity).
-    const m1 = JSON.parse(files1["wpdev-kit.json"]);
+    const m1 = JSON.parse(files1["wpdev.json"]);
     const m2 = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(m2.generatedAt).not.toBe(m1.generatedAt);
     // And the manifest's kitVersion + features + distMode must match.

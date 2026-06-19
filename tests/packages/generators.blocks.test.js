@@ -145,7 +145,7 @@ async function seedProjectForBlocks(tmp, features) {
     batchEndpoint: "/batch/v1",
   };
   await fs.writeFile(
-    path.join(tmp, "project.config.json"),
+    path.join(tmp, "wpdev.json"),
     JSON.stringify({ ...cfg, features: { ...features } }, null, 2) + "\n",
     "utf8",
   );
@@ -253,7 +253,7 @@ describe("blocks add/remove feature", () => {
     ).resolves.toBe("<?php // keep\n");
 
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(manifest.features.blocks).toBe("off");
   });

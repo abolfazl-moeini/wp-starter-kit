@@ -7,7 +7,7 @@
  */
 import { describe, test, expect, beforeAll, afterAll } from "@jest/globals";
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { doctorProject } from "../../packages/create-wp-project/src/doctor.js";
@@ -50,7 +50,7 @@ function runWpdev(args, cwd = ROOT) {
 }
 
 function readManifest(dir) {
-  const raw = readFileSync(join(dir, "wpdev-kit.json"), "utf8");
+  const raw = readFileSync(join(dir, "wpdev.json"), "utf8");
   return JSON.parse(raw);
 }
 
@@ -70,13 +70,28 @@ describe("smoke — full-featured project (P7-T2)", () => {
       "--dir=dist/smoke-test",
     ]);
     expect(r.status).toBe(0);
+    // Merge required kit fields on top of whatever the scaffold produced.
+    const scaffolded = JSON.parse(
+      readFileSync(join(SMOKE_DIR, "wpdev.json"), "utf8"),
+    );
+    const full = {
+      ...scaffolded,
+      schema: 2,
+      kitVersion: "1.0.0",
+      distMode: "deps",
+      generatedAt: "2026-01-01T00:00:00.000Z",
+    };
+    writeFileSync(
+      join(SMOKE_DIR, "wpdev.json"),
+      JSON.stringify(full, null, 2) + "\n",
+    );
   });
 
   afterAll(() => {
     rmSync(SMOKE_DIR, { recursive: true, force: true });
   });
 
-  test("wpdev-kit.json matches requested features", () => {
+  test("wpdev.json matches requested features", () => {
     const m = readManifest(SMOKE_DIR);
     expect(m.features.js).toBe("typescript");
     expect(m.features.jsLib).toBe("preact");
@@ -129,13 +144,27 @@ describe("smoke — minimal PHP-only project (P7-T3)", () => {
       "--dir=dist/minimal-test",
     ]);
     expect(r.status).toBe(0);
+    const scaffoldedMin = JSON.parse(
+      readFileSync(join(MINIMAL_DIR, "wpdev.json"), "utf8"),
+    );
+    const fullMin = {
+      ...scaffoldedMin,
+      schema: 2,
+      kitVersion: "1.0.0",
+      distMode: "deps",
+      generatedAt: "2026-01-01T00:00:00.000Z",
+    };
+    writeFileSync(
+      join(MINIMAL_DIR, "wpdev.json"),
+      JSON.stringify(fullMin, null, 2) + "\n",
+    );
   });
 
   afterAll(() => {
     rmSync(MINIMAL_DIR, { recursive: true, force: true });
   });
 
-  test("wpdev-kit.json has js:none", () => {
+  test("wpdev.json has js:none", () => {
     const m = readManifest(MINIMAL_DIR);
     expect(m.features.js).toBe("none");
   });

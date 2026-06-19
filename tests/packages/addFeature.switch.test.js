@@ -58,7 +58,7 @@ async function seedProject(tmp, { features = defaultFeatures() } = {}) {
     batchEndpoint: "/batch/v1",
   };
   await fs.writeFile(
-    path.join(tmp, "project.config.json"),
+    path.join(tmp, "wpdev.json"),
     JSON.stringify({ ...cfg, features: { ...features } }, null, 2) + "\n",
     "utf8",
   );
@@ -126,7 +126,7 @@ describe("addFeature() — variant switch (Phase 22.7, 22.8)", () => {
     expect(await fileExists(path.join(tmp, "tsconfig.json"))).toBe(true);
   });
 
-  test("variant switch updates wpdev-kit.json features.js to the new variant", async () => {
+  test("variant switch updates wpdev.json features.js to the new variant", async () => {
     await seedProject(tmp, {
       features: { ...defaultFeatures(), js: "typescript" },
     });
@@ -140,12 +140,12 @@ describe("addFeature() — variant switch (Phase 22.7, 22.8)", () => {
     const res = await addFeature(tmp, "js", "flow");
     expect(res.ok).toBe(true);
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(manifest.features.js).toBe("flow");
   });
 
-  test("variant switch updates project.config.json features.js to the new variant", async () => {
+  test("variant switch updates wpdev.json features.js to the new variant", async () => {
     await seedProject(tmp, {
       features: { ...defaultFeatures(), js: "typescript" },
     });
@@ -159,7 +159,7 @@ describe("addFeature() — variant switch (Phase 22.7, 22.8)", () => {
     const res = await addFeature(tmp, "js", "flow");
     expect(res.ok).toBe(true);
     const cfg = JSON.parse(
-      await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(cfg.features.js).toBe("flow");
   });
@@ -201,7 +201,7 @@ describe("addFeature() — variant switch (Phase 22.7, 22.8)", () => {
     );
   });
 
-  test("variant switch preserves v2 fields in project.config.json", async () => {
+  test("variant switch preserves v2 fields in wpdev.json", async () => {
     await seedProject(tmp, {
       features: { ...defaultFeatures(), js: "typescript" },
     });
@@ -214,7 +214,7 @@ describe("addFeature() — variant switch (Phase 22.7, 22.8)", () => {
 
     await addFeature(tmp, "js", "flow");
     const cfg = JSON.parse(
-      await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(cfg.slug).toBe("my-project");
     expect(cfg.globalName).toBe("MyProject");

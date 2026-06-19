@@ -30,7 +30,7 @@ describe("0.4.0 migration — commitlint + husky hooks", () => {
       features: { husky },
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpdev-kit.json"),
+      path.join(tmpDir, "wpdev.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -89,7 +89,7 @@ describe("0.4.0 migration — commitlint + husky hooks", () => {
     expect(pkg.scripts.prepare).toBe("husky");
 
     const after = JSON.parse(
-      await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
     );
     expect(after.kitVersion).toBe("0.4.0");
   });

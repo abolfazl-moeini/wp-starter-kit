@@ -16,11 +16,8 @@ const PROJECT_KEYS = [
 const BUILD_KEYS = ["globalMappings", "assetMappings", "styleEntryPoints"];
 
 describe("example config files", () => {
-  test("project.config.example.json is valid JSON with required keys", () => {
-    const raw = readFileSync(
-      join(process.cwd(), "project.config.example.json"),
-      "utf8",
-    );
+  test("wpdev.example.json is valid JSON with required keys", () => {
+    const raw = readFileSync(join(process.cwd(), "wpdev.example.json"), "utf8");
     const example = JSON.parse(raw);
     for (const key of PROJECT_KEYS) {
       expect(example).toHaveProperty(key);
@@ -28,14 +25,12 @@ describe("example config files", () => {
     expect(example.phpFunctionPrefix).not.toBe("wpdev_");
   });
 
-  test("build.config.example.json is valid JSON with required keys", () => {
-    const raw = readFileSync(
-      join(process.cwd(), "build.config.example.json"),
-      "utf8",
-    );
+  test("wpdev.example.json build section is valid JSON with required keys", () => {
+    const raw = readFileSync(join(process.cwd(), "wpdev.example.json"), "utf8");
     const example = JSON.parse(raw);
+    const build = example.build || example;
     for (const key of BUILD_KEYS) {
-      expect(example).toHaveProperty(key);
+      expect(build).toHaveProperty(key);
     }
   });
 });

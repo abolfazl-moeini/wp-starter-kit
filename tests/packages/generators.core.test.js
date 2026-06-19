@@ -8,7 +8,7 @@
  *  1. core.run(ctx) returns a contribution `{ files, dirs, deps, devDeps }`
  *     for a minimal valid ctx.
  *  2. The file set includes the golden BC list from plan §0.5:
- *     - project.config.json (with `features` key, dual-written
+ *     - wpdev.json (with `features` key, dual-written
  *       after the generator runs by `syncFeaturesToConfig` —
  *       but the generator itself does NOT pre-stamp the key;
  *       it renders the template, and the scaffold applies the
@@ -29,7 +29,7 @@
  *     when js === "none" (and husky is off — the scaffold's
  *     omit-when-js:none&&husky:off rule; the generator itself
  *     only knows about the js gate).
- *  6. project.config.json shape: every v2 field the legacy
+ *  6. wpdev.json shape: every v2 field the legacy
  *     scaffold emitted (restNamespace, vendorPrefix,
  *     phpMinVersion, phpSourceVersion, batchEndpoint) is present.
  *
@@ -113,8 +113,7 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
     // Phase 23: consumer gets framework from wpdev/framework dep; scaffold
     // only emits thin glue + user-owned src/Modules (when example on).
     // Core no longer writes src/Core/* (those live in the installed package).
-    expect(files).toContain("project.config.json");
-    expect(files).toContain("build.config.json");
+    expect(files).toContain("wpdev.json");
     expect(files).toContain("readme.txt");
     expect(files).toContain("my-project.php"); // {slug}.php
     expect(files).not.toContain("src/Core/Plugin.php");
@@ -159,26 +158,33 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
     expect(out.files["src/Core/ModuleLoader.php"]).toBeUndefined();
   });
 
-  test("emits project.config.json with every v2 default field", () => {
+  test("emits wpdev.json with every v2 default field", () => {
     const out = coreRun(makeCtx());
-    const cfg = JSON.parse(out.files["project.config.json"]);
-    expect(cfg).toEqual({
-      slug: "my-project",
-      globalName: "MyProject",
-      localizeVar: "MyProjectLoc",
-      textDomain: "my-project",
-      hookPrefix: "my-project",
-      npmScope: "@myorg",
-      depsBundle: "my-project-deps.js",
-      phpFunctionPrefix: "myprj_",
-      uiFramework: "preact",
-      projectType: "plugin",
-      restNamespace: "wpdev/v1",
-      vendorPrefix: "WpdevVendor",
-      phpMinVersion: "7.4",
-      phpSourceVersion: "8.1",
-      batchEndpoint: "/batch/v1",
-    });
+    const cfg = JSON.parse(out.files["wpdev.json"]);
+    // Branding fields
+    expect(cfg.slug).toBe("my-project");
+    expect(cfg.globalName).toBe("MyProject");
+    expect(cfg.localizeVar).toBe("MyProjectLoc");
+    expect(cfg.textDomain).toBe("my-project");
+    expect(cfg.hookPrefix).toBe("my-project");
+    expect(cfg.npmScope).toBe("@myorg");
+    expect(cfg.depsBundle).toBe("my-project-deps.js");
+    expect(cfg.phpFunctionPrefix).toBe("myprj_");
+    expect(cfg.uiFramework).toBe("preact");
+    expect(cfg.restNamespace).toBe("wpdev/v1");
+    expect(cfg.vendorPrefix).toBe("WpdevVendor");
+    expect(cfg.phpMinVersion).toBe("7.4");
+    expect(cfg.phpSourceVersion).toBe("8.1");
+    expect(cfg.batchEndpoint).toBe("/batch/v1");
+    // Kit metadata
+    expect(cfg.schema).toBe(2);
+    expect(cfg.distMode).toBe("deps");
+    // Build section
+    expect(cfg.build).toBeDefined();
+    expect(cfg.build.assetMappings).toEqual([]);
+    expect(cfg.build.styleEntryPoints).toContain(
+      "assets/stylesheets/style.css",
+    );
   });
 
   test("emits composer.json with PSR-4 vendor → src/ and require php >= phpMinVersion", () => {
@@ -256,10 +262,11 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
     expect(readme).toMatch(/License:/);
   });
 
-  test("emits build.config.json with the style entry-point list", () => {
+  test("emits wpdev.json with build.styleEntryPoints", () => {
     const out = coreRun(makeCtx());
-    const cfg = JSON.parse(out.files["build.config.json"]);
-    expect(cfg.styleEntryPoints).toEqual(
+    const cfg = JSON.parse(out.files["wpdev.json"]);
+    const build = cfg.build || cfg;
+    expect(build.styleEntryPoints).toEqual(
       expect.arrayContaining(["assets/stylesheets/style.css"]),
     );
   });

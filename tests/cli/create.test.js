@@ -115,7 +115,7 @@ describe("runCreate — engine wiring (I3.1)", () => {
     const deps = defaultDeps();
     deps.engine.scaffoldProject = jest.fn(async () => ({
       ok: true,
-      written: ["project.config.json"], // Phase 23: no src/Core/Plugin.php (deps)
+      written: ["wpdev.json"], // Phase 23: no src/Core/Plugin.php (deps)
     }));
     const out = await runCreate(
       {
@@ -127,9 +127,9 @@ describe("runCreate — engine wiring (I3.1)", () => {
       deps,
     );
     expect(out.ok).toBe(true);
-    expect(out.written).toEqual(["project.config.json"]); // no src/Core in deps mode (Phase 23)
-    // manifestPath is the standard `<dir>/wpdev-kit.json` location.
-    expect(out.manifestPath).toBe("/tmp/x/wpdev-kit.json");
+    expect(out.written).toEqual(["wpdev.json"]); // no src/Core in deps mode (Phase 23)
+    // manifestPath is the standard `<dir>/wpdev.json` location.
+    expect(out.manifestPath).toBe("/tmp/x/wpdev.json");
     expect(out.warnings).toEqual([]);
   });
 

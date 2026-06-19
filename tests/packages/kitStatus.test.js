@@ -67,7 +67,7 @@ async function seedProject({
     features,
   };
   await fs.writeFile(
-    path.join(dir, "wpdev-kit.json"),
+    path.join(dir, "wpdev.json"),
     JSON.stringify(manifest, null, 2) + "\n",
     "utf8",
   );

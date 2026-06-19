@@ -17,7 +17,7 @@ const OPTIONAL_DEFAULTS = {
   // Phase 14 v2 fields — sensible defaults so consumers (REST router,
   // Strauss release pipeline, fetch batch client) can rely on the keys
   // without a follow-up migration step. Override per-project by passing
-  // a non-default value through project.config.json.
+  // a non-default value through wpdev.json.
   restNamespace: "wpdev/v1",
   vendorPrefix: "WpdevVendor",
   phpMinVersion: "7.4",
@@ -39,7 +39,7 @@ function validateV2(field, value) {
   }
   if (typeof value !== "string") {
     throw new Error(
-      `project.config.json ${field} must be a string (got: ${typeof value})`,
+      `wpdev.json ${field} must be a string (got: ${typeof value})`,
     );
   }
   switch (field) {
@@ -49,7 +49,7 @@ function validateV2(field, value) {
       // Strauss-scoped vendor.
       if (!/^[A-Z][A-Za-z0-9_]*$/.test(value)) {
         throw new Error(
-          `project.config.json vendorPrefix must start with an uppercase ` +
+          `wpdev.json vendorPrefix must start with an uppercase ` +
             `letter and contain only [A-Za-z0-9_] (got: "${value}")`,
         );
       }
@@ -59,7 +59,7 @@ function validateV2(field, value) {
       // brackets, anything but a single forward-slash separator.
       if (!/^[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+$/.test(value)) {
         throw new Error(
-          `project.config.json restNamespace must look like "vendor/v1" ` +
+          `wpdev.json restNamespace must look like "vendor/v1" ` +
             `(letters, digits, dashes, underscores, one slash) (got: "${value}")`,
         );
       }
@@ -68,14 +68,14 @@ function validateV2(field, value) {
     case "phpSourceVersion":
       if (!/^\d+\.\d+(\.\d+)?$/.test(value)) {
         throw new Error(
-          `project.config.json ${field} must look like "X.Y" or "X.Y.Z" (got: "${value}")`,
+          `wpdev.json ${field} must look like "X.Y" or "X.Y.Z" (got: "${value}")`,
         );
       }
       return;
     case "batchEndpoint":
       if (!value.startsWith("/")) {
         throw new Error(
-          `project.config.json batchEndpoint must start with "/" (got: "${value}")`,
+          `wpdev.json batchEndpoint must start with "/" (got: "${value}")`,
         );
       }
       return;
@@ -85,16 +85,16 @@ function validateV2(field, value) {
 }
 
 export function readProjectConfig(options = {}) {
-  const configPath = options.path || join(getRootPath(), "project.config.json");
+  const configPath = options.path || join(getRootPath(), "wpdev.json");
 
   let raw;
   try {
     raw = readFileSync(configPath, "utf8");
   } catch (error) {
     if (error.code === "ENOENT") {
-      throw new Error(`project.config.json not found at: ${configPath}`);
+      throw new Error(`wpdev.json not found at: ${configPath}`);
     }
-    throw new Error(`Failed to read project.config.json: ${error.message}`);
+    throw new Error(`Failed to read wpdev.json: ${error.message}`);
   }
 
   let config;
@@ -102,18 +102,18 @@ export function readProjectConfig(options = {}) {
     config = JSON.parse(raw);
   } catch {
     throw new Error(
-      `project.config.json is malformed or invalid JSON at: ${configPath}`,
+      `wpdev.json is malformed or invalid JSON at: ${configPath}`,
     );
   }
 
   if (!config || typeof config !== "object") {
-    throw new Error("project.config.json must contain a JSON object");
+    throw new Error("wpdev.json must contain a JSON object");
   }
 
   const missing = REQUIRED_FIELDS.filter((f) => !config[f]);
   if (missing.length) {
     throw new Error(
-      `project.config.json missing required fields: ${missing.join(", ")}. ` +
+      `wpdev.json missing required fields: ${missing.join(", ")}. ` +
         `Required: ${REQUIRED_FIELDS.join(", ")}`,
     );
   }
@@ -127,7 +127,7 @@ export function readProjectConfig(options = {}) {
 
   if (!["preact", "react"].includes(merged.uiFramework)) {
     throw new Error(
-      `project.config.json uiFramework must be "preact" or "react" (got: ${merged.uiFramework})`,
+      `wpdev.json uiFramework must be "preact" or "react" (got: ${merged.uiFramework})`,
     );
   }
 

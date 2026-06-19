@@ -1,0 +1,26 @@
+{
+  "description": "Local path map for unpublished @wpdev/* npm and wpdev/* composer packages. Used by dev/setup-local-deps.mjs.",
+  "composerPathRepo": {
+    "url": "packages/*",
+    "options": {
+      "monorepo": true
+    }
+  },
+  "npmPackages": {
+    "@wpdev/hooks": "packages/hooks",
+    "@wpdev/utils": "packages/utils",
+    "@wpdev/rest-utils": "packages/rest-utils",
+    "@wpdev/html-utils": "packages/html-utils",
+    "@wpdev/translation": "packages/translation",
+    "@wpdev/fetch": "packages/fetch",
+    "@wpdev/ui-components": "packages/ui-components",
+    "@wpdev/rule-engine": "packages/rule-engine",
+    "@wpdev/polaris-stack": "packages/polaris-stack",
+    "@wpdev/create-wp-project": "packages/create-wp-project",
+    "@wpdev/cli": "packages/cli",
+    "@wpdev/create-plugin": "packages/cli/create-plugin",
+    "@wpdev/build": "core/packages/build",
+    "@wpdev/dependency-extraction-esbuild-plugin": "core/packages/dependency-extraction-esbuild-plugin",
+    "@core/utils": "core/packages/utils"
+  }
+}

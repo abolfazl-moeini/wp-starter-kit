@@ -1,5 +1,5 @@
 /**
- * Read consumer project.config.json and map it back to scaffold answers.
+ * Read consumer wpdev.json and map it back to scaffold answers.
  */
 
 import { deriveUiFramework } from "./derive-ui-framework.js";
@@ -12,19 +12,19 @@ import * as path from "node:path";
  * @param {string} [label]  error prefix (e.g. "addFeature")
  */
 export async function readProjectConfigFromDir(dir, label = "engine") {
-  const file = path.join(dir, "project.config.json");
+  const file = path.join(dir, "wpdev.json");
   let raw;
   try {
     raw = await fs.readFile(file, "utf8");
   } catch (error) {
     if (error.code === "ENOENT") {
       throw new Error(
-        `${label}: project.config.json not found at ${file} — ` +
+        `${label}: wpdev.json not found at ${file} — ` +
           "is this a wp-starter-kit project?",
       );
     }
     throw new Error(
-      `${label}: failed to read project.config.json at ${file}: ${error.message}`,
+      `${label}: failed to read wpdev.json at ${file}: ${error.message}`,
     );
   }
   let cfg;
@@ -32,7 +32,7 @@ export async function readProjectConfigFromDir(dir, label = "engine") {
     cfg = JSON.parse(raw);
   } catch (error) {
     throw new Error(
-      `${label}: malformed JSON in project.config.json at ${file}: ${error.message}`,
+      `${label}: malformed JSON in wpdev.json at ${file}: ${error.message}`,
     );
   }
   return { cfg, raw };

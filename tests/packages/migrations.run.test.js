@@ -14,8 +14,8 @@
  *     returns `{ok:true, alreadyCurrent:true, ran:[]}` and
  *     does NOT re-run the migration.
  *
- *  3. **project.config.json edit persists** — a migration can
- *     use `updateJsonFile` to patch `project.config.json`; the
+ *  3. **wpdev.json edit persists** — a migration can
+ *     use `updateJsonFile` to patch `wpdev.json`; the
  *     change is on disk after the run completes, and the
  *     manifest's `kitVersion` is also bumped.
  *
@@ -27,11 +27,11 @@
  *     leaves the project at its PRE-migration state).
  *
  *  5. **No manifest** — `runMigrations(dir, ...)` on a directory
- *     with no `wpdev-kit.json` returns `{ok:false, reason: ...}`
+ *     with no `wpdev.json` returns `{ok:false, reason: ...}`
  *     and does NOT throw.
  *
- *  6. **project.config.json mirror** — when a manifest bump
- *     lands on a project that HAS a `project.config.json`, the
+ *  6. **wpdev.json mirror** — when a manifest bump
+ *     lands on a project that HAS a `wpdev.json`, the
  *     mirror's `kitVersion` is also updated (per the dual-write
  *     contract in `syncFeaturesToConfig`).
  *
@@ -89,7 +89,7 @@ describe("runMigrations() — happy path (Phase 24.5, 24.6)", () => {
       features: {},
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpdev-kit.json"),
+      path.join(tmpDir, "wpdev.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -122,7 +122,7 @@ describe("runMigrations() — happy path (Phase 24.5, 24.6)", () => {
 
       // Manifest on disk is bumped to 0.2.0.
       const after = JSON.parse(
-        await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+        await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
       );
       expect(after.kitVersion).toBe("0.2.0");
     } finally {
@@ -162,7 +162,7 @@ describe("runMigrations() — idempotency (Phase 24.5, 24.6)", () => {
       features: {},
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpdev-kit.json"),
+      path.join(tmpDir, "wpdev.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -186,7 +186,7 @@ describe("runMigrations() — idempotency (Phase 24.5, 24.6)", () => {
       expect(first.alreadyCurrent).toBeUndefined();
       expect(calls).toBe(1);
       const afterFirst = JSON.parse(
-        await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+        await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
       );
       expect(afterFirst.kitVersion).toBe("0.2.0");
 
@@ -206,7 +206,7 @@ describe("runMigrations() — idempotency (Phase 24.5, 24.6)", () => {
 
       // Manifest is still 0.2.0 (no double-bump).
       const afterSecond = JSON.parse(
-        await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+        await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
       );
       expect(afterSecond.kitVersion).toBe("0.2.0");
     } finally {
@@ -226,7 +226,7 @@ describe("runMigrations() — idempotency (Phase 24.5, 24.6)", () => {
       features: {},
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpdev-kit.json"),
+      path.join(tmpDir, "wpdev.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -238,13 +238,13 @@ describe("runMigrations() — idempotency (Phase 24.5, 24.6)", () => {
     expect(res.ran).toEqual(["0.2.0"]);
 
     const after = JSON.parse(
-      await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
     );
     expect(after.kitVersion).toBe("0.2.0");
   });
 });
 
-describe("runMigrations() — project.config.json edit persists (Phase 24.5, 24.6)", () => {
+describe("runMigrations() — wpdev.json edit persists (Phase 24.5, 24.6)", () => {
   let tmpDir;
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-mig-"));
@@ -253,33 +253,26 @@ describe("runMigrations() — project.config.json edit persists (Phase 24.5, 24.
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  test("a migration can use updateJsonFile on project.config.json; the change persists", async () => {
-    // Seed a 0.1.0 manifest AND a v2-shape project.config.json.
-    const manifest = {
+  test("a migration can use updateJsonFile on wpdev.json; the change persists", async () => {
+    // Seed a 0.1.0 manifest merged with branding into wpdev.json.
+    const merged = {
       schema: 1,
       kitVersion: "0.1.0",
       distMode: "vendored",
       generatedAt: "2026-01-01T00:00:00.000Z",
       features: {},
-    };
-    const projectConfig = {
       slug: "wpdev-project",
       globalName: "WPDevProject",
       uiFramework: "preact",
       projectType: "plugin",
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpdev-kit.json"),
-      JSON.stringify(manifest, null, 2) + "\n",
-      "utf8",
-    );
-    await fs.writeFile(
-      path.join(tmpDir, "project.config.json"),
-      JSON.stringify(projectConfig, null, 2) + "\n",
+      path.join(tmpDir, "wpdev.json"),
+      JSON.stringify(merged, null, 2) + "\n",
       "utf8",
     );
 
-    // Wrap the 0.2.0 migration to ALSO edit project.config.json
+    // Wrap the 0.2.0 migration to ALSO edit wpdev.json
     // via the documented updateJsonFile helper. The change
     // should persist across the run, and the manifest's
     // kitVersion should also bump.
@@ -289,8 +282,8 @@ describe("runMigrations() — project.config.json edit persists (Phase 24.5, 24.
     const baseline = getMigrations().find((m) => m.version === "0.2.0");
     const originalRun = baseline.run;
     baseline.run = async function (dir) {
-      // Edit project.config.json before returning ok.
-      await updateJsonFile(path.join(dir, "project.config.json"), (cfg) => {
+      // Edit wpdev.json before returning ok.
+      await updateJsonFile(path.join(dir, "wpdev.json"), (cfg) => {
         cfg.addedByMigration = "0.2.0";
         return cfg;
       });
@@ -303,14 +296,14 @@ describe("runMigrations() — project.config.json edit persists (Phase 24.5, 24.
 
       // Manifest is bumped.
       const afterManifest = JSON.parse(
-        await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+        await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
       );
       expect(afterManifest.kitVersion).toBe("0.2.0");
 
-      // project.config.json carries BOTH the migration's edit
+      // wpdev.json carries BOTH the migration's edit
       // AND the kitVersion mirror.
       const afterCfg = JSON.parse(
-        await fs.readFile(path.join(tmpDir, "project.config.json"), "utf8"),
+        await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
       );
       expect(afterCfg.addedByMigration).toBe("0.2.0");
       expect(afterCfg.kitVersion).toBe("0.2.0");
@@ -339,7 +332,7 @@ describe("runMigrations() — failing migration aborts (Phase 24.6)", () => {
       features: {},
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpdev-kit.json"),
+      path.join(tmpDir, "wpdev.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -360,7 +353,7 @@ describe("runMigrations() — failing migration aborts (Phase 24.6)", () => {
 
       // Manifest is NOT bumped — it still reads 0.1.0.
       const after = JSON.parse(
-        await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+        await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
       );
       expect(after.kitVersion).toBe("0.1.0");
     } finally {
@@ -377,7 +370,7 @@ describe("runMigrations() — failing migration aborts (Phase 24.6)", () => {
       features: {},
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpdev-kit.json"),
+      path.join(tmpDir, "wpdev.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -396,7 +389,7 @@ describe("runMigrations() — failing migration aborts (Phase 24.6)", () => {
       expect(res.reason).toMatch(/soft fail/);
 
       const after = JSON.parse(
-        await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+        await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
       );
       expect(after.kitVersion).toBe("0.1.0");
     } finally {
@@ -431,7 +424,7 @@ describe("runMigrations() — depChanges apply (Phase 4)", () => {
       features: {},
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpdev-kit.json"),
+      path.join(tmpDir, "wpdev.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -464,7 +457,7 @@ describe("runMigrations() — depChanges apply (Phase 4)", () => {
     expect(pkg.devDependencies.esbuild).toBe(esbuildRange);
 
     const afterManifest = JSON.parse(
-      await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
     );
     expect(afterManifest.migratedAt).toBeDefined();
     expect(afterManifest.previousKitVersion).toBe("0.1.0");
@@ -481,7 +474,7 @@ describe("runMigrations() — schema migration (Phase 8)", () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  test("bumps manifest schema 0→1 before version migrations", async () => {
+  test("bumps manifest schema 0→2 before version migrations", async () => {
     const manifest = {
       schema: 0,
       kitVersion: "0.1.0",
@@ -490,7 +483,7 @@ describe("runMigrations() — schema migration (Phase 8)", () => {
       features: {},
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpdev-kit.json"),
+      path.join(tmpDir, "wpdev.json"),
       JSON.stringify(manifest, null, 2) + "\n",
       "utf8",
     );
@@ -499,9 +492,9 @@ describe("runMigrations() — schema migration (Phase 8)", () => {
     expect(res.ok).toBe(true);
 
     const after = JSON.parse(
-      await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
     );
-    expect(after.schema).toBe(1);
+    expect(after.schema).toBe(2);
     expect(after.kitVersion).toBe("0.2.0");
   });
 });

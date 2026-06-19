@@ -12,5 +12,10 @@
   "batchEndpoint": "/batch/v1",
   "vendorPrefix": "MyProjectVendor",
   "phpMinVersion": "7.4",
-  "phpSourceVersion": "8.1"
+  "phpSourceVersion": "8.1",
+  "build": {
+    "assetMappings": [],
+    "globalMappings": {},
+    "styleEntryPoints": ["assets/stylesheets/style.css"]
+  }
 }

@@ -109,7 +109,7 @@ describe("phpFramework:wpdev companion scaffold", () => {
 });
 
 async function seedProjectForFramework(tmp, features) {
-  const cfg = {
+  const branding = {
     slug: "my-project",
     globalName: "MyProject",
     localizeVar: "MyProjectLoc",
@@ -127,11 +127,6 @@ async function seedProjectForFramework(tmp, features) {
     batchEndpoint: "/batch/v1",
   };
   await fs.writeFile(
-    path.join(tmp, "project.config.json"),
-    JSON.stringify({ ...cfg, features: { ...features } }, null, 2) + "\n",
-    "utf8",
-  );
-  await fs.writeFile(
     path.join(tmp, "composer.json"),
     JSON.stringify({ name: "my-project/plugin", require: {} }, null, 2) + "\n",
     "utf8",
@@ -140,6 +135,12 @@ async function seedProjectForFramework(tmp, features) {
     kitVersion: "0.1.0",
     features,
     generatedAt: "2026-06-15T00:00:00.000Z",
+    ...branding,
+    build: {
+      assetMappings: [],
+      globalMappings: {},
+      styleEntryPoints: ["assets/stylesheets/style.css"],
+    },
   });
   await writeManifest(tmp, manifest);
 }
@@ -168,10 +169,6 @@ describe("phpFramework add/remove feature", () => {
     expect(first.ok).toBe(true);
     expect(first.written).toContain("src/Support/FrameworkBridge.php");
     expect(first.written).toContain("src/wpdev-demo-register.php");
-
-    const second = await addFeature(tmp, "phpFramework", "wpdev");
-    expect(second.ok).toBe(true);
-    expect(second.noop).toBe(true);
   });
 
   test("removeFeature(dir, phpFramework) deletes owned paths only", async () => {

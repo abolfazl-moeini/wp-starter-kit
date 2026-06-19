@@ -17,7 +17,7 @@ Open-source v1.0.0 release. Completes `plan.final.md` (Phases 0–9) and
 - **CLI**: `wpdev set` for config-only features (`phpMinVersion`, `wpMinVersion`,
   `license`, `ci`); interactive preset picker; post-scaffold install/git prompts;
   confirm gates on `add`, `remove`, and `update --run`
-- **Engine**: `validateProjectConfig()` for `project.config.json` / `wpdev-kit.json`
+- **Engine**: `validateProjectConfig()` for `wpdev.json` / `wpdev.json`
   drift detection; wired into `wpdev doctor` as "Config consistency" checks
 - **CLI UX**: `humanizeValidationErrors()` — feature IDs in validation messages
   are replaced with human labels from the feature catalog
@@ -50,7 +50,7 @@ Open-source v1.0.0 release. Completes `plan.final.md` (Phases 0–9) and
 - `installer.md` slimmed; canonical CLI docs in `cli-reference.md`
 - `features-and-manifest.md` slimmed; full catalog in `features-reference.md`
 - `docs/index.md` restructured with clear sections and one-line descriptions
-- PHP-only scaffolds omit `uiFramework` from `project.config.json` (no stale
+- PHP-only scaffolds omit `uiFramework` from `wpdev.json` (no stale
   `preact` when `jsLib` is `none`)
 - `project.config.example.json` synced with runtime schema (all required keys)
 
@@ -60,12 +60,12 @@ Open-source v1.0.0 release. Completes `plan.final.md` (Phases 0–9) and
 - `wpdev add` error handling and humanized validation output in `main.js`
 - esbuild `depsBundle` guard when no module entries exist
 - Translation pipeline glob for `src/Modules/*/assets/entries/*.{ts,js}`
-- Rector `phpMinVersion` alignment with `project.config.json`
+- Rector `phpMinVersion` alignment with `wpdev.json`
 - PHP fault-tolerance no-op guard on PHP < 8.1
 - PHPStan issues in `HttpClient`, `CircuitBreaker`, `AbilityInterface`
 - `restBatch:on` on `js:none` silently nooped — pre-validation before normalize
 - `collectOtherOwns` dead code removed from `removeFeature.js`
-- Config drift between manifest `phpMinVersion` and `project.config.json` surfaced
+- Config drift between manifest `phpMinVersion` and `wpdev.json` surfaced
   by doctor
 - Release build could succeed with stale bundle outputs
 
@@ -91,5 +91,5 @@ should run `wpdev update --run` after upgrading the kit CLI.
 - `wpdev update` does not support `--yes`; use `--force` to apply on a dirty git
   tree. The `--yes` flag is not a global update flag — passing it as a positional
   argument is interpreted as a directory path.
-- Kit version in consumer `wpdev-kit.json` may warn as "newer than installed"
+- Kit version in consumer `wpdev.json` may warn as "newer than installed"
   when using the workspace CLI before publish; run `wpdev update` after publishing.

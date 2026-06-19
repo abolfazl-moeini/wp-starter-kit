@@ -5,19 +5,15 @@
  * every wp-starter-kit consumer project has, regardless of which
  * features are turned on:
  *
- *   - project.config.json (with a `features` key, dual-written to
- *     wpdev-kit.json by `syncFeaturesToConfig` + `writeManifest`
- *     after the generator runs)
+ *   - wpdev.json (merged config + kit metadata + build section)
  *   - {slug}.php   (the WordPress plugin bootstrap) — plugin mode
  *   - src/Core/{Plugin,ModuleInterface,ModuleLoader}.php
- *   - wpdev-kit.json  (manifest, written by the scaffold AFTER the
- *     generator runs — NOT by the generator itself)
  *   - composer.json (PSR-4 vendor namespace → src/, php >= phpMinVersion)
  *   - package.json (with JS build scripts + devDeps when js ≠ none
  *     OR husky is on; see Phase 21.13 — the file is omitted only
  *     when js === "none" AND husky === "off", in which case the
  *     consumer has no Node toolchain to drive)
- *   - README.md, .gitignore, .editorconfig, readme.txt, build.config.json
+ *   - README.md, .gitignore, .editorconfig, readme.txt
  *   - tsconfig.json (only when js !== "none" — gated by the registry;
  *     core itself does NOT emit it when js is none, so a php-only
  *     project never sees a tsconfig.json file)
@@ -33,12 +29,12 @@
  */
 
 import { deriveUiFramework } from "../derive-ui-framework.js";
-import { renderTemplate, tplVars as legacyTplVars } from "./_templates.js";
 import {
-  TEMPLATE_PROJECT_CONFIG,
+  renderTemplate,
+  tplVars as legacyTplVars,
+  TEMPLATE_WPDEV_JSON,
   TEMPLATE_FUNCTIONS_PHP,
   TEMPLATE_FUNCTIONS_PHP_NO_JS,
-  TEMPLATE_BUILD_CONFIG,
   TEMPLATE_STYLESHEET,
   TEMPLATE_README,
   TEMPLATE_TSCONFIG_JSON,
@@ -80,12 +76,13 @@ export function run(ctx) {
   const files = {};
   const dirs = [];
 
-  // 1. project.config.json — branded via cfg + the v2 fields
-  //    (restNamespace, vendorPrefix, phpMinVersion, …) and the
-  //    v3 `features` key. The Phase 20 syncFeaturesToConfig()
-  //    helper is the one that writes `features` into the existing
-  //    project.config.json after this generator runs.
-  files["project.config.json"] = renderTemplate(TEMPLATE_PROJECT_CONFIG, tpl);
+  // 1. wpdev.json (merged config) template. The scaffold's writeManifest
+  //    call after generators will overwrite with full branding + features + build.
+  //    This emission is a fallback for bypass paths.
+  files["wpdev.json"] = renderTemplate(TEMPLATE_WPDEV_JSON, {
+    ...tpl,
+    kitVersion: tpl.kitVersion || "0.0.0",
+  });
 
   // 2. {slug}.php (or functions.php for legacy theme mode)
   const isPlugin = (cfg.projectType || "plugin") === "plugin";
@@ -116,9 +113,7 @@ export function run(ctx) {
   // 4. readme.txt (WordPress.org plugin format)
   files["readme.txt"] = renderTemplate(loadReadmeTxtTemplate(), tpl);
 
-  // 5. build.config.json + assets/stylesheets/style.css (the CSS
-  //    entry point is also referenced by build.config.json)
-  files["build.config.json"] = renderTemplate(TEMPLATE_BUILD_CONFIG, tpl);
+  // 5. assets/stylesheets/style.css (build config lives inside wpdev.json now)
   files["assets/stylesheets/style.css"] = renderTemplate(
     TEMPLATE_STYLESHEET,
     tpl,
@@ -263,10 +258,9 @@ export const descriptor = {
   id: "core",
   feature: null,
   owns: [
-    "project.config.json",
+    "wpdev.json",
     "composer.json",
     "readme.txt",
-    "build.config.json",
     "README.md",
     ".gitignore",
     ".editorconfig",

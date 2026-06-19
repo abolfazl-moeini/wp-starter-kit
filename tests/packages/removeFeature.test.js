@@ -72,7 +72,7 @@ async function seedProject(tmp, features) {
     batchEndpoint: "/batch/v1",
   };
   await fs.writeFile(
-    path.join(tmp, "project.config.json"),
+    path.join(tmp, "wpdev.json"),
     JSON.stringify({ ...cfg, features: { ...features } }, null, 2) + "\n",
     "utf8",
   );
@@ -164,7 +164,7 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
     expect(res.ok).toBe(true);
 
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(manifest.features.husky).toBe("off");
   });
@@ -176,7 +176,7 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
     await removeFeature(tmp, "husky");
 
     const cfg = JSON.parse(
-      await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(cfg.features.husky).toBe("off");
   });
@@ -220,7 +220,7 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
     );
 
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(manifest.features.js).toBe("none");
     expect(manifest.features.jsTest).toBe("none");
@@ -235,7 +235,7 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
     await removeFeature(tmp, "husky");
 
     const cfg = JSON.parse(
-      await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(cfg.slug).toBe("my-project");
     expect(cfg.globalName).toBe("MyProject");
@@ -348,7 +348,7 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
 
     // Manifest unchanged.
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(manifest.features).toEqual(defaultFeatures());
   });

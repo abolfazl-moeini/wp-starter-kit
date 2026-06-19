@@ -9,7 +9,7 @@
  * Idempotent: safe to run multiple times; missing files are ignored.
  * Never touches src/Modules/* (user code) or any non-glue paths.
  *
- * Also updates project.config.json mirror if present.
+ * Also updates wpdev.json mirror if present.
  */
 import { existsSync, promises as fs } from "node:fs";
 import * as path from "node:path";
@@ -67,7 +67,7 @@ export async function run(dir) {
   // 2. Patch manifest (if present) to flip distMode to "deps".
   //    The runner will still bump kitVersion after us, but we ensure
   //    the shape is correct for the current version.
-  const manifestPath = path.join(dir, "wpdev-kit.json");
+  const manifestPath = path.join(dir, "wpdev.json");
   if (existsSync(manifestPath)) {
     try {
       await updateJsonFile(manifestPath, (m) => {
@@ -79,9 +79,9 @@ export async function run(dir) {
     }
   }
 
-  // 3. Mirror distMode flip into project.config.json if it carries
+  // 3. Mirror distMode flip into wpdev.json if it carries
   //    a top-level distMode (rare; features are the common mirror).
-  const cfgPath = path.join(dir, "project.config.json");
+  const cfgPath = path.join(dir, "wpdev.json");
   if (existsSync(cfgPath)) {
     try {
       await updateJsonFile(cfgPath, (cfg) => {

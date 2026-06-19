@@ -23,7 +23,7 @@
  * leaves the on-disk state untouched.
  *
  * The test asserts BOTH the return value AND the on-disk state
- * (manifest + project.config.json are unchanged on failure).
+ * (manifest + wpdev.json are unchanged on failure).
  */
 
 import { describe, test, expect, beforeEach, afterEach } from "@jest/globals";
@@ -63,7 +63,7 @@ async function seedProject(
     batchEndpoint: "/batch/v1",
   };
   await fs.writeFile(
-    path.join(tmp, "project.config.json"),
+    path.join(tmp, "wpdev.json"),
     JSON.stringify({ ...cfg, features: { ...features } }, null, 2) + "\n",
     "utf8",
   );
@@ -126,7 +126,7 @@ describe("addFeature() — guards (Phase 22.5, 22.6)", () => {
     expect(actual).toBe(handEditedBody);
   });
 
-  test("the idempotent path does NOT bump wpdev-kit.json generatedAt", async () => {
+  test("the idempotent path does NOT bump wpdev.json generatedAt", async () => {
     const generatedAt = "2026-06-15T00:00:00.000Z";
     await seedProject(tmp, {
       features: { ...defaultFeatures(), husky: "on" },
@@ -135,7 +135,7 @@ describe("addFeature() — guards (Phase 22.5, 22.6)", () => {
 
     await addFeature(tmp, "husky", "on");
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(manifest.generatedAt).toBe(generatedAt);
   });
@@ -189,7 +189,7 @@ describe("addFeature() — guards (Phase 22.5, 22.6)", () => {
     expect(res.written).toEqual([]);
   });
 
-  test("validation-fail does NOT modify wpdev-kit.json (no partial writes)", async () => {
+  test("validation-fail does NOT modify wpdev.json (no partial writes)", async () => {
     const generatedAt = "2026-06-15T00:00:00.000Z";
     await seedProject(tmp, {
       features: {
@@ -202,13 +202,13 @@ describe("addFeature() — guards (Phase 22.5, 22.6)", () => {
 
     await addFeature(tmp, "faultTolerance", "on");
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(manifest.features.faultTolerance).toBe("off");
     expect(manifest.generatedAt).toBe(generatedAt);
   });
 
-  test("validation-fail does NOT modify project.config.json's features", async () => {
+  test("validation-fail does NOT modify wpdev.json's features", async () => {
     await seedProject(tmp, {
       features: {
         ...defaultFeatures(),
@@ -219,7 +219,7 @@ describe("addFeature() — guards (Phase 22.5, 22.6)", () => {
 
     await addFeature(tmp, "faultTolerance", "on");
     const cfg = JSON.parse(
-      await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(cfg.features.faultTolerance).toBe("off");
   });
@@ -251,14 +251,14 @@ describe("addFeature() — guards (Phase 22.5, 22.6)", () => {
     // generator hasn't actually emitted any in Phase 21, but
     // even checking for a representative file is fine).
     const entries = await fs.readdir(tmp);
-    // tmp only contains project.config.json + wpdev-kit.json.
-    expect(entries.sort()).toEqual(["project.config.json", "wpdev-kit.json"]);
+    // tmp only contains wpdev.json (single merged config file).
+    expect(entries.sort()).toEqual(["wpdev.json"]);
   });
 
-  test("returns { ok:false, reason } when wpdev-kit.json is missing (no throw)", async () => {
+  test("returns { ok:false, reason } when wpdev.json is missing (no throw)", async () => {
     const res = await addFeature(tmp, "husky", "on");
     expect(res.ok).toBe(false);
-    expect(res.reason).toMatch(/wpdev-kit\.json/i);
+    expect(res.reason).toMatch(/wpdev\.json/i);
   });
 
   test("returns { ok:false, reason } for an unknown feature id", async () => {

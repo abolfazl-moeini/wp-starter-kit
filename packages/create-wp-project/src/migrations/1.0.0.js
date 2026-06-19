@@ -138,7 +138,7 @@ export async function run(dir) {
   }
 
   // 2. Read project config to fill templates
-  const cfgPath = path.join(dir, "project.config.json");
+  const cfgPath = path.join(dir, "wpdev.json");
   let cfg = {};
   if (existsSync(cfgPath)) {
     try {
@@ -146,7 +146,7 @@ export async function run(dir) {
     } catch (err) {
       return {
         ok: false,
-        reason: `Failed to read project.config.json: ${err.message}`,
+        reason: `Failed to read wpdev.json: ${err.message}`,
       };
     }
   }

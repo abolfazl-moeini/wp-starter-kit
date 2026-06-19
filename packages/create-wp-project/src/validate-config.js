@@ -32,15 +32,15 @@ export function validateProjectConfig(dir) {
     return { errors, warnings };
   }
 
-  const cfgPath = path.join(dir, "project.config.json");
-  const kitPath = path.join(dir, "wpdev-kit.json");
+  const cfgPath = path.join(dir, "wpdev.json");
+  const kitPath = path.join(dir, "wpdev.json");
 
   if (!existsSync(cfgPath)) {
-    errors.push("Config consistency: project.config.json is missing");
+    errors.push("Config consistency: wpdev.json is missing");
     return { errors, warnings };
   }
   if (!existsSync(kitPath)) {
-    errors.push("Config consistency: wpdev-kit.json is missing");
+    errors.push("Config consistency: wpdev.json is missing");
     return { errors, warnings };
   }
 
@@ -49,7 +49,7 @@ export function validateProjectConfig(dir) {
     cfg = JSON.parse(readFileSync(cfgPath, "utf8"));
   } catch (e) {
     errors.push(
-      `Config consistency: project.config.json is not valid JSON (${e && e.message ? e.message : String(e)})`,
+      `Config consistency: wpdev.json is not valid JSON (${e && e.message ? e.message : String(e)})`,
     );
     return { errors, warnings };
   }
@@ -59,15 +59,13 @@ export function validateProjectConfig(dir) {
     manifest = readManifest(dir);
   } catch (e) {
     errors.push(
-      `Config consistency: wpdev-kit.json is not valid (${e && e.message ? e.message : String(e)})`,
+      `Config consistency: wpdev.json is not valid (${e && e.message ? e.message : String(e)})`,
     );
     return { errors, warnings };
   }
 
   if (!cfg || typeof cfg !== "object") {
-    errors.push(
-      "Config consistency: project.config.json must be a JSON object",
-    );
+    errors.push("Config consistency: wpdev.json must be a JSON object");
     return { errors, warnings };
   }
 
@@ -88,7 +86,7 @@ export function validateProjectConfig(dir) {
     String(manifestPhpMin) !== String(cfg.phpMinVersion)
   ) {
     errors.push(
-      `Config consistency: phpMinVersion drift — wpdev-kit.json has "${manifestPhpMin}" but project.config.json has "${cfg.phpMinVersion}"`,
+      `Config consistency: phpMinVersion drift — wpdev.json has "${manifestPhpMin}" but wpdev.json has "${cfg.phpMinVersion}"`,
     );
   }
 
@@ -105,7 +103,7 @@ export function validateProjectConfig(dir) {
       errors.push("Config consistency: missing field uiFramework");
     } else if (configured !== derived) {
       errors.push(
-        `Config consistency: uiFramework drift — project.config.json has "${configured}" but deriveUiFramework(features) yields "${derived}"`,
+        `Config consistency: uiFramework drift — wpdev.json has "${configured}" but deriveUiFramework(features) yields "${derived}"`,
       );
     }
   }

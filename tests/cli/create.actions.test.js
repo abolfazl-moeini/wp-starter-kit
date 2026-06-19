@@ -30,7 +30,7 @@ function makeEngine({ ok = true } = {}) {
   return {
     scaffoldProject: jest.fn(async () => ({
       ok,
-      written: ["project.config.json"],
+      written: ["wpdev.json"],
     })),
     buildManifest: jest.fn((args) => ({
       schema: 1,

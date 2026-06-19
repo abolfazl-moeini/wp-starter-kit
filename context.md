@@ -39,7 +39,7 @@ extend-kit/
 
 ### 3.1 Config (source of truth)
 
-**`project.config.json`** drives branding and runtime behaviour:
+**`wpdev.json`** drives branding and runtime behaviour:
 
 | Field                                | Example                 | Purpose                                |
 | ------------------------------------ | ----------------------- | -------------------------------------- |
@@ -56,7 +56,7 @@ extend-kit/
 | `uiFramework`                        | `preact`                | `preact` or `react`                    |
 | `phpMinVersion` / `phpSourceVersion` | `7.4` / `8.1`           | Rector targets                         |
 
-**`build.config.json`** — `globalMappings`, `assetMappings`, `styleEntryPoints`.
+**`the build section of wpdev.json`** — `globalMappings`, `assetMappings`, `styleEntryPoints`.
 
 Org name for esbuild: `ROOT_NAME` env or root `package.json` `name` → `getOrgNameSync()`.
 
@@ -146,7 +146,7 @@ When enabled, the project **must not** use `hookPrefix=wpdev` or `phpFunctionPre
 | Command                      | Purpose                                            |
 | ---------------------------- | -------------------------------------------------- |
 | `wpdev create`               | Scaffold new plugin from templates + feature flags |
-| `wpdev add` / `wpdev remove` | Toggle features; updates `wpdev-kit.json` manifest |
+| `wpdev add` / `wpdev remove` | Toggle features; updates `wpdev.json` manifest     |
 | `wpdev update`               | Run migrations to newer kit version                |
 | `wpdev doctor`               | Validate project health                            |
 | `wpdev info`                 | Show manifest + versions                           |
@@ -234,7 +234,7 @@ Key entry points:
 4. **TDD first** — add failing test, implement, refactor.
 5. **WordPress security** — nonces, caps, sanitize, escape, REST permissions.
 6. **Scoped vendors at release** — never rely on cross-plugin Composer resolution.
-7. **Config-driven branding** — use `project.config.json`, not hardcoded names.
+7. **Config-driven branding** — use `wpdev.json`, not hardcoded names.
 8. **Module entry glob** — new frontend features go in `src/Modules/{Name}/assets/entries/*.ts`.
 
 ---
@@ -245,7 +245,7 @@ Key entry points:
 | ----------------- | ------------------------------------------------------------------------- |
 | `asset.php`       | PHP sidecar with `dependencies`, `hash`, `internal_packages` for a bundle |
 | `importAsGlobals` | esbuild plugin mapping npm imports to WP/global variables                 |
-| `wpdev-kit.json`  | Manifest recording enabled features and kit version in generated projects |
+| `wpdev.json`      | Manifest recording enabled features and kit version in generated projects |
 | `elementProps`    | Converts HTML `data-*` attributes to component props                      |
 | `forceAssets`     | Manual dependency handles added to `.asset.php`                           |
 | `assetMappings`   | Config copying `node_modules` dist to `assets/libraries`                  |

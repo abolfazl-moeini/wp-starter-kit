@@ -105,32 +105,11 @@ describe("getGenerators(features) — registry dispatch (Phase 21.1/21.2)", () =
     expect(gens.map((g) => g.id)).not.toContain("exampleFeature");
   });
 
-  test("vendorScoping:on → vendorScoping generator is enabled (and the generated strauss.json does NOT exclude WPDev — §0.4.1)", () => {
+  test("vendorScoping:on → vendorScoping generator is enabled (strauss config lives in composer.json extra/strauss without WPDev exclusion)", () => {
     const gens = getGenerators({ vendorScoping: "on" });
     expect(gens.map((g) => g.id)).toContain("vendorScoping");
-    const vs = gens.find((g) => g.id === "vendorScoping");
-    // Phase 21.8: per plan §0.4.1 the consumer scaffold's strauss.json
-    // must NOT contain "WPDev" in exclude_from_prefix. We assert
-    // that the generator's run() output, given minimal ctx, does
-    // not emit a strauss.json with "WPDev" in the exclusion list.
-    const ctx = {
-      answers: {
-        slug: "p",
-        npmScope: "o",
-        globalName: "P",
-        textDomain: "p",
-        hookPrefix: "p",
-        phpFunctionPrefix: "p_",
-        uiFramework: "preact",
-      },
-      cfg: { vendorPrefix: "Pvendor" },
-      features: { vendorScoping: "on" },
-      vars: {},
-    };
-    const out = vs.run(ctx);
-    const straussPath = "strauss.json";
-    expect(out.files[straussPath]).toBeDefined();
-    expect(out.files[straussPath]).not.toMatch(/"WPDev"/);
+    // composer.json strauss config (without WPDev) is produced by core
+    // when vendorScoping on; vs generator itself emits no files now.
   });
 
   test("phpTest:phpunit → phpTest generator is enabled", () => {

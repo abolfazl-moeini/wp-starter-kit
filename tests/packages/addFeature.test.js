@@ -5,13 +5,13 @@
  * installer's `wpdev add <feature>` command calls. It turns a
  * feature ON (or switches its variant) in an EXISTING project,
  * writing only the files the feature's generator owns and
- * updating the manifest + project.config.json to reflect the
+ * updating the manifest + wpdev.json to reflect the
  * new state.
  *
  * Contracts locked here:
  *
  *  1. addFeature reads the manifest from `<dir>/wpdev-kit.json`
- *     and the answers-derived `project.config.json`. The two
+ *     and the answers-derived `wpdev.json`. The two
  *     must be in sync (syncFeaturesToConfig keeps them that way
  *     in the scaffold path; the test pre-populates them
  *     consistently).
@@ -23,12 +23,12 @@
  *
  *  3. The generator for `(id, variant)` is found via the
  *     registry. Its `run(ctx)` is called with the existing
- *     answers/cfg reconstructed from project.config.json. The
+ *     answers/cfg reconstructed from wpdev.json. The
  *     output is filtered: only files matched by the generator's
  *     `owns` globs are written. A file outside `owns` is a
  *     safety violation → throw, not silently touch user code.
  *
- *  4. After the writes, `wpdev-kit.json` and project.config.json's
+ *  4. After the writes, `wpdev-kit.json` and wpdev.json's
  *     `features` key are updated atomically (via `writeManifest`
  *     + `syncFeaturesToConfig`). The test asserts both files
  *     reflect the new feature state.
@@ -55,7 +55,7 @@ import {
 
 /**
  * Pre-populate a project directory with a v2-valid
- * project.config.json + a wpdev-kit.json that reflect a "minimal"
+ * wpdev.json + a wpdev-kit.json that reflect a "minimal"
  * starting feature set (js=none, husky=off, exampleFeature=off).
  * Returns the configured features so the test can re-merge.
  */
@@ -100,7 +100,7 @@ async function seedProject(
     batchEndpoint: "/batch/v1",
   };
   await fs.writeFile(
-    path.join(tmp, "project.config.json"),
+    path.join(tmp, "wpdev.json"),
     JSON.stringify({ ...cfg, features: { ...features } }, null, 2) + "\n",
     "utf8",
   );
@@ -154,7 +154,7 @@ describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
     expect(preCommit).toMatch(/lint-staged/);
   });
 
-  test("updates features.husky='on' in wpdev-kit.json", async () => {
+  test("updates features.husky='on' in wpdev.json (single manifest)", async () => {
     await seedProject(tmp, {
       features: { ...defaultFeatures(), husky: "off" },
     });
@@ -162,12 +162,12 @@ describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
     const res = await addFeature(tmp, "husky", "on");
     expect(res.ok).toBe(true);
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(manifest.features.husky).toBe("on");
   });
 
-  test("updates features.husky='on' in project.config.json", async () => {
+  test("updates features.husky='on' in wpdev.json (the config file)", async () => {
     await seedProject(tmp, {
       features: { ...defaultFeatures(), husky: "off" },
     });
@@ -175,19 +175,19 @@ describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
     const res = await addFeature(tmp, "husky", "on");
     expect(res.ok).toBe(true);
     const cfg = JSON.parse(
-      await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(cfg.features.husky).toBe("on");
   });
 
-  test("preserves v2 fields in project.config.json (no data loss)", async () => {
+  test("preserves v2 fields in wpdev.json (no data loss)", async () => {
     await seedProject(tmp, {
       features: { ...defaultFeatures(), husky: "off" },
     });
 
     await addFeature(tmp, "husky", "on");
     const cfg = JSON.parse(
-      await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(cfg.slug).toBe("my-project");
     expect(cfg.globalName).toBe("MyProject");
@@ -236,7 +236,7 @@ describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
     expect(res.ok).toBe(true);
     // No file emitted, but the manifest is updated.
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(manifest.features.restBatch).toBe("on");
   });
@@ -244,7 +244,7 @@ describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
   test("returns { ok:false } when called on a directory with no manifest", async () => {
     const res = await addFeature(tmp, "husky", "on");
     expect(res.ok).toBe(false);
-    expect(res.reason).toMatch(/wpdev-kit\.json|manifest/i);
+    expect(res.reason).toMatch(/wpdev\.json|manifest/i);
   });
 
   test("addFeature(js, none) coerces dependents and deletes their owned files", async () => {
@@ -279,7 +279,7 @@ describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
     expect(res.ok).toBe(true);
 
     const manifest = JSON.parse(
-      await fs.readFile(path.join(tmp, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(manifest.features.js).toBe("none");
     expect(manifest.features.jsLib).toBe("none");

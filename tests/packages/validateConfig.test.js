@@ -42,21 +42,17 @@ function defaultProjectConfig(overrides = {}) {
 
 async function seedProject(dir, { project = {}, features } = {}) {
   const cfg = defaultProjectConfig(project);
-  await fs.writeFile(
-    path.join(dir, "project.config.json"),
-    JSON.stringify(cfg, null, 2) + "\n",
-    "utf8",
-  );
-  const manifest = {
-    schema: 1,
+  const merged = {
+    schema: 2,
     kitVersion: "1.0.0",
     distMode: "deps",
     generatedAt: "2026-01-01T00:00:00.000Z",
+    ...cfg,
     features: features || defaultFeatures(),
   };
   await fs.writeFile(
-    path.join(dir, "wpdev-kit.json"),
-    JSON.stringify(manifest, null, 2) + "\n",
+    path.join(dir, "wpdev.json"),
+    JSON.stringify(merged, null, 2) + "\n",
     "utf8",
   );
 }
@@ -76,12 +72,12 @@ describe("validateProjectConfig()", () => {
     const cfg = defaultProjectConfig();
     delete cfg.slug;
     await fs.writeFile(
-      path.join(tmpDir, "project.config.json"),
+      path.join(tmpDir, "wpdev.json"),
       JSON.stringify(cfg, null, 2) + "\n",
       "utf8",
     );
     await fs.writeFile(
-      path.join(tmpDir, "wpdev-kit.json"),
+      path.join(tmpDir, "wpdev.json"),
       JSON.stringify({ schema: 1, features: defaultFeatures() }, null, 2) +
         "\n",
       "utf8",
@@ -119,12 +115,12 @@ describe("validateProjectConfig()", () => {
       const cfg = defaultProjectConfig();
       delete cfg[key];
       await fs.writeFile(
-        path.join(dir, "project.config.json"),
+        path.join(dir, "wpdev.json"),
         JSON.stringify(cfg, null, 2) + "\n",
         "utf8",
       );
       await fs.writeFile(
-        path.join(dir, "wpdev-kit.json"),
+        path.join(dir, "wpdev.json"),
         JSON.stringify({ schema: 1, features: defaultFeatures() }, null, 2) +
           "\n",
         "utf8",

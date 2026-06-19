@@ -29,7 +29,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal pr
 }
 `;
 
-exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal preset: key generated files match snapshot: minimal-project.config.json 1`] = `
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal preset: key generated files match snapshot: minimal-wpdev.json 1`] = `
 {
   "features": {
     "blocks": "off",
@@ -59,7 +59,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal pr
 }
 `;
 
-exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal preset: key generated files match snapshot: minimal-wpdev-kit.json 1`] = `
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal preset: key generated files match snapshot: minimal-wpdev.json 2`] = `
 {
   "distMode": "deps",
   "features": {
@@ -83,7 +83,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal pr
     "vendorScoping": "on",
     "wpMinVersion": "6.0",
   },
-  "schema": 1,
+  "schema": 2,
 }
 `;
 
@@ -160,7 +160,28 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
 }
 `;
 
-exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard preset: key generated files match snapshot: standard-project.config.json 1`] = `
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard preset: key generated files match snapshot: standard-tsconfig.json 1`] = `
+{
+  "exclude": [
+    "node_modules",
+    "vendor",
+    "build",
+    "dist",
+  ],
+  "include": [
+    "assets/**/*",
+    "core/**/*",
+    "packages/**/*",
+  ],
+  "jsx": "react-jsx",
+  "jsxImportSource": "preact",
+  "module": "ESNext",
+  "moduleResolution": "Bundler",
+  "strict": true,
+}
+`;
+
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard preset: key generated files match snapshot: standard-wpdev.json 1`] = `
 {
   "features": {
     "blocks": "off",
@@ -190,28 +211,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
 }
 `;
 
-exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard preset: key generated files match snapshot: standard-tsconfig.json 1`] = `
-{
-  "exclude": [
-    "node_modules",
-    "vendor",
-    "build",
-    "dist",
-  ],
-  "include": [
-    "assets/**/*",
-    "core/**/*",
-    "packages/**/*",
-  ],
-  "jsx": "react-jsx",
-  "jsxImportSource": "preact",
-  "module": "ESNext",
-  "moduleResolution": "Bundler",
-  "strict": true,
-}
-`;
-
-exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard preset: key generated files match snapshot: standard-wpdev-kit.json 1`] = `
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard preset: key generated files match snapshot: standard-wpdev.json 2`] = `
 {
   "distMode": "deps",
   "features": {
@@ -235,6 +235,6 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
     "vendorScoping": "on",
     "wpMinVersion": "6.0",
   },
-  "schema": 1,
+  "schema": 2,
 }
 `;

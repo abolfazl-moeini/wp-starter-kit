@@ -60,7 +60,7 @@ describe("jsLib scaffold + addFeature", () => {
     expect(pkg.dependencies.react).toMatch(/^[\^~]?18\./);
     expect(pkg.dependencies.preact).toBeUndefined();
     const cfg = JSON.parse(
-      await fs.readFile(path.join(tmp, "project.config.json"), "utf8"),
+      await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
     expect(cfg.uiFramework).toBe("react");
     const tsconfig = JSON.parse(
@@ -83,7 +83,7 @@ describe("jsLib scaffold + addFeature", () => {
   test("addFeature(jsLib, react) updates package.json and marker file", async () => {
     const features = { ...defaultFeatures(), jsLib: "none" };
     await fs.writeFile(
-      path.join(tmp, "project.config.json"),
+      path.join(tmp, "wpdev.json"),
       JSON.stringify(
         {
           slug: "my-project",

@@ -120,18 +120,18 @@ export async function refreshGlue(dir, features) {
     files["composer.json"] = JSON.stringify(composer, null, 2) + "\n";
   }
 
-  // Core's project.config.json template has a fixed set of fields.
+  // Core's wpdev.json template has a fixed set of fields.
   // Merge the on-disk cfg so user-added keys are preserved, then
-  // stamp the current features so the manifest stays in sync.
-  if ("project.config.json" in files) {
-    const templateCfg = JSON.parse(files["project.config.json"]);
+  // stamp the current features.
+  if ("wpdev.json" in files) {
+    const templateCfg = JSON.parse(files["wpdev.json"]);
     const merged = {
       ...templateCfg,
       ...cfg,
       features: { ...features },
       uiFramework: deriveUiFramework(features, cfg),
     };
-    files["project.config.json"] = JSON.stringify(merged, null, 2) + "\n";
+    files["wpdev.json"] = JSON.stringify(merged, null, 2) + "\n";
   }
 
   const written = [];

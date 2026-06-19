@@ -8,8 +8,8 @@ Reusable WordPress plugin starter for modular plugin development. Read
 ```text
 wp-starter-kit/
 ├── wpdev-starter.php          # Plugin bootstrap
-├── project.config.json       # Branding + runtime config (source of truth)
-├── build.config.json         # Asset mappings + esbuild options
+├── wpdev.json       # Branding + runtime config (source of truth)
+├── the build section of wpdev.json         # Asset mappings + esbuild options
 ├── composer.json / package.json
 ├── src/
 │   ├── Core/                 # Plugin, ModuleLoader, ModuleInterface

@@ -1,4 +1,5 @@
 {
+  "schema": 2,
   "slug": "wpdev-starter",
   "globalName": "WPDev",
   "localizeVar": "WPDevLoc",
@@ -12,5 +13,10 @@
   "vendorPrefix": "WpdevVendor",
   "phpMinVersion": "7.4",
   "phpSourceVersion": "8.1",
-  "batchEndpoint": "/batch/v1"
+  "batchEndpoint": "/batch/v1",
+  "build": {
+    "assetMappings": [],
+    "globalMappings": {},
+    "styleEntryPoints": ["assets/stylesheets/style.css"]
+  }
 }

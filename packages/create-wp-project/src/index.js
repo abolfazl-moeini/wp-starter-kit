@@ -48,7 +48,7 @@ import {
   buildManifest,
   readManifest,
   writeManifest,
-  syncFeaturesToConfig,
+  MANIFEST_FILENAME,
   DEFAULT_DIST_MODE,
 } from "./manifest.js";
 import { updateJsonFile } from "./json-utils.js";
@@ -334,17 +334,17 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   }
 
   // 4. Refuse to clobber an existing project unless --force is set.
-  //    The sentinel is project.config.json — if it exists, the
+  //    The sentinel is wpdev.json — if it exists, the
   //    directory is treated as an existing project. Any other file
   //    the scaffold emits (src/Core/Plugin.php, etc.) is treated as
   //    a derivative of that sentinel and is protected by the same
   //    rule.
   if (!options.force) {
     try {
-      await fs.access(path.join(targetDir, "project.config.json"));
+      await fs.access(path.join(targetDir, "wpdev.json"));
       return {
         ok: false,
-        reason: `project.config.json already exists at ${targetDir} — pass { force: true } to overwrite`,
+        reason: `wpdev.json already exists at ${targetDir} — pass { force: true } to overwrite`,
       };
     } catch {
       /* good — does not exist */
@@ -379,8 +379,7 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   //    generators contribute only when their gate is open. The
   //    final write set is the merge of all contributions, with
   //    later generators overwriting earlier ones on key
-  //    collision (e.g. vendorScoping overrides core's
-  //    strauss.json).
+  //    collision.
   const gens = getGenerators(features);
   const ctx = { answers: answersWithUi, cfg, features, vars, options };
   const merged = { files: {}, dirs: [], deps: {}, devDeps: {} };
@@ -456,28 +455,44 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
     written.push(rel);
   }
 
-  // 9. Write the manifest. The manifest's `features` object
-  //    is the validated feature set; `kitVersion` is the kit's
-  //    own version; `distMode` defaults to "deps" (framework via
-  //    wpdev/framework Composer dep; vendored is legacy).
+  // 9. Write the manifest (now the merged wpdev.json). Pass branding + build
+  //    so the single file contains everything (no more dual write).
+  // phpMinVersion: features.phpMinVersion is authoritative (user's --php-min flag);
+  // cfg.phpMinVersion is the config-derived default (may lag features).
+  const effectivePhpMinVersion = features.phpMinVersion || cfg.phpMinVersion;
   const manifest = buildManifest({
     kitVersion: KIT_VERSION,
     features,
     distMode: DEFAULT_DIST_MODE,
+    // pass branding fields from cfg:
+    slug: cfg.slug,
+    globalName: cfg.globalName,
+    localizeVar: cfg.localizeVar,
+    textDomain: cfg.textDomain,
+    hookPrefix: cfg.hookPrefix,
+    npmScope: cfg.npmScope,
+    depsBundle: cfg.depsBundle,
+    phpFunctionPrefix: cfg.phpFunctionPrefix,
+    uiFramework: cfg.uiFramework,
+    restNamespace: cfg.restNamespace,
+    vendorPrefix: cfg.vendorPrefix,
+    phpMinVersion: effectivePhpMinVersion,
+    phpSourceVersion: cfg.phpSourceVersion,
+    batchEndpoint: cfg.batchEndpoint,
+    projectType: cfg.projectType,
+    build: {
+      assetMappings: [],
+      globalMappings: {},
+      styleEntryPoints: ["assets/stylesheets/style.css"],
+    },
   });
   await writeManifest(targetDir, manifest);
   // The manifest is part of the consumer's durable state — add
   // it to the `written` list so callers can assert the full
   // file set returned by scaffoldProject.
-  if (!written.includes("wpdev-kit.json")) {
-    written.push("wpdev-kit.json");
+  if (!written.includes(MANIFEST_FILENAME)) {
+    written.push(MANIFEST_FILENAME);
   }
-
-  // 10. Dual-write `features` into project.config.json so
-  //    pre-Phase 20 readers (the kit's PHP classes, the JS
-  //    asset bundle) can answer "which features are on?"
-  //    without discovering wpdev-kit.json.
-  await syncFeaturesToConfig(targetDir, features);
 
   return { ok: true, written };
 }
@@ -582,14 +597,10 @@ if (
 //   - buildManifest          manifest.js
 //   - readManifest           manifest.js
 //   - writeManifest          manifest.js
-//   - syncFeaturesToConfig   manifest.js
 //   - updateJsonFile         json-utils.js
 //
 // Phase 22 exports (addFeature, removeFeature) — the installer's
 // `wpdev add <feature>` and `wpdev remove <feature>` entry points.
-// Both go through the same syncFeaturesToConfig contract as the
-// scaffold path, so a consumer that calls them directly sees the
-// same on-disk shape scaffoldProject produces.
 
 export {
   getFeatureCatalog,
@@ -599,7 +610,6 @@ export {
   buildManifest,
   readManifest,
   writeManifest,
-  syncFeaturesToConfig,
   updateJsonFile,
   getPresets,
   applyPreset,

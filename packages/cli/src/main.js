@@ -334,7 +334,7 @@ export function buildProgram() {
   allowPassthrough(
     program
       .command("list")
-      .description("list the features in the current project's wpdev-kit.json")
+      .description("list the features in the current project's wpdev.json")
       .option("--json", "emit machine-readable JSON instead of a table"),
   ).action(async () => {
     return runList(process.cwd(), { engine, ui });

@@ -25,25 +25,18 @@ describe("1.0.0 migration — WPDev companion updates", () => {
     phpFramework = "wpdev",
     kitVersion = "0.4.0",
   } = {}) {
-    const manifest = {
-      schema: 1,
+    const merged = {
+      schema: 2,
       kitVersion,
       distMode: "deps",
       generatedAt: "2026-01-01T00:00:00.000Z",
+      slug: "test-plugin",
+      globalName: "TestPlugin",
       features: { phpFramework },
     };
     await fs.writeFile(
-      path.join(tmpDir, "wpdev-kit.json"),
-      JSON.stringify(manifest, null, 2) + "\n",
-      "utf8",
-    );
-    await fs.writeFile(
-      path.join(tmpDir, "project.config.json"),
-      JSON.stringify(
-        { slug: "test-plugin", globalName: "TestPlugin" },
-        null,
-        2,
-      ) + "\n",
+      path.join(tmpDir, "wpdev.json"),
+      JSON.stringify(merged, null, 2) + "\n",
       "utf8",
     );
   }
@@ -76,7 +69,7 @@ describe("1.0.0 migration — WPDev companion updates", () => {
     expect(bridge).toContain("TestPlugin");
 
     const after = JSON.parse(
-      await fs.readFile(path.join(tmpDir, "wpdev-kit.json"), "utf8"),
+      await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
     );
     expect(after.kitVersion).toBe("1.0.0");
   }, 15000);
