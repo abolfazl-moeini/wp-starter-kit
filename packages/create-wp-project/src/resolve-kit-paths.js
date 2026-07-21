@@ -13,10 +13,12 @@ import { createRequire } from "node:module";
 import { execSync } from "node:child_process";
 import { existsSync, realpathSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const ENGINE_MARKER = path.join("generators", "_templates.js");
 
 let cachedKitRoot = undefined;
+let cachedEngineSrc = undefined;
 
 function readWpdevKitRoot() {
   if (cachedKitRoot !== undefined) {
@@ -90,17 +92,61 @@ function resolveEngineViaPackage(anchorFile) {
 }
 
 /**
+ * This module lives at packages/create-wp-project/src/resolve-kit-paths.js.
+ * Prefer locating the engine from *this file* so scaffolds work even when
+ * cwd is outside the monorepo and argv[1] is a thin wrapper.
+ *
+ * @returns {string | null}
+ */
+function resolveEngineFromThisModule() {
+  // Native ESM: import.meta.url points at this file (even under nvm
+  // symlink installs, realpath of the file still lands in the kit).
+  // Access via Function() so Jest's CJS transform never sees a bare
+  // `import.meta` token (SyntaxError: Cannot use 'import.meta' outside a module).
+  try {
+    const metaUrl = Function(
+      "try { return typeof import.meta !== 'undefined' && import.meta.url; } catch (e) { return null; }",
+    )();
+    if (typeof metaUrl === "string" && metaUrl.length > 0) {
+      const here = path.dirname(fileURLToPath(metaUrl));
+      const realHere = safeRealpath(here);
+      if (isEngineSrcDir(realHere)) return realHere;
+      if (isEngineSrcDir(here)) return here;
+    }
+  } catch {
+    /* Jest/babel CJS path — fall through to __dirname / argv */
+  }
+  return null;
+}
+
+/**
  * @returns {string}
  */
 export function resolveEngineSrcDir() {
+  if (cachedEngineSrc !== undefined) {
+    return cachedEngineSrc;
+  }
+
+  /** @type {string | null} */
+  let found = null;
+
+  // 0. Self-locate from this module file (most reliable for ESM).
+  found = resolveEngineFromThisModule();
+  if (found) {
+    cachedEngineSrc = found;
+    return found;
+  }
+
   // 1. Jest / CJS transform: __dirname is this file's directory
   //    (…/create-wp-project/src) or a child under it.
   if (typeof __dirname !== "undefined" && __dirname) {
     if (isEngineSrcDir(__dirname)) {
+      cachedEngineSrc = __dirname;
       return __dirname;
     }
     const parent = path.dirname(__dirname);
     if (isEngineSrcDir(parent)) {
+      cachedEngineSrc = parent;
       return parent;
     }
   }
@@ -112,16 +158,26 @@ export function resolveEngineSrcDir() {
   if (argv1) {
     const realArgv = safeRealpath(argv1);
     const viaPkg = resolveEngineViaPackage(realArgv);
-    if (viaPkg) return viaPkg;
+    if (viaPkg) {
+      cachedEngineSrc = viaPkg;
+      return viaPkg;
+    }
 
-    const found = walkUpForEngineSrc(path.dirname(realArgv));
-    if (found) return found;
+    found = walkUpForEngineSrc(path.dirname(realArgv));
+    if (found) {
+      cachedEngineSrc = found;
+      return found;
+    }
   }
 
   // 3. Walk realpath(cwd) — useful when developing inside the kit.
+  //    Only accept if the engine markers are real (never invent a path).
   const realCwd = safeRealpath(process.cwd());
-  const fromCwd = walkUpForEngineSrc(realCwd);
-  if (fromCwd) return fromCwd;
+  found = walkUpForEngineSrc(realCwd);
+  if (found) {
+    cachedEngineSrc = found;
+    return found;
+  }
 
   // 4. Explicit kit root override (npm config).
   const kitRoot = readWpdevKitRoot();
@@ -131,6 +187,7 @@ export function resolveEngineSrcDir() {
       "packages/create-wp-project/src",
     );
     if (isEngineSrcDir(candidate)) {
+      cachedEngineSrc = candidate;
       return candidate;
     }
   }
@@ -139,13 +196,14 @@ export function resolveEngineSrcDir() {
   //    phantom path that later fails with a confusing "missing file".
   const fallback = path.join(process.cwd(), "packages/create-wp-project/src");
   if (isEngineSrcDir(fallback)) {
+    cachedEngineSrc = fallback;
     return fallback;
   }
 
   throw new Error(
     "Could not locate @wpdev/create-wp-project engine src " +
-      "(generators/_templates.js). Tried realpath(argv[1]), cwd walk, " +
-      "npm config wpdev-kit-root, and cwd/packages/create-wp-project/src.",
+      "(generators/_templates.js). Tried import.meta.url, realpath(argv[1]), " +
+      "cwd walk, npm config wpdev-kit-root, and cwd/packages/create-wp-project/src.",
   );
 }
 

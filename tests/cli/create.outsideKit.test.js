@@ -60,12 +60,17 @@ describe("wpdev create from empty folder outside the kit", () => {
     }
 
     expect(existsSync(join(target, "wpdev.json"))).toBe(true);
+    expect(existsSync(join(target, "my-plugin.php"))).toBe(true);
     expect(existsSync(join(target, "dev/release/prepare-release.js"))).toBe(
       true,
     );
     expect(existsSync(join(target, "dev/release/prepareComposer.js"))).toBe(
       true,
     );
+
+    const bootstrap = readFileSync(join(target, "my-plugin.php"), "utf8");
+    expect(bootstrap).toMatch(/Plugin Name:/);
+    expect(bootstrap).toMatch(/MY_PLUGIN_VERSION/);
 
     const pkg = JSON.parse(readFileSync(join(target, "package.json"), "utf8"));
     expect(pkg.scripts.release).toMatch(/prepare-release\.js/);

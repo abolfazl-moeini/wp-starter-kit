@@ -21,6 +21,7 @@ import {
   CONSUMER_BUILD_WPDEV_PACKAGES,
 } from "../dep-versions.js";
 import { deriveUiFramework } from "../derive-ui-framework.js";
+import { resolveEngineSrcDir } from "../resolve-kit-paths.js";
 
 /* -------------------------------------------------------------------- */
 /* renderTemplate (also re-exported from src/index.js)                   */
@@ -296,32 +297,11 @@ function scriptsForVariant(variant, defaults) {
 /* -------------------------------------------------------------------- */
 
 /**
- * Resolve the absolute path of a file that ships next to this module.
- * Mirrors the helper that used to live in src/index.js — except that
- * the templates/ directory is the parent of generators/, so the
- * base path is the parent of __dirname (or, in CLI / jest contexts,
- * the cwd-relative `packages/create-wp-project/src`).
+ * Template files live under create-wp-project/src/templates/.
+ * Always use resolveEngineSrcDir from resolve-kit-paths (realpath +
+ * package resolve + import.meta). Never invent cwd/packages/create-wp-project
+ * — that breaks scaffolds outside the monorepo.
  */
-function resolveEngineSrcDir() {
-  if (typeof __dirname !== "undefined" && __dirname) {
-    return path.dirname(__dirname);
-  }
-  const anchors = [process.argv[1], process.cwd()].filter(Boolean);
-  for (const anchor of anchors) {
-    let dir = path.resolve(path.dirname(anchor));
-    for (let depth = 0; depth < 10; depth++) {
-      const candidate = path.join(dir, "packages/create-wp-project/src");
-      if (existsSync(path.join(candidate, "generators/_templates.js"))) {
-        return candidate;
-      }
-      const parent = path.dirname(dir);
-      if (parent === dir) break;
-      dir = parent;
-    }
-  }
-  return path.join(process.cwd(), "packages/create-wp-project/src");
-}
-
 function modulePath(relPath) {
   return path.join(resolveEngineSrcDir(), relPath);
 }
