@@ -55,6 +55,7 @@ import {
   stripRequiresPluginsWpdevHeader,
   stripWpdevDependencyNotice,
 } from "./generators/phpFramework.js";
+import { dumpComposerAutoload } from "./composer-dump.js";
 
 import { listGenerators } from "./generators/index.js";
 import {
@@ -492,6 +493,10 @@ export async function removeFeature(dir, id, _opts = {}) {
       }
     }
   }
+
+  // Stale vendor autoload maps keep requiring deleted register files
+  // (classic: blocks-register.php after blocks removal).
+  dumpComposerAutoload(dir);
 
   return {
     ok: true,

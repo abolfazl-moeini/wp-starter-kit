@@ -59,6 +59,7 @@ import {
   projectConfigToAnswers,
 } from "./project-config-io.js";
 import { refreshGlue } from "./refresh-glue.js";
+import { dumpComposerAutoload } from "./composer-dump.js";
 
 /* -------------------------------------------------------------------- */
 /* Helpers                                                               */
@@ -527,6 +528,14 @@ export async function addFeature(dir, id, variant, _opts = {}) {
     if (!written.includes(p) && !p.startsWith("-")) {
       written.push(p);
     }
+  }
+
+  // Keep vendor/composer autoload maps in sync when register files change
+  // (stale maps cause fatals for deleted autoload.files entries).
+  const dump = dumpComposerAutoload(dir);
+  if (dump.warning) {
+    // Surface via written marker so CLI can show it if desired.
+    written.push(`#composer-dump-warning:${dump.warning}`);
   }
 
   // Host plugin header + dependency admin notice when phpFramework is

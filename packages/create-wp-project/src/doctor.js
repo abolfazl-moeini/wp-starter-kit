@@ -349,6 +349,13 @@ export function doctorProject(dir) {
     result.warnings.push(w);
   }
 
+  for (const e of checkComposerAutoloadFiles(dir)) {
+    result.errors.push(e);
+  }
+  for (const w of checkStaleVendorAutoloadFiles(dir)) {
+    result.warnings.push(w);
+  }
+
   const registry = getDepVersions();
   if (registry.size === 0) {
     result.warnings.push(
@@ -358,4 +365,83 @@ export function doctorProject(dir) {
 
   result.ok = result.errors.length === 0;
   return result;
+}
+
+/**
+ * composer.json autoload.files must exist on disk (missing → fatal on require).
+ *
+ * @param {string} dir
+ * @returns {string[]}
+ */
+export function checkComposerAutoloadFiles(dir) {
+  const errors = [];
+  const composerPath = path.join(dir, "composer.json");
+  if (!existsSync(composerPath)) return errors;
+  let composer;
+  try {
+    composer = JSON.parse(readFileSync(composerPath, "utf8"));
+  } catch {
+    return errors;
+  }
+  const files = composer?.autoload?.files;
+  if (!Array.isArray(files)) return errors;
+  for (const rel of files) {
+    if (!rel || typeof rel !== "string") continue;
+    const abs = path.join(dir, rel);
+    if (!existsSync(abs)) {
+      errors.push(
+        `composer.json autoload.files entry missing on disk: ${rel} — remove it from composer.json and run \`composer dump-autoload\``,
+      );
+    }
+  }
+  return errors;
+}
+
+/**
+ * Detect vendor maps that still require files not listed in composer.json
+ * (stale dump after feature remove, e.g. blocks-register.php).
+ *
+ * @param {string} dir
+ * @returns {string[]}
+ */
+export function checkStaleVendorAutoloadFiles(dir) {
+  const warnings = [];
+  const vendorMap = path.join(dir, "vendor", "composer", "autoload_files.php");
+  const composerPath = path.join(dir, "composer.json");
+  if (!existsSync(vendorMap) || !existsSync(composerPath)) return warnings;
+
+  let listed = new Set();
+  try {
+    const composer = JSON.parse(readFileSync(composerPath, "utf8"));
+    listed = new Set(
+      (composer?.autoload?.files || []).filter((f) => typeof f === "string"),
+    );
+  } catch {
+    return warnings;
+  }
+
+  let mapBody = "";
+  try {
+    mapBody = readFileSync(vendorMap, "utf8");
+  } catch {
+    return warnings;
+  }
+
+  // Project-local files only: $baseDir . '/src/...'
+  const re = /\$baseDir\s*\.\s*['"]\/([^'"]+)['"]/g;
+  let m;
+  const stale = [];
+  while ((m = re.exec(mapBody)) !== null) {
+    const rel = m[1];
+    if (!rel.startsWith("src/")) continue;
+    if (!listed.has(rel)) {
+      stale.push(rel);
+    }
+  }
+  if (stale.length) {
+    warnings.push(
+      `vendor/composer/autoload_files.php still references removed project files: ${stale.join(", ")}. Run \`composer dump-autoload\` (or reinstall) so WordPress does not fatal on missing requires.`,
+    );
+  }
+  return warnings;
 }
