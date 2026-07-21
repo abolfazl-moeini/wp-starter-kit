@@ -11,7 +11,8 @@
  * framework is a dep and SHOULD be scoped).
  *
  * Steps:
- *   1. Resolve the slug from project.config.json.
+ *   1. Resolve the slug from wpdev.json (legacy project.config.json
+ *      accepted as a fallback).
  *   2. Copy the kit's source tree into dist/{slug}/ (excluding
  *      dev-only files like tests/, dev/, node_modules/, etc.).
  *   3. Re-emit a CONSUMER-shaped composer.json into the dist:
@@ -34,15 +35,18 @@ declare(strict_types=1);
 
 $root = dirname(__DIR__, 2);
 
-$configPath = $root . '/project.config.json';
+$configPath = $root . '/wpdev.json';
 if (!is_file($configPath)) {
-    fwrite(STDERR, "project.config.json not found at {$configPath}\n");
+    $configPath = $root . '/project.config.json';
+}
+if (!is_file($configPath)) {
+    fwrite(STDERR, "Project config not found (tried wpdev.json / project.config.json) under {$root}\n");
     exit(1);
 }
 
 $config = json_decode((string) file_get_contents($configPath), true);
 if (!is_array($config) || empty($config['slug'])) {
-    fwrite(STDERR, "project.config.json must contain a slug\n");
+    fwrite(STDERR, "Project config must contain a slug ({$configPath})\n");
     exit(1);
 }
 

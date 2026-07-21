@@ -46,10 +46,10 @@ jobs:
               "uiFramework": "preact"
             }' \
             node packages/create-wp-project/src/index.js
-          test -f "$TMP/my-project/project.config.json"
+          test -f "$TMP/my-project/wpdev.json"
           test -f "$TMP/my-project/my-project.php"
           test -f "$TMP/my-project/assets/dependencies.ts"
-          node -e "const c=require('$TMP/my-project/project.config.json'); if(c.slug!=='my-project') process.exit(1)"
+          node -e "const c=require('$TMP/my-project/wpdev.json'); if(c.slug!=='my-project') process.exit(1)"
           echo "Scaffold smoke OK"
 
   # ============================================================

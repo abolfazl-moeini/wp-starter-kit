@@ -54,7 +54,7 @@ jobs:
         run: |
           mkdir -p release-archive
           cp -r core dev packages tests docs includes assets build release-archive/
-          cp project.config.json build.config.json composer.json package.json release-archive/
+          cp wpdev.json composer.json package.json release-archive/
           cp phpunit.xml phpcs.xml phpstan.neon release-archive/
           if [ -f README.md ]; then cp README.md release-archive/; fi
           if [ -f CHANGELOG.md ]; then cp CHANGELOG.md release-archive/; fi

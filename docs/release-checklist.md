@@ -57,7 +57,7 @@ or publish.
 
 ### Additional pre-release checks
 
-- [ ] `project.config.json` `version` is bumped to the target release.
+- [ ] `wpdev.json` `version` is bumped to the target release (if present).
 - [ ] `CHANGELOG.md` has an entry for this version with:
   - Bullet list of new features
   - Bullet list of bug fixes
@@ -90,7 +90,7 @@ the kit version reported by `wpdev --version` is
 4. Root `package.json` — `version` field (monorepo aggregator; stays private).
 5. `composer.json` — if PHP package version is surfaced to consumers.
 6. `CHANGELOG.md` — new `## [X.Y.Z]` section.
-7. `project.config.json` — consumer-facing version marker.
+7. `wpdev.json` — consumer-facing version marker (kit + generated projects).
 8. Regenerate lockfiles: `npm install` at root, `composer update --lock` if needed.
 
 ### Version alignment rules
@@ -194,7 +194,7 @@ npm run build
 Expected outcomes:
 
 - [ ] `npm create` resolves `@wpdev/create-plugin` from the registry (not workspace).
-- [ ] Generated project has `wpdev-kit.json` and `project.config.json`.
+- [ ] Generated project has `wpdev.json`.
 - [ ] `npm install` and `composer install` complete without errors.
 - [ ] `npm run build` produces `assets/bundles/` output.
 
@@ -366,7 +366,7 @@ order before announcing the hotfix.
 - [ ] Open a `release/1.0.x` branch for backports.
 - [ ] Notify stakeholders (Slack, email, the project's RSS feed).
 - [ ] Close the milestone on GitHub.
-- [ ] Bump `project.config.json` `version` to `1.1.0-dev` so the
+- [ ] Bump `wpdev.json` `version` to `1.1.0-dev` so the
       next iteration starts at the right number.
 - [ ] Confirm `npm create @wpdev/plugin@latest` smoke test passes from a
       clean machine (not the monorepo workspace).

@@ -11,6 +11,8 @@ parameters:
         - dist/*
         # Vendored third-party framework — analysed upstream, not in kit CI.
         - packages/wpdev-framework/*
+        # Test harness that requires WordPress stubs — analysed in consumer CI.
+        - packages/plugin-core-test/*
         - tests/*
         - wp-content/*
         - blockstudio/*

@@ -7,7 +7,6 @@
     ".": "./src/index.js"
   },
   "type": "module",
-  "private": true,
   "bin": {
     "create-wp-project": "src/index.js"
   },

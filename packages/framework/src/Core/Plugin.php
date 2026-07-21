@@ -17,7 +17,8 @@ namespace WPDev\Core;
  *
  * Responsibilities:
  *  - Locate and cache the project configuration JSON
- *    (`project.config.json` in the plugin root).
+ *    (`wpdev.json` preferred; legacy `project.config.json`
+ *    accepted as a fallback in the plugin root).
  *  - Hold a single {@see ModuleLoader} instance for the lifetime of
  *    the request / CLI run / unit test.
  *  - Hook into WordPress at `plugins_loaded` (or `init` if the
@@ -33,7 +34,7 @@ namespace WPDev\Core;
  * For Composer deployments the framework lives in
  * `vendor/wpdev/framework/src/Core/Plugin.php`, so the default
  * `dirname(__DIR__, 2)` would resolve into the vendor tree and
- * miss the real `project.config.json`. Consumer plugins should
+ * miss the real config file. Consumer plugins should
  * call {@see Plugin::set_plugin_dir()} (or pass an explicit path
  * to {@see Plugin::boot()}) before the first config read.
  */
@@ -54,26 +55,26 @@ final class Plugin {
 	private static ?ModuleLoader $loader = null;
 
 	/**
-	 * Override path for `project.config.json`. Resolved at boot
+	 * Override path for the project config JSON. Resolved at boot
 	 * time and cached for the rest of the request.
 	 */
 	private static $config_path = null;
 
 	/**
 	 * Consumer-supplied plugin root. When set, {@see
-	 * Plugin::resolve_default_config_path()} anchors
-	 * `project.config.json` here instead of walking up from
-	 * `__DIR__`. Required for Composer deployments where the
-	 * framework is loaded from `vendor/wpdev/framework/` — the
-	 * default `dirname(__DIR__, 2)` would otherwise resolve into
-	 * the vendor tree and miss the consumer's config file.
+	 * Plugin::resolve_default_config_path()} anchors the config
+	 * file here instead of walking up from `__DIR__`. Required for
+	 * Composer deployments where the framework is loaded from
+	 * `vendor/wpdev/framework/` — the default `dirname(__DIR__, 2)`
+	 * would otherwise resolve into the vendor tree and miss the
+	 * consumer's config file.
 	 *
 	 * @var string|null
 	 */
 	private static ?string $plugin_dir = null;
 
 	/**
-	 * Parsed contents of `project.config.json`.
+	 * Parsed contents of `wpdev.json` (or legacy `project.config.json`).
 	 *
 	 * @var array<string,mixed>|null
 	 */
@@ -119,12 +120,14 @@ final class Plugin {
 	 * and the `plugin_loaded` hook is recorded for later inspection.
 	 *
 	 * @param string|null $config_path Optional override for the
-	 *                                 project.config.json location.
+	 *                                 project config JSON location
+	 *                                 (`wpdev.json` or legacy
+	 *                                 `project.config.json`).
 	 *                                 Production code lets this be
 	 *                                 null and the file is resolved
 	 *                                 from the plugin root.
 	 *
-	 * @throws \RuntimeException When project.config.json cannot be
+	 * @throws \RuntimeException When the project config cannot be
 	 *                           located or read.
 	 */
 	public static function boot( ?string $config_path = null ): void {
@@ -217,10 +220,11 @@ final class Plugin {
 	}
 
 	/**
-	 * Read and return `project.config.json` as an associative
+	 * Read and return the project config JSON as an associative
 	 * array. The file is resolved relative to the *plugin* root
 	 * (the directory that contains `src/Core/Plugin.php`'s
-	 * grandparent), never to the active theme.
+	 * grandparent), never to the active theme. Prefers
+	 * `wpdev.json`; falls back to legacy `project.config.json`.
 	 *
 	 * @param string|null $override_path Optional override path
 	 *                                   for the config file.
@@ -243,7 +247,7 @@ final class Plugin {
 			// exception, not a render context.
 			throw new \RuntimeException(
 				// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
-				sprintf( 'project.config.json not found at %s', $path )
+				sprintf( 'Project config not found at %s (tried wpdev.json / project.config.json)', $path )
 			);
 		}
 
@@ -251,7 +255,7 @@ final class Plugin {
 		if ( false === $raw ) {
 			throw new \RuntimeException(
 				// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
-				sprintf( 'Failed to read project.config.json at %s', $path )
+				sprintf( 'Failed to read project config at %s', $path )
 			);
 		}
 
@@ -259,7 +263,7 @@ final class Plugin {
 		if ( ! is_array( $decoded ) ) {
 			throw new \RuntimeException(
 				// phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
-				sprintf( 'project.config.json at %s did not decode as an object/array', $path )
+				sprintf( 'Project config at %s did not decode as an object/array', $path )
 			);
 		}
 
@@ -339,8 +343,10 @@ final class Plugin {
 	}
 
 	/**
-	 * Resolve the default `project.config.json` path from the
-	 * plugin root.
+	 * Resolve the default project config path from the plugin root.
+	 *
+	 * Prefers `wpdev.json`; falls back to legacy `project.config.json`
+	 * so older consumer plugins keep booting during migration.
 	 *
 	 * Resolution order:
 	 *   1. The override set by {@see Plugin::set_plugin_dir()}
@@ -363,8 +369,11 @@ final class Plugin {
 			$user_constants = $constants['user'] ?? [];
 			foreach ( $user_constants as $name => $val ) {
 				if ( substr( $name, -11 ) === '_PLUGIN_DIR' && is_string( $val ) ) {
-					$candidate = rtrim( $val, '/\\' ) . '/project.config.json';
-					if ( is_file( $candidate ) ) {
+					$root = rtrim( $val, '/\\' );
+					if (
+						is_file( $root . '/wpdev.json' ) ||
+						is_file( $root . '/project.config.json' )
+					) {
 						$plugin_root = $val;
 						break;
 					}
@@ -376,6 +385,12 @@ final class Plugin {
 			$plugin_root = dirname( __DIR__, 2 );
 		}
 
-		return rtrim( $plugin_root, '/\\' ) . '/project.config.json';
+		$root = rtrim( $plugin_root, '/\\' );
+		$wpdev = $root . '/wpdev.json';
+		if ( is_file( $wpdev ) ) {
+			return $wpdev;
+		}
+
+		return $root . '/project.config.json';
 	}
 }

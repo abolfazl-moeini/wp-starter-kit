@@ -42,15 +42,25 @@ const POLARIS_DIST = join(
   "packages/polaris-stack/dist/index.js",
 );
 
-let Button;
-let Card;
-let Text;
-let Heading;
-let Badge;
-let Alert;
-let Spinner;
-let Kbd;
-let IconButton;
+// Loaded from CJS dist in beforeAll — typed loosely for tsc/noImplicitAny.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Button: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Card: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Text: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Heading: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Badge: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Alert: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Spinner: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Kbd: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let IconButton: any;
 
 beforeAll(() => {
   if (!existsSync(POLARIS_DIST)) {

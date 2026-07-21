@@ -45,13 +45,21 @@ const POLARIS_DIST = join(
   "packages/polaris-stack/dist/index.js",
 );
 
-let Divider;
-let Container;
-let Cover;
-let Frame;
-let Reel;
-let Imposter;
-let Switcher;
+// Loaded from CJS dist in beforeAll — typed loosely for tsc/noImplicitAny.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Divider: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Container: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Cover: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Frame: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Reel: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Imposter: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let Switcher: any;
 
 beforeAll(() => {
   if (!existsSync(POLARIS_DIST)) {
@@ -144,7 +152,7 @@ describe("polaris-stack layout render", () => {
   test("Container renders with max CSS var", () => {
     const root = document.createElement("div");
     render(h(Container, { max: "40rem" }, "content"), root);
-    const el = root.querySelector(".ps-container");
+    const el = root.querySelector(".ps-container") as HTMLElement | null;
     expect(el).not.toBeNull();
     expect(el?.style.getPropertyValue("--ps-max")).toBe("40rem");
   });
@@ -158,21 +166,21 @@ describe("polaris-stack layout render", () => {
   test("Frame renders with ratio CSS var", () => {
     const root = document.createElement("div");
     render(h(Frame, { ratio: "4 / 3" }, "media"), root);
-    const el = root.querySelector(".ps-frame");
+    const el = root.querySelector(".ps-frame") as HTMLElement | null;
     expect(el?.style.getPropertyValue("--ps-frame-ratio")).toBe("4 / 3");
   });
 
   test("Reel renders with ps-reel class", () => {
     const root = document.createElement("div");
     render(h(Reel, { gap: "2" }, "scroll"), root);
-    const el = root.querySelector(".ps-reel");
+    const el = root.querySelector(".ps-reel") as HTMLElement | null;
     expect(el?.style.getPropertyValue("--ps-gap")).toBe("var(--ps-space-2)");
   });
 
   test("Imposter renders with position var", () => {
     const root = document.createElement("div");
     render(h(Imposter, { position: "start" }, "overlay"), root);
-    const el = root.querySelector(".ps-imposter");
+    const el = root.querySelector(".ps-imposter") as HTMLElement | null;
     expect(el?.style.getPropertyValue("--ps-imposter-position")).toBe(
       "flex-start",
     );

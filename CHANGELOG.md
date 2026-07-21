@@ -5,7 +5,38 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-_No changes yet._
+### Added
+
+- **Config**: single `wpdev.json` replaces `project.config.json`,
+  `build.config.json`, and `wpdev-kit.json` (migration `2.0.0`)
+- **Scaffold**: production release packager
+  (`dev/release/prepare-release.js` + `prepareComposer.js`) on every
+  generated project (migration `2.1.0`)
+- **Polaris Stack v2**: `frontendStack: polaris` copies design system
+  primitives/components into scaffolds; kit docs under `docs/polaris/`
+- **PHPUnit templates**: generated tests align with
+  `plugin-core-test` conventions
+
+### Fixed
+
+- **Outside-kit create**: `resolveEngineSrcDir` uses `realpath` and
+  package-graph resolution so global/nvm-linked `wpdev` bins find the
+  engine (no more phantom `./packages/create-wp-project/src/release/...`)
+- **mcp-integration**: sibling kit package resolution when cwd is
+  outside the monorepo
+- **CLI UX**: create prompts, minimal-preset PHPUnit ask, clack-styled
+  post-scaffold summary and next steps
+- **Framework boot**: `Plugin::config()` prefers `wpdev.json`, falls
+  back to legacy `project.config.json`
+- **CI**: nightly scaffold smoke and release archive copy `wpdev.json`
+  (no longer require removed config files)
+- **Publishability**: `@wpdev/create-wp-project` is no longer
+  `private: true` (required for ordered CLI-chain publish)
+
+### Changed
+
+- Release checklist and `dev/release/build-dist.php` read `wpdev.json`
+- PHPStan excludes `packages/plugin-core-test` (WP-stub harness)
 
 ## [1.0.0] - 2026-06-18
 
