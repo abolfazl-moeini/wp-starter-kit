@@ -127,19 +127,7 @@ describe("getGenerators(features) — registry dispatch (Phase 21.1/21.2)", () =
     expect(gens.map((g) => g.id)).not.toContain("i18n");
   });
 
-  test("blocks:on + js:typescript + wpMinVersion:6.0 → blocks generator is enabled", () => {
-    const gens = getGenerators({
-      js: "typescript",
-      blocks: "on",
-      wpMinVersion: "6.0",
-    });
-    expect(gens.map((g) => g.id)).toContain("blocks");
-  });
 
-  test("blocks:on + js:none → blocks generator is enabled (PHP-first)", () => {
-    const gens = getGenerators({ js: "none", blocks: "on" });
-    expect(gens.map((g) => g.id)).toContain("blocks");
-  });
 
   test("restBatch:on + js:typescript → restBatch generator is enabled", () => {
     const gens = getGenerators({ js: "typescript", restBatch: "on" });
@@ -189,8 +177,6 @@ describe("getGenerators(features) — registry dispatch (Phase 21.1/21.2)", () =
     expect(ids).not.toContain("css");
     // restBatch default = "off" → no restBatch
     expect(ids).not.toContain("restBatch");
-    // blocks default = "off" → no blocks
-    expect(ids).not.toContain("blocks");
   });
 
   test("every descriptor has the required shape { id, feature, owns, run }", () => {
@@ -240,7 +226,6 @@ describe("listGenerators() — full catalog (Phase 21.2)", () => {
     expect(ids).toContain("i18n");
     expect(ids).toContain("phpTest");
     expect(ids).toContain("license");
-    expect(ids).toContain("blocks");
     expect(ids).toContain("css");
   });
 });

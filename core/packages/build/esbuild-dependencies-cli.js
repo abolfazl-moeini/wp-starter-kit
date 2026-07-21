@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { fileURLToPath } from "node:url";
 import { runBuild } from "./esbuild-dependencies.js";
 import { parseBuildCliOptions, runWatchUntilExit } from "./cli-options.js";

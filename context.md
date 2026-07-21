@@ -18,7 +18,7 @@ The starter supports:
 - **Composer in dev, scoped vendors in dist** — Strauss / php-scoper pipeline.
 - **CLI installer** — `wpdev` scaffolds projects, adds/removes features, runs migrations.
 - **Build pipeline** — four-stage esbuild (dependencies, components, styles, asset copy).
-- **Optional packages** — REST batch fetch, fault tolerance, Gutenberg blocks, i18n, patches.
+- **Optional packages** — REST batch fetch, fault tolerance, i18n, patches.
 
 The implementation lives in `wp-starter-kit/`. Former research folders and plan documents have been removed after porting.
 
@@ -117,19 +117,6 @@ wpdev create my-plugin --js=none --mcp-abilities=on --yes
 
 PHP-only — no JS pipeline required. Requires WordPress 6.9+ at runtime (installer warns; library shows admin notice when API is missing). Generated projects get a vendored copy under `src/Mcp/` + `src/Modules/McpAbilities/`.
 
-### 3.3.3 Blockstudio blocks (optional)
-
-The `blocks` feature (`blocks:on`) scaffolds [Blockstudio 7](https://blockstudio.dev) — PHP-first Gutenberg blocks with field definitions in `block.json`. No JS build step required; works with `js:none`.
-
-Enable via installer:
-
-```bash
-wpdev create my-plugin --blocks=on --yes
-wpdev add blocks
-wpdev remove blocks
-```
-
-Requires **PHP 8.2+** at runtime for Blockstudio vendor code (installer warns when `phpMinVersion < 8.2`; Rector downlevels plugin source only). Generated projects get `blockstudio.json`, `blockstudio/example-hero/`, `src/Modules/Blocks/Module.php`, and `src/blocks-register.php`. See `wp-starter-kit/docs/blocks.md` and `docs/blocks-blockstudio.md`.
 
 ### 3.3.4 WPDev Admin Framework (optional, companion plugin)
 

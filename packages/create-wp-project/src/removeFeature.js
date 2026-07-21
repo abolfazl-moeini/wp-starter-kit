@@ -93,7 +93,7 @@ function findCatalogEntry(id) {
  * Pick the OFF value for a feature. The convention is:
  *  - If the catalog has a variant literally named `"off"`, that
  *    is the OFF value (matches husky, exampleFeature, i18n,
- *    vendorScoping, faultTolerance, restBatch, blocks).
+ *    vendorScoping, faultTolerance, restBatch).
  *  - Otherwise, fall back to the first variant whose name is
  *    `"none"` (matches js, jsLib, jsTest, css, phpFramework,
  *    phpTest). For features that have neither `"off"` nor

@@ -2,6 +2,7 @@
   "name": "wpdev/php-fault-tolerance",
   "description": "Fault-tolerance utilities for wp-starter-kit (full on PHP 8.1+, no-op stubs below).",
   "type": "library",
+  "version": "1.0.0",
   "license": "MIT",
   "require": {
     "php": ">=7.4"

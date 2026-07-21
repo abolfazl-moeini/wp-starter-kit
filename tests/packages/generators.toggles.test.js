@@ -19,7 +19,6 @@
  *                                 when phpunit
  *  7. license       (gpl2/gpl3/mit) → LICENSE file with the right
  *                                 body, for any license variant
- *  8. blocks        (off/on)   → src/Modules/Blocks/* when on +
  *                                 js ≠ none + wpMinVersion ≥ 5.8
  *  9. css           (none/sass/tailwind/postcss) → variant config
  *                                 file when ≠ none + js ≠ none
@@ -40,7 +39,6 @@ import { run as restBatchRun } from "../../packages/create-wp-project/src/genera
 import { run as i18nRun } from "../../packages/create-wp-project/src/generators/i18n.js";
 import { run as phpTestRun } from "../../packages/create-wp-project/src/generators/phpTest.js";
 import { run as licenseRun } from "../../packages/create-wp-project/src/generators/license.js";
-import { run as blocksRun } from "../../packages/create-wp-project/src/generators/blocks.js";
 import { run as cssRun } from "../../packages/create-wp-project/src/generators/css.js";
 
 function makeCtx(answers = {}, cfg = {}, features = {}) {
@@ -90,7 +88,6 @@ function makeCtx(answers = {}, cfg = {}, features = {}) {
     vendorScoping: "on",
     husky: "on",
     css: "none",
-    blocks: "off",
     license: "gpl2",
     wpMinVersion: "6.0",
     exampleFeature: "on",
@@ -315,35 +312,6 @@ describe("license generator (Phase 21.7/21.8)", () => {
   });
 });
 
-describe("blocks generator (Blockstudio)", () => {
-  test("emits Blockstudio scaffold when blocks=on", () => {
-    const out = blocksRun(
-      makeCtx({}, {}, { blocks: "on", js: "typescript", wpMinVersion: "6.0" }),
-    );
-    expect(out.files["blockstudio.json"]).toBeDefined();
-    expect(out.files["blockstudio/example-hero/block.json"]).toBeDefined();
-    expect(out.files["src/Modules/Blocks/Module.php"]).toBeDefined();
-    const bj = JSON.parse(out.files["blockstudio/example-hero/block.json"]);
-    expect(bj.$schema).toMatch(/wp\.org\/trunk\/block\.json/);
-    expect(bj.apiVersion).toBe(3);
-    expect(out.files["src/Modules/Blocks/Module.php"]).toMatch(
-      /namespace\s+MyProject\\Modules\\Blocks/,
-    );
-    expect(out.files["src/Modules/Blocks/Module.php"]).toMatch(
-      /Blockstudio\\Build::init/,
-    );
-  });
-
-  test("emits nothing when blocks=off", () => {
-    const out = blocksRun(makeCtx({}, {}, { blocks: "off", js: "typescript" }));
-    expect(Object.keys(out.files)).toEqual([]);
-  });
-
-  test("emits scaffold when blocks=on with js=none (PHP-first)", () => {
-    const out = blocksRun(makeCtx({}, {}, { blocks: "on", js: "none" }));
-    expect(out.files["blockstudio.json"]).toBeDefined();
-  });
-});
 
 describe("css generator (Phase 21.7/21.8)", () => {
   test("emits .sassrc when css=sass + js=typescript", () => {

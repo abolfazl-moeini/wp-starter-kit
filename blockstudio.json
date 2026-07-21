@@ -1,9 +1,0 @@
-{
-  "$schema": "https://app.blockstudio.dev/schema/blockstudio",
-  "assets": {
-    "process": { "scss": true }
-  },
-  "editor": {
-    "formatOnSave": false
-  }
-}

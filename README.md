@@ -89,7 +89,7 @@ feature set, and hands it to the engine.
 - TypeScript + esbuild build pipeline with optional Preact/React UI
 - PHP version downleveling via Rector (target PHP 7.4+)
 - Feature manifest (`wpdev-kit.json`) with add/remove/set/update CLI
-- Optional Blockstudio blocks, fault tolerance, MCP Abilities API
+- Optional fault tolerance, MCP Abilities API
 - PHPUnit + Jest test infrastructure, Strauss vendor scoping
 - Publishable `@wpdev/*` npm packages and `wpdev/framework` Composer package
 

@@ -18,7 +18,7 @@ import { validateFeatureSet } from "../../packages/create-wp-project/src/feature
  *   minimal       PHP-only, no JS, minimal tooling
  *   standard      §1 defaults (TypeScript + PHPUnit + Jest)
  *   full          All optional features ON
- *   woocommerce   standard + blocks:on, exampleFeature:off
+ *   woocommerce   standard + exampleFeature:off
  *
  * Three contracts are locked:
  *  1. getPresets() returns the three ids in a stable order
@@ -91,7 +91,6 @@ describe("applyPreset() — known presets produce valid feature sets (Phase 20.1
     expect(f.jsLib).toBe("none");
     expect(f.jsTest).toBe("none");
     expect(f.css).toBe("none");
-    expect(f.blocks).toBe("off");
     expect(f.phpTest).toBe("phpunit");
     expect(f.husky).toBe("off");
     expect(f.exampleFeature).toBe("off");
@@ -122,7 +121,6 @@ describe("applyPreset() — known presets produce valid feature sets (Phase 20.1
       vendorScoping: "on",
       husky: "on",
       css: "none",
-      blocks: "off",
       license: "gpl2",
       wpMinVersion: "6.0",
       exampleFeature: "on",
@@ -143,13 +141,11 @@ describe("applyPreset() — known presets produce valid feature sets (Phase 20.1
     const standard = applyPreset("standard");
     expect(full.jsLib).toBe("preact");
     expect(full.faultTolerance).toBe("on");
-    expect(full.blocks).toBe("on");
     expect(full.frontendStack).toBe("polaris");
     expect(full.restBatch).toBe("on");
     expect(full.phpMinVersion).toBe("8.2");
     // FT is default-on for standard as well (dual-mode package).
     expect(standard.faultTolerance).toBe("on");
-    expect(standard.blocks).toBe("off");
   });
 
   test("applyPreset('woocommerce') returns a complete valid feature set", () => {
@@ -159,11 +155,9 @@ describe("applyPreset() — known presets produce valid feature sets (Phase 20.1
     expect(v).toMatchObject({ ok: true, errors: {} });
   });
 
-  test("applyPreset('woocommerce') = standard + blocks:on + exampleFeature:off", () => {
+  test("applyPreset('woocommerce') = standard + exampleFeature:off", () => {
     const woo = applyPreset("woocommerce");
     const standard = applyPreset("standard");
-    expect(woo.blocks).toBe("on");
-    expect(standard.blocks).toBe("off");
     expect(woo.exampleFeature).toBe("off");
     expect(standard.exampleFeature).toBe("on");
     expect(woo.wpMinVersion).toBe("6.0");

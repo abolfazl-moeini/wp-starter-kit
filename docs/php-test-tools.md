@@ -207,12 +207,11 @@ The kit uses **Jest** for JavaScript/TypeScript unit tests under
 kit default — generated projects may opt into `jsTest: "vitest"`, but
 the starter's own `jest.config.mjs` ignores foreign test trees:
 
-- `wp-content/` (e.g. gitignored Blockstudio vendor Vitest specs)
+- `wp-content/`
 - `node_modules/`
 - `dist/`
 
-Run `npx jest --listTests | grep blockstudio` after checkout — it should
-return empty even when Blockstudio is installed under `wp-content/plugins/`.
+
 
 ## CI integration
 

@@ -103,7 +103,7 @@ describe("refreshGlue after feature mutations", () => {
   });
 
   test("addFeature preserves user-customized project.config.json keys", async () => {
-    const features = { ...defaultFeatures(), blocks: "off" };
+    const features = { ...defaultFeatures() };
     await seedProject(tmp, features);
     await refreshGlue(tmp, features);
 
@@ -112,11 +112,11 @@ describe("refreshGlue after feature mutations", () => {
     cfg.restNamespace = "custom/v1";
     await fs.writeFile(cfgPath, JSON.stringify(cfg, null, 2) + "\n", "utf8");
 
-    await addFeature(tmp, "blocks", "on");
+    // Mutate a real toggle (blocks feature removed from catalog).
+    await addFeature(tmp, "restBatch", "on");
 
     const after = JSON.parse(await fs.readFile(cfgPath, "utf8"));
     expect(after.restNamespace).toBe("custom/v1");
-    expect(after.features.blocks).toBe("on");
   });
 
   test("removeFeature(js) drops package.json and tsconfig.json when husky is off", async () => {

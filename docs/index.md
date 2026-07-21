@@ -72,8 +72,6 @@
 | -------------------------------------------------------- | --------------------------------------------- | ----------------------------------------- |
 | [wpdev-adapter.md](wpdev-adapter.md)                     | WPDev Admin Framework companion plugin bridge | You're integrating `phpFramework:wpdev`   |
 | [framework-as-dependency.md](framework-as-dependency.md) | Composer `wpdev/framework` and `distMode`     | You're shipping framework as a dependency |
-| [blocks.md](blocks.md)                                   | Blockstudio blocks feature overview           | You're adding Gutenberg blocks            |
-| [blocks-blockstudio.md](blocks-blockstudio.md)           | Blockstudio layout, fields, and authoring     | You're writing block definitions          |
 | [fault-tolerance.md](fault-tolerance.md)                 | PHP circuit breaker and resilience package    | You need fault-tolerance helpers          |
 | [mcp-integration.md](mcp-integration.md)                 | WordPress Abilities API for MCP tool exposure | You're using `mcpAbilities:on`            |
 

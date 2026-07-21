@@ -1,6 +1,6 @@
 import { build, context } from "esbuild";
 import path from "node:path";
-import { glob } from "glob";
+import { createRequire } from "node:module";
 import {
   importAsGlobals,
   saveAssetFile,
@@ -8,6 +8,15 @@ import {
 import { readProjectConfig } from "@core/utils";
 import { readBuildConfig } from "./index.js";
 import { getJsxOptions, getReactAliases } from "./getJsxOptions.js";
+
+// glob v10 is ESM; older transitive installs may still be CJS (v7).
+// createRequire works for both and keeps consumer `npm run build` reliable.
+const require = createRequire(import.meta.url);
+const globModule = require("glob");
+const glob =
+  typeof globModule.glob === "function"
+    ? globModule.glob.bind(globModule)
+    : globModule;
 
 /** Module entries: plain TS or TSX (JSX automatic runtime). */
 const MODULE_ENTRY_GLOBS = [

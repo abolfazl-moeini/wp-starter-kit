@@ -92,7 +92,6 @@ Every scaffold is shaped by its feature set (`{ featureId: variant }`). Key feat
 | `jsLib`         | `none`/`preact`/`react`                                      |
 | `phpMinVersion` | Rector downgrade target                                      |
 | `phpFramework`  | `none`/`wpdev` — companion plugin with WPDev Admin Framework |
-| `blocks`        | Blockstudio 7 Gutenberg blocks (PHP 8.2+ runtime)            |
 | `frontendStack` | `none`/`polaris` — Polaris Stack design system               |
 | `mcpAbilities`  | WordPress Abilities API (WP 6.9+)                            |
 | `vendorScoping` | Strauss prefix on release                                    |

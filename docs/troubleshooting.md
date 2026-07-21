@@ -68,7 +68,6 @@ For production, ensure all three CLI packages are on npm per
 
 1. Check `package.json` `engines` and `composer.json` `require.php`.
 2. Align local versions or adjust via `wpdev set phpMinVersion <ver>`.
-3. Remember `blocks:on` needs PHP **8.2+** at runtime regardless of Rector target.
 
 **Related:** [features-reference.md](features-reference.md#phpminversion--php)
 

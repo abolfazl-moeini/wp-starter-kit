@@ -7,7 +7,7 @@
  * Phase I3 + I6 export two additional helpers:
  *  - `renderSummary({answers, features, runOptions})` — returns a
  *    multi-line string for the "your project" panel. Field order
- *    is locked (slug → JS → lib → CSS → blocks → PHP min →
+ *    is locked (slug → JS → lib → CSS → PHP min →
  *    fault-tolerance → ON toggles).
  *  - `renderNextSteps(features, runOptions)` — returns an ordered
  *    array of `cd <dir> && <command>` strings for the "what to do
@@ -244,14 +244,7 @@ export function renderSummary(input) {
 
   // 2. CSS.
   push("CSS", f.css);
-  // 3. Blocks.
-  push("Blocks", f.blocks === "on" ? "Blockstudio" : f.blocks);
-  if (f.blocks === "on" && f.phpMinVersion && f.phpMinVersion < "8.2") {
-    lines.push(
-      "  Note: Blockstudio requires PHP 8.2+ at runtime (Rector downlevels your plugin source only).",
-    );
-  }
-  // 4. PHP min + framework + test.
+  // 3. PHP min + framework + test.
   push("PHP min", f.phpMinVersion);
   push(
     "PHP framework",
@@ -353,11 +346,7 @@ export async function renderWarnings(warnings) {
  * `commands/create.js`:
  *   - npm install: included when `js !== 'none'` OR `husky === 'on'`
  *     (i.e. a package.json was emitted by the engine).
- *   - composer install: included when `phpTest === 'phpunit'` OR
- *     `blocks === 'on'` (Blockstudio is a Composer dependency).
- *   - When `blocks:on` and `phpMinVersion < 8.2`, an advisory line
- *     reminds that Rector downlevels plugin source only — Blockstudio
- *     still requires PHP 8.2+ at runtime.
+ *   - composer install: included when `phpTest === 'phpunit'`.
  *
  * @param {Record<string,string>} [features]
  * @param {object} [runOptions]
@@ -375,19 +364,13 @@ export function renderNextSteps(features, runOptions) {
     steps.push("npm install");
   }
 
-  const needsComposer = f.phpTest === "phpunit" || f.blocks === "on";
+  const needsComposer = f.phpTest === "phpunit";
   if (needsComposer) {
     steps.push("composer install");
   }
 
   if (f.phpFramework === "wpdev") {
     steps.push("Activate the companion plugin under companion-plugins/wpdev/.");
-  }
-
-  if (f.blocks === "on" && f.phpMinVersion && f.phpMinVersion < "8.2") {
-    steps.push(
-      "Note: Blockstudio requires PHP 8.2+ at runtime (Rector downlevels your plugin source only).",
-    );
   }
 
   // Advisory: if JS is on, the user can run tests. We add this

@@ -110,7 +110,7 @@ describe("feature catalog audit (TASK-24a)", () => {
     });
 
     test.each([
-      ["blocks", "on"],
+      ["faultTolerance", "on"],
       ["mcpAbilities", "on"],
     ])(
       "addFeature(%s, %s) succeeds with composer.json present",

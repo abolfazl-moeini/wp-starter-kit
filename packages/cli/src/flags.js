@@ -31,7 +31,6 @@ import { sanitizeSlug } from "./slug.js";
  * predictable list and tests can assert membership.
  */
 export const KNOWN_FLAGS = [
-  "--blocks=",
   "--css=",
   "--dir=",
   "--domain=",
@@ -88,7 +87,6 @@ const FLAG_MAP = [
   ["features", "jsLib", "--js-lib=", "kv"],
   ["features", "jsTest", "--js-test=", "kv"],
   ["features", "css", "--css=", "kv"],
-  ["features", "blocks", "--blocks=", "kv"],
   ["features", "phpMinVersion", "--php-min=", "kv"],
   ["features", "phpFramework", "--php-framework=", "kv"],
   ["features", "phpTest", "--php-test=", "kv"],

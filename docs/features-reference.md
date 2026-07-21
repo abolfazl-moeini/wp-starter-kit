@@ -32,7 +32,6 @@
 | `vendorScoping`  | Vendor Scoping       | on, off                       | on         | —                                       | —                           | add/remove |
 | `husky`          | Husky                | on, off                       | on         | `js ≠ none` for package.json            | —                           | add/remove |
 | `css`            | CSS                  | none, sass, tailwind, postcss | none       | `js ≠ none`                             | polaris vs tailwind (v1)    | add/remove |
-| `blocks`         | Blocks               | off, on                       | off        | PHP 8.2+ runtime (Blockstudio)          | —                           | add/remove |
 | `license`        | License              | gpl2, gpl3, mit               | gpl2       | —                                       | —                           | **set**    |
 | `wpMinVersion`   | WordPress            | 5.8, 6.0, 6.2, 6.4, 6.6       | 6.0        | —                                       | —                           | **set**    |
 | `exampleFeature` | Example Feature      | on, off                       | on         | —                                       | —                           | add/remove |
@@ -112,7 +111,6 @@ See [php-test-tools.md](php-test-tools.md) for PHP-side testing.
 | **Enables**      | Rector downgrade target, `composer.json` `require.php`             |
 | **Owned paths**  | Refreshed via glue (not deleted on set)                            |
 | **Dependencies** | None                                                               |
-| **Conflicts**    | `faultTolerance:on` requires ≥ `8.1`; `blocks:on` warns if `< 8.2` |
 | **Toggle**       | `wpdev set phpMinVersion 8.2`                                      |
 
 ---
@@ -220,18 +218,13 @@ See [css-variants.md](css-variants.md).
 
 ---
 
-### `blocks` — Blocks
 
 | Property         | Value                                                           |
 | ---------------- | --------------------------------------------------------------- |
 | **Label**        | Blocks                                                          |
 | **Variants**     | `off` _(default)_, `on`                                         |
-| **Enables**      | Blockstudio 7, `blockstudio/` directory, blocks module          |
-| **Owned paths**  | `blockstudio/**`, blocks module paths                           |
-| **Dependencies** | PHP 8.2+ at runtime for Blockstudio vendor; WP 6.7+ recommended |
 | **Toggle**       | `wpdev add blocks` / `wpdev remove blocks`                      |
 
-See [blocks.md](blocks.md) and [blocks-blockstudio.md](blocks-blockstudio.md).
 
 ---
 
@@ -384,8 +377,6 @@ Use normalization when merging flags and presets to avoid stale dependent values
 | Condition                           | Warning key    | Message summary                    |
 | ----------------------------------- | -------------- | ---------------------------------- |
 | `license:mit`                       | `license`      | WordPress.org GPL policy advisory  |
-| `blocks:on` + low `wpMinVersion`    | `blocks`       | Blockstudio targets WP 6.7+        |
-| `blocks:on` + `phpMinVersion < 8.2` | `blocksPhp`    | Blockstudio runtime needs PHP 8.2+ |
 | `mcpAbilities:on`                   | `mcpAbilities` | Requires WP 6.9+ Abilities API     |
 
 Warnings do not set `ok: false`. The CLI surfaces them before scaffold.

@@ -64,7 +64,6 @@ describe("smoke — full-featured project (P7-T2)", () => {
       "--js=typescript",
       "--js-lib=preact",
       "--frontend-stack=polaris",
-      "--blocks=on",
       "--php-min=8.2",
       "--yes",
       "--dir=dist/smoke-test",
@@ -96,7 +95,6 @@ describe("smoke — full-featured project (P7-T2)", () => {
     expect(m.features.js).toBe("typescript");
     expect(m.features.jsLib).toBe("preact");
     expect(m.features.frontendStack).toBe("polaris");
-    expect(m.features.blocks).toBe("on");
     expect(m.features.phpMinVersion).toBe("8.2");
   });
 
@@ -105,16 +103,7 @@ describe("smoke — full-featured project (P7-T2)", () => {
     expect(report.errors).toEqual([]);
   });
 
-  test("wpdev add blocks is idempotent", () => {
-    const r = runWpdev(["add", "blocks", "--yes"], SMOKE_DIR);
-    expect(r.status).toBe(0);
-  });
 
-  test("wpdev remove blocks succeeds", () => {
-    const r = runWpdev(["remove", "blocks", "--yes"], SMOKE_DIR);
-    expect(r.status).toBe(0);
-    expect(existsSync(join(SMOKE_DIR, "blocks"))).toBe(false);
-  });
 
   test("wpdev set phpMinVersion succeeds", () => {
     const r = runWpdev(["set", "phpMinVersion", "8.1"], SMOKE_DIR);

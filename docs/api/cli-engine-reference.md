@@ -299,7 +299,6 @@ Turn a feature on or switch its variant in an existing project.
 | Name        | Type     | Description                                       |
 | ----------- | -------- | ------------------------------------------------- |
 | `dir`       | `string` | Project root                                      |
-| `featureId` | `string` | Catalog id (e.g. `js`, `blocks`, `husky`)         |
 | `variant`   | `string` | Required for variant features (e.g. `typescript`) |
 
 **Returns**
@@ -615,8 +614,7 @@ enabled features. Written by `scaffoldProject`, `addFeature`, `removeFeature`,
     "faultTolerance": "off",
     "vendorScoping": "on",
     "husky": "on",
-    "css": "none",
-    "blocks": "off",
+    "css": "none": "off",
     "license": "gpl2",
     "wpMinVersion": "6.0",
     "exampleFeature": "on",
@@ -706,7 +704,7 @@ import { addFeature, doctorProject } from "@wpdev/create-wp-project";
 const health = doctorProject(dir);
 if (!health.ok) throw new Error(health.errors.join("\n"));
 
-const res = await addFeature(dir, "blocks", "on");
+const res = await addFeature(dir, "on");
 if (!res.ok) throw new Error(res.reason);
 ```
 

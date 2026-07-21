@@ -78,7 +78,6 @@ describe("readProjectConfig — v3 tolerance (Phase 20.9/20.10)", () => {
         vendorScoping: "on",
         husky: "on",
         css: "none",
-        blocks: "off",
         license: "gpl2",
         wpMinVersion: "6.0",
         exampleFeature: "on",

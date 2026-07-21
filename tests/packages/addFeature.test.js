@@ -68,7 +68,6 @@ async function seedProject(
       exampleFeature: "off",
       i18n: "off",
       css: "none",
-      blocks: "off",
       restBatch: "off",
       vendorScoping: "off",
       phpTest: "none",

@@ -12,7 +12,7 @@
  * Conditional rules (plan.installer.md I2.5):
  *  - Skip JS sub-questions (`jsLib`, `jsTest`) when `js:none`.
  *  - Skip `css` when `js:none`.
- *  - Ask `blocks` independently (Blockstudio is PHP-first).
+ *  - Ask remaining toggles independently.
  *  - Skip `faultTolerance` when `phpMinVersion < 8.1`.
  *  - Branding questions always come first.
  *  - Preset short-circuit: `minimal` skips per-feature prompts
@@ -209,7 +209,6 @@ const FEATURE_QUESTIONS = {
   husky: "Git pre-commit hooks (Husky)?",
   exampleFeature: "Include the ExampleFeature demo module?",
   i18n: "Translation pipeline?",
-  blocks: "Gutenberg blocks (Blockstudio)?",
   mcpAbilities: "WordPress Abilities API (MCP)?",
   frontendStack: "Frontend structure?",
 };
@@ -519,7 +518,6 @@ export function buildPromptPlan(currentFeatures, engine, options) {
   }
 
   for (const id of [
-    "blocks",
     "mcpAbilities",
     "phpTest",
     "phpUnitDocker",

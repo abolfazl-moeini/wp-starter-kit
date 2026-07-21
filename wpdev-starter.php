@@ -40,17 +40,6 @@ foreach ($autoloadCandidates as $autoload) {
 	}
 }
 
-$blockstudioCandidates = [
-	(defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR : (defined('ABSPATH') ? ABSPATH . 'wp-content/plugins' : '')) . '/blockstudio/blockstudio.php',
-	WPDEV_STARTER_PLUGIN_DIR . 'vendor/blockstudio/blockstudio/blockstudio.php',
-];
-foreach ($blockstudioCandidates as $blockstudio) {
-	if (is_file( $blockstudio )) {
-		require_once $blockstudio;
-		break;
-	}
-}
-
 // Inform Assets of the plugin root so path/URL resolution works correctly
 // regardless of whether the framework lives in packages/ (dev) or vendor/ (Composer).
 if ( class_exists( 'WPDev\\Support\\Assets' ) ) {

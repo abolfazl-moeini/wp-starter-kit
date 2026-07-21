@@ -98,7 +98,6 @@ Source of truth: `KNOWN_FLAGS` in `packages/cli/src/flags.js`.
 | `--js-lib=<lib>`              | `features.jsLib`          | `none` / `preact` / `react`                          |
 | `--js-test=<runner>`          | `features.jsTest`         | `jest` / `vitest` / `none`                           |
 | `--css=<flavor>`              | `features.css`            | `none` / `sass` / `tailwind` / `postcss`             |
-| `--blocks=<on\|off>`          | `features.blocks`         | Blockstudio blocks                                   |
 | `--php-min=<ver>`             | `features.phpMinVersion`  | `7.4` … `8.3`                                        |
 | `--php-framework=<opt>`       | `features.phpFramework`   | `none` / `wpdev` (alias `wpdev-framework` → `wpdev`) |
 | `--php-test=<opt>`            | `features.phpTest`        | `phpunit` / `none`                                   |
@@ -145,7 +144,7 @@ wpdev create my-plugin --yes --preset=minimal --install
 
 # Full stack with explicit flags overriding preset
 wpdev create my-plugin --yes --preset=standard \
-  --js-lib=react --blocks=on --frontend-stack=polaris
+  --js-lib=react  --frontend-stack=polaris
 
 # Force overwrite in CI
 wpdev create my-plugin --yes --force --dir=/tmp/my-plugin
@@ -290,7 +289,6 @@ wpdev set phpMinVersion 8.1 /path/to/my-plugin
 `phpMinVersion` to `7.4` while `faultTolerance:on` fails with a dependency
 error.
 
-Toggle features (`js`, `blocks`, `husky`, …) must use `wpdev add` / `wpdev remove`.
 
 ---
 
@@ -468,7 +466,6 @@ When `--yes` is omitted, `wpdev create` runs:
 3. **Feature prompts** — conditional branching:
    - `js` variant → if not `none`, prompt `jsLib`, `jsTest`, `css`
    - `frontendStack` only when TS + React/Preact
-   - `blocks`, `phpFramework`, `faultTolerance`, `mcpAbilities` as toggles
    - `phpMinVersion`, `wpMinVersion`, `license` as selects
 4. **Install confirmation** — npm/composer install and optional `git init`
 

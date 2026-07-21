@@ -85,7 +85,6 @@ function makeCtx(answers = {}, cfg = {}, features = {}) {
     vendorScoping: "on",
     husky: "on",
     css: "none",
-    blocks: "off",
     license: "gpl2",
     wpMinVersion: "6.0",
     exampleFeature: "on",
@@ -106,7 +105,7 @@ describe("generator purity (Phase 21.9/21.10)", () => {
     // The default features are permissive — they enable every
     // toggle the registry has a default for, so we exercise the
     // full catalog. Generators whose gate is closed (js:pure,
-    // js:flow, restBatch, css, blocks) are NOT in the
+    // js:flow, restBatch, css) are NOT in the
     // default-features set, so the test below covers only the
     // generators the default scaffold runs.
     const features = defaultFeatures();
@@ -114,10 +113,8 @@ describe("generator purity (Phase 21.9/21.10)", () => {
     // without changing the default semantics.
     features.restBatch = "on";
     features.css = "tailwind";
-    features.blocks = "on";
-    // restBatch is gated on js != none + restBatch == "on" — ✓
+        // restBatch is gated on js != none + restBatch == "on" — ✓
     // css is gated on js != none + css != "none" — ✓
-    // blocks is gated on blocks === "on" only (PHP-first; no js gate) — ✓
     const ctx = makeCtx({}, {}, features);
     const gens = getGenerators(features);
 
@@ -156,7 +153,6 @@ describe("generator purity (Phase 21.9/21.10)", () => {
         vendorScoping: "off",
         license: "",
         css: "none",
-        blocks: "off",
         restBatch: "off",
       },
     );
@@ -209,8 +205,7 @@ describe("generator purity (Phase 21.9/21.10)", () => {
     const features = defaultFeatures();
     features.restBatch = "on";
     features.css = "tailwind";
-    features.blocks = "on";
-    features.wpMinVersion = "6.0";
+        features.wpMinVersion = "6.0";
     const ctxWide = makeCtx({}, {}, features);
     for (const g of getGenerators(features)) {
       const out = g.run(ctxWide);

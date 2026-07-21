@@ -69,10 +69,6 @@ describe("parseFlags()", () => {
     expect(parseFlags(["--css=tailwind"]).features.css).toBe("tailwind");
   });
 
-  test("parses --blocks=on → features.blocks", () => {
-    expect(parseFlags(["--blocks=on"]).features.blocks).toBe("on");
-    expect(parseFlags(["--blocks=off"]).features.blocks).toBe("off");
-  });
 
   test("parses --php-min= → features.phpMinVersion", () => {
     expect(parseFlags(["--php-min=8.1"]).features.phpMinVersion).toBe("8.1");
@@ -203,7 +199,7 @@ describe("parseFlags()", () => {
       "--js-lib=",
       "--js-test=",
       "--css=",
-      "--blocks=",
+      
       "--php-min=",
       "--php-source=",
       "--php-framework=",

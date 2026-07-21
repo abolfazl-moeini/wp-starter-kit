@@ -183,7 +183,7 @@ describe("validateFeatureSet — §1.1 rule 1 (js ≠ none for dependents)", () 
 /* -------------------------------------------------------------------- */
 
 describe("validateFeatureSet — §1.1 rule 2 (faultTolerance + phpMinVersion)", () => {
-  test("faultTolerance:on + phpMinVersion:8.0 → warning (not hard error)", () => {
+  test("faultTolerance:on + phpMinVersion:8.0 → ok (dual-mode, no warning)", () => {
     const r = validateFeatureSet({
       ...defaultFeatures(),
       faultTolerance: "on",
@@ -191,10 +191,10 @@ describe("validateFeatureSet — §1.1 rule 2 (faultTolerance + phpMinVersion)",
     });
     expect(r.ok).toBe(true);
     expect(r.errors.faultTolerance).toBeUndefined();
-    expect(r.warnings.faultTolerance).toMatch(/phpMinVersion ≥ 8\.1/);
+    expect(r.warnings?.faultTolerance).toBeUndefined();
   });
 
-  test("faultTolerance:on + phpMinVersion:7.4 → warning (not hard error)", () => {
+  test("faultTolerance:on + phpMinVersion:7.4 → ok (dual-mode, no warning)", () => {
     const r = validateFeatureSet({
       ...defaultFeatures(),
       faultTolerance: "on",
@@ -202,7 +202,7 @@ describe("validateFeatureSet — §1.1 rule 2 (faultTolerance + phpMinVersion)",
     });
     expect(r.ok).toBe(true);
     expect(r.errors.faultTolerance).toBeUndefined();
-    expect(r.warnings.faultTolerance).toMatch(/phpMinVersion ≥ 8\.1/);
+    expect(r.warnings?.faultTolerance).toBeUndefined();
   });
 
   test("faultTolerance:on + phpMinVersion:8.1 → no error", () => {
@@ -249,59 +249,6 @@ describe("validateFeatureSet — §1.1 rule 2 (faultTolerance + phpMinVersion)",
       phpMinVersion: "7.4",
     });
     expect(r.errors?.faultTolerance).toBeUndefined();
-  });
-});
-
-/* -------------------------------------------------------------------- */
-/* §1.1 rule 3 — blocks:on Blockstudio warnings (no js gate)            */
-/* -------------------------------------------------------------------- */
-
-describe("validateFeatureSet — §1.1 rule 3 (blocks + Blockstudio)", () => {
-  test("blocks:on + js:none → ok with blocksPhp warning when phpMinVersion < 8.2", () => {
-    const r = validateFeatureSet({
-      ...defaultFeatures(),
-      js: "none",
-      jsTest: "none",
-      blocks: "on",
-      phpMinVersion: "7.4",
-      wpMinVersion: "6.0",
-    });
-    expect(r.ok).toBe(true);
-    expect(r.warnings.blocksPhp).toMatch(/PHP 8\.2/);
-  });
-
-  test("blocks:on + js:typescript → ok", () => {
-    const r = validateFeatureSet({
-      ...defaultFeatures(),
-      js: "typescript",
-      blocks: "on",
-      wpMinVersion: "6.0",
-      phpMinVersion: "8.2",
-    });
-    expect(r.ok).toBe(true);
-    expect(r.errors?.blocks).toBeUndefined();
-  });
-
-  test("blocks:on + wpMinVersion below 6.7 → advisory blocks warning", () => {
-    const r = validateFeatureSet({
-      ...defaultFeatures(),
-      blocks: "on",
-      wpMinVersion: "6.0",
-      phpMinVersion: "8.2",
-    });
-    expect(r.ok).toBe(true);
-    expect(r.warnings.blocks).toMatch(/6\.7/);
-  });
-
-  test("blocks:off → no blocks warnings", () => {
-    const r = validateFeatureSet({
-      ...defaultFeatures(),
-      js: "none",
-      blocks: "off",
-      wpMinVersion: "5.8",
-    });
-    expect(r.warnings?.blocks).toBeUndefined();
-    expect(r.warnings?.blocksPhp).toBeUndefined();
   });
 });
 

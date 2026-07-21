@@ -70,7 +70,7 @@ import { refreshGlue } from "./refresh-glue.js";
  * Look up the generator descriptor for a (feature, variant) pair.
  * Matches:
  *   - `feature: id && variant: variant`  (e.g. js:typescript, css:sass)
- *   - `feature: id && !variant`          (toggle, e.g. husky, blocks)
+ *   - `feature: id && !variant`          (toggle, e.g. husky, exampleFeature)
  *
  * Returns `null` if no descriptor matches. The match is
  * descriptor-stable: when multiple variants exist for a feature

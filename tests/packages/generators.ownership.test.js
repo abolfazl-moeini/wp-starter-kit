@@ -125,10 +125,10 @@ function firstOverlap(a, b) {
     "src/Modules/ExampleFeature/assets/entries/admin.ts",
     "tests/phpunit/Modules/ExampleFeature/ModuleTest.php",
     "src/Modules/ExampleFeature/assets/entries/__tests__/admin.test.ts",
-    "blockstudio.json",
-    "blockstudio/example-hero/block.json",
-    "src/Modules/Blocks/Module.php",
-    "src/blocks-register.php",
+    
+    
+    
+    
     "src/Modules/RestBatch/Module.php",
     "assets/dependencies.ts",
     "assets/dependencies.js",
@@ -239,8 +239,7 @@ describe("generator ownership — owned-paths map (Phase 22.1, 22.2)", () => {
       // Force-open the gates that depend on sub-features:
       feats.js = "typescript";
       feats.jsTest = "jest";
-      feats.blocks = "on";
-      feats.wpMinVersion = "6.6";
+            feats.wpMinVersion = "6.6";
       feats.css = "sass";
       feats.restBatch = "on";
 

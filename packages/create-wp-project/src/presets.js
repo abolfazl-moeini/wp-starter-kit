@@ -10,9 +10,8 @@
  *
  *   minimal      PHP-only, no JS, minimal tooling
  *   standard     TypeScript + PHPUnit + Jest (§1 defaults; CLI --yes default)
- *   full         All optional features ON (fault-tolerance, blocks, polaris, …)
- *   woocommerce  standard + blocks:on + exampleFeature:off +
- *                jsLib:preact (for block UIs)
+ *   full         All optional features ON (fault-tolerance, polaris, …)
+ *   woocommerce  standard + exampleFeature:off + jsLib:preact
  *
  * Order matters: the first entry returned by getPresets() is the
  * default selection in a CLI picker. We order
@@ -56,7 +55,6 @@ function buildMinimal() {
     jsLib: "none",
     jsTest: "none",
     css: "none",
-    blocks: "off",
     phpMinVersion: "7.4",
     phpFramework: "none",
     phpTest: "phpunit",
@@ -86,7 +84,7 @@ function buildStandard() {
 
 /**
  * Build the 'full' preset: standard + every optional feature enabled.
- * Mirrors improve.md TASK-14a (fault-tolerance, blocks, polaris, rest-batch).
+ * Mirrors improve.md TASK-14a (fault-tolerance, polaris, rest-batch).
  */
 function buildFull() {
   return {
@@ -94,22 +92,19 @@ function buildFull() {
     jsLib: "preact",
     faultTolerance: "on",
     phpMinVersion: "8.2",
-    blocks: "on",
     frontendStack: "polaris",
     restBatch: "on",
   };
 }
 
 /**
- * Build the 'woocommerce' preset: standard + blocks:on +
- * exampleFeature:off + jsLib:preact (so a real consumer can
- * build WooCommerce block UIs without a follow-up flag flip).
- * Mirrors the `woocommerce` row in plan.installer.md §1.5.
+ * Build the 'woocommerce' preset: standard + exampleFeature:off +
+ * jsLib:preact (so a real consumer can build WooCommerce UIs without
+ * a follow-up flag flip).
  */
 function buildWoocommerce() {
   return {
     ...buildStandard(),
-    blocks: "on",
     exampleFeature: "off",
     jsLib: "preact",
     phpMinVersion: "8.2",
@@ -130,7 +125,7 @@ const PRESET_BUILDERS = [
   ],
   [
     "woocommerce",
-    "Standard + blocks:on, optimized for WooCommerce extensions (consumer brings their own modules).",
+    "Standard + exampleFeature:off, optimized for WooCommerce extensions (consumer brings their own modules).",
     buildWoocommerce,
   ],
 ];

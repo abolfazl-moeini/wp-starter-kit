@@ -228,7 +228,6 @@ describe("addFeature() — guards (Phase 22.5, 22.6)", () => {
     await seedProject(tmp, {
       features: {
         ...defaultFeatures(),
-        blocks: "off",
         js: "typescript",
         wpMinVersion: "6.0",
       },

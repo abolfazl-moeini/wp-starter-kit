@@ -69,7 +69,6 @@ describe("buildPromptPlan() — conditional omissions (I2.5)", () => {
       "jsLib",
       "jsTest",
       "css",
-      "blocks",
       "phpMinVersion",
       "phpFramework",
       "phpTest",
@@ -113,19 +112,6 @@ describe("buildPromptPlan() — conditional omissions (I2.5)", () => {
     ).toBe(false);
   });
 
-  test("when js=none, omits jsLib, jsTest, css, restBatch but still asks blocks", () => {
-    const plan = buildPromptPlan({ js: "none" });
-    const findQ = (id) => plan.find((q) => q.id === id);
-    const custom = {
-      runOptions: { preset: "custom" },
-      features: { js: "none" },
-    };
-    expect(findQ("jsLib").when(custom)).toBe(false);
-    expect(findQ("jsTest").when(custom)).toBe(false);
-    expect(findQ("css").when(custom)).toBe(false);
-    expect(findQ("restBatch").when(custom)).toBe(false);
-    expect(findQ("blocks").when(custom)).toBe(true);
-  });
 
   test("when js=typescript, includes jsLib, jsTest, css, restBatch", () => {
     const plan = buildPromptPlan({ js: "typescript" });
@@ -140,14 +126,6 @@ describe("buildPromptPlan() — conditional omissions (I2.5)", () => {
     expect(findQ("restBatch").when(custom)).toBe(true);
   });
 
-  test("blocks prompt is always available and mentions Blockstudio", () => {
-    const plan = buildPromptPlan({});
-    const blocksQ = plan.find((q) => q.id === "blocks");
-    const custom = { runOptions: { preset: "custom" }, features: {} };
-    expect(blocksQ).toBeDefined();
-    expect(blocksQ.message).toMatch(/Blockstudio/i);
-    expect(blocksQ.when({ ...custom, features: { js: "none" } })).toBe(true);
-  });
 
   test("when phpMinVersion < 8.1, omits faultTolerance via when()", () => {
     const plan = buildPromptPlan({ phpMinVersion: "7.4" });
@@ -192,7 +170,6 @@ describe("buildPromptPlan() — preset short-circuit (I2.6)", () => {
       "js",
       "jsLib",
       "css",
-      "blocks",
       "license",
       "wpMinVersion",
     ]) {
@@ -287,7 +264,6 @@ describe("buildPromptPlan() — JS variant matrix order (TASK-24b)", () => {
     expect(phpMin).toBeLessThan(phpFramework);
 
     for (const optionalId of [
-      "blocks",
       "husky",
       "i18n",
       "faultTolerance",

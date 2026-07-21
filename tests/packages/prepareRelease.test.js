@@ -112,6 +112,28 @@ describe("prepareComposerForRelease", () => {
     expect(out.repositories[0].options.symlink).toBe(false);
   });
 
+  test("path repositories enable minimum-stability dev + prefer-stable", () => {
+    // Path packages without a stable version resolve as dev-main; Composer
+    // rejects require "*" against them unless min-stability allows dev.
+    const out = prepareComposerForRelease(
+      {
+        repositories: [{ type: "path", url: "packages/*" }],
+        require: { "wpdev/php-fault-tolerance": "*" },
+      },
+      "7.4",
+    );
+    expect(out["minimum-stability"]).toBe("dev");
+    expect(out["prefer-stable"]).toBe(true);
+  });
+
+  test("no path repositories leaves stability defaults alone", () => {
+    const out = prepareComposerForRelease(
+      { repositories: [{ type: "composer", url: "https://repo.example" }] },
+      "7.4",
+    );
+    expect(out["minimum-stability"]).toBeUndefined();
+  });
+
   test("does not mutate the input object", () => {
     const input = {
       require: { php: ">=7.0" },

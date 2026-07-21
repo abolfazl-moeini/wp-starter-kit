@@ -19,7 +19,6 @@
     <exclude-pattern>assets/*</exclude-pattern>
     <exclude-pattern>packages/wpdev-framework/*</exclude-pattern>
     <exclude-pattern>wp-content/*</exclude-pattern>
-    <exclude-pattern>blockstudio/*</exclude-pattern>
     <!--
         Dev tooling (rector configs, dev scripts, php-test-tools), tests,
         and the new PSR-4 src/ tree follow their own conventions

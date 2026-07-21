@@ -40,7 +40,6 @@ describe("getFeatureCatalog() — feature data model (Phase 20.1/20.2)", () => {
       "vendorScoping",
       "husky",
       "css",
-      "blocks",
       "license",
       "wpMinVersion",
       "exampleFeature",
@@ -78,7 +77,6 @@ describe("getFeatureCatalog() — feature data model (Phase 20.1/20.2)", () => {
       vendorScoping: "on",
       husky: "on",
       css: "none",
-      blocks: "off",
       license: "gpl2",
       wpMinVersion: "6.0",
       exampleFeature: "on",
@@ -111,7 +109,6 @@ describe("getFeatureCatalog() — feature data model (Phase 20.1/20.2)", () => {
     expect(byId.vendorScoping.variants).toEqual(["on", "off"]);
     expect(byId.husky.variants).toEqual(["on", "off"]);
     expect(byId.css.variants).toEqual(["none", "sass", "tailwind", "postcss"]);
-    expect(byId.blocks.variants).toEqual(["off", "on"]);
     expect(byId.license.variants).toEqual(["gpl2", "gpl3", "mit"]);
     expect(byId.wpMinVersion.variants).toEqual([
       "6.0",
@@ -178,7 +175,6 @@ describe("defaultFeatures() — all-default feature set (Phase 20.2)", () => {
       vendorScoping: "on",
       husky: "on",
       css: "none",
-      blocks: "off",
       license: "gpl2",
       wpMinVersion: "6.0",
       exampleFeature: "on",

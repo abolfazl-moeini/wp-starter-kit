@@ -55,7 +55,6 @@ wpdev list [dir]             # لیست feature های فعال
 | `js`            | `typescript` / `pure` / `none` | `typescript` |
 | `jsLib`         | `none` / `preact` / `react`    | `none`       |
 | `phpMinVersion` | `7.4` / `8.0` / `8.1` / `8.2`  | `7.4`        |
-| `blocks`        | `on` / `off`                   | `off`        |
 | `phpFramework`  | `none` / `wpdev`               | `none`       |
 | `ci`            | `on` / `off`                   | `off`        |
 

@@ -92,7 +92,6 @@ function makeCtx(answers = {}, cfg = {}, features = {}) {
     vendorScoping: "on",
     husky: "on",
     css: "none",
-    blocks: "off",
     license: "gpl2",
     wpMinVersion: "6.0",
     exampleFeature: "on",

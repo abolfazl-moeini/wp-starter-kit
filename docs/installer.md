@@ -80,9 +80,7 @@ of the workspace: `node packages/cli/bin/wpdev.js ...`.
 The `fault-tolerance` feature requires PHP 8.1+. Either drop the
 feature, raise `--php-min=8.1`, or set `--fault-tolerance=off`.
 
-### Blockstudio PHP 8.2 runtime
 
-`blocks:on` adds `blockstudio/blockstudio` via Composer. Blockstudio requires **PHP 8.2+** on the server. If `phpMinVersion < 8.2`, the installer warns that Rector downlevels your plugin source only — not Blockstudio vendor code. Run `composer install` after scaffold.
 
 ### "Cannot resolve @wpdev/create-wp-project"
 

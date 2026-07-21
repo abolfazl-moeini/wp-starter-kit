@@ -15,7 +15,6 @@ parameters:
         - packages/plugin-core-test/*
         - tests/*
         - wp-content/*
-        - blockstudio/*
         - packages/*/vendor/*
         - core/packages/*/vendor/*
         - packages/mcp-integration/tests/*

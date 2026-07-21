@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { fileURLToPath } from "node:url";
 import { buildComponents } from "./esbuild-components.js";
 import { parseBuildCliOptions, runWatchUntilExit } from "./cli-options.js";

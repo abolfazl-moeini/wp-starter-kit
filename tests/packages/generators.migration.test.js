@@ -203,7 +203,6 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
       jsTest: "none",
       jsLib: "none",
       css: "none",
-      blocks: "off",
       restBatch: "off",
     };
     const res = await scaffoldProject(tmp, goodAnswers, { features });

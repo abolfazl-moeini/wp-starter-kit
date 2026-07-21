@@ -40,7 +40,6 @@ import { descriptor as i18n } from "./i18n.js";
 import { descriptor as phpTest } from "./phpTest.js";
 import { descriptor as phpUnitDocker } from "./phpUnitDocker.js";
 import { descriptor as license } from "./license.js";
-import { descriptor as blocks } from "./blocks.js";
 import { descriptor as css } from "./css.js";
 import { descriptor as jsTest } from "./jsTest.js";
 import { descriptor as jsLib } from "./jsLib.js";
@@ -73,7 +72,6 @@ const ALL = [
   phpTest,
   phpUnitDocker,
   license,
-  blocks,
   css,
   jsTest,
   jsLib,
@@ -129,7 +127,6 @@ export function findGenerator(id) {
  *  - license               enabled iff `features.license` is truthy
  *                          (every license variant in the catalog is
  *                          a real license — there's no "off" value)
- *  - blocks                enabled iff `features.blocks === "on"`
  *  - css                   enabled iff `features.css !== "none"`
  *                          AND `features.js !== "none"`
  *
@@ -183,7 +180,6 @@ export function getGenerators(features) {
     )
       enabled.push(g);
     else if (g.id === "license" && f.license) enabled.push(g);
-    else if (g.id === "blocks" && f.blocks === "on") enabled.push(g);
     else if (g.id === "css" && f.css && f.css !== "none" && jsEnabled)
       enabled.push(g);
     else if (g.id === "jsTest" && f.jsTest && f.jsTest !== "none" && jsEnabled)

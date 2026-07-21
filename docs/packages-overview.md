@@ -161,7 +161,6 @@ wpdev/framework
 wpdev/php-fault-tolerance  (optional, faultTolerance:on)
   → guzzlehttp/guzzle (transitive)
 
-blockstudio/blockstudio  (optional, blocks:on)
   → PHP 8.2+ runtime requirement
 
 wpdev/mcp-integration  (optional, mcpAbilities:on)

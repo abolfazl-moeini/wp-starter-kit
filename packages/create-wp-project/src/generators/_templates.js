@@ -230,6 +230,10 @@ export function packageJsonForAnswers(answers, features) {
       // transitive dep, but we surface it explicitly so
       // the version is visible in the consumer's lockfile.
       ...wpdevDevDeps,
+      // Required by scripts.build (npm-run-all --parallel …).
+      // Without this, `npm run build` / `npm run release` fail
+      // with "npm-run-all: command not found" after a clean install.
+      "npm-run-all": versionOf("npm-run-all"),
       // Phase 25.C: the Flow variant adds `flow-bin` as a
       // devDep so the consumer can run `npm run typecheck:flow`
       // without an extra install step. We pin to the same

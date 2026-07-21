@@ -8,7 +8,6 @@
  *   - Includes the JS flavor (e.g. "typescript", "none").
  *   - Includes the JS UI library (e.g. "preact", "react", "none").
  *   - Includes the CSS framework (e.g. "tailwind", "none").
- *   - Includes the blocks toggle (e.g. "on", "off").
  *   - Includes the PHP minimum version.
  *   - Includes the fault-tolerance toggle.
  *   - Field order is stable (locked by the test — header lines
@@ -107,15 +106,6 @@ describe("renderSummary()", () => {
       runOptions: {},
     });
     expect(out).toMatch(/PHP framework:\s*WPDev \(companion plugin\)/i);
-  });
-
-  test("includes Blockstudio label when blocks:on", () => {
-    const out = renderSummary({
-      answers: { slug: "x" },
-      features: { js: "typescript", blocks: "on", phpMinVersion: "8.2" },
-      runOptions: {},
-    });
-    expect(out).toMatch(/Blocks:\s*Blockstudio/i);
   });
 
   test("includes the PHP minimum version", () => {
@@ -320,22 +310,6 @@ describe("renderNextSteps()", () => {
       { targetDir: "/tmp/proj" },
     );
     expect(steps.some((s) => /composer install/.test(s))).toBe(false);
-  });
-
-  test("blocks:on → 'composer install' step even when phpTest:none", () => {
-    const steps = renderNextSteps(
-      { blocks: "on", phpTest: "none", js: "none" },
-      { targetDir: "/tmp/proj" },
-    );
-    expect(steps.some((s) => /composer install/.test(s))).toBe(true);
-  });
-
-  test("blocks:on + phpMinVersion < 8.2 → runtime PHP advisory", () => {
-    const steps = renderNextSteps(
-      { blocks: "on", phpMinVersion: "7.4", phpTest: "none", js: "none" },
-      { targetDir: "/tmp/proj" },
-    );
-    expect(steps.some((s) => /PHP 8\.2\+ at runtime/.test(s))).toBe(true);
   });
 
   test("the dir is taken from runOptions.targetDir", () => {

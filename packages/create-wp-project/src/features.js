@@ -127,17 +127,6 @@ const FEATURE_CATALOG = [
     notes: "CSS framework. Requires js ≠ none for the build pipeline.",
   },
   {
-    id: "blocks",
-    label: "Blocks",
-    variants: ["off", "on"],
-    default: "off",
-    notes:
-      "Gutenberg blocks via Blockstudio 7 (blockstudio/blockstudio). " +
-      "PHP-first; 30+ field types defined in block.json; no build step required. " +
-      "Requires PHP 8.2+ at runtime (Rector can downlevel plugin source, but not Blockstudio vendor code). " +
-      "WordPress 6.7+ minimum; 7.0 recommended for Block API v3 (iframed editor, pattern overrides).",
-  },
-  {
     id: "license",
     label: "License",
     variants: ["gpl2", "gpl3", "mit"],
@@ -467,27 +456,6 @@ export function validateFeatureSet(features, answers = {}, options = {}) {
     errors["frontendStack"] =
       "frontendStack=polaris is not compatible with css=tailwind in v1. " +
       "Polaris uses global BEM CSS + design tokens; Tailwind conflicts with the layout/style separation rule.";
-  }
-
-  // 3. blocks:on — Blockstudio runtime requirements (warnings only in v1).
-  if (filled.blocks === "on") {
-    if (comparePhpVersion(filled.wpMinVersion, "6.7") < 0) {
-      warnings.blocks =
-        "blocks=on uses Blockstudio, which targets WordPress 6.7+ (7.0 recommended for Block API v3 iframe editor). " +
-        `Current wpMinVersion=${filled.wpMinVersion}.`;
-    }
-
-    if (comparePhpVersion(filled.phpMinVersion, "8.2") < 0) {
-      warnings.blocksPhp =
-        "blocks=on requires Blockstudio (PHP 8.2+ at runtime on the server). " +
-        `Your phpMinVersion=${filled.phpMinVersion} enables Rector to downgrade YOUR plugin PHP source, ` +
-        "but Blockstudio itself cannot run on PHP < 8.2. " +
-        "Recommend phpMinVersion 8.2 when using blocks, or omit blocks for PHP 7.4-only hosts.";
-    } else {
-      warnings.blocks =
-        warnings.blocks ||
-        "blocks=on adds blockstudio/blockstudio via Composer. Run composer install after scaffold.";
-    }
   }
 
   // 4. Warnings (Phase 25.G2) — advisory only, never block.

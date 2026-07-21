@@ -32,7 +32,6 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal pr
 exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal preset: key generated files match snapshot: minimal-wpdev.json 1`] = `
 {
   "features": {
-    "blocks": "off",
     "ci": "auto",
     "css": "none",
     "exampleFeature": "off",
@@ -63,7 +62,6 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal pr
 {
   "distMode": "deps",
   "features": {
-    "blocks": "off",
     "ci": "auto",
     "css": "none",
     "exampleFeature": "off",
@@ -99,6 +97,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
   "name": "myorg/my-project",
   "require": [
     "php",
+    "wpdev/php-fault-tolerance",
   ],
   "scripts": [
     "post-install-cmd",
@@ -142,6 +141,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
     "husky",
     "jest",
     "lint-staged",
+    "npm-run-all",
   ],
   "name": "@myorg/my-project",
   "scripts": [
@@ -185,11 +185,10 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
 exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard preset: key generated files match snapshot: standard-wpdev.json 1`] = `
 {
   "features": {
-    "blocks": "off",
     "ci": "auto",
     "css": "none",
     "exampleFeature": "on",
-    "faultTolerance": "off",
+    "faultTolerance": "on",
     "frontendStack": "none",
     "husky": "on",
     "i18n": "on",
@@ -217,11 +216,10 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
 {
   "distMode": "deps",
   "features": {
-    "blocks": "off",
     "ci": "auto",
     "css": "none",
     "exampleFeature": "on",
-    "faultTolerance": "off",
+    "faultTolerance": "on",
     "frontendStack": "none",
     "husky": "on",
     "i18n": "on",

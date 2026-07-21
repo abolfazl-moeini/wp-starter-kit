@@ -47,11 +47,13 @@ export function prepareComposerForRelease(
   }
   next.config.platform.php = phpMin;
 
+  let hasPathRepo = false;
   if (Array.isArray(next.repositories)) {
     next.repositories = next.repositories.map((repo) => {
       if (!repo || typeof repo !== "object") return repo;
       if (repo.type !== "path") return repo;
 
+      hasPathRepo = true;
       const out = { ...repo };
       const options =
         out.options && typeof out.options === "object"
@@ -79,6 +81,19 @@ export function prepareComposerForRelease(
 
       return out;
     });
+  }
+
+  // Path repositories expose packages as dev-main / 9999999-dev without a
+  // stable version. Default Composer min-stability is "stable", so
+  // `require: { "pkg": "*" }` fails with "does not match your
+  // minimum-stability". Allow dev packages when path repos are present.
+  if (hasPathRepo) {
+    if (!next["minimum-stability"]) {
+      next["minimum-stability"] = "dev";
+    }
+    if (next["prefer-stable"] === undefined) {
+      next["prefer-stable"] = true;
+    }
   }
 
   return next;

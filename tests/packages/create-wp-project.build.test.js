@@ -108,6 +108,16 @@ describe("@wpdev/create-wp-project — build scripts use installed @wpdev/* bins
     expect(pkg.scripts["build:assets"]).toBe("wpdev-build-assets");
   });
 
+  test("devDependencies includes npm-run-all for scripts.build parallel runner", async () => {
+    // scripts.build is `npm-run-all --parallel …`. Without the dep,
+    // `npm run build` / `npm run release` fail with command not found.
+    const res = await scaffoldProject(tmp, goodAnswers);
+    expect(res.ok).toBe(true);
+    const pkg = await readPackageJson();
+    expect(pkg.scripts.build).toMatch(/npm-run-all/);
+    expect(pkg.devDependencies?.["npm-run-all"]).toBeDefined();
+  });
+
   /* ------------------------------------------------------------------ */
   /* Regression guard — no legacy `node core/packages/...` paths         */
   /* ------------------------------------------------------------------ */
