@@ -22,7 +22,7 @@ class BuildDistTest extends \WPDevTest\TestCases\TestCase
     public function test_release_dist_creates_dist_tree_with_marker(): void
     {
         $config = json_decode(
-            (string) file_get_contents($this->root . '/project.config.json'),
+            (string) file_get_contents($this->root . '/wpdev.json'),
             true
         );
         $slug = $config['slug'];
@@ -38,7 +38,7 @@ class BuildDistTest extends \WPDevTest\TestCases\TestCase
         $this->assertSame(0, $exitCode, implode("\n", $output));
         $this->assertDirectoryExists($distDir);
         $this->assertFileExists($distDir . '/.dist-built');
-        $this->assertFileExists($distDir . '/project.config.json');
+        $this->assertFileExists($distDir . '/wpdev.json');
         $this->assertFileExists(
             $distDir . '/vendor-prefixed/wpdev/framework/src/Core/Plugin.php',
             'dist must run Strauss and scope the framework into vendor-prefixed/'

@@ -17,7 +17,7 @@ class StraussConfigTest extends \WPDevTest\TestCases\TestCase
     public function test_strauss_json_exists_and_uses_vendor_prefix_from_project_config(): void
     {
         $config = json_decode(
-            (string) file_get_contents($this->root . '/project.config.json'),
+            (string) file_get_contents($this->root . '/wpdev.json'),
             true
         );
         $strauss = json_decode(

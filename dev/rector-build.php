@@ -21,7 +21,11 @@ return static function (RectorConfig $rector_config): void {
     $shared($rector_config);
 
     $phpMin = '7.4';
-    $cfgPath = dirname(__DIR__) . '/project.config.json';
+    $root = dirname(__DIR__);
+    $cfgPath = $root . '/wpdev.json';
+    if (! is_readable($cfgPath)) {
+        $cfgPath = $root . '/project.config.json';
+    }
     if (is_readable($cfgPath)) {
         $cfg = json_decode((string) file_get_contents($cfgPath), true);
         if (is_array($cfg) && ! empty($cfg['phpMinVersion'])) {
