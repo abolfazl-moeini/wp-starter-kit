@@ -155,8 +155,8 @@ final class Module implements ModuleInterface
 
 \tprivate static function plugin_root(): string
 \t{
-\t\tif (defined('{{slug_underscore}}_PLUGIN_DIR')) {
-\t\t\treturn (string) {{slug_underscore}}_PLUGIN_DIR;
+\t\tif (defined('{{slug_constant}}_PLUGIN_DIR')) {
+\t\t\treturn (string) {{slug_constant}}_PLUGIN_DIR;
 \t\t}
 
 \t\treturn dirname(__DIR__, 3) . DIRECTORY_SEPARATOR;

@@ -49,6 +49,7 @@ import {
   buildComposerJson,
 } from "./_templates.js";
 import { frameworkPackageFiles } from "./_framework-template.js";
+import { consumerWpdevJsPackageFiles } from "./_wpdev-js-packages-template.js";
 
 function loadReleaseScript(name) {
   const full = path.join(resolveEngineSrcDir(), "release", name);
@@ -129,6 +130,19 @@ export function run(ctx) {
     files[`${FRAMEWORK_PREFIX}${rel}`] = body;
   }
   dirs.push("packages/framework");
+
+  // 3c. Vendor unpublished @wpdev/* (and @core/utils) into packages/*
+  //     so npm workspaces resolve them — they are not on the public registry.
+  //     Only when the project has a JS toolchain (package.json lists those deps).
+  if (features.js && features.js !== "none") {
+    for (const [rel, body] of Object.entries(consumerWpdevJsPackageFiles())) {
+      files[rel] = body;
+      const top = rel.split("/").slice(0, 2).join("/");
+      if (top.startsWith("packages/") && !dirs.includes(top)) {
+        dirs.push(top);
+      }
+    }
+  }
 
   // 4. readme.txt (WordPress.org plugin format)
   files["readme.txt"] = renderTemplate(loadReadmeTxtTemplate(), tpl);
@@ -298,9 +312,17 @@ export const descriptor = {
     "assets/stylesheets/**",
     "dev/release/**",
     "packages/framework/**",
+    "packages/hooks/**",
+    "packages/utils/**",
+    "packages/rest-utils/**",
+    "packages/html-utils/**",
+    "packages/translation/**",
+    "packages/build/**",
+    "packages/dependency-extraction-esbuild-plugin/**",
+    "packages/core-utils/**",
     "*.php", // the plugin or theme bootstrap at the project root
-    // Kit module runtime lives under packages/framework/ (copy or submodule).
-    // Not a Composer "wpdev/framework" package install.
+    // Kit module runtime: packages/framework (PSR-4, not Composer package).
+    // JS @wpdev/* + @core/utils: vendored under packages/* for npm workspaces.
   ],
   run,
 };

@@ -144,6 +144,18 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
     expect(php).toMatch(/WPDev\\Core\\Plugin::boot/);
   });
 
+  test("plugin bootstrap define() constants use UPPER_SNAKE (slug_constant)", () => {
+    const out = coreRun(makeCtx());
+    const php = out.files["my-project.php"];
+    // slug "my-project" → MY_PROJECT_* (WordPress constant convention)
+    expect(php).toMatch(/define\s*\(\s*['"]MY_PROJECT_VERSION['"]/);
+    expect(php).toMatch(/define\s*\(\s*['"]MY_PROJECT_PLUGIN_FILE['"]/);
+    expect(php).toMatch(/define\s*\(\s*['"]MY_PROJECT_PLUGIN_DIR['"]/);
+    // Must not emit lowercase constant names
+    expect(php).not.toMatch(/define\s*\(\s*['"]my_project_VERSION['"]/);
+    expect(php).not.toMatch(/define\s*\(\s*['"]my_project_PLUGIN_/);
+  });
+
   // Phase 23: the WPDev\\Core framework classes are provided exclusively
   // by the "wpdev/framework" Composer dependency (see packages/framework/src/Core/*).
   // The scaffold never emits src/Core/*.php copies for consumer projects

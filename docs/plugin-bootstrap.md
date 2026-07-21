@@ -136,15 +136,16 @@ if ( ! defined( 'MY_PROJECT_PLUGIN_DIR' ) ) {
 }
 ```
 
-Three constants are emitted:
+Three constants are emitted (always **UPPER_SNAKE** via
+`{{slug_constant}}`, e.g. slug `my-project` → `MY_PROJECT_*`):
 
-- `{slug_underscore}_VERSION` — the plugin's version, mirrored
+- `{SLUG_CONSTANT}_VERSION` — the plugin's version, mirrored
   from the `Version:` header. Use it for cache-busting query
   strings and asset version arguments.
-- `{slug_underscore}_PLUGIN_FILE` — the absolute path to
+- `{SLUG_CONSTANT}_PLUGIN_FILE` — the absolute path to
   `{slug}.php`. Pass to `register_activation_hook(__FILE__, ...)`
   and friends.
-- `{slug_underscore}_PLUGIN_DIR` — `plugin_dir_path(__FILE__)`,
+- `{SLUG_CONSTANT}_PLUGIN_DIR` — `plugin_dir_path(__FILE__)`,
   the absolute directory the plugin lives in. Anchor every
   filesystem call here, never to the active theme.
 
@@ -315,7 +316,8 @@ The scaffold (`@wpdev/create-wp-project`) reads it, runs
 | --------------------- | ---------------------------- | -------------------------------- |
 | `{{name}}`            | `name` / derived from `slug` | `My Project`                     |
 | `{{slug}}`            | `slug` (kebab-case)          | `my-project`                     |
-| `{{slug_underscore}}` | `slug` → `snake_case` + `_`  | `my_project_`                    |
+| `{{slug_underscore}}` | `slug` → lowercase snake     | `my_project` (functions/classes) |
+| `{{slug_constant}}`   | `slug` → UPPER_SNAKE         | `MY_PROJECT` (define constants)  |
 | `{{pluginUri}}`       | `pluginUri`                  | `https://example.com/my-project` |
 | `{{description}}`     | `description`                | `...`                            |
 | `{{author}}`          | `author`                     | `Acme`                           |

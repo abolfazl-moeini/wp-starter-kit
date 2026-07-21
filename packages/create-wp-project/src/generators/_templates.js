@@ -49,8 +49,11 @@ export function tplVars(answers, cfg) {
   return {
     ...answers,
     ...cfg,
-    // {{slug_underscore}} for the PHP-side function names
+    // {{slug_underscore}} for PHP function / class names (lowercase snake_case)
     slug_underscore: answers.slug.replace(/-/g, "_"),
+    // {{slug_constant}} for define() constants — WordPress convention is UPPER_SNAKE
+    // e.g. slug "my-project" → MY_PROJECT_VERSION, MY_PROJECT_PLUGIN_DIR
+    slug_constant: answers.slug.replace(/-/g, "_").toUpperCase(),
     depsHandle: (
       answers.depsBundle ||
       cfg.depsBundle ||
@@ -396,8 +399,8 @@ export const TEMPLATE_FUNCTIONS_PHP = `<?php
  * project, please delete this file and rely on \`{{slug}}.php\`.
  */
 
-if (!defined('{{slug_underscore}}_VERSION')) {
-    define('{{slug_underscore}}_VERSION', '0.1.0');
+if (!defined('{{slug_constant}}_VERSION')) {
+    define('{{slug_constant}}_VERSION', '0.1.0');
 }
 
 add_action('after_setup_theme', '{{slug_underscore}}_setup');
@@ -468,8 +471,8 @@ export const TEMPLATE_FUNCTIONS_PHP_NO_JS = `<?php
  * project, please delete this file and rely on \`{{slug}}.php\`.
  */
 
-if (!defined('{{slug_underscore}}_VERSION')) {
-    define('{{slug_underscore}}_VERSION', '0.1.0');
+if (!defined('{{slug_constant}}_VERSION')) {
+    define('{{slug_constant}}_VERSION', '0.1.0');
 }
 
 add_action('after_setup_theme', '{{slug_underscore}}_setup');

@@ -170,6 +170,7 @@ describe("scaffoldProject — BC migration to generator registry (Phase 21.11/21
       ...goodAnswers,
       ...cfg,
       slug_underscore: goodAnswers.slug.replace(/-/g, "_"),
+      slug_constant: goodAnswers.slug.replace(/-/g, "_").toUpperCase(),
       depsHandle: goodAnswers.depsBundle || cfg.depsBundle.replace(/\.js$/, ""),
       name: cfg.globalName || goodAnswers.slug,
       description: `${goodAnswers.slug} — built on wp-starter-kit (WPDev) framework`,

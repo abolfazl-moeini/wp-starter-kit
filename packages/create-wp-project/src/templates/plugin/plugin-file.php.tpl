@@ -34,14 +34,14 @@ defined( 'ABSPATH' ) || exit;
  * hookPrefix, phpFunctionPrefix) and are available to every feature module
  * loaded by this plugin.
  */
-if ( ! defined( '{{slug_underscore}}_VERSION' ) ) {
-    define( '{{slug_underscore}}_VERSION', '0.1.0' );
+if ( ! defined( '{{slug_constant}}_VERSION' ) ) {
+    define( '{{slug_constant}}_VERSION', '0.1.0' );
 }
-if ( ! defined( '{{slug_underscore}}_PLUGIN_FILE' ) ) {
-    define( '{{slug_underscore}}_PLUGIN_FILE', __FILE__ );
+if ( ! defined( '{{slug_constant}}_PLUGIN_FILE' ) ) {
+    define( '{{slug_constant}}_PLUGIN_FILE', __FILE__ );
 }
-if ( ! defined( '{{slug_underscore}}_PLUGIN_DIR' ) ) {
-    define( '{{slug_underscore}}_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+if ( ! defined( '{{slug_constant}}_PLUGIN_DIR' ) ) {
+    define( '{{slug_constant}}_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 }
 
 /*

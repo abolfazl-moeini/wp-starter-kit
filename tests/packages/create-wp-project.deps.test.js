@@ -129,6 +129,30 @@ describe("@wpdev/create-wp-project — consumer package.json deps (Phase 23.B3/B
     },
   );
 
+  test("scaffolds vendored @wpdev/* sources under packages/* (not registry-only)", async () => {
+    const res = await scaffoldProject(tmp, goodAnswers);
+    expect(res.ok).toBe(true);
+    // Workspace packages must exist on disk so npm install does not hit E404
+    // for unpublished @wpdev/* names on registry.npmjs.org.
+    await expect(
+      fs.stat(path.join(tmp, "packages/hooks/package.json")),
+    ).resolves.toBeTruthy();
+    await expect(
+      fs.stat(path.join(tmp, "packages/build/package.json")),
+    ).resolves.toBeTruthy();
+    await expect(
+      fs.stat(path.join(tmp, "packages/core-utils/package.json")),
+    ).resolves.toBeTruthy();
+    const hooksPkg = JSON.parse(
+      await fs.readFile(path.join(tmp, "packages/hooks/package.json"), "utf8"),
+    );
+    expect(hooksPkg.name).toBe("@wpdev/hooks");
+    const buildPkg = JSON.parse(
+      await fs.readFile(path.join(tmp, "packages/build/package.json"), "utf8"),
+    );
+    expect(buildPkg.name).toBe("@wpdev/build");
+  });
+
   test("package.json no longer references the old @core/build name", async () => {
     // Guard against a regression where someone re-introduces the
     // old @core/* names (e.g. by re-running the old templates).

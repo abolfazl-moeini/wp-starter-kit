@@ -31,6 +31,7 @@ export function run(ctx) {
     frameworkNamespace: ctx.vars?.frameworkNamespace || "WPDev",
     slug,
     slug_underscore: String(slug).replace(/-/g, "_"),
+    slug_constant: String(slug).replace(/-/g, "_").toUpperCase(),
     textDomain: ctx.vars?.textDomain || ctx.answers?.textDomain || slug,
   };
 
