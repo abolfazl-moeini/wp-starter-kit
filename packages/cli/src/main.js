@@ -183,13 +183,20 @@ export function buildProgram() {
       positionalSlug,
     });
 
-    // 3. Drive runCreate. The bin layer wires the real
-    //    engine + runners + ui; runCreate stays pure and
-    //    unit-testable with fakes.
-    const spinner =
+    // 3. Drive runCreate. Spinner covers scaffold only — it must
+    //    stop before post-run confirms ("Install dependencies now?")
+    //    so loading is not shown over the prompt.
+    let spinner =
       typeof ui.spinner === "function"
         ? await ui.spinner({ message: "Scaffolding project…" })
         : null;
+    let scaffoldSpinnerStopped = false;
+    const stopScaffoldSpinner = (msg, code) => {
+      if (scaffoldSpinnerStopped || !spinner) return;
+      spinner.stop?.(msg, code);
+      scaffoldSpinnerStopped = true;
+      spinner = null;
+    };
     spinner?.start?.();
 
     const result = await runCreate(
@@ -204,6 +211,9 @@ export function buildProgram() {
         engine,
         runners,
         ui,
+        onAfterScaffold: () => {
+          stopScaffoldSpinner("Project scaffolded");
+        },
         // readEnginePackageVersion is the default impl in
         // commands/create.js (it reads the on-disk
         // packages/create-wp-project/package.json). We don't
@@ -214,7 +224,7 @@ export function buildProgram() {
     // 4. Render the summary + next-steps panels, then exit
     //    0/1 based on the result.
     if (!result.ok) {
-      spinner?.stop?.("Scaffold failed", 1);
+      stopScaffoldSpinner("Scaffold failed", 1);
       const reason = result.reason || "unknown";
       const fatal = await ui.renderFatalError(
         reason.includes("not empty")
@@ -233,7 +243,8 @@ export function buildProgram() {
       process.exit(fatal.code);
     }
 
-    spinner?.stop?.("Project scaffolded");
+    // Safety: if onAfterScaffold was not wired, still clear spinner.
+    stopScaffoldSpinner("Project scaffolded");
 
     if (result.warnings && result.warnings.length > 0) {
       await ui.renderWarnings(result.warnings);

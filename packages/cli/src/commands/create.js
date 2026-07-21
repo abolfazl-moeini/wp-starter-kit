@@ -250,6 +250,17 @@ export async function runCreate(input, deps) {
     );
   }
 
+  // Scaffold + manifest are done. Stop any outer "Scaffolding…" spinner
+  // before interactive post-run confirms so loading is not shown on top
+  // of "Install dependencies now?" / "Initialize a git repository?".
+  if (typeof d.onAfterScaffold === "function") {
+    try {
+      await d.onAfterScaffold({ dir, written, warnings });
+    } catch {
+      /* never block post-run on a UI callback failure */
+    }
+  }
+
   // 6. Post-generation actions. Each is gated and best-effort.
   //    We collect warnings; the run continues regardless.
   const ui = d.ui || {};

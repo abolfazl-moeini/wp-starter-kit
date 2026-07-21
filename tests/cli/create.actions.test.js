@@ -423,4 +423,34 @@ describe("runCreate — interactive install/git prompts (G-002, G-003)", () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  test("onAfterScaffold runs before install/git confirms (no spinner over prompts)", async () => {
+    const dir = makeEmptyDir();
+    try {
+      const order = [];
+      const deps = makeDeps();
+      deps.onAfterScaffold = jest.fn(async () => {
+        order.push("afterScaffold");
+      });
+      deps.ui.confirm = jest.fn(async (opts) => {
+        order.push(`confirm:${opts.message}`);
+        return false;
+      });
+      await runCreate(
+        {
+          dir,
+          answers: { slug: "x" },
+          features: { js: "typescript", phpTest: "phpunit" },
+          runOptions: { interactive: true },
+        },
+        deps,
+      );
+      expect(deps.onAfterScaffold).toHaveBeenCalledTimes(1);
+      expect(order[0]).toBe("afterScaffold");
+      expect(order[1]).toMatch(/^confirm:Install dependencies/);
+      expect(order[2]).toMatch(/^confirm:Initialize a git/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
