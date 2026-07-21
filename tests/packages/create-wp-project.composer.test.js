@@ -40,14 +40,24 @@ describe("@wpdev/create-wp-project — consumer composer.json (Phase 23.A3/A4)",
     );
   }
 
-  test("composer.json requires wpdev/framework", async () => {
+  test("composer.json does NOT require wpdev/framework (autoload packages/framework instead)", async () => {
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(true);
     const composer = await readComposer();
     expect(composer.require).toBeDefined();
-    expect(composer.require["wpdev/framework"]).toBeDefined();
-    expect(typeof composer.require["wpdev/framework"]).toBe("string");
-    expect(composer.require["wpdev/framework"].length).toBeGreaterThan(0);
+    expect(composer.require.php).toMatch(/^>=/);
+    expect(composer.require["wpdev/framework"]).toBeUndefined();
+    expect(composer.autoload["psr-4"]["WPDev\\"]).toBe(
+      "packages/framework/src/",
+    );
+  });
+
+  test("scaffold writes packages/framework sources", async () => {
+    const res = await scaffoldProject(tmp, goodAnswers);
+    expect(res.ok).toBe(true);
+    await expect(
+      fs.stat(path.join(tmp, "packages/framework/src/Core/Plugin.php")),
+    ).resolves.toBeTruthy();
   });
 
   test("composer.json does NOT emit monorepo path repos by default", async () => {
@@ -63,7 +73,6 @@ describe("@wpdev/create-wp-project — consumer composer.json (Phase 23.A3/A4)",
         r.type === "path" &&
         typeof r.url === "string" &&
         (r.url.includes("../packages/") ||
-          r.url.endsWith("packages/framework") ||
           r.url.includes("php-fault-tolerance")),
     );
     expect(monorepoPaths).toEqual([]);
@@ -76,19 +85,5 @@ describe("@wpdev/create-wp-project — consumer composer.json (Phase 23.A3/A4)",
     expect(composer.autoload).toBeDefined();
     expect(composer.autoload["psr-4"]).toBeDefined();
     expect(composer.autoload["psr-4"]["MyProject\\"]).toBe("src/");
-  });
-
-  test("composer.json path repository is opt-in via scaffold option", async () => {
-    const customPath = "/tmp/fake-kit-workspace/packages/framework";
-    const res = await scaffoldProject(tmp, goodAnswers, {
-      frameworkPath: customPath,
-    });
-    expect(res.ok).toBe(true);
-    const composer = await readComposer();
-    const pathRepo = (composer.repositories || []).find(
-      (r) => r && r.type === "path" && typeof r.url === "string",
-    );
-    expect(pathRepo).toBeDefined();
-    expect(pathRepo.url).toBe(customPath);
   });
 });

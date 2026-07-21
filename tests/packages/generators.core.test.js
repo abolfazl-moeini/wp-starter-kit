@@ -151,7 +151,7 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
   // vendor ns to src/, and the dep satisfies the WPDev references from
   // the plugin bootstrap and user modules). These bodies are tested
   // in the framework package's own PHPUnit suite instead.
-  test("does NOT emit src/Core/* framework sources (they come from wpdev/framework dep)", () => {
+  test("does NOT emit src/Core/* framework sources (they live under packages/framework)", () => {
     const out = coreRun(makeCtx());
     expect(out.files["src/Core/Plugin.php"]).toBeUndefined();
     expect(out.files["src/Core/ModuleInterface.php"]).toBeUndefined();

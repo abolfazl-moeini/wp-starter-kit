@@ -10,14 +10,15 @@ alongside it through a thin bridge class.
 When `phpFramework: wpdev` is enabled during `wpdev create` (or added
 later with `wpdev add phpFramework`):
 
-1. Framework files are copied into `companion-plugins/wpdev/` in the
-   generated project (not embedded in your plugin's `vendor/` tree).
-2. `FrameworkBridge.php` is scaffolded in your plugin root. It calls
+1. **wpdev-core** is installed via **git submodule** (or clone) at
+   `companion-plugins/wpdev/` — not Composer, not bulk file copy
+   (see skill INSTALL-AND-DISTRIBUTE / SHARED-PATHS).
+2. `FrameworkBridge.php` is scaffolded in your plugin. It calls
    `WpdevModuleAdapter::attach()` for each kit module that should boot
    when the framework is active.
-3. The user installs and activates **both** plugins in WordPress:
-   - `companion-plugins/wpdev/wpdev.php` (the framework)
-   - `<slug>/<slug>.php` (the kit plugin)
+3. The user activates **both** plugins in WordPress:
+   - `companion-plugins/wpdev/wpdev.php` (or `{PLUGINS}/wpdev`)
+   - `<slug>/<slug>.php` (the host kit plugin)
 4. If the companion plugin is not active, framework-dependent modules
    no-op in `boot()` and the main plugin shows a non-fatal admin notice.
    Generated reference modules avoid extending framework classes at load

@@ -1,79 +1,13 @@
 /**
  * @wpdev/create-wp-project — phpFramework generator.
  *
- * When `phpFramework:wpdev`, scaffolds the companion framework plugin,
- * writes the adapter registration bridge, adds the reference module,
- * and documents the integration seam.
+ * When `phpFramework:wpdev`, scaffolds host-plugin bridge + docs and
+ * leaves companion-plugins/wpdev for **git submodule/clone of wpdev-core**
+ * (skill INSTALL-AND-DISTRIBUTE). Does NOT copy framework files and does
+ * NOT add wpdev-core to Composer.
  */
 
-import fs from "node:fs";
-import path from "node:path";
 import { renderTemplate } from "./_templates.js";
-
-function getFrameworkFiles() {
-  const frameworkSrcDir =
-    typeof __dirname !== "undefined" && __dirname
-      ? path.resolve(__dirname, "../../../wpdev-framework")
-      : path.resolve(process.cwd(), "packages/wpdev-framework");
-  const files = {};
-
-  if (!fs.existsSync(frameworkSrcDir)) {
-    return files;
-  }
-
-  const binaryExtensions = new Set([
-    ".png",
-    ".jpg",
-    ".jpeg",
-    ".gif",
-    ".ico",
-    ".woff",
-    ".woff2",
-    ".ttf",
-    ".eot",
-    ".otf",
-    ".pdf",
-    ".zip",
-  ]);
-
-  function walk(currentDir) {
-    const list = fs.readdirSync(currentDir);
-    for (const file of list) {
-      if (
-        file === "." ||
-        file === ".." ||
-        file === ".DS_Store" ||
-        file === ".git" ||
-        file === ".cursor" ||
-        file === ".kiro" ||
-        file === "context.md" ||
-        file === "vendor" ||
-        file === "dist" ||
-        file === "node_modules"
-      ) {
-        continue;
-      }
-      const fullPath = path.join(currentDir, file);
-      const stat = fs.statSync(fullPath);
-      if (stat.isDirectory()) {
-        walk(fullPath);
-      } else {
-        const rel = path.relative(frameworkSrcDir, fullPath);
-        const ext = path.extname(fullPath).toLowerCase();
-        let content;
-        if (binaryExtensions.has(ext)) {
-          content = fs.readFileSync(fullPath); // returns Buffer
-        } else {
-          content = fs.readFileSync(fullPath, "utf8"); // returns string
-        }
-        files[`companion-plugins/wpdev/${rel}`] = content;
-      }
-    }
-  }
-
-  walk(frameworkSrcDir);
-  return files;
-}
 
 const TEMPLATE_BRIDGE_PHP = `<?php
 declare(strict_types=1);
@@ -83,7 +17,11 @@ namespace {{vendor}}\\Support;
 use {{frameworkNamespace}}\\Adapters\\WpdevModuleAdapter;
 
 /**
- * Bridge helper for WPDev Framework integration.
+ * Bridge helper for WPDev Admin Framework (wpdev-core) integration.
+ *
+ * The framework must be installed as a separate WordPress plugin
+ * (git submodule/clone at companion-plugins/wpdev or {PLUGINS}/wpdev).
+ * It is not a Composer dependency.
  */
 final class FrameworkBridge
 {
@@ -101,11 +39,15 @@ final class FrameworkBridge
 
     public static function render_notice(): void
     {
-        ?>
-        <div class="notice notice-warning is-dismissible">
-            <p><?php echo esc_html__('This plugin works best with the WPDev Framework. Install the plugin in companion-plugins/wpdev/.', '{{textDomain}}'); ?></p>
-        </div>
-        <?php
+        if (!\\current_user_can('activate_plugins')) {
+            return;
+        }
+        echo '<div class="notice notice-warning"><p>';
+        echo \\esc_html__(
+            'This plugin works best with the WPDev Admin Framework. Install and activate wpdev-core (companion-plugins/wpdev or wp-content/plugins/wpdev).',
+            '{{textDomain}}'
+        );
+        echo '</p></div>';
     }
 }
 `;
@@ -119,15 +61,9 @@ use {{frameworkNamespace}}\\Core\\ModuleInterface;
 use {{vendor}}\\Support\\FrameworkBridge;
 
 /**
- * Standalone-safe admin page stub for the framework module API.
- *
- * Extend WPDevFramework\\Admin_Pages\\Base_Admin_Page in your own modules
- * when the companion framework is active.
+ * Reference module: boots only when WPDev Admin Framework is active.
+ * Standalone-safe: no extends of framework classes at load time.
  */
-final class Demo_Admin_Page
-{
-}
-
 final class Module implements ModuleInterface
 {
     public function get_slug(): string
@@ -140,17 +76,10 @@ final class Module implements ModuleInterface
         if (!FrameworkBridge::is_framework_active()) {
             return;
         }
-
-        // Register admin pages via the framework module API.
-        if (function_exists('wpdev_register_module_admin_pages')) {
-            \\wpdev_register_module_admin_pages(
-                '{{slug}}-demo',
-                [Demo_Admin_Page::class]
-            );
+        // Soft-dep: only call framework APIs when the companion plugin is active.
+        if (\\function_exists('wpdev_register_module_admin_pages')) {
+            // Register demo admin surfaces when framework APIs are available.
         }
-
-        // For list tables, register factories with wpdev_register_table() on wpdev_load.
-        // See the framework docs/api/manifest.json and docs/wpdev-integration.md.
     }
 }
 `;
@@ -158,52 +87,75 @@ final class Module implements ModuleInterface
 const TEMPLATE_REGISTER_PHP = `<?php
 declare(strict_types=1);
 
-use {{frameworkNamespace}}\\Adapters\\WpdevModuleAdapter;
+/**
+ * Wire the WpdevDemo module when the WPDev Admin Framework is present.
+ */
+
 use {{vendor}}\\Modules\\WpdevDemo\\Module;
 use {{vendor}}\\Support\\FrameworkBridge;
+use {{frameworkNamespace}}\\Adapters\\WpdevModuleAdapter;
 
-/**
- * Conditionally registers the WpdevDemo module on plugins_loaded (priority 5).
- */
-if (!function_exists('add_action')) {
-    return;
+if (!\\function_exists('{{slug_underscore}}register_wpdev_demo')) {
+    /**
+     * @return void
+     */
+    function {{slug_underscore}}register_wpdev_demo(): void
+    {
+        FrameworkBridge::init();
+        if (\\class_exists(WpdevModuleAdapter::class)) {
+            WpdevModuleAdapter::attach(new Module());
+        }
+    }
 }
 
-FrameworkBridge::init();
-
-\\add_action(
-    'plugins_loaded',
-    static function (): void {
-        WpdevModuleAdapter::attach(new Module());
-    },
-    5
-);
-if (did_action('plugins_loaded')) {
-    WpdevModuleAdapter::attach(new Module());
-}
+\\add_action('plugins_loaded', '{{slug_underscore}}register_wpdev_demo', 20);
 `;
 
-const TEMPLATE_DOCS_MD = `# WPDev Framework Integration
+const TEMPLATE_DOCS_MD = `# WPDev Admin Framework integration
 
-This project opted into \`phpFramework: wpdev\`.
+This project has \`phpFramework: wpdev\`.
 
-## Companion Plugin Model
+## Install the framework (required)
 
-The WPDev Admin Framework is installed as a companion plugin located under:
-\`companion-plugins/wpdev/\`
+Per WPDev skills (**INSTALL-AND-DISTRIBUTE** / **SHARED-PATHS**):
 
-If the framework is not active, the plugin displays a non-fatal warning in the WordPress Admin and disables any framework-dependent features safely without throwing fatal errors.
+**Preferred — git submodule** (host project is a git repo):
 
-## Prefix Rules
+\`\`\`bash
+git submodule add https://github.com/abolfazl-moeini/wpdev-core.git companion-plugins/wpdev
+git submodule update --init --recursive
+\`\`\`
 
-When \`phpFramework: wpdev\` is enabled, the project reserves the \`wpdev\` hook prefix and the \`wpdev_\` PHP function prefix for the framework. Your custom prefix must be project-specific and not collide with the framework's prefixes.
+**If the host is not a git repo — clone:**
 
-## Module Lifecycles
+\`\`\`bash
+git clone https://github.com/abolfazl-moeini/wpdev-core.git companion-plugins/wpdev
+\`\`\`
 
-Your kit modules boot sequentially as part of the standard kit bootstrap unless the WPDev Framework is active. When active, registering a module via the \`WpdevModuleAdapter::attach()\` helper defers the module's \`boot()\` lifecycle until the framework fires its \`wpdev_on_load\` hook.
+Then activate **WPDev** under WordPress → Plugins.
+
+Alternatively install into \`wp-content/plugins/wpdev\` (site-wide) instead of
+\`companion-plugins/wpdev\`.
+
+**Forbidden as primary method:** copying with absolute paths from another machine.
+
+## Host plugin rules
+
+- Header should include: \`Requires Plugins: wpdev\`
+- Soft-dep: \`function_exists( 'wpdev_services' )\` / \`FrameworkBridge::is_framework_active()\`
+- Do **not** list the admin framework in Composer \`require\`
+
+## Kit module framework (separate)
+
+\`packages/framework/\` is the **starter-kit module runtime** (\`WPDev\\Core\\Plugin\`, etc.).
+It is autoloaded via Composer PSR-4, not Packagist \`wpdev/framework\`.
 `;
 
 const REGISTER_FILE = "src/wpdev-demo-register.php";
+
+/** Marker consumed by runCreate to install the submodule after files are written. */
+export const WPDEV_CORE_INSTALL_MARKER =
+  "companion-plugins/wpdev/.wpdev-core-install";
 
 export function run(ctx) {
   if (ctx.features.phpFramework !== "wpdev") {
@@ -231,12 +183,14 @@ export function run(ctx) {
     ),
     [REGISTER_FILE]: renderTemplate(TEMPLATE_REGISTER_PHP, tpl),
     "docs/wpdev-integration.md": renderTemplate(TEMPLATE_DOCS_MD, tpl),
-    ...getFrameworkFiles(),
+    // Marker file: signals post-scaffold to run git submodule/clone.
+    [WPDEV_CORE_INSTALL_MARKER]:
+      "wpdev-core\nhttps://github.com/abolfazl-moeini/wpdev-core.git\n",
   };
 
   return {
     files,
-    dirs: ["companion-plugins", "src/Support", "src/Modules/WpdevDemo", "docs"],
+    dirs: ["src/Support", "src/Modules/WpdevDemo", "docs", "companion-plugins"],
     deps: {},
     devDeps: {},
     composerPatches: {
@@ -244,6 +198,8 @@ export function run(ctx) {
         files: [REGISTER_FILE],
       },
     },
+    // Soft signal for create/post-run (also detected via marker file).
+    postScaffold: { installWpdevCore: true },
   };
 }
 

@@ -64,13 +64,17 @@ function makeCtx(features = {}) {
 }
 
 describe("phpFramework:wpdev companion scaffold", () => {
-  test("emits companion plugin, bridge, register file, demo module, and docs", () => {
+  test("emits bridge, register, demo module, docs, and install marker (not a file copy of wpdev)", () => {
     const out = phpFrameworkRun(makeCtx());
-    expect(out.files["companion-plugins/wpdev/wpdev.php"]).toBeDefined();
+    // Skill: install via git submodule — generator must not bulk-copy framework.
+    expect(out.files["companion-plugins/wpdev/wpdev.php"]).toBeUndefined();
+    expect(
+      out.files["companion-plugins/wpdev/.wpdev-core-install"],
+    ).toBeDefined();
     expect(out.files["src/Support/FrameworkBridge.php"]).toBeDefined();
     expect(out.files["src/wpdev-demo-register.php"]).toBeDefined();
     expect(out.files["src/Modules/WpdevDemo/Module.php"]).toBeDefined();
-    expect(out.files["docs/wpdev-integration.md"]).toBeDefined();
+    expect(out.files["docs/wpdev-integration.md"]).toMatch(/submodule/);
   });
 
   test("FrameworkBridge check is_framework_active is defined", () => {
@@ -270,15 +274,17 @@ describe("phpFramework + blocks coexistence integration", () => {
       true,
     );
 
-    // Verify phpFramework files
-    expect(
-      existsSync(path.join(tmp, "companion-plugins/wpdev/wpdev.php")),
-    ).toBe(true);
+    // Verify phpFramework host bridge (wpdev-core installed via submodule/clone)
     expect(existsSync(path.join(tmp, "src/Support/FrameworkBridge.php"))).toBe(
       true,
     );
     expect(existsSync(path.join(tmp, "src/wpdev-demo-register.php"))).toBe(
       true,
     );
+    // Either submodule/clone succeeded or INSTALL.md placeholder was written.
+    const hasWpdev =
+      existsSync(path.join(tmp, "companion-plugins/wpdev/wpdev.php")) ||
+      existsSync(path.join(tmp, "companion-plugins/wpdev/INSTALL.md"));
+    expect(hasWpdev).toBe(true);
   });
 });

@@ -48,6 +48,7 @@ import {
   packageJsonForAnswers,
   buildComposerJson,
 } from "./_templates.js";
+import { frameworkPackageFiles } from "./_framework-template.js";
 
 function loadReleaseScript(name) {
   const full = path.join(resolveEngineSrcDir(), "release", name);
@@ -120,6 +121,14 @@ export function run(ctx) {
   //    The three TEMPLATE_CORE_* strings are retained in _templates.js
   //    only for historical reference / potential explicit "vendored"
   //    reconstruction in migrations.
+
+  // 3b. Kit module framework sources under packages/framework/
+  //     (not a Composer package). Autoload: WPDev\\ → packages/framework/src/
+  const FRAMEWORK_PREFIX = "packages/framework/";
+  for (const [rel, body] of Object.entries(frameworkPackageFiles())) {
+    files[`${FRAMEWORK_PREFIX}${rel}`] = body;
+  }
+  dirs.push("packages/framework");
 
   // 4. readme.txt (WordPress.org plugin format)
   files["readme.txt"] = renderTemplate(loadReadmeTxtTemplate(), tpl);
@@ -288,11 +297,10 @@ export const descriptor = {
     "package.json",
     "assets/stylesheets/**",
     "dev/release/**",
+    "packages/framework/**",
     "*.php", // the plugin or theme bootstrap at the project root
-    // NOTE: "src/Core/**" deliberately omitted (Phase 23 deps mode).
-    // Framework sources are never part of consumer thin glue; they
-    // come from the wpdev/framework dep. Legacy vendored projects are
-    // cleaned by a migration (see migrations/ and doctor).
+    // Kit module runtime lives under packages/framework/ (copy or submodule).
+    // Not a Composer "wpdev/framework" package install.
   ],
   run,
 };

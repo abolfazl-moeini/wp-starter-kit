@@ -5,13 +5,13 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal pr
   "autoload": {
     "psr-4": {
       "MyProject\\": "src/",
+      "WPDev\\": "packages/framework/src/",
     },
   },
   "license": "GPL-2.0-or-later",
   "name": "myproject/my-project",
   "require": [
     "php",
-    "wpdev/framework",
   ],
   "scripts": [
     "post-install-cmd",
@@ -22,9 +22,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal pr
   ],
   "strauss": {
     "namespace_prefix": "WpdevVendor",
-    "packages": [
-      "wpdev/framework",
-    ],
+    "packages": [],
     "target_directory": "vendor-prefixed",
   },
   "type": "wordpress-plugin",
@@ -94,13 +92,13 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
   "autoload": {
     "psr-4": {
       "MyProject\\": "src/",
+      "WPDev\\": "packages/framework/src/",
     },
   },
   "license": "GPL-2.0-or-later",
   "name": "myproject/my-project",
   "require": [
     "php",
-    "wpdev/framework",
   ],
   "scripts": [
     "post-install-cmd",
@@ -111,9 +109,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
   ],
   "strauss": {
     "namespace_prefix": "WpdevVendor",
-    "packages": [
-      "wpdev/framework",
-    ],
+    "packages": [],
     "target_directory": "vendor-prefixed",
   },
   "type": "wordpress-plugin",

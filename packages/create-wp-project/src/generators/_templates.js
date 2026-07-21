@@ -1189,6 +1189,9 @@ export function buildComposerJson(vars) {
   const vendorPrefix = vars.vendorPrefix || "WpdevVendor";
   const phpMin = vars.phpMinVersion || "7.4";
   const excludeNamespaces = vars.vendorScopingOn === false ? ["WPDev"] : [];
+  // Kit module framework (Plugin / ModuleLoader / Support) is NOT a
+  // Composer package install — sources live at packages/framework/
+  // (copied at scaffold or replaced with a git submodule). Autoload only.
   const payload = {
     name: `${vars.vendorNamespaceLower || vars.slug}/${vars.slug}`,
     description:
@@ -1198,16 +1201,19 @@ export function buildComposerJson(vars) {
     license: vars.licenseId || "GPL-2.0-or-later",
     require: {
       php: `>=${phpMin}`,
-      "wpdev/framework": vars.frameworkVersion || "*",
     },
     autoload: {
       "psr-4": {
         [`${vars.vendorNamespace}\\`]: "src/",
+        // Kit module runtime (not Composer "wpdev/framework" package).
+        "WPDev\\": "packages/framework/src/",
       },
     },
     scripts: {
-      "post-install-cmd": ["@php vendor/bin/strauss"],
-      "post-update-cmd": ["@php vendor/bin/strauss"],
+      // Strauss only when there are Composer packages to prefix (feature
+      // generators may add packages later). Empty whitelist = no-op.
+      "post-install-cmd": ["@php vendor/bin/strauss || true"],
+      "post-update-cmd": ["@php vendor/bin/strauss || true"],
       "scope:vendor": "@php vendor/bin/strauss",
       // Production package under dist/{slug}/ (source tree untouched).
       "release:dist": "node dev/release/prepare-release.js",
@@ -1225,7 +1231,8 @@ export function buildComposerJson(vars) {
         constant_prefix: `${vendorPrefix.toUpperCase()}_`,
         delete_vendor_files: false,
         include_modified_files: false,
-        packages: ["wpdev/framework"],
+        // No kit-core package — only real Composer deps (e.g. fault-tolerance).
+        packages: [],
         exclude_from_prefix: {
           namespaces: excludeNamespaces,
           file_patterns: [],
@@ -1237,21 +1244,6 @@ export function buildComposerJson(vars) {
       },
     },
   };
-
-  // Path repos are opt-in only (kit monorepo / local checkout). Never
-  // emit a default `../packages/framework` — that path is meaningless
-  // in a real scaffolded plugin outside the kit tree.
-  const frameworkPath =
-    typeof vars.frameworkPath === "string" ? vars.frameworkPath.trim() : "";
-  if (frameworkPath) {
-    payload.repositories = [
-      {
-        type: "path",
-        url: frameworkPath,
-        options: { symlink: true },
-      },
-    ];
-  }
 
   return JSON.stringify(payload, null, 2) + "\n";
 }

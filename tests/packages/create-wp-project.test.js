@@ -443,21 +443,21 @@ describe("@wpdev/create-wp-project", () => {
       uiFramework: "preact",
     };
 
-    /* ----- src/Core/ emission (Phase 23 deps mode) ------------------- */
-    // Framework sources are supplied by the wpdev/framework Composer
-    // dependency. Scaffold never writes src/Core/*.php for consumers
-    // (consumer PSR-4 only maps the developer's vendor ns; the WPDev
-    // references resolve from vendor/wpdev/framework after `composer install`).
+    /* ----- src/Core/ emission — kit framework lives under packages/ --- */
+    // Module runtime is copied to packages/framework/ (PSR-4 WPDev\\),
+    // not under src/Core/ and not as Composer package wpdev/framework.
 
-    test("does NOT scaffold src/Core/* framework copies (deps mode)", async () => {
+    test("does NOT scaffold src/Core/* (framework is packages/framework)", async () => {
       const res = await scaffoldProject(tmp, goodAnswers);
       expect(res.ok).toBe(true);
       await expect(
         fs.access(path.join(tmp, "src", "Core", "Plugin.php")),
       ).rejects.toThrow();
       await expect(
-        fs.access(path.join(tmp, "src", "Core", "ModuleInterface.php")),
-      ).rejects.toThrow();
+        fs.access(
+          path.join(tmp, "packages", "framework", "src", "Core", "Plugin.php"),
+        ),
+      ).resolves.toBeUndefined();
     });
 
     /* ----- src/Modules/ emission ------------------------------------- */
