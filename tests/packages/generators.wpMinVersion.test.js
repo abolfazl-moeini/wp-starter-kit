@@ -5,7 +5,6 @@
 import { describe, test, expect } from "@jest/globals";
 
 import { run as coreRun } from "../../packages/create-wp-project/src/generators/core.js";
-import { validateFeatureSet } from "../../packages/create-wp-project/src/features.js";
 import { defaultFeatures } from "../../packages/create-wp-project/src/features.js";
 
 function makeCtx(features = {}) {
@@ -61,4 +60,3 @@ describe("wpMinVersion — plugin header + readme (Phase 25.I)", () => {
     expect(php).toMatch(/Requires PHP:\s*8\.1/);
   });
 });
-

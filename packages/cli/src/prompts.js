@@ -332,15 +332,6 @@ function resolvePresetChoice(state, buildTimeFeatures) {
  * @param {Record<string,string>} [buildTimeFeatures]
  * @returns {boolean}
  */
-function presetIsCustom(state, buildTimeFeatures) {
-  return resolvePresetChoice(state, buildTimeFeatures) === "custom";
-}
-
-/**
- * @param {object} state
- * @param {Record<string,string>} [buildTimeFeatures]
- * @returns {boolean}
- */
 function presetIsMinimal(state, buildTimeFeatures) {
   return resolvePresetChoice(state, buildTimeFeatures) === "minimal";
 }

@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-import { describe, test, expect, beforeEach, afterEach } from "@jest/globals";
+import { describe, test, expect, beforeEach } from "@jest/globals";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {

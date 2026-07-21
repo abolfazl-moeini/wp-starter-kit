@@ -8,7 +8,6 @@ import * as path from "node:path";
 import * as os from "node:os";
 
 import { addFeature } from "../../packages/create-wp-project/src/addFeature.js";
-import { scaffoldProject } from "../../packages/create-wp-project/src/index.js";
 import { removeFeature } from "../../packages/create-wp-project/src/removeFeature.js";
 import { run as phpFrameworkRun } from "../../packages/create-wp-project/src/generators/phpFramework.js";
 import { run as coreRun } from "../../packages/create-wp-project/src/generators/core.js";

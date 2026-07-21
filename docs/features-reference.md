@@ -218,14 +218,6 @@ See [css-variants.md](css-variants.md).
 
 ---
 
-| Property     | Value                                      |
-| ------------ | ------------------------------------------ |
-| **Label**    | Blocks                                     |
-| **Variants** | `off` _(default)_, `on`                    |
-| **Toggle**   | `wpdev add blocks` / `wpdev remove blocks` |
-
----
-
 ### `license` — License
 
 | Property        | Value                                       |

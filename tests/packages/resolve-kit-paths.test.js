@@ -1,6 +1,6 @@
 import { describe, test, expect, afterEach } from "@jest/globals";
 import path from "node:path";
-import { existsSync, realpathSync } from "node:fs";
+import { existsSync } from "node:fs";
 import {
   resolveEngineSrcDir,
   resolveKitPackageSrc,

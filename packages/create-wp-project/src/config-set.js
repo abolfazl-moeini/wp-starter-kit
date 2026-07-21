@@ -13,12 +13,7 @@ import {
   normalizeFeatureSet,
   validateFeatureSet,
 } from "./features.js";
-import {
-  readManifest,
-  writeManifest,
-  buildManifest,
-  DEFAULT_DIST_MODE,
-} from "./manifest.js";
+import { readManifest, writeManifest, buildManifest } from "./manifest.js";
 import { findGenerator } from "./generators/index.js";
 import { descriptor as licenseDescriptor } from "./generators/license.js";
 import {

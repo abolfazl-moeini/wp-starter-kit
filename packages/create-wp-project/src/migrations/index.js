@@ -37,7 +37,6 @@
  *    flow can format a human message.
  */
 
-import { existsSync } from "node:fs";
 import * as path from "node:path";
 
 import {

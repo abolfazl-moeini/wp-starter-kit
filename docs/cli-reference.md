@@ -199,10 +199,10 @@ wpdev add <feature> [--variant <value>] [options] [dir]
 ### Examples
 
 ```bash
-wpdev add blocks --yes
 wpdev add jsTest --variant vitest --install
 wpdev add phpFramework --variant wpdev --yes
 wpdev add frontendStack --variant polaris
+wpdev add faultTolerance --yes
 ```
 
 ### Confirmation behavior
@@ -288,7 +288,6 @@ wpdev set phpMinVersion 8.1 /path/to/my-plugin
 `setConfigValue` runs `validateFeatureSet` before writing. Setting
 `phpMinVersion` to `7.4` while `faultTolerance:on` fails with a dependency
 error.
-
 
 ---
 
@@ -441,12 +440,12 @@ wpdev list | grep '^js='
 
 ## Presets
 
-| Preset        | Summary                                                         |
-| ------------- | --------------------------------------------------------------- |
-| `minimal`     | PHP-only (`js:none`), no example, no i18n, husky off            |
-| `standard`    | TypeScript + PHPUnit + Jest (catalog defaults; `--yes` default) |
-| `full`        | All optional features on (blocks, polaris, fault tolerance, …)  |
-| `woocommerce` | `standard` + blocks + Preact, example feature off               |
+| Preset        | Summary                                                            |
+| ------------- | ------------------------------------------------------------------ |
+| `minimal`     | PHP-only (`js:none`), no example, no i18n, husky off               |
+| `standard`    | TypeScript + PHPUnit + Jest (catalog defaults; `--yes` default)    |
+| `full`        | All optional features on (polaris, fault tolerance, rest batch, …) |
+| `woocommerce` | `standard` + Preact, example feature off                           |
 
 Flags override preset values after merge. `--preset` skips interactive feature
 prompts (branding may still prompt unless `--yes`).

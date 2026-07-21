@@ -238,36 +238,6 @@ export function defaultFeatures() {
 /* -------------------------------------------------------------------- */
 /* Helpers used by validateFeatureSet                                    */
 /* -------------------------------------------------------------------- */
-
-/**
- * Compare two dotted PHP version strings (e.g. "8.0", "8.1", "7.4").
- * Returns negative if a < b, 0 if equal, positive if a > b. Anything
- * that doesn't match the X.Y or X.Y.Z shape sorts AFTER a valid
- * version, so a malformed `phpMinVersion` will be detected as
- * "greater than 8.1" and will mask the rule — the upstream
- * shape-check in validateFeatureSet catches that first.
- */
-function comparePhpVersion(a, b) {
-  const parse = (v) => {
-    if (typeof v !== "string") return [Infinity];
-    const parts = v.split(".").map((p) => {
-      const n = parseInt(p, 10);
-      return Number.isNaN(n) ? -1 : n;
-    });
-    return parts;
-  };
-  const pa = parse(a);
-  const pb = parse(b);
-  const len = Math.max(pa.length, pb.length);
-  for (let i = 0; i < len; i++) {
-    const av = pa[i] ?? 0;
-    const bv = pb[i] ?? 0;
-    if (av !== bv) return av - bv;
-  }
-  return 0;
-}
-
-/* -------------------------------------------------------------------- */
 /* normalizeFeatureSet                                                   */
 /* -------------------------------------------------------------------- */
 

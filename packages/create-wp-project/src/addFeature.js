@@ -51,12 +51,7 @@ import {
   ensureRequiresPluginsWpdevHeader,
   ensureWpdevDependencyNotice,
 } from "./generators/phpFramework.js";
-import {
-  readManifest,
-  writeManifest,
-  buildManifest,
-  DEFAULT_DIST_MODE,
-} from "./manifest.js";
+import { readManifest, writeManifest, buildManifest } from "./manifest.js";
 import { updateJsonFile } from "./json-utils.js";
 import { applyComposerPatches } from "./composer-patches.js";
 import {

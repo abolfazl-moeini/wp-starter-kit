@@ -5,7 +5,7 @@
  * packages/plugin-core-test/ (see wordpress-plugin-unit-tests skill).
  */
 
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { resolveKitPackageSrc } from "../resolve-kit-paths.js";
 

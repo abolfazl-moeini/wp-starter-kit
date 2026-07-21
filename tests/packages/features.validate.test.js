@@ -179,10 +179,10 @@ describe("validateFeatureSet — §1.1 rule 1 (js ≠ none for dependents)", () 
 });
 
 /* -------------------------------------------------------------------- */
-/* §1.1 rule 2 — faultTolerance:on requires phpMinVersion ≥ 8.1         */
+/* §1.1 rule 2 — faultTolerance dual-mode (no phpMinVersion gate)       */
 /* -------------------------------------------------------------------- */
 
-describe("validateFeatureSet — §1.1 rule 2 (faultTolerance + phpMinVersion)", () => {
+describe("validateFeatureSet — §1.1 rule 2 (faultTolerance dual-mode)", () => {
   test("faultTolerance:on + phpMinVersion:8.0 → ok (dual-mode, no warning)", () => {
     const r = validateFeatureSet({
       ...defaultFeatures(),

@@ -81,8 +81,8 @@ composer test        # اجرای PHPUnit
 # اضافه کردن Preact
 wpdev add jsLib preact
 
-# حذف blocks
-wpdev remove blocks
+# فعال کردن soft-dep فریمورک WPDev
+wpdev add phpFramework --variant wpdev --yes
 
 # تغییر نسخه PHP هدف
 wpdev set phpMinVersion 8.1
