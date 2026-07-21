@@ -180,7 +180,8 @@ use {{vendor}}\\Modules\\Blocks\\Module;
 
 /**
  * Registers the Blockstudio bridge module on plugins_loaded (priority 5),
- * before {{frameworkNamespace}}\\Core\\Plugin::boot() at priority 10.
+ * before {{frameworkNamespace}}\\Core\\Plugin::boot() at priority 10
+ * (module boot_all runs at priority 11 inside Plugin).
  */
 if (!function_exists('add_action')) {
     return;

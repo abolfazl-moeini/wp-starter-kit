@@ -140,8 +140,12 @@ export function validateAnswers(a, features = {}) {
   if (!a.slug || !SLUG_RE.test(a.slug)) {
     errors.slug = "slug must be lowercase kebab-case (a-z, 0-9, dashes)";
   }
-  if (!a.npmScope || !SCOPE_RE.test(a.npmScope)) {
-    errors.npmScope = "npmScope must be lowercase kebab-case (no @)";
+  if (!a.npmScope || String(a.npmScope).trim() === "") {
+    errors.npmScope =
+      "vendor / organization is required (lowercase kebab-case, no @) — used in package.json and composer.json as vendor/project";
+  } else if (!SCOPE_RE.test(String(a.npmScope).replace(/^@/, ""))) {
+    errors.npmScope =
+      "vendor / organization must be lowercase kebab-case (a-z, 0-9, dashes; no @)";
   }
   if (!a.globalName || !IDENT_RE.test(a.globalName)) {
     errors.globalName = "globalName must be a valid JS identifier";
@@ -203,13 +207,16 @@ export function validateAnswers(a, features = {}) {
 /* -------------------------------------------------------------------- */
 
 export function answersToProjectConfig(a) {
+  const bareScope = String(a.npmScope || "")
+    .replace(/^@/, "")
+    .trim();
   const cfg = {
     slug: a.slug,
     globalName: a.globalName,
     localizeVar: a.localizeVar || a.globalName + "Loc",
     textDomain: a.textDomain,
     hookPrefix: a.hookPrefix,
-    npmScope: "@" + a.npmScope,
+    npmScope: bareScope ? "@" + bareScope : "",
     depsBundle: a.depsBundle || `${a.slug}-deps.js`,
     phpFunctionPrefix: a.phpFunctionPrefix || "wpdev_",
     projectType: a.projectType || "plugin",

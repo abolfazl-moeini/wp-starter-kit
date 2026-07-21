@@ -28,6 +28,67 @@ defined( 'ABSPATH' ) || exit;
 
 /*
  * -----------------------------------------------------------------------------
+ * PHP version gate (runtime — Composer platform-check is disabled)
+ * -----------------------------------------------------------------------------
+ * Enforce Requires PHP here so hosts can still `composer install` on a
+ * newer CLI while WordPress runs on an older PHP (or the reverse).
+ * Keep this block free of modern PHP syntax so it can fail gracefully.
+ */
+if ( ! defined( '{{slug_constant}}_PHP_MIN' ) ) {
+	define( '{{slug_constant}}_PHP_MIN', '{{phpMinVersion}}' );
+}
+
+if ( version_compare( PHP_VERSION, {{slug_constant}}_PHP_MIN, '<' ) ) {
+	/**
+	 * @return void
+	 */
+	function {{slug_underscore}}_php_version_notice() {
+		if ( function_exists( 'current_user_can' ) && ! current_user_can( 'activate_plugins' ) ) {
+			return;
+		}
+		printf(
+			'<div class="notice notice-error"><p>%s</p></div>',
+			esc_html(
+				sprintf(
+					/* translators: 1: plugin name, 2: required PHP version, 3: running PHP version */
+					__( '%1$s requires PHP %2$s or higher. This site is running PHP %3$s.', '{{textDomain}}' ),
+					'{{name}}',
+					{{slug_constant}}_PHP_MIN,
+					PHP_VERSION
+				)
+			)
+		);
+	}
+	add_action( 'admin_notices', '{{slug_underscore}}_php_version_notice' );
+
+	register_activation_hook(
+		__FILE__,
+		static function () {
+			if ( function_exists( 'deactivate_plugins' ) ) {
+				deactivate_plugins( plugin_basename( __FILE__ ) );
+			}
+			wp_die(
+				esc_html(
+					sprintf(
+						/* translators: 1: plugin name, 2: required PHP version, 3: running PHP version */
+						__( '%1$s requires PHP %2$s or higher. This site is running PHP %3$s.', '{{textDomain}}' ),
+						'{{name}}',
+						{{slug_constant}}_PHP_MIN,
+						PHP_VERSION
+					)
+				),
+				esc_html__( 'Plugin activation error', '{{textDomain}}' ),
+				array( 'back_link' => true )
+			);
+		}
+	);
+
+	// Do not load autoloaders or the rest of the plugin.
+	return;
+}
+
+/*
+ * -----------------------------------------------------------------------------
  * Plugin constants
  * -----------------------------------------------------------------------------
  * These constants are derived from project.config.json (slug, textDomain,
@@ -149,21 +210,48 @@ function {{slug_underscore}}_load_textdomain(): void {
  * -----------------------------------------------------------------------------
  * Wire WPDev\Core\Plugin
  * -----------------------------------------------------------------------------
- * The static facade is responsible for:
- *   - reading project.config.json (from the plugin root, not the theme),
- *   - building a ModuleLoader from any src/Modules/* that registers itself,
- *   - hooking `plugins_loaded` (priority 10) and `init` (priority 10),
- *   - firing the `{$hookPrefix}_plugin_loaded` action.
- *
- * Phase 11 of wp-starter-kit promotes this pattern: every project is a
- * plugin, the WPDev namespace owns the boot sequence, and theme functions
- * are kept strictly for backward compatibility (see functions.php for the
- * deprecation note).
+ * Module registration: composer autoload files hook plugins_loaded @ 5.
+ * Plugin::boot @ 10; module boot_all @ 11 (inside Plugin — must not be 10).
+ * set_plugin_dir so wpdev.json / Assets resolve from the plugin root, not
+ * packages/framework/.
  */
-add_action( 'plugins_loaded', 'WPDev\\Core\\Plugin::boot', 10, 0 );
-// Direct call as a safety net for environments where plugins_loaded has
-// already fired (e.g. wp-cli, unit tests, and most test runners).
-if ( class_exists( 'WPDev\\Core\\Plugin' ) && did_action( 'plugins_loaded' ) ) {
-    WPDev\Core\Plugin::boot();
-    WPDev\Core\Plugin::loader()->boot_all();
+add_action(
+    'plugins_loaded',
+    static function (): void {
+        if ( ! class_exists( \WPDev\Core\Plugin::class ) ) {
+            return;
+        }
+        if ( defined( '{{slug_constant}}_PLUGIN_DIR' ) ) {
+            \WPDev\Core\Plugin::set_plugin_dir( {{slug_constant}}_PLUGIN_DIR );
+            if (
+                class_exists( \WPDev\Support\Assets::class ) &&
+                defined( '{{slug_constant}}_PLUGIN_FILE' )
+            ) {
+                \WPDev\Support\Assets::set_plugin_dir(
+                    {{slug_constant}}_PLUGIN_DIR,
+                    plugins_url( '', {{slug_constant}}_PLUGIN_FILE )
+                );
+            }
+        }
+        \WPDev\Core\Plugin::boot();
+    },
+    10,
+    0
+);
+// Safety net when plugins_loaded already fired (CLI / unit tests).
+if ( class_exists( \WPDev\Core\Plugin::class ) && did_action( 'plugins_loaded' ) ) {
+    if ( defined( '{{slug_constant}}_PLUGIN_DIR' ) ) {
+        \WPDev\Core\Plugin::set_plugin_dir( {{slug_constant}}_PLUGIN_DIR );
+        if (
+            class_exists( \WPDev\Support\Assets::class ) &&
+            defined( '{{slug_constant}}_PLUGIN_FILE' )
+        ) {
+            \WPDev\Support\Assets::set_plugin_dir(
+                {{slug_constant}}_PLUGIN_DIR,
+                plugins_url( '', {{slug_constant}}_PLUGIN_FILE )
+            );
+        }
+    }
+    \WPDev\Core\Plugin::boot();
+    \WPDev\Core\Plugin::loader()->boot_all();
 }

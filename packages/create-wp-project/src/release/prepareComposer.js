@@ -40,6 +40,8 @@ export function prepareComposerForRelease(
   if (!next.config || typeof next.config !== "object") {
     next.config = {};
   }
+  // Runtime PHP is enforced in the plugin bootstrap file, not Composer.
+  next.config["platform-check"] = false;
   if (!next.config.platform || typeof next.config.platform !== "object") {
     next.config.platform = {};
   }

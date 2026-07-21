@@ -9,7 +9,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal pr
     },
   },
   "license": "GPL-2.0-or-later",
-  "name": "myproject/my-project",
+  "name": "myorg/my-project",
   "require": [
     "php",
   ],
@@ -96,7 +96,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
     },
   },
   "license": "GPL-2.0-or-later",
-  "name": "myproject/my-project",
+  "name": "myorg/my-project",
   "require": [
     "php",
   ],

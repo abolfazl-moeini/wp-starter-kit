@@ -67,6 +67,27 @@ function buildBrandingQuestions(
 
   return [
     {
+      // Asked first: vendor is shared by package.json (@vendor/slug) and
+      // composer.json (vendor/slug). Field id stays `npmScope` for BC.
+      id: "npmScope",
+      type: "text",
+      target: "answers",
+      message:
+        "Vendor / organization (no @) — used in package.json and composer.json as vendor/project",
+      placeholder: "acme",
+      // No defaultValue: empty input must fail validation.
+      validate: (s) => {
+        if (s === undefined || s === null || String(s).trim() === "") {
+          return "vendor / organization is required";
+        }
+        const v = String(s).trim().replace(/^@/, "");
+        if (!/^[a-z0-9][a-z0-9-]*$/.test(v)) {
+          return "must be lowercase kebab-case (a-z, 0-9, dashes; no @)";
+        }
+        return undefined;
+      },
+    },
+    {
       id: "slug",
       type: "text",
       target: "answers",
@@ -77,18 +98,6 @@ function buildBrandingQuestions(
         typeof s === "string" && /^[a-z0-9][a-z0-9-]*$/.test(s) && s.length > 0
           ? undefined
           : "slug must be lowercase kebab-case (a-z, 0-9, dashes)",
-    },
-    {
-      id: "npmScope",
-      type: "text",
-      target: "answers",
-      message: "npm scope (no @) — usually your brand or org name",
-      placeholder: d.npmScope,
-      defaultValue: d.npmScope,
-      validate: (s) =>
-        typeof s === "string" && /^[a-z0-9][a-z0-9-]*$/.test(s)
-          ? undefined
-          : "npm scope must be lowercase kebab-case (no @)",
     },
     {
       id: "globalName",
@@ -700,27 +709,36 @@ export async function runPrompts(plan, ui, prefill) {
     }
 
     if (q.id === "npmScope" && value) {
-      collected.answers.hookPrefix = value;
+      const bare = String(value).trim().replace(/^@/, "");
+      collected.answers.npmScope = bare;
+      collected.answers.hookPrefix = bare;
+      value = bare;
     }
 
     if (q.id === "phpFramework" && value === "wpdev") {
       fillDerivedBranding(collected.answers);
       if (collected.answers.hookPrefix === "wpdev") {
         await u.log(
-          "phpFramework=wpdev reserves the 'wpdev' hook prefix. Choose a different npm scope.",
+          "phpFramework=wpdev reserves the 'wpdev' hook prefix. Choose a different vendor / organization.",
         );
         const suggested = collected.answers.slug || brandingDefaults.slug;
         let newScope;
         do {
           newScope = await u.text({
-            message: "npm scope (no @) — usually your brand or org name",
-            placeholder: suggested,
-            defaultValue: suggested,
+            message:
+              "Vendor / organization (no @) — used in package.json and composer.json",
+            placeholder:
+              suggested && suggested !== "wpdev" ? suggested : "acme",
             validate: (val) => {
-              if (!val) return "npm scope is required";
-              if (val === "wpdev") return "Cannot use 'wpdev' as npm scope";
-              if (!/^[a-z0-9][a-z0-9-]*$/.test(val)) {
-                return "npm scope must be lowercase kebab-case (no @)";
+              if (!val || String(val).trim() === "") {
+                return "vendor / organization is required";
+              }
+              const v = String(val).trim().replace(/^@/, "");
+              if (v === "wpdev") {
+                return "Cannot use 'wpdev' as vendor (reserved for the framework)";
+              }
+              if (!/^[a-z0-9][a-z0-9-]*$/.test(v)) {
+                return "must be lowercase kebab-case (a-z, 0-9, dashes; no @)";
               }
               return undefined;
             },
@@ -734,6 +752,7 @@ export async function runPrompts(plan, ui, prefill) {
             err.code = "WPDEV_USER_CANCELLED";
             throw err;
           }
+          newScope = String(newScope).trim().replace(/^@/, "");
         } while (newScope === "wpdev");
         collected.answers.npmScope = newScope;
         collected.answers.hookPrefix = newScope;

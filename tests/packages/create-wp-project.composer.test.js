@@ -86,4 +86,11 @@ describe("@wpdev/create-wp-project — consumer composer.json (Phase 23.A3/A4)",
     expect(composer.autoload["psr-4"]).toBeDefined();
     expect(composer.autoload["psr-4"]["MyProject\\"]).toBe("src/");
   });
+
+  test("composer.json name is vendor/project from npmScope + slug", async () => {
+    const res = await scaffoldProject(tmp, goodAnswers);
+    expect(res.ok).toBe(true);
+    const composer = await readComposer();
+    expect(composer.name).toBe("myorg/my-project");
+  });
 });

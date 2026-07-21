@@ -372,15 +372,12 @@ describe("runCreate — verbose forwarded; runner failure is a warning (I3.8)", 
   });
 });
 
-describe("runCreate — interactive install/git prompts (G-002, G-003)", () => {
-  test("interactive, decline both prompts → install/git NOT run", async () => {
+describe("runCreate — interactive git prompt (no install prompt)", () => {
+  test("interactive, decline git prompt → install/git NOT run", async () => {
     const dir = makeEmptyDir();
     try {
       const deps = makeDeps();
-      deps.ui.confirm = jest
-        .fn()
-        .mockResolvedValueOnce(false)
-        .mockResolvedValueOnce(false);
+      deps.ui.confirm = jest.fn().mockResolvedValueOnce(false);
       await runCreate(
         {
           dir,
@@ -390,7 +387,10 @@ describe("runCreate — interactive install/git prompts (G-002, G-003)", () => {
         },
         deps,
       );
-      expect(deps.ui.confirm).toHaveBeenCalledTimes(2);
+      expect(deps.ui.confirm).toHaveBeenCalledTimes(1);
+      expect(deps.ui.confirm.mock.calls[0][0].message).toMatch(
+        /Initialize a git/,
+      );
       expect(deps.runners.npmInstall).not.toHaveBeenCalled();
       expect(deps.runners.composerInstall).not.toHaveBeenCalled();
       expect(deps.runners.gitInit).not.toHaveBeenCalled();
@@ -399,14 +399,11 @@ describe("runCreate — interactive install/git prompts (G-002, G-003)", () => {
     }
   });
 
-  test("interactive, accept both prompts → install/git run", async () => {
+  test("interactive never prompts for dependency install (only --install runs it)", async () => {
     const dir = makeEmptyDir();
     try {
       const deps = makeDeps();
-      deps.ui.confirm = jest
-        .fn()
-        .mockResolvedValueOnce(true)
-        .mockResolvedValueOnce(true);
+      deps.ui.confirm = jest.fn().mockResolvedValue(true);
       await runCreate(
         {
           dir,
@@ -416,15 +413,18 @@ describe("runCreate — interactive install/git prompts (G-002, G-003)", () => {
         },
         deps,
       );
-      expect(deps.runners.npmInstall).toHaveBeenCalledTimes(1);
-      expect(deps.runners.composerInstall).toHaveBeenCalledTimes(1);
+      const messages = deps.ui.confirm.mock.calls.map((c) => c[0].message);
+      expect(messages.some((m) => /Install dependencies/i.test(m))).toBe(false);
+      expect(deps.runners.npmInstall).not.toHaveBeenCalled();
+      expect(deps.runners.composerInstall).not.toHaveBeenCalled();
+      // Accepting the sole remaining confirm (git) still runs gitInit.
       expect(deps.runners.gitInit).toHaveBeenCalledTimes(1);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
   });
 
-  test("onAfterScaffold runs before install/git confirms (no spinner over prompts)", async () => {
+  test("onAfterScaffold runs before git confirm (no spinner over prompts)", async () => {
     const dir = makeEmptyDir();
     try {
       const order = [];
@@ -447,8 +447,8 @@ describe("runCreate — interactive install/git prompts (G-002, G-003)", () => {
       );
       expect(deps.onAfterScaffold).toHaveBeenCalledTimes(1);
       expect(order[0]).toBe("afterScaffold");
-      expect(order[1]).toMatch(/^confirm:Install dependencies/);
-      expect(order[2]).toMatch(/^confirm:Initialize a git/);
+      expect(order[1]).toMatch(/^confirm:Initialize a git/);
+      expect(order).toHaveLength(2);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

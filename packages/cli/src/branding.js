@@ -35,7 +35,7 @@ export function slugToPhpFunctionPrefix(slug) {
  *   textDomain: string,
  *   globalName: string,
  *   phpFunctionPrefix: string,
- *   npmScope: string,
+ *   npmScope: string | undefined,
  * }}
  */
 export function deriveBrandingDefaults(dirBasename) {
@@ -45,7 +45,8 @@ export function deriveBrandingDefaults(dirBasename) {
     textDomain: slug,
     globalName: slugToGlobalName(slug),
     phpFunctionPrefix: slugToPhpFunctionPrefix(slug),
-    npmScope: slug,
+    // Vendor/org is required from the user (or --scope=); never invent one.
+    npmScope: undefined,
   };
 }
 
@@ -81,8 +82,9 @@ export function fillDerivedBranding(answers) {
   if (slug && !answers.globalName) {
     answers.globalName = slugToGlobalName(slug);
   }
-  if (slug && !answers.npmScope) {
-    answers.npmScope = slug;
+  // Do not invent npmScope — required via prompt or --scope=.
+  if (answers.npmScope) {
+    answers.npmScope = String(answers.npmScope).replace(/^@/, "").trim();
   }
   if (answers.npmScope && !answers.hookPrefix) {
     answers.hookPrefix = answers.npmScope;

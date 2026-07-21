@@ -251,8 +251,7 @@ export async function runCreate(input, deps) {
   }
 
   // Scaffold + manifest are done. Stop any outer "Scaffolding…" spinner
-  // before interactive post-run confirms so loading is not shown on top
-  // of "Install dependencies now?" / "Initialize a git repository?".
+  // before interactive post-run confirms (e.g. "Initialize a git repository?").
   if (typeof d.onAfterScaffold === "function") {
     try {
       await d.onAfterScaffold({ dir, written, warnings });
@@ -283,6 +282,8 @@ export async function runCreate(input, deps) {
 
   // 6. Post-generation actions. Each is gated and best-effort.
   //    We collect warnings; the run continues regardless.
+  //    Dependency install is never prompted — only via --install /
+  //    runOptions.install. Users run npm/composer from Next steps.
   const ui = d.ui || {};
   let postRunOptions = { ...(i.runOptions || {}) };
   if (
@@ -290,13 +291,6 @@ export async function runCreate(input, deps) {
     postRunOptions.yes !== true &&
     typeof ui.confirm === "function"
   ) {
-    if (postRunOptions.install !== true) {
-      const installNow = await ui.confirm({
-        message: "Install dependencies now? (npm + composer)",
-        initial: false,
-      });
-      if (installNow === true) postRunOptions.install = true;
-    }
     if (postRunOptions.git !== true) {
       const initGit = await ui.confirm({
         message: "Initialize a git repository?",

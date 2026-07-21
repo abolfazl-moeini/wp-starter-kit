@@ -31,6 +31,7 @@ describe("prepareComposerForRelease", () => {
   test("sets config.platform.php to the min version", () => {
     const out = prepareComposerForRelease({}, "8.0");
     expect(out.config.platform.php).toBe("8.0");
+    expect(out.config["platform-check"]).toBe(false);
   });
 
   test("preserves other config keys when adding platform", () => {

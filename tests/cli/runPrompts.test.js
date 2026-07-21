@@ -77,8 +77,10 @@ describe("runPrompts() — branding defaults", () => {
       { getFeatureCatalog, applyPreset },
       { dirBasename: "my-sample-plugin" },
     );
+    // Branding text order: npmScope (required, no default), slug, textDomain, phpFunctionPrefix
+    // (globalName skipped for minimal / js:none).
     const ui = makeUi({
-      text: ["", "", "", ""],
+      text: ["acme", "", "", ""],
       select: ["7.4"],
     });
     const out = await runPrompts(plan, ui, {
@@ -94,6 +96,7 @@ describe("runPrompts() — branding defaults", () => {
       },
     });
     expect(out.answers.slug).toBe("my-sample-plugin");
+    expect(out.answers.npmScope).toBe("acme");
   });
 
   test("passes defaultValue from directory basename to slug prompt", () => {
@@ -103,6 +106,8 @@ describe("runPrompts() — branding defaults", () => {
     const slugQ = plan.find((q) => q.id === "slug");
     expect(slugQ.defaultValue).toBe("my-sample-plugin");
     expect(slugQ.placeholder).toBe("my-sample-plugin");
+    const scopeQ = plan.find((q) => q.id === "npmScope");
+    expect(scopeQ.defaultValue).toBeUndefined();
   });
 
   test("derives phpFunctionPrefix from slug (dashes to underscores)", async () => {
@@ -112,7 +117,7 @@ describe("runPrompts() — branding defaults", () => {
       { dirBasename: "my-sample-plugin" },
     );
     const ui = makeUi({
-      text: ["", "acme-brand", "", ""],
+      text: ["acme", "", "", ""],
       select: ["7.4"],
     });
     const out = await runPrompts(plan, ui, {
@@ -138,7 +143,7 @@ describe("runPrompts() — branding defaults", () => {
 
     const ui = makeUi({
       select: ["7.4"],
-      text: ["", "acme", "", ""],
+      text: ["acme", "", "", ""],
     });
     const out = await runPrompts(plan, ui, {
       brandingDefaults: {
@@ -146,7 +151,7 @@ describe("runPrompts() — branding defaults", () => {
         textDomain: "my-sample-plugin",
         globalName: "MySamplePlugin",
         phpFunctionPrefix: "my_sample_plugin_",
-        npmScope: "my-sample-plugin",
+        npmScope: undefined,
       },
       runOptions: { preset: "minimal" },
     });
@@ -166,7 +171,7 @@ describe("runPrompts() — branding defaults", () => {
     expect(planIds(plan)).toContain("phpTest");
 
     const ui = makeUi({
-      text: ["", "", "", ""],
+      text: ["acme", "", "", ""],
       select: ["7.4", "none"],
     });
     const out = await runPrompts(plan, ui, {

@@ -166,16 +166,32 @@ final class Plugin {
 		self::$booted    = true;
 		self::$last_hook = $hook_prefix . '_plugin_loaded';
 
-		// Wire into WordPress. add_action is a no-op shim in the
-		// project's test bootstrap, so this is safe in unit tests.
+		// Wire module boot into WordPress.
 		//
-		// We only register on `plugins_loaded` (not `init`). Registering
-		// on both would cause `on_plugins_loaded` to fire twice on every
-		// normal request — WordPress fires `plugins_loaded` first and
-		// then `init`, and there is no scenario in our supported runtimes
-		// where `plugins_loaded` is unavailable but `init` is.
+		// IMPORTANT: The main plugin file typically calls
+		// `add_action( 'plugins_loaded', [ Plugin::class, 'boot' ], 10 )`.
+		// That means `boot()` itself runs *during* `plugins_loaded` at
+		// priority 10. Registering `on_plugins_loaded` at the *same*
+		// priority 10 is too late — WP will not re-run that priority, so
+		// modules never boot. Use priority 11 so it still fires in the
+		// same `plugins_loaded` pass (after module registration hooks
+		// at priority 5 and boot at 10).
+		//
+		// When boot() is invoked *after* `plugins_loaded` has fully
+		// finished (CLI / late include), also boot modules immediately.
+		// `$modules_booted` keeps this idempotent with the priority-11
+		// callback if both paths run.
 		if ( function_exists( 'add_action' ) ) {
-			\add_action( 'plugins_loaded', array( self::class, 'on_plugins_loaded' ), 10, 0 );
+			\add_action( 'plugins_loaded', array( self::class, 'on_plugins_loaded' ), 11, 0 );
+		}
+
+		if (
+			function_exists( 'did_action' )
+			&& did_action( 'plugins_loaded' )
+			&& function_exists( 'doing_action' )
+			&& ! \doing_action( 'plugins_loaded' )
+		) {
+			self::on_plugins_loaded();
 		}
 
 		if ( function_exists( 'do_action' ) ) {
@@ -382,7 +398,22 @@ final class Plugin {
 		}
 
 		if ( null === $plugin_root ) {
-			$plugin_root = dirname( __DIR__, 2 );
+			// packages/framework/src/Core → plugin root is 4 levels up.
+			// Legacy src/Core layout is 2 levels up. Prefer a path that
+			// actually contains wpdev.json / project.config.json.
+			foreach ( array( 4, 3, 2 ) as $levels ) {
+				$candidate = dirname( __DIR__, $levels );
+				if (
+					is_file( $candidate . '/wpdev.json' ) ||
+					is_file( $candidate . '/project.config.json' )
+				) {
+					$plugin_root = $candidate;
+					break;
+				}
+			}
+			if ( null === $plugin_root ) {
+				$plugin_root = dirname( __DIR__, 2 );
+			}
 		}
 
 		$root = rtrim( $plugin_root, '/\\' );

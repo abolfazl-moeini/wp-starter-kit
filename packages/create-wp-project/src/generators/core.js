@@ -167,6 +167,11 @@ export function run(ctx) {
   files["composer.json"] = buildComposerJson({
     ...tpl,
     vendorNamespace: deriveVendorNamespace(answers.globalName),
+    // vendor/project — same org as package.json @vendor/project
+    packageVendor: String(answers.npmScope || cfg.npmScope || "")
+      .replace(/^@/, "")
+      .trim(),
+    npmScope: answers.npmScope || cfg.npmScope,
     licenseId: spdxForLicense(features.license || "gpl2"),
     vendorScopingOn: features.vendorScoping === "on",
   });

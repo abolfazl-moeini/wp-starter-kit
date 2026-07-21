@@ -13,7 +13,8 @@ describe("deriveBrandingDefaults()", () => {
     const d = deriveBrandingDefaults("my-sample-plugin");
     expect(d.slug).toBe("my-sample-plugin");
     expect(d.textDomain).toBe("my-sample-plugin");
-    expect(d.npmScope).toBe("my-sample-plugin");
+    // Vendor is never invented — prompt or --scope= is required.
+    expect(d.npmScope).toBeUndefined();
     expect(d.globalName).toBe("MySamplePlugin");
     expect(d.phpFunctionPrefix).toBe("my_sample_plugin_");
   });
@@ -26,19 +27,20 @@ describe("deriveBrandingDefaults()", () => {
 });
 
 describe("fillDerivedBranding()", () => {
-  test("defaults npmScope and hookPrefix from slug when missing", () => {
+  test("does not invent npmScope when missing; still fills other branding", () => {
     const answers = { slug: "my-sample-plugin" };
     fillDerivedBranding(answers);
-    expect(answers.npmScope).toBe("my-sample-plugin");
-    expect(answers.hookPrefix).toBe("my-sample-plugin");
+    expect(answers.npmScope).toBeUndefined();
+    expect(answers.hookPrefix).toBeUndefined();
     expect(answers.globalName).toBe("MySamplePlugin");
     expect(answers.textDomain).toBe("my-sample-plugin");
     expect(answers.phpFunctionPrefix).toBe("my_sample_plugin_");
   });
 
-  test("keeps explicit npmScope for hookPrefix", () => {
-    const answers = { slug: "my-sample-plugin", npmScope: "acme" };
+  test("uses explicit npmScope for hookPrefix and strips leading @", () => {
+    const answers = { slug: "my-sample-plugin", npmScope: "@acme" };
     fillDerivedBranding(answers);
+    expect(answers.npmScope).toBe("acme");
     expect(answers.hookPrefix).toBe("acme");
   });
 });

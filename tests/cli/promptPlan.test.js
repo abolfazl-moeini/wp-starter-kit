@@ -46,9 +46,11 @@ describe("buildPromptPlan() — conditional omissions (I2.5)", () => {
     const ids = planIds(plan);
     expect(ids[0]).toBe("preset");
     // Branding ids follow the preset question.
+    // Vendor first, then project name (slug) — vendor is shared by
+    // package.json (@vendor/slug) and composer.json (vendor/slug).
     expect(ids.slice(1, 7)).toEqual([
-      "slug",
       "npmScope",
+      "slug",
       "globalName",
       "textDomain",
       "phpFunctionPrefix",

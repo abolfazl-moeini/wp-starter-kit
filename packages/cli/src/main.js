@@ -184,7 +184,7 @@ export function buildProgram() {
     });
 
     // 3. Drive runCreate. Spinner covers scaffold only — it must
-    //    stop before post-run confirms ("Install dependencies now?")
+    //    stop before post-run confirms ("Initialize a git repository?")
     //    so loading is not shown over the prompt.
     let spinner =
       typeof ui.spinner === "function"

@@ -142,6 +142,9 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
     expect(php).toMatch(/vendor-prefixed\/autoload\.php/);
     expect(php).toMatch(/require_once\s+\$vendor_autoload/);
     expect(php).toMatch(/WPDev\\Core\\Plugin::boot/);
+    // Module boot fix: set_plugin_dir + Assets before boot
+    expect(php).toMatch(/Plugin::set_plugin_dir\s*\(\s*MY_PROJECT_PLUGIN_DIR/);
+    expect(php).toMatch(/Assets::set_plugin_dir/);
   });
 
   test("plugin bootstrap define() constants use UPPER_SNAKE (slug_constant)", () => {
@@ -223,7 +226,8 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
     );
     const composer = JSON.parse(out.files["composer.json"]);
     // Composer package name is lower-cased globalName / slug.
-    expect(composer.name).toBe("myproject/my-project");
+    // Composer name uses vendor/project (answers.npmScope + slug)
+    expect(composer.name).toBe("myorg/my-project");
     // PSR-4 mapping: vendorNamespace (PascalCase of globalName) → src/
     expect(composer.autoload["psr-4"]).toBeDefined();
     const psr4 = composer.autoload["psr-4"];
@@ -236,6 +240,23 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
     expect(keys.some((k) => k.startsWith("MyProject"))).toBe(true);
     // require.php >= 8.1
     expect(composer.require.php).toBe(">=8.1");
+    // Runtime PHP is enforced in the plugin bootstrap, not Composer.
+    expect(composer.config["platform-check"]).toBe(false);
+  });
+
+  test("plugin bootstrap gates on PHP version before loading Composer", () => {
+    const out = coreRun(
+      makeCtx({}, { phpMinVersion: "8.1" }, { phpMinVersion: "8.1" }),
+    );
+    const php = out.files["my-project.php"];
+    expect(php).toMatch(/MY_PROJECT_PHP_MIN/);
+    expect(php).toMatch(/version_compare\s*\(\s*PHP_VERSION/);
+    expect(php).toMatch(/8\.1/);
+    // Gate must appear before vendor/autoload.php
+    const gateAt = php.indexOf("version_compare");
+    const autoloadAt = php.indexOf("vendor/autoload.php");
+    expect(gateAt).toBeGreaterThan(-1);
+    expect(autoloadAt).toBeGreaterThan(gateAt);
   });
 
   test("emits composer.json with the right license field for each license variant", () => {

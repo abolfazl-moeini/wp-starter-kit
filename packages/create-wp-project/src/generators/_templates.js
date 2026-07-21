@@ -159,8 +159,12 @@ export function packageJsonForAnswers(answers, features) {
     CONSUMER_BUILD_WPDEV_PACKAGES.map((name) => [name, versionOf(name)]),
   );
 
+  const packageVendor = String(answers.npmScope || "")
+    .replace(/^@/, "")
+    .trim();
   return {
-    name: "@" + answers.npmScope + "/" + answers.slug,
+    // npm scoped name: @vendor/project  (Composer uses vendor/project)
+    name: `@${packageVendor}/${answers.slug}`,
     version: "0.1.0",
     description,
     private: true,
@@ -692,7 +696,7 @@ WordPress plugin scaffolded from [wp-starter-kit](https://github.com/abolfazl-mo
 
 ## Branding (all from \`wpdev.json\`)
 
-- npm scope: \`{{npmScope}}\`
+- vendor / org (package + composer): \`{{npmScope}}\`
 - Global JS name: \`{{globalName}}\`
 - Localize var: \`{{localizeVar}}\`
 - Text domain: \`{{textDomain}}\`
@@ -836,9 +840,18 @@ final class Plugin
         self::\$booted = true;
         self::\$lastHook = \$hookPrefix . '_plugin_loaded';
 
+        // Priority 11: boot() is usually hooked at plugins_loaded@10; same
+        // priority would never fire. Never also register on init (double boot).
         if (function_exists('add_action')) {
-            \\add_action('plugins_loaded', [self::class, 'on_plugins_loaded'], 10, 0);
-            \\add_action('init', [self::class, 'on_plugins_loaded'], 10, 0);
+            \\add_action('plugins_loaded', [self::class, 'on_plugins_loaded'], 11, 0);
+        }
+        if (
+            function_exists('did_action')
+            && did_action('plugins_loaded')
+            && function_exists('doing_action')
+            && !\\doing_action('plugins_loaded')
+        ) {
+            self::on_plugins_loaded();
         }
 
         if (function_exists('do_action')) {
@@ -1172,11 +1185,21 @@ export function buildComposerJson(vars) {
   const vendorPrefix = vars.vendorPrefix || "WpdevVendor";
   const phpMin = vars.phpMinVersion || "7.4";
   const excludeNamespaces = vars.vendorScopingOn === false ? ["WPDev"] : [];
+  // Composer package name: vendor/project (same vendor as package.json scope).
+  const packageVendor = String(
+    vars.packageVendor ||
+      vars.npmScope ||
+      vars.vendorNamespaceLower ||
+      vars.slug ||
+      "",
+  )
+    .replace(/^@/, "")
+    .trim();
   // Kit module framework (Plugin / ModuleLoader / Support) is NOT a
   // Composer package install — sources live at packages/framework/
   // (copied at scaffold or replaced with a git submodule). Autoload only.
   const payload = {
-    name: `${vars.vendorNamespaceLower || vars.slug}/${vars.slug}`,
+    name: `${packageVendor}/${vars.slug}`,
     description:
       vars.description ||
       `${vars.slug} — built on wp-starter-kit (WPDev) framework`,
@@ -1202,6 +1225,8 @@ export function buildComposerJson(vars) {
       "release:dist": "node dev/release/prepare-release.js",
     },
     config: {
+      // Runtime PHP is enforced in the plugin bootstrap (not Composer).
+      "platform-check": false,
       platform: {
         php: phpMin,
       },

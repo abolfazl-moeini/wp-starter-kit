@@ -72,7 +72,7 @@ describe("--yes / -y non-interactive (I2.10, I2.11)", () => {
   test("--yes: no prompt function is ever called", async () => {
     const ui = makeRecordingUi();
     await gatherInputs({
-      argv: ["my-plugin", "--yes"],
+      argv: ["my-plugin", "--yes", "--scope=acme"],
       interactive: true, // --yes must override
       engine: engineStub,
       ui,
@@ -86,7 +86,7 @@ describe("--yes / -y non-interactive (I2.10, I2.11)", () => {
   test("-y: short form also skips prompts", async () => {
     const ui = makeRecordingUi();
     await gatherInputs({
-      argv: ["my-plugin", "-y"],
+      argv: ["my-plugin", "-y", "--scope=acme"],
       interactive: true,
       engine: engineStub,
       ui,
@@ -100,7 +100,7 @@ describe("--yes / -y non-interactive (I2.10, I2.11)", () => {
   test("--yes: all unspecified features come from the standard preset", async () => {
     const ui = makeRecordingUi();
     const out = await gatherInputs({
-      argv: ["my-plugin", "--yes"],
+      argv: ["my-plugin", "--yes", "--scope=acme"],
       interactive: true,
       engine: engineStub,
       ui,
@@ -131,6 +131,7 @@ describe("--yes / -y non-interactive (I2.10, I2.11)", () => {
       argv: [
         "my-plugin",
         "--yes",
+        "--scope=acme",
         "--js=none",
         "--php-framework=wpdev",
         "--hook=acme",
@@ -151,7 +152,7 @@ describe("--yes / -y non-interactive (I2.10, I2.11)", () => {
   test("--preset=minimal applies the minimal feature set", async () => {
     const ui = makeRecordingUi();
     const out = await gatherInputs({
-      argv: ["my-plugin", "--yes", "--preset=minimal"],
+      argv: ["my-plugin", "--yes", "--scope=acme", "--preset=minimal"],
       interactive: true,
       engine: engineStub,
       ui,
