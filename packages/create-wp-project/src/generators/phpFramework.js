@@ -141,7 +141,7 @@ Alternatively install into \`wp-content/plugins/wpdev\` (site-wide) instead of
 
 ## Host plugin rules
 
-- Header should include: \`Requires Plugins: wpdev\`
+- Scaffold emits \`Requires Plugins: wpdev\` on the host plugin header (WP 6.5+)
 - Soft-dep: \`function_exists( 'wpdev_services' )\` / \`FrameworkBridge::is_framework_active()\`
 - Do **not** list the admin framework in Composer \`require\`
 
@@ -156,6 +156,60 @@ const REGISTER_FILE = "src/wpdev-demo-register.php";
 /** Marker consumed by runCreate to install the submodule after files are written. */
 export const WPDEV_CORE_INSTALL_MARKER =
   "companion-plugins/wpdev/.wpdev-core-install";
+
+/** WordPress plugin header line (WP 6.5+ dependency declaration). */
+export const REQUIRES_PLUGINS_WPDEV_LINE = " * Requires Plugins: wpdev";
+
+/**
+ * Inject `Requires Plugins: wpdev` into a plugin bootstrap file header.
+ * Idempotent. Returns original content when the header is already present
+ * or when the file does not look like a plugin bootstrap.
+ *
+ * @param {string} phpSource
+ * @returns {{ content: string, changed: boolean }}
+ */
+export function ensureRequiresPluginsWpdevHeader(phpSource) {
+  const src = String(phpSource ?? "");
+  if (/Requires\s+Plugins\s*:\s*wpdev/i.test(src)) {
+    return { content: src, changed: false };
+  }
+  // Insert after Domain Path when present; else after Text Domain; else
+  // before the closing `*/` of the first docblock.
+  if (/^\s*\*\s*Domain Path\s*:/im.test(src)) {
+    const content = src.replace(
+      /^(\s*\*\s*Domain Path\s*:[^\n]*\n)/im,
+      `$1${REQUIRES_PLUGINS_WPDEV_LINE}\n`,
+    );
+    return { content, changed: content !== src };
+  }
+  if (/^\s*\*\s*Text Domain\s*:/im.test(src)) {
+    const content = src.replace(
+      /^(\s*\*\s*Text Domain\s*:[^\n]*\n)/im,
+      `$1${REQUIRES_PLUGINS_WPDEV_LINE}\n`,
+    );
+    return { content, changed: content !== src };
+  }
+  const content = src.replace(
+    /^(\s*\*\/)/m,
+    `${REQUIRES_PLUGINS_WPDEV_LINE}\n$1`,
+  );
+  return { content, changed: content !== src };
+}
+
+/**
+ * Remove the wpdev Requires Plugins header line (removeFeature path).
+ *
+ * @param {string} phpSource
+ * @returns {{ content: string, changed: boolean }}
+ */
+export function stripRequiresPluginsWpdevHeader(phpSource) {
+  const src = String(phpSource ?? "");
+  const content = src.replace(
+    /^[ \t]*\*[ \t]*Requires\s+Plugins\s*:\s*wpdev[ \t]*\r?\n/gim,
+    "",
+  );
+  return { content, changed: content !== src };
+}
 
 export function run(ctx) {
   if (ctx.features.phpFramework !== "wpdev") {

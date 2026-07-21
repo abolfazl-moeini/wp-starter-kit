@@ -156,6 +156,24 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
     expect(php).not.toMatch(/define\s*\(\s*['"]my_project_PLUGIN_/);
   });
 
+  test("phpFramework=wpdev emits Requires Plugins: wpdev header", () => {
+    const out = coreRun(
+      makeCtx(
+        { hookPrefix: "acme", phpFunctionPrefix: "acme_" },
+        { hookPrefix: "acme", phpFunctionPrefix: "acme_" },
+        { phpFramework: "wpdev" },
+      ),
+    );
+    const php = out.files["my-project.php"];
+    expect(php).toMatch(/Requires Plugins:\s*wpdev/);
+    expect(php).toMatch(/Domain Path:\s*\/languages/);
+  });
+
+  test("phpFramework=none does not emit Requires Plugins header", () => {
+    const php = coreRun(makeCtx()).files["my-project.php"];
+    expect(php).not.toMatch(/Requires Plugins:/);
+  });
+
   // Phase 23: the WPDev\\Core framework classes are provided exclusively
   // by the "wpdev/framework" Composer dependency (see packages/framework/src/Core/*).
   // The scaffold never emits src/Core/*.php copies for consumer projects

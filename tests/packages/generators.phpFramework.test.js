@@ -110,6 +110,31 @@ describe("phpFramework:wpdev companion scaffold", () => {
     ).toBeUndefined();
     expect(out.composerSuggest?.["wpdev/framework-core"]).toBeUndefined();
   });
+
+  test("ensureRequiresPluginsWpdevHeader injects after Domain Path", async () => {
+    const {
+      ensureRequiresPluginsWpdevHeader,
+      stripRequiresPluginsWpdevHeader,
+    } =
+      await import("../../packages/create-wp-project/src/generators/phpFramework.js");
+    const before = `<?php
+/**
+ * Plugin Name: Demo
+ * Text Domain: demo
+ * Domain Path:       /languages
+ *
+ * @package demo
+ */
+`;
+    const { content, changed } = ensureRequiresPluginsWpdevHeader(before);
+    expect(changed).toBe(true);
+    expect(content).toMatch(/Domain Path:[^\n]*\n \* Requires Plugins: wpdev/);
+    const again = ensureRequiresPluginsWpdevHeader(content);
+    expect(again.changed).toBe(false);
+    const stripped = stripRequiresPluginsWpdevHeader(content);
+    expect(stripped.changed).toBe(true);
+    expect(stripped.content).not.toMatch(/Requires Plugins:/);
+  });
 });
 
 async function seedProjectForFramework(tmp, features) {
@@ -168,11 +193,29 @@ describe("phpFramework add/remove feature", () => {
       css: "none",
     };
     await seedProjectForFramework(tmp, features);
+    await fs.writeFile(
+      path.join(tmp, "my-project.php"),
+      `<?php
+/**
+ * Plugin Name: My Project
+ * Text Domain: my-project
+ * Domain Path:       /languages
+ *
+ * @package my-project
+ */
+`,
+      "utf8",
+    );
 
     const first = await addFeature(tmp, "phpFramework", "wpdev");
     expect(first.ok).toBe(true);
     expect(first.written).toContain("src/Support/FrameworkBridge.php");
     expect(first.written).toContain("src/wpdev-demo-register.php");
+    const pluginPhp = await fs.readFile(
+      path.join(tmp, "my-project.php"),
+      "utf8",
+    );
+    expect(pluginPhp).toMatch(/Requires Plugins:\s*wpdev/);
   });
 
   test("removeFeature(dir, phpFramework) deletes owned paths only", async () => {

@@ -48,9 +48,10 @@
  * removeFeature.
  */
 
-import { promises as fs } from "node:fs";
+import { promises as fs, existsSync } from "node:fs";
 import * as path from "node:path";
 import minimatch from "minimatch";
+import { stripRequiresPluginsWpdevHeader } from "./generators/phpFramework.js";
 
 import { listGenerators } from "./generators/index.js";
 import {
@@ -464,10 +465,33 @@ export async function removeFeature(dir, id, _opts = {}) {
   await writeManifest(dir, nextManifest);
 
   const glueWritten = await refreshGlue(dir, newFeatures);
+  const written =
+    glueWritten.length > 0
+      ? [...glueWritten]
+      : /** @type {string[]|false} */ (false);
+
+  // Drop Requires Plugins: wpdev from the host bootstrap when framework is off.
+  if (id === "phpFramework" && currentFeatures.phpFramework === "wpdev") {
+    const slug = nextManifest.slug || existingManifest.slug;
+    if (slug) {
+      const pluginRel = `${slug}.php`;
+      const pluginAbs = path.join(dir, pluginRel);
+      if (existsSync(pluginAbs)) {
+        const before = await fs.readFile(pluginAbs, "utf8");
+        const { content, changed } = stripRequiresPluginsWpdevHeader(before);
+        if (changed) {
+          await fs.writeFile(pluginAbs, content, "utf8");
+          if (Array.isArray(written)) {
+            if (!written.includes(pluginRel)) written.push(pluginRel);
+          }
+        }
+      }
+    }
+  }
 
   return {
     ok: true,
-    written: glueWritten.length > 0 ? glueWritten : false,
+    written: Array.isArray(written) && written.length > 0 ? written : false,
     removed: removedRel,
     manifest: nextManifest,
   };

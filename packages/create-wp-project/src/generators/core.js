@@ -85,6 +85,10 @@ export function run(ctx) {
     ...(vars || legacyTplVars(answers, cfg)),
     wpMinVersion: features.wpMinVersion || "6.0",
     phpMinVersion: features.phpMinVersion || cfg.phpMinVersion || "7.4",
+    // WP 6.5+ dependency header when host needs WPDev Admin Framework.
+    // Skill INSTALL-AND-DISTRIBUTE: Requires Plugins: wpdev
+    requiresPluginsHeader:
+      features.phpFramework === "wpdev" ? "\n * Requires Plugins: wpdev" : "",
   };
   const files = {};
   const dirs = [];
