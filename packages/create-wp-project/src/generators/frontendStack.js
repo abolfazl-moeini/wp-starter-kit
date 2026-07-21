@@ -60,7 +60,8 @@ export function run(ctx) {
     POLARIS_DEMO_SHORTCODE_PHP,
     tpl,
   );
-  files[`${DEMO_DIR}/assets/entries/view.ts`] = polarisDemoViewEntry(ctx);
+  // JSX entry (automatic runtime) — must be .tsx so esbuild uses the tsx loader.
+  files[`${DEMO_DIR}/assets/entries/view.tsx`] = polarisDemoViewEntry(ctx);
   files[REGISTER_FILE] = renderTemplate(POLARIS_DEMO_REGISTER_PHP, tpl);
 
   return {

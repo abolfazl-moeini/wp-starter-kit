@@ -63,9 +63,17 @@ describe("frontendStack feature integration", () => {
     const out = runFrontendStack(ctx);
     expect(out.files["src/polaris/index.ts"]).toBeDefined();
     expect(out.files["src/polaris/styles.css"]).toContain("--ps-color-bg");
-    expect(
-      out.files["src/Modules/PolarisDemo/assets/entries/view.ts"],
-    ).toMatch(/polaris\/styles\.css/);
+    const viewEntry =
+      out.files["src/Modules/PolarisDemo/assets/entries/view.tsx"];
+    expect(viewEntry).toBeDefined();
+    expect(viewEntry).toMatch(/polaris\/styles\.css/);
+    // Prefer JSX over hyperscript h(...) for readability.
+    expect(viewEntry).toMatch(/<Stack\b/);
+    expect(viewEntry).toMatch(/<Button\b/);
+    expect(viewEntry).not.toMatch(/\bh\s*\(/);
+    expect(out.files["src/Modules/PolarisDemo/assets/entries/view.ts"]).toBe(
+      undefined,
+    );
     expect(out.files["src/Modules/PolarisDemo/Module.php"]).toMatch(
       /ShortcodesSetup::register/,
     );

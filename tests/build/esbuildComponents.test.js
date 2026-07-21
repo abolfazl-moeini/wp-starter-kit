@@ -33,13 +33,16 @@ describe("esbuild-components", () => {
     expect(source).toMatch(/['"]examples\/\*\*['"]/);
   });
 
-  test("discovers src/Modules/*/assets/entries/*.ts module entry glob", () => {
+  test("discovers src/Modules/*/assets/entries/*.{ts,tsx} module entry globs", () => {
     const source = readFileSync(
       join(process.cwd(), "core/packages/build/esbuild-components.js"),
       "utf8",
     );
     expect(source).toContain("src/Modules/*/assets/entries/*.ts");
+    expect(source).toContain("src/Modules/*/assets/entries/*.tsx");
     expect(source).toMatch(/MODULE_ENTRY_GLOB|moduleEntries/);
+    // Bundle name strips either .ts or .tsx
+    expect(source).toMatch(/\.tsx\?/);
   });
 
   test("reads uiFramework via getJsxOptions for automatic JSX runtime", () => {

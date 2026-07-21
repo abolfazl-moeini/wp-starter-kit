@@ -82,7 +82,8 @@ export function polarisFiles(_ctx) {
 }
 
 /**
- * Frontend view entry (Preact h — no JSX so .ts works without extra config).
+ * Frontend view entry as JSX (.tsx). Uses automatic JSX runtime
+ * (tsconfig jsx: react-jsx + jsxImportSource preact|react).
  * Mounts on [data-polaris-demo] nodes from the framework shortcode.
  *
  * @param {object} ctx
@@ -90,11 +91,22 @@ export function polarisFiles(_ctx) {
  */
 export function polarisDemoViewEntry(ctx) {
   const framework = ctx.features?.["jsLib"] === "react" ? "react" : "preact";
+  const renderImport =
+    framework === "react"
+      ? 'import { createRoot } from "react-dom/client";'
+      : 'import { render } from "preact";';
+  const mountCall =
+    framework === "react"
+      ? "createRoot(el).render(<PolarisDemoApp />);"
+      : "render(<PolarisDemoApp />, el);";
+  const libLabel = framework === "react" ? "react" : "preact";
+
   return `/**
  * Frontend Polaris demo — shortcode mount points [data-polaris-demo].
+ * JSX via automatic runtime (jsxImportSource: ${framework}).
  */
 // uiFramework: ${framework}
-import { h, render } from "preact";
+${renderImport}
 import "../../../../polaris/styles.css";
 import {
   Button,
@@ -109,38 +121,34 @@ import {
 setPolarisTheme("system");
 
 function PolarisDemoApp() {
-  return h(Stack, { gap: "4" }, [
-    h(Card, null, [
-      h(Heading, null, "Polaris Stack (frontend)"),
-      h(
-        Text,
-        null,
-        "Dummy Preact UI via framework ShortcodesSetup shortcode.",
-      ),
-      h(Stack, { gap: "2" }, [
-        h(Badge, null, "sample"),
-        h(Badge, null, "preact"),
-        h(Badge, null, "polaris"),
-      ]),
-      h(Stack, { gap: "2" }, [
-        h(Button, { onClick: () => setPolarisTheme("dark") }, "Dark theme"),
-        h(
-          Button,
-          { variant: "ghost", onClick: () => setPolarisTheme("light") },
-          "Light theme",
-        ),
-        h(
-          Button,
-          { variant: "ghost", onClick: () => setPolarisTheme("system") },
-          "System",
-        ),
-      ]),
-    ]),
-    h(Card, null, [
-      h(Heading, { as: "h3" }, "Fake stats"),
-      h(Text, null, "Items: 12 · Active: yes"),
-    ]),
-  ]);
+  return (
+    <Stack gap="4">
+      <Card>
+        <Heading>Polaris Stack (frontend)</Heading>
+        <Text>
+          Dummy ${libLabel} UI via framework ShortcodesSetup shortcode.
+        </Text>
+        <Stack gap="2">
+          <Badge>sample</Badge>
+          <Badge>${libLabel}</Badge>
+          <Badge>polaris</Badge>
+        </Stack>
+        <Stack gap="2">
+          <Button onClick={() => setPolarisTheme("dark")}>Dark theme</Button>
+          <Button variant="ghost" onClick={() => setPolarisTheme("light")}>
+            Light theme
+          </Button>
+          <Button variant="ghost" onClick={() => setPolarisTheme("system")}>
+            System
+          </Button>
+        </Stack>
+      </Card>
+      <Card>
+        <Heading as="h3">Fake stats</Heading>
+        <Text>Items: 12 · Active: yes</Text>
+      </Card>
+    </Stack>
+  );
 }
 
 function mountAll() {
@@ -148,7 +156,7 @@ function mountAll() {
     if (!el.id) {
       el.id = "polaris-demo-root-" + index;
     }
-    render(h(PolarisDemoApp, null), el);
+    ${mountCall}
   });
 }
 

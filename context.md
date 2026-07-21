@@ -161,7 +161,7 @@ See `wp-starter-kit/docs/installer.md` and `docs/features-and-manifest.md`.
 Four parallel stages (`npm run build` / `npm run release`):
 
 1. **dependencies** — `assets/bundles/{slug}-deps.js` + `.asset.php`
-2. **components** — `src/Modules/*/assets/entries/*.ts` → `assets/bundles/{Module}-{entry}.js`
+2. **components** — `src/Modules/*/assets/entries/*.{ts,tsx}` → `assets/bundles/{Module}-{entry}.js`
 3. **styles** — CSS hash sidecars (`.asset.php`)
 4. **assets** — copy `node_modules` dist → `assets/libraries` via `assetMappings`
 
@@ -238,7 +238,7 @@ Key entry points:
 5. **WordPress security** — nonces, caps, sanitize, escape, REST permissions.
 6. **Scoped vendors at release** — never rely on cross-plugin Composer resolution.
 7. **Config-driven branding** — use `wpdev.json`, not hardcoded names.
-8. **Module entry glob** — new frontend features go in `src/Modules/{Name}/assets/entries/*.ts`.
+8. **Module entry glob** — new frontend features go in `src/Modules/{Name}/assets/entries/*.{ts,tsx}` (JSX → `.tsx`).
 
 ---
 

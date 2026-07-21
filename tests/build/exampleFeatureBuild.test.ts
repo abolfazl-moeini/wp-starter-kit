@@ -19,6 +19,7 @@ describe("ExampleFeature build integration", () => {
       "utf8",
     );
     expect(source).toContain("src/Modules/*/assets/entries/*.ts");
+    expect(source).toContain("src/Modules/*/assets/entries/*.tsx");
     expect(source).toMatch(/ExampleFeature-admin|moduleName.*entryName/);
   });
 });

@@ -9,7 +9,11 @@ import { readProjectConfig } from "@core/utils";
 import { readBuildConfig } from "./index.js";
 import { getJsxOptions, getReactAliases } from "./getJsxOptions.js";
 
-const MODULE_ENTRY_GLOB = "src/Modules/*/assets/entries/*.ts";
+/** Module entries: plain TS or TSX (JSX automatic runtime). */
+const MODULE_ENTRY_GLOBS = [
+  "src/Modules/*/assets/entries/*.ts",
+  "src/Modules/*/assets/entries/*.tsx",
+];
 const LEGACY_SCRIPT_GLOB = "**/script.js";
 const COMPONENT_ENTRY_IGNORE = [
   "**/node_modules/**",
@@ -22,7 +26,7 @@ const COMPONENT_ENTRY_IGNORE = [
 function bundleNameForEntry(cwd, sourceFile) {
   const normalized = sourceFile.replace(/\\/g, "/");
   const moduleMatch = normalized.match(
-    /^src\/Modules\/([^/]+)\/assets\/entries\/(.+)\.ts$/,
+    /^src\/Modules\/([^/]+)\/assets\/entries\/(.+)\.tsx?$/,
   );
   if (moduleMatch) {
     const [, moduleName, entryName] = moduleMatch;
@@ -32,8 +36,12 @@ function bundleNameForEntry(cwd, sourceFile) {
 }
 
 async function discoverComponentEntries(cwd) {
-  const [moduleEntries, legacyScripts] = await Promise.all([
-    glob(MODULE_ENTRY_GLOB, {
+  const [moduleTs, moduleTsx, legacyScripts] = await Promise.all([
+    glob(MODULE_ENTRY_GLOBS[0], {
+      cwd,
+      ignore: COMPONENT_ENTRY_IGNORE,
+    }),
+    glob(MODULE_ENTRY_GLOBS[1], {
       cwd,
       ignore: COMPONENT_ENTRY_IGNORE,
     }),
@@ -45,8 +53,21 @@ async function discoverComponentEntries(cwd) {
 
   const seen = new Set();
   const entries = [];
-  for (const file of [...moduleEntries, ...legacyScripts]) {
+  for (const file of [...moduleTs, ...moduleTsx, ...legacyScripts]) {
     const key = file.replace(/\\/g, "/");
+    // Prefer .tsx over a same-named .ts if both exist (should not happen).
+    if (key.endsWith(".ts") && seen.has(`${key}x`)) {
+      continue;
+    }
+    if (key.endsWith(".tsx")) {
+      const bareTs = key.slice(0, -1); // drop trailing x → .ts path
+      if (seen.has(bareTs)) {
+        // Replace bare .ts with .tsx
+        const idx = entries.indexOf(bareTs);
+        if (idx !== -1) entries.splice(idx, 1);
+        seen.delete(bareTs);
+      }
+    }
     if (!seen.has(key)) {
       seen.add(key);
       entries.push(key);
@@ -175,4 +196,6 @@ export async function buildComponents(options = {}) {
   );
 }
 
-export const MODULE_TS_ENTRY_GLOB = MODULE_ENTRY_GLOB;
+/** @deprecated Prefer MODULE_ENTRY_GLOBS (includes .tsx). */
+export const MODULE_TS_ENTRY_GLOB = MODULE_ENTRY_GLOBS[0];
+export { MODULE_ENTRY_GLOBS };

@@ -57,14 +57,14 @@ Build settings live under the `build` key inside `wpdev.json`.
 
 ### PHP module system
 
-`src/Core/Plugin.php` boots the plugin and delegates to `ModuleLoader`, which discovers and registers anything implementing `ModuleInterface`. New features go in `src/Modules/{Name}/` with a `Module.php` implementing `ModuleInterface`. Frontend entries go in `src/Modules/{Name}/assets/entries/*.ts`.
+`src/Core/Plugin.php` boots the plugin and delegates to `ModuleLoader`, which discovers and registers anything implementing `ModuleInterface`. New features go in `src/Modules/{Name}/` with a `Module.php` implementing `ModuleInterface`. Frontend entries go in `src/Modules/{Name}/assets/entries/*.{ts,tsx}` (use `.tsx` for JSX).
 
 PHP namespaces: `WPDev\Core`, `WPDev\Modules\*`, `WPDev\Support\*`, `WPDev\Adapters\*`.
 
 ### JS build pipeline (4 parallel stages)
 
 1. **dependencies** (`build:dependencies`) → `assets/bundles/{slug}-deps.js` + `.asset.php`
-2. **components** (`build:components`) — auto-discovers `src/Modules/*/assets/entries/*.ts` → `assets/bundles/{Module}-{entry}.js`
+2. **components** (`build:components`) — auto-discovers `src/Modules/*/assets/entries/*.{ts,tsx}` → `assets/bundles/{Module}-{entry}.js`
 3. **styles** (`build:styles`) — CSS with hash sidecars
 4. **assets** (`build:assets`) — copies `node_modules` dist → `assets/libraries` per `assetMappings`
 
@@ -114,7 +114,7 @@ Clone with: `git clone --recurse-submodules <url>` or `git submodule update --in
 - **WordPress security** — nonces, capability checks, sanitize inputs, escape outputs, REST `permission_callback` on every endpoint.
 - **Config-driven** — use `project.config.json` values, never hardcode slug/namespace/prefix.
 - **PHP 8.1 source, 7.4 dist** — write source at 8.1+; Rector handles downgrade for release.
-- **Module entry glob** — new frontend features must land in `src/Modules/{Name}/assets/entries/*.ts` to be auto-discovered by the build.
+- **Module entry glob** — new frontend features must land in `src/Modules/{Name}/assets/entries/*.{ts,tsx}` to be auto-discovered by the build. Prefer JSX (`.tsx`) over `h(...)` for UI.
 - `react` / `react-dom` resolve to `@preact/compat` at install time — do not import React APIs that Preact compat doesn't support without checking.
 
 ## gstack (REQUIRED — global install)

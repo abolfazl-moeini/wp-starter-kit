@@ -235,43 +235,34 @@ Three things to know about how esbuild handles `.ts`:
   [asset-mappings.md](asset-mappings.md#the-two-bundles) for the
   rest of the bundle strategy.
 
-### Component glob: `src/Modules/*/assets/entries/*.ts` (Phase 12)
+### Component glob: `src/Modules/*/assets/entries/*.{ts,tsx}` (Phase 12)
 
 The components stage discovers **two** kinds of entry files:
 
 ```js
 // core/packages/build/esbuild-components.js
-const MODULE_ENTRY_GLOB = 'src/Modules/*/assets/entries/*.ts';
+const MODULE_ENTRY_GLOBS = [
+  'src/Modules/*/assets/entries/*.ts',
+  'src/Modules/*/assets/entries/*.tsx', // JSX (automatic runtime)
+];
 const LEGACY_SCRIPT_GLOB = '**/script.js';
-
-async function discoverComponentEntries(cwd) {
-  const [moduleEntries, legacyScripts] = await Promise.all([
-    glob(MODULE_ENTRY_GLOB, {
-      cwd,
-      ignore: ['node_modules/**', 'assets/**', 'examples/**', 'tests/**'],
-    }),
-    glob(LEGACY_SCRIPT_GLOB, {
-      cwd,
-      ignore: ['node_modules/**', 'assets/**', 'examples/**', 'tests/**'],
-    }),
-  ]);
-  // de-duplicate by path, module entries win on conflict
-  ...
-}
+// discoverComponentEntries() globs both, de-dupes, prefers .tsx over .ts
 ```
 
-The new glob (`src/Modules/*/assets/entries/*.ts`) is the **canonical
+The globs (`src/Modules/*/assets/entries/*.{ts,tsx}`) are the **canonical
 shape** for new feature modules — every module ships its own
 TypeScript entry, and the builder names the resulting bundle after
-`<Module>-<entry>.ts` (for example
+`<Module>-<entry>` (for example
 `src/Modules/ExampleFeature/assets/entries/admin.ts` becomes
-`assets/bundles/ExampleFeature-admin.js`). The legacy `**/script.js`
+`assets/bundles/ExampleFeature-admin.js`, and
+`PolarisDemo/assets/entries/view.tsx` → `PolarisDemo-view.js`). Prefer
+`.tsx` + JSX over `h(...)` for UI. The legacy `**/script.js`
 glob stays in place for projects that have not migrated yet; the
-two lists are merged with a `Set` so a path can never be built
+lists are merged with a `Set` so a path can never be built
 twice.
 
 If you are starting a fresh feature module, write your entry at
-`src/Modules/<MyModule>/assets/entries/<myEntry>.ts` and skip the
+`src/Modules/<MyModule>/assets/entries/<myEntry>.ts` (or `.tsx` for JSX) and skip the
 legacy `script.js` form entirely. The starter repo's
 `src/Modules/ExampleFeature/assets/entries/admin.ts` is the working
 example.
