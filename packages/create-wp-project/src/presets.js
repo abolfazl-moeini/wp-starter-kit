@@ -123,7 +123,11 @@ const PRESET_BUILDERS = [
     "TypeScript plugin with PHPUnit + Jest (default for --yes).",
     buildStandard,
   ],
-  ["full", "All optional features enabled.", buildFull],
+  [
+    "full",
+    "All optional features enabled (interactive: you can still change UI lib, etc.).",
+    buildFull,
+  ],
   [
     "woocommerce",
     "Standard + blocks:on, optimized for WooCommerce extensions (consumer brings their own modules).",

@@ -15,13 +15,19 @@
  *  - Ask `blocks` independently (Blockstudio is PHP-first).
  *  - Skip `faultTolerance` when `phpMinVersion < 8.1`.
  *  - Branding questions always come first.
- *  - Preset short-circuit: when `preset` is not `custom`, no
- *    per-feature prompts are asked (the preset fills them).
+ *  - Preset short-circuit: `minimal` skips per-feature prompts
+ *    (except phpTest). `standard` / `full` / `woocommerce` still
+ *    ask feature questions, pre-selecting the preset's values so
+ *    the user can override (e.g. Preact → React on full).
  *  - The `when()` function receives the running answer/feature set
  *    so we can react to choices made earlier in the plan.
  */
 
-import { getFeatureCatalog, getPresets } from "@wpdev/create-wp-project";
+import {
+  getFeatureCatalog,
+  getPresets,
+  applyPreset as engineApplyPreset,
+} from "@wpdev/create-wp-project";
 
 import {
   deriveBrandingDefaults,
@@ -206,6 +212,43 @@ const FEATURE_QUESTIONS = {
  * Translate a feature id into a question descriptor. Variants are
  * rendered as `{ label, value }` pairs for clack's `select`.
  */
+/**
+ * Resolve the feature value to pre-select in the UI: user answer so
+ * far → selected preset map → catalog default.
+ *
+ * @param {string} featureId
+ * @param {string} catalogDefault
+ * @param {object} state
+ * @returns {string}
+ */
+function resolveFeatureInitial(featureId, catalogDefault, state) {
+  if (state?.features && state.features[featureId] !== undefined) {
+    return state.features[featureId];
+  }
+  if (state?.presetFeatures && state.presetFeatures[featureId] !== undefined) {
+    return state.presetFeatures[featureId];
+  }
+  return catalogDefault;
+}
+
+/**
+ * Effective feature value for conditional `when()` checks — includes
+ * preset defaults that have not been re-answered yet.
+ *
+ * @param {object} state
+ * @param {string} featureId
+ * @returns {string|undefined}
+ */
+function effectiveFeature(state, featureId) {
+  if (state?.features && state.features[featureId] !== undefined) {
+    return state.features[featureId];
+  }
+  if (state?.presetFeatures && state.presetFeatures[featureId] !== undefined) {
+    return state.presetFeatures[featureId];
+  }
+  return undefined;
+}
+
 function featureQuestion(feature) {
   const message =
     feature.question || FEATURE_QUESTIONS[feature.id] || feature.id;
@@ -226,7 +269,8 @@ function featureQuestion(feature) {
         { label: "Yes", value: "on" },
         { label: "No", value: "off" },
       ],
-      initialValue: feature.default,
+      initialValue: (collected) =>
+        resolveFeatureInitial(feature.id, feature.default, collected),
     };
   }
   return {
@@ -245,7 +289,8 @@ function featureQuestion(feature) {
           : v,
       value: v,
     })),
-    initialValue: feature.default,
+    initialValue: (collected) =>
+      resolveFeatureInitial(feature.id, feature.default, collected),
   };
 }
 
@@ -258,7 +303,8 @@ function featureQuestion(feature) {
  * The plan says: hide them when `js:none`.
  */
 function needsJsSubQuestions(state) {
-  return state.features.js && state.features.js !== "none";
+  const js = effectiveFeature(state, "js");
+  return Boolean(js && js !== "none");
 }
 
 /**
@@ -347,7 +393,8 @@ function buildPresetQuestion(engine) {
  */
 const PHP_MIN_ORDER = ["7.4", "8.0", "8.1", "8.2", "8.3"];
 function canAskFaultTolerance(state) {
-  const idx = PHP_MIN_ORDER.indexOf(state.features.phpMinVersion);
+  const phpMin = effectiveFeature(state, "phpMinVersion") || "7.4";
+  const idx = PHP_MIN_ORDER.indexOf(phpMin);
   // Unknown / unset → assume 7.4 (most conservative).
   return idx >= PHP_MIN_ORDER.indexOf("8.1");
 }
@@ -366,7 +413,7 @@ export function buildPromptPlan(currentFeatures, engine, options) {
   const eng = engine || {
     getFeatureCatalog,
     getPresets,
-    applyPreset: undefined,
+    applyPreset: engineApplyPreset,
   };
   const opts = options || {};
   const brandingDefaults = deriveBrandingDefaults(
@@ -376,10 +423,13 @@ export function buildPromptPlan(currentFeatures, engine, options) {
   const catalog = eng.getFeatureCatalog();
   const buildTimePreset = (currentFeatures && currentFeatures.__preset) || null;
   const skipPresetQuestion = buildTimePreset && buildTimePreset !== "custom";
-  const skipFeaturesAtBuild = buildTimePreset && buildTimePreset !== "custom";
+  // Only `minimal` short-circuits the feature walk. Other named
+  // presets still ask, with preset values as the select defaults.
+  const skipFeaturesAtBuild = buildTimePreset === "minimal";
 
   const wrapWhen = (originalWhen) => (s) => {
-    if (!presetIsCustom(s, currentFeatures)) return false;
+    // minimal: no full feature walk (phpTest is appended separately).
+    if (presetIsMinimal(s, currentFeatures)) return false;
     if (typeof originalWhen === "function") return originalWhen(s);
     return true;
   };
@@ -427,11 +477,13 @@ export function buildPromptPlan(currentFeatures, engine, options) {
       if (frontendStack) {
         plan.push({
           ...featureQuestion(frontendStack),
-          when: wrapWhen(
-            (s) =>
-              s.features.js === "typescript" &&
-              (s.features.jsLib === "react" || s.features.jsLib === "preact"),
-          ),
+          when: wrapWhen((s) => {
+            const jsVal = effectiveFeature(s, "js");
+            const lib = effectiveFeature(s, "jsLib");
+            return (
+              jsVal === "typescript" && (lib === "react" || lib === "preact")
+            );
+          }),
         });
       }
     }
@@ -481,6 +533,26 @@ export function buildPromptPlan(currentFeatures, engine, options) {
 /* -------------------------------------------------------------------- */
 
 /**
+ * Load the selected preset's feature map into `collected.presetFeatures`
+ * so later questions can pre-select and gate on those values without
+ * marking features as "already answered".
+ *
+ * @param {object} collected
+ */
+function seedPresetFeatures(collected) {
+  const name = collected?.runOptions?.preset;
+  if (!name || name === "custom") {
+    collected.presetFeatures = collected.presetFeatures || {};
+    return;
+  }
+  try {
+    collected.presetFeatures = { ...engineApplyPreset(name) };
+  } catch {
+    collected.presetFeatures = collected.presetFeatures || {};
+  }
+}
+
+/**
  * @param {Array<object>} plan
  * @param {object} ui  the clack wrapper (default ui.js)
  * @param {object} [prefill]  pre-populated values to short-circuit
@@ -498,14 +570,27 @@ export async function runPrompts(plan, ui, prefill) {
     answers: { ...(prefilled.answers || {}) },
     features: {},
     runOptions: { ...(prefilled.runOptions || {}) },
+    /** @type {Record<string,string>} preset baseline for defaults / when() */
+    presetFeatures: { ...(prefilled.presetFeatures || {}) },
   };
 
+  // --preset=full (etc.) at build time: seed defaults so feature
+  // questions pre-select the preset values.
+  seedPresetFeatures(collected);
+
   for (const q of plan) {
-    // Pre-filled: skip the prompt entirely.
+    // Pre-filled answers only (flags / positional). Feature keys
+    // are NOT skipped from presetFeatures — those are defaults.
     if (q.target === "answers" && collected.answers[q.id] !== undefined) {
       continue;
     }
-    if (q.target === "features" && collected.features[q.id] !== undefined) {
+    if (
+      q.target === "features" &&
+      prefilled.features &&
+      prefilled.features[q.id] !== undefined
+    ) {
+      // Explicit flag prefill (e.g. --js-lib=react) — skip prompt.
+      collected.features[q.id] = prefilled.features[q.id];
       continue;
     }
 
@@ -542,10 +627,14 @@ export async function runPrompts(plan, ui, prefill) {
         typeof q.options === "function"
           ? q.options(collected, brandingDefaults)
           : q.options;
+      const initialValue =
+        typeof q.initialValue === "function"
+          ? q.initialValue(collected, brandingDefaults)
+          : q.initialValue;
       value = await u.select({
         message: q.message,
         options,
-        initialValue: q.initialValue,
+        initialValue,
       });
     } else if (q.type === "confirm") {
       value = await u.confirm({ message: q.message });
@@ -582,6 +671,11 @@ export async function runPrompts(plan, ui, prefill) {
     if (q.target === "answers") collected.answers[q.id] = value;
     else if (q.target === "features") collected.features[q.id] = value;
     else if (q.target === "runOptions") collected.runOptions[q.id] = value;
+
+    // After choosing a named preset, seed defaults for the feature walk.
+    if (q.id === "preset") {
+      seedPresetFeatures(collected);
+    }
 
     if (q.id === "npmScope" && value) {
       collected.answers.hookPrefix = value;
@@ -663,5 +757,9 @@ export async function runPrompts(plan, ui, prefill) {
 
   fillDerivedBranding(collected.answers);
 
-  return collected;
+  return {
+    answers: collected.answers,
+    features: collected.features,
+    runOptions: collected.runOptions,
+  };
 }

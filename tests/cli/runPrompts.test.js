@@ -29,6 +29,47 @@ function makeUi(responses) {
   };
 }
 
+describe("runPrompts() — full preset still asks feature questions", () => {
+  test("full seeds Preact default but accepts React override for jsLib", async () => {
+    const plan = buildPromptPlan(
+      {},
+      { getFeatureCatalog, applyPreset, getPresets: () => [] },
+    );
+    // Drive: branding defaults + feature selects.
+    // select order after branding phpSourceVersion:
+    // js, jsLib, jsTest, css, frontendStack?, phpMinVersion, phpFramework,
+    // blocks, mcpAbilities, phpTest, license, wpMinVersion, restBatch,
+    // faultTolerance, vendorScoping, husky, exampleFeature, i18n
+    const selects = [];
+    // We'll answer only via initialValue acceptance except jsLib → react.
+    const ui = {
+      text: async (opts) => opts.defaultValue ?? "",
+      select: async (opts) => {
+        selects.push({ message: opts.message, initial: opts.initialValue });
+        if (opts.message === "UI library?") return "react";
+        if (opts.message === "Choose a starter preset") return "full";
+        return opts.initialValue ?? opts.options[0]?.value;
+      },
+      confirm: async () => false,
+      log: async () => {},
+    };
+    const out = await runPrompts(plan, ui, {
+      brandingDefaults: deriveBrandingDefaults("demo-plugin"),
+      phpSourceVersionOptions: {
+        versions: ["8.2"],
+        defaultVersion: "8.2",
+        options: [{ label: "8.2", value: "8.2" }],
+      },
+    });
+    expect(out.runOptions.preset).toBe("full");
+    expect(out.features.jsLib).toBe("react");
+    // UI library was offered with preact pre-selected from full.
+    const jsLibPrompt = selects.find((s) => s.message === "UI library?");
+    expect(jsLibPrompt).toBeDefined();
+    expect(jsLibPrompt.initial).toBe("preact");
+  });
+});
+
 describe("runPrompts() — branding defaults", () => {
   test("accepts Enter on slug by applying defaultValue before validate", async () => {
     const plan = buildPromptPlan(

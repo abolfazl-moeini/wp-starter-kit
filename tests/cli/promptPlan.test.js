@@ -18,14 +18,20 @@ describe("buildPromptPlan() — interactive preset picker (G-001)", () => {
     expect(planIds(plan)[0]).toBe("preset");
   });
 
-  test("choosing minimal skips feature questions; custom includes them", () => {
+  test("choosing minimal skips feature questions; full/custom include them", () => {
     const plan = buildPromptPlan(defaultFeatures());
     const presetQ = plan.find((q) => q.id === "preset");
     expect(presetQ).toBeDefined();
     const stateMinimal = { runOptions: { preset: "minimal" }, features: {} };
     const stateCustom = { runOptions: { preset: "custom" }, features: {} };
+    const stateFull = {
+      runOptions: { preset: "full" },
+      features: {},
+      presetFeatures: { js: "typescript" },
+    };
     expect(plan.find((q) => q.id === "js").when(stateMinimal)).toBe(false);
     expect(plan.find((q) => q.id === "js").when(stateCustom)).toBe(true);
+    expect(plan.find((q) => q.id === "js").when(stateFull)).toBe(true);
   });
 
   test("when __preset is set from --preset= flag, preset question is omitted", () => {
@@ -173,16 +179,13 @@ describe("buildPromptPlan() — conditional omissions (I2.5)", () => {
 });
 
 describe("buildPromptPlan() — preset short-circuit (I2.6)", () => {
-  test("when preset is 'full' (or any non-custom), no per-feature questions are added", () => {
-    // The marker for "preset was chosen" is the `__preset` slot on
-    // the state. gatherInputs.js sets it before calling
-    // buildPromptPlan. We mirror that here.
+  test("when preset is 'full', feature questions are still asked (overridable defaults)", () => {
+    // full/standard/woocommerce pre-fill defaults but still walk the
+    // feature list so users can change jsLib (Preact/React), etc.
     const plan = buildPromptPlan({ __preset: "full" });
     const ids = planIds(plan);
-    // Branding questions are still present (preset doesn't pin them).
     expect(ids).toContain("slug");
     expect(ids).toContain("npmScope");
-    // No feature questions at all.
     for (const id of [
       "js",
       "jsLib",
@@ -191,15 +194,24 @@ describe("buildPromptPlan() — preset short-circuit (I2.6)", () => {
       "license",
       "wpMinVersion",
     ]) {
-      expect(ids).not.toContain(id);
+      expect(ids).toContain(id);
     }
+    const stateFull = {
+      runOptions: { preset: "full" },
+      features: {},
+      presetFeatures: { js: "typescript", jsLib: "preact" },
+    };
+    expect(plan.find((q) => q.id === "jsLib").when(stateFull)).toBe(true);
+    expect(plan.find((q) => q.id === "jsLib").initialValue(stateFull)).toBe(
+      "preact",
+    );
   });
 
-  test("when preset is 'woocommerce', still no per-feature questions", () => {
+  test("when preset is 'woocommerce', feature questions remain available", () => {
     const plan = buildPromptPlan({ __preset: "woocommerce" });
     const ids = planIds(plan);
-    expect(ids).not.toContain("js");
-    expect(ids).not.toContain("license");
+    expect(ids).toContain("js");
+    expect(ids).toContain("license");
   });
 
   test("when preset is 'minimal', asks phpTest but skips other features", () => {
