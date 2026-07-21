@@ -23,7 +23,8 @@ describe("humanizeValidationErrors()", () => {
     const result = humanizeValidationErrors(
       {
         errors: {
-          faultTolerance: "faultTolerance requires phpMinVersion >= 8.1",
+          faultTolerance:
+            "faultTolerance is dual-mode; phpMinVersion may be 7.4",
         },
         warnings: {},
       },

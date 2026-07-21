@@ -175,7 +175,7 @@ Do **not** use a runtime "latest dependency wins" Composer loader in distributed
 
 ### 3.7 Optional backend resilience
 
-`packages/php-fault-tolerance/` — HTTP batch, circuit breaker, retry (PHP 8.1+, opt-in feature flag). See `docs/fault-tolerance.md`.
+`packages/php-fault-tolerance/` — HTTP batch, circuit breaker, retry. Dual-mode (Real PHP 8.1+ / Stub below); feature default on. See `docs/fault-tolerance.md`.
 
 ### 3.8 PHP support libraries (ported)
 

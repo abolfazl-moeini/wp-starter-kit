@@ -39,7 +39,7 @@ const CATALOG = [
   },
   { id: "jsLib", variants: ["none", "preact", "react"], default: "none" },
   { id: "husky", variants: ["on", "off"], default: "on" },
-  { id: "faultTolerance", variants: ["off", "on"], default: "off" },
+  { id: "faultTolerance", variants: ["on", "off"], default: "on" },
   {
     id: "css",
     variants: ["none", "sass", "tailwind", "postcss"],

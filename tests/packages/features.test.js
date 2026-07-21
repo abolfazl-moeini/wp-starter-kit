@@ -74,7 +74,7 @@ describe("getFeatureCatalog() — feature data model (Phase 20.1/20.2)", () => {
       phpTest: "phpunit",
       phpUnitDocker: "off",
       restBatch: "off",
-      faultTolerance: "off",
+      faultTolerance: "on",
       vendorScoping: "on",
       husky: "on",
       css: "none",
@@ -107,7 +107,7 @@ describe("getFeatureCatalog() — feature data model (Phase 20.1/20.2)", () => {
     expect(byId.phpFramework.variants).toEqual(["none", "wpdev"]);
     expect(byId.phpTest.variants).toEqual(["phpunit", "none"]);
     expect(byId.restBatch.variants).toEqual(["off", "on"]);
-    expect(byId.faultTolerance.variants).toEqual(["off", "on"]);
+    expect(byId.faultTolerance.variants).toEqual(["on", "off"]);
     expect(byId.vendorScoping.variants).toEqual(["on", "off"]);
     expect(byId.husky.variants).toEqual(["on", "off"]);
     expect(byId.css.variants).toEqual(["none", "sass", "tailwind", "postcss"]);
@@ -174,7 +174,7 @@ describe("defaultFeatures() — all-default feature set (Phase 20.2)", () => {
       phpTest: "phpunit",
       phpUnitDocker: "off",
       restBatch: "off",
-      faultTolerance: "off",
+      faultTolerance: "on",
       vendorScoping: "on",
       husky: "on",
       css: "none",

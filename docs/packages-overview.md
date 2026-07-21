@@ -79,8 +79,8 @@ Composer (`distMode:deps`) into `vendor/wpdev/framework/`. Provides
 `Plugin`, `ModuleLoader`, REST helpers, asset registration, and shortcodes.
 Never copy `src/Core/` into consumer projects in new scaffolds.
 
-**`wpdev/php-fault-tolerance`** — Optional resilience layer when
-`faultTolerance:on`. Requires PHP 8.1+ at runtime.
+**`wpdev/php-fault-tolerance`** — Resilience layer when `faultTolerance:on`
+(default on). Dual-mode: full features on PHP 8.1+, no-op stubs below.
 
 **`wpdev/mcp-integration`** — Feature-gated (`mcpAbilities:on`). Registers
 abilities on `wp_abilities_api_init`. See [mcp-integration.md](mcp-integration.md).

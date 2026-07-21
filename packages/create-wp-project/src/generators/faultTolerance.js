@@ -1,9 +1,11 @@
 /**
- * @wpdev/create-wp-project — faultTolerance generator (Phase 25).
+ * @wpdev/create-wp-project — faultTolerance generator.
  *
- * When `faultTolerance:on` (and `phpMinVersion ≥ 8.1`, enforced by
- * `validateFeatureSet`), wires the optional `wpdev/php-fault-tolerance`
- * Composer package into the consumer project.
+ * When `faultTolerance:on`, wires `wpdev/php-fault-tolerance` into the
+ * consumer project. The package is dual-mode:
+ *   PHP >= 8.1 → full Real implementation
+ *   PHP <  8.1 → Stub no-op wrappers (same API)
+ * so phpMinVersion may be 7.4 without skipping install.
  */
 
 export function run(ctx) {
@@ -44,15 +46,27 @@ This project has \`faultTolerance: on\`.
 
 ## Composer dependency
 
-\`composer.json\` requires \`wpdev/php-fault-tolerance\` (PHP ≥ 8.1).
+\`composer.json\` requires \`wpdev/php-fault-tolerance\` (PHP ≥ 7.4).
 Run \`composer install\` after scaffolding.
+
+## Runtime behaviour
+
+| PHP version | Mode | Behaviour |
+|-------------|------|-----------|
+| ≥ 8.1 | **Real** | Circuit breaker, retries, HTTP pool/batch |
+| < 8.1 | **Stub** | Same API; no-op / single-shot / sequential HTTP |
+
+Check: \`wpdev_fault_tolerance_is_active()\` → true only on Real.
 
 ## Usage
 
 \`\`\`php
-use WPDev\\FaultTolerance\\CircuitBreaker;
-use WPDev\\FaultTolerance\\HttpClient;
 use WPDev\\FaultTolerance\\FaultTolerance;
+
+// Safe on all supported PHP versions (Real on 8.1+, Stub below):
+FaultTolerance::resilient(static function () {
+    return 'ok';
+});
 \`\`\`
 
 See the kit doc \`docs/fault-tolerance.md\` for patterns.

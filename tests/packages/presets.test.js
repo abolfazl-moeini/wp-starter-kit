@@ -118,7 +118,7 @@ describe("applyPreset() — known presets produce valid feature sets (Phase 20.1
       phpFramework: "none",
       phpTest: "phpunit",
       restBatch: "off",
-      faultTolerance: "off",
+      faultTolerance: "on",
       vendorScoping: "on",
       husky: "on",
       css: "none",
@@ -147,7 +147,8 @@ describe("applyPreset() — known presets produce valid feature sets (Phase 20.1
     expect(full.frontendStack).toBe("polaris");
     expect(full.restBatch).toBe("on");
     expect(full.phpMinVersion).toBe("8.2");
-    expect(standard.faultTolerance).toBe("off");
+    // FT is default-on for standard as well (dual-mode package).
+    expect(standard.faultTolerance).toBe("on");
     expect(standard.blocks).toBe("off");
   });
 

@@ -1,22 +1,38 @@
 # Fault tolerance (WPDev / WD package)
 
-`packages/php-fault-tolerance/` provides optional PHP 8.1+ resilience helpers.
-The WPDev Fault Tolerance package (abbreviated **WD FT** in comments) is
-self-contained: it has no hard dependency on the main starter kit and is safe
-to ship alongside Strauss-scoped Composer vendors in distributed plugins.
+`packages/php-fault-tolerance/` provides resilience helpers with a **dual-mode**
+runtime:
 
-Enable in consumer projects with `faultTolerance: on` (requires `phpMinVersion ≥ 8.1`).
+| Runtime PHP | Mode | Behaviour |
+|-------------|------|-----------|
+| ≥ 8.1 | **Real** | Circuit breaker, retries, curl_multi pool, SSRF guards |
+| < 8.1 | **Stub** | Same public API; no-op / single-shot / sequential HTTP |
 
-## Source layout (6 files)
+Install is always safe: package requires **PHP ≥ 7.4**. Bootstrap picks Real
+or Stub via `PHP_VERSION_ID` (not `phpMinVersion` in config).
+
+Enable in consumer projects with `faultTolerance: on` (scaffold **default**).
+
+Helper: `wpdev_fault_tolerance_is_active()` → `true` only when Real is loaded.
+
+## Source layout
 
 ```
 packages/php-fault-tolerance/src/
-├── CircuitBreaker.php   — transient-backed circuit breaker
-├── CircuitState.php     — Closed | Open | HalfOpen enum (standalone public type)
-├── HttpClient.php       — parallel pool() + sequential batch() with SSRF guard
-├── Resilient.php        — retry with optional fallback
-├── FaultTolerance.php   — static facade over the three domain classes
-└── functions.php        — global wrappers (WordPress-style ergonomics)
+├── bootstrap.php        — files autoload; registers Real or Stub autoloader
+├── functions.php        — global helpers (always defined)
+├── Real/                — full implementation (PHP 8.1+)
+│   ├── CircuitBreaker.php
+│   ├── CircuitState.php   — backed enum
+│   ├── HttpClient.php
+│   ├── Resilient.php
+│   └── FaultTolerance.php
+└── Stub/                — PHP 7.4-safe no-op wrappers
+    ├── CircuitBreaker.php
+    ├── CircuitState.php   — string constants
+    ├── HttpClient.php
+    ├── Resilient.php
+    └── FaultTolerance.php
 ```
 
 ## Global helpers
@@ -27,6 +43,7 @@ packages/php-fault-tolerance/src/
 | `http_batch($requests)` | `HttpClient::batch()` | Sequential `wp_remote_request` (default) |
 | `http_pool($requests)` | `HttpClient::pool()` | Parallel `curl_multi` with SSRF blocking |
 | `fault_tolerance()` | `new FaultTolerance()` | Facade instance (static methods on class) |
+| `wpdev_fault_tolerance_is_active()` | — | `true` when Real (PHP ≥ 8.1) is loaded |
 
 Request shape for HTTP helpers:
 

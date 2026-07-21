@@ -75,21 +75,19 @@ describe("setConfigValue()", () => {
     expect(cfg.features.phpMinVersion).toBe("8.2");
   });
 
-  test('setConfigValue(dir,"phpMinVersion","7.4") while faultTolerance:"on" auto-disables faultTolerance', async () => {
+  test('setConfigValue(dir,"phpMinVersion","7.4") keeps faultTolerance on (dual-mode package)', async () => {
     await seedProject(tmpDir, {
       phpMinVersion: "8.1",
       faultTolerance: "on",
     });
     const result = await setConfigValue(tmpDir, "phpMinVersion", "7.4");
     expect(result.ok).toBe(true);
-    expect(
-      result.warnings?.some((w) => /faultTolerance|phpMinVersion/i.test(w)),
-    ).toBe(true);
     const manifest = JSON.parse(
       await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
     );
     expect(manifest.features.phpMinVersion).toBe("7.4");
-    expect(manifest.features.faultTolerance).toBe("off");
+    // Dual-mode FT no longer requires phpMinVersion ≥ 8.1.
+    expect(manifest.features.faultTolerance).toBe("on");
   });
 
   test('setConfigValue(dir,"js","typescript") is rejected (use add/remove)', async () => {

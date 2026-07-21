@@ -39,9 +39,8 @@ function makeRecordingUi() {
 }
 
 describe("gatherInputs() — validation gate (I2.8)", () => {
-  test("faultTolerance=on + phpMin=7.4 soft-fails: no throw, faultTolerance off + warning", async () => {
+  test("faultTolerance=on + phpMin=7.4 is valid (dual-mode package)", async () => {
     const ui = makeRecordingUi();
-    // Soft rule: normalize disables faultTolerance; create continues.
     const out = await gatherInputs({
       argv: [
         "my-plugin",
@@ -59,8 +58,8 @@ describe("gatherInputs() — validation gate (I2.8)", () => {
       ui,
     });
     expect(out.validation.ok).toBe(true);
-    expect(out.features.faultTolerance).toBe("off");
-    expect(out.validation.warnings.faultTolerance).toMatch(/phpMinVersion/);
+    expect(out.features.faultTolerance).toBe("on");
+    expect(out.features.phpMinVersion).toBe("7.4");
   });
 
   test("hard invalid flag combos still fail (unknown feature value)", async () => {

@@ -40,15 +40,14 @@
   "autoload": {
     "files": [
       "includes/asset-functions.php",
-      "packages/php-fault-tolerance/src/functions.php"
+      "packages/php-fault-tolerance/src/bootstrap.php"
     ],
     "classmap": [
       "includes/"
     ],
     "psr-4": {
       "WPDev\\": "src/",
-      "WPDev\\TestTools\\": "packages/php-test-tools/src/",
-      "WPDev\\FaultTolerance\\": "packages/php-fault-tolerance/src/"
+      "WPDev\\TestTools\\": "packages/php-test-tools/src/"
     }
   },
   "autoload-dev": {

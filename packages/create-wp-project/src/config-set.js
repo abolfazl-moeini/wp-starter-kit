@@ -136,16 +136,6 @@ export async function setConfigValue(dir, key, value) {
 
   /** @type {string[]} */
   const warnings = Object.values(v.warnings || {});
-  if (
-    requestedFeatures.faultTolerance === "on" &&
-    newFeatures.faultTolerance === "off"
-  ) {
-    const msg =
-      `faultTolerance=on requires phpMinVersion ≥ 8.1 ` +
-      `(currently phpMinVersion=${newFeatures.phpMinVersion}); ` +
-      `faultTolerance has been set to off`;
-    if (!warnings.includes(msg)) warnings.push(msg);
-  }
 
   const existing = manifest || {};
   const nextManifest = buildManifest({

@@ -1,9 +1,8 @@
 <?php
-declare(strict_types=1);
-
-if (PHP_VERSION_ID < 80100) {
-    return;
-}
+/**
+ * Global helpers — available on all supported PHP versions.
+ * Implementation is Real (8.1+) or Stub (<8.1) via bootstrap autoload.
+ */
 
 use WPDev\FaultTolerance\FaultTolerance;
 use WPDev\FaultTolerance\HttpClient;
@@ -11,10 +10,11 @@ use WPDev\FaultTolerance\Resilient;
 
 if (!function_exists('resilient')) {
     /**
-     * @param callable():mixed $operation
-     * @param array<string,mixed> $options
+     * @param callable $operation
+     * @param array    $options
+     * @return mixed
      */
-    function resilient(callable $operation, array $options = []): mixed
+    function resilient(callable $operation, array $options = [])
     {
         return Resilient::resilient($operation, $options);
     }
@@ -22,10 +22,10 @@ if (!function_exists('resilient')) {
 
 if (!function_exists('http_batch')) {
     /**
-     * @param list<array{url:string,args?:array<string,mixed>}> $requests
-     * @return list<array<string,mixed>|WP_Error>
+     * @param array $requests
+     * @return array
      */
-    function http_batch(array $requests): array
+    function http_batch(array $requests)
     {
         return HttpClient::batch($requests);
     }
@@ -33,18 +33,31 @@ if (!function_exists('http_batch')) {
 
 if (!function_exists('http_pool')) {
     /**
-     * @param list<array{url:string,args?:array<string,mixed>}> $requests
-     * @return list<array<string,mixed>|WP_Error>
+     * @param array $requests
+     * @return array
      */
-    function http_pool(array $requests): array
+    function http_pool(array $requests)
     {
         return HttpClient::pool($requests);
     }
 }
 
 if (!function_exists('fault_tolerance')) {
-    function fault_tolerance(): FaultTolerance
+    /**
+     * @return FaultTolerance
+     */
+    function fault_tolerance()
     {
         return new FaultTolerance();
+    }
+}
+
+if (!function_exists('wpdev_fault_tolerance_is_active')) {
+    /**
+     * True when the full (Real) implementation is loaded (PHP >= 8.1).
+     */
+    function wpdev_fault_tolerance_is_active(): bool
+    {
+        return PHP_VERSION_ID >= 80100;
     }
 }

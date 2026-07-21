@@ -122,14 +122,15 @@ describe("feature catalog audit (TASK-24a)", () => {
     );
   });
 
-  test("restBatch and faultTolerance refuse invalid combos on minimal (js:none / php 7.4)", async () => {
+  test("restBatch refuses js:none; faultTolerance is allowed on php 7.4", async () => {
     const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-audit-"));
     try {
-      await seedMinimalProject(tmp);
+      await seedMinimalProject(tmp, { withComposer: true });
       const rest = await addFeature(tmp, "restBatch", "on");
       expect(rest.ok).toBe(false);
+      // Dual-mode FT: valid on phpMinVersion 7.4 (runtime stubs when PHP < 8.1).
       const fault = await addFeature(tmp, "faultTolerance", "on");
-      expect(fault.ok).toBe(false);
+      expect(fault.ok).toBe(true);
     } finally {
       await fs.rm(tmp, { recursive: true, force: true });
     }

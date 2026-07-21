@@ -1,18 +1,32 @@
 <?php
 declare(strict_types=1);
 
-
 final class FunctionsAutoloadTest extends \WPDevTest\TestCases\TestCase
 {
-    public function test_functions_file_noops_below_php_81(): void
+    public function test_helpers_are_always_defined_after_bootstrap(): void
     {
-        if (PHP_VERSION_ID >= 80100) {
-            $this->markTestSkipped('Requires PHP < 8.1 to verify no-op guard');
-        }
+        $this->assertTrue(function_exists('resilient'));
+        $this->assertTrue(function_exists('http_batch'));
+        $this->assertTrue(function_exists('http_pool'));
+        $this->assertTrue(function_exists('fault_tolerance'));
+        $this->assertTrue(function_exists('wpdev_fault_tolerance_is_active'));
+    }
 
-        $path = dirname(__DIR__, 3) . '/packages/php-fault-tolerance/src/functions.php';
-        require_once $path;
-        $this->assertFalse(function_exists('resilient'));
-        $this->assertFalse(function_exists('http_batch'));
+    public function test_active_flag_matches_php_version(): void
+    {
+        $this->assertSame(
+            PHP_VERSION_ID >= 80100,
+            wpdev_fault_tolerance_is_active()
+        );
+    }
+
+    public function test_resilient_helper_runs_operation(): void
+    {
+        $this->assertSame(
+            'ok',
+            resilient(static function (): string {
+                return 'ok';
+            })
+        );
     }
 }
