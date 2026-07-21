@@ -53,18 +53,29 @@ describe("frontendStack feature integration", () => {
     expect(files["components/Button.tsx"]).toBeDefined();
   });
 
-  test("frontendStack generator writes polaris demo entry", () => {
+  test("frontendStack generator writes polaris shortcode demo via ShortcodesSetup", () => {
     const ctx = {
       features: { frontendStack: "polaris", jsLib: "preact" },
-      answers: {},
+      answers: { slug: "my-plugin", globalName: "MyPlugin", textDomain: "my-plugin" },
       cfg: {},
+      vars: { vendor: "MyPlugin", frameworkNamespace: "WPDev" },
     };
     const out = runFrontendStack(ctx);
     expect(out.files["src/polaris/index.ts"]).toBeDefined();
     expect(out.files["src/polaris/styles.css"]).toContain("--ps-color-bg");
     expect(
-      out.files["src/Modules/PolarisDemo/assets/entries/admin.ts"],
+      out.files["src/Modules/PolarisDemo/assets/entries/view.ts"],
     ).toMatch(/polaris\/styles\.css/);
+    expect(out.files["src/Modules/PolarisDemo/Module.php"]).toMatch(
+      /ShortcodesSetup::register/,
+    );
+    expect(
+      out.files["src/Modules/PolarisDemo/Shortcodes/DemoShortcode.php"],
+    ).toMatch(/extends Shortcode/);
+    expect(out.files["src/polaris-demo-register.php"]).toBeDefined();
+    expect(out.composerPatches?.autoload?.files).toContain(
+      "src/polaris-demo-register.php",
+    );
   });
 
   test("getGenerators enables frontendStack when polaris selected", () => {
