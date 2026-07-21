@@ -3,8 +3,6 @@
  *
  * Instance-scoped forms with hooks + optional Preact signals.
  * Replaces the legacy global MLForm store API.
- *
- * See form.plan.md for the design.
  */
 export {
   WDForm,
