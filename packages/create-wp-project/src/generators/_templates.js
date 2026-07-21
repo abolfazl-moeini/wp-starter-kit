@@ -81,28 +81,16 @@ export function tplVars(answers, cfg) {
     // composer.json resolves this through the wpdev/framework dependency.
     frameworkNamespace: "WPDev",
     vendorPrefixUpper: (cfg.vendorPrefix || "WpdevVendor").toUpperCase(),
-    // Phase 23.A4: {{frameworkPath}} is the URL the consumer
-    // composer.json's `repositories` entry points at for
-    // wpdev/framework. The path is a single source of truth — the
-    // scaffold accepts a `frameworkPath` option (and/or detects
-    // one from a kit config); the default below is the
-    // sibling-project relative path ("../packages/framework"),
-    // which assumes the consumer lives next to a kit checkout
-    // (the dev-mode path repo). The kit's own installer
-    // (Phase 23.A6 release wiring) overrides this with the
-    // real absolute path of the kit workspace.
-    frameworkPath:
-      (answers && answers.frameworkPath) || "../packages/framework",
+    // Optional local path for kit-internal path-repo mode only.
+    // Consumer projects do NOT get a default ../packages/* path —
+    // that only works next to a monorepo checkout and breaks
+    // real scaffolded plugins. Pass answers.frameworkPath /
+    // options.frameworkPath explicitly when you need a path repo.
+    frameworkPath: (answers && answers.frameworkPath) || "",
     // {{frameworkVersion}} is the composer `require` constraint
-    // for wpdev/framework. `*` is the canonical choice for a
-    // path-repository-driven consumer (the path repo pins the
-    // actual source). Pinned semver is the published-mode choice
-    // — Phase 23.B (the JS half) will pass it through
-    // `dep-versions.js`.
+    // for wpdev/framework (Packagist / VCS). Default `*`.
     frameworkVersion: (answers && answers.frameworkVersion) || "*",
-    faultTolerancePath:
-      (answers && answers.faultTolerancePath) ||
-      "../packages/php-fault-tolerance",
+    faultTolerancePath: (answers && answers.faultTolerancePath) || "",
   };
 }
 
@@ -1204,13 +1192,6 @@ export function buildComposerJson(vars) {
       `${vars.slug} — built on wp-starter-kit (WPDev) framework`,
     type: "wordpress-plugin",
     license: vars.licenseId || "GPL-2.0-or-later",
-    repositories: [
-      {
-        type: "path",
-        url: vars.frameworkPath || "../packages/framework",
-        options: { symlink: true },
-      },
-    ],
     require: {
       php: `>=${phpMin}`,
       "wpdev/framework": vars.frameworkVersion || "*",
@@ -1252,6 +1233,22 @@ export function buildComposerJson(vars) {
       },
     },
   };
+
+  // Path repos are opt-in only (kit monorepo / local checkout). Never
+  // emit a default `../packages/framework` — that path is meaningless
+  // in a real scaffolded plugin outside the kit tree.
+  const frameworkPath =
+    typeof vars.frameworkPath === "string" ? vars.frameworkPath.trim() : "";
+  if (frameworkPath) {
+    payload.repositories = [
+      {
+        type: "path",
+        url: frameworkPath,
+        options: { symlink: true },
+      },
+    ];
+  }
+
   return JSON.stringify(payload, null, 2) + "\n";
 }
 

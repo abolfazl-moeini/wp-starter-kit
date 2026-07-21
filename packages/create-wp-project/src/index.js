@@ -359,18 +359,16 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   const cfg = answersToProjectConfig(answersWithUi);
   const vars = tplVarsFromGenerators(answersWithUi, cfg);
 
-  // 5b. Phase 23.A4: thread the framework path through to the
-  //    composer.json template. The default lives in tplVars
-  //    (../packages/framework — the sibling-project relative
-  //    path that works when the consumer lives next to a kit
-  //    checkout). Real kit installations override this via
-  //    options.frameworkPath (the installer's own working
-  //    directory is the source of truth for the absolute
-  //    workspace path). When neither is set, the sibling-relative
-  //    default stands and a real `composer install` will resolve
-  //    wpdev/framework from the dev path repo.
+  // 5b. Optional path-repo override for kit-internal / monorepo
+  //    checkouts only. Consumer scaffolds never get a default
+  //    `../packages/framework` repository — that path is invalid
+  //    outside the kit tree. Pass options.frameworkPath explicitly
+  //    when you need Composer path-repo mode.
   if (options.frameworkPath) {
     vars.frameworkPath = options.frameworkPath;
+  }
+  if (options.faultTolerancePath) {
+    vars.faultTolerancePath = options.faultTolerancePath;
   }
 
   // 6. Run the registry. Each enabled generator contributes

@@ -12,7 +12,29 @@ export function run(ctx) {
   }
 
   const tpl = ctx.vars || { ...ctx.answers, ...(ctx.cfg || {}) };
-  const pkgPath = tpl.faultTolerancePath || "../packages/php-fault-tolerance";
+  // Optional local path only when the caller explicitly sets
+  // faultTolerancePath (kit monorepo). Real consumers resolve the
+  // package from Packagist/VCS — never default to ../packages/*.
+  const pkgPath =
+    typeof tpl.faultTolerancePath === "string"
+      ? tpl.faultTolerancePath.trim()
+      : "";
+
+  /** @type {{ require: Record<string,string>, repositories?: object[] }} */
+  const composerPatches = {
+    require: {
+      "wpdev/php-fault-tolerance": "*",
+    },
+  };
+  if (pkgPath) {
+    composerPatches.repositories = [
+      {
+        type: "path",
+        url: pkgPath,
+        options: { symlink: true },
+      },
+    ];
+  }
 
   return {
     files: {
@@ -39,18 +61,7 @@ See the kit doc \`docs/fault-tolerance.md\` for patterns.
     dirs: ["docs"],
     deps: {},
     devDeps: {},
-    composerPatches: {
-      require: {
-        "wpdev/php-fault-tolerance": "*",
-      },
-      repositories: [
-        {
-          type: "path",
-          url: pkgPath,
-          options: { symlink: true },
-        },
-      ],
-    },
+    composerPatches,
   };
 }
 

@@ -44,7 +44,6 @@ function makeCtx(features = {}) {
     },
     vars: {
       ...goodAnswers,
-      faultTolerancePath: "../packages/php-fault-tolerance",
     },
   };
 }
@@ -85,8 +84,29 @@ describe("faultTolerance scaffold integration", () => {
       await fs.readFile(path.join(tmp, "composer.json"), "utf8"),
     );
     expect(composer.require["wpdev/php-fault-tolerance"]).toBe("*");
+    // No monorepo path repo by default — package resolves from Packagist/VCS.
     const repo = (composer.repositories || []).find(
       (r) => typeof r.url === "string" && r.url.includes("php-fault-tolerance"),
+    );
+    expect(repo).toBeUndefined();
+  });
+
+  test("scaffold can opt into a local path repo via faultTolerancePath", async () => {
+    const localPath = "/tmp/fake-kit/packages/php-fault-tolerance";
+    const res = await scaffoldProject(tmp, goodAnswers, {
+      features: {
+        ...defaultFeatures(),
+        faultTolerance: "on",
+        phpMinVersion: "8.1",
+      },
+      faultTolerancePath: localPath,
+    });
+    expect(res.ok).toBe(true);
+    const composer = JSON.parse(
+      await fs.readFile(path.join(tmp, "composer.json"), "utf8"),
+    );
+    const repo = (composer.repositories || []).find(
+      (r) => typeof r.url === "string" && r.url === localPath,
     );
     expect(repo).toBeDefined();
   });
