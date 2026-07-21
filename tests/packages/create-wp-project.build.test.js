@@ -130,12 +130,13 @@ describe("@wpdev/create-wp-project — build scripts use installed @wpdev/* bins
     }
   });
 
-  test("consumer package.json does not leak the kit's workspace layout", async () => {
-    // Generated consumer projects install @wpdev/* packages from npm;
-    // they do not contain a monorepo workspace layout.
+  test("consumer package.json workspaces only declare local packages/*", async () => {
+    // Local monorepo packages (like composer path `packages/*`).
+    // Must not reintroduce the kit's `core/packages/*` layout.
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(true);
     const pkg = await readPackageJson();
-    expect(pkg.workspaces).toBeUndefined();
+    expect(pkg.workspaces).toEqual(["packages/*"]);
+    expect(JSON.stringify(pkg.workspaces)).not.toMatch(/core\/packages/);
   });
 });

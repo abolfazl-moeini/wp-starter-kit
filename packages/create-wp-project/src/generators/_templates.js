@@ -161,6 +161,10 @@ export function packageJsonForAnswers(answers, features) {
     description,
     private: true,
     type: "module",
+    // Local monorepo packages under packages/* (mirrors composer
+    // path repo `packages/*` for PHP). Empty dir / PHP-only packages
+    // are fine — npm only links subfolders that have package.json.
+    workspaces: ["packages/*"],
     scripts: scriptsForVariant(jsVariant, {
       build:
         "npm-run-all --parallel build:dependencies build:components build:styles build:assets",
