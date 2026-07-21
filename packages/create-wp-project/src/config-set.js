@@ -8,7 +8,11 @@
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
 
-import { getFeatureCatalog, validateFeatureSet } from "./features.js";
+import {
+  getFeatureCatalog,
+  normalizeFeatureSet,
+  validateFeatureSet,
+} from "./features.js";
 import {
   readManifest,
   writeManifest,
@@ -109,7 +113,8 @@ export async function setConfigValue(dir, key, value) {
   }
 
   const currentFeatures = manifest.features || {};
-  const newFeatures = { ...currentFeatures, [key]: value };
+  const requestedFeatures = { ...currentFeatures, [key]: value };
+  const newFeatures = normalizeFeatureSet(requestedFeatures);
 
   let answers = {};
   try {
@@ -127,6 +132,19 @@ export async function setConfigValue(dir, key, value) {
       ok: false,
       reason: `invalid feature set: ${first[0]}=${JSON.stringify(first[1])}`,
     };
+  }
+
+  /** @type {string[]} */
+  const warnings = Object.values(v.warnings || {});
+  if (
+    requestedFeatures.faultTolerance === "on" &&
+    newFeatures.faultTolerance === "off"
+  ) {
+    const msg =
+      `faultTolerance=on requires phpMinVersion ≥ 8.1 ` +
+      `(currently phpMinVersion=${newFeatures.phpMinVersion}); ` +
+      `faultTolerance has been set to off`;
+    if (!warnings.includes(msg)) warnings.push(msg);
   }
 
   const existing = manifest || {};
@@ -183,5 +201,6 @@ export async function setConfigValue(dir, key, value) {
     ok: true,
     written: written.length > 0 ? written : false,
     manifest: nextManifest,
+    ...(warnings.length > 0 ? { warnings } : {}),
   };
 }

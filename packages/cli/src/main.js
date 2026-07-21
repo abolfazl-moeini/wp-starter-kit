@@ -161,6 +161,19 @@ export function buildProgram() {
       process.exit(1);
     }
 
+    // Soft feature conflicts (e.g. faultTolerance auto-disabled).
+    const gatherWarnings = Object.values(resolved.validation.warnings || {});
+    if (gatherWarnings.length > 0) {
+      if (typeof ui.renderWarnings === "function") {
+        await ui.renderWarnings(gatherWarnings);
+      } else {
+        process.stderr.write("wpdev create: warnings:\n");
+        for (const msg of gatherWarnings) {
+          process.stderr.write("  " + msg + "\n");
+        }
+      }
+    }
+
     // 2. Resolve the target dir: --dir= if set, else the positional
     //    slug as a subdirectory, else the current working directory
     //    (scaffold in-place when no slug was passed).

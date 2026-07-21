@@ -75,14 +75,21 @@ describe("setConfigValue()", () => {
     expect(cfg.features.phpMinVersion).toBe("8.2");
   });
 
-  test('setConfigValue(dir,"phpMinVersion","7.4") while faultTolerance:"on" returns {ok:false, reason}', async () => {
+  test('setConfigValue(dir,"phpMinVersion","7.4") while faultTolerance:"on" auto-disables faultTolerance', async () => {
     await seedProject(tmpDir, {
       phpMinVersion: "8.1",
       faultTolerance: "on",
     });
     const result = await setConfigValue(tmpDir, "phpMinVersion", "7.4");
-    expect(result.ok).toBe(false);
-    expect(result.reason).toMatch(/faultTolerance|phpMinVersion/i);
+    expect(result.ok).toBe(true);
+    expect(
+      result.warnings?.some((w) => /faultTolerance|phpMinVersion/i.test(w)),
+    ).toBe(true);
+    const manifest = JSON.parse(
+      await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
+    );
+    expect(manifest.features.phpMinVersion).toBe("7.4");
+    expect(manifest.features.faultTolerance).toBe("off");
   });
 
   test('setConfigValue(dir,"js","typescript") is rejected (use add/remove)', async () => {

@@ -39,41 +39,40 @@ function makeRecordingUi() {
 }
 
 describe("gatherInputs() — validation gate (I2.8)", () => {
-  test("throws immediately when flags produce an invalid feature combo (no prompts run)", async () => {
+  test("faultTolerance=on + phpMin=7.4 soft-fails: no throw, faultTolerance off + warning", async () => {
     const ui = makeRecordingUi();
-    // --fault-tolerance=on requires phpMinVersion >= 8.1, but the
-    // user passed --php-min=7.4.
+    // Soft rule: normalize disables faultTolerance; create continues.
+    const out = await gatherInputs({
+      argv: [
+        "my-plugin",
+        "--yes",
+        "--scope=acme",
+        "--global=Acme",
+        "--domain=acme",
+        "--hook=acme",
+        "--php-fn=acme_",
+        "--fault-tolerance=on",
+        "--php-min=7.4",
+      ],
+      interactive: false,
+      engine: engineStub,
+      ui,
+    });
+    expect(out.validation.ok).toBe(true);
+    expect(out.features.faultTolerance).toBe("off");
+    expect(out.validation.warnings.faultTolerance).toMatch(/phpMinVersion/);
+  });
+
+  test("hard invalid flag combos still fail (unknown feature value)", async () => {
+    const ui = makeRecordingUi();
     await expect(
       gatherInputs({
-        argv: ["my-plugin", "--fault-tolerance=on", "--php-min=7.4"],
+        argv: ["my-plugin", "--js=coffeescript"],
         interactive: true,
         engine: engineStub,
         ui,
       }),
     ).rejects.toThrow(/Invalid feature combination/);
-    // The fail-fast gate must run before any prompt. With a valid
-    // gate, the fake UI's text/select should never have been
-    // called.
-    expect(
-      ui.calls.filter((c) => c.kind === "text" || c.kind === "select"),
-    ).toEqual([]);
-  });
-
-  test("the thrown error carries the per-field errors as a property", async () => {
-    const ui = makeRecordingUi();
-    let captured;
-    try {
-      await gatherInputs({
-        argv: ["--fault-tolerance=on", "--php-min=7.4"],
-        engine: engineStub,
-        ui,
-      });
-    } catch (e) {
-      captured = e;
-    }
-    expect(captured).toBeDefined();
-    expect(captured.errors).toBeDefined();
-    expect(captured.errors.faultTolerance).toMatch(/phpMinVersion/);
   });
 
   test("accepts a valid feature combination from flags (no throw)", async () => {

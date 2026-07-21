@@ -301,6 +301,13 @@ export function normalizeFeatureSet(features) {
   if (f.phpTest !== "phpunit") {
     f.phpUnitDocker = "off";
   }
+  // faultTolerance needs PHP ≥ 8.1 — coerce off instead of hard-failing create.
+  if (
+    f.faultTolerance === "on" &&
+    comparePhpVersion(f.phpMinVersion || "7.4", "8.1") < 0
+  ) {
+    f.faultTolerance = "off";
+  }
   return f;
 }
 
@@ -437,12 +444,15 @@ export function validateFeatureSet(features, answers = {}, options = {}) {
     }
   }
 
-  // 2. `faultTolerance: on` requires `phpMinVersion` ≥ 8.1.
+  // 2. `faultTolerance: on` needs `phpMinVersion` ≥ 8.1.
+  //    Advisory only: normalizeFeatureSet turns faultTolerance off.
+  //    Create continues with a warning instead of a hard error.
   if (filled.faultTolerance === "on") {
     if (comparePhpVersion(filled.phpMinVersion, "8.1") < 0) {
-      errors.faultTolerance =
+      warnings.faultTolerance =
         `faultTolerance=on requires phpMinVersion ≥ 8.1 ` +
-        `(currently phpMinVersion=${filled.phpMinVersion})`;
+        `(currently phpMinVersion=${filled.phpMinVersion}); ` +
+        `faultTolerance has been set to off`;
     }
   }
 

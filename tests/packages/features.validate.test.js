@@ -183,24 +183,26 @@ describe("validateFeatureSet — §1.1 rule 1 (js ≠ none for dependents)", () 
 /* -------------------------------------------------------------------- */
 
 describe("validateFeatureSet — §1.1 rule 2 (faultTolerance + phpMinVersion)", () => {
-  test("faultTolerance:on + phpMinVersion:8.0 → error", () => {
+  test("faultTolerance:on + phpMinVersion:8.0 → warning (not hard error)", () => {
     const r = validateFeatureSet({
       ...defaultFeatures(),
       faultTolerance: "on",
       phpMinVersion: "8.0",
     });
-    expect(r.ok).toBe(false);
-    expect(r.errors.faultTolerance).toMatch(/phpMinVersion ≥ 8\.1/);
+    expect(r.ok).toBe(true);
+    expect(r.errors.faultTolerance).toBeUndefined();
+    expect(r.warnings.faultTolerance).toMatch(/phpMinVersion ≥ 8\.1/);
   });
 
-  test("faultTolerance:on + phpMinVersion:7.4 → error", () => {
+  test("faultTolerance:on + phpMinVersion:7.4 → warning (not hard error)", () => {
     const r = validateFeatureSet({
       ...defaultFeatures(),
       faultTolerance: "on",
       phpMinVersion: "7.4",
     });
-    expect(r.ok).toBe(false);
-    expect(r.errors.faultTolerance).toMatch(/phpMinVersion ≥ 8\.1/);
+    expect(r.ok).toBe(true);
+    expect(r.errors.faultTolerance).toBeUndefined();
+    expect(r.warnings.faultTolerance).toMatch(/phpMinVersion ≥ 8\.1/);
   });
 
   test("faultTolerance:on + phpMinVersion:8.1 → no error", () => {
@@ -210,6 +212,7 @@ describe("validateFeatureSet — §1.1 rule 2 (faultTolerance + phpMinVersion)",
       phpMinVersion: "8.1",
     });
     expect(r.errors?.faultTolerance).toBeUndefined();
+    expect(r.warnings?.faultTolerance).toBeUndefined();
   });
 
   test("faultTolerance:on + phpMinVersion:8.2 → no error", () => {

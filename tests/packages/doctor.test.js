@@ -332,7 +332,7 @@ describe("doctorProject() — validateFeatureSet + variant checks (Phase 3)", ()
     if (tmpDir) await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  test('faultTolerance:"on" + phpMinVersion:"7.4" surfaces a validation error', async () => {
+  test('faultTolerance:"on" + phpMinVersion:"7.4" surfaces a validation warning', async () => {
     tmpDir = await seedHealthy({
       features: {
         ...defaultFeatureSet(),
@@ -341,10 +341,13 @@ describe("doctorProject() — validateFeatureSet + variant checks (Phase 3)", ()
       },
     });
     const res = doctorProject(tmpDir);
-    expect(res.ok).toBe(false);
+    expect(res.ok).toBe(true);
+    expect(
+      res.warnings.some((e) => /faultTolerance|phpMinVersion/i.test(e)),
+    ).toBe(true);
     expect(
       res.errors.some((e) => /faultTolerance|phpMinVersion/i.test(e)),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   test('js:"coffeescript" surfaces invalid value error', async () => {
