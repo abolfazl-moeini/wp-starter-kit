@@ -92,6 +92,7 @@ const FLAG_MAP = [
   ["features", "phpMinVersion", "--php-min=", "kv"],
   ["features", "phpFramework", "--php-framework=", "kv"],
   ["features", "phpTest", "--php-test=", "kv"],
+  ["features", "phpUnitDocker", "--phpunit-docker=", "kv"],
   ["features", "license", "--license=", "kv"],
   ["features", "wpMinVersion", "--wp-min=", "kv"],
   ["features", "restBatch", "--rest-batch=", "kv"],

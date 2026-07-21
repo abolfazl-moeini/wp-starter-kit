@@ -22,6 +22,7 @@ function phpunitXmlDist(tpl) {
     backupGlobals="false"
     colors="true"
     verbose="true"
+    executionOrder="random"
 >
     <testsuites>
         <testsuite name="${tpl.slug}">

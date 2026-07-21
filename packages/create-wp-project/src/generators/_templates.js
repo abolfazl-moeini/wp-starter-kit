@@ -1276,6 +1276,10 @@ vendor-prefixed/
 # Env
 .env
 .env.local
+
+# Docker PHPUnit generated local files
+tests/docker-phpunit/.env
+tests/docker-phpunit/wp-tests-config.php
 `;
 
 export const TEMPLATE_EDITORCONFIG = `# wp-starter-kit default .editorconfig

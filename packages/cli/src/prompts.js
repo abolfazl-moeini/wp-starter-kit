@@ -191,6 +191,7 @@ const FEATURE_QUESTIONS = {
   phpMinVersion: "Minimum PHP version to support?",
   phpFramework: "Use WPDev Admin Framework?",
   phpTest: "PHP unit tests (PHPUnit)?",
+  phpUnitDocker: "Run PHPUnit in Docker (PHP + MySQL containers)?",
   license: "License?",
   wpMinVersion: "Minimum WordPress version?",
   restBatch: "REST batch endpoint + client?",
@@ -359,6 +360,19 @@ function appendMinimalExtraQuestions(plan, catalog, buildTimeFeatures) {
     initialValue: phpTest.default || "phpunit",
     when: (s) => presetIsMinimal(s, buildTimeFeatures),
   });
+
+  // When the plan is built for --preset=minimal (no full feature walk),
+  // still offer Docker after PHPUnit. For interactive / other presets the
+  // main feature loop adds phpUnitDocker — avoid duplicating the id.
+  if (buildTimeFeatures?.__preset === "minimal") {
+    const phpUnitDocker = catalog.find((f) => f.id === "phpUnitDocker");
+    if (phpUnitDocker) {
+      plan.push({
+        ...featureQuestion(phpUnitDocker),
+        when: (s) => effectiveFeature(s, "phpTest") === "phpunit",
+      });
+    }
+  }
 }
 
 /**
@@ -499,6 +513,7 @@ export function buildPromptPlan(currentFeatures, engine, options) {
     "blocks",
     "mcpAbilities",
     "phpTest",
+    "phpUnitDocker",
     "license",
     "wpMinVersion",
     "restBatch",
@@ -519,6 +534,13 @@ export function buildPromptPlan(currentFeatures, engine, options) {
       plan.push({
         ...featureQuestion(f),
         when: wrapWhen((s) => needsJsSubQuestions(s)),
+      });
+    } else if (id === "phpUnitDocker") {
+      // Asked whenever PHPUnit is on — including under `minimal`
+      // (which otherwise skips the feature walk via wrapWhen).
+      plan.push({
+        ...featureQuestion(f),
+        when: (s) => effectiveFeature(s, "phpTest") === "phpunit",
       });
     } else {
       plan.push({ ...featureQuestion(f), when: wrapWhen(() => true) });

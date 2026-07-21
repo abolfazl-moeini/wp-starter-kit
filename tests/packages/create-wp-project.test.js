@@ -235,6 +235,7 @@ describe("@wpdev/create-wp-project", () => {
           phpMinVersion: "7.4",
           phpFramework: "none",
           phpTest: "phpunit",
+          phpUnitDocker: "off",
           restBatch: "off",
           faultTolerance: "off",
           vendorScoping: "on",

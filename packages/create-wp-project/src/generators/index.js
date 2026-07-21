@@ -38,6 +38,7 @@ import { descriptor as exampleFeature } from "./exampleFeature.js";
 import { descriptor as restBatch } from "./restBatch.js";
 import { descriptor as i18n } from "./i18n.js";
 import { descriptor as phpTest } from "./phpTest.js";
+import { descriptor as phpUnitDocker } from "./phpUnitDocker.js";
 import { descriptor as license } from "./license.js";
 import { descriptor as blocks } from "./blocks.js";
 import { descriptor as css } from "./css.js";
@@ -70,6 +71,7 @@ const ALL = [
   restBatch,
   i18n,
   phpTest,
+  phpUnitDocker,
   license,
   blocks,
   css,
@@ -174,6 +176,12 @@ export function getGenerators(features) {
       enabled.push(g);
     else if (g.id === "i18n" && f.i18n === "on") enabled.push(g);
     else if (g.id === "phpTest" && f.phpTest === "phpunit") enabled.push(g);
+    else if (
+      g.id === "phpUnitDocker" &&
+      f.phpUnitDocker === "on" &&
+      f.phpTest === "phpunit"
+    )
+      enabled.push(g);
     else if (g.id === "license" && f.license) enabled.push(g);
     else if (g.id === "blocks" && f.blocks === "on") enabled.push(g);
     else if (g.id === "css" && f.css && f.css !== "none" && jsEnabled)

@@ -81,6 +81,14 @@ const FEATURE_CATALOG = [
     notes: "PHP unit testing. PHPUnit on by default.",
   },
   {
+    id: "phpUnitDocker",
+    label: "PHPUnit Docker",
+    variants: ["off", "on"],
+    default: "off",
+    notes:
+      "Scaffold tests/docker-phpunit/ (Docker Compose PHP + MySQL) for running PHPUnit without local MySQL. Only applies when phpTest=phpunit.",
+  },
+  {
     id: "restBatch",
     label: "REST Batch",
     variants: ["off", "on"],
@@ -193,7 +201,7 @@ export function fillFeatureDefaults(features) {
 }
 
 /** New catalog ids backfilled when absent (older manifests / partial sets). */
-const BACKFILL_ON_VALIDATE = ["ci"];
+const BACKFILL_ON_VALIDATE = ["ci", "phpUnitDocker"];
 
 /**
  * @param {Record<string, string>} features
@@ -288,6 +296,10 @@ export function normalizeFeatureSet(features) {
     if (f.frontendStack && f.frontendStack !== "none") {
       f.frontendStack = "none";
     }
+  }
+  // Docker PHPUnit stack is meaningless without PHPUnit itself.
+  if (f.phpTest !== "phpunit") {
+    f.phpUnitDocker = "off";
   }
   return f;
 }
