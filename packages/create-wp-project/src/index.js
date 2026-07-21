@@ -70,7 +70,7 @@ import {
   applyComposerPatches,
   mergeComposerPatchAccumulator,
 } from "./composer-patches.js";
-import { installWpdevCoreSubmodule } from "./wpdev-core-install.js";
+
 //
 // Phase 24 (24.1–24.6) — migrations registry, selector, and
 // runner live under `./migrations/index.js`. Re-exported
@@ -461,21 +461,7 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
     written.push(rel);
   }
 
-  // 8b. WPDev Admin Framework (wpdev-core): git submodule or clone —
-  //     skill INSTALL-AND-DISTRIBUTE. Never Composer; never empty dir.
   const warnings = [];
-  if (features.phpFramework === "wpdev") {
-    try {
-      const inst = installWpdevCoreSubmodule(targetDir);
-      if (inst.warning) warnings.push(inst.warning);
-      if (inst.path) written.push(inst.path);
-    } catch (e) {
-      warnings.push(
-        "wpdev-core install failed: " +
-          (e && e.message ? e.message : String(e)),
-      );
-    }
-  }
 
   // 9. Write the manifest (now the merged wpdev.json). Pass branding + build
   //    so the single file contains everything (no more dual write).
@@ -654,6 +640,4 @@ export {
   getKitStatus,
   setConfigValue,
   isConfigSettable,
-  // WPDev Admin Framework install (git submodule / clone — not Composer).
-  installWpdevCoreSubmodule,
 };

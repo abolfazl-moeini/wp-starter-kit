@@ -117,10 +117,9 @@ wpdev create my-plugin --js=none --mcp-abilities=on --yes
 
 PHP-only — no JS pipeline required. Requires WordPress 6.9+ at runtime (installer warns; library shows admin notice when API is missing). Generated projects get a vendored copy under `src/Mcp/` + `src/Modules/McpAbilities/`.
 
-
 ### 3.3.4 WPDev Admin Framework (optional, companion plugin)
 
-The `phpFramework` feature (`phpFramework:wpdev`) scaffolds the vendored WPDev Admin Framework as a **companion plugin** at `companion-plugins/wpdev/`. The generated plugin bridges kit modules via `WpdevModuleAdapter::attach()` and includes a `WpdevDemo` reference module.
+The `phpFramework` feature (`phpFramework:wpdev`) treats WPDev Admin Framework as a **soft dependency** (separate site plugin). Scaffold emits `FrameworkBridge`, `WpdevDemo`, `Requires Plugins: wpdev`, and an admin notice in the main plugin file when the framework is inactive. It does **not** create `companion-plugins/`.
 
 ```bash
 wpdev create my-plugin --php-framework=wpdev --hook=acme --php-fn=acme_ --yes

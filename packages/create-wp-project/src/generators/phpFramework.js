@@ -1,10 +1,13 @@
 /**
  * @wpdev/create-wp-project — phpFramework generator.
  *
- * When `phpFramework:wpdev`, scaffolds host-plugin bridge + docs and
- * leaves companion-plugins/wpdev for **git submodule/clone of wpdev-core**
- * (skill INSTALL-AND-DISTRIBUTE). Does NOT copy framework files and does
- * NOT add wpdev-core to Composer.
+ * When `phpFramework:wpdev`, scaffolds host-plugin bridge + docs.
+ * WPDev Admin Framework is expected as a separate WordPress plugin
+ * (already installed on the site). Does NOT create companion-plugins/,
+ * does NOT clone/submodule wpdev-core, and does NOT add it to Composer.
+ *
+ * The main plugin bootstrap gets an admin notice when the framework is
+ * inactive (injected via core template / ensureWpdevDependencyNotice).
  */
 
 import { renderTemplate } from "./_templates.js";
@@ -17,11 +20,11 @@ namespace {{vendor}}\\Support;
 use {{frameworkNamespace}}\\Adapters\\WpdevModuleAdapter;
 
 /**
- * Bridge helper for WPDev Admin Framework (wpdev-core) integration.
+ * Bridge helper for WPDev Admin Framework integration.
  *
- * The framework must be installed as a separate WordPress plugin
- * (git submodule/clone at companion-plugins/wpdev or {PLUGINS}/wpdev).
- * It is not a Composer dependency.
+ * The framework must be installed and activated as a separate WordPress
+ * plugin. It is not a Composer dependency and is not vendored into this
+ * project.
  */
 final class FrameworkBridge
 {
@@ -30,24 +33,13 @@ final class FrameworkBridge
         return WpdevModuleAdapter::is_framework_active();
     }
 
+    /**
+     * Soft-dep bootstrap. Admin notice for a missing framework lives in
+     * the main plugin file; this method is kept for call-site BC.
+     */
     public static function init(): void
     {
-        if (!self::is_framework_active()) {
-            \\add_action('admin_notices', [self::class, 'render_notice']);
-        }
-    }
-
-    public static function render_notice(): void
-    {
-        if (!\\current_user_can('activate_plugins')) {
-            return;
-        }
-        echo '<div class="notice notice-warning"><p>';
-        echo \\esc_html__(
-            'This plugin works best with the WPDev Admin Framework. Install and activate wpdev-core (companion-plugins/wpdev or wp-content/plugins/wpdev).',
-            '{{textDomain}}'
-        );
-        echo '</p></div>';
+        // Intentionally empty — main plugin bootstrap shows the notice.
     }
 }
 `;
@@ -76,7 +68,7 @@ final class Module implements ModuleInterface
         if (!FrameworkBridge::is_framework_active()) {
             return;
         }
-        // Soft-dep: only call framework APIs when the companion plugin is active.
+        // Soft-dep: only call framework APIs when the framework plugin is active.
         if (\\function_exists('wpdev_register_module_admin_pages')) {
             // Register demo admin surfaces when framework APIs are available.
         }
@@ -117,32 +109,20 @@ This project has \`phpFramework: wpdev\`.
 
 ## Install the framework (required)
 
-Per WPDev skills (**INSTALL-AND-DISTRIBUTE** / **SHARED-PATHS**):
+Install and activate **WPDev Admin Framework** as a normal WordPress plugin
+on the site (e.g. under \`wp-content/plugins/wpdev\`).
 
-**Preferred — git submodule** (host project is a git repo):
+This scaffold does **not** vendor the framework into the project and does
+**not** create a \`companion-plugins/\` directory.
 
-\`\`\`bash
-git submodule add https://github.com/abolfazl-moeini/wpdev-core.git companion-plugins/wpdev
-git submodule update --init --recursive
-\`\`\`
-
-**If the host is not a git repo — clone:**
-
-\`\`\`bash
-git clone https://github.com/abolfazl-moeini/wpdev-core.git companion-plugins/wpdev
-\`\`\`
-
-Then activate **WPDev** under WordPress → Plugins.
-
-Alternatively install into \`wp-content/plugins/wpdev\` (site-wide) instead of
-\`companion-plugins/wpdev\`.
-
-**Forbidden as primary method:** copying with absolute paths from another machine.
+**Forbidden as primary method:** listing the admin framework in Composer
+\`require\`.
 
 ## Host plugin rules
 
 - Scaffold emits \`Requires Plugins: wpdev\` on the host plugin header (WP 6.5+)
-- Soft-dep: \`function_exists( 'wpdev_services' )\` / \`FrameworkBridge::is_framework_active()\`
+- Soft-dep: the main plugin file shows an admin notice when the framework is inactive
+- Soft-dep helpers: \`function_exists( 'wpdev_register_table' )\` / \`FrameworkBridge::is_framework_active()\`
 - Do **not** list the admin framework in Composer \`require\`
 
 ## Kit module framework (separate)
@@ -153,12 +133,122 @@ It is autoloaded via Composer PSR-4, not Packagist \`wpdev/framework\`.
 
 const REGISTER_FILE = "src/wpdev-demo-register.php";
 
-/** Marker consumed by runCreate to install the submodule after files are written. */
-export const WPDEV_CORE_INSTALL_MARKER =
-  "companion-plugins/wpdev/.wpdev-core-install";
-
 /** WordPress plugin header line (WP 6.5+ dependency declaration). */
 export const REQUIRES_PLUGINS_WPDEV_LINE = " * Requires Plugins: wpdev";
+
+/**
+ * PHP snippet injected into the main plugin bootstrap when phpFramework=wpdev.
+ * Checks at admin_notices time so plugin load order does not matter.
+ *
+ * @param {{ slug_underscore?: string, textDomain?: string, name?: string }} tpl
+ * @returns {string}
+ */
+export function buildWpdevDependencyNoticeBlock(tpl = {}) {
+  const slugUnderscore = String(tpl.slug_underscore || "my_plugin");
+  const textDomain = String(tpl.textDomain || "my-plugin");
+  const name = String(tpl.name || tpl.slug || "This plugin");
+  return `
+/*
+ * -----------------------------------------------------------------------------
+ * WPDev Admin Framework dependency (phpFramework:wpdev)
+ * -----------------------------------------------------------------------------
+ * Soft dependency: show an admin notice when the framework plugin is not
+ * active. Feature modules that need the framework no-op until it is present.
+ * BEGIN wpdev-dependency-notice
+ */
+add_action( 'admin_notices', '${slugUnderscore}_wpdev_dependency_notice' );
+/**
+ * @return void
+ */
+function ${slugUnderscore}_wpdev_dependency_notice() {
+	if ( function_exists( 'wpdev_register_table' ) ) {
+		return;
+	}
+	if ( function_exists( 'current_user_can' ) && ! current_user_can( 'activate_plugins' ) ) {
+		return;
+	}
+	printf(
+		'<div class="notice notice-warning"><p>%s</p></div>',
+		esc_html(
+			sprintf(
+				/* translators: %s: plugin name */
+				__( '%s requires the WPDev Admin Framework plugin to be installed and active.', '${textDomain}' ),
+				'${name.replace(/'/g, "\\'")}'
+			)
+		)
+	);
+}
+/* END wpdev-dependency-notice */
+`;
+}
+
+/**
+ * Inject the WPDev dependency admin-notice block into a plugin bootstrap.
+ * Idempotent. Returns original content when already present.
+ *
+ * @param {string} phpSource
+ * @param {{ slug_underscore?: string, textDomain?: string, name?: string, slug?: string }} tpl
+ * @returns {{ content: string, changed: boolean }}
+ */
+export function ensureWpdevDependencyNotice(phpSource, tpl = {}) {
+  const src = String(phpSource ?? "");
+  if (
+    /BEGIN wpdev-dependency-notice/i.test(src) ||
+    /_wpdev_dependency_notice\s*\(/i.test(src)
+  ) {
+    return { content: src, changed: false };
+  }
+  const block = buildWpdevDependencyNoticeBlock(tpl);
+  // Prefer after Composer autoload section; else before final Plugin::boot block; else append.
+  if (/Composer autoloaders/i.test(src)) {
+    // Insert after the autoload block's closing `}` of the elseif vendor missing branch,
+    // just before Lifecycle or Translation section.
+    const lifecycle = src.search(/\/\*\s*\n\s*\*\s*-+\s*\n\s*\*\s*Lifecycle:/);
+    if (lifecycle !== -1) {
+      const content =
+        src.slice(0, lifecycle) + block + "\n" + src.slice(lifecycle);
+      return { content, changed: true };
+    }
+  }
+  if (/Wire WPDev\\Core\\Plugin/i.test(src) || /Plugin::boot/i.test(src)) {
+    const idx = src.search(/\/\*\s*\n\s*\*\s*-+\s*\n\s*\*\s*Wire WPDev/);
+    if (idx !== -1) {
+      const content = src.slice(0, idx) + block + "\n" + src.slice(idx);
+      return { content, changed: true };
+    }
+  }
+  const content = src.trimEnd() + "\n" + block + "\n";
+  return { content, changed: true };
+}
+
+/**
+ * Remove the wpdev dependency notice block (removeFeature path).
+ *
+ * @param {string} phpSource
+ * @returns {{ content: string, changed: boolean }}
+ */
+export function stripWpdevDependencyNotice(phpSource) {
+  const src = String(phpSource ?? "");
+  // Prefer marked block (BEGIN…END), spanning the start/end comments.
+  let content = src.replace(
+    /\/\*[\s\S]*?BEGIN wpdev-dependency-notice[\s\S]*?END wpdev-dependency-notice\s*\*\//gi,
+    "",
+  );
+  // Fallback: function + add_action by name pattern.
+  if (content === src) {
+    content = src
+      .replace(
+        /\r?\n?add_action\s*\(\s*['"]admin_notices['"]\s*,\s*['"][^'"]*_wpdev_dependency_notice['"]\s*\)\s*;\r?\n?/g,
+        "\n",
+      )
+      .replace(
+        /\r?\n?(?:\/\*\*[\s\S]*?\*\/\r?\n)?function\s+\w+_wpdev_dependency_notice\s*\([^)]*\)\s*(?::\s*void\s*)?\{[\s\S]*?\n\}\r?\n?/g,
+        "\n",
+      );
+  }
+  content = content.replace(/\n{3,}/g, "\n\n");
+  return { content, changed: content !== src };
+}
 
 /**
  * Inject `Requires Plugins: wpdev` into a plugin bootstrap file header.
@@ -237,14 +327,11 @@ export function run(ctx) {
     ),
     [REGISTER_FILE]: renderTemplate(TEMPLATE_REGISTER_PHP, tpl),
     "docs/wpdev-integration.md": renderTemplate(TEMPLATE_DOCS_MD, tpl),
-    // Marker file: signals post-scaffold to run git submodule/clone.
-    [WPDEV_CORE_INSTALL_MARKER]:
-      "wpdev-core\nhttps://github.com/abolfazl-moeini/wpdev-core.git\n",
   };
 
   return {
     files,
-    dirs: ["src/Support", "src/Modules/WpdevDemo", "docs", "companion-plugins"],
+    dirs: ["src/Support", "src/Modules/WpdevDemo", "docs"],
     deps: {},
     devDeps: {},
     composerPatches: {
@@ -252,8 +339,6 @@ export function run(ctx) {
         files: [REGISTER_FILE],
       },
     },
-    // Soft signal for create/post-run (also detected via marker file).
-    postScaffold: { installWpdevCore: true },
   };
 }
 
@@ -261,7 +346,6 @@ export const descriptor = {
   id: "phpFramework",
   feature: "phpFramework",
   owns: [
-    "companion-plugins/wpdev/**",
     "src/Support/FrameworkBridge.php",
     "src/Modules/WpdevDemo/Module.php",
     REGISTER_FILE,

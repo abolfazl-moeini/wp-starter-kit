@@ -47,7 +47,10 @@ import {
   validateFeatureSet,
 } from "./features.js";
 import { deleteOwnedFilesForTurnedOff } from "./removeFeature.js";
-import { ensureRequiresPluginsWpdevHeader } from "./generators/phpFramework.js";
+import {
+  ensureRequiresPluginsWpdevHeader,
+  ensureWpdevDependencyNotice,
+} from "./generators/phpFramework.js";
 import {
   readManifest,
   writeManifest,
@@ -531,18 +534,30 @@ export async function addFeature(dir, id, variant, _opts = {}) {
     }
   }
 
-  // Host plugin header: Requires Plugins: wpdev (WP 6.5+) when
-  // phpFramework is turned on via addFeature (core does not re-run).
+  // Host plugin header + dependency admin notice when phpFramework is
+  // turned on via addFeature (core does not re-run).
   if (id === "phpFramework" && newFeatures.phpFramework === "wpdev") {
     const slug = nextManifest.slug || existingManifest.slug;
     if (slug) {
       const pluginRel = `${slug}.php`;
       const pluginAbs = path.join(dir, pluginRel);
       if (existsSync(pluginAbs)) {
-        const before = await fs.readFile(pluginAbs, "utf8");
-        const { content, changed } = ensureRequiresPluginsWpdevHeader(before);
-        if (changed) {
-          await fs.writeFile(pluginAbs, content, "utf8");
+        let before = await fs.readFile(pluginAbs, "utf8");
+        let changedAny = false;
+        const header = ensureRequiresPluginsWpdevHeader(before);
+        before = header.content;
+        changedAny = changedAny || header.changed;
+        const notice = ensureWpdevDependencyNotice(before, {
+          slug_underscore: String(slug).replace(/-/g, "_"),
+          textDomain:
+            nextManifest.textDomain || existingManifest.textDomain || slug,
+          name: nextManifest.globalName || existingManifest.globalName || slug,
+          slug,
+        });
+        before = notice.content;
+        changedAny = changedAny || notice.changed;
+        if (changedAny) {
+          await fs.writeFile(pluginAbs, before, "utf8");
           if (!written.includes(pluginRel)) written.push(pluginRel);
         }
       }

@@ -70,8 +70,9 @@ const FEATURE_CATALOG = [
     variants: ["none", "wpdev"],
     default: "none",
     notes:
-      "WPDev Admin Framework (wpdev-core). Installs as git submodule/clone at companion-plugins/wpdev " +
-      "(not Composer). Scaffolds FrameworkBridge + WpdevDemo. Reserves wpdev_* prefixes.",
+      "WPDev Admin Framework as a soft dependency (separate site plugin, not Composer). " +
+      "Scaffolds FrameworkBridge + WpdevDemo + admin notice in the main plugin file when inactive. " +
+      "Reserves wpdev_* prefixes. Does not create companion-plugins/.",
   },
   {
     id: "phpTest",

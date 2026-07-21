@@ -111,12 +111,12 @@ Engine logic never imports Commander — keeping the boundary testable.
 
 ## Internal and feature-gated packages
 
-| Path                        | Role                                 | Feature gate              | Notes                                                                    |
-| --------------------------- | ------------------------------------ | ------------------------- | ------------------------------------------------------------------------ |
-| `packages/wpdev-framework/` | WPDev Admin Framework source         | `phpFramework:wpdev`      | Vendored into `companion-plugins/wpdev/`; excluded from consumer PHPStan |
-| `packages/mcp-integration/` | Abilities API bridge                 | `mcpAbilities:on`         | Composer path repo in kit; copied into consumer on add                   |
-| `packages/polaris-stack/`   | Design system                        | `frontendStack:polaris`   | npm workspace package; not published standalone in v1                    |
-| `core/packages/build/`      | Legacy path alias for `@wpdev/build` | always (when `js ≠ none`) | Same code as `packages/build` in some layouts                            |
+| Path                        | Role                                 | Feature gate              | Notes                                                                     |
+| --------------------------- | ------------------------------------ | ------------------------- | ------------------------------------------------------------------------- |
+| `packages/wpdev-framework/` | WPDev Admin Framework source (kit)   | reference only            | Not copied into consumer projects; site installs WPDev as a normal plugin |
+| `packages/mcp-integration/` | Abilities API bridge                 | `mcpAbilities:on`         | Composer path repo in kit; copied into consumer on add                    |
+| `packages/polaris-stack/`   | Design system                        | `frontendStack:polaris`   | npm workspace package; not published standalone in v1                     |
+| `core/packages/build/`      | Legacy path alias for `@wpdev/build` | always (when `js ≠ none`) | Same code as `packages/build` in some layouts                             |
 
 ---
 

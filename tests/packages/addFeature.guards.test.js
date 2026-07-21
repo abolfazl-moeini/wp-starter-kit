@@ -11,12 +11,13 @@
  *     "no-op" path did NOT bump the timestamp.
  *
  *  2. VALIDATION FAIL: turning a feature ON that violates a §1.1
- *     dependency rule. The example: `faultTolerance: on` while
- *     `phpMinVersion: 7.4` (faultTolerance requires ≥ 8.1). The
+ *     dependency rule. The example: `restBatch: on` while
+ *     `js: none` (restBatch requires js ≠ none). The
  *     expected behavior is `{ ok: false, reason }` — the call
  *     failed cleanly, no files were written, the manifest is
  *     unchanged, and the error message identifies which feature
  *     violated which rule.
+ *     (faultTolerance no longer requires phpMin ≥ 8.1 — dual-mode.)
  *
  * In BOTH cases, "no partial writes" is the contract: the engine
  * computes the new state in memory first, then writes. A failure
@@ -170,21 +171,20 @@ describe("addFeature() — guards (Phase 22.5, 22.6)", () => {
 
   /* -- validation-fail: dependency rule violated -- */
 
-  test("returns { ok:false, reason } when the merged set violates a dependency rule (faultTolerance on PHP 7.4)", async () => {
-    // phpMinVersion=7.4 (default). faultTolerance requires ≥ 8.1.
-    // The merged set: { phpMinVersion: "7.4", faultTolerance: "on" } → invalid.
+  test("returns { ok:false, reason } when the merged set violates a dependency rule (restBatch on js=none)", async () => {
+    // restBatch=on requires js ≠ none.
     await seedProject(tmp, {
       features: {
         ...defaultFeatures(),
-        faultTolerance: "off",
-        phpMinVersion: "7.4",
+        js: "none",
+        restBatch: "off",
       },
     });
 
-    const res = await addFeature(tmp, "faultTolerance", "on");
+    const res = await addFeature(tmp, "restBatch", "on");
     expect(res.ok).toBe(false);
     expect(res.reason).toBeDefined();
-    expect(res.reason).toMatch(/faultTolerance|8\.1/);
+    expect(res.reason).toMatch(/restBatch|js/);
     // No files written, no manifest update.
     expect(res.written).toEqual([]);
   });
@@ -194,17 +194,17 @@ describe("addFeature() — guards (Phase 22.5, 22.6)", () => {
     await seedProject(tmp, {
       features: {
         ...defaultFeatures(),
-        faultTolerance: "off",
-        phpMinVersion: "7.4",
+        js: "none",
+        restBatch: "off",
       },
       generatedAt,
     });
 
-    await addFeature(tmp, "faultTolerance", "on");
+    await addFeature(tmp, "restBatch", "on");
     const manifest = JSON.parse(
       await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
-    expect(manifest.features.faultTolerance).toBe("off");
+    expect(manifest.features.restBatch).toBe("off");
     expect(manifest.generatedAt).toBe(generatedAt);
   });
 
@@ -212,43 +212,28 @@ describe("addFeature() — guards (Phase 22.5, 22.6)", () => {
     await seedProject(tmp, {
       features: {
         ...defaultFeatures(),
-        faultTolerance: "off",
-        phpMinVersion: "7.4",
+        js: "none",
+        restBatch: "off",
       },
     });
 
-    await addFeature(tmp, "faultTolerance", "on");
+    await addFeature(tmp, "restBatch", "on");
     const cfg = JSON.parse(
       await fs.readFile(path.join(tmp, "wpdev.json"), "utf8"),
     );
-    expect(cfg.features.faultTolerance).toBe("off");
+    expect(cfg.features.restBatch).toBe("off");
   });
 
   test("validation-fail does NOT create any feature files on disk", async () => {
     await seedProject(tmp, {
       features: {
         ...defaultFeatures(),
-        js: "typescript",
-        wpMinVersion: "6.0",
+        js: "none",
+        restBatch: "off",
       },
     });
 
-    // js: pure (not typescript) while restBatch:on is a violation
-    // (restBatch=on requires js ≠ none — pure is not none, so
-    // actually this IS valid. Let me use a different rule.
-    // Use: faultTolerance with phpMinVersion=7.4).
-    await seedProject(tmp, {
-      features: {
-        ...defaultFeatures(),
-        faultTolerance: "off",
-        phpMinVersion: "7.4",
-      },
-    });
-
-    await addFeature(tmp, "faultTolerance", "on");
-    // No fault-tolerance files should exist (the feature's
-    // generator hasn't actually emitted any in Phase 21, but
-    // even checking for a representative file is fine).
+    await addFeature(tmp, "restBatch", "on");
     const entries = await fs.readdir(tmp);
     // tmp only contains wpdev.json (single merged config file).
     expect(entries.sort()).toEqual(["wpdev.json"]);

@@ -86,15 +86,15 @@ The update flow is intentionally two-phase: `wpdev update` prints the plan (read
 
 Every scaffold is shaped by its feature set (`{ featureId: variant }`). Key features:
 
-| Feature         | Purpose                                                      |
-| --------------- | ------------------------------------------------------------ |
-| `js`            | `typescript`/`pure`/`flow`/`none` — JS pipeline              |
-| `jsLib`         | `none`/`preact`/`react`                                      |
-| `phpMinVersion` | Rector downgrade target                                      |
-| `phpFramework`  | `none`/`wpdev` — companion plugin with WPDev Admin Framework |
-| `frontendStack` | `none`/`polaris` — Polaris Stack design system               |
-| `mcpAbilities`  | WordPress Abilities API (WP 6.9+)                            |
-| `vendorScoping` | Strauss prefix on release                                    |
+| Feature         | Purpose                                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------ |
+| `js`            | `typescript`/`pure`/`flow`/`none` — JS pipeline                                                  |
+| `jsLib`         | `none`/`preact`/`react`                                                                          |
+| `phpMinVersion` | Rector downgrade target                                                                          |
+| `phpFramework`  | `none`/`wpdev` — soft-dep on site WPDev plugin (admin notice if inactive; no companion-plugins/) |
+| `frontendStack` | `none`/`polaris` — Polaris Stack design system                                                   |
+| `mcpAbilities`  | WordPress Abilities API (WP 6.9+)                                                                |
+| `vendorScoping` | Strauss prefix on release                                                                        |
 
 ### Vendor scoping
 

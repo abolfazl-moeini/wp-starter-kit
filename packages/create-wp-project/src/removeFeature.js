@@ -51,7 +51,10 @@
 import { promises as fs, existsSync } from "node:fs";
 import * as path from "node:path";
 import minimatch from "minimatch";
-import { stripRequiresPluginsWpdevHeader } from "./generators/phpFramework.js";
+import {
+  stripRequiresPluginsWpdevHeader,
+  stripWpdevDependencyNotice,
+} from "./generators/phpFramework.js";
 
 import { listGenerators } from "./generators/index.js";
 import {
@@ -470,17 +473,23 @@ export async function removeFeature(dir, id, _opts = {}) {
       ? [...glueWritten]
       : /** @type {string[]|false} */ (false);
 
-  // Drop Requires Plugins: wpdev from the host bootstrap when framework is off.
+  // Drop Requires Plugins header + dependency notice when framework is off.
   if (id === "phpFramework" && currentFeatures.phpFramework === "wpdev") {
     const slug = nextManifest.slug || existingManifest.slug;
     if (slug) {
       const pluginRel = `${slug}.php`;
       const pluginAbs = path.join(dir, pluginRel);
       if (existsSync(pluginAbs)) {
-        const before = await fs.readFile(pluginAbs, "utf8");
-        const { content, changed } = stripRequiresPluginsWpdevHeader(before);
-        if (changed) {
-          await fs.writeFile(pluginAbs, content, "utf8");
+        let before = await fs.readFile(pluginAbs, "utf8");
+        let changedAny = false;
+        const header = stripRequiresPluginsWpdevHeader(before);
+        before = header.content;
+        changedAny = changedAny || header.changed;
+        const notice = stripWpdevDependencyNotice(before);
+        before = notice.content;
+        changedAny = changedAny || notice.changed;
+        if (changedAny) {
+          await fs.writeFile(pluginAbs, before, "utf8");
           if (Array.isArray(written)) {
             if (!written.includes(pluginRel)) written.push(pluginRel);
           }

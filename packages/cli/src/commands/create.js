@@ -260,26 +260,6 @@ export async function runCreate(input, deps) {
     }
   }
 
-  // 5b. WPDev Admin Framework (wpdev-core): git submodule/clone per skill —
-  //     not Composer, not absolute-path copy.
-  if (
-    features.phpFramework === "wpdev" &&
-    typeof engine.installWpdevCoreSubmodule === "function"
-  ) {
-    try {
-      const inst = engine.installWpdevCoreSubmodule(dir);
-      if (inst && inst.warning) warnings.push(inst.warning);
-      if (inst && inst.ok && inst.path) {
-        written.push(inst.path);
-      }
-    } catch (e) {
-      warnings.push(
-        "wpdev-core install failed: " +
-          (e && e.message ? e.message : String(e)),
-      );
-    }
-  }
-
   // 6. Post-generation actions. Each is gated and best-effort.
   //    We collect warnings; the run continues regardless.
   //    Dependency install is never prompted — only via --install /

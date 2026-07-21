@@ -10,7 +10,7 @@ import { existsSync } from "node:fs";
 
 import { runMigrations } from "../../packages/create-wp-project/src/migrations/index.js";
 
-describe("1.0.0 migration — WPDev companion updates", () => {
+describe("1.0.0 migration — WPDev bridge updates", () => {
   let tmpDir;
 
   beforeEach(async () => {
@@ -41,7 +41,7 @@ describe("1.0.0 migration — WPDev companion updates", () => {
     );
   }
 
-  test("runMigrations 0.4.0 → 1.0.0 updates framework when phpFramework is wpdev", async () => {
+  test("runMigrations 0.4.0 → 1.0.0 updates bridge when phpFramework is wpdev (no companion-plugins)", async () => {
     await seedProject({ phpFramework: "wpdev" });
 
     const res = await runMigrations(tmpDir, { from: "0.4.0", to: "1.0.0" });
@@ -50,7 +50,8 @@ describe("1.0.0 migration — WPDev companion updates", () => {
 
     expect(
       existsSync(path.join(tmpDir, "companion-plugins", "wpdev", "wpdev.php")),
-    ).toBe(true);
+    ).toBe(false);
+    expect(existsSync(path.join(tmpDir, "companion-plugins"))).toBe(false);
     expect(
       existsSync(path.join(tmpDir, "src", "Support", "FrameworkBridge.php")),
     ).toBe(true);
@@ -67,6 +68,7 @@ describe("1.0.0 migration — WPDev companion updates", () => {
     );
     expect(bridge).toContain("FrameworkBridge");
     expect(bridge).toContain("TestPlugin");
+    expect(bridge).not.toMatch(/companion-plugins/);
 
     const after = JSON.parse(
       await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),

@@ -280,13 +280,15 @@ jobs:
         run: |
           node packages/cli/bin/wpdev.js info /tmp/wpdev-installer-e2e
 
-      - name: "E2E: php-framework=wpdev companion scaffold smoke"
+      - name: "E2E: php-framework=wpdev soft-dep scaffold smoke"
         run: |
-          test -f packages/wpdev-framework/wpdev.php
           node packages/cli/bin/wpdev.js create /tmp/wpdev-fw \
             --yes --js=none --php-framework=wpdev \
             --scope=acme --global=Acme --domain=acme --hook=acme --php-fn=acme_
-          test -f /tmp/wpdev-fw/companion-plugins/wpdev/wpdev.php
+          test ! -d /tmp/wpdev-fw/companion-plugins
+          test -f /tmp/wpdev-fw/src/Support/FrameworkBridge.php
+          grep -q '_wpdev_dependency_notice' /tmp/wpdev-fw/acme.php || grep -q '_wpdev_dependency_notice' /tmp/wpdev-fw/*.php
+          grep -rq 'Requires Plugins: wpdev' /tmp/wpdev-fw --include='*.php'
           php -l /tmp/wpdev-fw/src/Support/FrameworkBridge.php
           php -l /tmp/wpdev-fw/src/wpdev-demo-register.php
           php -l /tmp/wpdev-fw/src/Modules/WpdevDemo/Module.php

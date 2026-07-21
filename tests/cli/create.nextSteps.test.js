@@ -118,18 +118,17 @@ describe("runCreate / ui.renderNextSteps — next-steps contract (I3.9/I3.10)", 
     expect(steps[0]).toBe("cd /var/tmp/wpdev");
   });
 
-  test("renderNextSteps lists companion plugin activation when phpFramework is wpdev", () => {
+  test("renderNextSteps lists WPDev framework activation when phpFramework is wpdev", () => {
     const steps = renderNextSteps(
       { js: "none", husky: "off", phpTest: "none", phpFramework: "wpdev" },
       { targetDir: "/tmp/proj" },
     );
     expect(
       steps.some((s) =>
-        /Activate the companion plugin under companion-plugins\/wpdev\//.test(
-          s,
-        ),
+        /Install and activate the WPDev Admin Framework plugin/.test(s),
       ),
     ).toBe(true);
+    expect(steps.some((s) => /companion-plugins/.test(s))).toBe(false);
   });
 
   test("runCreate returns the resolved features + runOptions shape that the bin uses to drive renderNextSteps", async () => {

@@ -123,7 +123,7 @@ The starter follows [Semantic Versioning 2.0.0](https://semver.org/):
       key matches `packages/wpdev-framework/constants.php`).
 - [ ] Companion-plugin installer smoke passes:
       `wpdev create --yes --js=none --php-framework=wpdev` writes
-      `companion-plugins/wpdev/wpdev.php` and `FrameworkBridge.php` lint clean.
+      `FrameworkBridge.php` and the main plugin notice block lint clean (no `companion-plugins/`).
 
 ### Common build mistakes
 

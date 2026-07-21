@@ -370,7 +370,9 @@ export function renderNextSteps(features, runOptions) {
   }
 
   if (f.phpFramework === "wpdev") {
-    steps.push("Activate the companion plugin under companion-plugins/wpdev/.");
+    steps.push(
+      "Install and activate the WPDev Admin Framework plugin (site plugins).",
+    );
   }
 
   // Advisory: if JS is on, the user can run tests. We add this

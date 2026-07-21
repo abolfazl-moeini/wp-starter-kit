@@ -1,12 +1,12 @@
 /**
- * 1.0.0 migration — WPDev Framework companion update.
+ * 1.0.0 migration — WPDev Framework bridge update.
  *
  * For projects with phpFramework:wpdev, this migration:
- *   - Re-copies the companion plugin companion-plugins/wpdev/** from the updated kit framework.
  *   - Writes/updates src/Support/FrameworkBridge.php and src/wpdev-demo-register.php.
- *   - Writes MIGRATION-NOTES-1.0.0.md to guide the user on updating the plugin in WP admin.
+ *   - Writes MIGRATION-NOTES-1.0.0.md (install WPDev as a site plugin; no companion-plugins/).
  *
  * Idempotent: skips if phpFramework is not wpdev.
+ * Does NOT create or copy companion-plugins/.
  */
 
 import { existsSync, promises as fs } from "node:fs";
@@ -16,7 +16,7 @@ import { readManifest } from "../manifest.js";
 
 export const version = "1.0.0";
 export const description =
-  "Update WPDev companion framework plugin files and bridge registration";
+  "Update WPDev Framework bridge registration (soft dependency; no companion-plugins)";
 
 const TEMPLATE_BRIDGE_PHP = `<?php
 declare(strict_types=1);
@@ -27,6 +27,7 @@ use {{frameworkNamespace}}\\Adapters\\WpdevModuleAdapter;
 
 /**
  * Bridge helper for WPDev Framework integration.
+ * Admin notice for a missing framework lives in the main plugin file.
  */
 final class FrameworkBridge
 {
@@ -37,18 +38,7 @@ final class FrameworkBridge
 
     public static function init(): void
     {
-        if (!self::is_framework_active()) {
-            \\add_action('admin_notices', [self::class, 'render_notice']);
-        }
-    }
-
-    public static function render_notice(): void
-    {
-        ?>
-        <div class="notice notice-warning is-dismissible">
-            <p><?php echo esc_html__('This plugin works best with the WPDev Framework. Install the plugin in companion-plugins/wpdev/.', '{{textDomain}}'); ?></p>
-        </div>
-        <?php
+        // Intentionally empty — main plugin bootstrap shows the notice.
     }
 }
 `;
@@ -83,14 +73,14 @@ if (did_action('plugins_loaded')) {
 
 const TEMPLATE_NOTES_MD = `# WPDev Framework Migration Notes (v1.0.0)
 
-The WPDev Admin Framework companion plugin has been updated to v{{wpdevFrameworkVersion}}.
+This project uses \`phpFramework: wpdev\` as a **soft dependency**.
 
-Please update the companion plugin on your WordPress site:
-1. Log in to your WordPress admin panel.
-2. Go to Plugins.
-3. If the WPDev Framework plugin is active, deactivate it first.
-4. Replace/install the plugin files from your project's \`companion-plugins/wpdev/\` folder.
-5. Re-activate the WPDev Framework plugin.
+1. Install and activate the **WPDev Admin Framework** as a normal WordPress plugin on the site.
+2. This kit no longer vendors the framework under \`companion-plugins/\`.
+3. When the framework is inactive, the host plugin shows an admin notice in wp-admin.
+4. Kit bridge files: \`src/Support/FrameworkBridge.php\`, \`src/wpdev-demo-register.php\`.
+
+Bridge version reference: {{wpdevFrameworkVersion}}.
 `;
 
 function render(tmpl, vars) {
@@ -112,32 +102,7 @@ export async function run(dir) {
     return { ok: true };
   }
 
-  // 1. Resolve framework source directory (kit dev, npm, or env override).
-  const candidates = [];
-  if (process.env.WPDEV_FRAMEWORK_SRC) {
-    candidates.push(path.resolve(process.env.WPDEV_FRAMEWORK_SRC));
-  }
-  if (typeof __dirname !== "undefined" && __dirname) {
-    candidates.push(path.resolve(__dirname, "../../../wpdev-framework"));
-    candidates.push(
-      path.resolve(__dirname, "../../../node_modules/@wpdev/wpdev-framework"),
-    );
-  }
-  candidates.push(path.resolve(process.cwd(), "packages/wpdev-framework"));
-  candidates.push(
-    path.resolve(process.cwd(), "node_modules/@wpdev/wpdev-framework"),
-  );
-
-  const frameworkSrcDir = candidates.find((p) => existsSync(p));
-  if (!frameworkSrcDir) {
-    return {
-      ok: false,
-      reason:
-        "WPDev Framework source not found; set WPDEV_FRAMEWORK_SRC or install @wpdev/wpdev-framework",
-    };
-  }
-
-  // 2. Read project config to fill templates
+  // Read project config to fill templates
   const cfgPath = path.join(dir, "wpdev.json");
   let cfg = {};
   if (existsSync(cfgPath)) {
@@ -160,7 +125,6 @@ export async function run(dir) {
     textDomain: cfg.textDomain || cfg.slug || "my-plugin",
   };
 
-  // 3. Write bridge files
   try {
     await fs.mkdir(path.join(dir, "src", "Support"), { recursive: true });
     await fs.writeFile(
@@ -183,70 +147,6 @@ export async function run(dir) {
     return {
       ok: false,
       reason: `Failed to write bridge files: ${error.message}`,
-    };
-  }
-
-  // 4. Re-copy companion framework recursively
-  const binaryExtensions = new Set([
-    ".png",
-    ".jpg",
-    ".jpeg",
-    ".gif",
-    ".ico",
-    ".woff",
-    ".woff2",
-    ".ttf",
-    ".eot",
-    ".otf",
-    ".pdf",
-    ".zip",
-  ]);
-
-  async function copyDir(currentSrc, currentDest) {
-    await fs.mkdir(currentDest, { recursive: true });
-    const list = await fs.readdir(currentSrc);
-    for (const file of list) {
-      if (
-        file === "." ||
-        file === ".." ||
-        file === ".DS_Store" ||
-        file === ".git" ||
-        file === ".cursor" ||
-        file === ".kiro" ||
-        file === "context.md" ||
-        file === "vendor" ||
-        file === "dist" ||
-        file === "node_modules"
-      ) {
-        continue;
-      }
-      const srcPath = path.join(currentSrc, file);
-      const destPath = path.join(currentDest, file);
-      const stat = await fs.stat(srcPath);
-      if (stat.isDirectory()) {
-        await copyDir(srcPath, destPath);
-      } else {
-        const ext = path.extname(srcPath).toLowerCase();
-        if (binaryExtensions.has(ext)) {
-          const buffer = await fs.readFile(srcPath);
-          await fs.writeFile(destPath, buffer);
-        } else {
-          const text = await fs.readFile(srcPath, "utf8");
-          await fs.writeFile(destPath, text, "utf8");
-        }
-      }
-    }
-  }
-
-  try {
-    await copyDir(
-      frameworkSrcDir,
-      path.join(dir, "companion-plugins", "wpdev"),
-    );
-  } catch (error) {
-    return {
-      ok: false,
-      reason: `Failed to copy companion framework: ${error.message}`,
     };
   }
 

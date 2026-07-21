@@ -43,9 +43,10 @@ describe("CI workflow contract", () => {
     expect(release).not.toMatch(/wpsk-starter-/);
   });
 
-  test("ci.yml installer-e2e includes php-framework companion smoke", () => {
+  test("ci.yml installer-e2e includes php-framework soft-dep smoke", () => {
     expect(ci).toMatch(/php-framework=wpdev/);
-    expect(ci).toMatch(/companion-plugins\/wpdev\/wpdev\.php/);
+    expect(ci).toMatch(/test ! -d \/tmp\/wpdev-fw\/companion-plugins/);
+    expect(ci).toMatch(/_wpdev_dependency_notice/);
     expect(ci).toMatch(/FrameworkBridge\.php/);
     expect(ci).toMatch(/wpdev-demo-register\.php/);
     expect(ci).toMatch(/Modules\/WpdevDemo\/Module\.php/);

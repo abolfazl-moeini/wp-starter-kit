@@ -55,7 +55,6 @@ submodule** of [github.com/abolfazl-moeini/polaris-stack](https://github.com/abo
 
 Agent context and implementation rules live in `packages/polaris-stack/context.md`. Generated consumer projects receive a copy of the runtime files under `src/polaris/`.
 
-
 ## MCP Integration
 
 Self-contained Abilities API library at `packages/mcp-integration/` (`wpdev/mcp-integration`). Selectable via the `wpdev` installer (`--mcp-abilities=on`).
@@ -84,4 +83,4 @@ git submodule update --init --recursive
 - `js-core-libs/` → `packages/rest-utils/` (batch client; `packages/fetch/` is a shim)
 - `php-core-libs/` → `src/Support/` + `docs/php-core-libs.md`
 - `WordPress Concurrency & Fault Tolerance/` → `packages/php-fault-tolerance/`
-- `mrlogistic-laravel/`, `sample-plugin/`, `packages/wpdev-framework/` → vendored WPDev Admin Framework core (companion plugin source); generated projects get `companion-plugins/wpdev/` when `phpFramework:wpdev`
+- `packages/wpdev-framework/` → kit-side WPDev Admin Framework source (reference); generated projects with `phpFramework:wpdev` soft-depend on a site-installed WPDev plugin (no `companion-plugins/` folder)

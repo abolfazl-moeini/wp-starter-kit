@@ -50,6 +50,7 @@ import {
 } from "./_templates.js";
 import { frameworkPackageFiles } from "./_framework-template.js";
 import { consumerWpdevJsPackageFiles } from "./_wpdev-js-packages-template.js";
+import { buildWpdevDependencyNoticeBlock } from "./phpFramework.js";
 
 function loadReleaseScript(name) {
   const full = path.join(resolveEngineSrcDir(), "release", name);
@@ -81,14 +82,31 @@ export function run(ctx) {
   // Defensive: tplVars can be built by the caller OR by the legacy
   // helper. The contract is the same — it returns a flat object of
   // substitution tokens for `{{token}}` placeholders.
+  const baseTpl = vars || legacyTplVars(answers, cfg);
   const tpl = {
-    ...(vars || legacyTplVars(answers, cfg)),
+    ...baseTpl,
     wpMinVersion: features.wpMinVersion || "6.0",
     phpMinVersion: features.phpMinVersion || cfg.phpMinVersion || "7.4",
     // WP 6.5+ dependency header when host needs WPDev Admin Framework.
-    // Skill INSTALL-AND-DISTRIBUTE: Requires Plugins: wpdev
     requiresPluginsHeader:
       features.phpFramework === "wpdev" ? "\n * Requires Plugins: wpdev" : "",
+    // Soft-dep admin notice when WPDev Admin Framework is not active.
+    // Empty string when phpFramework is not wpdev (placeholder must expand cleanly).
+    wpdevDependencyCheck:
+      features.phpFramework === "wpdev"
+        ? buildWpdevDependencyNoticeBlock({
+            slug_underscore:
+              baseTpl.slug_underscore ||
+              String(answers.slug || cfg.slug || "my_plugin").replace(
+                /-/g,
+                "_",
+              ),
+            textDomain:
+              baseTpl.textDomain || answers.textDomain || cfg.textDomain,
+            name: baseTpl.name || answers.name || answers.slug || cfg.slug,
+            slug: answers.slug || cfg.slug,
+          })
+        : "",
   };
   const files = {};
   const dirs = [];

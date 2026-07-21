@@ -128,7 +128,7 @@ if ( is_readable( $vendor_autoload ) ) {
     } );
     return;
 }
-
+{{wpdevDependencyCheck}}
 /*
  * -----------------------------------------------------------------------------
  * Lifecycle: activation / deactivation / uninstall

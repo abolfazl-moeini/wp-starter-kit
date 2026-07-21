@@ -104,28 +104,28 @@ See [php-test-tools.md](php-test-tools.md) for PHP-side testing.
 
 ### `phpMinVersion` — PHP
 
-| Property         | Value                                                              |
-| ---------------- | ------------------------------------------------------------------ |
-| **Label**        | PHP                                                                |
-| **Variants**     | `7.4` _(default)_, `8.0`, `8.1`, `8.2`, `8.3`                      |
-| **Enables**      | Rector downgrade target, `composer.json` `require.php`             |
-| **Owned paths**  | Refreshed via glue (not deleted on set)                            |
-| **Dependencies** | None                                                               |
-| **Toggle**       | `wpdev set phpMinVersion 8.2`                                      |
+| Property         | Value                                                  |
+| ---------------- | ------------------------------------------------------ |
+| **Label**        | PHP                                                    |
+| **Variants**     | `7.4` _(default)_, `8.0`, `8.1`, `8.2`, `8.3`          |
+| **Enables**      | Rector downgrade target, `composer.json` `require.php` |
+| **Owned paths**  | Refreshed via glue (not deleted on set)                |
+| **Dependencies** | None                                                   |
+| **Toggle**       | `wpdev set phpMinVersion 8.2`                          |
 
 ---
 
 ### `phpFramework` — PHP Framework
 
-| Property         | Value                                                                   |
-| ---------------- | ----------------------------------------------------------------------- |
-| **Label**        | PHP Framework                                                           |
-| **Variants**     | `none` _(default)_, `wpdev`                                             |
-| **Enables**      | `companion-plugins/wpdev/`, `FrameworkBridge.php`, `WpdevModuleAdapter` |
-| **Owned paths**  | `companion-plugins/wpdev/**`, bridge files, demo module                 |
-| **Dependencies** | None                                                                    |
-| **Validation**   | `hookPrefix ≠ wpdev`, `phpFunctionPrefix ≠ wpdev_`                      |
-| **Toggle**       | `wpdev add phpFramework --variant wpdev` / `wpdev remove phpFramework`  |
+| Property         | Value                                                                                                 |
+| ---------------- | ----------------------------------------------------------------------------------------------------- |
+| **Label**        | PHP Framework                                                                                         |
+| **Variants**     | `none` _(default)_, `wpdev`                                                                           |
+| **Enables**      | Soft-dep on site WPDev plugin; `FrameworkBridge.php`; admin notice in main file; `WpdevModuleAdapter` |
+| **Owned paths**  | Bridge files, demo module, docs (no `companion-plugins/`)                                             |
+| **Dependencies** | None (framework is a separate WordPress plugin, not Composer)                                         |
+| **Validation**   | `hookPrefix ≠ wpdev`, `phpFunctionPrefix ≠ wpdev_`                                                    |
+| **Toggle**       | `wpdev add phpFramework --variant wpdev` / `wpdev remove phpFramework`                                |
 
 See [wpdev-adapter.md](wpdev-adapter.md).
 
@@ -218,13 +218,11 @@ See [css-variants.md](css-variants.md).
 
 ---
 
-
-| Property         | Value                                                           |
-| ---------------- | --------------------------------------------------------------- |
-| **Label**        | Blocks                                                          |
-| **Variants**     | `off` _(default)_, `on`                                         |
-| **Toggle**       | `wpdev add blocks` / `wpdev remove blocks`                      |
-
+| Property     | Value                                      |
+| ------------ | ------------------------------------------ |
+| **Label**    | Blocks                                     |
+| **Variants** | `off` _(default)_, `on`                    |
+| **Toggle**   | `wpdev add blocks` / `wpdev remove blocks` |
 
 ---
 
@@ -374,10 +372,10 @@ Use normalization when merging flags and presets to avoid stale dependent values
 
 ## Warnings (non-blocking)
 
-| Condition                           | Warning key    | Message summary                    |
-| ----------------------------------- | -------------- | ---------------------------------- |
-| `license:mit`                       | `license`      | WordPress.org GPL policy advisory  |
-| `mcpAbilities:on`                   | `mcpAbilities` | Requires WP 6.9+ Abilities API     |
+| Condition         | Warning key    | Message summary                   |
+| ----------------- | -------------- | --------------------------------- |
+| `license:mit`     | `license`      | WordPress.org GPL policy advisory |
+| `mcpAbilities:on` | `mcpAbilities` | Requires WP 6.9+ Abilities API    |
 
 Warnings do not set `ok: false`. The CLI surfaces them before scaffold.
 
