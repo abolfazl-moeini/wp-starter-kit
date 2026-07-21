@@ -37,6 +37,26 @@ Workflow:
 
 See [contributing.md](contributing.md#red--green--refactor) for the full loop.
 
+## Production release package
+
+Every scaffolded project ships a release packager under `dev/release/`:
+
+```bash
+# JS projects: production asset build + clean package under dist/{slug}/
+npm run release
+
+# Packaging only (after a prior build), also available when package.json is absent:
+composer release:dist
+# equivalent: node dev/release/prepare-release.js
+```
+
+The packager **never mutates the source tree**. It copies into `dist/{slug}/`, then:
+
+1. **Composer** (if `composer.json` exists): ensures `require.php` is `>={phpMinVersion}`, sets `config.platform.php`, forces path repositories to `options.symlink: false`, runs `composer install --no-dev`.
+2. **Strip** dev-only paths: `tests/`, `docs/`, `packages/`, `docker-phpunit/`, `dev/`, `node_modules/`, `package.json` (+ lockfiles), `coverage.xml*`, `phpunit.xml*`, `CLAUDE.md` / `context.md` / `AGENTS.md`, and hidden (`.*/`) directories.
+
+Existing projects can pick this up via `wpdev update` (migration `2.1.0`).
+
 ## Usage
 
 ### 1. As a one-shot from a project dir
@@ -81,17 +101,17 @@ if (res.ok) console.log("Wrote", res.written);
 
 ## Answer contract (`ScaffoldAnswers`)
 
-| Key                 | Required | Pattern                                        | Example                    |
-| ------------------- | -------- | ---------------------------------------------- | -------------------------- |
-| `slug`              | yes      | `^[a-z0-9][a-z0-9-]*$`                         | `my-project`               |
-| `npmScope`          | yes      | `^[a-z0-9][a-z0-9-]*$` (no `@`)                | `myorg`                    |
-| `globalName`        | yes      | JS identifier                                  | `MyProject`                |
-| `localizeVar`       | no       | JS identifier (inferred: `globalName + 'Loc'`) | `MyProjectLoc`             |
-| `textDomain`        | yes      | `^[a-z0-9][a-z0-9-]*$`                         | `my-project`               |
-| `hookPrefix`        | yes      | `^[a-z0-9][a-z0-9-]*$`                         | `my-project`               |
-| `depsBundle`        | no       | `*.js` (inferred: `slug + '-deps.js'`)         | `my-project-deps.js`       |
+| Key                 | Required | Pattern                                        | Example                     |
+| ------------------- | -------- | ---------------------------------------------- | --------------------------- |
+| `slug`              | yes      | `^[a-z0-9][a-z0-9-]*$`                         | `my-project`                |
+| `npmScope`          | yes      | `^[a-z0-9][a-z0-9-]*$` (no `@`)                | `myorg`                     |
+| `globalName`        | yes      | JS identifier                                  | `MyProject`                 |
+| `localizeVar`       | no       | JS identifier (inferred: `globalName + 'Loc'`) | `MyProjectLoc`              |
+| `textDomain`        | yes      | `^[a-z0-9][a-z0-9-]*$`                         | `my-project`                |
+| `hookPrefix`        | yes      | `^[a-z0-9][a-z0-9-]*$`                         | `my-project`                |
+| `depsBundle`        | no       | `*.js` (inferred: `slug + '-deps.js'`)         | `my-project-deps.js`        |
 | `phpFunctionPrefix` | no       | `^[a-z][a-z0-9_]*_$`                           | `myprj_` (default `wpdev_`) |
-| `uiFramework`       | yes      | `preact` \| `react`                            | `preact`                   |
+| `uiFramework`       | yes      | `preact` \| `react`                            | `preact`                    |
 
 ## Output
 

@@ -180,6 +180,9 @@ export function packageJsonForAnswers(answers, features) {
       "build:components": "wpdev-build-components",
       "build:styles": "wpdev-build-styles",
       "build:assets": "wpdev-build-assets",
+      // Build production assets, then package a clean dist/{slug}/ tree.
+      // Source is never modified; packaging lives in dev/release/.
+      release: "npm run build && node dev/release/prepare-release.js",
       ...(huskyOn ? { prepare: "husky" } : {}),
       ...(jsTestVariant === "vitest"
         ? { test: "vitest run" }
@@ -730,6 +733,22 @@ npm run build
 npm test
 \`\`\`
 
+## Production release package
+
+Build assets and produce a clean installable tree under \`dist/{{slug}}/\`
+(source is not modified):
+
+\`\`\`
+npm run release
+# or, PHP-only packaging after a prior build:
+composer release:dist
+\`\`\`
+
+The dist tree hardens \`composer.json\` (PHP platform, path-repo
+\`symlink: false\`), runs \`composer install --no-dev\`, then strips
+dev-only files (\`tests/\`, \`docs/\`, \`packages/\`, \`node_modules/\`,
+\`package.json\`, agent docs, hidden dirs, …).
+
 See the parent starter docs in \`node_modules/wp-starter-kit/README.md\` (if linked) or https://github.com/abolfazl-moeini/wp-plugin-starter-kit.
 `;
 
@@ -1176,6 +1195,7 @@ export const TEMPLATE_TSCONFIG_JSON = `{
  */
 export function buildComposerJson(vars) {
   const vendorPrefix = vars.vendorPrefix || "WpdevVendor";
+  const phpMin = vars.phpMinVersion || "7.4";
   const excludeNamespaces = vars.vendorScopingOn === false ? ["WPDev"] : [];
   const payload = {
     name: `${vars.vendorNamespaceLower || vars.slug}/${vars.slug}`,
@@ -1192,7 +1212,7 @@ export function buildComposerJson(vars) {
       },
     ],
     require: {
-      php: `>=${vars.phpMinVersion || "7.4"}`,
+      php: `>=${phpMin}`,
       "wpdev/framework": vars.frameworkVersion || "*",
     },
     autoload: {
@@ -1204,6 +1224,13 @@ export function buildComposerJson(vars) {
       "post-install-cmd": ["@php vendor/bin/strauss"],
       "post-update-cmd": ["@php vendor/bin/strauss"],
       "scope:vendor": "@php vendor/bin/strauss",
+      // Production package under dist/{slug}/ (source tree untouched).
+      "release:dist": "node dev/release/prepare-release.js",
+    },
+    config: {
+      platform: {
+        php: phpMin,
+      },
     },
     extra: {
       strauss: {

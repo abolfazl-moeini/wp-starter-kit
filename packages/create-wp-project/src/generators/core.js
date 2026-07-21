@@ -28,7 +28,10 @@
  * template strings so the BC file list is byte-identical (Phase 21.11).
  */
 
+import { existsSync, readFileSync } from "node:fs";
+import * as path from "node:path";
 import { deriveUiFramework } from "../derive-ui-framework.js";
+import { resolveEngineSrcDir } from "../resolve-kit-paths.js";
 import {
   renderTemplate,
   tplVars as legacyTplVars,
@@ -45,6 +48,14 @@ import {
   packageJsonForAnswers,
   buildComposerJson,
 } from "./_templates.js";
+
+function loadReleaseScript(name) {
+  const full = path.join(resolveEngineSrcDir(), "release", name);
+  if (!existsSync(full)) {
+    throw new Error(`Release script missing at ${full}`);
+  }
+  return readFileSync(full, "utf8");
+}
 
 /**
  * Run the core generator. Always returns a contribution (core
@@ -178,6 +189,15 @@ export function run(ctx) {
     // not emit a duplicate.
   }
 
+  // 11. Production release packager — always emitted so every
+  //     consumer can run `npm run release` / `composer release:dist`
+  //     and get a clean dist/{slug}/ tree without touching source.
+  files["dev/release/prepare-release.js"] =
+    loadReleaseScript("prepare-release.js");
+  files["dev/release/prepareComposer.js"] =
+    loadReleaseScript("prepareComposer.js");
+  dirs.push("dev/release");
+
   return {
     files,
     dirs,
@@ -267,6 +287,7 @@ export const descriptor = {
     "tsconfig.json",
     "package.json",
     "assets/stylesheets/**",
+    "dev/release/**",
     "*.php", // the plugin or theme bootstrap at the project root
     // NOTE: "src/Core/**" deliberately omitted (Phase 23 deps mode).
     // Framework sources are never part of consumer thin glue; they
