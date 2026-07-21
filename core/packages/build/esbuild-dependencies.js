@@ -5,7 +5,7 @@ import {
   saveAssetFile,
 } from "@wpdev/dependency-extraction-esbuild-plugin";
 import { readBuildConfig } from "./index.js";
-import { getJsxOptions, getReactAliases } from "./getJsxOptions.js";
+import { getJsxOptions, getBuildAliases } from "./getJsxOptions.js";
 
 export function buildDepsConfig(projectConfig, buildConfig = {}, options = {}) {
   const cwd = options.cwd ?? process.cwd();
@@ -29,7 +29,7 @@ export function buildDepsConfig(projectConfig, buildConfig = {}, options = {}) {
     globalName: projectConfig.globalName,
     outfile,
     ...getJsxOptions(projectConfig.uiFramework),
-    alias: getReactAliases(projectConfig.uiFramework),
+    alias: getBuildAliases(projectConfig.uiFramework, cwd),
     define: {
       IS_DEV: String(isDev),
       __WPDEV_GLOBAL_NAME__: JSON.stringify(projectConfig.globalName),

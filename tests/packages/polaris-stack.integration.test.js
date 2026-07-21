@@ -56,7 +56,11 @@ describe("frontendStack feature integration", () => {
   test("frontendStack generator writes polaris shortcode demo via ShortcodesSetup", () => {
     const ctx = {
       features: { frontendStack: "polaris", jsLib: "preact" },
-      answers: { slug: "my-plugin", globalName: "MyPlugin", textDomain: "my-plugin" },
+      answers: {
+        slug: "my-plugin",
+        globalName: "MyPlugin",
+        textDomain: "my-plugin",
+      },
       cfg: {},
       vars: { vendor: "MyPlugin", frameworkNamespace: "WPDev" },
     };
@@ -66,7 +70,14 @@ describe("frontendStack feature integration", () => {
     const viewEntry =
       out.files["src/Modules/PolarisDemo/assets/entries/view.tsx"];
     expect(viewEntry).toBeDefined();
-    expect(viewEntry).toMatch(/polaris\/styles\.css/);
+    // Package-name imports only — no deep relative paths.
+    expect(viewEntry).toMatch(/from ["']@wpdev\/polaris-stack["']/);
+    expect(viewEntry).toMatch(/@wpdev\/polaris-stack\/styles\.css/);
+    expect(viewEntry).not.toMatch(/\.\.\/\.\.\/\.\.\/\.\.\/polaris/);
+    expect(out.files["src/polaris/package.json"]).toMatch(
+      /"name":\s*"@wpdev\/polaris-stack"/,
+    );
+    expect(out.deps?.["@wpdev/polaris-stack"]).toBe("file:src/polaris");
     // Prefer JSX over hyperscript h(...) for readability.
     expect(viewEntry).toMatch(/<Stack\b/);
     expect(viewEntry).toMatch(/<Button\b/);

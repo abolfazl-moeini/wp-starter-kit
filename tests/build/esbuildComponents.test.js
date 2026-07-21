@@ -51,7 +51,7 @@ describe("esbuild-components", () => {
       "utf8",
     );
     expect(source).toContain("getJsxOptions");
-    expect(source).toContain("getReactAliases");
+    expect(source).toContain("getBuildAliases");
     expect(source).toContain("projectConfig.uiFramework");
   });
 

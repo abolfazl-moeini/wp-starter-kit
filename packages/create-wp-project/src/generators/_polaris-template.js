@@ -78,8 +78,32 @@ export function polarisFiles(_ctx) {
     files["components/components.css"],
     "",
   ].join("\n");
+  // Local package identity so consumers import by package name, never
+  // deep relative paths like ../../../../polaris.
+  files["package.json"] = `${JSON.stringify(
+    {
+      name: "@wpdev/polaris-stack",
+      version: "0.0.0",
+      private: true,
+      type: "module",
+      sideEffects: ["**/*.css"],
+      exports: {
+        ".": "./index.ts",
+        "./styles.css": "./styles.css",
+        "./layout": "./layout/index.ts",
+        "./components": "./components/index.ts",
+        "./theme": "./theme/index.ts",
+        "./theme-script": "./theme/script.ts",
+      },
+    },
+    null,
+    2,
+  )}\n`;
   return files;
 }
+
+/** Package import used by scaffolded demo entries (not relative paths). */
+export const POLARIS_PACKAGE_NAME = "@wpdev/polaris-stack";
 
 /**
  * Frontend view entry as JSX (.tsx). Uses automatic JSX runtime
@@ -104,10 +128,11 @@ export function polarisDemoViewEntry(ctx) {
   return `/**
  * Frontend Polaris demo — shortcode mount points [data-polaris-demo].
  * JSX via automatic runtime (jsxImportSource: ${framework}).
+ * Imports use package name @wpdev/polaris-stack (not relative paths).
  */
 // uiFramework: ${framework}
 ${renderImport}
-import "../../../../polaris/styles.css";
+import "@wpdev/polaris-stack/styles.css";
 import {
   Button,
   Card,
@@ -116,7 +141,7 @@ import {
   Text,
   Badge,
   setPolarisTheme,
-} from "../../../../polaris";
+} from "@wpdev/polaris-stack";
 
 setPolarisTheme("system");
 

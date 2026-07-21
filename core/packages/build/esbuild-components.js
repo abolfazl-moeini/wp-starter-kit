@@ -6,7 +6,7 @@ import {
 } from "@wpdev/dependency-extraction-esbuild-plugin";
 import { readProjectConfig } from "@core/utils";
 import { readBuildConfig } from "./index.js";
-import { getJsxOptions, getReactAliases } from "./getJsxOptions.js";
+import { getJsxOptions, getBuildAliases } from "./getJsxOptions.js";
 
 // Resolve `glob` without import.meta (Jest/babel cannot parse import.meta
 // in this file). Prefer the ESM named export (glob@10+); fall back to CJS
@@ -144,7 +144,7 @@ async function buildSingleComponent({
     sourcemap: isDev,
     metafile: true,
     ...getJsxOptions(projectConfig.uiFramework),
-    alias: getReactAliases(projectConfig.uiFramework),
+    alias: getBuildAliases(projectConfig.uiFramework, cwd),
     define: {
       IS_DEV: String(isDev),
       __WPDEV_GLOBAL_NAME__: JSON.stringify(projectConfig.globalName),

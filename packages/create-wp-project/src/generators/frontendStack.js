@@ -33,8 +33,7 @@ export function run(ctx) {
   const slug_constant = slug_underscore.toUpperCase();
   const vendor =
     ctx.vars?.vendor || answers.globalName || cfg.globalName || "WPDev";
-  const frameworkNamespace =
-    ctx.vars?.frameworkNamespace || "WPDev";
+  const frameworkNamespace = ctx.vars?.frameworkNamespace || "WPDev";
   const textDomain = answers.textDomain || cfg.textDomain || slug;
 
   const tpl = {
@@ -55,7 +54,10 @@ export function run(ctx) {
     files[`${POLARIS_DIR}/${rel}`] = body;
   }
 
-  files[`${DEMO_DIR}/Module.php`] = renderTemplate(POLARIS_DEMO_MODULE_PHP, tpl);
+  files[`${DEMO_DIR}/Module.php`] = renderTemplate(
+    POLARIS_DEMO_MODULE_PHP,
+    tpl,
+  );
   files[`${DEMO_DIR}/Shortcodes/DemoShortcode.php`] = renderTemplate(
     POLARIS_DEMO_SHORTCODE_PHP,
     tpl,
@@ -72,7 +74,11 @@ export function run(ctx) {
       `${DEMO_DIR}/Shortcodes`,
       `${DEMO_DIR}/assets/entries`,
     ],
-    deps: {},
+    // Path package so Node/esbuild resolve `@wpdev/polaris-stack` without
+    // deep relative imports from module entries.
+    deps: {
+      "@wpdev/polaris-stack": "file:src/polaris",
+    },
     devDeps: {},
     composerPatches: {
       autoload: {
@@ -85,10 +91,6 @@ export function run(ctx) {
 export const descriptor = {
   id: "frontendStack",
   feature: "frontendStack",
-  owns: [
-    "src/polaris/**",
-    "src/Modules/PolarisDemo/**",
-    REGISTER_FILE,
-  ],
+  owns: ["src/polaris/**", "src/Modules/PolarisDemo/**", REGISTER_FILE],
   run,
 };

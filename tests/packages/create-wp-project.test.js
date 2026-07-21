@@ -973,6 +973,8 @@ function snapshotTsconfig(tsconfig) {
     module: opts.module,
     moduleResolution: opts.moduleResolution,
     strict: opts.strict,
+    baseUrl: opts.baseUrl,
+    paths: opts.paths,
     include: tsconfig.include,
     exclude: tsconfig.exclude,
   };

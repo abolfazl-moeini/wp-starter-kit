@@ -163,6 +163,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
 
 exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard preset: key generated files match snapshot: standard-tsconfig.json 1`] = `
 {
+  "baseUrl": ".",
   "exclude": [
     "node_modules",
     "vendor",
@@ -171,6 +172,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
   ],
   "include": [
     "assets/**/*",
+    "src/**/*",
     "core/**/*",
     "packages/**/*",
   ],
@@ -178,6 +180,17 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
   "jsxImportSource": "preact",
   "module": "ESNext",
   "moduleResolution": "Bundler",
+  "paths": {
+    "@/*": [
+      "src/*",
+    ],
+    "@wpdev/polaris-stack": [
+      "src/polaris/index.ts",
+    ],
+    "@wpdev/polaris-stack/*": [
+      "src/polaris/*",
+    ],
+  },
   "strict": true,
 }
 `;

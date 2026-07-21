@@ -1489,9 +1489,15 @@ export const TEMPLATE_TSCONFIG_JSON = `{
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@wpdev/polaris-stack": ["src/polaris/index.ts"],
+      "@wpdev/polaris-stack/*": ["src/polaris/*"]
+    }
   },
-  "include": ["assets/**/*", "core/**/*", "packages/**/*"],
+  "include": ["assets/**/*", "src/**/*", "core/**/*", "packages/**/*"],
   "exclude": ["node_modules", "vendor", "build", "dist"]
 }
 `;
