@@ -462,12 +462,24 @@ describe("@wpdev/create-wp-project", () => {
 
     /* ----- src/Modules/ emission ------------------------------------- */
 
-    test("scaffolds full ExampleFeature module (REST + TS entry)", async () => {
+    test("scaffolds full ExampleFeature module (AccessManager + REST + TS entry)", async () => {
       const res = await scaffoldProject(tmp, goodAnswers);
       expect(res.ok).toBe(true);
       const moduleDir = path.join(tmp, "src", "Modules", "ExampleFeature");
       const modulePhp = await fs.readFile(
         path.join(moduleDir, "Module.php"),
+        "utf8",
+      );
+      const featureAccess = await fs.readFile(
+        path.join(moduleDir, "Access", "FeatureAccess.php"),
+        "utf8",
+      );
+      const deferredSetup = await fs.readFile(
+        path.join(moduleDir, "Queue", "DeferredSetup.php"),
+        "utf8",
+      );
+      const viewPhp = await fs.readFile(
+        path.join(moduleDir, "Templates", "View.php"),
         "utf8",
       );
       const controller = await fs.readFile(
@@ -478,8 +490,20 @@ describe("@wpdev/create-wp-project", () => {
         path.join(moduleDir, "assets", "entries", "admin.ts"),
         "utf8",
       );
+      const statusCommand = await fs.readFile(
+        path.join(moduleDir, "Cli", "StatusCommand.php"),
+        "utf8",
+      );
       expect(modulePhp).toMatch(/RestSetup::register/);
+      expect(modulePhp).toMatch(/DeferredSetup::boot/);
+      expect(modulePhp).toMatch(/CliSetup::register/);
+      expect(featureAccess).toMatch(/extends UserAccess/);
+      expect(deferredSetup).toMatch(/DeferredCall::queue/);
+      expect(viewPhp).toMatch(/Template::set_variable/);
+      expect(statusCommand).toMatch(/extends Command/);
       expect(controller).toMatch(/BatchResponse::wrap/);
+      expect(controller).toMatch(/CapabilityPolicy::access/);
+      expect(controller).toMatch(/View::notice/);
       expect(adminTs).toMatch(/domReady/);
     });
 

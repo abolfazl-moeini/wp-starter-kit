@@ -205,6 +205,21 @@ describe("addFeature() — happy path (Phase 22.3, 22.4)", () => {
     expect(res.ok).toBe(true);
     expect(res.written).toContain("src/Modules/ExampleFeature/Module.php");
     expect(res.written).toContain(
+      "src/Modules/ExampleFeature/Access/FeatureAccess.php",
+    );
+    expect(res.written).toContain(
+      "src/Modules/ExampleFeature/Queue/DeferredSetup.php",
+    );
+    expect(res.written).toContain(
+      "src/Modules/ExampleFeature/Templates/View.php",
+    );
+    expect(res.written).toContain(
+      "src/Modules/ExampleFeature/Templates/status-notice.php",
+    );
+    expect(res.written).toContain(
+      "src/Modules/ExampleFeature/Cli/StatusCommand.php",
+    );
+    expect(res.written).toContain(
       "src/Modules/ExampleFeature/Rest/ItemsController.php",
     );
     expect(res.written).toContain(

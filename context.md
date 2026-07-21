@@ -185,6 +185,9 @@ Reimplemented under `src/Support/` (and `packages/framework/`):
 - `DeferredCall` queue
 - Class-based shortcodes
 - `CapabilityPolicy` auth helper
+- `AccessManager` (`UserAccess` + `BluePrint`) for named capability rules
+- `Templates` (`Template` + namespaced helpers) for PHP partials / messages
+- `WpCli` (`Command` + `CliSetup`) for class-based WP-CLI commands
 
 See `docs/php-core-libs.md`, `docs/fetch-batch.md`.
 

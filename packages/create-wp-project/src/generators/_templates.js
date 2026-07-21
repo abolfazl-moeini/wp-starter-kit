@@ -537,11 +537,142 @@ export const TEMPLATE_COMMITLINT_CONFIG = `module.exports = {
 };
 `;
 
+export const TEMPLATE_EXAMPLE_FEATURE_ACCESS = `<?php
+declare(strict_types=1);
+
+namespace {{vendor}}\\Modules\\ExampleFeature\\Access;
+
+use {{frameworkNamespace}}\\Support\\AccessManager\\BluePrint\\BluePrint;
+use {{frameworkNamespace}}\\Support\\AccessManager\\UserAccess;
+
+/**
+ * Named access map for ExampleFeature (AccessManager).
+ *
+ * Prefer have_access() / CapabilityPolicy::access() over scattering
+ * current_user_can() across the module. Declare every gate once here.
+ *
+ * Patterns:
+ * - any()  — OR of capabilities
+ * - all()  — AND of capabilities
+ * - custom() — free-form callback
+ * - Multiple describe() with the same id — OR of rule groups
+ *
+ * @see {{frameworkNamespace}}\\Support\\AccessManager\\UserAccess
+ * @see {{frameworkNamespace}}\\Support\\Auth\\CapabilityPolicy::access()
+ */
+final class FeatureAccess extends UserAccess
+{
+    public const VIEW_ITEMS = 'view_items';
+    public const EDIT_ITEMS = 'edit_items';
+    public const PUBLISH_ITEMS = 'publish_items';
+    public const MANAGE_FEATURE = 'manage_feature';
+
+    protected function describe(BluePrint $blue_print): void
+    {
+        // any(): pass if user has at least one of these caps
+        $blue_print->describe(self::VIEW_ITEMS)
+            ->any('read', 'edit_posts');
+
+        // Primary REST gate for mutating endpoints
+        $blue_print->describe(self::EDIT_ITEMS)
+            ->any('edit_posts');
+
+        // all(): every listed cap is required
+        $blue_print->describe(self::PUBLISH_ITEMS)
+            ->all('edit_posts', 'publish_posts');
+
+        // custom() + second describe() group = OR of rule groups
+        $blue_print->describe(self::MANAGE_FEATURE)
+            ->custom(static function (): bool {
+                return current_user_can('manage_options');
+            });
+
+        $blue_print->describe(self::MANAGE_FEATURE)
+            ->any('edit_others_posts');
+    }
+}
+`;
+
+export const TEMPLATE_EXAMPLE_FEATURE_VIEW = `<?php
+declare(strict_types=1);
+
+namespace {{vendor}}\\Modules\\ExampleFeature\\Templates;
+
+use {{frameworkNamespace}}\\Support\\Templates\\Template;
+
+/**
+ * ExampleFeature template helpers — Template API usage.
+ *
+ * @see {{frameworkNamespace}}\\Support\\Templates\\Template
+ * @see {{frameworkNamespace}}\\Support\\Templates\\set_template_variable()
+ */
+final class View
+{
+    public static function directory(): string
+    {
+        return __DIR__;
+    }
+
+    public static function render(string $template): string
+    {
+        return Template::render($template, self::directory());
+    }
+
+    public static function load(string $template): bool
+    {
+        return Template::load($template, self::directory());
+    }
+
+    public static function notice(string $message, string $type = 'info'): string
+    {
+        Template::set_variable('notice', [
+            'message' => $message,
+            'type'    => $type,
+        ]);
+
+        return self::render('status-notice.php');
+    }
+
+    /**
+     * @param mixed $error
+     */
+    public static function messages($error): string
+    {
+        return Template::render_messages($error);
+    }
+}
+`;
+
+export const TEMPLATE_EXAMPLE_FEATURE_STATUS_NOTICE = `<?php
+/**
+ * ExampleFeature sample partial — reads vars via Template APIs.
+ *
+ * @package {{vendor}}\\Modules\\ExampleFeature
+ */
+
+use function {{frameworkNamespace}}\\Support\\Templates\\get_template_variable;
+
+$notice = get_template_variable('notice');
+if (!is_array($notice)) {
+    return;
+}
+
+$message = isset($notice['message']) ? (string) $notice['message'] : '';
+$type = isset($notice['type']) ? (string) $notice['type'] : 'info';
+$type_class = preg_replace('/[^a-z0-9_-]/i', '', $type) ?: 'info';
+?>
+<div class="wpdev-example-notice wpdev-example-notice--<?php echo esc_attr($type_class); ?>" role="status">
+	<p><?php echo esc_html($message); ?></p>
+</div>
+`;
+
 export const TEMPLATE_EXAMPLE_FEATURE_ITEMS_CONTROLLER = `<?php
 declare(strict_types=1);
 
 namespace {{vendor}}\\Modules\\ExampleFeature\\Rest;
 
+use {{vendor}}\\Modules\\ExampleFeature\\Access\\FeatureAccess;
+use {{vendor}}\\Modules\\ExampleFeature\\Templates\\View;
 use {{frameworkNamespace}}\\Support\\Auth\\CapabilityPolicy;
 use {{frameworkNamespace}}\\Support\\Rest\\AllowBatch;
 use {{frameworkNamespace}}\\Support\\Rest\\BatchResponse;
@@ -549,17 +680,33 @@ use {{frameworkNamespace}}\\Support\\Rest\\RestHandler;
 use WP_REST_Request;
 use WP_REST_Response;
 
+/**
+ * Demo REST handler. Permissions use AccessManager (FeatureAccess),
+ * not ad-hoc current_user_can() — see Access/FeatureAccess.php.
+ * HTML fragments use Template APIs via Templates/View.php.
+ */
 final class ItemsController extends RestHandler implements AllowBatch
 {
     public function rest_handler(WP_REST_Request $request): WP_REST_Response
     {
         $cacheKey = (string) ($request->get_param('cacheKey') ?? 'default');
-        return BatchResponse::wrap(['items' => []], $cacheKey);
+        $noticeHtml = View::notice('Example items loaded', 'success');
+        return BatchResponse::wrap(
+            [
+                'items'  => [],
+                'notice' => $noticeHtml,
+            ],
+            $cacheKey
+        );
     }
 
     public function rest_permission(): bool
     {
-        return CapabilityPolicy::can('read');
+        // Prefer named AccessManager rules over CapabilityPolicy::can().
+        return CapabilityPolicy::access(
+            new FeatureAccess(),
+            FeatureAccess::EDIT_ITEMS
+        );
     }
 
     public function rest_end_point(): string
@@ -1104,15 +1251,176 @@ final class ModuleLoader
 }
 `;
 
+export const TEMPLATE_EXAMPLE_FEATURE_DEFERRED_SETUP = `<?php
+declare(strict_types=1);
+
+namespace {{vendor}}\\Modules\\ExampleFeature\\Queue;
+
+use {{frameworkNamespace}}\\Support\\Queue\\DeferredCall;
+
+/**
+ * Canonical DeferredCall examples for the starter kit.
+ *
+ * Patterns (from queue-utils DefferCallTest):
+ * 1. Queue before the hook fires → callback runs on do_action (params only).
+ * 2. merge_hook_params → fixed params first, then args from do_action(...).
+ * 3. queue() / can_queue() return false when the hook already fired → run now.
+ *
+ * @see {{frameworkNamespace}}\\Support\\Queue\\DeferredCall
+ */
+final class DeferredSetup
+{
+    public const READY_HOOK = 'wpdev_example_feature_ready';
+    public const SYNC_HOOK = 'wpdev_example_feature_sync';
+
+    public static function boot(): void
+    {
+        // Pattern 1: fixed params only
+        DeferredCall::queue(self::READY_HOOK, [
+            'callback' => [self::class, 'on_ready'],
+            'params'   => [
+                [
+                    'module' => 'example-feature',
+                    'phase'  => 'ready',
+                ],
+            ],
+            'priority' => 10,
+        ]);
+
+        // Pattern 2: merge do_action() args after params
+        DeferredCall::queue(self::SYNC_HOOK, [
+            'callback'          => [self::class, 'on_sync'],
+            'params'            => [
+                [
+                    'source' => 'example-feature',
+                ],
+            ],
+            'merge_hook_params' => true,
+            'priority'          => 10,
+        ]);
+
+        // Demo fires — in production, another component usually fires these.
+        if (function_exists('do_action')) {
+            do_action(self::READY_HOOK);
+            do_action(self::SYNC_HOOK, 1, 2, 3);
+        }
+    }
+
+    /**
+     * Pattern 3: queue for $hook, or run immediately if it already fired.
+     */
+    public static function queue_or_run(string $hook, callable $callback, int $priority = 10): void
+    {
+        $queued = DeferredCall::queue($hook, [
+            'callback' => $callback,
+            'priority' => $priority,
+        ]);
+
+        if (!$queued) {
+            $callback();
+        }
+    }
+
+    /**
+     * @param array{module?: string, phase?: string} $context
+     */
+    public static function on_ready(array $context): void
+    {
+        if (function_exists('do_action')) {
+            do_action('wpdev_example_feature_deferred_ready', $context);
+        }
+    }
+
+    /**
+     * @param array{source?: string} $context
+     * @param mixed                  ...$hookArgs
+     */
+    public static function on_sync(array $context, ...$hookArgs): void
+    {
+        if (function_exists('do_action')) {
+            do_action('wpdev_example_feature_deferred_sync', $context, $hookArgs);
+        }
+    }
+}
+`;
+
+export const TEMPLATE_EXAMPLE_FEATURE_STATUS_COMMAND = `<?php
+declare(strict_types=1);
+
+namespace {{vendor}}\\Modules\\ExampleFeature\\Cli;
+
+use {{frameworkNamespace}}\\Support\\WpCli\\Command;
+
+/**
+ * Example WP-CLI command.
+ *
+ *   wp wpdev example-status
+ *   wp wpdev example-status --format=json
+ *
+ * @see {{frameworkNamespace}}\\Support\\WpCli\\CliSetup
+ */
+final class StatusCommand extends Command
+{
+    public function name(): string
+    {
+        return 'wpdev example-status';
+    }
+
+    public function description(): string
+    {
+        return 'Print ExampleFeature status (WP-CLI demo).';
+    }
+
+    public function synopsis(): array
+    {
+        return [
+            [
+                'type'        => 'assoc',
+                'name'        => 'format',
+                'description' => 'Output format: text or json.',
+                'optional'    => true,
+                'default'     => 'text',
+                'options'     => ['text', 'json'],
+            ],
+        ];
+    }
+
+    public function handle(array $args, array $assoc_args): void
+    {
+        $payload = [
+            'module'  => 'example-feature',
+            'status'  => 'ok',
+            'message' => 'ExampleFeature is loaded',
+        ];
+
+        $format = isset($assoc_args['format']) ? (string) $assoc_args['format'] : 'text';
+
+        if ($format === 'json') {
+            $this->log((string) wp_json_encode($payload));
+            $this->success('Status printed as JSON');
+            return;
+        }
+
+        $this->log('Module:  ' . $payload['module']);
+        $this->log('Status:  ' . $payload['status']);
+        $this->log('Message: ' . $payload['message']);
+        $this->success('ExampleFeature status OK');
+    }
+}
+`;
+
 export const TEMPLATE_EXAMPLE_FEATURE_MODULE_PHP = `<?php
 declare(strict_types=1);
 
 namespace {{vendor}}\\Modules\\ExampleFeature;
 
 use {{frameworkNamespace}}\\Core\\AbstractModule;
+use {{vendor}}\\Modules\\ExampleFeature\\Cli\\StatusCommand;
+use {{vendor}}\\Modules\\ExampleFeature\\Queue\\DeferredSetup;
 use {{vendor}}\\Modules\\ExampleFeature\\Rest\\ItemsController;
 use {{frameworkNamespace}}\\Support\\Assets;
 use {{frameworkNamespace}}\\Support\\Rest\\RestSetup;
+use {{frameworkNamespace}}\\Support\\WpCli\\CliSetup;
 
 final class Module extends AbstractModule
 {
@@ -1127,11 +1435,19 @@ final class Module extends AbstractModule
         // Do not call register_rest_route() here — RestSetup owns that.
         RestSetup::register(ItemsController::class);
 
+        // WP-CLI: class-based command — see Cli/StatusCommand.php.
+        // Do not call WP_CLI::add_command() here — CliSetup owns that.
+        CliSetup::register(StatusCommand::class);
+
+        // DeferredCall demo — see Queue/DeferredSetup.php (queue-utils patterns).
+        DeferredSetup::boot();
+
         if (!function_exists('is_admin') || !is_admin()) {
             return;
         }
 
-        add_action('admin_init', [$this, 'register_admin_assets']);
+        // Pattern 3: queue admin assets, or run now if admin_init already fired.
+        DeferredSetup::queue_or_run('admin_init', [$this, 'register_admin_assets']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
     }
 

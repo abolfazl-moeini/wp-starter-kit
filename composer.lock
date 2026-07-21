@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2be09a65cd3f2ea4190eb7067fcf6995",
+    "content-hash": "706534276d65ffe63010fc37b204a958",
     "packages": [
         {
             "name": "blockstudio/blockstudio",
@@ -8732,7 +8732,7 @@
             "dist": {
                 "type": "path",
                 "url": "packages/framework",
-                "reference": "00868d8304d9662ed393a21432a418a270549343"
+                "reference": "283d8f99470c6e7f7cdff486cddbd871cf2314a7"
             },
             "require": {
                 "php": ">=7.4"
@@ -8741,12 +8741,15 @@
             "autoload": {
                 "psr-4": {
                     "WPDev\\": "src/"
-                }
+                },
+                "files": [
+                    "src/Support/Templates/functions.php"
+                ]
             },
             "license": [
                 "GPL-2.0-or-later"
             ],
-            "description": "WordPress Starter Kit framework: PSR-4 plugin core (Plugin / ModuleLoader / ModuleInterface) and the Support namespace (Assets, Auth, Queue, Rest, Shortcodes).",
+            "description": "WordPress Starter Kit framework: PSR-4 plugin core (Plugin / ModuleLoader / ModuleInterface) and the Support namespace (Assets, Auth, AccessManager, Queue, Rest, Shortcodes, Templates).",
             "transport-options": {
                 "symlink": true,
                 "relative": true

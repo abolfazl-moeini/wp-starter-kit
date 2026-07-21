@@ -141,7 +141,7 @@ describe("vendorScoping generator (Phase 21.7/21.8)", () => {
 });
 
 describe("exampleFeature generator (Phase 21.7/21.8)", () => {
-  test("emits the ExampleFeature module (Module.php + Rest/ItemsController.php + assets/entries/admin.ts) when on", () => {
+  test("emits the ExampleFeature module (Module.php + Access + Rest/ItemsController.php + assets/entries/admin.ts) when on", () => {
     const out = exampleFeatureRun(
       makeCtx(
         {},
@@ -150,6 +150,21 @@ describe("exampleFeature generator (Phase 21.7/21.8)", () => {
       ),
     );
     expect(out.files["src/Modules/ExampleFeature/Module.php"]).toBeDefined();
+    expect(
+      out.files["src/Modules/ExampleFeature/Access/FeatureAccess.php"],
+    ).toBeDefined();
+    expect(
+      out.files["src/Modules/ExampleFeature/Queue/DeferredSetup.php"],
+    ).toBeDefined();
+    expect(
+      out.files["src/Modules/ExampleFeature/Templates/View.php"],
+    ).toBeDefined();
+    expect(
+      out.files["src/Modules/ExampleFeature/Templates/status-notice.php"],
+    ).toBeDefined();
+    expect(
+      out.files["src/Modules/ExampleFeature/Cli/StatusCommand.php"],
+    ).toBeDefined();
     expect(
       out.files["src/Modules/ExampleFeature/Rest/ItemsController.php"],
     ).toBeDefined();
@@ -169,9 +184,37 @@ describe("exampleFeature generator (Phase 21.7/21.8)", () => {
     expect(out.files["src/Modules/ExampleFeature/Module.php"]).toMatch(
       /RestSetup::register/,
     );
+    expect(out.files["src/Modules/ExampleFeature/Module.php"]).toMatch(
+      /DeferredSetup::boot/,
+    );
+    expect(out.files["src/Modules/ExampleFeature/Module.php"]).toMatch(
+      /CliSetup::register/,
+    );
     expect(
       out.files["src/Modules/ExampleFeature/Rest/ItemsController.php"],
     ).toMatch(/BatchResponse::wrap/);
+    // AccessManager is the preferred permission source for REST.
+    expect(
+      out.files["src/Modules/ExampleFeature/Access/FeatureAccess.php"],
+    ).toMatch(/extends UserAccess/);
+    expect(
+      out.files["src/Modules/ExampleFeature/Rest/ItemsController.php"],
+    ).toMatch(/CapabilityPolicy::access/);
+    // DeferredCall demo (queue-utils patterns).
+    expect(
+      out.files["src/Modules/ExampleFeature/Queue/DeferredSetup.php"],
+    ).toMatch(/DeferredCall::queue/);
+    // Template API demo (core-essentials patterns).
+    expect(out.files["src/Modules/ExampleFeature/Templates/View.php"]).toMatch(
+      /Template::set_variable/,
+    );
+    expect(
+      out.files["src/Modules/ExampleFeature/Rest/ItemsController.php"],
+    ).toMatch(/View::notice/);
+    // WP-CLI demo (Command + CliSetup).
+    expect(
+      out.files["src/Modules/ExampleFeature/Cli/StatusCommand.php"],
+    ).toMatch(/extends Command/);
   });
 
   test("emits nothing when exampleFeature=off", () => {

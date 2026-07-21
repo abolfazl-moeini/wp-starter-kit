@@ -209,8 +209,97 @@ final class CapabilityPolicy
 {
     public static function can(string $capability): bool;
     public static function rest_permission(string $capability): callable;
+    public static function access(UserAccess $qualifier, string $accessId): bool;
+    public static function rest_access(UserAccess $qualifier, string $accessId): callable;
 }
 ```
+
+Prefer `access()` / `rest_access()` with an AccessManager qualifier for
+feature-level gates. Use `can()` only for one-off single-capability checks.
+
+---
+
+## `WPDev\Support\AccessManager`
+
+### `UserAccess` (abstract)
+
+```php
+abstract class UserAccess extends QualifierBase
+{
+    abstract protected function describe(BluePrint $blue_print): void;
+    public function have_access($id): bool;
+    public function upper_current_user_can(string $capability): bool;
+}
+```
+
+### `BluePrint` (final)
+
+```php
+final class BluePrint
+{
+    public function describe(string $id): self;
+    public function describe_upper(string $id): self;
+    public function any(string ...$caps): self;
+    public function all(string ...$caps): self;
+    public function custom(callable $callback): self;
+    public function structure(): array;
+}
+```
+
+---
+
+## `WPDev\Support\WpCli`
+
+### `Command` (abstract)
+
+```php
+abstract class Command
+{
+    abstract public function name(): string;
+    abstract public function description(): string;
+    abstract public function handle(array $args, array $assoc_args): void;
+    public function synopsis(): array;
+    public function when(): string;
+    final public function run(array $args = [], array $assoc_args = []): void;
+}
+```
+
+### `CliSetup` (final)
+
+```php
+final class CliSetup
+{
+    public static function register(string|Command $command): bool;
+    public static function setup(): void;
+    public static function cli_init(): void;
+    public static function commands(): array;
+    public static function flush(): void;
+}
+```
+
+---
+
+## `WPDev\Support\Templates`
+
+### `Template` (final)
+
+```php
+final class Template
+{
+    public static function set_variable(string $name, $value): void;
+    public static function get_variable(string $name);
+    public static function set_variables(array &$vars): void;
+    public static function get_variables(): array;
+    public static function load(string $template, string $directory): bool;
+    public static function render(string $template, string $directory): string;
+    public static function render_messages($the_error): string;
+    public static function reset_for_tests(): void;
+}
+```
+
+Namespaced function aliases (Composer `files` autoload):
+`set_template_variable`, `get_template_variable`, `set_template_variables`,
+`get_template_variables`, `load_template`, `render_messages`.
 
 ---
 
@@ -365,7 +454,7 @@ Apply on every module that handles HTTP, forms, or output:
 
 | Concern            | PHP pattern                                                                                  |
 | ------------------ | -------------------------------------------------------------------------------------------- |
-| **Capability**     | `CapabilityPolicy::can( 'manage_options' )` or `rest_permission()`                           |
+| **Capability**     | Prefer `UserAccess` + `CapabilityPolicy::access()`; fallback `can()` / `rest_permission()`   |
 | **REST**           | Implement `rest_permission()` on every `RestHandler`; never omit `permission_callback`       |
 | **Nonces**         | `wp_verify_nonce()` for form/AJAX actions; localize nonces via `Assets::get_localize_data()` |
 | **Sanitize input** | `sanitize_text_field()`, `absint()`, typed REST schema validation                            |
@@ -406,15 +495,23 @@ module `boot()`, then call `RestSetup::setup()` once (often deferred to
 
 ## `DeferredCall` usage pattern
 
-Queue expensive work to run later on a named hook:
+Queue a callable to run when a WordPress hook fires. `queue()` registers
+`run_queue` on that hook automatically — do not call `run_queue()` yourself.
 
 ```php
-DeferredCall::queue( 'my_plugin_deferred_sync', array( 'id' => 42 ) );
-// Later, on that hook:
-DeferredCall::run_queue();
+DeferredCall::queue('my_plugin_deferred_sync', [
+    'callback' => [$this, 'sync'],
+    'params'   => [['id' => 42]],
+    'merge_hook_params' => true, // optional: append do_action args
+    'priority' => 10,
+]);
+// Later, when something fires the hook:
+do_action('my_plugin_deferred_sync', $extraArg);
 ```
 
-`can_queue()` returns false when the hook is not registered — check before queueing.
+`can_queue()` / `queue()` return `false` when the hook has already fired
+(`did_action`). In that case run the work immediately (see
+`ExampleFeature\Queue\DeferredSetup::queue_or_run()`).
 
 ---
 

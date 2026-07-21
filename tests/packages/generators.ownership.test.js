@@ -116,6 +116,11 @@ function firstOverlap(a, b) {
     "phpunit.xml.dist",
     // src/Core/* deliberately not owned (Phase 23: framework lives in wpdev/framework dep)
     "src/Modules/ExampleFeature/Module.php",
+    "src/Modules/ExampleFeature/Access/FeatureAccess.php",
+    "src/Modules/ExampleFeature/Queue/DeferredSetup.php",
+    "src/Modules/ExampleFeature/Templates/View.php",
+    "src/Modules/ExampleFeature/Templates/status-notice.php",
+    "src/Modules/ExampleFeature/Cli/StatusCommand.php",
     "src/Modules/ExampleFeature/Rest/ItemsController.php",
     "src/Modules/ExampleFeature/assets/entries/admin.ts",
     "tests/phpunit/Modules/ExampleFeature/ModuleTest.php",

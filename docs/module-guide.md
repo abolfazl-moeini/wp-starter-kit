@@ -118,6 +118,7 @@ declare(strict_types=1);
 
 namespace WPDev\Modules\MyFeature\Rest;
 
+use WPDev\Modules\MyFeature\Access\FeatureAccess;
 use WPDev\Support\Auth\CapabilityPolicy;
 use WPDev\Support\Rest\RestHandler;
 use WP_REST_Request;
@@ -132,7 +133,11 @@ final class ItemsController extends RestHandler
 
     public function rest_permission(): bool
     {
-        return CapabilityPolicy::can('edit_posts');
+        // Prefer AccessManager named rules (see Access/FeatureAccess.php).
+        return CapabilityPolicy::access(
+            new FeatureAccess(),
+            FeatureAccess::EDIT_ITEMS
+        );
     }
 
     public function rest_end_point(): string { return 'my-items'; }
@@ -140,7 +145,24 @@ final class ItemsController extends RestHandler
 }
 ```
 
+Declare rules once in `Access/FeatureAccess.php` (extends
+`WPDev\Support\AccessManager\UserAccess`). See ExampleFeature for a full
+map of `any` / `all` / `custom` / OR-group patterns.
+
 Register in `Module::boot()` via `RestSetup::register(ItemsController::class)`.
+
+For deferred work when boot order is uncertain, use
+`WPDev\Support\Queue\DeferredCall` (see ExampleFeature
+`Queue/DeferredSetup.php` for `params`, `merge_hook_params`, and
+`queue_or_run`).
+
+For PHP partials, use `WPDev\Support\Templates\Template` (set/get
+variables + `load`/`render`) instead of `extract()` + `include`. See
+ExampleFeature `Templates/View.php` and `status-notice.php`.
+
+For WP-CLI, extend `WPDev\Support\WpCli\Command` and register with
+`CliSetup::register()` (never call `WP_CLI::add_command` in the module).
+See ExampleFeature `Cli/StatusCommand.php`.
 
 ## Step 5: Enqueue assets
 
@@ -185,7 +207,7 @@ wpdev doctor .       # drift check on the project
 
 Every module must follow WordPress security practices:
 
-- [ ] REST routes implement `permission_callback` (use `CapabilityPolicy`)
+- [ ] REST routes implement `permission_callback` (prefer AccessManager `UserAccess` + `CapabilityPolicy::access()`)
 - [ ] Input sanitized (`sanitize_text_field`, `absint`, etc.)
 - [ ] Output escaped (`esc_html`, `esc_attr`, `wp_kses_post`)
 - [ ] AJAX handlers verify nonces

@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace WPDev\Modules\ExampleFeature\Rest;
 
+use WPDev\Modules\ExampleFeature\Access\FeatureAccess;
+use WPDev\Modules\ExampleFeature\Templates\View;
 use WPDev\Support\Auth\CapabilityPolicy;
 use WPDev\Support\Rest\AllowBatch;
 use WPDev\Support\Rest\BatchResponse;
@@ -13,10 +15,10 @@ use WP_REST_Response;
 final class ItemsController extends RestHandler implements AllowBatch
 {
     /**
-     * Capability required to call this endpoint. The `read` cap is granted
-     * to every logged-in user (including subscribers); using it as the
-     * authorization gate for a POST endpoint is a privilege-escalation
-     * footgun, so we require `edit_posts` (author+).
+     * Capability gate is declared on FeatureAccess (AccessManager), not here.
+     * Prefer named access ids over inline current_user_can() / CapabilityPolicy::can().
+     *
+     * @see FeatureAccess::EDIT_ITEMS
      */
     public const REQUIRED_CAPABILITY = 'edit_posts';
 
@@ -29,15 +31,27 @@ final class ItemsController extends RestHandler implements AllowBatch
         $cacheKey = sanitize_text_field(
             (string) ($request->get_param('cacheKey') ?? 'default')
         );
+        // Template API demo: View::notice() sets vars + loads Templates/status-notice.php.
+        // Prefer Template::set_variable / load over extract() + include.
+        $noticeHtml = View::notice('Example items loaded', 'success');
+
         return BatchResponse::wrap(
-            ['items' => [['id' => 1, 'label' => 'Example']]],
+            [
+                'items'  => [['id' => 1, 'label' => 'Example']],
+                'notice' => $noticeHtml,
+            ],
             $cacheKey
         );
     }
 
     public function rest_permission(): bool
     {
-        return CapabilityPolicy::can(self::REQUIRED_CAPABILITY);
+        // AccessManager: single source of truth for feature access rules.
+        // FeatureAccess::describe() maps EDIT_ITEMS → any('edit_posts').
+        return CapabilityPolicy::access(
+            new FeatureAccess(),
+            FeatureAccess::EDIT_ITEMS
+        );
     }
 
     public function rest_end_point(): string

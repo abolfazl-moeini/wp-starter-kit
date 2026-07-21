@@ -3,7 +3,8 @@
 wp-starter-kit reimplements useful `php-core-libs/` behavior under
 `packages/framework/src/Support/` with no legacy private dependencies.
 Every public class is namespaced under `WPDev\Support\` (or
-`WPDev\Support\Rest\`, `WPDev\Support\Queue\`, etc.).
+`WPDev\Support\Rest\`, `WPDev\Support\Queue\`, `WPDev\Support\AccessManager\`,
+`WPDev\Support\Templates\`, etc.).
 
 This document lists **signatures, parameters, return types, and usage**
 for each public symbol. For a compact index grouped by namespace, see
@@ -44,6 +45,7 @@ final class ItemsController extends RestHandler
 
     public function rest_permission(): bool
     {
+        // Prefer AccessManager: CapabilityPolicy::access(new FeatureAccess(), FeatureAccess::EDIT_ITEMS)
         return CapabilityPolicy::can('edit_posts');
     }
 
@@ -132,31 +134,54 @@ public static function reset_for_tests(): void;
 | `merge_hook_params` | `bool`     | no       | Merge hook's own args into params  |
 | `priority`          | `int`      | no       | `add_action` priority (default 10) |
 
-**Example:**
+**Example (boilerplate — `ExampleFeature/Queue/DeferredSetup.php`):**
 
 ```php
-DeferredCall::queue('init', [
-    'callback' => [$this, 'late_init'],
-    'params'   => [],
-    'priority' => 20,
+// Pattern 1: fixed params only (queue-utils DefferCallTest)
+DeferredCall::queue('wpdev_example_feature_ready', [
+    'callback' => [DeferredSetup::class, 'on_ready'],
+    'params'   => [['module' => 'example-feature']],
+    'priority' => 10,
 ]);
+
+// Pattern 2: merge do_action() args after params
+DeferredCall::queue('wpdev_example_feature_sync', [
+    'callback'          => [DeferredSetup::class, 'on_sync'],
+    'params'            => [['source' => 'example-feature']],
+    'merge_hook_params' => true,
+]);
+do_action('wpdev_example_feature_sync', 1, 2, 3);
+// → on_sync(['source' => 'example-feature'], 1, 2, 3)
+
+// Pattern 3: already-fired hook → run immediately
+if (!DeferredCall::queue('admin_init', ['callback' => [$this, 'setup']])) {
+    $this->setup(); // or DeferredSetup::queue_or_run(...)
+}
 ```
+
+See `src/Modules/ExampleFeature/Queue/DeferredSetup.php` for the full demo
+wired from `Module::boot()`.
 
 ---
 
 ## Auth (`WPDev\Support\Auth\CapabilityPolicy`)
 
-Thin wrappers around `current_user_can()` for REST permission reuse.
+Thin wrappers around `current_user_can()` and AccessManager named rules.
 
 ```php
 public static function can(string $capability): bool;
 public static function rest_permission(string $capability): callable;
+public static function access(UserAccess $qualifier, string $accessId): bool;
+public static function rest_access(UserAccess $qualifier, string $accessId): callable;
 ```
 
 **Security:** Always use the narrowest capability. `read` is granted to
 every logged-in user — avoid it for mutating endpoints.
 
-**Example:**
+**Prefer AccessManager** for multi-rule feature gates (see below). Use
+`can()` / `rest_permission()` only for one-off single-cap checks.
+
+**Example (single cap):**
 
 ```php
 register_rest_route($ns, '/items', [
@@ -164,6 +189,161 @@ register_rest_route($ns, '/items', [
     // ...
 ]);
 ```
+
+**Example (named AccessManager rule):**
+
+```php
+return CapabilityPolicy::access(new FeatureAccess(), FeatureAccess::EDIT_ITEMS);
+```
+
+---
+
+## AccessManager (`WPDev\Support\AccessManager\`)
+
+Declarative named access rules. Ported from `betterstudio/access-manager`.
+
+| Class                 | Role                                         |
+| --------------------- | -------------------------------------------- |
+| `UserAccess`          | Extend and implement `describe(BluePrint)`   |
+| `QualifierBase`       | `have_access($id)` — OR of rule groups       |
+| `BluePrint\BluePrint` | Fluent `describe` / `any` / `all` / `custom` |
+
+**Semantics:**
+
+- Multiple `describe('same-id')` calls create **OR** groups.
+- Rules inside one group (`any`/`all`/`custom` chains) are **AND**'d.
+- Unknown ids → `false` (deny by default).
+
+**Patterns** (see ExampleFeature `Access/FeatureAccess.php`):
+
+```php
+final class FeatureAccess extends UserAccess
+{
+    public const EDIT_ITEMS = 'edit_items';
+    public const PUBLISH_ITEMS = 'publish_items';
+    public const MANAGE_FEATURE = 'manage_feature';
+
+    protected function describe(BluePrint $blue_print): void
+    {
+        // any(): at least one cap
+        $blue_print->describe(self::EDIT_ITEMS)->any('edit_posts');
+
+        // all(): every cap required
+        $blue_print->describe(self::PUBLISH_ITEMS)
+            ->all('edit_posts', 'publish_posts');
+
+        // custom() + second group = OR
+        $blue_print->describe(self::MANAGE_FEATURE)
+            ->custom(static fn (): bool => current_user_can('manage_options'));
+        $blue_print->describe(self::MANAGE_FEATURE)
+            ->any('edit_others_posts');
+    }
+}
+
+// REST permission_callback
+return CapabilityPolicy::access(new FeatureAccess(), FeatureAccess::EDIT_ITEMS);
+// or: (new FeatureAccess())->have_access(FeatureAccess::EDIT_ITEMS);
+```
+
+`describe_upper()` checks the switched-from user when the User Switching
+plugin is active (`current_user_switched()`).
+
+---
+
+## WP-CLI (`WPDev\Support\WpCli\`)
+
+Minimal class-based WP-CLI commands — same pattern as Rest / Shortcodes.
+
+### `Command` (abstract)
+
+```php
+abstract public function name(): string;          // e.g. 'wpdev example-status'
+abstract public function description(): string;
+abstract public function handle(array $args, array $assoc_args): void;
+public function synopsis(): array;               // optional WP-CLI synopsis
+public function when(): string;                  // default after_wp_load
+// helpers: log / line / success / warning / error
+```
+
+### `CliSetup` (final)
+
+```php
+CliSetup::register(StatusCommand::class);
+// hooks cli_init → WP_CLI::add_command(...)
+```
+
+**Example (boilerplate):**
+
+```php
+final class StatusCommand extends Command
+{
+    public function name(): string { return 'wpdev example-status'; }
+    public function description(): string { return 'Show status'; }
+    public function handle(array $args, array $assoc_args): void
+    {
+        $this->success('OK');
+    }
+}
+
+// Module::boot()
+CliSetup::register(StatusCommand::class);
+```
+
+```bash
+wp wpdev example-status
+wp wpdev example-status --format=json
+```
+
+See `src/Modules/ExampleFeature/Cli/StatusCommand.php`.
+
+---
+
+## Templates (`WPDev\Support\Templates\`)
+
+Ported from `core-essentials` template helpers. Pass data into PHP partials
+without `extract()`; load files from a module directory.
+
+### Class API (`Template`)
+
+```php
+Template::set_variable(string $name, mixed $value): void;
+Template::get_variable(string $name): mixed;
+Template::set_variables(array &$vars): void;
+Template::get_variables(): array;
+Template::load(string $template, string $directory): bool;
+Template::render(string $template, string $directory): string;
+Template::render_messages(mixed $the_error): string;
+```
+
+### Function aliases (for use inside partials)
+
+```php
+use function WPDev\Support\Templates\set_template_variable;
+use function WPDev\Support\Templates\get_template_variable;
+use function WPDev\Support\Templates\set_template_variables;
+use function WPDev\Support\Templates\get_template_variables;
+use function WPDev\Support\Templates\load_template;
+use function WPDev\Support\Templates\render_messages;
+```
+
+Storage is the global `$wpdev_template_vars` bag.
+
+**Example (boilerplate — `ExampleFeature/Templates/`):**
+
+```php
+Template::set_variable('notice', [
+    'message' => 'Saved',
+    'type'    => 'success',
+]);
+$html = Template::render('status-notice.php', __DIR__);
+// or: View::notice('Saved', 'success');
+
+// Errors → HTML list (views/messages.php)
+echo Template::render_messages(new WP_Error('x', 'Nope'));
+```
+
+See `src/Modules/ExampleFeature/Templates/View.php` and
+`status-notice.php`.
 
 ---
 

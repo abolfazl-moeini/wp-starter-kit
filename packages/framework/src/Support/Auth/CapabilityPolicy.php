@@ -3,8 +3,15 @@ declare(strict_types=1);
 
 namespace WPDev\Support\Auth;
 
+use WPDev\Support\AccessManager\UserAccess;
+
 /**
- * Thin wrappers around current_user_can() for REST permission reuse.
+ * Capability and named-access helpers for REST and admin permission checks.
+ *
+ * Prefer AccessManager (UserAccess + BluePrint) for multi-rule feature access.
+ * Use can() / rest_permission() only for one-off single-capability gates.
+ *
+ * @see \WPDev\Support\AccessManager\UserAccess
  */
 final class CapabilityPolicy
 {
@@ -23,6 +30,32 @@ final class CapabilityPolicy
     {
         return static function () use ($capability): bool {
             return self::can($capability);
+        };
+    }
+
+    /**
+     * Evaluate a named access rule from a UserAccess qualifier.
+     *
+     * Preferred over can() when the module declares rules in describe().
+     */
+    public static function access(UserAccess $qualifier, string $accessId): bool
+    {
+        return $qualifier->have_access($accessId);
+    }
+
+    /**
+     * REST permission_callback bound to a named AccessManager rule.
+     *
+     * @example
+     *   'permission_callback' => CapabilityPolicy::rest_access(
+     *       new FeatureAccess(),
+     *       FeatureAccess::EDIT_ITEMS
+     *   ),
+     */
+    public static function rest_access(UserAccess $qualifier, string $accessId): callable
+    {
+        return static function () use ($qualifier, $accessId): bool {
+            return $qualifier->have_access($accessId);
         };
     }
 }

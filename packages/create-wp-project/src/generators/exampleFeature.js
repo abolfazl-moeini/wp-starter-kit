@@ -12,6 +12,11 @@
 import {
   renderTemplate,
   TEMPLATE_EXAMPLE_FEATURE_MODULE_PHP,
+  TEMPLATE_EXAMPLE_FEATURE_ACCESS,
+  TEMPLATE_EXAMPLE_FEATURE_DEFERRED_SETUP,
+  TEMPLATE_EXAMPLE_FEATURE_VIEW,
+  TEMPLATE_EXAMPLE_FEATURE_STATUS_NOTICE,
+  TEMPLATE_EXAMPLE_FEATURE_STATUS_COMMAND,
   TEMPLATE_EXAMPLE_FEATURE_ITEMS_CONTROLLER,
   TEMPLATE_EXAMPLE_FEATURE_ADMIN_TS,
   TEMPLATE_EXAMPLE_FEATURE_MODULE_TEST_PHP,
@@ -28,6 +33,26 @@ export function run(ctx) {
       TEMPLATE_EXAMPLE_FEATURE_MODULE_PHP,
       tpl,
     ),
+    "src/Modules/ExampleFeature/Access/FeatureAccess.php": renderTemplate(
+      TEMPLATE_EXAMPLE_FEATURE_ACCESS,
+      tpl,
+    ),
+    "src/Modules/ExampleFeature/Queue/DeferredSetup.php": renderTemplate(
+      TEMPLATE_EXAMPLE_FEATURE_DEFERRED_SETUP,
+      tpl,
+    ),
+    "src/Modules/ExampleFeature/Templates/View.php": renderTemplate(
+      TEMPLATE_EXAMPLE_FEATURE_VIEW,
+      tpl,
+    ),
+    "src/Modules/ExampleFeature/Templates/status-notice.php": renderTemplate(
+      TEMPLATE_EXAMPLE_FEATURE_STATUS_NOTICE,
+      tpl,
+    ),
+    "src/Modules/ExampleFeature/Cli/StatusCommand.php": renderTemplate(
+      TEMPLATE_EXAMPLE_FEATURE_STATUS_COMMAND,
+      tpl,
+    ),
     "src/Modules/ExampleFeature/Rest/ItemsController.php": renderTemplate(
       TEMPLATE_EXAMPLE_FEATURE_ITEMS_CONTROLLER,
       tpl,
@@ -39,6 +64,10 @@ export function run(ctx) {
   };
   const dirs = [
     "src/Modules/ExampleFeature",
+    "src/Modules/ExampleFeature/Access",
+    "src/Modules/ExampleFeature/Queue",
+    "src/Modules/ExampleFeature/Templates",
+    "src/Modules/ExampleFeature/Cli",
     "src/Modules/ExampleFeature/Rest",
     "src/Modules/ExampleFeature/assets/entries",
   ];
@@ -69,6 +98,11 @@ export const descriptor = {
   feature: "exampleFeature",
   owns: [
     "src/Modules/ExampleFeature/Module.php",
+    "src/Modules/ExampleFeature/Access/FeatureAccess.php",
+    "src/Modules/ExampleFeature/Queue/DeferredSetup.php",
+    "src/Modules/ExampleFeature/Templates/View.php",
+    "src/Modules/ExampleFeature/Templates/status-notice.php",
+    "src/Modules/ExampleFeature/Cli/StatusCommand.php",
     "src/Modules/ExampleFeature/Rest/ItemsController.php",
     "src/Modules/ExampleFeature/assets/entries/admin.ts",
     "tests/phpunit/Modules/ExampleFeature/ModuleTest.php",

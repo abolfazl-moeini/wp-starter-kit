@@ -25,4 +25,20 @@ class CapabilityPolicyTest extends \WPDevTest\TestCases\TestCase
         $callback = CapabilityPolicy::rest_permission('read');
         $this->assertTrue($callback());
     }
+
+    public function test_access_delegates_to_user_access_qualifier(): void
+    {
+        $this->login('editor');
+
+        $qualifier = new class extends \WPDev\Support\AccessManager\UserAccess {
+            protected function describe(
+                \WPDev\Support\AccessManager\BluePrint\BluePrint $blue_print
+            ): void {
+                $blue_print->describe('edit')->any('edit_posts');
+            }
+        };
+
+        $this->assertTrue(CapabilityPolicy::access($qualifier, 'edit'));
+        $this->assertTrue(CapabilityPolicy::rest_access($qualifier, 'edit')());
+    }
 }

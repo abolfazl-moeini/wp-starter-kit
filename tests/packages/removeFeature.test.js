@@ -249,6 +249,18 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
     // owned files manually (mirroring the exampleFeature generator's
     // output). The removal must delete all of them.
     await seedProject(tmp, defaultFeatures());
+    await fs.mkdir(path.join(tmp, "src/Modules/ExampleFeature/Access"), {
+      recursive: true,
+    });
+    await fs.mkdir(path.join(tmp, "src/Modules/ExampleFeature/Queue"), {
+      recursive: true,
+    });
+    await fs.mkdir(path.join(tmp, "src/Modules/ExampleFeature/Templates"), {
+      recursive: true,
+    });
+    await fs.mkdir(path.join(tmp, "src/Modules/ExampleFeature/Cli"), {
+      recursive: true,
+    });
     await fs.mkdir(path.join(tmp, "src/Modules/ExampleFeature/Rest"), {
       recursive: true,
     });
@@ -262,6 +274,31 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
     await fs.writeFile(
       path.join(tmp, "src/Modules/ExampleFeature/Module.php"),
       "<?php // Module body\n",
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(tmp, "src/Modules/ExampleFeature/Access/FeatureAccess.php"),
+      "<?php // FeatureAccess body\n",
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(tmp, "src/Modules/ExampleFeature/Queue/DeferredSetup.php"),
+      "<?php // DeferredSetup body\n",
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(tmp, "src/Modules/ExampleFeature/Templates/View.php"),
+      "<?php // View body\n",
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(tmp, "src/Modules/ExampleFeature/Templates/status-notice.php"),
+      "<?php // status-notice partial\n",
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(tmp, "src/Modules/ExampleFeature/Cli/StatusCommand.php"),
+      "<?php // StatusCommand body\n",
       "utf8",
     );
     await fs.writeFile(
@@ -292,6 +329,21 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
     expect(res.ok).toBe(true);
     expect(res.removed).toContain("src/Modules/ExampleFeature/Module.php");
     expect(res.removed).toContain(
+      "src/Modules/ExampleFeature/Access/FeatureAccess.php",
+    );
+    expect(res.removed).toContain(
+      "src/Modules/ExampleFeature/Queue/DeferredSetup.php",
+    );
+    expect(res.removed).toContain(
+      "src/Modules/ExampleFeature/Templates/View.php",
+    );
+    expect(res.removed).toContain(
+      "src/Modules/ExampleFeature/Templates/status-notice.php",
+    );
+    expect(res.removed).toContain(
+      "src/Modules/ExampleFeature/Cli/StatusCommand.php",
+    );
+    expect(res.removed).toContain(
       "src/Modules/ExampleFeature/Rest/ItemsController.php",
     );
     expect(res.removed).toContain(
@@ -307,6 +359,11 @@ describe("removeFeature() — turn a feature OFF (Phase 22.9, 22.10)", () => {
     // All owned paths are gone.
     for (const rel of [
       "src/Modules/ExampleFeature/Module.php",
+      "src/Modules/ExampleFeature/Access/FeatureAccess.php",
+      "src/Modules/ExampleFeature/Queue/DeferredSetup.php",
+      "src/Modules/ExampleFeature/Templates/View.php",
+      "src/Modules/ExampleFeature/Templates/status-notice.php",
+      "src/Modules/ExampleFeature/Cli/StatusCommand.php",
       "src/Modules/ExampleFeature/Rest/ItemsController.php",
       "src/Modules/ExampleFeature/assets/entries/admin.ts",
       "tests/phpunit/Modules/ExampleFeature/ModuleTest.php",
