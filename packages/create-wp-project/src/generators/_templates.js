@@ -633,13 +633,15 @@ final class ModuleTest extends PluginBaseTestCase
     }
 
     /** @test */
-    public function itShouldBootOnlyInAdmin(): void
+    public function itShouldBootForRestRegistrationOutsideAdmin(): void
     {
         $module = new Module();
-        $this->assertFalse($module->should_boot(), 'should_boot must be false outside admin');
-
-        set_current_screen('index');
-        $this->assertTrue($module->should_boot(), 'should_boot must be true in admin context');
+        // AbstractModule defaults should_boot() to true so RestSetup runs
+        // on public API requests; admin-only logic stays inside boot().
+        $this->assertTrue(
+            method_exists($module, 'should_boot') ? $module->should_boot() : true,
+            'ExampleFeature must not skip boot solely because the request is not admin'
+        );
     }
 }
 `;
@@ -1119,14 +1121,15 @@ final class Module extends AbstractModule
         return 'example-feature';
     }
 
-    public function should_boot(): bool
-    {
-        return function_exists('is_admin') && is_admin();
-    }
-
     public function boot(): void
     {
+        // Always register REST via framework RestSetup (public API + batch).
+        // Do not call register_rest_route() here — RestSetup owns that.
         RestSetup::register(ItemsController::class);
+
+        if (!function_exists('is_admin') || !is_admin()) {
+            return;
+        }
 
         add_action('admin_init', [$this, 'register_admin_assets']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);

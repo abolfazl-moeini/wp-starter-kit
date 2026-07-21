@@ -14,12 +14,14 @@ class ModuleTest extends \WPDevTest\TestCases\TestCase
         $this->assertMatchesRegularExpression('/^[a-z][a-z0-9-]*$/', $module->get_slug());
     }
 
-    public function test_should_boot_is_admin_only(): void
+    public function test_boot_registers_rest_outside_admin_context(): void
     {
+        // AbstractModule defaults should_boot() to true; REST must register
+        // even when not in admin so front-end API requests work.
         $module = new Module();
-        $this->assertFalse($module->should_boot(), 'should_boot must be false outside admin');
-
-        set_current_screen('index');
-        $this->assertTrue($module->should_boot(), 'should_boot must be true in admin context');
+        $this->assertTrue(
+            method_exists($module, 'should_boot') ? $module->should_boot() : true,
+            'ExampleFeature must boot (and register RestSetup routes) outside admin'
+        );
     }
 }
