@@ -14,3 +14,6 @@
 | 10 | Absolute file-system paths | `@framework` / `@examples` / `@playground` | Portable skill |
 | 11 | `wpdev-examples/wpdev-products/` folder | `@examples/products/` + module id `wpdev-products` | Naming rule |
 | 12 | PHP under `inc/` | `modules/` or `@examples/` only | Legacy artifact |
+| 13 | Settings section icon as bare WP `dashicons-*` only | Prefer `dashicons-wpdev-*` for left-nav | Settings chrome renders the class as-is |
+| 14 | Settings `repeater` with empty `values` and no `.field-repeater` seed row | Let the framework seed a blank line (or pass one empty row) | “Add new Line” clones the last `.field-repeater`; missing row → `cloneNode` null |
+| 15 | Expect settings `repeater` POST to land under the parent slug alone | Assemble `subfield[]` columns in `wpdev_pre_save_settings` | `Settings_Save` does not reshape repeater columns |
