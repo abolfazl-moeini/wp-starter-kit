@@ -140,9 +140,9 @@ final class WPDev {
 		wpdev_require_public_function( 'settings' );
 
 		/*
-		 * Set up the text-domain for translations
+		 * Set up the text-domain for translations (WP 6.7+: must be init or later).
 		 */
-		$this->setup_textdomain();
+		add_action( 'init', array( $this, 'setup_textdomain' ), 1 );
 
 		/*
 		 * Loads files containing public functions.

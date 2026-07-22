@@ -87,7 +87,7 @@ if ( ! function_exists( 'wpdev_starter_on_uninstall' )) {
 	}
 }
 
-add_action( 'init', 'wpdev_starter_load_textdomain' );
+add_action( 'init', 'wpdev_starter_load_textdomain', 1 );
 function wpdev_starter_load_textdomain(): void {
 	load_plugin_textdomain(
 		'wpdev-starter',

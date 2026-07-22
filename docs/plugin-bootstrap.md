@@ -230,7 +230,7 @@ checks that you don't conflate the three.
 ### 6. Text-domain loading
 
 ```php
-add_action( 'init', 'my_project_load_textdomain' );
+add_action( 'init', 'my_project_load_textdomain', 1 );
 function my_project_load_textdomain(): void {
     load_plugin_textdomain(
         'my-project',
@@ -239,6 +239,13 @@ function my_project_load_textdomain(): void {
     );
 }
 ```
+
+**WP 6.7+:** never call `__( …, 'my-project' )` before `init` (e.g. not on
+`plugins_loaded`, and not while handling `wpdev_load` which fires inside
+`plugins_loaded`). Doing so triggers `_load_textdomain_just_in_time` notices.
+Defer host settings registration that uses `__()` until `init` (after the
+textdomain load at priority `1`). Prefer priority `1` for
+`load_plugin_textdomain` so later `init` callbacks can translate safely.
 
 `load_plugin_textdomain` is the function that tells WordPress
 where to find `<plugin>/languages/{textDomain}-{locale}.mo`.

@@ -7,6 +7,27 @@ Register global settings for `Settings_Admin_Page` (`@framework/modules/admin-se
 
 ## Register on wpdev_load
 
+`wpdev_load` runs inside `plugins_loaded` (before `init`). For a **host** text
+domain under WP 6.7+, wrap registration so `__()` runs on/after `init`:
+
+```php
+function my_plugin_register_settings() {
+    if ( ! did_action( 'init' ) ) {
+        add_action( 'init', 'my_plugin_register_settings', 5 );
+        return;
+    }
+    wpdev_register_settings_section( 'my_addon', array(
+        'title' => __( 'My Add-on', 'my-plugin' ),
+        'icon'  => 'dashicons-wpdev-cog',
+        'order' => 10,
+    ) );
+    // …
+}
+add_action( 'wpdev_load', 'my_plugin_register_settings', 20 );
+```
+
+Framework domain (`wpdev`) examples:
+
 ```php
 add_action( 'wpdev_load', static function () {
     wpdev_register_settings_section( 'my_addon', array(

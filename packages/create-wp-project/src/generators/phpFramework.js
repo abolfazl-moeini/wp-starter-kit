@@ -124,6 +124,7 @@ This scaffold does **not** vendor the framework into the project and does
 - Soft-dep: the main plugin file shows an admin notice when the framework is inactive
 - Soft-dep helpers: \`function_exists( 'wpdev_register_table' )\` / \`FrameworkBridge::is_framework_active()\`
 - Do **not** list the admin framework in Composer \`require\`
+- WP 6.7+: load host textdomain on \`init\` (priority 1); defer \`__( ..., host-domain )\` used in settings registration until \`init\` (see \`docs/plugin-bootstrap.md\`)
 
 ## Kit module framework (separate)
 

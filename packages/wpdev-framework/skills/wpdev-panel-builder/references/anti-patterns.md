@@ -18,3 +18,5 @@
 | 14 | Settings `repeater` with empty `values` and no `.field-repeater` seed row | Let the framework seed a blank line (or pass one empty row) | “Add new Line” clones the last `.field-repeater`; missing row → `cloneNode` null |
 | 15 | Expect settings `repeater` POST to land under the parent slug alone | Assemble `subfield[]` columns in `wpdev_pre_save_settings` | `Settings_Save` does not reshape repeater columns |
 | 16 | Many `md:wpdev-w-1/2` fields inside a repeater for a “compact card” | Host CSS Grid (`display: contents` + areas) or stacked full-width | Flex half + gap overflows / sparse column |
+| 17 | Call `__( …, 'host-domain' )` while registering settings on `wpdev_load` / `plugins_loaded` | Defer until `init` (after `load_plugin_textdomain`) | WP 6.7 `_load_textdomain_just_in_time` notice |
+| 18 | `wpdev_register_plugin_settings_link( …, __( 'Settings', 'host' ) )` on `plugins_loaded` | Register on `init`, or pass empty label | Same JIT notice |

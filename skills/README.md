@@ -20,3 +20,7 @@ These skills describe the **post-scaffold** consumer layout:
 - JS: `src/Modules/*/assets/entries/*` + `assets/bundles/*` + package-name imports
 
 They complement kit docs (`docs/module-guide.md`, `packages/polaris-stack/context.md`) and are written as **agent instructions** (rules + checklists), not marketing docs.
+
+## Cross-cutting: WP 6.7 i18n
+
+Host plugins must load `load_plugin_textdomain` on `init` (prefer priority `1`) and must **not** call `__( …, '{textDomain}' )` before `init`. `wpdev_load` fires inside `plugins_loaded` — defer host settings registration that uses `__()` until `init`. See `docs/plugin-bootstrap.md` § Text-domain loading and wpdev-core skill `wpdev-settings-dashboard/references/settings-sections.md` § WP 6.7+ i18n timing.

@@ -197,7 +197,7 @@ if ( ! function_exists( '{{slug_underscore}}_on_uninstall' ) ) {
  * resolve it relative to the plugin's languages directory using
  * plugin_dir_path(__FILE__) below.
  */
-add_action( 'init', '{{slug_underscore}}_load_textdomain' );
+add_action( 'init', '{{slug_underscore}}_load_textdomain', 1 );
 function {{slug_underscore}}_load_textdomain(): void {
     load_plugin_textdomain(
         '{{textDomain}}',
