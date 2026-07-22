@@ -76,7 +76,7 @@ Registry: `wpdev_get_settings_section()`, `wpdev_has_settings_section()`, `wpdev
 
 **Icons:** prefer `dashicons-wpdev-*` for settings left-nav (not bare WP `dashicons-*` alone).
 
-**Repeaters on settings:** assemble `subfield[]` POST columns via `wpdev_pre_save_settings` — `Settings_Save` does not map them to the parent slug automatically. Empty `values` arrays seed one blank `.field-repeater` row so “Add new Line” can clone (otherwise Vue hits `cloneNode` on null).
+**Repeaters on settings:** assemble `subfield[]` POST columns via `wpdev_pre_save_settings` — `Settings_Save` does not map them to the parent slug automatically. Empty `values` arrays seed one blank `.field-repeater` row so “Add new Line” can clone (otherwise Vue hits `cloneNode` on null). For dense cards, prefer host CSS Grid (`display: contents` + named areas) over many `md:wpdev-w-1/2` flex halves — see wpdev-core skill `wpdev-edit-ux/references/repeater-fields.md` § Layout.
 
 Views: Settings chrome uses `admin-pages/fields` (same as edit pages), not legacy `settings/fields`.
 
