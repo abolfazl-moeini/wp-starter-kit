@@ -73,6 +73,10 @@
     $fields[$key.'[]'] = $field->fields[$key];
   }
 
+  // Nested form defaults: wrap + gap so many subfields do not crush into one row.
+  $repeater_form_classes = trim( 'wpdev-flex wpdev-flex-wrap wpdev-w-full wpdev-gap-4 ' . (string) $field->classes );
+  $repeater_field_wrapper = 'wpdev-bg-transparent wpdev-box-border wpdev-p-2 wpdev-w-full';
+
   if (is_array($field->values) && count($field->values) > 0) {
     $position = 0;
     $field_len = count($field->values);
@@ -82,8 +86,8 @@
       $field_id .= $position !== $field_len - 1 ? $key : '';
       $position++;
     ?>
-      <li id="<?php echo esc_attr($field_id); ?>-line" class="field-repeater wpdev-bg-gray-100 <?php echo esc_attr($field->wrapper_classes); ?>" <?php echo $field->get_wrapper_html_attributes(); ?>>
-        <div class="wpdev-w-full <?php echo esc_attr($field->classes); ?>">
+      <li id="<?php echo esc_attr($field_id); ?>-line" class="field-repeater wpdev-bg-gray-100 wpdev-rounded wpdev-p-4 wpdev-mb-4 <?php echo esc_attr($field->wrapper_classes); ?>" <?php echo $field->get_wrapper_html_attributes(); ?>>
+        <div class="wpdev-w-full">
           <?php
             foreach ($value as $field_name => $field_value) {
               $fields[$field_name.'[]']['value'] = $field_value;
@@ -91,8 +95,8 @@
 
             $form = new \WPDevFramework\UI\Form($field->id, $fields, array(
               'views'                 => 'admin-pages/fields',
-              'classes'               => 'wpdev-flex',
-              'field_wrapper_classes' => 'wpdev-bg-transparent',
+              'classes'               => $repeater_form_classes,
+              'field_wrapper_classes' => $repeater_field_wrapper,
             ));
 
             $form->render();
@@ -104,9 +108,9 @@
     }
   } else {
   ?>
-    <li id="<?php echo esc_attr($field->id); ?>-line" class="field-repeater wpdev-bg-gray-100 <?php echo esc_attr($field->wrapper_classes); ?>" <?php echo $field->get_wrapper_html_attributes(); ?>>
+    <li id="<?php echo esc_attr($field->id); ?>-line" class="field-repeater wpdev-bg-gray-100 wpdev-rounded wpdev-p-4 wpdev-mb-4 <?php echo esc_attr($field->wrapper_classes); ?>" <?php echo $field->get_wrapper_html_attributes(); ?>>
 
-      <div class="wpdev-w-full <?php echo esc_attr($field->classes); ?>">
+      <div class="wpdev-w-full">
 
         <?php
         /**
@@ -116,8 +120,8 @@
          */
         $form = new \WPDevFramework\UI\Form($field->id, $fields, array(
           'views'                 => 'admin-pages/fields',
-          'classes'               => 'wpdev-flex',
-          'field_wrapper_classes' => 'wpdev-bg-transparent',
+          'classes'               => $repeater_form_classes,
+          'field_wrapper_classes' => $repeater_field_wrapper,
         ));
 
         $form->render();
