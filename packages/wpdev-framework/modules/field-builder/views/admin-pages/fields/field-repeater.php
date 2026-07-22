@@ -73,7 +73,7 @@
     $fields[$key.'[]'] = $field->fields[$key];
   }
 
-  if (is_array($field->values)) {
+  if (is_array($field->values) && count($field->values) > 0) {
     $position = 0;
     $field_len = count($field->values);
     foreach ($field->values as $key => $value) {

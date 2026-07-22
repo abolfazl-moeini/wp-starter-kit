@@ -124,13 +124,33 @@ const loadApp = (element, app_id, callback = null) => {
       },
       duplicate_and_clean($event, query) {
         var _a;
-        const elements = document.querySelectorAll(query);
+        const buttonRow = $event && $event.currentTarget ? $event.currentTarget.closest("li") : null;
+        const list = buttonRow && buttonRow.parentNode ? buttonRow.parentNode : null;
+        // Prefer sibling rows in the same list so multiple repeaters do not clash.
+        const elements = list ? list.querySelectorAll(":scope > " + query) : document.querySelectorAll(query);
         const target = elements.item(elements.length - 1);
+        if (!target) {
+          return;
+        }
         const clone = target.cloneNode(true);
         clone.id = clone.id + "_copy";
         const textAreas = clone.querySelectorAll("input, textarea");
         textAreas.forEach((el) => el.value = "");
+        // Reset image previews on cloned rows.
+        clone.querySelectorAll(".wpdev-wrapper-image-field img").forEach((img) => {
+          img.removeAttribute("src");
+          img.classList.add("wpdev-absolute");
+        });
+        clone.querySelectorAll(".wpdev-wrapper-image-field-upload-actions").forEach((el) => {
+          el.style.display = "none";
+        });
+        clone.querySelectorAll(".wpdev-add-image-wrapper").forEach((el) => {
+          el.style.display = "";
+        });
         (_a = target.parentNode) == null ? void 0 : _a.insertBefore(clone, target.nextSibling);
+        if (typeof window.wpdev_initialize_imagepicker === "function") {
+          window.wpdev_initialize_imagepicker();
+        }
       },
       wpdev_format_money(value) {
         return wpdev_format_money(value);
