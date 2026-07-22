@@ -88,6 +88,8 @@ Field_Type_Registry::register( 'model', array( 'family' => 'model', 'ajax' => tr
 // Advanced family (K1-08).
 Field_Type_Registry::register( 'code-editor', array( 'family' => 'advanced', 'sanitize' => null ) );
 Field_Type_Registry::register( 'color', array( 'family' => 'advanced', 'sanitize' => 'sanitize_hex_color' ) );
+// Admin-pages chrome uses views/admin-pages/fields/field-color-picker.php (Vue + wpColorPicker).
+Field_Type_Registry::register( 'color-picker', array( 'family' => 'advanced', 'sanitize' => 'sanitize_hex_color' ) );
 Field_Type_Registry::register( 'date', array( 'family' => 'advanced', 'sanitize' => 'sanitize_text_field' ) );
 Field_Type_Registry::register( 'datetime', array( 'family' => 'advanced', 'sanitize' => 'sanitize_text_field' ) );
 Field_Type_Registry::register( 'wp_editor', array( 'family' => 'advanced', 'sanitize' => 'wp_kses_post' ) );

@@ -161,6 +161,8 @@ class Field implements \JsonSerializable {
 			'checkbox'            => 'toggle',
 			'upload'              => 'image',
 			'file'                => 'image',
+			// settings/fields has field-color.php; admin-pages chrome uses field-color-picker.php.
+			'color'               => 'color-picker',
 		);
 
 		$deprecated = array(
@@ -273,13 +275,13 @@ class Field implements \JsonSerializable {
 
 		} // end if;
 
-		if ($att === 'wrapper_classes' && is_a($this->form, '\\WPDev\\UI\\Form')) {
+		if ($att === 'wrapper_classes' && is_a($this->form, '\\WPDevFramework\\UI\\Form')) {
 
 			return $this->form->field_wrapper_classes . ' ' . $this->atts['wrapper_classes'];
 
 		} // end if;
 
-		if ($att === 'classes' && is_a($this->form, '\\WPDev\\UI\\Form')) {
+		if ($att === 'classes' && is_a($this->form, '\\WPDevFramework\\UI\\Form')) {
 
 			return $this->form->field_classes . ' ' . $this->atts['classes'];
 

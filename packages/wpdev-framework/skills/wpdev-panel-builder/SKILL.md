@@ -114,7 +114,7 @@ wpdev_register_ajax_handler( 'my_action', static function () {
 ### Settings
 
 ```php
-wpdev_register_settings_section( 'my_addon', array( 'title' => __( 'My Add-on', 'wpdev' ), 'icon' => 'dashicons-admin-generic' ) );
+wpdev_register_settings_section( 'my_addon', array( 'title' => __( 'My Add-on', 'wpdev' ), 'icon' => 'dashicons-wpdev-cog' ) );
 wpdev_register_settings_field( 'my_addon', 'api_key', array( 'type' => 'text', 'title' => __( 'API Key', 'wpdev' ) ) );
 $value = wpdev_get_setting( 'api_key', '' );
 wpdev_save_setting( 'api_key', sanitize_text_field( $value ) );

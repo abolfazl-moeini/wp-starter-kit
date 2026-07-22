@@ -21,6 +21,39 @@ function wpdev_wrap_use_container() {
 } // end wpdev_wrap_use_container;
 
 /**
+ * Normalize a settings / wizard section icon class for left-nav rendering.
+ *
+ * Prefer `dashicons-wpdev-*` (framework icon font; single class is enough).
+ * WordPress core icons like `dashicons-megaphone` need the base `dashicons` class.
+ *
+ * @since 2.7.1
+ *
+ * @param string $icon Icon class from section config.
+ * @return string Space-separated class list safe for esc_attr().
+ */
+function wpdev_admin_section_icon_class( $icon ) {
+
+	$icon = trim( (string) $icon );
+
+	if ( '' === $icon ) {
+		return 'dashicons-wpdev-cog';
+	}
+
+	// Already includes the WP dashicons base, or is a wpdev font glyph.
+	if ( false !== strpos( $icon, 'dashicons ' ) || 0 === strpos( $icon, 'dashicons-wpdev-' ) ) {
+		return $icon;
+	}
+
+	// Core WP dashicon slug without the base class (common host mistake).
+	if ( 0 === strpos( $icon, 'dashicons-' ) ) {
+		return 'dashicons ' . $icon;
+	}
+
+	return $icon;
+
+} // end wpdev_admin_section_icon_class;
+
+/**
  * Renders the responsive table single-line.
  *
  * @since 2.0.0

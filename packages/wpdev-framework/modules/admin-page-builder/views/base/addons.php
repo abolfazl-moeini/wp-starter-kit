@@ -135,7 +135,7 @@ body .theme-browser .theme .theme-name {
                   @click.prevent="set_category('<?php echo esc_attr($section_name); ?>')"
                 >
 
-                  <span class="<?php echo esc_attr($section['icon']); ?> wpdev-align-text-bottom wpdev-mr-1"></span>
+                  <span class="<?php echo esc_attr( function_exists( 'wpdev_admin_section_icon_class' ) ? wpdev_admin_section_icon_class( $section['icon'] ?? '' ) : ( $section['icon'] ?? '' ) ); ?> wpdev-align-text-bottom wpdev-mr-1"></span>
 
                   <?php echo esc_html( $section['title'] ); ?>
 

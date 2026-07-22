@@ -11,8 +11,14 @@ Register global settings for `Settings_Admin_Page` (`@framework/modules/admin-se
 add_action( 'wpdev_load', static function () {
     wpdev_register_settings_section( 'my_addon', array(
         'title' => __( 'My Add-on', 'wpdev' ),
-        'icon'  => 'dashicons-admin-generic',
+        'icon'  => 'dashicons-wpdev-cog',
         'order' => 10,
+    ) );
+
+    wpdev_register_settings_field( 'my_addon', 'enabled', array(
+        'type'    => 'toggle',
+        'title'   => __( 'Enable', 'wpdev' ),
+        'default' => 1,
     ) );
 
     wpdev_register_settings_field( 'my_addon', 'api_key', array(
@@ -20,12 +26,15 @@ add_action( 'wpdev_load', static function () {
         'title'      => __( 'API Key', 'wpdev' ),
         'default'    => '',
         'capability' => 'manage_network',
+        'require'    => array( 'enabled' => 1 ),
     ) );
 
-    wpdev_register_settings_field( 'my_addon', 'enabled', array(
-        'type'    => 'toggle',
-        'title'   => __( 'Enable', 'wpdev' ),
-        'default' => 1,
+    wpdev_register_settings_field( 'my_addon', 'brand_color', array(
+        'type'            => 'color-picker',
+        'title'           => __( 'Brand color', 'wpdev' ),
+        'default'         => '#00A78D',
+        'wrapper_classes' => 'sm:wpdev-w-1/2',
+        'require'         => array( 'enabled' => 1 ),
     ) );
 } );
 ```
@@ -56,14 +65,20 @@ Registry: `wpdev_get_settings_section()`, `wpdev_has_settings_section()`, `wpdev
 
 | Key | Purpose |
 |-----|---------|
-| `type` | `text`, `toggle`, `select`, `textarea`, … |
+| `type` | `text`, `toggle`, `select`, `textarea`, `color-picker`, `repeater`, … |
 | `title` | Label |
 | `default` | Default value |
 | `capability` | Per-field visibility |
-| `description` | Help text |
+| `desc` / `description` | Help text |
 | `options` | For `select` |
+| `require` | `array( 'other_key' => 1 )` — Vue hide until condition matches |
+| `wrapper_classes` | Layout utilities (e.g. `sm:wpdev-w-1/2` for color pickers) |
 
-Views: `wpdev_field_view( 'settings', $type )`.
+**Icons:** prefer `dashicons-wpdev-*` for settings left-nav (not bare WP `dashicons-*` alone).
+
+**Repeaters on settings:** assemble `subfield[]` POST columns via `wpdev_pre_save_settings` — `Settings_Save` does not map them to the parent slug automatically.
+
+Views: Settings chrome uses `admin-pages/fields` (same as edit pages), not legacy `settings/fields`.
 
 ## Save pipeline hooks
 

@@ -147,7 +147,7 @@
                   class="wpdev-block wpdev-py-2 wpdev-px-4 wpdev-no-underline wpdev-text-sm wpdev-rounded <?php echo ! $clickable_navigation && ! $is_pre_current_section ? 'wpdev-pointer-events-none' : ''; ?> <?php echo $current_section === $section_name ? 'wpdev-bg-gray-300 wpdev-text-gray-800' : 'wpdev-text-gray-600 hover:wpdev-text-gray-700'; ?>"
                 >
 
-                  <span class="<?php echo esc_attr($section['icon']); ?> wpdev-align-text-bottom wpdev-mr-1"></span>
+                  <span class="<?php echo esc_attr( function_exists( 'wpdev_admin_section_icon_class' ) ? wpdev_admin_section_icon_class( $section['icon'] ?? '' ) : ( $section['icon'] ?? '' ) ); ?> wpdev-align-text-bottom wpdev-mr-1"></span>
 
                   <?php echo esc_html( $section['title'] ); ?>
 
@@ -212,7 +212,7 @@
                   <!-- Menu Link -->
                   <a href="<?php echo esc_url($page->get_section_link($section_name)); ?>" class="wpdev-block wpdev-py-2 wpdev-px-4 wpdev-no-underline wpdev-text-sm wpdev-rounded <?php echo ! $clickable_navigation && ! $is_pre_current_section ? 'wpdev-pointer-events-none' : ''; ?> <?php echo $current_section === $section_name ? 'wpdev-bg-gray-300 wpdev-text-gray-800' : 'wpdev-text-gray-600 hover:wpdev-text-gray-700'; ?>">
 
-                    <span class="<?php echo esc_attr($section['icon']); ?> wpdev-align-text-bottom wpdev-mr-1"></span>
+                    <span class="<?php echo esc_attr( function_exists( 'wpdev_admin_section_icon_class' ) ? wpdev_admin_section_icon_class( $section['icon'] ?? '' ) : ( $section['icon'] ?? '' ) ); ?> wpdev-align-text-bottom wpdev-mr-1"></span>
 
                     <?php echo esc_html( $section['title'] ); ?>
 
