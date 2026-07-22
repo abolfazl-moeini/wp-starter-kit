@@ -1,5 +1,8 @@
 /**
  * Phase 25 — faultTolerance:on scaffold wiring.
+ *
+ * Vendors packages/php-fault-tolerance with Composer path-repo
+ * symlink:false (Docker-safe; no host-absolute kit symlinks).
  */
 
 import { describe, test, expect, beforeEach, afterEach } from "@jest/globals";
@@ -49,10 +52,23 @@ function makeCtx(features = {}) {
 }
 
 describe("faultTolerance generator (Phase 25)", () => {
-  test("emits docs/fault-tolerance.md when faultTolerance=on", () => {
+  test("emits docs + packages/php-fault-tolerance when faultTolerance=on", () => {
     const out = faultToleranceRun(makeCtx());
     expect(out.files["docs/fault-tolerance.md"]).toBeDefined();
+    expect(
+      out.files["packages/php-fault-tolerance/composer.json"],
+    ).toBeDefined();
+    expect(
+      out.files["packages/php-fault-tolerance/src/bootstrap.php"],
+    ).toBeDefined();
     expect(out.composerPatches.require["wpdev/php-fault-tolerance"]).toBe("*");
+    expect(out.composerPatches.repositories).toEqual([
+      {
+        type: "path",
+        url: "packages/*",
+        options: { monorepo: true, symlink: false },
+      },
+    ]);
   });
 
   test("emits nothing when faultTolerance=off", () => {
@@ -71,7 +87,7 @@ describe("faultTolerance scaffold integration", () => {
     await fs.rm(tmp, { recursive: true, force: true });
   });
 
-  test("scaffold with faultTolerance:on + phpMinVersion:8.1 requires wpdev/php-fault-tolerance", async () => {
+  test("scaffold with faultTolerance:on vendors packages/php-fault-tolerance", async () => {
     const res = await scaffoldProject(tmp, goodAnswers, {
       features: {
         ...defaultFeatures(),
@@ -84,31 +100,23 @@ describe("faultTolerance scaffold integration", () => {
       await fs.readFile(path.join(tmp, "composer.json"), "utf8"),
     );
     expect(composer.require["wpdev/php-fault-tolerance"]).toBe("*");
-    // No monorepo path repo by default — package resolves from Packagist/VCS.
-    const repo = (composer.repositories || []).find(
-      (r) => typeof r.url === "string" && r.url.includes("php-fault-tolerance"),
+    const pathRepo = (composer.repositories || []).find(
+      (r) => r.type === "path" && r.url === "packages/*",
     );
-    expect(repo).toBeUndefined();
-  });
-
-  test("scaffold can opt into a local path repo via faultTolerancePath", async () => {
-    const localPath = "/tmp/fake-kit/packages/php-fault-tolerance";
-    const res = await scaffoldProject(tmp, goodAnswers, {
-      features: {
-        ...defaultFeatures(),
-        faultTolerance: "on",
-        phpMinVersion: "8.1",
-      },
-      faultTolerancePath: localPath,
-    });
-    expect(res.ok).toBe(true);
-    const composer = JSON.parse(
-      await fs.readFile(path.join(tmp, "composer.json"), "utf8"),
+    expect(pathRepo).toBeDefined();
+    expect(pathRepo.options.symlink).toBe(false);
+    // No host-absolute kit path repo (breaks Docker).
+    const absRepo = (composer.repositories || []).find(
+      (r) =>
+        typeof r.url === "string" &&
+        (r.url.startsWith("/") || r.url.includes("extend-kit")),
     );
-    const repo = (composer.repositories || []).find(
-      (r) => typeof r.url === "string" && r.url === localPath,
-    );
-    expect(repo).toBeDefined();
+    expect(absRepo).toBeUndefined();
+    await expect(
+      fs.access(
+        path.join(tmp, "packages/php-fault-tolerance/src/bootstrap.php"),
+      ),
+    ).resolves.toBeUndefined();
   });
 });
 
@@ -160,7 +168,7 @@ describe("addFeature faultTolerance happy path", () => {
     await fs.rm(tmp, { recursive: true, force: true });
   });
 
-  test("addFeature(dir, faultTolerance, on) patches composer.json", async () => {
+  test("addFeature(dir, faultTolerance, on) vendors package + patches composer", async () => {
     const res = await addFeature(tmp, "faultTolerance", "on");
     expect(res.ok).toBe(true);
     const composer = JSON.parse(
@@ -168,5 +176,15 @@ describe("addFeature faultTolerance happy path", () => {
     );
     expect(composer.require["wpdev/php-fault-tolerance"]).toBe("*");
     expect(res.written).toContain("docs/fault-tolerance.md");
+    expect(
+      res.written.some((p) =>
+        String(p).startsWith("packages/php-fault-tolerance/"),
+      ),
+    ).toBe(true);
+    await expect(
+      fs.access(
+        path.join(tmp, "packages/php-fault-tolerance/src/bootstrap.php"),
+      ),
+    ).resolves.toBeUndefined();
   });
 });

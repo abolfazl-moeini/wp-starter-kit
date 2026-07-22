@@ -375,9 +375,6 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
   if (options.frameworkPath) {
     vars.frameworkPath = options.frameworkPath;
   }
-  if (options.faultTolerancePath) {
-    vars.faultTolerancePath = options.faultTolerancePath;
-  }
 
   // 6. Run the registry. Each enabled generator contributes
   //    `files` (and optionally `dirs`, `deps`, `devDeps`). The

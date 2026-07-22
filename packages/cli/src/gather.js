@@ -217,9 +217,6 @@ export async function gatherInputs(opts) {
       : engine.defaultFeatures();
   const merged = mergeInputs(flagInput, prompted, featureDefaults);
 
-  // Capture pre-normalize intent so we can warn when we auto-disable
-  // features (e.g. faultTolerance=on with phpMinVersion < 8.1).
-  const preNormalize = { ...merged.features };
   merged.features = engine.normalizeFeatureSet(merged.features);
 
   if (!merged.answers.slug) {
@@ -249,28 +246,15 @@ export async function gatherInputs(opts) {
       ? engine.validateAnswers(merged.answers, merged.features)
       : { ok: true, errors: {} };
 
-  const warnings = {
-    ...(featureValidation.warnings || {}),
-  };
-  // Auto-disable messages (normalize cleared the bad combo, so
-  // validateFeatureSet no longer sees it — surface the reason here).
-  if (
-    preNormalize.faultTolerance === "on" &&
-    merged.features.faultTolerance === "off"
-  ) {
-    warnings.faultTolerance =
-      `faultTolerance=on requires phpMinVersion ≥ 8.1 ` +
-      `(currently phpMinVersion=${preNormalize.phpMinVersion || merged.features.phpMinVersion}); ` +
-      `faultTolerance has been set to off`;
-  }
-
   const validation = {
     ok: featureValidation.ok && answersValidation.ok,
     errors: {
       ...(featureValidation.errors || {}),
       ...(answersValidation.errors || {}),
     },
-    warnings,
+    warnings: {
+      ...(featureValidation.warnings || {}),
+    },
   };
 
   return {

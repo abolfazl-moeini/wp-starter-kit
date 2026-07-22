@@ -81,6 +81,9 @@ Never copy `src/Core/` into consumer projects in new scaffolds.
 
 **`wpdev/php-fault-tolerance`** — Resilience layer when `faultTolerance:on`
 (default on). Dual-mode: full features on PHP 8.1+, no-op stubs below.
+Consumer scaffolds **mirror** the package under `packages/php-fault-tolerance/`
+and install via Composer path repo with `symlink: false` (never host-absolute
+kit symlinks — those break Docker).
 
 **`wpdev/mcp-integration`** — Feature-gated (`mcpAbilities:on`). Registers
 abilities on `wp_abilities_api_init`. See [mcp-integration.md](mcp-integration.md).
@@ -159,9 +162,8 @@ wpdev/framework
   → (no required consumer deps beyond PHP)
 
 wpdev/php-fault-tolerance  (optional, faultTolerance:on)
-  → guzzlehttp/guzzle (transitive)
-
-  → PHP 8.2+ runtime requirement
+  → mirrored under packages/php-fault-tolerance/ (path repo, symlink:false)
+  → Real on PHP ≥ 8.1; Stub no-op below (package requires PHP ≥ 7.4)
 
 wpdev/mcp-integration  (optional, mcpAbilities:on)
   → WordPress 6.9+ Abilities API at runtime
@@ -260,9 +262,11 @@ The three CLI-related packages (`@wpdev/cli`, `@wpdev/create-wp-project`,
 `@wpdev/create-plugin`) must be on npm for `npm create @wpdev/plugin@latest` to
 work end-to-end.
 
-Composer packages `wpdev/framework` and `wpdev/php-fault-tolerance` publish to
-Packagist. Internal packages (`mcp-integration`, `wpdev-framework` source) ship
-inside the kit repo or as path repos during development.
+Composer package `wpdev/framework` may publish to Packagist. Consumer
+`wpdev/php-fault-tolerance` is **vendored** into each project under
+`packages/php-fault-tolerance/` (path repo, `symlink: false`). Internal
+packages (`mcp-integration`, `wpdev-framework` source) ship inside the kit
+repo or as path repos during development.
 
 ---
 

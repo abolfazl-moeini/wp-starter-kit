@@ -13,7 +13,7 @@
  *  - Skip JS sub-questions (`jsLib`, `jsTest`) when `js:none`.
  *  - Skip `css` when `js:none`.
  *  - Ask remaining toggles independently.
- *  - Skip `faultTolerance` when `phpMinVersion < 8.1`.
+ *  - faultTolerance is dual-mode (Real on 8.1+, Stub below) — always askable.
  *  - Branding questions always come first.
  *  - Preset short-circuit: `minimal` skips per-feature prompts
  *    (except phpTest). `standard` / `full` / `woocommerce` still
@@ -401,18 +401,6 @@ function buildPresetQuestion(engine) {
 }
 
 /**
- * Should `faultTolerance` be asked? The plan says: hide it when
- * `phpMinVersion < 8.1`.
- */
-const PHP_MIN_ORDER = ["7.4", "8.0", "8.1", "8.2", "8.3"];
-function canAskFaultTolerance(state) {
-  const phpMin = effectiveFeature(state, "phpMinVersion") || "7.4";
-  const idx = PHP_MIN_ORDER.indexOf(phpMin);
-  // Unknown / unset → assume 7.4 (most conservative).
-  return idx >= PHP_MIN_ORDER.indexOf("8.1");
-}
-
-/**
  * Build the ordered list of question descriptors.
  *
  * @param {Record<string,string>} currentFeatures
@@ -523,12 +511,7 @@ export function buildPromptPlan(currentFeatures, engine, options) {
   ]) {
     const f = catalog.find((x) => x.id === id);
     if (!f) continue;
-    if (id === "faultTolerance") {
-      plan.push({
-        ...featureQuestion(f),
-        when: wrapWhen((s) => canAskFaultTolerance(s)),
-      });
-    } else if (id === "restBatch") {
+    if (id === "restBatch") {
       plan.push({
         ...featureQuestion(f),
         when: wrapWhen((s) => needsJsSubQuestions(s)),

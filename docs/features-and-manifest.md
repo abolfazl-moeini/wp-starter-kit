@@ -34,7 +34,7 @@ has a stable `id`, a list of allowed `variants`, and a default
 | `phpFramework`   | `none`, `wpdev`                       | `none`       | Soft-dep on WPDev Admin Framework (site plugin). Adds bridge, adapter, main-file admin notice. No `companion-plugins/`. |
 | `phpTest`        | `phpunit`, `none`                     | `phpunit`    | PHP unit testing. PHPUnit on by default.                                                                                |
 | `restBatch`      | `off`, `on`                           | `off`        | REST batch endpoint + `@scope/fetch` JS client.                                                                         |
-| `faultTolerance` | `off`, `on`                           | `off`        | PHP fault-tolerance package. Requires PHP ≥ 8.1.                                                                        |
+| `faultTolerance` | `off`, `on`                           | `off`        | Dual-mode FT package under `packages/php-fault-tolerance/` (Composer `symlink: false`).                                 |
 | `vendorScoping`  | `on`, `off`                           | `on`         | Strauss vendor scoping on release.                                                                                      |
 | `husky`          | `on`, `off`                           | `on`         | Git pre-commit hooks via husky.                                                                                         |
 | `css`            | `none`, `sass`, `tailwind`, `postcss` | `none`       | CSS framework. Requires `js !== "none"`.                                                                                |

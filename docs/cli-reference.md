@@ -104,7 +104,7 @@ Source of truth: `KNOWN_FLAGS` in `packages/cli/src/flags.js`.
 | `--license=<id>`              | `features.license`        | `gpl2` / `gpl3` / `mit`                              |
 | `--wp-min=<ver>`              | `features.wpMinVersion`   | `5.8` / `6.0` / `6.2` / `6.4` / `6.6`                |
 | `--rest-batch=<on\|off>`      | `features.restBatch`      | REST batch endpoint + client                         |
-| `--fault-tolerance=<on\|off>` | `features.faultTolerance` | PHP 8.1+ resilience package                          |
+| `--fault-tolerance=<on\|off>` | `features.faultTolerance` | Dual-mode FT (Real ≥8.1 / Stub below)                |
 | `--vendor-scoping=<on\|off>`  | `features.vendorScoping`  | Strauss vendor prefix on release                     |
 | `--husky=<on\|off>`           | `features.husky`          | Git pre-commit hooks                                 |
 | `--example=<on\|off>`         | `features.exampleFeature` | ExampleFeature demo module                           |
@@ -285,9 +285,9 @@ wpdev set phpMinVersion 8.1 /path/to/my-plugin
 
 ### Validation
 
-`setConfigValue` runs `validateFeatureSet` before writing. Setting
-`phpMinVersion` to `7.4` while `faultTolerance:on` fails with a dependency
-error.
+`setConfigValue` runs `validateFeatureSet` before writing. Invalid combinations
+(for example `frontendStack:polaris` without TypeScript) fail with a dependency
+error. `faultTolerance:on` is allowed on any `phpMinVersion` (dual-mode).
 
 ---
 

@@ -345,21 +345,6 @@ export async function addFeature(dir, id, variant, _opts = {}) {
   }
   const newFeatures = normalizeFeatureSet(requestedFeatures);
 
-  // Explicit enable of faultTolerance that normalize cleared (phpMin too low).
-  if (
-    id === "faultTolerance" &&
-    variant === "on" &&
-    newFeatures.faultTolerance === "off"
-  ) {
-    return {
-      ok: false,
-      reason:
-        `faultTolerance=on requires phpMinVersion ≥ 8.1 ` +
-        `(currently phpMinVersion=${newFeatures.phpMinVersion || "7.4"})`,
-      written: [],
-    };
-  }
-
   // 4. Idempotency — skip generator I/O when the normalized set is unchanged.
   const currentNormalized = normalizeFeatureSet(currentFeatures);
   if (

@@ -111,6 +111,18 @@ async function seedHealthy({ kitVersion, distMode = "deps", features } = {}) {
     JSON.stringify(merged, null, 2) + "\n",
     "utf8",
   );
+  // faultTolerance:on requires a local packages/ mirror (Docker-safe path repo).
+  if (featureSet.faultTolerance === "on") {
+    const ftBoot = path.join(
+      dir,
+      "packages",
+      "php-fault-tolerance",
+      "src",
+      "bootstrap.php",
+    );
+    await fs.mkdir(path.dirname(ftBoot), { recursive: true });
+    await fs.writeFile(ftBoot, "<?php\n", "utf8");
+  }
   return dir;
 }
 
@@ -332,7 +344,7 @@ describe("doctorProject() — validateFeatureSet + variant checks (Phase 3)", ()
     if (tmpDir) await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  test('faultTolerance:"on" + phpMinVersion:"7.4" surfaces a validation warning', async () => {
+  test('faultTolerance:"on" + phpMinVersion:"7.4" is valid (dual-mode)', async () => {
     tmpDir = await seedHealthy({
       features: {
         ...defaultFeatureSet(),
@@ -343,10 +355,12 @@ describe("doctorProject() — validateFeatureSet + variant checks (Phase 3)", ()
     const res = doctorProject(tmpDir);
     expect(res.ok).toBe(true);
     expect(
-      res.warnings.some((e) => /faultTolerance|phpMinVersion/i.test(e)),
-    ).toBe(true);
-    expect(
       res.errors.some((e) => /faultTolerance|phpMinVersion/i.test(e)),
+    ).toBe(false);
+    expect(
+      res.warnings.some((e) =>
+        /faultTolerance.*phpMinVersion|phpMinVersion.*faultTolerance/i.test(e),
+      ),
     ).toBe(false);
   });
 

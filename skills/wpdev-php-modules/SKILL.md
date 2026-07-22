@@ -30,7 +30,7 @@ vendor/                       # Composer only; never put feature code here
 | `packages/framework`           | Shared runtime (`Plugin`, `ModuleLoader`, Support APIs) | Prefer extend, not fork |
 | `src/Modules/*`                | Feature modules (domain code)                           | **Yes — primary work**  |
 | `src/*-register.php`           | Wire modules into loader                                | Yes when adding modules |
-| `packages/php-fault-tolerance` | Optional dual Real/Stub FT                              | Via feature flag        |
+| `packages/php-fault-tolerance` | Optional dual Real/Stub FT; mirrored + `symlink: false` | Via feature flag        |
 | `packages/mcp-integration`     | Abilities API helpers when mcp on                       | Via feature flag        |
 | `packages/plugin-core-test`    | PHPUnit base cases                                      | Tests only              |
 
@@ -213,13 +213,13 @@ Assets::enqueue_bundle_script('my-feature-admin');
 
 ## Other PHP packages (generated tree)
 
-| Package                        | When present                | Purpose                                                   |
-| ------------------------------ | --------------------------- | --------------------------------------------------------- |
-| `packages/framework`           | Always (js≠none or php kit) | Core module runtime + Support                             |
-| `packages/php-fault-tolerance` | `faultTolerance:on`         | Dual Real (PHP≥8.1) / Stub load                           |
-| `packages/mcp-integration`     | `mcpAbilities:on`           | WordPress Abilities API bridge                            |
-| `packages/plugin-core-test`    | `phpTest:phpunit`           | `PluginBaseTestCase`, Rest/Ajax bases                     |
-| `packages/wpdev-framework`     | Kit-only reference          | **Not** auto-vendored into consumers as companion-plugins |
+| Package                        | When present                | Purpose                                                                        |
+| ------------------------------ | --------------------------- | ------------------------------------------------------------------------------ |
+| `packages/framework`           | Always (js≠none or php kit) | Core module runtime + Support                                                  |
+| `packages/php-fault-tolerance` | `faultTolerance:on`         | Dual Real (PHP≥8.1) / Stub load; mirrored under `packages/` + `symlink: false` |
+| `packages/mcp-integration`     | `mcpAbilities:on`           | WordPress Abilities API bridge                                                 |
+| `packages/plugin-core-test`    | `phpTest:phpunit`           | `PluginBaseTestCase`, Rest/Ajax bases                                          |
+| `packages/wpdev-framework`     | Kit-only reference          | **Not** auto-vendored into consumers as companion-plugins                      |
 
 `phpFramework:wpdev` = soft dependency on site-installed WPDev Admin Framework +
 `FrameworkBridge` + admin notice in main file — **not** `companion-plugins/`.

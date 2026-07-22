@@ -20,7 +20,13 @@
  * exits non-zero only when errors.length > 0.
  */
 
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import {
+  existsSync,
+  readFileSync,
+  readdirSync,
+  lstatSync,
+  readlinkSync,
+} from "node:fs";
 import * as path from "node:path";
 import minimatch from "minimatch";
 
@@ -355,6 +361,9 @@ export function doctorProject(dir) {
   for (const w of checkStaleVendorAutoloadFiles(dir)) {
     result.warnings.push(w);
   }
+  for (const e of checkFaultToleranceInstall(dir, features)) {
+    result.errors.push(e);
+  }
 
   const registry = getDepVersions();
   if (registry.size === 0) {
@@ -444,4 +453,63 @@ export function checkStaleVendorAutoloadFiles(dir) {
     );
   }
   return warnings;
+}
+
+/**
+ * faultTolerance:on must vendor packages/php-fault-tolerance with a Docker-safe
+ * Composer install (path repo + symlink:false). Host-absolute symlinks into the
+ * kit checkout fatal inside containers.
+ *
+ * @param {string} dir
+ * @param {Record<string, string>} features
+ * @returns {string[]}
+ */
+export function checkFaultToleranceInstall(dir, features) {
+  const errors = [];
+  if (!features || features.faultTolerance !== "on") return errors;
+
+  const pkgBootstrap = path.join(
+    dir,
+    "packages",
+    "php-fault-tolerance",
+    "src",
+    "bootstrap.php",
+  );
+  if (!existsSync(pkgBootstrap)) {
+    errors.push(
+      "faultTolerance:on but packages/php-fault-tolerance/src/bootstrap.php is missing — run `wpdev add faultTolerance` (or copy the kit package under packages/) then `composer update wpdev/php-fault-tolerance`",
+    );
+  }
+
+  const vendorPath = path.join(dir, "vendor", "wpdev", "php-fault-tolerance");
+  let st;
+  try {
+    st = lstatSync(vendorPath);
+  } catch {
+    // vendor not installed yet — packages presence is the scaffold contract.
+    return errors;
+  }
+
+  if (st.isSymbolicLink()) {
+    let target = "";
+    try {
+      target = readlinkSync(vendorPath);
+    } catch {
+      target = "";
+    }
+    const absTarget = path.isAbsolute(target)
+      ? target
+      : path.resolve(path.dirname(vendorPath), target);
+    const projectRoot = path.resolve(dir);
+    if (
+      !absTarget.startsWith(projectRoot + path.sep) &&
+      absTarget !== projectRoot
+    ) {
+      errors.push(
+        `vendor/wpdev/php-fault-tolerance is a host-absolute symlink (${target || absTarget}) — breaks Docker. Keep packages/php-fault-tolerance locally, ensure composer path repo uses symlink:false, then reinstall.`,
+      );
+    }
+  }
+
+  return errors;
 }

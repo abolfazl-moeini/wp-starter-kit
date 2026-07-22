@@ -3,15 +3,28 @@
 `packages/php-fault-tolerance/` provides resilience helpers with a **dual-mode**
 runtime:
 
-| Runtime PHP | Mode | Behaviour |
-|-------------|------|-----------|
-| ≥ 8.1 | **Real** | Circuit breaker, retries, curl_multi pool, SSRF guards |
-| < 8.1 | **Stub** | Same public API; no-op / single-shot / sequential HTTP |
+| Runtime PHP | Mode     | Behaviour                                              |
+| ----------- | -------- | ------------------------------------------------------ |
+| ≥ 8.1       | **Real** | Circuit breaker, retries, curl_multi pool, SSRF guards |
+| < 8.1       | **Stub** | Same public API; no-op / single-shot / sequential HTTP |
 
 Install is always safe: package requires **PHP ≥ 7.4**. Bootstrap picks Real
 or Stub via `PHP_VERSION_ID` (not `phpMinVersion` in config).
 
 Enable in consumer projects with `faultTolerance: on` (scaffold **default**).
+
+### Consumer install (Docker-safe)
+
+Scaffold / `wpdev add faultTolerance` copies the package into the project:
+
+```
+packages/php-fault-tolerance/   ← mirrored sources (owned by the generator)
+vendor/wpdev/php-fault-tolerance ← Composer mirror (symlink: false)
+```
+
+`composer.json` uses a path repository on `packages/*` with `options.symlink: false`.
+Do **not** point Composer at an absolute kit checkout path — host symlinks fatal
+inside Docker (`Failed opening required …/php-fault-tolerance/src/bootstrap.php`).
 
 Helper: `wpdev_fault_tolerance_is_active()` → `true` only when Real is loaded.
 
@@ -37,13 +50,13 @@ packages/php-fault-tolerance/src/
 
 ## Global helpers
 
-| Function | Delegates to | Purpose |
-|----------|--------------|---------|
-| `resilient($operation, $options)` | `Resilient::resilient()` | Retry with delay and fallback |
-| `http_batch($requests)` | `HttpClient::batch()` | Sequential `wp_remote_request` (default) |
-| `http_pool($requests)` | `HttpClient::pool()` | Parallel `curl_multi` with SSRF blocking |
-| `fault_tolerance()` | `new FaultTolerance()` | Facade instance (static methods on class) |
-| `wpdev_fault_tolerance_is_active()` | — | `true` when Real (PHP ≥ 8.1) is loaded |
+| Function                            | Delegates to             | Purpose                                   |
+| ----------------------------------- | ------------------------ | ----------------------------------------- |
+| `resilient($operation, $options)`   | `Resilient::resilient()` | Retry with delay and fallback             |
+| `http_batch($requests)`             | `HttpClient::batch()`    | Sequential `wp_remote_request` (default)  |
+| `http_pool($requests)`              | `HttpClient::pool()`     | Parallel `curl_multi` with SSRF blocking  |
+| `fault_tolerance()`                 | `new FaultTolerance()`   | Facade instance (static methods on class) |
+| `wpdev_fault_tolerance_is_active()` | —                        | `true` when Real (PHP ≥ 8.1) is loaded    |
 
 Request shape for HTTP helpers:
 

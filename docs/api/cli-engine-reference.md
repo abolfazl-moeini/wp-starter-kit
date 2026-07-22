@@ -229,7 +229,7 @@ const v = validateFeatureSet({
   faultTolerance: "on",
   phpMinVersion: "7.4",
 });
-// v.ok === false — faultTolerance requires phpMinVersion ≥ 8.1
+// v.ok === true — dual-mode package (Stub below PHP 8.1)
 ```
 
 ---
@@ -296,10 +296,10 @@ Turn a feature on or switch its variant in an existing project.
 
 **Parameters**
 
-| Name        | Type     | Description                                       |
-| ----------- | -------- | ------------------------------------------------- |
-| `dir`       | `string` | Project root                                      |
-| `variant`   | `string` | Required for variant features (e.g. `typescript`) |
+| Name      | Type     | Description                                       |
+| --------- | -------- | ------------------------------------------------- |
+| `dir`     | `string` | Project root                                      |
+| `variant` | `string` | Required for variant features (e.g. `typescript`) |
 
 **Returns**
 

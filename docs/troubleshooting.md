@@ -130,7 +130,7 @@ wpdev create my-plugin --force --yes
 **Fix:** Read the error key. Examples:
 
 - `hookPrefix=wpdev` with `phpFramework:wpdev` → pick a project-unique prefix
-- `faultTolerance` with `phpMinVersion=7.4` → `wpdev set phpMinVersion 8.1`
+- Stale feature combos after an old kit → `wpdev doctor` / `wpdev update`
 
 **Related:** [features-reference.md](features-reference.md#validation-rules)
 
@@ -363,6 +363,34 @@ composer dump-autoload
 ---
 
 ## WordPress runtime
+
+### `php-fault-tolerance` bootstrap fatal in Docker
+
+**Symptom:**
+
+```
+Failed opening required '.../vendor/wpdev/php-fault-tolerance/src/bootstrap.php'
+```
+
+**Cause:** Composer installed the package as a **host-absolute symlink** into the
+kit checkout (`/Users/.../wp-starter-kit/packages/php-fault-tolerance`). That
+path does not exist inside the container.
+
+**Fix:**
+
+```bash
+# From the plugin root
+cp -R "$KIT/packages/php-fault-tolerance" packages/
+rm -rf vendor/wpdev/php-fault-tolerance
+# ensure composer.json path repo: packages/* with options.symlink = false
+composer update wpdev/php-fault-tolerance
+wpdev doctor   # should flag host-absolute FT symlinks
+```
+
+New scaffolds / `wpdev add faultTolerance` already mirror under `packages/` with
+`symlink: false`.
+
+---
 
 ### REST endpoint 404
 

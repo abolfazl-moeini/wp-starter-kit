@@ -112,7 +112,6 @@ describe("buildPromptPlan() — conditional omissions (I2.5)", () => {
     ).toBe(false);
   });
 
-
   test("when js=typescript, includes jsLib, jsTest, css, restBatch", () => {
     const plan = buildPromptPlan({ js: "typescript" });
     const findQ = (id) => plan.find((q) => q.id === id);
@@ -126,8 +125,7 @@ describe("buildPromptPlan() — conditional omissions (I2.5)", () => {
     expect(findQ("restBatch").when(custom)).toBe(true);
   });
 
-
-  test("when phpMinVersion < 8.1, omits faultTolerance via when()", () => {
+  test("faultTolerance is always askable (dual-mode; no phpMin gate)", () => {
     const plan = buildPromptPlan({ phpMinVersion: "7.4" });
     const findQ = (id) => plan.find((q) => q.id === id);
     const custom = { runOptions: { preset: "custom" }, features: {} };
@@ -136,23 +134,17 @@ describe("buildPromptPlan() — conditional omissions (I2.5)", () => {
         ...custom,
         features: { phpMinVersion: "7.4" },
       }),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       findQ("faultTolerance").when({
         ...custom,
         features: { phpMinVersion: "8.0" },
       }),
-    ).toBe(false);
-    expect(
-      findQ("faultTolerance").when({
-        ...custom,
-        features: { phpMinVersion: "8.1" },
-      }),
     ).toBe(true);
     expect(
       findQ("faultTolerance").when({
         ...custom,
-        features: { phpMinVersion: "8.2" },
+        features: { phpMinVersion: "8.1" },
       }),
     ).toBe(true);
   });
@@ -166,13 +158,7 @@ describe("buildPromptPlan() — preset short-circuit (I2.6)", () => {
     const ids = planIds(plan);
     expect(ids).toContain("slug");
     expect(ids).toContain("npmScope");
-    for (const id of [
-      "js",
-      "jsLib",
-      "css",
-      "license",
-      "wpMinVersion",
-    ]) {
+    for (const id of ["js", "jsLib", "css", "license", "wpMinVersion"]) {
       expect(ids).toContain(id);
     }
     const stateFull = {

@@ -228,7 +228,7 @@ Stale `vendor/composer/autoload_files.php` causes fatals (e.g. missing `blocks-r
 
 | Package                        | Role                                                                                            |
 | ------------------------------ | ----------------------------------------------------------------------------------------------- |
-| `packages/php-fault-tolerance` | Dual Real (≥8.1) / Stub; default feature on                                                     |
+| `packages/php-fault-tolerance` | Dual Real (≥8.1) / Stub; mirrored into consumers with Composer `symlink: false` (Docker-safe)   |
 | `packages/mcp-integration`     | Abilities API (not MCP transport); WP 6.9+                                                      |
 | `packages/plugin-core-test`    | PHPUnit bases for consumers                                                                     |
 | `packages/wpdev-framework`     | Full admin framework source (kit reference / submodule area) — not default consumer vendor path |

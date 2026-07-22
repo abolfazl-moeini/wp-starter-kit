@@ -1,52 +1,33 @@
 /**
  * @wpdev/create-wp-project — faultTolerance generator.
  *
- * When `faultTolerance:on`, wires `wpdev/php-fault-tolerance` into the
- * consumer project. The package is dual-mode:
+ * When `faultTolerance:on`, vendors `wpdev/php-fault-tolerance` into
+ * `packages/php-fault-tolerance/` and wires Composer path-repo install with
+ * `symlink: false` (same pattern as plugin-core-test). The package is dual-mode:
  *   PHP >= 8.1 → full Real implementation
  *   PHP <  8.1 → Stub no-op wrappers (same API)
  * so phpMinVersion may be 7.4 without skipping install.
  */
+
+import { phpFaultTolerancePackageFiles } from "./_php-fault-tolerance-template.js";
+
+const PACKAGE_PREFIX = "packages/php-fault-tolerance/";
 
 export function run(ctx) {
   if (ctx.features.faultTolerance !== "on") {
     return { files: {}, dirs: [], deps: {}, devDeps: {} };
   }
 
-  const tpl = ctx.vars || { ...ctx.answers, ...(ctx.cfg || {}) };
-  // Optional local path only when the caller explicitly sets
-  // faultTolerancePath (kit monorepo). Real consumers resolve the
-  // package from Packagist/VCS — never default to ../packages/*.
-  const pkgPath =
-    typeof tpl.faultTolerancePath === "string"
-      ? tpl.faultTolerancePath.trim()
-      : "";
-
-  /** @type {{ require: Record<string,string>, repositories?: object[] }} */
-  const composerPatches = {
-    require: {
-      "wpdev/php-fault-tolerance": "*",
-    },
-  };
-  if (pkgPath) {
-    composerPatches.repositories = [
-      {
-        type: "path",
-        url: pkgPath,
-        options: { symlink: true },
-      },
-    ];
-  }
-
-  return {
-    files: {
-      "docs/fault-tolerance.md": `# Fault tolerance
+  /** @type {Record<string, string>} */
+  const files = {
+    "docs/fault-tolerance.md": `# Fault tolerance
 
 This project has \`faultTolerance: on\`.
 
 ## Composer dependency
 
-\`composer.json\` requires \`wpdev/php-fault-tolerance\` (PHP ≥ 7.4).
+\`composer.json\` requires \`wpdev/php-fault-tolerance\` from the local path
+package under \`packages/php-fault-tolerance/\` (\`symlink: false\`).
 Run \`composer install\` after scaffolding.
 
 ## Runtime behaviour
@@ -71,17 +52,38 @@ FaultTolerance::resilient(static function () {
 
 See the kit doc \`docs/fault-tolerance.md\` for patterns.
 `,
-    },
-    dirs: ["docs"],
+  };
+
+  for (const [rel, body] of Object.entries(phpFaultTolerancePackageFiles())) {
+    files[`${PACKAGE_PREFIX}${rel}`] = body;
+  }
+
+  return {
+    files,
+    dirs: ["docs", "packages/php-fault-tolerance"],
     deps: {},
     devDeps: {},
-    composerPatches,
+    composerPatches: {
+      repositories: [
+        {
+          type: "path",
+          url: "packages/*",
+          options: {
+            monorepo: true,
+            symlink: false,
+          },
+        },
+      ],
+      require: {
+        "wpdev/php-fault-tolerance": "*",
+      },
+    },
   };
 }
 
 export const descriptor = {
   id: "faultTolerance",
   feature: "faultTolerance",
-  owns: ["docs/fault-tolerance.md"],
+  owns: ["docs/fault-tolerance.md", "packages/php-fault-tolerance/**"],
   run,
 };

@@ -24,11 +24,11 @@
 | `js`             | JavaScript           | typescript, pure, flow, none  | typescript | —                                       | `none` disables JS stack    | add/remove |
 | `jsLib`          | JavaScript Library   | none, preact, react           | none       | `js ≠ none`                             | —                           | add/remove |
 | `jsTest`         | JavaScript Testing   | jest, vitest, none            | jest       | `js ≠ none`                             | —                           | add/remove |
-| `phpMinVersion`  | PHP                  | 7.4–8.3                       | 7.4        | —                                       | `faultTolerance` needs ≥8.1 | **set**    |
+| `phpMinVersion`  | PHP                  | 7.4–8.3                       | 7.4        | —                                       | —                           | **set**    |
 | `phpFramework`   | PHP Framework        | none, wpdev                   | none       | —                                       | prefixes ≠ `wpdev`/`wpdev_` | add/remove |
 | `phpTest`        | PHP Testing          | phpunit, none                 | phpunit    | —                                       | —                           | add/remove |
 | `restBatch`      | REST Batch           | off, on                       | off        | `js ≠ none`                             | —                           | add/remove |
-| `faultTolerance` | Fault Tolerance      | off, on                       | off        | `phpMinVersion ≥ 8.1`                   | —                           | add/remove |
+| `faultTolerance` | Fault Tolerance      | off, on                       | off        | — (dual-mode Real/Stub)                 | —                           | add/remove |
 | `vendorScoping`  | Vendor Scoping       | on, off                       | on         | —                                       | —                           | add/remove |
 | `husky`          | Husky                | on, off                       | on         | `js ≠ none` for package.json            | —                           | add/remove |
 | `css`            | CSS                  | none, sass, tailwind, postcss | none       | `js ≠ none`                             | polaris vs tailwind (v1)    | add/remove |
@@ -160,14 +160,14 @@ See [fetch-batch.md](fetch-batch.md).
 
 ### `faultTolerance` — Fault Tolerance
 
-| Property         | Value                                                      |
-| ---------------- | ---------------------------------------------------------- |
-| **Label**        | Fault Tolerance                                            |
-| **Variants**     | `off` _(default)_, `on`                                    |
-| **Enables**      | `wpdev/php-fault-tolerance` Composer dependency            |
-| **Owned paths**  | `docs/fault-tolerance.md` (generator-owned doc stub)       |
-| **Dependencies** | `phpMinVersion ≥ 8.1`                                      |
-| **Toggle**       | `wpdev add faultTolerance` / `wpdev remove faultTolerance` |
+| Property         | Value                                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Label**        | Fault Tolerance                                                                                              |
+| **Variants**     | `off` _(default)_, `on`                                                                                      |
+| **Enables**      | `wpdev/php-fault-tolerance` via local `packages/php-fault-tolerance/` (Composer path repo, `symlink: false`) |
+| **Owned paths**  | `docs/fault-tolerance.md`, `packages/php-fault-tolerance/**`                                                 |
+| **Dependencies** | Dual-mode (Real on PHP ≥ 8.1, Stub below); no phpMin gate                                                    |
+| **Toggle**       | `wpdev add faultTolerance` / `wpdev remove faultTolerance`                                                   |
 
 See [fault-tolerance.md](fault-tolerance.md).
 
@@ -326,7 +326,7 @@ See [ci.md](ci.md).
 | Every catalog id present with allowed variant                        | per-id shape errors                 |
 | Unknown feature ids (strict mode)                                    | synthetic key errors                |
 | `js:none` → `jsLib`, `jsTest`, `css`, `restBatch` must be off/none   | per dependent id                    |
-| `faultTolerance:on` → `phpMinVersion ≥ 8.1`                          | `faultTolerance`                    |
+| `faultTolerance:on` allowed on any `phpMinVersion` (dual-mode)       | —                                   |
 | `frontendStack:polaris` → `js=typescript` + `jsLib ∈ {preact,react}` | `frontendStack`                     |
 | `frontendStack:polaris` + `css=tailwind`                             | `frontendStack`                     |
 | `phpFramework:wpdev` → prefixes must not be `wpdev` / `wpdev_`       | `phpFramework`, `phpFunctionPrefix` |
@@ -341,7 +341,7 @@ const result = validateFeatureSet({
   faultTolerance: "on",
   phpMinVersion: "7.4",
 });
-// result.ok === false
+// result.ok === true — dual-mode package (Stub below 8.1)
 ```
 
 ---

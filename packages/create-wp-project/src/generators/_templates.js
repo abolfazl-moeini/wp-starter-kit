@@ -94,7 +94,6 @@ export function tplVars(answers, cfg) {
     // {{frameworkVersion}} is the composer `require` constraint
     // for wpdev/framework (Packagist / VCS). Default `*`.
     frameworkVersion: (answers && answers.frameworkVersion) || "*",
-    faultTolerancePath: (answers && answers.faultTolerancePath) || "",
   };
 }
 
