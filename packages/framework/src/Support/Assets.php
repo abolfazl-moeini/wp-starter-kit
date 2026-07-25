@@ -433,6 +433,7 @@ final class Assets {
 			}
 		}
 
+		// File not on disk OR outside wp-content — explicit failure (never '').
 		return '';
 	}
 
