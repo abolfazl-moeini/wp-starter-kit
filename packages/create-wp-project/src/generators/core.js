@@ -42,6 +42,7 @@ import {
   TEMPLATE_README,
   TEMPLATE_TSCONFIG_JSON,
   TEMPLATE_GITIGNORE,
+  TEMPLATE_PRETTIERIGNORE,
   TEMPLATE_EDITORCONFIG,
   loadPluginFileTemplate,
   loadReadmeTxtTemplate,
@@ -200,6 +201,10 @@ export function run(ctx) {
   // 8. .gitignore + .editorconfig — minimal but useful defaults
   files[".gitignore"] = renderTemplate(TEMPLATE_GITIGNORE, tpl);
   files[".editorconfig"] = renderTemplate(TEMPLATE_EDITORCONFIG, tpl);
+  // Keep prettier from rewriting esbuild output under assets/bundles/.
+  if (features.husky === "on" || (features.js && features.js !== "none")) {
+    files[".prettierignore"] = TEMPLATE_PRETTIERIGNORE;
+  }
 
   // 9. tsconfig.json — ONLY when js === "typescript". The core
   //    generator owns this file (it lives at the project root)
@@ -333,6 +338,7 @@ export const descriptor = {
     "readme.txt",
     "README.md",
     ".gitignore",
+    ".prettierignore",
     ".editorconfig",
     "tsconfig.json",
     "package.json",
