@@ -147,32 +147,37 @@ setPolarisTheme("system");
 
 function PolarisDemoApp() {
   return (
-    <Stack gap="4">
-      <Card>
-        <Heading>Polaris Stack (frontend)</Heading>
-        <Text>
-          Dummy ${libLabel} UI via framework ShortcodesSetup shortcode.
-        </Text>
-        <Stack gap="2">
-          <Badge>sample</Badge>
-          <Badge>${libLabel}</Badge>
-          <Badge>polaris</Badge>
-        </Stack>
-        <Stack gap="2">
-          <Button onClick={() => setPolarisTheme("dark")}>Dark theme</Button>
-          <Button variant="ghost" onClick={() => setPolarisTheme("light")}>
-            Light theme
-          </Button>
-          <Button variant="ghost" onClick={() => setPolarisTheme("system")}>
-            System
-          </Button>
-        </Stack>
-      </Card>
-      <Card>
-        <Heading as="h3">Fake stats</Heading>
-        <Text>Items: 12 · Active: yes</Text>
-      </Card>
-    </Stack>
+    <div className="ps-scope">
+      <Stack gap="4">
+        <Card>
+          <Heading level={2}>Polaris Stack (frontend)</Heading>
+          <Text>
+            Dummy ${libLabel} UI via framework ShortcodesSetup shortcode.
+          </Text>
+          <Stack gap="2">
+            <Badge>sample</Badge>
+            <Badge>${libLabel}</Badge>
+            <Badge>polaris</Badge>
+          </Stack>
+          <Stack gap="2">
+            <Button onClick={() => setPolarisTheme("dark")}>Dark theme</Button>
+            <Button variant="ghost" onClick={() => setPolarisTheme("light")}>
+              Light theme
+            </Button>
+            <Button variant="ghost" onClick={() => setPolarisTheme("brand")}>
+              Brand theme
+            </Button>
+            <Button variant="ghost" onClick={() => setPolarisTheme("system")}>
+              System
+            </Button>
+          </Stack>
+        </Card>
+        <Card>
+          <Heading level={3}>Fake stats</Heading>
+          <Text>Items: 12 · Active: yes</Text>
+        </Card>
+      </Stack>
+    </div>
   );
 }
 

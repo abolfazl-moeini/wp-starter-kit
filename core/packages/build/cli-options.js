@@ -1,3 +1,6 @@
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
 /**
  * Shared CLI flags for esbuild entry scripts.
  */
@@ -8,6 +11,25 @@ export function parseBuildCliOptions(argv = process.argv) {
     watch,
     isDev: watch || argv.includes("--dev"),
   };
+}
+
+/**
+ * True when this module is the process entrypoint.
+ * Compares realpaths so npm bin symlinks still match import.meta.url.
+ *
+ * @param {string} importMetaUrl import.meta.url of the CLI file
+ * @returns {boolean}
+ */
+export function isCliMain(importMetaUrl) {
+  const entry = process.argv[1];
+  if (!entry) {
+    return false;
+  }
+  try {
+    return realpathSync(entry) === fileURLToPath(importMetaUrl);
+  } catch {
+    return false;
+  }
 }
 
 /**

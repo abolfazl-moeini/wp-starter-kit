@@ -1,7 +1,10 @@
 #!/usr/bin/env node
-import { fileURLToPath } from "node:url";
 import { runBuild } from "./esbuild-dependencies.js";
-import { parseBuildCliOptions, runWatchUntilExit } from "./cli-options.js";
+import {
+  isCliMain,
+  parseBuildCliOptions,
+  runWatchUntilExit,
+} from "./cli-options.js";
 
 async function runDepsCli() {
   const { watch, isDev } = parseBuildCliOptions();
@@ -16,6 +19,6 @@ async function runDepsCli() {
   }
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (isCliMain(import.meta.url)) {
   runDepsCli();
 }

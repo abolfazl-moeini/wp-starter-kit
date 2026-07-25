@@ -20,8 +20,8 @@
  *   0 — all checks pass
  *   1 — at least one check failed
  */
-import { fileURLToPath } from "node:url";
 import { checkProject } from "@core/utils";
+import { isCliMain } from "./cli-options.js";
 
 function runCheckCli() {
   let issues;
@@ -51,6 +51,6 @@ function runCheckCli() {
   process.exit(0);
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (isCliMain(import.meta.url)) {
   runCheckCli();
 }

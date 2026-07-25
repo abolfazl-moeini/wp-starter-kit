@@ -184,8 +184,10 @@ From `packages/polaris-stack/context.md` — non-negotiable:
 2. **Styled components** (`Button`, `Card`, `Badge`, …): colors, type, variants — **no** layout props.
 3. Spacing around a Button → wrap in `Stack` / `Box`, do not add `mt` to Button.
 4. Tokens are CSS variables `--ps-*`; theme via `setPolarisTheme` / `data-theme` — no ThemeProvider.
+   Built-in themes: `light`, `dark`, `system`, `brand`, `hc`.
 5. Import CSS **once** per page load path (`styles.css`).
 6. No CSS-in-JS libraries; no layout `px` for structure (prefer rem / logical props).
+7. Wrap admin/frontend mounts in `.ps-scope` so base typography does not clobber WP admin.
 
 ## Entry authoring patterns
 
@@ -237,6 +239,30 @@ Prefer `@wpdev/rest-utils` batch helpers when `restBatch:on`.
 | Shared design system           | Polaris package only — do not fork tokens per module   |
 | Shared non-UI logic            | Small pure TS under `src/lib/` imported as `@/lib/...` |
 | Form-heavy admin               | WDForm / ui-components patterns, not ad-hoc state soup |
+| Separate shortcodes / surfaces | **Separate modules** (or entries) → separate bundles   |
+
+### Multiple modules = multiple lazy bundles
+
+Each feature that mounts only on its own shortcode/admin screen should own:
+
+```
+src/Modules/{Name}/
+├── Module.php                         # ShortcodesSetup + register/enqueue
+├── Shortcodes/*.php                   # request_enqueue() in render
+└── assets/entries/view.tsx            # → assets/bundles/{Name}-view.js
+```
+
+PHP enqueues **only when the shortcode is present** (register early, enqueue
+conditionally). Do not load Module B’s JS because Module A rendered.
+
+Example shortcodes (demo plugins):
+
+| Shortcode               | Bundle                  |
+| ----------------------- | ----------------------- |
+| `[core_demo]`           | `PolarisDemo-view.js`   |
+| `[core_layout_gallery]` | `LayoutGallery-view.js` |
+| `[core_theme_lab]`      | `ThemeLab-view.js`      |
+| `[core_status_widget]`  | `StatusWidget-view.js`  |
 
 Keep **feature isolation**: Module A should not import Module B's private components.
 Cross-feature communication → hooks / REST / shared package.
@@ -287,7 +313,9 @@ npm run typecheck        # tsc --noEmit
 - [ ] Bundle name matches PHP `assets/bundles/{Module}-{entry}.js`
 - [ ] Polaris: layout/style separation respected
 - [ ] Mount only when DOM root exists; shortcode assets lazy
+- [ ] Each shortcode/surface enqueues **only its own** bundle
 - [ ] `uiFramework` / Preact compat respected
+- [ ] `npm run build` prints `build:src/Modules/...` for every entry (if silent, CLI symlink / glob bug)
 - [ ] typecheck + build clean
 
 ## Related
@@ -298,3 +326,4 @@ npm run typecheck        # tsc --noEmit
 - Docs: `docs/module-guide.md`, `docs/polaris/starter.md`, `docs/build-outputs.md`
 - Example entries: `src/Modules/ExampleFeature/assets/entries/admin.ts`
 - Scaffolded Polaris demo template: `packages/create-wp-project/src/generators/_polaris-template.js`
+- Multi-module Polaris labs (layouts + themes + widgets): consumer demos / `docs/polaris-js-modules-demo.md`

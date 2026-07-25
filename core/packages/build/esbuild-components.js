@@ -9,22 +9,56 @@ import { readBuildConfig } from "./index.js";
 import { getJsxOptions, getBuildAliases } from "./getJsxOptions.js";
 
 // Resolve `glob` without import.meta (Jest/babel cannot parse import.meta
-// in this file). Prefer the ESM named export (glob@10+); fall back to CJS
-// default / whole-module for older installs.
+// in this file). Support glob@10+ (Promise) and glob@7 (callback / sync).
 async function resolveGlob() {
   const globModule = await import("glob");
-  if (typeof globModule.glob === "function") {
-    return globModule.glob.bind(globModule);
+
+  /** @param {string} pattern @param {object} options @returns {Promise<string[]>} */
+  async function runGlob(pattern, options) {
+    const fn =
+      typeof globModule.glob === "function"
+        ? globModule.glob.bind(globModule)
+        : typeof globModule.default === "function"
+          ? globModule.default
+          : globModule.default && typeof globModule.default.glob === "function"
+            ? globModule.default.glob.bind(globModule.default)
+            : null;
+
+    if (!fn) {
+      throw new Error(
+        "esbuild-components: could not resolve a glob() function from the 'glob' package",
+      );
+    }
+
+    const result = fn(pattern, options);
+
+    if (Array.isArray(result)) {
+      return result;
+    }
+    if (result && typeof result.then === "function") {
+      const awaited = await result;
+      if (Array.isArray(awaited)) {
+        return awaited;
+      }
+    }
+
+    // glob@7 returns a Glob EventEmitter when called without a callback.
+    const sync =
+      typeof globModule.sync === "function"
+        ? globModule.sync
+        : globModule.default && typeof globModule.default.sync === "function"
+          ? globModule.default.sync
+          : null;
+    if (sync) {
+      return sync(pattern, options);
+    }
+
+    throw new Error(
+      "esbuild-components: glob() did not return string[]; install glob@10+ or ensure glob.sync is available",
+    );
   }
-  if (typeof globModule.default === "function") {
-    return globModule.default;
-  }
-  if (globModule.default && typeof globModule.default.glob === "function") {
-    return globModule.default.glob.bind(globModule.default);
-  }
-  throw new Error(
-    "esbuild-components: could not resolve a glob() function from the 'glob' package",
-  );
+
+  return runGlob;
 }
 
 /** Module entries: plain TS or TSX (JSX automatic runtime). */

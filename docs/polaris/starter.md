@@ -76,6 +76,76 @@ function PolarisStarterPage() {
 }
 ```
 
+## Themes
+
+```ts
+setPolarisTheme("light" | "dark" | "system" | "brand" | "hc");
+```
+
+| Theme    | Role                                               |
+| -------- | -------------------------------------------------- |
+| `light`  | Default `:root` tokens                             |
+| `dark`   | Dark palette via `[data-theme="dark"]`             |
+| `system` | Resolves to light/dark from `prefers-color-scheme` |
+| `brand`  | Sample branded palette (token-only swap)           |
+| `hc`     | High-contrast                                      |
+
+Themes never change layout structure — only `--ps-*` tokens.
+
+## Layout gallery (layout ≠ style)
+
+```tsx
+import {
+  Card,
+  Cluster,
+  Grid,
+  Heading,
+  Sidebar,
+  Stack,
+  Switcher,
+  Text,
+} from "@wpdev/polaris-stack";
+
+function LayoutGallery() {
+  return (
+    <div className="ps-scope">
+      <Stack gap="6">
+        <Stack gap="2">
+          <Heading level={2}>Layouts</Heading>
+          <Text tone="muted">
+            Spacing lives on Stack / Grid — never on Card / Button.
+          </Text>
+        </Stack>
+        <Grid gap="3" min="12rem">
+          <Card>
+            <Text>Cell</Text>
+          </Card>
+        </Grid>
+        <Sidebar gap="3" sideWidth="10rem">
+          <Card>
+            <Text>Side</Text>
+          </Card>
+          <Card>
+            <Text>Main</Text>
+          </Card>
+        </Sidebar>
+        <Switcher gap="3" threshold="24rem">
+          <Card>
+            <Text>A</Text>
+          </Card>
+          <Card>
+            <Text>B</Text>
+          </Card>
+        </Switcher>
+        <Cluster gap="2">
+          <Text>tags wrap here</Text>
+        </Cluster>
+      </Stack>
+    </div>
+  );
+}
+```
+
 ## Dark mode toggle (inline script + button)
 
 For WordPress admin, output the init script early:

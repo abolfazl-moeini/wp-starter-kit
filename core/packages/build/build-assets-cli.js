@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import { fileURLToPath } from "node:url";
 import { buildAssets } from "./build-assets.js";
+import { isCliMain } from "./cli-options.js";
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (isCliMain(import.meta.url)) {
   buildAssets().catch(() => process.exit(1));
 }

@@ -22,6 +22,7 @@
   "files": [
     "index.js",
     "getJsxOptions.js",
+    "cli-options.js",
     "esbuild-components.js",
     "esbuild-components-cli.js",
     "esbuild-dependencies.js",

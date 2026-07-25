@@ -204,6 +204,36 @@ Run `wpdev doctor` to see drift.
 
 ## Build
 
+### `npm run build:components` exits 0 but no bundles
+
+**Symptom:** `assets/bundles/` missing `{Module}-{entry}.js` files. No
+`build:src/Modules/...` lines in the log. Exit code is still `0`.
+
+**Cause (either or both):**
+
+1. **CLI symlink guard** — older CLIs compared `process.argv[1]` to
+   `fileURLToPath(import.meta.url)` without resolving npm bin symlinks, so
+   the CLI never ran.
+2. **Wrong project root** — `getRootPath()` used a fixed parent depth that
+   missed `wpdev.json` in generated plugins (`packages/core-utils` is one
+   level shallower than the kit’s `core/packages/utils`).
+3. **glob@7 hoist** — `glob()` without a callback returns a Glob object;
+   entry discovery then finds zero files.
+
+**Fix:**
+
+1. Upgrade `@wpdev/build` / `@core/utils` so CLIs use `isCliMain()`
+   (realpath compare) and `getRootPath()` walks up until it finds
+   `wpdev.json`.
+2. Confirm `npm run build:components` prints one `build:src/Modules/...`
+   line per entry.
+3. Prefer `glob@10+` (declared by `@wpdev/build`); if the root tree hoists
+   glob@7, the build now falls back to `glob.sync`.
+
+**Related:** [build-outputs.md](build-outputs.md), skill `wpdev-js-modules`
+
+---
+
 ### Build fails: missing depsBundle
 
 **Symptom:** esbuild or PHP enqueue cannot find `{slug}-deps.js`.

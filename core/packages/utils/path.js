@@ -1,5 +1,6 @@
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname as nodeDirname } from "node:path";
+import { dirname as nodeDirname, join } from "node:path";
 
 export function getMetaUrl() {
   return import.meta.url;
@@ -33,11 +34,29 @@ export function dirname(path, levels = 1) {
 }
 
 /**
- * Gets the absolute path to the monorepo root.
+ * Absolute path to the project / kit root that owns `wpdev.json`.
+ *
+ * Walks up from this package so both layouts work:
+ * - generated plugin: `packages/core-utils` → plugin root (3 levels)
+ * - kit monorepo: `core/packages/utils` → kit root (4 levels)
+ *
  * @returns {string} The root directory path.
  */
 export function getRootPath() {
   const __filename = fileURLToPath(getMetaUrl());
+  let dir = nodeDirname(__filename);
 
+  for (let i = 0; i < 12; i++) {
+    if (existsSync(join(dir, "wpdev.json"))) {
+      return dir;
+    }
+    const parent = nodeDirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+
+  // Fallback for unit tests that mock getMetaUrl without a wpdev.json tree.
   return dirname(__filename, 4);
 }
