@@ -10,7 +10,7 @@ class McpAbilitiesModuleTest extends \WPDevTest\TestCases\TestCase
     public function test_slug_is_non_empty_kebab_case(): void
     {
         $module = new Module();
-        $this->assertSame('mcp-abilities', $module->get_slug());
+        $this->assertSame('wpdev-starter-mcp-abilities', $module->get_slug());
         $this->assertMatchesRegularExpression('/^[a-z][a-z0-9-]*$/', $module->get_slug());
     }
 

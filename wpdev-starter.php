@@ -117,7 +117,6 @@ function wpdev_starter_load_textdomain(): void {
 function wpdev_starter_register_modules(): void {
 	WPDev\Core\Plugin::loader()->register( new WPDev\Modules\ExampleFeature\Module() );
 	WPDev\Core\Plugin::loader()->register( new WPDev\Modules\McpAbilities\Module() );
-	WPDev\Core\Plugin::loader()->register( new WPDev\Modules\Blocks\Module() );
 }
 
 add_action( 'plugins_loaded', 'wpdev_starter_register_modules', 5 );

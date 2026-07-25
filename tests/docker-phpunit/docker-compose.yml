@@ -34,7 +34,7 @@ services:
 
   wpdev-starter-phpunit-php:
     container_name: wpdev-starter-phpunit-php
-    image: arm64v8/wordpress:php8.1-apache
+    image: arm64v8/wordpress:php8.2-apache
     platform: linux/arm64/v8
     networks: [shared_net]
     restart: "no"
