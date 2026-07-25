@@ -56,6 +56,15 @@ vendor/                       # Composer only; never put feature code here
   `Plugin::config()` otherwise produce empty script URLs (`Unexpected token '<'`)
   or silently drop scripts whose deps never registered.
 - **ALWAYS** security: capability/nonce, sanitize in, escape out, REST `permission_callback`.
+- **ALWAYS** add `src/Modules/{Name}/Access/{Name}Access.php` (extends `UserAccess`)
+  when the module has admin ajax / REST / menu / CSV / settings gates. Declare
+  named rules in `describe(BluePrint)`; check with `have_access()` or
+  `CapabilityPolicy::access()` / `rest_access()`. See
+  [references/support-packages.md](references/support-packages.md).
+- **NEVER** scatter feature-level `current_user_can('manage_*'|'edit_products'|…)`
+  once an Access class exists for that gate — use the named rule instead.
+- Object-level `current_user_can('edit_post'|'edit_user', $id)` on metabox/profile
+  saves may stay **inline** (AccessManager is for feature-level gates).
 
 ## How a module is structured
 
@@ -162,10 +171,12 @@ Set plugin dir so Assets / `wpdev.json` resolve from plugin root (consumer main 
 ### New module checklist
 
 1. Create `src/Modules/{Name}/Module.php` (+ subfolders as needed).
-2. Add `src/{name}-register.php` (preferred) **or** wire priority-5 register in `{slug}.php`.
-3. If using a register file: append path to `composer.json` → `autoload.files`.
-4. Run **`composer dump-autoload`** after any `files` change (required — stale maps fatal).
-5. Mirror tests under `tests/phpunit/Modules/{Name}/` when phpunit is on.
+2. If the module has admin ajax / REST / menu / CSV / settings gates: add
+   `Access/{Name}Access.php` + `AccessTest.php` (see Access slice).
+3. Add `src/{name}-register.php` (preferred) **or** wire priority-5 register in `{slug}.php`.
+4. If using a register file: append path to `composer.json` → `autoload.files`.
+5. Run **`composer dump-autoload`** after any `files` change (required — stale maps fatal).
+6. Mirror tests under `tests/phpunit/Modules/{Name}/` when phpunit is on.
 
 ## packages/framework Support map
 
@@ -207,12 +218,43 @@ ShortcodesSetup::register(self::SHORTCODE, DemoShortcode::class);
 
 ### Access slice
 
-```php
-use WPDev\Support\AccessManager\UserAccess;
-use WPDev\Support\AccessManager\BluePrint\BluePrint;
+**Required** for modules with privileged surfaces. Canonical example:
+`src/Modules/ExampleFeature/Access/FeatureAccess.php`. Full package notes:
+[references/support-packages.md](references/support-packages.md) § AccessManager.
 
-// Prefer BluePrint any/all/custom over scattered current_user_can() when rules grow.
+```php
+namespace Vendor\Modules\MyFeature\Access;
+
+use WPDev\Support\AccessManager\BluePrint\BluePrint;
+use WPDev\Support\AccessManager\UserAccess;
+use WPDev\Support\Auth\CapabilityPolicy;
+
+final class MyFeatureAccess extends UserAccess
+{
+    public const EDIT_ITEMS = 'edit_items';
+    /** WP cap string for menus / $supported_panels (single source of truth). */
+    public const CAP_EDIT = 'edit_posts';
+
+    protected function describe(BluePrint $blue_print): void
+    {
+        $blue_print->describe(self::EDIT_ITEMS)->any(self::CAP_EDIT);
+        // all('edit_posts', 'publish_posts'); custom(fn (): bool => …);
+        // Second describe(same id) = OR group.
+    }
+}
+
+// Runtime (ajax / admin_post / REST permission_callback):
+CapabilityPolicy::access(new MyFeatureAccess(), MyFeatureAccess::EDIT_ITEMS);
+// or: (new MyFeatureAccess())->have_access(MyFeatureAccess::EDIT_ITEMS);
 ```
+
+Checklist when adding a module:
+
+1. Create `Access/{Name}Access.php` with rule-id + `CAP_*` constants.
+2. Replace feature-level `current_user_can(...)` call sites with `have_access` /
+   `CapabilityPolicy::access`.
+3. Point menu/`$supported_panels` at `XAccess::CAP_*` (string still required by WP).
+4. Add `tests/phpunit/Modules/{Name}/AccessTest.php` (`login('role')` true/false).
 
 ### Assets slice
 
@@ -299,6 +341,9 @@ Anti-patterns:
 - [ ] `boot()` only wires; logic in collaborators
 - [ ] No raw REST/CLI/shortcode registration bypassing Support
 - [ ] Assets gated by screen/shortcode
+- [ ] Access class present when admin ajax/REST/menu/CSV/settings gates exist
+- [ ] Named Access rules unit-tested (`AccessTest.php`)
+- [ ] Feature-level gates use `have_access` / `CapabilityPolicy::access` (not scattered caps)
 - [ ] composer `files` + dump-autoload done
 - [ ] PHPUnit under `tests/phpunit/Modules/...` when applicable
 - [ ] No hardcoded brand slug/prefix
@@ -306,6 +351,8 @@ Anti-patterns:
 ## Related
 
 - Package path map: [references/packages-map.md](references/packages-map.md)
+- Support package playbook: [references/support-packages.md](references/support-packages.md)
+- Human API deep-dive: `docs/php-core-libs.md`
 - JS modular + Polaris: skill **`wpdev-js-modules`**
 - Module tutorial: `docs/module-guide.md`
 - Example: `src/Modules/ExampleFeature/`
