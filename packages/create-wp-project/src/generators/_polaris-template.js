@@ -422,11 +422,15 @@ final class Module extends AbstractModule
         if (wp_script_is($handle, 'registered')) {
             return;
         }
+        if (class_exists(Assets::class)) {
+            Assets::register_vendor_scripts();
+        }
         $info = class_exists(Assets::class) ? Assets::asset_info($abs_js) : [];
         $ver = is_array($info) ? ($info['hash'] ?? false) : false;
         $deps = is_array($info) ? ($info['dependencies'] ?? []) : [];
         // Ensure .asset.php deps that live in this plugin are registered first.
         // Missing deps cause WP to silently omit the script from the page.
+        // Shared vendors (e.g. handle "preact") are registered via Assets above.
         foreach ($deps as $dep) {
             if (!is_string($dep) || $dep === '' || wp_script_is($dep, 'registered')) {
                 continue;

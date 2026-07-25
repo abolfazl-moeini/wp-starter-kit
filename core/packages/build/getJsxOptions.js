@@ -67,11 +67,35 @@ export function getProjectAliases(cwd = process.cwd()) {
  *
  * @param {'preact'|'react'|string} [uiFramework]
  * @param {string} [cwd]
+ * @param {{ externalizePolaris?: boolean }} [options]
+ *   When `externalizePolaris` is true (component builds), keep only the
+ *   styles.css alias — JS is loaded once from the deps bundle global.
  * @returns {Record<string, string>}
  */
-export function getBuildAliases(uiFramework = "preact", cwd = process.cwd()) {
-  return {
-    ...getReactAliases(uiFramework),
-    ...getProjectAliases(cwd),
-  };
+export function getBuildAliases(
+  uiFramework = "preact",
+  cwd = process.cwd(),
+  options = {},
+) {
+  const aliases = { ...getReactAliases(uiFramework) };
+  const project = getProjectAliases(cwd);
+  if (options.externalizePolaris) {
+    if (project["@wpdev/polaris-stack/styles.css"]) {
+      aliases["@wpdev/polaris-stack/styles.css"] =
+        project["@wpdev/polaris-stack/styles.css"];
+    }
+  } else {
+    Object.assign(aliases, project);
+  }
+  return aliases;
+}
+
+/**
+ * True when the project has a local Polaris tree under `src/polaris`.
+ *
+ * @param {string} [cwd]
+ * @returns {boolean}
+ */
+export function hasPolarisSource(cwd = process.cwd()) {
+  return existsSync(path.join(cwd, "src", "polaris"));
 }

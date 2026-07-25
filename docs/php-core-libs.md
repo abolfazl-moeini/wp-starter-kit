@@ -398,25 +398,33 @@ public static function get_localize_data(): array;
 public static function read_project_config(): array;
 ```
 
-| Method                     | Purpose                                                            |
-| -------------------------- | ------------------------------------------------------------------ |
-| `set_plugin_dir()`         | Set consumer plugin root path + URL (required for Composer layout) |
-| `asset_info()`             | Read `.asset.php` sidecar (deps + hash)                            |
-| `register_bundle_script()` | Register JS with sidecar deps + `wp_set_script_translations()`     |
-| `enqueue_bundle_script()`  | Register (if path given) then enqueue                              |
-| `enqueue_bundle_style()`   | Register + enqueue CSS bundle                                      |
-| `get_localize_data()`      | Build `api` / `api_x` localize payload for `@wpdev/utils`          |
+| Method                      | Purpose                                                                       |
+| --------------------------- | ----------------------------------------------------------------------------- |
+| `set_plugin_dir()`          | Set consumer plugin root path + URL (required for Composer layout)            |
+| `asset_info()`              | Read `.asset.php` sidecar (deps + hash)                                       |
+| `register_bundle_script()`  | Register JS with sidecar deps + `wp_set_script_translations()`                |
+| `register_vendor_scripts()` | Register shared non-WP vendors (handle `preact` → `assets/bundles/preact.js`) |
+| `enqueue_bundle_script()`   | Register (if path given) then enqueue                                         |
+| `enqueue_bundle_style()`    | Register + enqueue CSS bundle                                                 |
+| `get_localize_data()`       | Build `api` / `api_x` localize payload for `@wpdev/utils`                     |
 
 **Example:**
 
 ```php
 Assets::set_plugin_dir(plugin_dir_path(__FILE__), plugins_url('', __FILE__));
+add_action('init', [Assets::class, 'register_vendor_scripts'], 1);
 Assets::enqueue_bundle_script(
     'my-admin',
     plugin_dir_path(__FILE__) . 'assets/bundles/MyModule-admin.js'
 );
 wp_localize_script('my-admin', 'MyProjectLoc', Assets::get_localize_data());
 ```
+
+### Shared vendors
+
+Libraries WordPress does not ship (Preact) are registered once under a stable
+handle (`preact`). Prefer the unprefixed handle so two kit plugins share one
+copy. Call `register_vendor_scripts()` after `set_plugin_dir()`.
 
 ### Multi-plugin caveat
 

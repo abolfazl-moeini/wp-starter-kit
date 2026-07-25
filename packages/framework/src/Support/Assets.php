@@ -154,11 +154,57 @@ final class Assets {
 	 * @return bool              `true` once the script is registered and
 	 *                           enqueued.
 	 */
+	/**
+	 * Register shared JS vendors that WordPress core does not ship
+	 * (currently: Preact as handle `preact`).
+	 *
+	 * Idempotent and multi-plugin safe: the first plugin to register the
+	 * handle wins; later calls no-op when the handle is already registered.
+	 *
+	 * Call early (e.g. `init`) after {@see self::set_plugin_dir()}.
+	 */
+	public static function register_vendor_scripts(): void {
+		self::register_preact_vendor();
+	}
+
+	/**
+	 * Register `assets/bundles/preact.js` as WP script handle `preact`.
+	 */
+	public static function register_preact_vendor(): void {
+		if ( ! function_exists( 'wp_register_script' ) || ! function_exists( 'wp_script_is' ) ) {
+			return;
+		}
+		if ( wp_script_is( 'preact', 'registered' ) ) {
+			return;
+		}
+
+		$paths = self::resolve_paths();
+		$rel   = 'assets/bundles/preact.js';
+		$abs   = $paths['base_path'] . $rel;
+		if ( ! is_readable( $abs ) ) {
+			return;
+		}
+
+		$info = self::asset_info( $abs );
+		$ver  = $info['hash'] ?? false;
+		$url  = self::resolve_asset_url( $abs );
+		if ( '' === $url ) {
+			return;
+		}
+		if ( $ver ) {
+			$url = add_query_arg( 'id', $ver, $url );
+		}
+
+		wp_register_script( 'preact', $url, [], $ver, true );
+	}
+
 	public static function register_bundle_script(
 		string $handle,
 		string $rel_path,
 		array $extra_deps = []
 	): bool {
+		self::register_vendor_scripts();
+
 		$info    = self::asset_info( $rel_path );
 		$version = $info['hash'] ?? false;
 		$deps    = array_merge( $extra_deps, $info['dependencies'] ?? [] );

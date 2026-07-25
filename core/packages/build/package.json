@@ -9,12 +9,14 @@
     "wpdev-build-components": "./esbuild-components-cli.js",
     "wpdev-build-styles": "./esbuild-styles-cli.js",
     "wpdev-build-assets": "./build-assets-cli.js",
+    "wpdev-build-vendor": "./esbuild-vendor-cli.js",
     "wpdev-check": "./wpdev-check-cli.js"
   },
   "exports": {
     ".": "./index.js",
     "./esbuild-components.js": "./esbuild-components.js",
     "./esbuild-dependencies.js": "./esbuild-dependencies.js",
+    "./esbuild-vendor.js": "./esbuild-vendor.js",
     "./esbuild-styles.js": "./esbuild-styles.js",
     "./build-assets.js": "./build-assets.js",
     "./getJsxOptions.js": "./getJsxOptions.js"
@@ -27,6 +29,8 @@
     "esbuild-components-cli.js",
     "esbuild-dependencies.js",
     "esbuild-dependencies-cli.js",
+    "esbuild-vendor.js",
+    "esbuild-vendor-cli.js",
     "esbuild-styles.js",
     "esbuild-styles-cli.js",
     "build-assets.js",

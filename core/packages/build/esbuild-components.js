@@ -6,7 +6,11 @@ import {
 } from "@wpdev/dependency-extraction-esbuild-plugin";
 import { readProjectConfig } from "@core/utils";
 import { readBuildConfig } from "./index.js";
-import { getJsxOptions, getBuildAliases } from "./getJsxOptions.js";
+import {
+  getJsxOptions,
+  getBuildAliases,
+  hasPolarisSource,
+} from "./getJsxOptions.js";
 
 // Resolve `glob` without import.meta (Jest/babel cannot parse import.meta
 // in this file). Support glob@10+ (Promise) and glob@7 (callback / sync).
@@ -163,6 +167,12 @@ async function buildSingleComponent({
     [`${projectConfig.npmScope}/utils`]: `${projectConfig.globalName}.utils`,
   };
 
+  // Polaris UI once in deps bundle → `${globalName}.polaris`.
+  if (hasPolarisSource(cwd)) {
+    globalMappings["@wpdev/polaris-stack"] =
+      `${projectConfig.globalName}.polaris`;
+  }
+
   if (!projectConfig.depsBundle) {
     throw new Error(
       "project.config.json is missing 'depsBundle' (required for component builds)",
@@ -178,7 +188,9 @@ async function buildSingleComponent({
     sourcemap: isDev,
     metafile: true,
     ...getJsxOptions(projectConfig.uiFramework),
-    alias: getBuildAliases(projectConfig.uiFramework, cwd),
+    alias: getBuildAliases(projectConfig.uiFramework, cwd, {
+      externalizePolaris: hasPolarisSource(cwd),
+    }),
     define: {
       IS_DEV: String(isDev),
       __WPDEV_GLOBAL_NAME__: JSON.stringify(projectConfig.globalName),

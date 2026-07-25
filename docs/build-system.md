@@ -72,6 +72,20 @@ custom esbuild plugin in the project. It reads
 [official map](https://github.com/WordPress/gutenberg/tree/trunk/packages/dependency-extraction-webpack-plugin))
 and rewrites bare imports to the corresponding `wp.*` global.
 
+### Shared vendors (Preact) and Polaris
+
+WordPress core already provides `react`, `react-dom`, `react-jsx-runtime`, and
+`@wordpress/*` — those stay external and appear in `.asset.php` dependencies.
+
+When `uiFramework: preact`, the dependencies builder also emits
+`assets/bundles/preact.js` (core + hooks + compat + jsx-runtime) and registers
+it under the stable handle **`preact`** (unprefixed, first-plugin-wins). View
+bundles must not inline Preact.
+
+When `src/polaris` exists, Polaris is bundled **once** into `{slug}-deps.js` as
+`${globalName}.polaris`. Component builds map `@wpdev/polaris-stack` to that
+global so each view stays small.
+
 ## TypeScript
 
 Phase 12 wired the build pipeline (and the Jest runner) to **TypeScript
@@ -242,10 +256,10 @@ The components stage discovers **two** kinds of entry files:
 ```js
 // core/packages/build/esbuild-components.js
 const MODULE_ENTRY_GLOBS = [
-  'src/Modules/*/assets/entries/*.ts',
-  'src/Modules/*/assets/entries/*.tsx', // JSX (automatic runtime)
+  "src/Modules/*/assets/entries/*.ts",
+  "src/Modules/*/assets/entries/*.tsx", // JSX (automatic runtime)
 ];
-const LEGACY_SCRIPT_GLOB = '**/script.js';
+const LEGACY_SCRIPT_GLOB = "**/script.js";
 // discoverComponentEntries() globs both, de-dupes, prefers .tsx over .ts
 ```
 

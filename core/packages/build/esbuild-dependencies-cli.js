@@ -11,7 +11,8 @@ async function runDepsCli() {
   try {
     const result = await runBuild({ watch, isDev });
     if (watch) {
-      await runWatchUntilExit(result ? [result] : []);
+      const contexts = Array.isArray(result) ? result : result ? [result] : [];
+      await runWatchUntilExit(contexts);
     }
   } catch (error) {
     console.error("Dependencies build failed:", error.message);

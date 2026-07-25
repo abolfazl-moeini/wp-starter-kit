@@ -312,8 +312,29 @@ When `frontendStack:polaris`, also:
 ### esbuild aliases
 
 - Preact: `react` / `react-dom` → `preact/compat` when `uiFramework=preact`
-- Polaris: `@wpdev/polaris-stack` → `src/polaris/index.ts` when present
+- Polaris: `@wpdev/polaris-stack` → `src/polaris/index.ts` when building the
+  **deps** bundle; component builds map it to `${globalName}.polaris` (loaded once)
 - JSX: automatic runtime + `jsxImportSource` preact|react
+
+### Shared vendors (do not duplicate in every view bundle)
+
+WordPress already registers `react`, `react-dom`, `react-jsx-runtime`, and
+`@wordpress/*`. Those MUST stay external (dependency-extraction → `.asset.php`).
+
+Libraries WP does **not** ship (Preact) are built once and registered under a
+stable handle:
+
+| Import                         | WP handle     | Bundle                                |
+| ------------------------------ | ------------- | ------------------------------------- |
+| `preact`, `preact/hooks`, …    | `preact`      | `assets/bundles/preact.js`            |
+| `@wordpress/*`, `react` (mode) | WP core       | (none — use WP scripts)               |
+| `@wpdev/polaris-stack`         | `{slug}-deps` | inside `{slug}-deps.js` as `.polaris` |
+
+- Handle `preact` is **unprefixed** so two kit plugins share one registration
+  (first registrant wins).
+- Call `Assets::register_vendor_scripts()` early (`init`) after `set_plugin_dir()`.
+- View `.asset.php` lists `preact` + `{slug}-deps`; never inline Preact/Polaris
+  into each module bundle.
 
 ### Commands
 
@@ -347,6 +368,8 @@ breaks generated `baseUrl` / `paths`).
 - [ ] Mount only when DOM root exists; shortcode assets lazy
 - [ ] Each shortcode/surface enqueues **only its own** bundle
 - [ ] Shared `depsBundle` is registered/enqueued with feature scripts
+- [ ] Preact is **not** inlined in view bundles (`assets/bundles/preact.js` + handle `preact`)
+- [ ] Polaris JS comes from deps global (`${globalName}.polaris`), not copied into every view
 - [ ] `uiFramework` / Preact compat respected
 - [ ] `npm run build` prints `build:src/Modules/...` for every entry (if silent, CLI symlink / glob bug)
 - [ ] typecheck + build clean (`typescript` direct devDep, not transitive-only)

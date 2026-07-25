@@ -91,6 +91,20 @@ export function defaultRequestToExternal(request) {
     case "react/jsx-runtime":
     case "react/jsx-dev-runtime":
       return "ReactJSXRuntime";
+
+    // Shared Preact vendor (handle: preact) — not shipped by WordPress core.
+    case "preact":
+      return "preact";
+
+    case "preact/hooks":
+      return "preactHooks";
+
+    case "preact/compat":
+      return "preactCompat";
+
+    case "preact/jsx-runtime":
+    case "preact/jsx-dev-runtime":
+      return "preactJsxRuntime";
   }
 
   if (request.includes("react-refresh/runtime")) {
@@ -124,6 +138,25 @@ export function defaultRequestToHandle(request) {
 
     case "lodash-es":
       return "lodash";
+
+    // WordPress core script handles (script-loader.php).
+    case "react":
+      return "react";
+
+    case "react-dom":
+      return "react-dom";
+
+    case "react/jsx-runtime":
+    case "react/jsx-dev-runtime":
+      return "react-jsx-runtime";
+
+    // Local shared vendor — register once as handle "preact".
+    case "preact":
+    case "preact/hooks":
+    case "preact/compat":
+    case "preact/jsx-runtime":
+    case "preact/jsx-dev-runtime":
+      return "preact";
   }
 
   if (request.includes("react-refresh/runtime")) {

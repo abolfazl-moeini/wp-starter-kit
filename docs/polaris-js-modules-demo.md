@@ -10,6 +10,19 @@ How to validate **layout ≠ style**, **per-module esbuild bundles**, and **lazy
 | Modular JS                 | Each feature owns `src/Modules/{Name}/assets/entries/*.{ts,tsx}`             |
 | Lazy bundles               | `assets/bundles/{Name}-{entry}.js` loads only when that shortcode is present |
 | Cross-module Polaris usage | Modules import `@wpdev/polaris-stack` by package name — never deep relatives |
+| Shared vendors             | Preact once as handle `preact`; Polaris once on `{slug}-deps` (`.polaris`)   |
+
+## Shared vendors (bundle size)
+
+After `npm run build` you should see roughly:
+
+| File                            | Role                                         |
+| ------------------------------- | -------------------------------------------- |
+| `assets/bundles/preact.js`      | Shared Preact (handle `preact`)              |
+| `assets/bundles/{slug}-deps.js` | Hooks bridge + Polaris (`{Global}.polaris`)  |
+| `assets/bundles/*-view.js`      | Thin mounts only (depend on `preact` + deps) |
+
+View `.asset.php` should list `preact` and `{slug}-deps`, not ship a second Preact copy.
 
 ## Reference modules (consumer labs)
 
