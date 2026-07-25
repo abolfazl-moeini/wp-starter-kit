@@ -67,12 +67,16 @@ Also build/register the shared deps bundle (`wpdev.json` → `depsBundle`) befor
 
 ## Multi-plugin caveat
 
-`WPDev\Core\Plugin` and `WPDev\MCP\Core\Plugin` hold **static** loaders. If two
-kit-based plugins are active, they share one loader (whichever class autoloads
-first). Module slugs must be unique across those plugins — scaffold uses
-`{{slug}}-polaris-demo` / `{{slug}}-mcp-abilities` (e.g. `nik-core-polaris-demo`),
-not bare `polaris-demo`. MCP bridge modules also register `example-abilities`
-idempotently via `$loader->has()` before `$loader->register()`.
+`WPDev\Core\Plugin`, `WPDev\MCP\Core\Plugin`, and `WPDev\Support\Assets` hold
+**process-wide** static state. If two kit-based plugins are active:
+
+| Collision                                              | Scaffold mitigation                                                                                                 |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| Module slug `polaris-demo`                             | Use `{{slug}}-polaris-demo`                                                                                         |
+| MCP `example-abilities`                                | Idempotent `has()` before `register()`                                                                              |
+| Script handle `polaris-demo-view`                      | Use `{{slug}}-polaris-demo-view`                                                                                    |
+| Empty JS URL → site home HTML → `Unexpected token '<'` | Register via `plugins_url( $rel, $plugin_file )`; Assets refuses empty URLs; `content_url` fallback                 |
+| Wrong `depsBundle` from sibling `Plugin::config()`     | Read **this** plugin's `wpdev.json` for deps / localizeVar; register `.asset.php` deps from local `assets/bundles/` |
 
 ## Manual test plan (WordPress)
 

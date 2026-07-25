@@ -164,7 +164,12 @@ final class Assets {
 		$deps    = array_merge( $extra_deps, $info['dependencies'] ?? [] );
 
 		$url = self::resolve_asset_url( $rel_path );
-		if ($version) {
+		// Empty URL + add_query_arg becomes the site home (HTML). Never register that —
+		// browsers then throw "Unexpected token '<'" when parsing homepage as JS.
+		if ( '' === $url ) {
+			return false;
+		}
+		if ( $version ) {
 			$url = add_query_arg( 'id', $version, $url );
 		}
 
@@ -361,15 +366,27 @@ final class Assets {
 		$real_abs  = realpath( $abs_path );
 		$real_root = realpath( $base_path );
 
-		if ($real_abs && $real_root && strpos( $real_abs, $real_root ) === 0) {
+		if ( $real_abs && $real_root && strpos( $real_abs, $real_root ) === 0 ) {
 			$relative = ltrim( substr( $real_abs, strlen( $real_root ) ), '/' );
 			return $base_url . $relative;
 		}
 
-		// File not on disk OR outside the plugin root — caller must decide.
-		// Returning '' makes the failure mode explicit; the previous
-		// guess-the-subdir fallback silently produced 404 URLs for any
-		// file under a non-bundles subdir (assets/stylesheets/, etc).
+		// Multi-plugin caveat: Assets::$plugin_dir is process-wide. When another
+		// kit plugin called set_plugin_dir() last, $real_root is their root and
+		// our abs path fails the prefix check. Fall back to content_url so the
+		// script still points at the real file under wp-content/.
+		if (
+			$real_abs
+			&& defined( 'WP_CONTENT_DIR' )
+			&& function_exists( 'content_url' )
+		) {
+			$content_dir = realpath( WP_CONTENT_DIR );
+			if ( $content_dir && strpos( $real_abs, $content_dir ) === 0 ) {
+				$relative = ltrim( str_replace( '\\', '/', substr( $real_abs, strlen( $content_dir ) ) ), '/' );
+				return content_url( $relative );
+			}
+		}
+
 		return '';
 	}
 

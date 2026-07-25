@@ -418,6 +418,27 @@ Assets::enqueue_bundle_script(
 wp_localize_script('my-admin', 'MyProjectLoc', Assets::get_localize_data());
 ```
 
+### Multi-plugin caveat
+
+`Assets::$plugin_dir` and `Plugin::config()` are **process-wide**. If two kit
+plugins are active, whichever called `set_plugin_dir()` / `Plugin::boot()` last
+(or first, for config cache) wins for the whole request.
+
+Symptoms when this goes wrong:
+
+| Symptom                                              | Cause                                                                                                                                                              |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Console `Uncaught SyntaxError: Unexpected token '<'` | `resolve_asset_url()` returned `''`; `add_query_arg` turned it into the site home HTML loaded as JS                                                                |
+| View JS missing from the page entirely               | Script depends on `{slug}-deps` but `read_project_config()` returned a **sibling** plugin's `depsBundle`, so the dep was never registered and WP omitted the child |
+
+Mitigations (scaffold Polaris demo does these):
+
+1. Prefix script/style handles with the plugin slug (`{slug}-polaris-demo-view`).
+2. Register view JS with `plugins_url( $rel, $plugin_file )` + `.asset.php` deps (do not rely solely on `Assets::resolve_asset_url()` for cross-plugin safety).
+3. Read **this** plugin's `wpdev.json` for `depsBundle` / `localizeVar` instead of `Assets::read_project_config()` when co-install is possible.
+4. `register_bundle_script()` returns `false` when the URL would be empty (never registers the homepage as a script).
+5. `resolve_asset_url()` falls back to `content_url()` when the abs path is under `WP_CONTENT_DIR` but outside the current `set_plugin_dir()` root.
+
 **Security:** `get_localize_data()` uses `sanitize_url()` on REST URLs and
 `wp_create_nonce()` for nonces. Never hardcode nonces in JS source.
 

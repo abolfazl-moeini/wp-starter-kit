@@ -275,6 +275,13 @@ With slug `nik-core` → `[nik_core_layout_gallery]`, etc. Lab modules are
 kit plugins. Scaffold uses `{slug}-polaris-demo` / `{slug}-mcp-abilities` because
 `WPDev\Core\Plugin` and `WPDev\MCP\Core\Plugin` share process-wide static loaders.
 
+**Script handles + enqueue:** use `{slug}-…-view` handles and register view JS via
+`plugins_url` + local `wpdev.json` for `depsBundle`. Shared `Assets` /
+`Plugin::config()` across two active kit plugins caused
+`src="https://site/?id=…"` (console `Unexpected token '<'`) and missing deps
+so WP omitted the script entirely. See `docs/php-core-libs.md` (Assets) and
+`docs/polaris-js-modules-demo.md`.
+
 Keep **feature isolation**: Module A should not import Module B's private components.
 Cross-feature communication → hooks / REST / shared package.
 

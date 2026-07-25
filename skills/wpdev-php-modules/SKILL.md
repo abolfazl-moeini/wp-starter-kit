@@ -48,6 +48,13 @@ vendor/                       # Composer only; never put feature code here
   (`{slug}-polaris-demo`, `{slug}-mcp-abilities`) — `WPDev\Core\Plugin` and
   `WPDev\MCP\Core\Plugin` hold **process-wide static** loaders; two kit plugins
   on one site share them and collide on bare slugs like `polaris-demo`.
+- **ALWAYS** prefix WP script/style handles the same way (`{slug}-polaris-demo-view`).
+  Bare handles like `polaris-demo-view` collide across co-installed kit plugins.
+- **ALWAYS** register frontend view JS with `plugins_url( $rel, $plugin_file )`
+  (or ensure deps from **this** plugin's `wpdev.json` / `.asset.php` are registered)
+  when another kit plugin may be active — shared `Assets::$plugin_dir` /
+  `Plugin::config()` otherwise produce empty script URLs (`Unexpected token '<'`)
+  or silently drop scripts whose deps never registered.
 - **ALWAYS** security: capability/nonce, sanitize in, escape out, REST `permission_callback`.
 
 ## How a module is structured
@@ -287,6 +294,7 @@ Anti-patterns:
 
 - [ ] `ModuleInterface` / `AbstractModule` with stable `get_slug()`
 - [ ] Scaffolded demo slugs prefixed with plugin slug (`{slug}-…`) when co-install is possible
+- [ ] Script/style handles also prefixed; view JS registered via `plugins_url` when co-install is possible
 - [ ] MCP bridge: idempotent `has()` before registering `example-abilities`
 - [ ] `boot()` only wires; logic in collaborators
 - [ ] No raw REST/CLI/shortcode registration bypassing Support

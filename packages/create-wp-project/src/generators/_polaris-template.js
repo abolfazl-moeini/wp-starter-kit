@@ -220,12 +220,12 @@ export function polarisDemoEntry(ctx) {
 export const POLARIS_DEMO_MODULE_PHP = `<?php
 declare(strict_types=1);
 
-namespace {{vendor}}\\Modules\\PolarisDemo;
+namespace {{vendor}}\Modules\PolarisDemo;
 
-use {{vendor}}\\Modules\\PolarisDemo\\Shortcodes\\DemoShortcode;
-use {{frameworkNamespace}}\\Core\\AbstractModule;
-use {{frameworkNamespace}}\\Support\\Assets;
-use {{frameworkNamespace}}\\Support\\Shortcodes\\ShortcodesSetup;
+use {{vendor}}\Modules\PolarisDemo\Shortcodes\DemoShortcode;
+use {{frameworkNamespace}}\Core\AbstractModule;
+use {{frameworkNamespace}}\Support\Assets;
+use {{frameworkNamespace}}\Support\Shortcodes\ShortcodesSetup;
 
 /**
  * Frontend Polaris demo via framework ShortcodesSetup (not add_shortcode).
@@ -235,8 +235,8 @@ use {{frameworkNamespace}}\\Support\\Shortcodes\\ShortcodesSetup;
 final class Module extends AbstractModule
 {
     public const SHORTCODE = '{{slug_underscore}}_demo';
-    public const SCRIPT_HANDLE = 'polaris-demo-view';
-    public const STYLE_HANDLE = 'polaris-demo-view-style';
+    public const SCRIPT_HANDLE = '{{slug}}-polaris-demo-view';
+    public const STYLE_HANDLE = '{{slug}}-polaris-demo-view-style';
     public const JS_REL = 'assets/bundles/PolarisDemo-view.js';
     public const CSS_REL = 'assets/bundles/PolarisDemo-view.css';
 
@@ -276,7 +276,7 @@ final class Module extends AbstractModule
         $css = $this->abs(self::CSS_REL);
 
         if (is_readable($js)) {
-            Assets::register_bundle_script(self::SCRIPT_HANDLE, $js);
+            $this->register_view_script($js);
         }
         if (is_readable($css)) {
             $info = Assets::asset_info($css);
@@ -311,10 +311,8 @@ final class Module extends AbstractModule
         $css = $this->abs(self::CSS_REL);
 
         if (is_readable($js)) {
-            if (!wp_script_is(self::SCRIPT_HANDLE, 'registered')) {
-                Assets::register_bundle_script(self::SCRIPT_HANDLE, $js);
-            }
-            Assets::enqueue_bundle_script(self::SCRIPT_HANDLE);
+            $this->register_view_script($js);
+            wp_enqueue_script(self::SCRIPT_HANDLE);
         }
 
         if (is_readable($css)) {
@@ -340,7 +338,7 @@ final class Module extends AbstractModule
             return;
         }
         if (!wp_script_is($handle, 'registered')) {
-            Assets::register_bundle_script($handle, $abs);
+            $this->register_script_abs($handle, $abs, 'assets/bundles/' . ltrim($this->deps_filename(), '/'));
         }
     }
 
@@ -352,13 +350,17 @@ final class Module extends AbstractModule
             return;
         }
         if (!wp_script_is($handle, 'registered')) {
-            Assets::register_bundle_script($handle, $abs);
+            $this->register_script_abs($handle, $abs, 'assets/bundles/' . ltrim($this->deps_filename(), '/'));
         }
         if (!wp_script_is($handle, 'enqueued')) {
-            Assets::enqueue_bundle_script($handle);
-            $config = Assets::read_project_config();
-            $loc_var = is_array($config) ? ($config['localizeVar'] ?? '') : '';
-            if (is_string($loc_var) && $loc_var !== '' && function_exists('wp_localize_script')) {
+            wp_enqueue_script($handle);
+            $loc_var = '';
+            $local = $this->abs('wpdev.json');
+            if (is_readable($local)) {
+                $raw = json_decode((string) file_get_contents($local), true);
+                $loc_var = is_array($raw) ? (string) ($raw['localizeVar'] ?? '') : '';
+            }
+            if ($loc_var !== '' && function_exists('wp_localize_script')) {
                 wp_localize_script($handle, $loc_var, Assets::get_localize_data());
             }
         }
@@ -367,14 +369,23 @@ final class Module extends AbstractModule
     private function deps_handle(): string
     {
         $file = $this->deps_filename();
-        return $file === '' ? '' : (string) preg_replace('/\\.js$/', '', $file);
+        return $file === '' ? '' : (string) preg_replace('/\.js$/', '', $file);
     }
 
     private function deps_filename(): string
     {
-        $config = Assets::read_project_config();
-        $name = is_array($config) ? ($config['depsBundle'] ?? '{{slug}}-deps.js') : '{{slug}}-deps.js';
-        return is_string($name) && $name !== '' ? $name : '{{slug}}-deps.js';
+        // Do not use Assets::read_project_config() — Plugin::config() is a
+        // process-wide cache and may belong to a sibling kit plugin
+        // (e.g. nikamooz-deps.js instead of {{slug}}-deps.js).
+        $local = $this->abs('wpdev.json');
+        if (is_readable($local)) {
+            $raw = json_decode((string) file_get_contents($local), true);
+            $name = is_array($raw) ? ($raw['depsBundle'] ?? '') : '';
+            if (is_string($name) && $name !== '') {
+                return $name;
+            }
+        }
+        return '{{slug}}-deps.js';
     }
 
     private function deps_abs(): string
@@ -389,18 +400,54 @@ final class Module extends AbstractModule
             return false;
         }
         $post = get_post();
-        if (!$post instanceof \\WP_Post) {
+        if (!$post instanceof \WP_Post) {
             return false;
         }
         return has_shortcode((string) $post->post_content, self::SHORTCODE);
     }
+
+
+    /**
+     * Register a view bundle via plugins_url (not Assets::resolve_asset_url).
+     * Assets::$plugin_dir is process-wide and may point at a sibling kit plugin,
+     * which previously produced src="https://site/?id=…" and Unexpected token '<'.
+     */
+    private function register_view_script(string $abs_js): void
+    {
+        $this->register_script_abs(self::SCRIPT_HANDLE, $abs_js, self::JS_REL);
+    }
+
+    private function register_script_abs(string $handle, string $abs_js, string $rel): void
+    {
+        if (wp_script_is($handle, 'registered')) {
+            return;
+        }
+        $info = class_exists(Assets::class) ? Assets::asset_info($abs_js) : [];
+        $ver = is_array($info) ? ($info['hash'] ?? false) : false;
+        $deps = is_array($info) ? ($info['dependencies'] ?? []) : [];
+        // Ensure .asset.php deps that live in this plugin are registered first.
+        // Missing deps cause WP to silently omit the script from the page.
+        foreach ($deps as $dep) {
+            if (!is_string($dep) || $dep === '' || wp_script_is($dep, 'registered')) {
+                continue;
+            }
+            $dep_rel = 'assets/bundles/' . $dep . '.js';
+            $dep_abs = $this->abs($dep_rel);
+            if (is_readable($dep_abs)) {
+                $this->register_script_abs($dep, $dep_abs, $dep_rel);
+            }
+        }
+        $url = plugins_url($rel, $this->plugin_file());
+        wp_register_script($handle, $url, $deps, $ver, true);
+    }
+
 
     private function abs(string $rel): string
     {
         $root = defined('{{slug_constant}}_PLUGIN_DIR')
             ? {{slug_constant}}_PLUGIN_DIR
             : plugin_dir_path($this->plugin_file());
-        return rtrim($root, '/\\\\') . '/' . ltrim($rel, '/');
+        return rtrim($root, '/\\') . '/' . ltrim($rel, '/');
     }
 
     private function plugin_file(): string
