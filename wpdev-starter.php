@@ -47,6 +47,15 @@ if ( class_exists( 'WPDev\\Support\\Assets' ) ) {
 		WPDEV_STARTER_PLUGIN_DIR,
 		plugins_url( '', WPDEV_STARTER_PLUGIN_FILE )
 	);
+	// Shared vendors (handle: preact) — first registrant wins across plugins.
+	add_action(
+		'init',
+		static function (): void {
+			\WPDev\Support\Assets::register_vendor_scripts();
+		},
+		1,
+		0
+	);
 }
 
 if ( ! class_exists( 'WPDev\\Core\\Plugin' )) {

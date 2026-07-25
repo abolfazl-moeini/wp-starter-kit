@@ -4,13 +4,14 @@ How to validate **layout ≠ style**, **per-module esbuild bundles**, and **lazy
 
 ## Goal
 
-| Concern                    | What to prove                                                                |
-| -------------------------- | ---------------------------------------------------------------------------- |
-| Layout / theme separation  | Layout primitives own spacing; themes only swap `--ps-*` tokens              |
-| Modular JS                 | Each feature owns `src/Modules/{Name}/assets/entries/*.{ts,tsx}`             |
-| Lazy bundles               | `assets/bundles/{Name}-{entry}.js` loads only when that shortcode is present |
-| Cross-module Polaris usage | Modules import `@wpdev/polaris-stack` by package name — never deep relatives |
-| Shared vendors             | Preact once as handle `preact`; Polaris once on `{slug}-deps` (`.polaris`)   |
+| Concern                     | What to prove                                                                |
+| --------------------------- | ---------------------------------------------------------------------------- |
+| Layout / theme separation   | Layout primitives own spacing; themes only swap `--ps-*` tokens              |
+| Modular JS                  | Each feature owns `src/Modules/{Name}/assets/entries/*.{ts,tsx}`             |
+| Lazy bundles                | `assets/bundles/{Name}-{entry}.js` loads only when that shortcode is present |
+| Cross-module Polaris usage  | Modules import `@wpdev/polaris-stack` by package name — never deep relatives |
+| Shared vendors              | Preact once as handle `preact`; Polaris once on `{slug}-deps` (`.polaris`)   |
+| Preact-mode `react` imports | Extraction maps `react` → `preactCompat` (not WP `react` handle)             |
 
 ## Shared vendors (bundle size)
 

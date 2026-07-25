@@ -144,6 +144,9 @@ describe("core generator — always-on contribution (Phase 21.3/21.4)", () => {
     // Module boot fix: set_plugin_dir + Assets before boot
     expect(php).toMatch(/Plugin::set_plugin_dir\s*\(\s*MY_PROJECT_PLUGIN_DIR/);
     expect(php).toMatch(/Assets::set_plugin_dir/);
+    // Shared Preact vendor — early init registration (first registrant wins).
+    expect(php).toMatch(/Assets::register_vendor_scripts/);
+    expect(php).toMatch(/add_action\(\s*['"]init['"]/);
   });
 
   test("plugin bootstrap define() constants use UPPER_SNAKE (slug_constant)", () => {

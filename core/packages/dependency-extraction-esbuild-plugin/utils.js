@@ -57,17 +57,72 @@ const BUNDLED_PACKAGES = [
 ];
 
 /**
+ * Cached project `uiFramework` (`preact` | `react`).
+ * Null until first resolve. Use {@link __setUiFrameworkForTests} in unit tests.
+ * @type {'preact'|'react'|null}
+ */
+let uiFrameworkCache = null;
+
+/**
+ * Resolve project UI framework for extraction maps.
+ * Defaults to `preact` (kit default) when config is missing.
+ *
+ * @returns {'preact'|'react'}
+ */
+export function resolveUiFramework() {
+  if (uiFrameworkCache === "preact" || uiFrameworkCache === "react") {
+    return uiFrameworkCache;
+  }
+  if (
+    process.env.WPDEV_UI_FRAMEWORK === "preact" ||
+    process.env.WPDEV_UI_FRAMEWORK === "react"
+  ) {
+    uiFrameworkCache = process.env.WPDEV_UI_FRAMEWORK;
+    return uiFrameworkCache;
+  }
+  try {
+    const config = readProjectConfig();
+    uiFrameworkCache = config?.uiFramework === "react" ? "react" : "preact";
+  } catch {
+    uiFrameworkCache = "preact";
+  }
+  return uiFrameworkCache;
+}
+
+/**
+ * True when shared Preact vendor should back `react` / `react-dom` imports.
+ * @returns {boolean}
+ */
+export function usesPreactVendor() {
+  return resolveUiFramework() !== "react";
+}
+
+/**
+ * Test-only: pin or reset cached uiFramework (null clears cache).
+ * @param {'preact'|'react'|null} value
+ */
+export function __setUiFrameworkForTests(value) {
+  uiFrameworkCache = value;
+}
+
+/**
  * Default request to global transformation
  *
  * Transform @wordpress dependencies:
  * - request `@wordpress/api-fetch` becomes `[ 'wp', 'apiFetch' ]`
  * - request `@wordpress/i18n` becomes `[ 'wp', 'i18n' ]`
  *
+ * When `uiFramework` is `preact`, bare `react` / `react-dom` / jsx-runtime
+ * map to the shared Preact vendor globals (importAsGlobals intercepts before
+ * esbuild aliases can rewrite paths).
+ *
  * @param {string} request Module request (the module name in `import from`) to be transformed
  * @return {string|string[]|undefined} The resulting external definition. Return `undefined`
  *   to ignore the request. Return `string|string[]` to map the request to an external.
  */
 export function defaultRequestToExternal(request) {
+  const preactMode = usesPreactVendor();
+
   switch (request) {
     case "moment":
       return request;
@@ -83,14 +138,15 @@ export function defaultRequestToExternal(request) {
       return "jQuery";
 
     case "react":
-      return "React";
+      // Preact mode: compat global from assets/bundles/preact.js (not WP React).
+      return preactMode ? "preactCompat" : "React";
 
     case "react-dom":
-      return "ReactDOM";
+      return preactMode ? "preactCompat" : "ReactDOM";
 
     case "react/jsx-runtime":
     case "react/jsx-dev-runtime":
-      return "ReactJSXRuntime";
+      return preactMode ? "preactJsxRuntime" : "ReactJSXRuntime";
 
     // Shared Preact vendor (handle: preact) — not shipped by WordPress core.
     case "preact":
@@ -132,6 +188,8 @@ export function defaultRequestToExternal(request) {
  *   to use the same name as the module.
  */
 export function defaultRequestToHandle(request) {
+  const preactMode = usesPreactVendor();
+
   switch (request) {
     case "@babel/runtime/regenerator":
       return "wp-polyfill";
@@ -139,16 +197,16 @@ export function defaultRequestToHandle(request) {
     case "lodash-es":
       return "lodash";
 
-    // WordPress core script handles (script-loader.php).
+    // WordPress core script handles (script-loader.php) — or shared preact.
     case "react":
-      return "react";
+      return preactMode ? "preact" : "react";
 
     case "react-dom":
-      return "react-dom";
+      return preactMode ? "preact" : "react-dom";
 
     case "react/jsx-runtime":
     case "react/jsx-dev-runtime":
-      return "react-jsx-runtime";
+      return preactMode ? "preact" : "react-jsx-runtime";
 
     // Local shared vendor — register once as handle "preact".
     case "preact":

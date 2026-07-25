@@ -231,6 +231,15 @@ add_action(
                     {{slug_constant}}_PLUGIN_DIR,
                     plugins_url( '', {{slug_constant}}_PLUGIN_FILE )
                 );
+                // Shared vendors (handle: preact) — first registrant wins across plugins.
+                add_action(
+                    'init',
+                    static function (): void {
+                        \WPDev\Support\Assets::register_vendor_scripts();
+                    },
+                    1,
+                    0
+                );
             }
         }
         \WPDev\Core\Plugin::boot();
@@ -250,6 +259,8 @@ if ( class_exists( \WPDev\Core\Plugin::class ) && did_action( 'plugins_loaded' )
                 {{slug_constant}}_PLUGIN_DIR,
                 plugins_url( '', {{slug_constant}}_PLUGIN_FILE )
             );
+            // Shared vendors (handle: preact) — same contract as plugins_loaded path.
+            \WPDev\Support\Assets::register_vendor_scripts();
         }
     }
     \WPDev\Core\Plugin::boot();

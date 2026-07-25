@@ -311,7 +311,11 @@ When `frontendStack:polaris`, also:
 
 ### esbuild aliases
 
-- Preact: `react` / `react-dom` → `preact/compat` when `uiFramework=preact`
+- Preact: esbuild still aliases `react` / `react-dom` → `preact/compat` for
+  resolve-time paths, but **dependency-extraction** is authoritative: when
+  `uiFramework=preact`, bare `react` / `react-dom` / `react/jsx-runtime` map to
+  `preactCompat` / `preactJsxRuntime` and WP handle `preact` (importAsGlobals
+  runs before aliases).
 - Polaris: `@wpdev/polaris-stack` → `src/polaris/index.ts` when building the
   **deps** bundle; component builds map it to `${globalName}.polaris` (loaded once)
 - JSX: automatic runtime + `jsxImportSource` preact|react
@@ -319,16 +323,18 @@ When `frontendStack:polaris`, also:
 ### Shared vendors (do not duplicate in every view bundle)
 
 WordPress already registers `react`, `react-dom`, `react-jsx-runtime`, and
-`@wordpress/*`. Those MUST stay external (dependency-extraction → `.asset.php`).
+`@wordpress/*`. In **`uiFramework: react`** those MUST stay external
+(dependency-extraction → `.asset.php`). In **`uiFramework: preact`**, bare
+`react` imports are rewritten to the shared Preact vendor instead of WP React.
 
 Libraries WP does **not** ship (Preact) are built once and registered under a
 stable handle:
 
-| Import                         | WP handle     | Bundle                                |
-| ------------------------------ | ------------- | ------------------------------------- |
-| `preact`, `preact/hooks`, …    | `preact`      | `assets/bundles/preact.js`            |
-| `@wordpress/*`, `react` (mode) | WP core       | (none — use WP scripts)               |
-| `@wpdev/polaris-stack`         | `{slug}-deps` | inside `{slug}-deps.js` as `.polaris` |
+| Import                                     | WP handle     | Bundle                                |
+| ------------------------------------------ | ------------- | ------------------------------------- |
+| `preact`, `preact/hooks`, `react` (preact) | `preact`      | `assets/bundles/preact.js`            |
+| `@wordpress/*`, `react` (react mode only)  | WP core       | (none — use WP scripts)               |
+| `@wpdev/polaris-stack`                     | `{slug}-deps` | inside `{slug}-deps.js` as `.polaris` |
 
 - Handle `preact` is **unprefixed** so two kit plugins share one registration
   (first registrant wins).

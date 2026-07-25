@@ -80,7 +80,10 @@ WordPress core already provides `react`, `react-dom`, `react-jsx-runtime`, and
 When `uiFramework: preact`, the dependencies builder also emits
 `assets/bundles/preact.js` (core + hooks + compat + jsx-runtime) and registers
 it under the stable handle **`preact`** (unprefixed, first-plugin-wins). View
-bundles must not inline Preact.
+bundles must not inline Preact. Dependency-extraction maps bare `react` /
+`react-dom` / `react/jsx-runtime` to the Preact vendor globals (`preactCompat`,
+`preactJsxRuntime`) so importAsGlobals never pulls WordPress’s `React` handle
+in Preact projects.
 
 When `src/polaris` exists, Polaris is bundled **once** into `{slug}-deps.js` as
 `${globalName}.polaris`. Component builds map `@wpdev/polaris-stack` to that
