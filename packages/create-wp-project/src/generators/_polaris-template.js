@@ -245,7 +245,7 @@ final class Module extends AbstractModule
 
     public function get_slug(): string
     {
-        return 'polaris-demo';
+        return '{{slug}}-polaris-demo';
     }
 
     public function boot(): void
@@ -468,7 +468,12 @@ if (!function_exists('{{slug_underscore}}_register_polaris_demo')) {
      */
     function {{slug_underscore}}_register_polaris_demo(): void
     {
-        Plugin::loader()->register(new PolarisDemoModule());
+        $loader = Plugin::loader();
+        $module = new PolarisDemoModule();
+        // Slug is {{slug}}-polaris-demo — still guard for late/double hooks.
+        if (!$loader->has($module->get_slug())) {
+            $loader->register($module);
+        }
     }
 }
 

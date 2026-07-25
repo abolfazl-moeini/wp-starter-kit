@@ -30,6 +30,15 @@ isolation:
   prefix for any module-local hooks / options the module
   registers.
 
+  **Multi-plugin caveat:** `WPDev\Core\Plugin` holds a process-wide
+  static `ModuleLoader`. If two kit-based plugins are active, they
+  share one loader (whichever `WPDev\Core\*` class autoloads first).
+  Scaffolded demo modules therefore use `{plugin-slug}-feature`
+  (e.g. `nik-core-polaris-demo`, `acme-plugin-mcp-abilities`), not
+  bare names like `polaris-demo`. The same applies to
+  `WPDev\MCP\Core\Plugin` — register `example-abilities` idempotently
+  with `$loader->has()` before `$loader->register()`.
+
 - **`boot(): void`** — the entry point the loader calls exactly
   once per `boot_all()` invocation. Implementations should be
   **idempotent at the call-site level** — the loader does not

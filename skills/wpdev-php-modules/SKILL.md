@@ -44,6 +44,10 @@ vendor/                       # Composer only; never put feature code here
 - **NEVER** add files to `composer.json` `autoload.files` and skip `composer dump-autoload`.
 - **ALWAYS** implement `ModuleInterface` (or extend `AbstractModule`) per feature.
 - **ALWAYS** keep module slug stable after release (`get_slug()` is a public contract).
+- **ALWAYS** prefix scaffolded / demo module slugs with the plugin slug
+  (`{slug}-polaris-demo`, `{slug}-mcp-abilities`) — `WPDev\Core\Plugin` and
+  `WPDev\MCP\Core\Plugin` hold **process-wide static** loaders; two kit plugins
+  on one site share them and collide on bare slugs like `polaris-demo`.
 - **ALWAYS** security: capability/nonce, sanitize in, escape out, REST `permission_callback`.
 
 ## How a module is structured
@@ -76,7 +80,7 @@ use WPDev\Support\Rest\RestSetup;
 
 final class Module extends AbstractModule
 {
-    public function get_slug(): string { return 'my-feature'; }
+    public function get_slug(): string { return 'my-plugin-my-feature'; }
 
     public function should_boot(): bool
     {
@@ -282,6 +286,8 @@ Anti-patterns:
 ## Quality checklist
 
 - [ ] `ModuleInterface` / `AbstractModule` with stable `get_slug()`
+- [ ] Scaffolded demo slugs prefixed with plugin slug (`{slug}-…`) when co-install is possible
+- [ ] MCP bridge: idempotent `has()` before registering `example-abilities`
 - [ ] `boot()` only wires; logic in collaborators
 - [ ] No raw REST/CLI/shortcode registration bypassing Support
 - [ ] Assets gated by screen/shortcode

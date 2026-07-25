@@ -15,7 +15,9 @@ final class Module implements ModuleInterface
 {
     public function get_slug(): string
     {
-        return 'mcp-abilities';
+        // Prefixed with kit slug so co-installed consumer plugins do not
+        // collide on the shared static WPDev\Core\ModuleLoader.
+        return 'wpdev-starter-mcp-abilities';
     }
 
     public function boot(): void
@@ -23,7 +25,13 @@ final class Module implements ModuleInterface
         $config = Plugin::config();
         $slug = $config['slug'] ?? 'wpdev-starter';
         $hookPrefix = $config['hookPrefix'] ?? 'wpdev';
-        McpPlugin::loader()->register(new McpExampleModule());
+        // WPDev\MCP\Core\Plugin is process-wide; sibling plugins may already
+        // own example-abilities — register idempotently.
+        $loader = McpPlugin::loader();
+        $example = new McpExampleModule();
+        if (!$loader->has($example->get_slug())) {
+            $loader->register($example);
+        }
         McpPlugin::boot(['namespace' => (string) $slug, 'hookPrefix' => $hookPrefix . '_mcp']);
     }
 }

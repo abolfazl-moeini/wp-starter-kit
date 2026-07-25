@@ -60,7 +60,9 @@ final class Module implements ModuleInterface
 {
     public function get_slug(): string
     {
-        return 'wpdev-demo';
+        // Prefixed with plugin slug so co-installed kit plugins do not
+        // collide on the shared static WPDev\\Core\\ModuleLoader.
+        return '{{slug}}-wpdev-demo';
     }
 
     public function boot(): void

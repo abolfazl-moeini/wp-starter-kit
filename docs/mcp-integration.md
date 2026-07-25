@@ -183,12 +183,13 @@ Kit-level tests: `tests/packages/mcp-integration.test.js` (generator wiring).
 
 ## Troubleshooting
 
-| Symptom                                    | Fix                                                         |
-| ------------------------------------------ | ----------------------------------------------------------- |
-| Admin notice "Abilities API not available" | Upgrade to WordPress 6.9+                                   |
-| Abilities not visible to MCP               | Install/configure MCP Adapter plugin separately             |
-| Permission denied on execute               | Fix `check_permission()` cap; test as correct user role     |
-| Scaffold validation warning                | Expected on WP < 6.9 hosts — acknowledge or disable feature |
+| Symptom                                      | Fix                                                                                                                                                                   |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Admin notice "Abilities API not available"   | Upgrade to WordPress 6.9+                                                                                                                                             |
+| Abilities not visible to MCP                 | Install/configure MCP Adapter plugin separately                                                                                                                       |
+| Permission denied on execute                 | Fix `check_permission()` cap; test as correct user role                                                                                                               |
+| Scaffold validation warning                  | Expected on WP < 6.9 hosts — acknowledge or disable feature                                                                                                           |
+| `Module with slug '…' is already registered` | Another kit plugin shares the static loader. Use `{slug}-mcp-abilities` and idempotent `has()` before registering `example-abilities` (see [modules.md](modules.md)). |
 
 More: [troubleshooting.md](troubleshooting.md#mcp-abilities-not-registered).
 

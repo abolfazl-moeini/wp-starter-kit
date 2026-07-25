@@ -92,6 +92,9 @@ setPolarisTheme("light" | "dark" | "system" | "brand" | "hc");
 
 Themes never change layout structure — only `--ps-*` tokens.
 
+For a full multi-module demo (layout gallery + theme lab + lazy bundles),
+see [polaris-js-modules-demo.md](../polaris-js-modules-demo.md).
+
 ## Layout gallery (layout ≠ style)
 
 ```tsx

@@ -53,8 +53,17 @@ describe("mcpAbilities feature integration", () => {
     expect(out.files["src/Modules/McpAbilities/Module.php"]).toContain(
       "'namespace' => 'acme-plugin'",
     );
+    expect(out.files["src/Modules/McpAbilities/Module.php"]).toContain(
+      "return 'acme-plugin-mcp-abilities';",
+    );
+    expect(out.files["src/Modules/McpAbilities/Module.php"]).toContain(
+      "!$loader->has($example->get_slug())",
+    );
     expect(out.files["src/mcp-abilities-register.php"]).toContain(
       "McpAbilities\\Module",
+    );
+    expect(out.files["src/mcp-abilities-register.php"]).toContain(
+      "!$loader->has($module->get_slug())",
     );
     expect(out.composerPatches.autoload["psr-4"]["WPDev\\MCP\\"]).toBe(
       "src/Mcp/",

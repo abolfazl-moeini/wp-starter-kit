@@ -53,6 +53,11 @@ export function mcpLibraryFiles(_ctx) {
 /**
  * Kit bridge module: wires the vendored library into WPDev\Core\Plugin.
  *
+ * Module slug is prefixed with {{slug}} so two kit plugins active on the
+ * same site do not collide on the shared static ModuleLoader. The MCP
+ * example-abilities module uses a process-wide WPDev\MCP\Core\Plugin
+ * singleton, so register is idempotent.
+ *
  * @param {object} _ctx
  * @returns {string}
  */
@@ -75,12 +80,19 @@ final class Module implements ModuleInterface
 {
     public function get_slug(): string
     {
-        return 'mcp-abilities';
+        return '{{slug}}-mcp-abilities';
     }
 
     public function boot(): void
     {
-        McpPlugin::loader()->register(new McpExampleModule());
+        // WPDev\\MCP\\Core\\Plugin is a process-wide static singleton (PSR-4
+        // autoload wins from whichever plugin loads first). A sibling kit
+        // plugin may already own example-abilities — register idempotently.
+        $loader = McpPlugin::loader();
+        $example = new McpExampleModule();
+        if (!$loader->has($example->get_slug())) {
+            $loader->register($example);
+        }
         McpPlugin::boot(['namespace' => '{{slug}}']);
     }
 }
@@ -112,12 +124,20 @@ if (!function_exists('add_action')) {
 \\add_action(
     'plugins_loaded',
     static function (): void {
-        Plugin::loader()->register(new Module());
+        $loader = Plugin::loader();
+        $module = new Module();
+        if (!$loader->has($module->get_slug())) {
+            $loader->register($module);
+        }
     },
     5
 );
 if (did_action('plugins_loaded')) {
-    Plugin::loader()->register(new Module());
+    $loader = Plugin::loader();
+    $module = new Module();
+    if (!$loader->has($module->get_slug())) {
+        $loader->register($module);
+    }
 }
 `;
 }

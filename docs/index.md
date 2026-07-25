@@ -75,6 +75,13 @@
 | [fault-tolerance.md](fault-tolerance.md)                 | PHP circuit breaker and resilience package    | You need fault-tolerance helpers          |
 | [mcp-integration.md](mcp-integration.md)                 | WordPress Abilities API for MCP tool exposure | You're using `mcpAbilities:on`            |
 
+## Polaris
+
+| Doc                                                      | One-line description                                      | Read when…                                      |
+| -------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------- |
+| [polaris/starter.md](polaris/starter.md)                 | Copy-paste Polaris starter page + themes + layout gallery | You're building a first Polaris UI              |
+| [polaris-js-modules-demo.md](polaris-js-modules-demo.md) | Multi-module labs: layouts, themes, lazy bundles          | You're validating JS module split + Polaris use |
+
 ## Topic guides
 
 | Doc                                          | One-line description                       | Read when…                               |

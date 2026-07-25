@@ -259,14 +259,21 @@ src/Modules/{Name}/
 PHP enqueues **only when the shortcode is present** (register early, enqueue
 conditionally). Do not load Module B’s JS because Module A rendered.
 
-Example shortcodes (demo plugins):
+Example shortcodes (demo plugins; prefix = `{slug_underscore}`):
 
-| Shortcode               | Bundle                  |
-| ----------------------- | ----------------------- |
-| `[core_demo]`           | `PolarisDemo-view.js`   |
-| `[core_layout_gallery]` | `LayoutGallery-view.js` |
-| `[core_theme_lab]`      | `ThemeLab-view.js`      |
-| `[core_status_widget]`  | `StatusWidget-view.js`  |
+| Shortcode                            | Bundle                  |
+| ------------------------------------ | ----------------------- |
+| `[{slug_underscore}_demo]`           | `PolarisDemo-view.js`   |
+| `[{slug_underscore}_layout_gallery]` | `LayoutGallery-view.js` |
+| `[{slug_underscore}_theme_lab]`      | `ThemeLab-view.js`      |
+| `[{slug_underscore}_status_widget]`  | `StatusWidget-view.js`  |
+
+With slug `nik-core` → `[nik_core_layout_gallery]`, etc. Lab modules are
+**consumer demos** (not auto-scaffolded); see `docs/polaris-js-modules-demo.md`.
+
+**Module PHP slugs** (not shortcode tags) must also be unique across co-installed
+kit plugins. Scaffold uses `{slug}-polaris-demo` / `{slug}-mcp-abilities` because
+`WPDev\Core\Plugin` and `WPDev\MCP\Core\Plugin` share process-wide static loaders.
 
 Keep **feature isolation**: Module A should not import Module B's private components.
 Cross-feature communication → hooks / REST / shared package.
