@@ -1,5 +1,90 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal preset: key generated files match snapshot: minimal-composer.json 1`] = `
+{
+  "autoload": {
+    "psr-4": {
+      "MyProject\\": "src/",
+      "WPDev\\": "packages/framework/src/",
+    },
+  },
+  "license": "GPL-2.0-or-later",
+  "name": "myorg/my-project",
+  "require": [
+    "php",
+  ],
+  "scripts": [
+    "post-install-cmd",
+    "post-update-cmd",
+    "release:dist",
+    "scope:vendor",
+    "test",
+  ],
+  "strauss": {
+    "namespace_prefix": "WpdevVendor",
+    "packages": [],
+    "target_directory": "vendor-prefixed",
+  },
+  "type": "wordpress-plugin",
+}
+`;
+
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal preset: key generated files match snapshot: minimal-wpdev.json 1`] = `
+{
+  "features": {
+    "ci": "auto",
+    "css": "none",
+    "exampleFeature": "off",
+    "faultTolerance": "off",
+    "frontendStack": "none",
+    "husky": "off",
+    "i18n": "off",
+    "js": "none",
+    "jsLib": "none",
+    "jsTest": "none",
+    "license": "gpl2",
+    "mcpAbilities": "off",
+    "phpFramework": "none",
+    "phpMinVersion": "7.4",
+    "phpTest": "phpunit",
+    "restBatch": "off",
+    "vendorScoping": "on",
+    "wpMinVersion": "6.0",
+  },
+  "globalName": "MyProject",
+  "npmScope": "@myorg",
+  "projectType": "plugin",
+  "slug": "my-project",
+}
+`;
+
+exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal preset: key generated files match snapshot: minimal-wpdev.json 2`] = `
+{
+  "distMode": "deps",
+  "features": {
+    "ci": "auto",
+    "css": "none",
+    "exampleFeature": "off",
+    "faultTolerance": "off",
+    "frontendStack": "none",
+    "husky": "off",
+    "i18n": "off",
+    "js": "none",
+    "jsLib": "none",
+    "jsTest": "none",
+    "license": "gpl2",
+    "mcpAbilities": "off",
+    "phpFramework": "none",
+    "phpMinVersion": "7.4",
+    "phpTest": "phpunit",
+    "restBatch": "off",
+    "vendorScoping": "on",
+    "wpMinVersion": "6.0",
+  },
+  "schema": 2,
+}
+`;
+
 exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard preset: key generated files match snapshot: standard-composer.json 1`] = `
 {
   "autoload": {
