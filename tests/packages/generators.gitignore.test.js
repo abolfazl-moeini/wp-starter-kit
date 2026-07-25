@@ -51,13 +51,15 @@ function makeCtx() {
 }
 
 describe("generators.gitignore (Phase 26.3)", () => {
-  test("emits .gitignore with node_modules, vendor, dist, and build", () => {
+  test("emits .gitignore with node_modules, vendor, dist, and root /build/", () => {
     const out = coreRun(makeCtx());
     const gi = out.files[".gitignore"];
     expect(gi).toBeDefined();
     expect(gi).toMatch(/node_modules\//);
     expect(gi).toMatch(/vendor\//);
     expect(gi).toMatch(/dist\//);
-    expect(gi).toMatch(/build\//);
+    // Root-only so packages/build (the @wpdev/build workspace) stays tracked.
+    expect(gi).toMatch(/\/build\//);
+    expect(gi).not.toMatch(/(^|\n)build\//);
   });
 });

@@ -194,6 +194,15 @@ export function packageJsonForAnswers(answers, features) {
         'prettier --check "**/*.{js,jsx,ts,tsx,json,md,yml,yaml,css}"',
       check: "wpdev-check",
     }),
+    ...(huskyOn
+      ? {
+          "lint-staged": {
+            "*.{js,jsx,ts,tsx,json,md,yml,yaml,css}": [
+              "prettier --write --ignore-unknown",
+            ],
+          },
+        }
+      : {}),
     dependencies: {
       ...(uiFramework === "preact"
         ? {
@@ -245,6 +254,11 @@ export function packageJsonForAnswers(answers, features) {
             jest: "^29.7.0",
             "@jest/globals": "^29.7.0",
             "babel-jest": "^29.7.0",
+          }
+        : {}),
+      ...(huskyOn
+        ? {
+            prettier: versionOf("prettier"),
           }
         : {}),
     },
@@ -1601,7 +1615,7 @@ Thumbs.db
 # Build artifacts
 node_modules/
 vendor/
-build/
+/build/
 dist/
 vendor-prefixed/
 
