@@ -41,6 +41,7 @@ import {
   TEMPLATE_STYLESHEET,
   TEMPLATE_README,
   TEMPLATE_TSCONFIG_JSON,
+  POLARIS_TSCONFIG_PATHS,
   TEMPLATE_GITIGNORE,
   TEMPLATE_PRETTIERIGNORE,
   TEMPLATE_EDITORCONFIG,
@@ -216,9 +217,12 @@ export function run(ctx) {
   //    (Phase 25.B / 25.C narrowing of the gate.)
   if (features.js === "typescript") {
     const uiFramework = deriveUiFramework(features, answers) || "preact";
+    const polarisOn = features.frontendStack === "polaris";
     files["tsconfig.json"] = renderTemplate(TEMPLATE_TSCONFIG_JSON, {
       ...tpl,
       jsxImportSource: uiFramework === "react" ? "react" : "preact",
+      // Only map @wpdev/polaris-stack + react shim when polaris is scaffolded.
+      polarisTsPaths: polarisOn ? POLARIS_TSCONFIG_PATHS : "",
     });
   }
 

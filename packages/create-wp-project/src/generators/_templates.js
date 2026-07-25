@@ -256,6 +256,12 @@ export function packageJsonForAnswers(answers, features) {
             "babel-jest": "^29.7.0",
           }
         : {}),
+      // Pin TypeScript for `npm run typecheck`. Without a direct dep,
+      // tsc may resolve from transitive packages (e.g. commitlint → TS 7)
+      // and break generated tsconfig (baseUrl/paths).
+      ...(jsVariant === "typescript"
+        ? { typescript: versionOf("typescript") || "~5.8.0" }
+        : {}),
       ...(huskyOn
         ? {
             prettier: versionOf("prettier"),
@@ -1505,15 +1511,20 @@ export const TEMPLATE_TSCONFIG_JSON = `{
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@wpdev/polaris-stack": ["src/polaris/index.ts"],
-      "@wpdev/polaris-stack/*": ["src/polaris/*"]
+      "@/*": ["src/*"]{{polarisTsPaths}}
     }
   },
   "include": ["assets/**/*", "src/**/*", "core/**/*", "packages/**/*"],
   "exclude": ["node_modules", "vendor", "build", "dist"]
 }
 `;
+
+/** Extra tsconfig paths when frontendStack=polaris (Preact compat type bridge). */
+export const POLARIS_TSCONFIG_PATHS = `,
+      "@wpdev/polaris-stack": ["src/polaris/index.ts"],
+      "@wpdev/polaris-stack/*": ["src/polaris/*"],
+      "react": ["src/polaris/react.d.ts"],
+      "react/jsx-runtime": ["src/polaris/react.d.ts"]`;
 
 /* -------------------------------------------------------------------- */
 /* Phase 21 — new template strings (composer.json, .gitignore, .editorconfig) */

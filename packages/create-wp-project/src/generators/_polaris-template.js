@@ -78,6 +78,12 @@ export function polarisFiles(_ctx) {
     files["components/components.css"],
     "",
   ].join("\n");
+  // Type bridge for `import … from "react"` under Preact compat (kit aliases
+  // react → @preact/compat). Lives next to package root, not under src/.
+  const reactShim = path.join(path.dirname(polarisSrcRoot()), "react.d.ts");
+  if (existsSync(reactShim)) {
+    files["react.d.ts"] = readFileSync(reactShim, "utf8");
+  }
   // Local package identity so consumers import by package name, never
   // deep relative paths like ../../../../polaris.
   files["package.json"] = `${JSON.stringify(
@@ -264,6 +270,8 @@ final class Module extends AbstractModule
             return;
         }
 
+        $this->register_deps_bundle();
+
         $js = $this->abs(self::JS_REL);
         $css = $this->abs(self::CSS_REL);
 
@@ -296,6 +304,9 @@ final class Module extends AbstractModule
             return;
         }
 
+        $this->register_deps_bundle();
+        $this->enqueue_deps_bundle();
+
         $js = $this->abs(self::JS_REL);
         $css = $this->abs(self::CSS_REL);
 
@@ -315,6 +326,61 @@ final class Module extends AbstractModule
             }
             wp_enqueue_style(self::STYLE_HANDLE);
         }
+    }
+
+    /**
+     * View .asset.php depends on depsBundle handle (e.g. core-deps).
+     * Register/enqueue it so WP script dependencies resolve.
+     */
+    private function register_deps_bundle(): void
+    {
+        $handle = $this->deps_handle();
+        $abs = $this->deps_abs();
+        if ($handle === '' || $abs === '' || !is_readable($abs)) {
+            return;
+        }
+        if (!wp_script_is($handle, 'registered')) {
+            Assets::register_bundle_script($handle, $abs);
+        }
+    }
+
+    private function enqueue_deps_bundle(): void
+    {
+        $handle = $this->deps_handle();
+        $abs = $this->deps_abs();
+        if ($handle === '' || $abs === '' || !is_readable($abs)) {
+            return;
+        }
+        if (!wp_script_is($handle, 'registered')) {
+            Assets::register_bundle_script($handle, $abs);
+        }
+        if (!wp_script_is($handle, 'enqueued')) {
+            Assets::enqueue_bundle_script($handle);
+            $config = Assets::read_project_config();
+            $loc_var = is_array($config) ? ($config['localizeVar'] ?? '') : '';
+            if (is_string($loc_var) && $loc_var !== '' && function_exists('wp_localize_script')) {
+                wp_localize_script($handle, $loc_var, Assets::get_localize_data());
+            }
+        }
+    }
+
+    private function deps_handle(): string
+    {
+        $file = $this->deps_filename();
+        return $file === '' ? '' : (string) preg_replace('/\\.js$/', '', $file);
+    }
+
+    private function deps_filename(): string
+    {
+        $config = Assets::read_project_config();
+        $name = is_array($config) ? ($config['depsBundle'] ?? '{{slug}}-deps.js') : '{{slug}}-deps.js';
+        return is_string($name) && $name !== '' ? $name : '{{slug}}-deps.js';
+    }
+
+    private function deps_abs(): string
+    {
+        $file = $this->deps_filename();
+        return $file === '' ? '' : $this->abs('assets/bundles/' . ltrim($file, '/'));
     }
 
     private function content_has_shortcode(): bool

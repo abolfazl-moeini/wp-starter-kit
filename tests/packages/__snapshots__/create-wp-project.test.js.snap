@@ -143,6 +143,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
     "lint-staged",
     "npm-run-all",
     "prettier",
+    "typescript",
   ],
   "name": "@myorg/my-project",
   "scripts": [
@@ -184,12 +185,6 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
   "paths": {
     "@/*": [
       "src/*",
-    ],
-    "@wpdev/polaris-stack": [
-      "src/polaris/index.ts",
-    ],
-    "@wpdev/polaris-stack/*": [
-      "src/polaris/*",
     ],
   },
   "strict": true,

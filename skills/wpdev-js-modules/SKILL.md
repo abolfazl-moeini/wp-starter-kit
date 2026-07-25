@@ -176,6 +176,10 @@ if (document.readyState === "loading") {
 PHP side: `ShortcodesSetup` + shortcode `render` calls `Module::request_enqueue()`
 so the view bundle loads only when the shortcode is present.
 
+**Also enqueue the shared deps bundle** (`wpdev.json` → `depsBundle`, e.g.
+`core-deps.js`). Component `.asset.php` lists that handle as a dependency;
+register + enqueue it before the feature script or WP will skip the missing dep.
+
 ## Polaris rules (layout ≠ style)
 
 From `packages/polaris-stack/context.md` — non-negotiable:
@@ -274,12 +278,22 @@ Cross-feature communication → hooks / REST / shared package.
 ```json
 "baseUrl": ".",
 "paths": {
-  "@/*": ["src/*"],
-  "@wpdev/polaris-stack": ["src/polaris/index.ts"],
-  "@wpdev/polaris-stack/*": ["src/polaris/*"]
-},
-"include": ["assets/**/*", "src/**/*", "packages/**/*"]
+  "@/*": ["src/*"]
+}
 ```
+
+When `frontendStack:polaris`, also:
+
+```json
+"@wpdev/polaris-stack": ["src/polaris/index.ts"],
+"@wpdev/polaris-stack/*": ["src/polaris/*"],
+"react": ["src/polaris/react.d.ts"],
+"react/jsx-runtime": ["src/polaris/react.d.ts"]
+```
+
+(`react.d.ts` is the Preact compat type bridge copied into `src/polaris/`.)
+
+`"include": ["assets/**/*", "src/**/*", "packages/**/*"]`
 
 ### esbuild aliases
 
@@ -292,8 +306,12 @@ Cross-feature communication → hooks / REST / shared package.
 ```bash
 npm run dev              # watch JS
 npm run build            # production bundles
-npm run typecheck        # tsc --noEmit
+npm run typecheck        # tsc --noEmit (requires direct devDependency: typescript ~5.x)
 ```
+
+Scaffolded `package.json` must list `typescript` under `devDependencies` when
+`js=typescript`. Do not rely on transitive tsc (commitlint may pull TS 7 which
+breaks generated `baseUrl` / `paths`).
 
 ## Decision tree
 
@@ -314,9 +332,10 @@ npm run typecheck        # tsc --noEmit
 - [ ] Polaris: layout/style separation respected
 - [ ] Mount only when DOM root exists; shortcode assets lazy
 - [ ] Each shortcode/surface enqueues **only its own** bundle
+- [ ] Shared `depsBundle` is registered/enqueued with feature scripts
 - [ ] `uiFramework` / Preact compat respected
 - [ ] `npm run build` prints `build:src/Modules/...` for every entry (if silent, CLI symlink / glob bug)
-- [ ] typecheck + build clean
+- [ ] typecheck + build clean (`typescript` direct devDep, not transitive-only)
 
 ## Related
 
