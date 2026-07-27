@@ -131,13 +131,24 @@ describe("prepareRelease integration", () => {
     await expect(fs.stat(path.join(dist, "node_modules"))).rejects.toThrow();
     await expect(fs.stat(path.join(dist, ".github"))).rejects.toThrow();
 
-    // Composer hardened for release.
-    const composer = JSON.parse(
-      await fs.readFile(path.join(dist, "composer.json"), "utf8"),
-    );
-    expect(composer.require.php).toBe(">=8.0");
-    expect(composer.config.platform.php).toBe("8.0");
-    expect(composer.repositories[0].options.symlink).toBe(false);
-    expect(composer.repositories[0].options.monorepo).toBe(true);
+    // Composer manifests used for install, then stripped from the ship tree.
+    await expect(fs.stat(path.join(dist, "composer.json"))).rejects.toThrow();
+    await expect(fs.stat(path.join(dist, "composer.lock"))).rejects.toThrow();
+
+    // Zip sits next to the folder (WordPress-style: {slug}/… as archive root).
+    expect(result.zipPath).toBe(path.join(tmp, "dist", "demo-plugin.zip"));
+    await expect(fs.stat(result.zipPath)).resolves.toBeTruthy();
+  });
+
+  test("skipZip leaves folder only", async () => {
+    const result = await prepareRelease({
+      root: tmp,
+      skipComposer: true,
+      skipZip: true,
+    });
+    expect(result.zipPath).toBeNull();
+    await expect(
+      fs.stat(path.join(tmp, "dist", "demo-plugin.zip")),
+    ).rejects.toThrow();
   });
 });

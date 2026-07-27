@@ -5,10 +5,12 @@ import { join } from "node:path";
 import { buildProgram } from "../../packages/cli/src/main.js";
 
 describe("wpdev --version and --help", () => {
-  // The "version" is read from packages/cli/package.json at build
-  // time, so the test asserts the live value, not a literal.
+  // Single source of truth: engine package version (see packages/cli/src/version.js).
   const expectedVersion = JSON.parse(
-    readFileSync(join(process.cwd(), "packages/cli/package.json"), "utf8"),
+    readFileSync(
+      join(process.cwd(), "packages/create-wp-project/package.json"),
+      "utf8",
+    ),
   ).version;
 
   test("program.version() returns the package.json version", () => {

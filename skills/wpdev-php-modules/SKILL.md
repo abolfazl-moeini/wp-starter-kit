@@ -4,9 +4,11 @@ description: >
   Modular PHP architecture for wp-starter-kit / generated plugins: ModuleInterface,
   ModuleLoader, Support packages (RestSetup, ShortcodesSetup, CliSetup, AccessManager,
   Assets, Templates, DeferredCall), packages/framework and packages/php-fault-tolerance,
-  composer autoload.files registration. Use when adding or refactoring PHP features,
-  modules under src/Modules, REST/CLI/shortcodes, access checks, or when the user
-  mentions modular PHP, Module.php, RestSetup, or plugin bootstrap. Slash: /wpdev-php-modules
+  composer autoload.files registration, Rector phpSourceVersion→phpMinVersion downgrade
+  (dev/rector-*.php, rector:build, release:dist). Use when adding or refactoring PHP
+  features, modules under src/Modules, REST/CLI/shortcodes, access checks, PHP version
+  compat, or when the user mentions modular PHP, Module.php, RestSetup, Rector, or
+  plugin bootstrap. Slash: /wpdev-php-modules
 ---
 
 # WPDev PHP modular architecture
@@ -310,6 +312,28 @@ Anti-patterns:
 - After any change to `files` or deleting a register PHP: `composer dump-autoload -o`.
 - Doctor flags missing autoload.files and stale `vendor/composer/autoload_files.php` maps.
 
+## PHP versions + Rector
+
+Write source at **`phpSourceVersion`** (default 8.1). Ship / test runtime at
+**`phpMinVersion`** (default 7.4). Both live in `wpdev.json`.
+
+| Command                   | Role                                                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `composer rector:build`   | Downgrade tree to `phpMinVersion` (run on host PHP ≥ source version)                                                       |
+| `composer rector:prefix`  | Optional first-party namespace rename at release                                                                           |
+| `composer rector:upgrade` | Modernise / quality sets toward PHP 8.1                                                                                    |
+| `composer release:dist`   | Copies to `dist/{slug}/`, runs **rector:build on dist**, strips `dev/` + root composer manifests, writes `dist/{slug}.zip` |
+
+Configs: `dev/rector-config.php`, `dev/rector-build.php`, `dev/rector-upgrade.php`,
+`dev/rector-prefix.php` (scaffolded; migration `2.2.0` for older projects).
+
+**Do not** Rector-rewrite `packages/php-fault-tolerance/src/Real/` — dual-load
+Stub (`<8.1`) / Real (`≥8.1`) is intentional. Skip `vendor/` and `vendor-prefixed/`.
+
+Docker PHPUnit should use an image matching **`phpMinVersion`** when verifying
+compat. Prefer `release:dist` for shipping rather than mutating authoring source
+in place (unless you intentionally author at `phpMinVersion`).
+
 ## Security baseline (every module)
 
 - Capability checks on admin actions and REST `permission_callback`
@@ -321,16 +345,17 @@ Anti-patterns:
 
 ## Decision tree
 
-| Goal                    | Do this                                                       |
-| ----------------------- | ------------------------------------------------------------- |
-| New feature             | New `src/Modules/{Name}/` + register file + dump-autoload     |
-| REST endpoint           | `RestHandler` + `RestSetup::register`                         |
-| Admin screen JS         | Module registers Assets; entry under `assets/entries/*.ts(x)` |
-| Frontend shortcode UI   | `Shortcode` + `ShortcodesSetup` + view entry (Polaris skill)  |
-| Capability matrix       | AccessManager BluePrint / CapabilityPolicy                    |
-| Defer until hook        | `DeferredCall` patterns (see ExampleFeature Queue)            |
-| WP-CLI                  | `Command` + `CliSetup`                                        |
-| Soft-dep WPDev admin FW | `FrameworkBridge::is_framework_active()` + adapter attach     |
+| Goal                                | Do this                                                       |
+| ----------------------------------- | ------------------------------------------------------------- |
+| New feature                         | New `src/Modules/{Name}/` + register file + dump-autoload     |
+| REST endpoint                       | `RestHandler` + `RestSetup::register`                         |
+| Admin screen JS                     | Module registers Assets; entry under `assets/entries/*.ts(x)` |
+| Frontend shortcode UI               | `Shortcode` + `ShortcodesSetup` + view entry (Polaris skill)  |
+| Capability matrix                   | AccessManager BluePrint / CapabilityPolicy                    |
+| Defer until hook                    | `DeferredCall` patterns (see ExampleFeature Queue)            |
+| WP-CLI                              | `Command` + `CliSetup`                                        |
+| Downgrade PHP for shipping / 7.4 CI | `composer rector:build` or `release:dist` (Rector on dist)    |
+| Soft-dep WPDev admin FW             | `FrameworkBridge::is_framework_active()` + adapter attach     |
 
 ## Quality checklist
 

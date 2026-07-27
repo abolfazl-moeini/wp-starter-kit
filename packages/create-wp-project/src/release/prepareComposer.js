@@ -144,6 +144,7 @@ export function releaseStripDirNames() {
 
 /**
  * Exact root filenames removed from the dist tree after install/build.
+ * Matched only at the dist root (not nested paths under vendor/).
  *
  * @returns {string[]}
  */
@@ -158,6 +159,8 @@ export function releaseStripFileNames() {
     "npm-shrinkwrap.json",
     "yarn.lock",
     "pnpm-lock.yaml",
+    "composer.json",
+    "composer.lock",
     "tsconfig.json",
     "jsconfig.json",
     "jest.config.js",
@@ -247,7 +250,8 @@ export function shouldStripRelativePath(relativePath) {
     }
   }
 
-  if (releaseStripFileNames().includes(base)) {
+  // Root-only: keep nested composer.json under vendor/, etc.
+  if (segments.length === 1 && releaseStripFileNames().includes(base)) {
     return true;
   }
 

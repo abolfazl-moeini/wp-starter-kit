@@ -53,9 +53,10 @@ composer release:dist
 The packager **never mutates the source tree**. It copies into `dist/{slug}/`, then:
 
 1. **Composer** (if `composer.json` exists): ensures `require.php` is `>={phpMinVersion}`, sets `config.platform.php`, forces path repositories to `options.symlink: false`, runs `composer install --no-dev`.
-2. **Strip** dev-only paths: `tests/`, `docs/`, `packages/`, `docker-phpunit/`, `dev/`, `node_modules/`, `package.json` (+ lockfiles), `coverage.xml*`, `phpunit.xml*`, `CLAUDE.md` / `context.md` / `AGENTS.md`, and hidden (`.*/`) directories.
+2. **Strip** dev-only paths: `tests/`, `docs/`, `packages/`, `docker-phpunit/`, `dev/`, `node_modules/`, root `composer.json` / `composer.lock`, `package.json` (+ lockfiles), `coverage.xml*`, `phpunit.xml*`, `CLAUDE.md` / `context.md` / `AGENTS.md`, and hidden (`.*/`) directories.
+3. **Zip** `dist/{slug}/` → `dist/{slug}.zip` (WordPress-style: `{slug}/…` as archive root). Pass `--skip-zip` to keep the folder only.
 
-Existing projects can pick this up via `wpdev update` (migration `2.1.0`).
+Existing projects can pick this up via `wpdev update` (migrations `2.1.0`–`2.3.0`).
 
 ## Usage
 

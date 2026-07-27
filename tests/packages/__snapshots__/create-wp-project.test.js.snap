@@ -16,6 +16,9 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal pr
   "scripts": [
     "post-install-cmd",
     "post-update-cmd",
+    "rector:build",
+    "rector:prefix",
+    "rector:upgrade",
     "release:dist",
     "scope:vendor",
     "test",
@@ -102,6 +105,9 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
   "scripts": [
     "post-install-cmd",
     "post-update-cmd",
+    "rector:build",
+    "rector:prefix",
+    "rector:upgrade",
     "release:dist",
     "scope:vendor",
     "test",

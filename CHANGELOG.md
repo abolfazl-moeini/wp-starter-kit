@@ -7,6 +7,14 @@ follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Scaffold / migration `2.3.0`**: refresh release packager — strip root
+  `composer.json` / `composer.lock` after install; write `dist/{slug}.zip`
+  (`--skip-zip` to opt out)
+- **Scaffold / migration `2.2.0`**: emit `dev/rector-*.php` + composer
+  `rector:build` / `rector:prefix` / `rector:upgrade` (+ `require-dev.rector/rector`)
+- **Release**: `prepare-release.js` runs Rector downgrade on `dist/{slug}/`
+  before stripping `dev/` (`--skip-rector` to opt out)
+- **Doctor**: warns when Rector tooling / scripts are missing
 - **Config**: single `wpdev.json` replaces `project.config.json`,
   `build.config.json`, and `wpdev-kit.json` (migration `2.0.0`)
 - **Scaffold**: production release packager
@@ -19,6 +27,8 @@ follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Rector config**: skip `vendor-prefixed/` and
+  `packages/php-fault-tolerance/src/Real/` (intentional PHP 8.1+ dual-load)
 - **Outside-kit create**: `resolveEngineSrcDir` uses `realpath` and
   package-graph resolution so global/nvm-linked `wpdev` bins find the
   engine (no more phantom `./packages/create-wp-project/src/release/...`)
@@ -35,6 +45,7 @@ follows [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- `@wpdev/create-wp-project` version **2.2.0** (unlocks migrations `2.0.0`–`2.2.0` on `wpdev update`)
 - Release checklist and `dev/release/build-dist.php` read `wpdev.json`
 - PHPStan excludes `packages/plugin-core-test` (WP-stub harness)
 

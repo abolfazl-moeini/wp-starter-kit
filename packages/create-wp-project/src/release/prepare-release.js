@@ -5,12 +5,16 @@
  * Source tree is left untouched. Steps:
  *   1. Resolve slug + phpMinVersion from wpdev.json (or project.config.json)
  *   2. Copy project → dist/{slug}/ (excluding node_modules, vendor, dist, …)
- *   3. If composer.json exists: harden for release, composer install --no-dev
- *   4. Strip dev-only paths (tests, docs, packages, package.json, .* dirs, …)
+ *   3. Downgrade PHP in dist/ via Rector to phpMinVersion (host `vendor/bin/rector`)
+ *   4. If composer.json exists: harden for release, composer install --no-dev
+ *   5. Strip dev-only paths (tests, docs, packages, composer.json/lock, …)
+ *   6. Zip dist/{slug}/ → dist/{slug}.zip (WordPress-style: folder as zip root)
  *
  * Usage (from project root):
  *   node dev/release/prepare-release.js
  *   node dev/release/prepare-release.js --out=dist --skip-composer
+ *   node dev/release/prepare-release.js --skip-rector
+ *   node dev/release/prepare-release.js --skip-zip
  *
  * Wired as:
  *   npm run release  →  npm run build && node dev/release/prepare-release.js
@@ -40,10 +44,14 @@ function parseArgs(argv) {
   const opts = {
     out: "dist",
     skipComposer: false,
+    skipRector: false,
+    skipZip: false,
     root: process.cwd(),
   };
   for (const arg of argv) {
     if (arg === "--skip-composer") opts.skipComposer = true;
+    else if (arg === "--skip-rector") opts.skipRector = true;
+    else if (arg === "--skip-zip") opts.skipZip = true;
     else if (arg.startsWith("--out=")) opts.out = arg.slice("--out=".length);
     else if (arg.startsWith("--root="))
       opts.root = path.resolve(arg.slice("--root=".length));
@@ -229,25 +237,113 @@ function runComposerInstall(distRoot) {
 }
 
 /**
+ * Downgrade PHP in the dist tree to phpMinVersion using the *host*
+ * project's Rector binary (dist has no vendor yet / will install --no-dev).
+ *
+ * Soft-skip when rector is not installed or configs are missing — projects
+ * that already author at phpMinVersion do not need this step.
+ *
+ * @param {string} root Project root (has vendor/bin/rector).
+ * @param {string} distRoot Copied tree still containing dev/rector-*.php.
+ */
+function runRectorBuildOnDist(root, distRoot) {
+  const rectorBin = path.join(root, "vendor/bin/rector");
+  const config = path.join(distRoot, "dev/rector-build.php");
+  if (!existsSync(rectorBin) || !existsSync(config)) {
+    return { skipped: true, reason: "rector binary or config missing" };
+  }
+
+  const result = spawnSync(
+    "php",
+    [rectorBin, "process", "-c", "dev/rector-build.php", "--clear-cache"],
+    {
+      cwd: distRoot,
+      encoding: "utf8",
+      shell: process.platform === "win32",
+    },
+  );
+  if (result.status !== 0) {
+    const out = `${result.stdout || ""}\n${result.stderr || ""}`.trim();
+    throw new Error(
+      `rector:build failed in ${distRoot} (exit ${result.status}):\n${out}`,
+    );
+  }
+  return { skipped: false };
+}
+
+/**
+ * Zip dist/{slug}/ into dist/{slug}.zip with `{slug}/…` as the archive root
+ * (WordPress plugin install convention).
+ *
+ * @param {string} outAbs Absolute path to the output base (e.g. …/dist)
+ * @param {string} slug Plugin slug / folder name inside outAbs
+ * @returns {string} Absolute path to the zip file
+ */
+function createReleaseZip(outAbs, slug) {
+  const zipPath = path.join(outAbs, `${slug}.zip`);
+  if (existsSync(zipPath)) {
+    rmSync(zipPath, { force: true });
+  }
+
+  let result;
+  if (process.platform === "win32") {
+    // Compress-Archive includes the folder name as the zip root entry.
+    result = spawnSync(
+      "powershell.exe",
+      [
+        "-NoProfile",
+        "-Command",
+        `Compress-Archive -Path '${slug.replace(/'/g, "''")}' -DestinationPath '${slug.replace(/'/g, "''")}.zip' -Force`,
+      ],
+      { cwd: outAbs, encoding: "utf8" },
+    );
+  } else {
+    result = spawnSync("zip", ["-r", "-q", `${slug}.zip`, slug], {
+      cwd: outAbs,
+      encoding: "utf8",
+    });
+  }
+
+  if (result.status !== 0) {
+    const out = `${result.stdout || ""}\n${result.stderr || ""}`.trim();
+    throw new Error(
+      `zip failed for ${zipPath} (exit ${result.status}):\n${out}`,
+    );
+  }
+  if (!existsSync(zipPath)) {
+    throw new Error(`zip reported success but ${zipPath} was not created`);
+  }
+  return zipPath;
+}
+
+/**
  * Programmatic entry (for tests and CLI).
  *
- * @param {{ root?: string, out?: string, skipComposer?: boolean }} options
- * @returns {Promise<{ distRoot: string, slug: string, phpMinVersion: string }>}
+ * @param {{ root?: string, out?: string, skipComposer?: boolean, skipRector?: boolean, skipZip?: boolean }} options
+ * @returns {Promise<{ distRoot: string, zipPath: string|null, slug: string, phpMinVersion: string }>}
  */
 export async function prepareRelease(options = {}) {
   const root = path.resolve(options.root || process.cwd());
   const outBase = options.out || "dist";
   const skipComposer = Boolean(options.skipComposer);
+  const skipRector = Boolean(options.skipRector);
+  const skipZip = Boolean(options.skipZip);
 
   const { slug, phpMinVersion } = readProjectConfig(root);
-  const distRoot = path.join(root, outBase, slug);
+  const outAbs = path.join(root, outBase);
+  const distRoot = path.join(outAbs, slug);
 
   if (existsSync(distRoot)) {
     rmSync(distRoot, { recursive: true, force: true });
   }
-  mkdirSync(path.dirname(distRoot), { recursive: true });
+  mkdirSync(outAbs, { recursive: true });
 
   copyTree(root, distRoot, releaseCopyExcludeNames());
+
+  // Downgrade *before* composer --no-dev and before stripping `dev/`.
+  if (!skipRector) {
+    runRectorBuildOnDist(root, distRoot);
+  }
 
   const composerPath = path.join(distRoot, "composer.json");
   if (existsSync(composerPath)) {
@@ -273,19 +369,23 @@ export async function prepareRelease(options = {}) {
     "utf8",
   );
 
-  return { distRoot, slug, phpMinVersion };
+  const zipPath = skipZip ? null : createReleaseZip(outAbs, slug);
+
+  return { distRoot, zipPath, slug, phpMinVersion };
 }
 
 function printHelp() {
   process.stdout.write(`Usage: node prepare-release.js [options]
 
-Prepare a production plugin package under dist/{slug}/ without
-modifying the source tree.
+Prepare a production plugin package under dist/{slug}/ (and
+dist/{slug}.zip) without modifying the source tree.
 
 Options:
   --out=DIR          Output base directory (default: dist)
   --root=DIR         Project root (default: cwd)
   --skip-composer    Skip composer install --no-dev
+  --skip-rector      Skip PHP downgrade (rector:build) on dist/
+  --skip-zip         Skip creating dist/{slug}.zip
   -h, --help         Show this help
 `);
 }
@@ -299,6 +399,9 @@ async function main() {
   try {
     const result = await prepareRelease(opts);
     process.stdout.write(`Release package ready: ${result.distRoot}\n`);
+    if (result.zipPath) {
+      process.stdout.write(`Release zip ready: ${result.zipPath}\n`);
+    }
   } catch (err) {
     process.stderr.write(
       `prepare-release failed: ${err && err.message ? err.message : err}\n`,

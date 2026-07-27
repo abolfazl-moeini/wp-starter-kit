@@ -169,7 +169,7 @@ describe("release strip / copy lists", () => {
     );
   });
 
-  test("strip files include agent docs and package.json", () => {
+  test("strip files include agent docs, package.json, and composer manifests", () => {
     const names = releaseStripFileNames();
     expect(names).toEqual(
       expect.arrayContaining([
@@ -178,6 +178,8 @@ describe("release strip / copy lists", () => {
         "AGENTS.md",
         "package.json",
         "package-lock.json",
+        "composer.json",
+        "composer.lock",
       ]),
     );
   });
@@ -209,8 +211,10 @@ describe("shouldStripRelativePath", () => {
     ["coverage.xml.bak", true],
     ["src/Modules/Foo/Module.php", false],
     ["assets/bundles/Foo-bar.js", false],
-    ["composer.json", false],
+    ["composer.json", true],
+    ["composer.lock", true],
     ["vendor/autoload.php", false],
+    ["vendor/some-pkg/composer.json", false],
     ["my-plugin.php", false],
   ])("%s → %s", (rel, expected) => {
     expect(shouldStripRelativePath(rel)).toBe(expected);

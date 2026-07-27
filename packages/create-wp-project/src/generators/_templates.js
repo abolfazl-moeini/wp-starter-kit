@@ -1576,6 +1576,13 @@ export function buildComposerJson(vars) {
       "scope:vendor": "@php vendor/bin/strauss",
       // Production package under dist/{slug}/ (source tree untouched).
       "release:dist": "node dev/release/prepare-release.js",
+      // PHP rewrite tooling (requires host PHP ≥ phpSourceVersion).
+      "rector:upgrade":
+        "@php ./vendor/bin/rector process -c dev/rector-upgrade.php --clear-cache",
+      "rector:prefix":
+        "@php ./vendor/bin/rector process -c dev/rector-prefix.php --clear-cache",
+      "rector:build":
+        "@php ./vendor/bin/rector process -c dev/rector-build.php --clear-cache",
     },
     config: {
       // Runtime PHP is enforced in the plugin bootstrap (not Composer).
@@ -1583,6 +1590,9 @@ export function buildComposerJson(vars) {
       platform: {
         php: phpMin,
       },
+    },
+    "require-dev": {
+      "rector/rector": "^2.0",
     },
     extra: {
       strauss: {

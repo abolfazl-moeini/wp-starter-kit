@@ -48,11 +48,11 @@ after every `composer install`.
 
 Key fields:
 
-| Field | Purpose |
-|-------|---------|
-| `target_directory` | Output dir (`vendor-prefixed`, never `vendor/`) |
-| `namespace_prefix` | Prefix for PSR-4 namespaces |
-| `classmap_prefix` | Prefix for classmap autoload entries |
+| Field                 | Purpose                                         |
+| --------------------- | ----------------------------------------------- |
+| `target_directory`    | Output dir (`vendor-prefixed`, never `vendor/`) |
+| `namespace_prefix`    | Prefix for PSR-4 namespaces                     |
+| `classmap_prefix`     | Prefix for classmap autoload entries            |
 | `delete_vendor_files` | `false` keeps the unscoped tree for dev tooling |
 
 ## Commands
@@ -60,11 +60,27 @@ Key fields:
 ```bash
 composer install          # dev: unscoped vendor/; post-install runs Strauss
 composer scope:vendor       # run Strauss manually (dry-run in CI via config tests)
-composer release:dist     # copy shippable tree to dist/{slug}/
+composer rector:build       # downgrade PHP to phpMinVersion (host PHP ≥ phpSourceVersion)
+composer release:dist     # copy shippable tree to dist/{slug}/ + zip (+ rector on dist)
 ```
 
-`composer release` (existing) still runs first-party Rector prefix only.
-`composer release:dist` copies production files and writes `.dist-built`.
+`composer release` (kit monorepo) still runs first-party Rector prefix only.
+`composer release:dist` (consumers) copies production files, runs `rector:build`
+**inside `dist/{slug}/`** using the host `vendor/bin/rector` (before stripping
+`dev/`), strips root `composer.json` / `composer.lock`, writes `.dist-built`,
+and zips to `dist/{slug}.zip`. Pass `--skip-rector` / `--skip-zip` to opt out.
+
+### Rector layout (consumers)
+
+| Path                     | Purpose                                                        |
+| ------------------------ | -------------------------------------------------------------- |
+| `dev/rector-config.php`  | Shared paths / skips (`vendor`, `vendor-prefixed`, FT `Real/`) |
+| `dev/rector-build.php`   | Downgrade to `wpdev.json` → `phpMinVersion`                    |
+| `dev/rector-upgrade.php` | Upgrade / quality sets                                         |
+| `dev/rector-prefix.php`  | Optional namespace rename                                      |
+
+Scaffold emits these; older projects get them via migration `2.2.0`
+(`wpdev update`). See skill **`wpdev-php-modules`** § PHP versions + Rector.
 
 ## Conflict fixtures
 

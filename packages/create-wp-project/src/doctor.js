@@ -364,6 +364,9 @@ export function doctorProject(dir) {
   for (const e of checkFaultToleranceInstall(dir, features)) {
     result.errors.push(e);
   }
+  for (const w of checkRectorTooling(dir)) {
+    result.warnings.push(w);
+  }
 
   const registry = getDepVersions();
   if (registry.size === 0) {
@@ -452,6 +455,51 @@ export function checkStaleVendorAutoloadFiles(dir) {
       `vendor/composer/autoload_files.php still references removed project files: ${stale.join(", ")}. Run \`composer dump-autoload\` (or reinstall) so WordPress does not fatal on missing requires.`,
     );
   }
+  return warnings;
+}
+
+/**
+ * Rector downgrade tooling should be present so release:dist / rector:build work.
+ *
+ * @param {string} dir
+ * @returns {string[]}
+ */
+export function checkRectorTooling(dir) {
+  const warnings = [];
+  const required = [
+    "dev/rector-config.php",
+    "dev/rector-build.php",
+    "dev/rector-upgrade.php",
+    "dev/rector-prefix.php",
+  ];
+  const missing = required.filter((rel) => !existsSync(path.join(dir, rel)));
+  if (missing.length) {
+    warnings.push(
+      `Rector tooling missing (${missing.join(", ")}) — run \`wpdev update\` (migration 2.2.0) or copy kit \`dev/rector-*.php\``,
+    );
+  }
+
+  const composerPath = path.join(dir, "composer.json");
+  if (existsSync(composerPath)) {
+    try {
+      const composer = JSON.parse(readFileSync(composerPath, "utf8"));
+      const scripts = composer.scripts || {};
+      if (!scripts["rector:build"]) {
+        warnings.push(
+          "composer.json missing scripts.rector:build — run `wpdev update` or add kit Rector scripts",
+        );
+      }
+      const requireDev = composer["require-dev"] || {};
+      if (!requireDev["rector/rector"]) {
+        warnings.push(
+          "composer.json missing require-dev.rector/rector — run `composer require --dev rector/rector:^2.0`",
+        );
+      }
+    } catch {
+      /* ignore unreadable composer.json */
+    }
+  }
+
   return warnings;
 }
 

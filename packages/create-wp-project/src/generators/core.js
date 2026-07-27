@@ -62,6 +62,14 @@ function loadReleaseScript(name) {
   return readFileSync(full, "utf8");
 }
 
+function loadRectorScript(name) {
+  const full = path.join(resolveEngineSrcDir(), "rector", name);
+  if (!existsSync(full)) {
+    throw new Error(`Rector script missing at ${full}`);
+  }
+  return readFileSync(full, "utf8");
+}
+
 /**
  * Run the core generator. Always returns a contribution (core
  * runs for every feature set). The shape is:
@@ -257,6 +265,20 @@ export function run(ctx) {
     loadReleaseScript("prepareComposer.js");
   dirs.push("dev/release");
 
+  // 12. Rector pipeline — downgrade / prefix / upgrade (same as kit
+  //     `dev/rector-*.php`). Consumers run `composer rector:build` on a
+  //     host PHP that can parse phpSourceVersion; release:dist also
+  //     applies downgrade inside dist/{slug}/ before stripping `dev/`.
+  for (const name of [
+    "rector-config.php",
+    "rector-build.php",
+    "rector-upgrade.php",
+    "rector-prefix.php",
+  ]) {
+    files[`dev/${name}`] = loadRectorScript(name);
+  }
+  dirs.push("dev");
+
   return {
     files,
     dirs,
@@ -348,6 +370,7 @@ export const descriptor = {
     "package.json",
     "assets/stylesheets/**",
     "dev/release/**",
+    "dev/rector-*.php",
     "packages/framework/**",
     "packages/hooks/**",
     "packages/utils/**",

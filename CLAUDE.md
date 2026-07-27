@@ -37,6 +37,7 @@ npm run doctor                    # packages/create-wp-project — validate proj
 # Vendor scoping (release only)
 composer scope:vendor             # Strauss prefix (runs auto on post-install)
 composer release                  # rector:prefix + fix-autoloader
+composer rector:build             # downgrade to phpMinVersion (host PHP ≥ source)
 ```
 
 > If Composer's platform PHP is 7.4 but you run PHP 8.2+ locally, install with:
@@ -98,7 +99,7 @@ Every scaffold is shaped by its feature set (`{ featureId: variant }`). Key feat
 
 ### Vendor scoping
 
-Strauss (`strauss.json`) + Rector prefix pipeline (`dev/rector-*.php`) scope vendors at release time. Never rely on cross-plugin Composer resolution. The Strauss `post-install-cmd` runs automatically; the Rector step is release-only.
+Strauss (`strauss.json`) + Rector prefix/downgrade pipeline (`dev/rector-*.php`, scaffolded into consumers) scope vendors and downlevel PHP at release time. Never rely on cross-plugin Composer resolution. The Strauss `post-install-cmd` runs automatically; consumer `release:dist` runs Rector on `dist/` before stripping `dev/`.
 
 ### Optional packages (git submodules)
 

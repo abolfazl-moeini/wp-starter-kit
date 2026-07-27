@@ -18,8 +18,7 @@
  * WordPress function stubs are loaded so Rector can resolve WP function
  * signatures in the `includes/` tree.
  *
- * Keep in sync with `packages/create-wp-project/src/rector/rector-config.php`
- * (emitted into consumer projects as `dev/rector-config.php`).
+ * Keep in sync with kit root `dev/rector-config.php` (scaffold emits this file as consumer `dev/rector-config.php`).
  */
 
 declare(strict_types=1);
