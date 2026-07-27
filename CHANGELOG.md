@@ -5,6 +5,11 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Release**: require `wpdev/framework` into `vendor/` (migration `2.4.0`) so
+  stripping `packages/` no longer drops `WPDev\\Core\\ModuleInterface`
+
 ### Added
 
 - **Scaffold / migration `2.3.0`**: refresh release packager — strip root

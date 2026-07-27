@@ -1548,9 +1548,9 @@ export function buildComposerJson(vars) {
   )
     .replace(/^@/, "")
     .trim();
-  // Kit module framework (Plugin / ModuleLoader / Support) is NOT a
-  // Composer package install — sources live at packages/framework/
-  // (copied at scaffold or replaced with a git submodule). Autoload only.
+  // Kit module framework sources live at packages/framework/ (path repo).
+  // require installs them into vendor/wpdev/framework so release:dist can
+  // strip packages/ without breaking WPDev\\Core\\* at runtime.
   const payload = {
     name: `${packageVendor}/${vars.slug}`,
     description:
@@ -1560,14 +1560,20 @@ export function buildComposerJson(vars) {
     license: vars.licenseId || "GPL-2.0-or-later",
     require: {
       php: `>=${phpMin}`,
+      "wpdev/framework": "*",
     },
     autoload: {
       "psr-4": {
         [`${vars.vendorNamespace}\\`]: "src/",
-        // Kit module runtime (not Composer "wpdev/framework" package).
-        "WPDev\\": "packages/framework/src/",
       },
     },
+    repositories: [
+      {
+        type: "path",
+        url: "packages/*",
+        options: { monorepo: true, symlink: false },
+      },
+    ],
     scripts: {
       // Strauss only when there are Composer packages to prefix (feature
       // generators may add packages later). Empty whitelist = no-op.

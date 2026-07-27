@@ -156,7 +156,7 @@ export function run(ctx) {
   //    reconstruction in migrations.
 
   // 3b. Kit module framework sources under packages/framework/
-  //     (not a Composer package). Autoload: WPDev\\ → packages/framework/src/
+  //     (path package wpdev/framework → vendor/ on install / release).
   const FRAMEWORK_PREFIX = "packages/framework/";
   for (const [rel, body] of Object.entries(frameworkPackageFiles())) {
     files[`${FRAMEWORK_PREFIX}${rel}`] = body;

@@ -40,16 +40,21 @@ describe("@wpdev/create-wp-project — consumer composer.json (Phase 23.A3/A4)",
     );
   }
 
-  test("composer.json does NOT require wpdev/framework (autoload packages/framework instead)", async () => {
+  test("composer.json requires wpdev/framework (vendor install for release:dist)", async () => {
     const res = await scaffoldProject(tmp, goodAnswers);
     expect(res.ok).toBe(true);
     const composer = await readComposer();
     expect(composer.require).toBeDefined();
     expect(composer.require.php).toMatch(/^>=/);
-    expect(composer.require["wpdev/framework"]).toBeUndefined();
-    expect(composer.autoload["psr-4"]["WPDev\\"]).toBe(
-      "packages/framework/src/",
-    );
+    expect(composer.require["wpdev/framework"]).toBe("*");
+    // Runtime autoload comes from the installed package, not a root PSR-4 map.
+    expect(composer.autoload["psr-4"]["WPDev\\"]).toBeUndefined();
+    const repos = Array.isArray(composer.repositories)
+      ? composer.repositories
+      : [];
+    expect(
+      repos.some((r) => r && r.type === "path" && r.url === "packages/*"),
+    ).toBe(true);
   });
 
   test("scaffold writes packages/framework sources", async () => {

@@ -131,7 +131,7 @@ This scaffold does **not** vendor the framework into the project and does
 ## Kit module framework (separate)
 
 \`packages/framework/\` is the **starter-kit module runtime** (\`WPDev\\Core\\Plugin\`, etc.).
-It is autoloaded via Composer PSR-4, not Packagist \`wpdev/framework\`.
+Composer requires \`wpdev/framework\` from the local path repo so \`release:dist\` installs it under \`vendor/wpdev/framework/\` (then strips \`packages/\`).
 `;
 
 const REGISTER_FILE = "src/wpdev-demo-register.php";

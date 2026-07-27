@@ -1,9 +1,10 @@
 /**
  * Vendor kit module framework into generated projects under packages/framework/.
  *
- * Not a Composer package install — sources are copied (or later replaced by a
- * git submodule). Composer only maps WPDev\\ → packages/framework/src/ via
- * autoload (see buildComposerJson). Matches "no wpdev/framework in require".
+ * Sources are copied at scaffold (or later replaced by a git submodule).
+ * Composer requires `wpdev/framework` from the `packages/*` path repo so
+ * `composer install` (and release:dist) place a runtime copy under
+ * `vendor/wpdev/framework/` — `packages/` is stripped from the ship tree.
  */
 
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";

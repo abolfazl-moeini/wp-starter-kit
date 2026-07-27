@@ -2,6 +2,7 @@
   "name": "wpdev/framework",
   "description": "WordPress Starter Kit framework: PSR-4 plugin core (Plugin / ModuleLoader / ModuleInterface) and the Support namespace (Assets, Auth, AccessManager, Queue, Rest, Shortcodes, Templates, WpCli).",
   "type": "library",
+  "version": "1.0.0",
   "license": "GPL-2.0-or-later",
   "require": {
     "php": ">=7.4"
