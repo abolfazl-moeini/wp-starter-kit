@@ -11,6 +11,7 @@ Prefer **package name** imports. Never deep relative paths into packages.
 | `@wpdev/rest-utils`               | `packages/rest-utils`                              | Batch fetch / cache                 |
 | `@wpdev/ui-components`            | `packages/ui-components`                           | WDForm and related UI               |
 | `@wpdev/html-utils`               | `packages/html-utils`                              | DOM helpers                         |
+| `@wpdev/wpdev-bridge`             | `packages/wpdev-bridge`                            | WPDev AJAX/config/hooks adapters    |
 | `@wpdev/translation`              | `packages/translation`                             | Client i18n helpers                 |
 | `@wpdev/rule-engine`              | `packages/rule-engine`                             | Client rules                        |
 | `@/*`                             | `src/*`                                            | Project-local path alias (tsconfig) |

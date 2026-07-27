@@ -9,6 +9,7 @@
 
 - [@wpdev/hooks](#wpdevhooks)
 - [@wpdev/utils](#wpdevutils)
+- [@wpdev/wpdev-bridge](#wpdevwpdev-bridge)
 - [@wpdev/rest-utils](#wpdevrest-utils)
 - [@wpdev/html-utils](#wpdevhtml-utils)
 - [@wpdev/ui-components](#wpdevui-components)
@@ -77,6 +78,50 @@ const { url, nonce } = localize.api();
 ```
 
 See [localize-contract.md](../localize-contract.md).
+
+---
+
+## `@wpdev/wpdev-bridge`
+
+WPDev framework AJAX / localize / hooks adapters for Polaris module entries.
+
+```ts
+export function createWpdevAjax(cfg?: WpdevAjaxConfig): WpdevAjaxClient;
+export function createCheckoutAjax(
+  checkout?: WpdevCheckoutConfig,
+  ajaxCfg?: WpdevAjaxConfig,
+): WpdevAjaxClient;
+export function normalizeEnvelope(json: unknown): WpdevAjaxEnvelope;
+export function hasData(
+  envelope: WpdevAjaxEnvelope | null | undefined,
+): boolean;
+export function readWpdevFeatureConfig(options?: object): WpdevFeatureConfig;
+export function isCheckoutAjaxReady(config: WpdevFeatureConfig): boolean;
+export function getWpdevHooks(globalName?: string): HooksLike;
+export function doWpdevAction(hookName: string, ...args: unknown[]): void;
+export function applyWpdevFilters(
+  hookName: string,
+  value: unknown,
+  ...args: unknown[]
+): unknown;
+```
+
+**Usage:**
+
+```ts
+import {
+  createCheckoutAjax,
+  hasData,
+  readWpdevFeatureConfig,
+} from "@wpdev/wpdev-bridge";
+
+const config = readWpdevFeatureConfig();
+const ajax = createCheckoutAjax(config.checkout, config.ajax);
+const res = await ajax.post("wpdev_create_order", { products: [1] });
+if (!hasData(res)) throw new Error(res.message || "failed");
+```
+
+See [packages/wpdev-bridge/README.md](../../packages/wpdev-bridge/README.md) and [integrate.md](../../integrate.md).
 
 ---
 

@@ -88,6 +88,11 @@ const SHIPPABLE_PACKAGES = [
     minFiles: 1,
   },
   {
+    dir: "packages/wpdev-bridge",
+    expectedName: "@wpdev/wpdev-bridge",
+    minFiles: 1,
+  },
+  {
     dir: "packages/fetch",
     expectedName: "@wpdev/fetch",
     minFiles: 1,
@@ -157,7 +162,7 @@ describe("@wpdev/* packages — publishable metadata (Phase 23.B1)", () => {
     // per-package tests below will still pass on the remaining
     // packages, hiding a regression in the kit's "what we ship"
     // surface. The count check is the safety net.
-    expect(SHIPPABLE_PACKAGES.length).toBe(10);
+    expect(SHIPPABLE_PACKAGES.length).toBe(11);
   });
 
   describe("per-package metadata", () => {

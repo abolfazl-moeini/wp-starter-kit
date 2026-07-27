@@ -101,6 +101,7 @@ Generated / monorepo packages commonly available (npm workspaces or path deps):
 | `@wpdev/rest-utils` / fetch       | `packages/rest-utils`                              | Batch REST client, cache (`@wpdev/fetch` is a deprecated shim → rest-utils) |
 | `@wpdev/ui-components` / WDForm   | `packages/ui-components`                           | Form store / WDForm patterns                                                |
 | `@wpdev/html-utils`               | `packages/html-utils`                              | Safe DOM helpers                                                            |
+| `@wpdev/wpdev-bridge`             | `packages/wpdev-bridge`                            | WPDev AJAX/config/hooks adapters (see `integrate.md`)                       |
 | `@wpdev/translation`              | `packages/translation`                             | i18n helpers when feature on                                                |
 | `@wpdev/rule-engine`              | `packages/rule-engine`                             | Client-side rule evaluation                                                 |
 | `@wordpress/*`                    | WP scripts / deps                                  | Official WP packages (dom-ready, i18n, …)                                   |

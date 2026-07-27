@@ -1,0 +1,26 @@
+{
+  "name": "@wpdev/wpdev-bridge",
+  "version": "1.0.0",
+  "description": "Adapter layer between WPDev framework AJAX/hooks/localize globals and wp-starter-kit module entries.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./ajax": "./ajax.js",
+    "./config": "./config.js",
+    "./hooks": "./hooks.js",
+    "./types": "./types.ts"
+  },
+  "files": [
+    "index.js",
+    "ajax.js",
+    "config.js",
+    "hooks.js",
+    "types.ts",
+    "README.md"
+  ],
+  "dependencies": {
+    "@wpdev/hooks": "^1.0.0"
+  },
+  "license": "MIT"
+}

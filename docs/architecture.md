@@ -133,6 +133,7 @@ noted as tooling-only. Build-time packages are devDependencies.
 | `@wpdev/utils`                                | `packages/utils/`                                     | always-on                | Localize bridge, shared JS helpers                                    |
 | `@wpdev/rest-utils`                           | `packages/rest-utils/`                                | always-on                | REST/AJAX client, hook dispatch, and `createBatchRequest` batch fetch |
 | `@wpdev/html-utils`                           | `packages/html-utils/`                                | always-on                | `elementProps`, `mountComponent`, form/DOM helpers                    |
+| `@wpdev/wpdev-bridge`                         | `packages/wpdev-bridge/`                              | WPDev integration        | AJAX / localize / hooks adapters for Polaris entries                  |
 | `@wpdev/fetch`                                | `packages/fetch/`                                     | deprecated shim          | Re-exports `@wpdev/rest-utils/fetch` for one release                  |
 | `@wpdev/ui-components`                        | `packages/ui-components/`                             | `jsLib: preact/react`    | WDForm and shared UI primitives                                       |
 | `@wpdev/rule-engine`                          | `packages/rule-engine/`                               | always-on                | Generic rule DSL (WDForm validators stay form-specific)               |

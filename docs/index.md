@@ -68,12 +68,15 @@
 
 ## Integrations
 
-| Doc                                                      | One-line description                          | Read when…                                |
-| -------------------------------------------------------- | --------------------------------------------- | ----------------------------------------- |
-| [wpdev-adapter.md](wpdev-adapter.md)                     | WPDev Admin Framework companion plugin bridge | You're integrating `phpFramework:wpdev`   |
-| [framework-as-dependency.md](framework-as-dependency.md) | Composer `wpdev/framework` and `distMode`     | You're shipping framework as a dependency |
-| [fault-tolerance.md](fault-tolerance.md)                 | PHP circuit breaker and resilience package    | You need fault-tolerance helpers          |
-| [mcp-integration.md](mcp-integration.md)                 | WordPress Abilities API for MCP tool exposure | You're using `mcpAbilities:on`            |
+| Doc                                                        | One-line description                           | Read when…                                |
+| ---------------------------------------------------------- | ---------------------------------------------- | ----------------------------------------- |
+| [wpdev-adapter.md](wpdev-adapter.md)                       | WPDev Admin Framework companion plugin bridge  | You're integrating `phpFramework:wpdev`   |
+| [../integrate.md](../integrate.md)                         | WPDev frontend AJAX/hooks ↔ Polaris plan       | You're aligning WPDev JS with starter-kit |
+| [wpdev-bridge-checkout.md](wpdev-bridge-checkout.md)       | Checkout reference using `@wpdev/wpdev-bridge` | You're validating light-AJAX + nonce flow |
+| [wpdev-panel-audit-matrix.md](wpdev-panel-audit-matrix.md) | Per-panel transport/nonce migration matrix     | You're migrating more WPDev panels        |
+| [framework-as-dependency.md](framework-as-dependency.md)   | Composer `wpdev/framework` and `distMode`      | You're shipping framework as a dependency |
+| [fault-tolerance.md](fault-tolerance.md)                   | PHP circuit breaker and resilience package     | You need fault-tolerance helpers          |
+| [mcp-integration.md](mcp-integration.md)                   | WordPress Abilities API for MCP tool exposure  | You're using `mcpAbilities:on`            |
 
 ## Polaris
 
