@@ -19,13 +19,13 @@ See [`integrate.md`](../integrate.md) and [`wpdev-bridge-checkout.md`](wpdev-bri
 
 ## Seeded rows (from current codebase)
 
-| Panel                        | DOM root                                  | JS type            | Transport                   | Nonce                                  | Globals                       | Hooks                                 | ps-scope               |
-| ---------------------------- | ----------------------------------------- | ------------------ | --------------------------- | -------------------------------------- | ----------------------------- | ------------------------------------- | ---------------------- |
-| Checkout / cart              | `#wpdev-order-summary-content`, form root | Vue + jQuery mixed | light (+ late for validate) | feature `wpdev_checkout` as `_wpnonce` | `wpdev_checkout`              | `wpdev_on_create_order`, change hooks | Yes — shell only       |
-| Field templates (checkout)   | template holders                          | jQuery/Vue         | light                       | feature `wpdev_checkout`               | `wpdev_checkout`              | template fetch hooks                  | N/A (markup)           |
-| Ajax list tables             | list table wrappers                       | jQuery + Vue deps  | admin                       | per-table `_ajax_{id}_nonce`           | `wpdev_list_table`            | `wpdev_list_table_update`             | Caution — admin chrome |
-| Settings ajax_button         | field row                                 | inline JS          | admin                       | shared via `wpdev.ajax`                | `wpdev_ajax`                  | none typical                          | Yes — field region     |
-| Vue apps (fields/customizer) | `[data-state]` apps                       | Vue-era            | mostly admin                | varies                                 | `wpdev_settings`, app globals | `wpdev_{app}_mounted/changed`         | Caution                |
+| Panel                        | DOM root                                  | JS type            | Transport                   | Nonce                                  | Globals                       | Hooks                                 | ps-scope                                       |
+| ---------------------------- | ----------------------------------------- | ------------------ | --------------------------- | -------------------------------------- | ----------------------------- | ------------------------------------- | ---------------------------------------------- |
+| Checkout / cart              | `#wpdev-order-summary-content`, form root | Vue + jQuery mixed | light (+ late for validate) | feature `wpdev_checkout` as `_wpnonce` | `wpdev_checkout`              | `wpdev_on_create_order`, change hooks | Yes — shell only                               |
+| Field templates (checkout)   | template holders                          | jQuery/Vue         | light                       | feature `wpdev_checkout`               | `wpdev_checkout`              | template fetch hooks                  | N/A (markup)                                   |
+| Ajax list tables             | list table wrappers                       | jQuery + Vue deps  | admin                       | per-table `_ajax_{id}_nonce`           | `wpdev_list_table`            | `wpdev_list_table_update`             | Caution — admin chrome — **Phase 3.1 aligned** |
+| Settings ajax_button         | field row                                 | inline JS          | admin                       | shared via `wpdev.ajax` / button nonce | `wpdev_ajax`                  | none typical                          | Yes — field region — **Phase 3.1 aligned**     |
+| Vue apps (fields/customizer) | `[data-state]` apps                       | Vue-era            | mostly admin                | varies                                 | `wpdev_settings`, app globals | `wpdev_{app}_mounted/changed`         | Caution                                        |
 
 ## Per-panel migration steps
 

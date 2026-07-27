@@ -242,13 +242,10 @@ export function createWpdevAjax(cfg = {}) {
     const shared = getSharedClient();
 
     // Shared client injects the framework nonce as `nonce`. When a feature
-    // needs a different field (e.g. checkout `_wpnonce`), prefer fetch so we
-    // control the payload exactly.
+    // needs a different field (checkout `_wpnonce`, list-table `_ajax_*`),
+    // prefer fetch so we control the payload exactly.
     const needsCustomNonce =
-      options.nonceField === "_wpnonce" ||
-      (typeof options.nonceValue === "string" &&
-        options.nonceValue !== "" &&
-        options.nonceField);
+      typeof options.nonceField === "string" && options.nonceField !== "nonce";
 
     if (
       shared &&
@@ -364,6 +361,86 @@ export function createCheckoutAjax(checkout = {}, ajaxCfg = {}) {
     },
     get(action, data, options) {
       return client.get(action, data, withCheckoutDefaults(options));
+    },
+  };
+}
+
+/**
+ * Unwrap list-table refresh payloads.
+ *
+ * List tables often return `wp_send_json_success({ rows, pagination, ... })`
+ * so consumers want the inner `data` object, not the envelope.
+ *
+ * @param {WpdevAjaxEnvelope} envelope
+ * @returns {*}
+ */
+export function unwrapListTablePayload(envelope) {
+  if (!hasData(envelope)) {
+    return null;
+  }
+  return envelope.data;
+}
+
+/**
+ * Convenience factory for ajax list-table refresh.
+ *
+ * Uses admin-ajax + per-table nonce field `_ajax_{tableId}_nonce`.
+ *
+ * @param {{ tableId: string, nonce?: string, action?: string }} table
+ * @param {WpdevAjaxConfig} [ajaxCfg]
+ */
+export function createListTableAjax(table, ajaxCfg = {}) {
+  const tableId = table && table.tableId ? String(table.tableId) : "";
+  const action =
+    (table && table.action) || "wpdev_list_table_fetch_ajax_results";
+  const nonceField = tableId ? `_ajax_${tableId}_nonce` : "nonce";
+
+  const cfg = {
+    adminUrl: ajaxCfg.adminUrl,
+    lightUrl: ajaxCfg.lightUrl,
+    nonce: table.nonce || ajaxCfg.nonce,
+  };
+
+  const client = createWpdevAjax(cfg);
+
+  function withTableDefaults(options = {}) {
+    return {
+      transport: options.transport || "admin",
+      endpointUrl: options.endpointUrl,
+      nonceField: options.nonceField || nonceField,
+      nonceValue: options.nonceValue || table.nonce || cfg.nonce || "",
+      signal: options.signal,
+    };
+  }
+
+  return {
+    ...client,
+    tableId,
+    action,
+    nonceField,
+    /**
+     * Refresh the table. Merges `table_id` automatically.
+     *
+     * @param {Record<string, *>} [data]
+     * @param {WpdevAjaxOptions} [options]
+     * @returns {Promise<*>} unwrapped list-table payload (`rows`, etc.) or null
+     */
+    async refresh(data = {}, options = {}) {
+      const envelope = await client.post(
+        action,
+        {
+          table_id: tableId,
+          ...data,
+        },
+        withTableDefaults(options),
+      );
+      return unwrapListTablePayload(envelope);
+    },
+    post(actionName, data, options) {
+      return client.post(actionName, data, withTableDefaults(options));
+    },
+    get(actionName, data, options) {
+      return client.get(actionName, data, withTableDefaults(options));
     },
   };
 }

@@ -10,6 +10,8 @@
 export {
   createWpdevAjax,
   createCheckoutAjax,
+  createListTableAjax,
+  unwrapListTablePayload,
   normalizeEnvelope,
   hasData,
   resolveEndpoint,

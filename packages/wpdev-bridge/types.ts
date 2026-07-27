@@ -13,7 +13,7 @@ export type WpdevAjaxEnvelope<T = unknown> = {
 
 export type WpdevAjaxTransport = "admin" | "light";
 
-export type WpdevAjaxNonceField = "_wpnonce" | "nonce";
+export type WpdevAjaxNonceField = "_wpnonce" | "nonce" | string;
 
 export type WpdevAjaxOptions = {
   transport?: WpdevAjaxTransport;

@@ -7,6 +7,8 @@ import {
   hasData,
   withNonce,
   createCheckoutAjax,
+  createListTableAjax,
+  unwrapListTablePayload,
   readWpdevFeatureConfig,
   isCheckoutAjaxReady,
   getWpdevHooks,
@@ -124,6 +126,50 @@ describe("@wpdev/wpdev-bridge/ajax", () => {
       });
       await ajax.post("wpdev_validate_form", {});
       expect(calls[0]).toContain("wpdev-when=");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  test("createListTableAjax uses per-table nonce and unwraps payload", async () => {
+    const calls = [];
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async (url, opts) => {
+      calls.push({ url, opts });
+      return {
+        ok: true,
+        status: 200,
+        text: async () =>
+          JSON.stringify({
+            success: true,
+            data: { rows: "<tr></tr>", pagination: { top: "", bottom: "" } },
+          }),
+      };
+    };
+
+    try {
+      const ajax = createListTableAjax(
+        { tableId: "product_list_table", nonce: "table-nonce" },
+        { adminUrl: "http://example.test/wp-admin/admin-ajax.php" },
+      );
+
+      const payload = await ajax.refresh({ paged: 2 });
+      expect(payload.rows).toContain("<tr");
+      expect(
+        unwrapListTablePayload({
+          success: false,
+          code: "x",
+          message: "",
+          data: { rows: 1 },
+        }),
+      ).toBe(null);
+
+      const body = calls[0].opts.body;
+      expect(body.get("action")).toBe("wpdev_list_table_fetch_ajax_results");
+      expect(body.get("table_id")).toBe("product_list_table");
+      expect(body.get("_ajax_product_list_table_nonce")).toBe("table-nonce");
+      expect(body.get("paged")).toBe("2");
+      expect(calls[0].url).toContain("admin-ajax.php");
     } finally {
       globalThis.fetch = originalFetch;
     }

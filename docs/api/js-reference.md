@@ -91,6 +91,13 @@ export function createCheckoutAjax(
   checkout?: WpdevCheckoutConfig,
   ajaxCfg?: WpdevAjaxConfig,
 ): WpdevAjaxClient;
+export function createListTableAjax(
+  table: { tableId: string; nonce?: string; action?: string },
+  ajaxCfg?: WpdevAjaxConfig,
+): WpdevAjaxClient & {
+  refresh(data?: object, options?: WpdevAjaxOptions): Promise<unknown>;
+};
+export function unwrapListTablePayload(envelope: WpdevAjaxEnvelope): unknown;
 export function normalizeEnvelope(json: unknown): WpdevAjaxEnvelope;
 export function hasData(
   envelope: WpdevAjaxEnvelope | null | undefined,

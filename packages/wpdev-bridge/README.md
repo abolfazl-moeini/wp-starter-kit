@@ -54,6 +54,8 @@ const res = await ajax.post("wpdev_search", {
 | --------------------------------------- | ------------------------------------------------------------- |
 | `createWpdevAjax(cfg)`                  | Admin/light client; prefers `window.wpdev.ajax`               |
 | `createCheckoutAjax(checkout, ajaxCfg)` | Light AJAX + `_wpnonce` checkout nonce                        |
+| `createListTableAjax(table, ajaxCfg)`   | Admin AJAX + `_ajax_{tableId}_nonce` + `refresh()`            |
+| `unwrapListTablePayload(envelope)`      | Inner list-table `data` or `null`                             |
 | `normalizeEnvelope(json)`               | Map payloads / bare `1` to `{ success, code, message, data }` |
 | `hasData(envelope)`                     | Guard before reading `envelope.data`                          |
 | `withNonce(data, options, cfg)`         | Merge nonce field into payload                                |
@@ -70,6 +72,12 @@ Checkout defaults:
 - transport: `light`
 - `wpdev_validate_form` uses `lateAjaxUrl` when set
 
+List-table defaults:
+
+- nonce field: `_ajax_{tableId}_nonce`
+- transport: `admin`
+- `refresh()` unwraps `data` via `unwrapListTablePayload`
+
 ## Part of wp-starter-kit
 
 This package is part of [wp-starter-kit](../../README.md).
@@ -80,4 +88,5 @@ See also:
 
 - Plan: [`integrate.md`](../../integrate.md)
 - Checkout reference: [`docs/wpdev-bridge-checkout.md`](../../docs/wpdev-bridge-checkout.md)
+- List tables: [`docs/wpdev-bridge-list-tables.md`](../../docs/wpdev-bridge-list-tables.md)
 - Panel matrix: [`docs/wpdev-panel-audit-matrix.md`](../../docs/wpdev-panel-audit-matrix.md)

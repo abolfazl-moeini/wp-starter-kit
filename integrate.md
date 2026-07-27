@@ -398,13 +398,13 @@ Last updated: 2026-07-27
 
 Package: [`packages/wpdev-bridge`](packages/wpdev-bridge/) (`@wpdev/wpdev-bridge`)
 
-| Adapter | API                                                                                  |
-| ------- | ------------------------------------------------------------------------------------ |
-| AJAX    | `createWpdevAjax`, `createCheckoutAjax`, `normalizeEnvelope`, `hasData`, `withNonce` |
-| Config  | `readWpdevFeatureConfig`, `isCheckoutAjaxReady`                                      |
-| Hooks   | `getWpdevHooks`, `doWpdevAction`, `applyWpdevFilters`                                |
+| Adapter | API                                                                                                                                   |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| AJAX    | `createWpdevAjax`, `createCheckoutAjax`, `createListTableAjax`, `unwrapListTablePayload`, `normalizeEnvelope`, `hasData`, `withNonce` |
+| Config  | `readWpdevFeatureConfig`, `isCheckoutAjaxReady`                                                                                       |
+| Hooks   | `getWpdevHooks`, `doWpdevAction`, `applyWpdevFilters`                                                                                 |
 
-Tests: `tests/packages/wpdev-bridge.test.js` (12 passing).
+Tests: `tests/packages/wpdev-bridge.test.js` (13 passing).
 
 ### Phase 2 — checkout reference (done, adapter-aligned)
 
@@ -421,4 +421,16 @@ Tests: `tests/packages/wpdev-bridge.test.js` (12 passing).
 | Panel audit matrix | [`docs/wpdev-panel-audit-matrix.md`](docs/wpdev-panel-audit-matrix.md) |
 | Package map        | `skills/wpdev-js-modules/references/packages-map.md`                   |
 
-Next incremental work: migrate additional panels using the matrix, one transport/nonce class at a time.
+### Phase 3.1 — admin AJAX panels (done)
+
+Next transport class after checkout light-AJAX: **admin-ajax + custom/shared nonce**.
+
+| Piece                                            | Location                                                                   |
+| ------------------------------------------------ | -------------------------------------------------------------------------- |
+| `createListTableAjax` / `unwrapListTablePayload` | `packages/wpdev-bridge/ajax.js`                                            |
+| List-table reference                             | [`docs/wpdev-bridge-list-tables.md`](docs/wpdev-bridge-list-tables.md)     |
+| Legacy list-table envelope guards                | `wpdev/modules/table-builder/assets/js/list-tables/list-tables-factory.js` |
+| Settings ajax_button fallback harden             | `wpdev/modules/field-builder/views/settings/fields/field-ajax_button.php`  |
+
+Next incremental work: Vue-era admin apps / customizer hooks, or scaffold a real
+Polaris `CheckoutShell` module entry that imports `@wpdev/wpdev-bridge`.
