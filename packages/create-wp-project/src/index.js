@@ -108,8 +108,8 @@ import { setConfigValue, isConfigSettable } from "./config-set.js";
  * @typedef {Object} ScaffoldAnswers
  * @property {string} slug
  * @property {string} npmScope       e.g. 'myorg' (no @)
- * @property {string} globalName     e.g. 'MyProject'
- * @property {string} [localizeVar]  e.g. 'MyProjectLoc' (inferred from globalName)
+ * @property {string} globalName     e.g. 'MyProject' or 'Brand.Product' (esbuild nested IIFE global)
+ * @property {string} [localizeVar]  e.g. 'MyProjectLoc' (single identifier; inferred from globalName)
  * @property {string} textDomain
  * @property {string} hookPrefix
  * @property {string} [depsBundle]   e.g. 'my-project-deps.js' (inferred from slug)
@@ -128,8 +128,38 @@ import { setConfigValue, isConfigSettable } from "./config-set.js";
 
 const SLUG_RE = /^[a-z0-9][a-z0-9-]*$/;
 const SCOPE_RE = /^[a-z0-9][a-z0-9-]*$/; // npmScope is the part after '@'
-const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]*$/; // JS identifier
+const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]*$/; // single JS identifier (localizeVar, etc.)
+// esbuild IIFE `globalName` supports nested paths (e.g. Brand.Product → window.Brand.Product)
+const GLOBAL_NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$/;
 const DOMAIN_RE = /^[a-z0-9][a-z0-9-]*$/; // text-domain / hook-prefix slug
+
+/**
+ * Whether `name` is a valid window global path for the deps IIFE.
+ * Accepts a single identifier (`MyPlugin`) or a dotted path
+ * (`Brand.Product`) matching esbuild's `globalName` option.
+ *
+ * @param {string} name
+ * @returns {boolean}
+ */
+export function isValidJsGlobalName(name) {
+  return typeof name === "string" && GLOBAL_NAME_RE.test(name);
+}
+
+/**
+ * Default `wp_localize_script` variable for a globalName.
+ * Localize vars must be a single identifier (not a dotted path).
+ * `Brand.Product` → `BrandProductLoc`.
+ *
+ * @param {string} globalName
+ * @returns {string}
+ */
+export function defaultLocalizeVar(globalName) {
+  const base = String(globalName || "")
+    .split(".")
+    .filter(Boolean)
+    .join("");
+  return (base || "WPDev") + "Loc";
+}
 
 export function validateAnswers(a, features = {}) {
   const errors = {};
@@ -147,8 +177,9 @@ export function validateAnswers(a, features = {}) {
     errors.npmScope =
       "vendor / organization must be lowercase kebab-case (a-z, 0-9, dashes; no @)";
   }
-  if (!a.globalName || !IDENT_RE.test(a.globalName)) {
-    errors.globalName = "globalName must be a valid JS identifier";
+  if (!a.globalName || !isValidJsGlobalName(a.globalName)) {
+    errors.globalName =
+      "globalName must be a valid JS identifier or dotted path (e.g. Brand.Product)";
   }
   if (
     a.localizeVar !== undefined &&
@@ -213,7 +244,7 @@ export function answersToProjectConfig(a) {
   const cfg = {
     slug: a.slug,
     globalName: a.globalName,
-    localizeVar: a.localizeVar || a.globalName + "Loc",
+    localizeVar: a.localizeVar || defaultLocalizeVar(a.globalName),
     textDomain: a.textDomain,
     hookPrefix: a.hookPrefix,
     npmScope: bareScope ? "@" + bareScope : "",

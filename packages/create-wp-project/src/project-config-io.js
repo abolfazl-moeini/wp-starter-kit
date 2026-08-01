@@ -7,6 +7,15 @@ import { deriveUiFramework } from "./derive-ui-framework.js";
 import { promises as fs } from "node:fs";
 import * as path from "node:path";
 
+/** Match `defaultLocalizeVar` in index.js — keep local to avoid import cycles. */
+function defaultLocalizeVar(globalName) {
+  const base = String(globalName || "")
+    .split(".")
+    .filter(Boolean)
+    .join("");
+  return (base || "WPDev") + "Loc";
+}
+
 /**
  * @param {string} dir
  * @param {string} [label]  error prefix (e.g. "addFeature")
@@ -55,7 +64,8 @@ export function projectConfigToAnswers(cfg) {
         : cfg.npmScope,
     globalName: cfg.globalName,
     localizeVar:
-      cfg.localizeVar || (cfg.globalName ? `${cfg.globalName}Loc` : undefined),
+      cfg.localizeVar ||
+      (cfg.globalName ? defaultLocalizeVar(cfg.globalName) : undefined),
     textDomain: cfg.textDomain,
     hookPrefix: cfg.hookPrefix,
     depsBundle: cfg.depsBundle || (slug ? `${slug}-deps.js` : undefined),

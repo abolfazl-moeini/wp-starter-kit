@@ -294,10 +294,10 @@ export function run(ctx) {
 /**
  * Derive a PSR-4 vendor namespace root from the `globalName` answer.
  *
- * `globalName` is a JS identifier (per `validateAnswers`), so the
- * PascalCase form is already correct. We strip any leading/trailing
- * whitespace defensively (the answer validator should already have
- * rejected whitespace) and emit e.g. "MyPlugin".
+ * `globalName` may be a single JS identifier (`MyPlugin`) or a dotted
+ * path (`Brand.Product`). PHP namespaces cannot use dots, so nested
+ * paths use the first segment (`Brand`). Leading/trailing whitespace
+ * is stripped defensively.
  *
  * @param {string} globalName
  * @returns {string}
@@ -306,7 +306,9 @@ function deriveVendorNamespace(globalName) {
   if (typeof globalName !== "string" || globalName.length === 0) {
     return "WPDev";
   }
-  return globalName.trim();
+  const trimmed = globalName.trim();
+  const first = trimmed.split(".")[0];
+  return first || "WPDev";
 }
 
 /**

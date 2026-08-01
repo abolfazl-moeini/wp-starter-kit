@@ -7,6 +7,8 @@ beforeEach(async () => {
   jest.resetModules();
   delete globalThis.WPDev;
   delete globalThis.MyApp;
+  delete globalThis.AnotherApp;
+  delete globalThis.Brandname;
   hooks = await import("../../packages/hooks/index.js");
 });
 
@@ -42,5 +44,17 @@ describe("@wpdev/hooks", () => {
   test("getHooks(globalName) accepts an explicit override", () => {
     globalThis.AnotherApp = { hooks: { tag: "override" } };
     expect(hooks.getHooks("AnotherApp")).toEqual({ tag: "override" });
+  });
+
+  test("getHooks resolves dotted globalName paths (nested IIFE)", () => {
+    globalThis.Brandname = {
+      ProductName: { hooks: { tag: "nested" } },
+    };
+    expect(hooks.getHooks("Brandname.ProductName")).toEqual({ tag: "nested" });
+  });
+
+  test("getHooks returns undefined for incomplete nested paths", () => {
+    globalThis.Brandname = {};
+    expect(hooks.getHooks("Brandname.ProductName")).toBeUndefined();
   });
 });

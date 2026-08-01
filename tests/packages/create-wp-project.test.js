@@ -89,6 +89,41 @@ describe("@wpdev/create-wp-project", () => {
       expect(r.ok).toBe(false);
       expect(r.errors.uiFramework).toBeDefined();
     });
+
+    test("accepts dotted globalName paths (esbuild nested IIFE)", () => {
+      const ok = validateAnswers({
+        slug: "my-product",
+        npmScope: "brandname",
+        globalName: "Brandname.ProductName",
+        textDomain: "my-product",
+        hookPrefix: "my-product",
+        phpFunctionPrefix: "my_product_",
+        uiFramework: "preact",
+      });
+      expect(ok).toEqual({ ok: true, errors: {} });
+    });
+
+    test("rejects invalid dotted globalName paths", () => {
+      for (const globalName of [
+        ".Brand",
+        "Brand.",
+        "Brand..Product",
+        "Brand.Product-Name",
+        "1Brand.Product",
+      ]) {
+        const r = validateAnswers({
+          slug: "my-product",
+          npmScope: "brandname",
+          globalName,
+          textDomain: "my-product",
+          hookPrefix: "my-product",
+          phpFunctionPrefix: "my_product_",
+          uiFramework: "preact",
+        });
+        expect(r.ok).toBe(false);
+        expect(r.errors.globalName).toBeDefined();
+      }
+    });
   });
 
   /* -------------------------------------------------------------------- */
@@ -96,6 +131,19 @@ describe("@wpdev/create-wp-project", () => {
   /* -------------------------------------------------------------------- */
 
   describe("answersToProjectConfig", () => {
+    test("defaults localizeVar for dotted globalName to a single identifier", () => {
+      const cfg = answersToProjectConfig({
+        slug: "my-product",
+        npmScope: "brandname",
+        globalName: "Brandname.ProductName",
+        textDomain: "my-product",
+        hookPrefix: "my-product",
+        phpFunctionPrefix: "my_product_",
+      });
+      expect(cfg.globalName).toBe("Brandname.ProductName");
+      expect(cfg.localizeVar).toBe("BrandnameProductNameLoc");
+    });
+
     test("returns the canonical wpdev.json shape", () => {
       const cfg = answersToProjectConfig({
         slug: "my-project",

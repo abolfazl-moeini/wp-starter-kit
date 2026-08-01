@@ -22,10 +22,32 @@
  */
 
 const FALLBACK_GLOBAL =
-  typeof __WPDEV_GLOBAL_NAME__ !== "undefined" ? __WPDEV_GLOBAL_NAME__ : "WPDev";
+  typeof __WPDEV_GLOBAL_NAME__ !== "undefined"
+    ? __WPDEV_GLOBAL_NAME__
+    : "WPDev";
 
 function resolveGlobalName(override) {
   return override || FALLBACK_GLOBAL;
+}
+
+/**
+ * Walk a dotted global path on `globalThis`.
+ * Supports esbuild nested IIFE names: `Brand.Product` → globalThis.Brand.Product.
+ *
+ * @param {string} pathName
+ * @returns {object | undefined}
+ */
+function resolveGlobalRoot(pathName) {
+  if (!pathName || typeof pathName !== "string") return undefined;
+  const parts = pathName.split(".").filter(Boolean);
+  if (parts.length === 0) return undefined;
+
+  let current = globalThis;
+  for (const part of parts) {
+    if (current == null || typeof current !== "object") return undefined;
+    current = current[part];
+  }
+  return current && typeof current === "object" ? current : undefined;
 }
 
 /**
@@ -34,13 +56,16 @@ function resolveGlobalName(override) {
  * Returns `undefined` if the global namespace is not present (i.e. the deps
  * bundle has not loaded yet) or if `globalName` cannot be resolved.
  *
+ * `globalName` may be a single identifier (`WPDev`) or a dotted path
+ * (`Brand.Product`) matching esbuild's nested `globalName` option.
+ *
  * @param {string} [globalName]  Override the config-driven global name.
  * @returns {import('./types.js').HooksInstance | undefined}
  */
 export function getHooks(globalName) {
   const name = resolveGlobalName(globalName);
   if (!name) return undefined;
-  const root = globalThis[name];
+  const root = resolveGlobalRoot(name);
   return root && root.hooks ? root.hooks : undefined;
 }
 

@@ -78,17 +78,17 @@ Source of truth: `KNOWN_FLAGS` in `packages/cli/src/flags.js`.
 
 ### Branding flags (`answers.*`)
 
-| Flag                  | Maps to                     | Values / notes                                 |
-| --------------------- | --------------------------- | ---------------------------------------------- |
-| `[slug]` (positional) | `answers.slug`              | Sanitized; default directory name              |
-| `--slug=<slug>`       | `answers.slug`              | Explicit slug; wins over positional            |
-| `--dir=<path>`        | `runOptions.targetDir`      | Output directory                               |
-| `--scope=<scope>`     | `answers.npmScope`          | npm scope without `@`                          |
-| `--global=<Name>`     | `answers.globalName`        | JS global (valid identifier, PascalCase)       |
-| `--domain=<slug>`     | `answers.textDomain`        | WordPress text domain                          |
-| `--hook=<prefix>`     | `answers.hookPrefix`        | Hook prefix; must not be `wpdev` with wpdev FW |
-| `--php-fn=<pfx_>`     | `answers.phpFunctionPrefix` | PHP function prefix ending with `_`            |
-| `--php-source=<ver>`  | `answers.phpSourceVersion`  | Authoring PHP version (`8.1`, `8.2`, `8.3`)    |
+| Flag                  | Maps to                     | Values / notes                                              |
+| --------------------- | --------------------------- | ----------------------------------------------------------- |
+| `[slug]` (positional) | `answers.slug`              | Sanitized; default directory name                           |
+| `--slug=<slug>`       | `answers.slug`              | Explicit slug; wins over positional                         |
+| `--dir=<path>`        | `runOptions.targetDir`      | Output directory                                            |
+| `--scope=<scope>`     | `answers.npmScope`          | npm scope without `@`                                       |
+| `--global=<Name>`     | `answers.globalName`        | JS global (identifier or dotted path, e.g. `Brand.Product`) |
+| `--domain=<slug>`     | `answers.textDomain`        | WordPress text domain                                       |
+| `--hook=<prefix>`     | `answers.hookPrefix`        | Hook prefix; must not be `wpdev` with wpdev FW              |
+| `--php-fn=<pfx_>`     | `answers.phpFunctionPrefix` | PHP function prefix ending with `_`                         |
+| `--php-source=<ver>`  | `answers.phpSourceVersion`  | Authoring PHP version (`8.1`, `8.2`, `8.3`)                 |
 
 ### Feature flags (`features.*`)
 

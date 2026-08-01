@@ -27,6 +27,7 @@ import {
   getFeatureCatalog,
   getPresets,
   applyPreset as engineApplyPreset,
+  isValidJsGlobalName,
 } from "@wpdev/create-wp-project";
 
 import {
@@ -104,7 +105,7 @@ function buildBrandingQuestions(
       type: "text",
       target: "answers",
       message:
-        "Global JS name (window.* object exposed by script bundles; auto-filled for PHP-only)",
+        "Global JS name (window.* object; single id or nested path e.g. Brand.Product; auto-filled for PHP-only)",
       placeholder: d.globalName,
       defaultValue: d.globalName,
       when: (s) => {
@@ -119,9 +120,9 @@ function buildBrandingQuestions(
         return needsGlobalNamePrompt(s, eng);
       },
       validate: (s) =>
-        typeof s === "string" && /^[A-Za-z_][A-Za-z0-9_]*$/.test(s)
+        isValidJsGlobalName(s)
           ? undefined
-          : "global name must be a valid JS identifier",
+          : "global name must be a valid JS identifier or dotted path (e.g. Brand.Product)",
     },
     {
       id: "textDomain",
