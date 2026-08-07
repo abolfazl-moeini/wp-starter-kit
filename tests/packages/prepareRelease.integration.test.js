@@ -156,4 +156,42 @@ describe("prepareRelease integration", () => {
       fs.stat(path.join(tmp, "dist", "demo-plugin.zip")),
     ).rejects.toThrow();
   });
+
+  test("failed suite blocks dist and leaves prior package intact", async () => {
+    const prior = path.join(tmp, "dist", "demo-plugin");
+    await fs.mkdir(prior, { recursive: true });
+    await fs.writeFile(path.join(prior, ".keep"), "prior-dist\n");
+
+    await fs.writeFile(
+      path.join(tmp, "wpdev.json"),
+      JSON.stringify({
+        slug: "demo-plugin",
+        phpMinVersion: "8.0",
+        globalName: "DemoPlugin",
+        features: {
+          phpTest: "none",
+          jsTest: "jest",
+          e2eTest: "none",
+        },
+      }),
+    );
+    await fs.writeFile(
+      path.join(tmp, "package.json"),
+      JSON.stringify({
+        name: "demo",
+        scripts: {
+          build: "echo build",
+          test: 'node -e "process.exit(2)"',
+        },
+      }),
+    );
+
+    await expect(
+      prepareRelease({ root: tmp, skipComposer: true, skipZip: true }),
+    ).rejects.toThrow(/Release blocked|failed/);
+
+    expect(await fs.readFile(path.join(prior, ".keep"), "utf8")).toBe(
+      "prior-dist\n",
+    );
+  });
 });

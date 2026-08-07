@@ -3,6 +3,7 @@
  * Prepare a production-ready plugin package under dist/{slug}/.
  *
  * Source tree is left untouched. Steps:
+ *   0. Run enabled PHP/JS unit + Playwright e2e (unless --skip-tests)
  *   1. Resolve slug + phpMinVersion from wpdev.json (or project.config.json)
  *   2. Copy project → dist/{slug}/ (excluding node_modules, vendor, dist, …)
  *   3. Downgrade PHP in dist/ via Rector to phpMinVersion (host `vendor/bin/rector`)
@@ -22,7 +23,8 @@
  * --skip-tests or WPDEV_SKIP_TESTS=1.
  *
  * Wired as:
- *   npm run release  →  npm run build && node dev/release/prepare-release.js
+ *   npm run release  →  node dev/release/run-release.js
+ *     (tests → npm run build → prepare-release --skip-tests)
  *   composer release:dist  →  node dev/release/prepare-release.js
  */
 

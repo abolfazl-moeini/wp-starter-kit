@@ -78,6 +78,11 @@ describe("resolveReleaseTestPlan", () => {
     const plan = resolveReleaseTestPlan(null, pkg, composer);
     expect(plan.map((s) => s.id)).toEqual(["phpunit", "js", "e2e"]);
   });
+
+  test("partial features: missing keys discover scripts; none skips", () => {
+    const plan = resolveReleaseTestPlan({ e2eTest: "none" }, pkg, composer);
+    expect(plan.map((s) => s.id)).toEqual(["phpunit", "js"]);
+  });
 });
 
 describe("runReleaseTests / gateReleaseTests", () => {

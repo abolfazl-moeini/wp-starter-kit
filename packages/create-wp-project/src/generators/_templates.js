@@ -216,7 +216,7 @@ export function packageJsonForAnswers(answers, features) {
       "build:assets": "wpdev-build-assets",
       // Build production assets, then package a clean dist/{slug}/ tree.
       // Source is never modified; packaging lives in dev/release/.
-      release: "npm run build && node dev/release/prepare-release.js",
+      release: "node dev/release/run-release.js",
       ...(huskyOn ? { prepare: "husky" } : {}),
       ...(jsTestVariant === "vitest"
         ? { test: "vitest run" }

@@ -46,8 +46,9 @@ See [contributing.md](contributing.md#red--green--refactor) for the full loop.
 Every scaffolded project ships a release packager under `dev/release/`:
 
 ```bash
-# JS projects: production asset build + clean package under dist/{slug}/
+# JS projects: pre-dist tests → asset build → clean package under dist/{slug}/
 npm run release
+# → node dev/release/run-release.js
 
 # Packaging only (after a prior build), also available when package.json is absent:
 composer release:dist

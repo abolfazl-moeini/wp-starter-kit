@@ -11,11 +11,11 @@ prevents most registry and consumer breakage.
 
 ## Consumer plugin dist zip
 
-Scaffolded plugins use `npm run release` / `composer release:dist`
-(`dev/release/prepare-release.js`). By default that **runs enabled unit and
-e2e suites before writing `dist/`**. Use `--skip-tests` or `WPDEV_SKIP_TESTS=1`
-only for intentional bypass. See [scaffold.md](scaffold.md) and
-[e2e-tests.md](e2e-tests.md).
+Scaffolded plugins use `npm run release` (`dev/release/run-release.js`:
+tests → build → pack) / `composer release:dist` (`prepare-release.js`).
+By default that **runs enabled unit and e2e suites before writing `dist/`**.
+Use `--skip-tests` or `WPDEV_SKIP_TESTS=1` only for intentional bypass. See
+[scaffold.md](scaffold.md) and [e2e-tests.md](e2e-tests.md).
 
 ---
 

@@ -92,7 +92,9 @@ function hasComposerTest(composer) {
  * Resolve which suites to run. Features win when present; otherwise
  * fall back to discovering scripts on disk.
  *
- * When a feature is ON but the script is missing, throws.
+ * When a feature is explicitly ON but the script is missing, throws.
+ * When a feature key is missing (partial manifest), fall back to script
+ * discovery for that suite. Explicit `none` skips the suite.
  *
  * @param {Record<string,string>|null|undefined} features
  * @param {object|null} pkg
@@ -108,7 +110,8 @@ export function resolveReleaseTestPlan(features, pkg, composer) {
     Object.keys(features).length > 0;
 
   if (hasFeatures) {
-    if (features.phpTest === "phpunit") {
+    const php = features.phpTest;
+    if (php === "phpunit") {
       if (!hasComposerTest(composer)) {
         throw new Error(
           'features.phpTest=phpunit but composer.json has no "scripts.test" — add `composer test` or set phpTest=none',
@@ -120,28 +123,52 @@ export function resolveReleaseTestPlan(features, pkg, composer) {
         command: "composer",
         args: ["test"],
       });
+    } else if (php !== "none" && hasComposerTest(composer)) {
+      // Key missing or unknown → discover.
+      plan.push({
+        id: "phpunit",
+        label: "PHPUnit (composer test)",
+        command: "composer",
+        args: ["test"],
+      });
     }
 
-    if (features.jsTest === "jest" || features.jsTest === "vitest") {
+    const js = features.jsTest;
+    if (js === "jest" || js === "vitest") {
       if (!hasNpmScript(pkg, "test")) {
         throw new Error(
-          `features.jsTest=${features.jsTest} but package.json has no "scripts.test" — add \`npm test\` or set jsTest=none`,
+          `features.jsTest=${js} but package.json has no "scripts.test" — add \`npm test\` or set jsTest=none`,
         );
       }
       plan.push({
         id: "js",
-        label: `JS unit (npm test / ${features.jsTest})`,
+        label: `JS unit (npm test / ${js})`,
+        command: "npm",
+        args: ["test"],
+      });
+    } else if (js !== "none" && hasNpmScript(pkg, "test")) {
+      plan.push({
+        id: "js",
+        label: "JS unit (npm test)",
         command: "npm",
         args: ["test"],
       });
     }
 
-    if (features.e2eTest === "playwright") {
+    const e2e = features.e2eTest;
+    if (e2e === "playwright") {
       if (!hasNpmScript(pkg, "test:e2e")) {
         throw new Error(
           'features.e2eTest=playwright but package.json has no "scripts.test:e2e" — add `npm run test:e2e` or set e2eTest=none',
         );
       }
+      plan.push({
+        id: "e2e",
+        label: "Playwright E2E (npm run test:e2e)",
+        command: "npm",
+        args: ["run", "test:e2e"],
+      });
+    } else if (e2e !== "none" && hasNpmScript(pkg, "test:e2e")) {
       plan.push({
         id: "e2e",
         label: "Playwright E2E (npm run test:e2e)",

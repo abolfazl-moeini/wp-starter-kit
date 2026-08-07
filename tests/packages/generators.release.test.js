@@ -62,11 +62,12 @@ describe("core generator — release packager", () => {
     );
   });
 
-  test("emits prepare-release.js, prepareComposer.js, and releaseTests.js", () => {
+  test("emits prepare-release.js, prepareComposer.js, releaseTests.js, and run-release.js", () => {
     const contrib = coreRun(makeCtx());
     expect(contrib.files["dev/release/prepare-release.js"]).toBeDefined();
     expect(contrib.files["dev/release/prepareComposer.js"]).toBeDefined();
     expect(contrib.files["dev/release/releaseTests.js"]).toBeDefined();
+    expect(contrib.files["dev/release/run-release.js"]).toBeDefined();
     expect(contrib.files["dev/release/prepare-release.js"]).toMatch(
       /prepareRelease/,
     );
@@ -79,14 +80,13 @@ describe("core generator — release packager", () => {
     expect(contrib.files["dev/release/prepare-release.js"]).toMatch(
       /skip-tests/,
     );
+    expect(contrib.files["dev/release/run-release.js"]).toMatch(/runNpmBuild/);
   });
 
-  test("package.json release script builds then packages", () => {
+  test("package.json release script uses run-release.js", () => {
     const contrib = coreRun(makeCtx({ js: "typescript" }));
     const pkg = JSON.parse(contrib.files["package.json"]);
-    expect(pkg.scripts.release).toBe(
-      "npm run build && node dev/release/prepare-release.js",
-    );
+    expect(pkg.scripts.release).toBe("node dev/release/run-release.js");
   });
 
   test("composer.json has release:dist, php require, and platform.php", () => {
@@ -127,7 +127,10 @@ describe("scaffoldProject — release packager on disk", () => {
     const pkg = JSON.parse(
       await fs.readFile(path.join(tmp, "package.json"), "utf8"),
     );
-    expect(pkg.scripts.release).toMatch(/prepare-release\.js/);
+    await expect(
+      fs.stat(path.join(tmp, "dev/release/run-release.js")),
+    ).resolves.toBeTruthy();
+    expect(pkg.scripts.release).toMatch(/run-release\.js/);
 
     const composer = JSON.parse(
       await fs.readFile(path.join(tmp, "composer.json"), "utf8"),

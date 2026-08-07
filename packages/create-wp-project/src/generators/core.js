@@ -267,6 +267,7 @@ export function run(ctx) {
   files["dev/release/prepareComposer.js"] =
     loadReleaseScript("prepareComposer.js");
   files["dev/release/releaseTests.js"] = loadReleaseScript("releaseTests.js");
+  files["dev/release/run-release.js"] = loadReleaseScript("run-release.js");
   dirs.push("dev/release");
 
   // 12. Rector pipeline — downgrade / prefix / upgrade (same as kit
