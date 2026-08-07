@@ -22,6 +22,7 @@ import {
 } from "./project-config-io.js";
 import { refreshGlue } from "./refresh-glue.js";
 import { tplVars } from "./generators/_templates.js";
+import { comparePhpVersion, syncPhpMinArtifacts } from "./sync-php-min.js";
 
 /** Feature ids settable via `wpdev set` (not add/remove). */
 export const CONFIG_SETTABLE_IDS = new Set([
@@ -133,6 +134,16 @@ export async function setConfigValue(dir, key, value) {
   const warnings = Object.values(v.warnings || {});
 
   const existing = manifest || {};
+  let nextPhpMin = existing.phpMinVersion || currentFeatures.phpMinVersion;
+  let nextPhpSource = existing.phpSourceVersion;
+  if (key === "phpMinVersion") {
+    nextPhpMin = value;
+    // Authoring PHP must be ≥ runtime min.
+    if (!nextPhpSource || comparePhpVersion(String(nextPhpSource), value) < 0) {
+      nextPhpSource = value;
+    }
+  }
+
   const nextManifest = buildManifest({
     kitVersion: existing.kitVersion,
     features: newFeatures,
@@ -148,8 +159,8 @@ export async function setConfigValue(dir, key, value) {
     uiFramework: existing.uiFramework,
     restNamespace: existing.restNamespace,
     vendorPrefix: existing.vendorPrefix,
-    phpMinVersion: existing.phpMinVersion,
-    phpSourceVersion: existing.phpSourceVersion,
+    phpMinVersion: nextPhpMin,
+    phpSourceVersion: nextPhpSource,
     batchEndpoint: existing.batchEndpoint,
     projectType: existing.projectType,
     build: existing.build,
@@ -180,6 +191,15 @@ export async function setConfigValue(dir, key, value) {
   const glueWritten = await refreshGlue(dir, newFeatures);
   if (glueWritten.length > 0) {
     written.push(...glueWritten);
+  }
+
+  if (key === "phpMinVersion") {
+    const synced = await syncPhpMinArtifacts(dir, value, {
+      slug: existing.slug || nextManifest.slug,
+    });
+    for (const rel of synced) {
+      if (!written.includes(rel)) written.push(rel);
+    }
   }
 
   return {

@@ -32,6 +32,7 @@ import {
   readProjectConfigFromDir,
   projectConfigToAnswers,
 } from "./project-config-io.js";
+import { applyPhpMinToComposer } from "./sync-php-min.js";
 
 const CONDITIONAL_GLUE = ["tsconfig.json", "package.json"];
 const CI_PATH = ".github/workflows/ci.yml";
@@ -135,6 +136,7 @@ export async function refreshGlue(dir, features) {
   // composer.json: never replace a customized on-disk file with a
   // fresh scaffold. Patch require/autoload/scripts onto the existing
   // composer when present; only emit the core template when missing.
+  // Always sync require.php + config.platform.php to features.phpMinVersion.
   if ("composer.json" in files) {
     const composerAbs = path.join(dir, "composer.json");
     let composer;
@@ -149,19 +151,28 @@ export async function refreshGlue(dir, features) {
     if (Object.keys(composerSuggest).length) {
       composer.suggest = { ...(composer.suggest || {}), ...composerSuggest };
     }
+    const phpMin =
+      features.phpMinVersion ||
+      cfg.phpMinVersion ||
+      vars.phpMinVersion ||
+      "7.4";
+    composer = applyPhpMinToComposer(composer, phpMin);
     files["composer.json"] = JSON.stringify(composer, null, 2) + "\n";
   }
 
   // Core's wpdev.json template has a fixed set of fields.
   // Merge the on-disk cfg so user-added keys are preserved, then
-  // stamp the current features.
+  // stamp the current features + effective phpMinVersion.
   if ("wpdev.json" in files) {
     const templateCfg = JSON.parse(files["wpdev.json"]);
+    const phpMin =
+      features.phpMinVersion || cfg.phpMinVersion || vars.phpMinVersion;
     const merged = {
       ...templateCfg,
       ...cfg,
       features: { ...features },
       uiFramework: deriveUiFramework(features, cfg),
+      ...(phpMin ? { phpMinVersion: phpMin } : {}),
     };
     files["wpdev.json"] = JSON.stringify(merged, null, 2) + "\n";
   }

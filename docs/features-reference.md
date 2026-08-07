@@ -106,14 +106,17 @@ See [php-test-tools.md](php-test-tools.md) for PHP-side testing.
 
 ### `phpMinVersion` — PHP
 
-| Property         | Value                                                  |
-| ---------------- | ------------------------------------------------------ |
-| **Label**        | PHP                                                    |
-| **Variants**     | `7.4` _(default)_, `8.0`, `8.1`, `8.2`, `8.3`          |
-| **Enables**      | Rector downgrade target, `composer.json` `require.php` |
-| **Owned paths**  | Refreshed via glue (not deleted on set)                |
-| **Dependencies** | None                                                   |
-| **Toggle**       | `wpdev set phpMinVersion 8.2`                          |
+| Property         | Value                                                                                               |
+| ---------------- | --------------------------------------------------------------------------------------------------- |
+| **Label**        | PHP                                                                                                 |
+| **Variants**     | `7.4` _(default)_, `8.0`, `8.1`, `8.2`, `8.3`                                                       |
+| **Enables**      | Rector target, Composer `require.php` / `platform.php`, plugin header, readme, Docker PHPUnit image |
+| **Owned paths**  | Synced on set (not deleted); also stamps top-level `phpMinVersion`                                  |
+| **Dependencies** | None                                                                                                |
+| **Toggle**       | `wpdev set phpMinVersion 8.2`                                                                       |
+
+Pair with top-level **`phpSourceVersion`** (authoring PHP). Write source at
+source; ship/test runtime at min. CI PHP = `max(min, source)`.
 
 ---
 

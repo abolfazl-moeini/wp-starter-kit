@@ -91,7 +91,11 @@ function readProjectConfig(root) {
   }
   return {
     slug: String(raw.slug),
-    phpMinVersion: String(raw.phpMinVersion || "7.4"),
+    phpMinVersion: String(
+      (raw.features && raw.features.phpMinVersion) ||
+        raw.phpMinVersion ||
+        "7.4",
+    ),
     configPath,
   };
 }

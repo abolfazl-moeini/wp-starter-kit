@@ -314,8 +314,14 @@ Anti-patterns:
 
 ## PHP versions + Rector
 
-Write source at **`phpSourceVersion`** (default 8.1). Ship / test runtime at
-**`phpMinVersion`** (default 7.4). Both live in `wpdev.json`.
+**Always read `wpdev.json` before choosing PHP syntax, CI images, or Docker tags.**
+
+| Field                                                        | Role                                                                                                          | Default |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ------- |
+| `phpSourceVersion` (top-level)                               | Authoring syntax — write typed properties, enums, etc. at this level                                          | `8.1`   |
+| `phpMinVersion` (top-level **and** `features.phpMinVersion`) | Runtime / ship target — Composer `require.php`, plugin header, readme, Docker PHPUnit image, Rector downgrade | `7.4`   |
+
+Agents must not assume PHP 8.x globally. Prefer `phpSourceVersion` for source; never invent a lower runtime than `phpMinVersion`. If only one field is present, treat it as both.
 
 | Command                   | Role                                                                                                                                                                                                                                |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -329,6 +335,12 @@ Configs: `dev/rector-config.php`, `dev/rector-build.php`, `dev/rector-upgrade.ph
 
 **Do not** Rector-rewrite `packages/php-fault-tolerance/src/Real/` — dual-load
 Stub (`<8.1`) / Real (`≥8.1`) is intentional. Skip `vendor/` and `vendor-prefixed/`.
+
+`wpdev set phpMinVersion <ver>` syncs top-level `phpMinVersion`, Composer
+`require.php` + `config.platform.php`, plugin `Requires PHP` / `*_PHP_MIN`,
+`readme.txt`, and Docker PHPUnit default image. It bumps `phpSourceVersion`
+when the current source is below the new min. CI uses
+`max(phpMinVersion, phpSourceVersion)` so authoring PHP still parses.
 
 Docker PHPUnit should use an image matching **`phpMinVersion`** when verifying
 compat. Prefer `release:dist` for shipping rather than mutating authoring source

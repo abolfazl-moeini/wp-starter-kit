@@ -44,10 +44,35 @@ describe("ci generator (Phase 26.4)", () => {
     expect(out.files[".github/workflows/ci.yml"]).toBeUndefined();
   });
 
-  test('ci:"auto" with no test runners produces no CI file', () => {
-    const out = ciRun(
-      makeCtx({ ci: "auto", js: "none", jsTest: "none", phpTest: "none" }),
+  test("CI php-version follows max(phpMinVersion, phpSourceVersion)", () => {
+    const out = ciRun({
+      answers: {},
+      cfg: { phpMinVersion: "7.4", phpSourceVersion: "8.1" },
+      features: {
+        ...defaultFeatures(),
+        phpTest: "phpunit",
+        jsTest: "none",
+        js: "none",
+        phpMinVersion: "7.4",
+      },
+    });
+    expect(out.files[".github/workflows/ci.yml"]).toMatch(
+      /php-version:\s*"8\.1"/,
     );
-    expect(Object.keys(out.files)).toEqual([]);
+
+    const out2 = ciRun({
+      answers: {},
+      cfg: { phpMinVersion: "8.2", phpSourceVersion: "8.1" },
+      features: {
+        ...defaultFeatures(),
+        phpTest: "phpunit",
+        jsTest: "none",
+        js: "none",
+        phpMinVersion: "8.2",
+      },
+    });
+    expect(out2.files[".github/workflows/ci.yml"]).toMatch(
+      /php-version:\s*"8\.2"/,
+    );
   });
 });

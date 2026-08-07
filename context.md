@@ -107,7 +107,7 @@ Single branding/runtime source of truth (kit + consumers after scaffold):
 | `restNamespace`                      | REST namespace (e.g. `wpdev/v1`)                            |
 | `batchEndpoint`                      | Batch path for rest-utils                                   |
 | `vendorPrefix`                       | Strauss prefix for release                                  |
-| `phpMinVersion` / `phpSourceVersion` | Platform / Rector                                           |
+| `phpMinVersion` / `phpSourceVersion` | Runtime min vs authoring PHP (read before syntax/images)    |
 | `build.assetMappings`                | Copy node dist → `assets/libraries`                         |
 | `build.globalMappings`               | esbuild import → global maps                                |
 | `build.styleEntryPoints`             | CSS entries                                                 |

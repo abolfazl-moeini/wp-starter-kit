@@ -45,6 +45,25 @@ describe("phpUnitDocker generator", () => {
     );
   });
 
+  test("docker image follows features.phpMinVersion", () => {
+    const out = phpUnitDockerRun({
+      answers: goodAnswers,
+      cfg: { phpMinVersion: "7.4" },
+      features: {
+        phpTest: "phpunit",
+        phpUnitDocker: "on",
+        phpMinVersion: "8.2",
+      },
+      vars: { slug: "my-project" },
+    });
+    expect(out.files["tests/docker-phpunit/docker-compose.yml"]).toContain(
+      "wordpress:php8.2-apache",
+    );
+    expect(out.files["tests/docker-phpunit/env.example"]).toContain(
+      "wordpress:php8.2-apache",
+    );
+  });
+
   test("emits nothing when off", () => {
     const out = phpUnitDockerRun({
       answers: goodAnswers,

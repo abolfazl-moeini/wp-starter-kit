@@ -51,7 +51,7 @@ composer rector:build             # downgrade to phpMinVersion (host PHP ≥ sou
 
 - `slug`, `globalName`, `localizeVar`, `textDomain`, `hookPrefix`, `npmScope` — plugin identity
 - `uiFramework` — `preact` or `react` (aliased via `package.json` `react → @preact/compat`)
-- `phpMinVersion` / `phpSourceVersion` — Rector downgrade targets (default 7.4 / 8.1)
+- `phpMinVersion` / `phpSourceVersion` — runtime min vs authoring PHP (default 7.4 / 8.1). Read both before choosing syntax or images; `wpdev set phpMinVersion` syncs Composer/header/readme/docker
 - `vendorPrefix` — Strauss namespace prefix for dist
 
 Build settings live under the `build` key inside `wpdev.json`.

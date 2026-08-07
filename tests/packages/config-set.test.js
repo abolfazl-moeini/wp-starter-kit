@@ -43,6 +43,21 @@ async function seedProject(tmp, features = {}) {
     kitVersion: "0.1.0",
     features: allFeatures,
     generatedAt: "2026-06-15T00:00:00.000Z",
+    slug: cfg.slug,
+    globalName: cfg.globalName,
+    localizeVar: cfg.localizeVar,
+    textDomain: cfg.textDomain,
+    hookPrefix: cfg.hookPrefix,
+    npmScope: cfg.npmScope,
+    depsBundle: cfg.depsBundle,
+    phpFunctionPrefix: cfg.phpFunctionPrefix,
+    uiFramework: cfg.uiFramework,
+    restNamespace: cfg.restNamespace,
+    vendorPrefix: cfg.vendorPrefix,
+    phpMinVersion: cfg.phpMinVersion,
+    phpSourceVersion: cfg.phpSourceVersion,
+    batchEndpoint: cfg.batchEndpoint,
+    projectType: cfg.projectType,
   });
   await writeManifest(tmp, manifest);
   return { cfg, features: allFeatures };
@@ -59,8 +74,33 @@ describe("setConfigValue()", () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
-  test('setConfigValue(dir,"phpMinVersion","8.2") updates manifest + project.config.json', async () => {
+  test('setConfigValue(dir,"phpMinVersion","8.2") syncs top-level, composer, header, docker', async () => {
     await seedProject(tmpDir, { phpMinVersion: "7.4" });
+    await fs.writeFile(
+      path.join(tmpDir, "composer.json"),
+      JSON.stringify(
+        {
+          name: "acme/my-project",
+          require: { php: ">=7.4" },
+          config: { platform: { php: "7.4" } },
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+    await fs.writeFile(
+      path.join(tmpDir, "my-project.php"),
+      "<?php\n/**\n * Requires PHP:      7.4\n */\ndefine( 'MY_PROJECT_PHP_MIN', '7.4' );\n",
+    );
+    await fs.writeFile(path.join(tmpDir, "readme.txt"), "Requires PHP: 7.4\n");
+    await fs.mkdir(path.join(tmpDir, "tests/docker-phpunit"), {
+      recursive: true,
+    });
+    await fs.writeFile(
+      path.join(tmpDir, "tests/docker-phpunit/docker-compose.yml"),
+      "image: ${PHP_IMAGE:-wordpress:php8.1-apache}\n",
+    );
+
     const result = await setConfigValue(tmpDir, "phpMinVersion", "8.2");
     expect(result.ok).toBe(true);
 
@@ -68,11 +108,44 @@ describe("setConfigValue()", () => {
       await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
     );
     expect(manifest.features.phpMinVersion).toBe("8.2");
+    expect(manifest.phpMinVersion).toBe("8.2");
+    // Source bumped because it was below min.
+    expect(manifest.phpSourceVersion).toBe("8.2");
 
-    const cfg = JSON.parse(
+    const composer = JSON.parse(
+      await fs.readFile(path.join(tmpDir, "composer.json"), "utf8"),
+    );
+    expect(composer.require.php).toBe(">=8.2");
+    expect(composer.config.platform.php).toBe("8.2");
+
+    const plugin = await fs.readFile(
+      path.join(tmpDir, "my-project.php"),
+      "utf8",
+    );
+    expect(plugin).toMatch(/Requires PHP:\s+8\.2/);
+    expect(plugin).toMatch(/PHP_MIN',\s*'8\.2'/);
+
+    const readme = await fs.readFile(path.join(tmpDir, "readme.txt"), "utf8");
+    expect(readme).toMatch(/Requires PHP:\s*8\.2/);
+
+    const compose = await fs.readFile(
+      path.join(tmpDir, "tests/docker-phpunit/docker-compose.yml"),
+      "utf8",
+    );
+    expect(compose).toContain("wordpress:php8.2-apache");
+  });
+
+  test('setConfigValue(dir,"phpMinVersion","7.4") keeps higher phpSourceVersion', async () => {
+    await seedProject(tmpDir, { phpMinVersion: "8.1" });
+    // seed uses phpSourceVersion 8.1; lowering min should keep source.
+    const result = await setConfigValue(tmpDir, "phpMinVersion", "7.4");
+    expect(result.ok).toBe(true);
+    const manifest = JSON.parse(
       await fs.readFile(path.join(tmpDir, "wpdev.json"), "utf8"),
     );
-    expect(cfg.features.phpMinVersion).toBe("8.2");
+    expect(manifest.features.phpMinVersion).toBe("7.4");
+    expect(manifest.phpMinVersion).toBe("7.4");
+    expect(manifest.phpSourceVersion).toBe("8.1");
   });
 
   test('setConfigValue(dir,"phpMinVersion","7.4") keeps faultTolerance on (dual-mode package)', async () => {

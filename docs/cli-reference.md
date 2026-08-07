@@ -268,12 +268,17 @@ wpdev set <key> <value> [dir]
 
 ### Settable keys
 
-| Key             | Allowed values                    | Effect                                       |
-| --------------- | --------------------------------- | -------------------------------------------- |
-| `phpMinVersion` | `7.4`, `8.0`, `8.1`, `8.2`, `8.3` | Rector target, composer PHP constraint       |
-| `wpMinVersion`  | `5.8`, `6.0`, `6.2`, `6.4`, `6.6` | Plugin header `Requires at least`            |
-| `license`       | `gpl2`, `gpl3`, `mit`             | Regenerates `LICENSE` file                   |
-| `ci`            | `auto`, `off`                     | Controls `.github/workflows/ci.yml` emission |
+| Key             | Allowed values                    | Effect                                                                                           |
+| --------------- | --------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `phpMinVersion` | `7.4`, `8.0`, `8.1`, `8.2`, `8.3` | Runtime min: Rector, Composer, header, readme, Docker PHPUnit; bumps `phpSourceVersion` if lower |
+| `wpMinVersion`  | `5.8`, `6.0`, `6.2`, `6.4`, `6.6` | Plugin header `Requires at least`                                                                |
+| `license`       | `gpl2`, `gpl3`, `mit`             | Regenerates `LICENSE` file                                                                       |
+| `ci`            | `auto`, `off`                     | Controls `.github/workflows/ci.yml` emission                                                     |
+
+`phpMinVersion` and `phpSourceVersion` are distinct: author at source, ship at
+min (Rector). Agents should read both from `wpdev.json` before choosing PHP
+syntax. `wpdev set phpMinVersion` updates top-level + `features.phpMinVersion`
+and syncs Composer / plugin header / readme / docker-phpunit image.
 
 ### Examples
 

@@ -6,7 +6,27 @@
  * and/or e2eTest:playwright).
  */
 
-function buildCiYml(hasUnit, hasE2e) {
+import { maxPhpVersion } from "../sync-php-min.js";
+
+/**
+ * PHP version for CI setup-php. Prefer authoring (phpSourceVersion) so
+ * modern source parses; never below phpMinVersion.
+ *
+ * @param {object} ctx
+ * @returns {string}
+ */
+export function resolveCiPhpVersion(ctx) {
+  const features = ctx.features || {};
+  const cfg = ctx.cfg || {};
+  const vars = ctx.vars || {};
+  const min =
+    features.phpMinVersion || cfg.phpMinVersion || vars.phpMinVersion || "7.4";
+  const source = cfg.phpSourceVersion || vars.phpSourceVersion || min;
+  return maxPhpVersion(String(min), String(source));
+}
+
+function buildCiYml(hasUnit, hasE2e, phpVersion) {
+  const php = phpVersion || "8.1";
   const unitJob = hasUnit
     ? `
   test:
@@ -17,7 +37,7 @@ function buildCiYml(hasUnit, hasE2e) {
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.2"
+          php-version: "${php}"
           extensions: mbstring
 
       - name: Setup Node
@@ -90,9 +110,14 @@ export function run(ctx) {
   if (!hasPhp && !hasJs && !hasE2e) {
     return { files: {}, dirs: [], deps: {}, devDeps: {} };
   }
+  const phpVersion = resolveCiPhpVersion(ctx);
   return {
     files: {
-      ".github/workflows/ci.yml": buildCiYml(hasPhp || hasJs, hasE2e),
+      ".github/workflows/ci.yml": buildCiYml(
+        hasPhp || hasJs,
+        hasE2e,
+        phpVersion,
+      ),
     },
     dirs: [".github/workflows"],
     deps: {},

@@ -9,6 +9,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import * as path from "node:path";
 import { resolveEngineSrcDir } from "../resolve-kit-paths.js";
+import { wordpressPhpImage } from "../sync-php-min.js";
 
 const TEMPLATE_DIR = "generators/templates/docker-phpunit";
 const OUT_PREFIX = "tests/docker-phpunit/";
@@ -22,15 +23,18 @@ function templateRoot() {
 
 /**
  * @param {string} slug
+ * @param {string} phpMin
  * @returns {Record<string, string>}
  */
-function loadDockerPhpunitFiles(slug) {
+function loadDockerPhpunitFiles(slug, phpMin) {
   const root = templateRoot();
   if (!existsSync(root)) {
     throw new Error(
       `phpUnitDocker templates missing at ${root} — expected under packages/create-wp-project/src/${TEMPLATE_DIR}`,
     );
   }
+
+  const phpImage = wordpressPhpImage(phpMin || "8.1");
 
   /** @type {Record<string, string>} */
   const files = {};
@@ -48,6 +52,8 @@ function loadDockerPhpunitFiles(slug) {
       if (!entry.isFile()) continue;
       let body = readFileSync(full, "utf8");
       body = body.replaceAll("{{slug}}", slug || "my-plugin");
+      body = body.replaceAll("{{phpImage}}", phpImage);
+      body = body.replaceAll("wordpress:php8.1-apache", phpImage);
       files[`${OUT_PREFIX}${childRel}`] = body;
     }
   }
@@ -69,7 +75,12 @@ export function run(ctx) {
 
   const tpl = ctx.vars || { ...ctx.answers, ...(ctx.cfg || {}) };
   const slug = tpl.slug || ctx.answers?.slug || "my-plugin";
-  const files = loadDockerPhpunitFiles(slug);
+  const phpMin =
+    ctx.features.phpMinVersion ||
+    tpl.phpMinVersion ||
+    ctx.cfg?.phpMinVersion ||
+    "7.4";
+  const files = loadDockerPhpunitFiles(slug, phpMin);
 
   return {
     files,
