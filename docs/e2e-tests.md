@@ -19,14 +19,14 @@ Requires **Docker** for `wp-env`.
 
 ## What gets scaffolded
 
-| Path                                     | Purpose                                                                                                                                                                    |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.wp-env.json`                           | Maps `"."` as the plugin; pretty-permalink lifecycle. With `phpFramework=wpdev`, also mounts `../wpdev` **before** `"."` so `Requires Plugins: wpdev` activation succeeds. |
-| `playwright.config.js`                   | Extends `@wordpress/scripts` Playwright config via `createRequire` (ESM-safe); `testDir: ./tests/e2e`                                                                      |
-| `tests/e2e/config/global-setup.js`       | REST login + `storageState` + content reset                                                                                                                                |
-| `tests/e2e/specs/admin-smoke.spec.js`    | Dashboard / Plugins smoke                                                                                                                                                  |
-| `tests/e2e/specs/frontend-smoke.spec.js` | Front-end + REST-created post                                                                                                                                              |
-| `package.json`                           | Scripts `wp-env`, `test:e2e`; Playwright-related `devDependencies`                                                                                                         |
+| Path                                     | Purpose                                                                                                                                                                                                               |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.wp-env.json`                           | Maps `"."` as the plugin; pretty-permalink lifecycle. With `phpFramework=wpdev`, mounts `../wpdev` **before** `"."`. Append other `Requires Plugins:` deps (e.g. WooCommerce zip) **between** framework and consumer. |
+| `playwright.config.js`                   | Extends `@wordpress/scripts` Playwright config via `createRequire` (ESM-safe); `testDir: ./tests/e2e`                                                                                                                 |
+| `tests/e2e/config/global-setup.js`       | REST login + `storageState` + content reset                                                                                                                                                                           |
+| `tests/e2e/specs/admin-smoke.spec.js`    | Dashboard / Plugins smoke                                                                                                                                                                                             |
+| `tests/e2e/specs/frontend-smoke.spec.js` | Front-end + REST-created post                                                                                                                                                                                         |
+| `package.json`                           | Scripts `wp-env`, `test:e2e`; Playwright-related `devDependencies`                                                                                                                                                    |
 
 Generator: `packages/create-wp-project/src/generators/e2eTest.js`  
 Templates: `packages/create-wp-project/src/generators/templates/e2e/`

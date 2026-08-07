@@ -2,9 +2,9 @@
 
 Lessons from consumer plugins that soft-depend on **WPDev** (`Requires Plugins: wpdev`) and use React admin UIs (Gutenberg components / WPDev settings).
 
-## Soft-dep: mount `../wpdev` first
+## Soft-dep: mount dependencies before the consumer
 
-wp-env must load the framework **before** the consumer. Alphabetical order of plugin folders is not enough (`my-plugin` often sorts before `wpdev`).
+wp-env must load soft-deps **before** the consumer. Alphabetical folder order is not enough (`my-plugin` often sorts before `wpdev`).
 
 ```json
 {
@@ -12,8 +12,22 @@ wp-env must load the framework **before** the consumer. Alphabetical order of pl
 }
 ```
 
-Expect the framework as a **sibling** of the plugin under `wp-content/plugins/`.
-Kit generator (`e2eTest` + `phpFramework=wpdev`) writes this automatically.
+With additional `Requires Plugins:` entries (e.g. WooCommerce), keep **framework → other deps → consumer**:
+
+```json
+{
+  "plugins": [
+    "../wpdev",
+    "https://downloads.wordpress.org/plugin/woocommerce.latest-stable.zip",
+    "."
+  ]
+}
+```
+
+Expect the framework as a **sibling** under `wp-content/plugins/`.  
+Kit generator (`e2eTest` + `phpFramework=wpdev`) writes `["../wpdev", "."]` automatically — append other deps by hand when the header lists them.
+
+Do **not** point wp-env `core` at an unbuilt `wordpress-develop/src` tree.
 
 ## Port conflicts
 
@@ -78,13 +92,43 @@ WordPress admin often shows the same label twice (top-level + submenu, or “Add
 | `page.locator("a.toplevel_page_…")`  | bare `getByText("Plugin Name")`                |
 | Scope under `#toplevel_page_…`       | first match of a duplicated submenu label      |
 
-## WPDev list-table status filters
+## WPDev list-table status / view filters
 
 Status chips may call `wpdev_list_table_fetch_ajax_results`. In some wp-env setups that AJAX returns **404** (`list_table_unresolved`). Prefer full navigation over clicking the filter chip:
 
 ```javascript
 await admin.visitAdminPage("admin.php", "page=your-list-slug&status=draft");
 ```
+
+Same for host “views” that change a query arg (`price_edit_view`, `type`, …): assert via `visitAdminPage` / POM `open({ view })`, not ajax tab clicks that may not update the URL.
+
+## WPDev list table locators
+
+| Prefer                                           | Avoid                                |
+| ------------------------------------------------ | ------------------------------------ |
+| `[data-table-id="your-table-id"]`                | Fragile nested table markup alone    |
+| Scope bulk Apply / checkboxes under that wrapper | Global `#doaction` on the wrong form |
+
+Empty lists still expose `data-table-id` (framework wraps empty state). If a host still omits the wrapper on older WPDev, seed a row in `beforeAll` or fix the framework.
+
+## Wubox / bulk confirm modals
+
+Bulk confirm and many `wpdev_register_form` modals load into **`#WUB_ajaxContent`** (inline admin-ajax), **not** an iframe.
+
+```javascript
+const modal = page.locator("#WUB_ajaxContent");
+await expect(modal).toBeVisible();
+```
+
+WPDev toggle fields: click the **`label[for=…]`** (or associated label), not only the hidden checkbox — iOS / Playwright often miss the input alone.
+
+Bulk confirm POST field name is **`confirm`**; Vue state key is `confirmed`. Assert / fill the named input.
+
+Search on list pages often uses `?s=` via full navigation rather than relying on the search box + ajax.
+
+## Brand menu titles
+
+Brand top-level title defaults to the **site name**. Filter `wpdev_brand_menu_title` (and capability via `wpdev_brand_menu_args`) in the host — e2e should assert the branded label, not `get_bloginfo( 'name' )`.
 
 ## Projects without `wpdev.json`
 

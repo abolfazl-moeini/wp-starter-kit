@@ -83,6 +83,8 @@ export function run(ctx) {
 
   // Soft-dep WPDev framework: mount sibling plugin first so Requires Plugins
   // activation succeeds (consumer slug often sorts before "wpdev" alphabetically).
+  // Additional Requires Plugins deps (WooCommerce zip, etc.) must stay between
+  // ../wpdev and "." — append them in the host .wp-env.json after scaffold.
   if (ctx.features?.phpFramework === "wpdev" && files[".wp-env.json"]) {
     try {
       const env = JSON.parse(files[".wp-env.json"]);

@@ -63,7 +63,9 @@ in the spec when used once.
 - After create+redirect, assert URL / list / REST, not a toast.
 - Duplicate admin labels → `.page-title-action` / scoped `toplevel_page_*`.
 - WPDev settings tabs → `#tab-selector-{section}-link`.
-- Soft-dep WPDev → `.wp-env.json` plugins `["../wpdev", "."]`.
+- Soft-dep WPDev → `.wp-env.json` plugins `["../wpdev", "."]` (extra Requires Plugins deps between framework and `"."`).
+- Wubox bulk/modal → `#WUB_ajaxContent` (not iframe); toggles via `label[for=…]`.
+- List views → prefer `visitAdminPage` with query args over ajax chips.
 
 See [wpdev-and-admin-ui.md](wpdev-and-admin-ui.md).
 
