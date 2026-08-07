@@ -2,11 +2,16 @@
  * External dependencies
  */
 import path from "node:path";
+import { createRequire } from "node:module";
 import { defineConfig } from "@playwright/test";
 
 /**
  * WordPress dependencies
+ *
+ * Scaffolded plugins use package.json "type": "module". Use createRequire
+ * so we can load the CJS base config from @wordpress/scripts.
  */
+const require = createRequire(import.meta.url);
 const baseConfig = require("@wordpress/scripts/config/playwright.config");
 
 process.env.WP_ARTIFACTS_PATH ??= path.join(process.cwd(), "artifacts");

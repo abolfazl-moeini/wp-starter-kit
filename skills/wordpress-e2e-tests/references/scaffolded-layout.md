@@ -21,7 +21,8 @@ Emitted by `packages/create-wp-project/src/generators/e2eTest.js` from templates
 - `playwright.config.js`
 - `tests/e2e/**`
 
-Safe for `wpdev add` / `wpdev set e2eTest=none` / `wpdev remove e2eTest`.
+Safe for `wpdev add e2eTest --variant playwright` / `wpdev remove e2eTest`
+(or `wpdev add e2eTest --variant none`).
 
 ## npm scripts (via `packageJsonForAnswers`)
 

@@ -2,7 +2,8 @@
  * 2.5.0 migration — backfill e2eTest feature (Browser E2E / Playwright).
  *
  * Older manifests omit `e2eTest`. Default is `none` (opt-in). Files are
- * not scaffolded here — run `wpdev add e2eTest=playwright` to emit them.
+ * not scaffolded here — run:
+ *   wpdev add e2eTest --variant playwright
  */
 
 import { existsSync } from "node:fs";
@@ -11,7 +12,7 @@ import { updateJsonFile } from "../json-utils.js";
 
 export const version = "2.5.0";
 export const description =
-  "Backfill features.e2eTest=none (Playwright E2E opt-in via wpdev add)";
+  "Backfill features.e2eTest=none (enable later: wpdev add e2eTest --variant playwright)";
 
 export async function run(dir) {
   const manifestPath = path.join(dir, "wpdev.json");

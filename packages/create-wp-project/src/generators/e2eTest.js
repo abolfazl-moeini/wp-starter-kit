@@ -48,6 +48,7 @@ function loadE2eFiles(slug, pluginName) {
       }
       if (!entry.isFile()) continue;
       if (entry.name === "README.md") continue;
+      if (entry.name === ".DS_Store" || entry.name === "Thumbs.db") continue;
       let body = readFileSync(full, "utf8");
       body = body.replaceAll("{{slug}}", slug || "my-plugin");
       body = body.replaceAll(

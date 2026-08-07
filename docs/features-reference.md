@@ -162,15 +162,15 @@ See [php-test-tools.md](php-test-tools.md).
 
 ### `e2eTest` — Browser E2E
 
-| Property         | Value                                                                                        |
-| ---------------- | -------------------------------------------------------------------------------------------- |
-| **Label**        | Browser E2E                                                                                  |
-| **Variants**     | `none` _(default)_, `playwright`                                                             |
-| **Enables**      | `.wp-env.json`, `playwright.config.js`, `tests/e2e/**`, scripts `wp-env` / `test:e2e`        |
-| **Owned paths**  | `.wp-env.json`, `playwright.config.js`, `tests/e2e/**`                                       |
-| **Dependencies** | Docker for `@wordpress/env`; may emit lean `package.json` even when `js:none`                |
-| **Presets**      | `full` → `playwright`; others → `none`                                                       |
-| **Toggle**       | `wpdev add e2eTest --variant playwright` / `wpdev set e2eTest none` / `wpdev remove e2eTest` |
+| Property         | Value                                                                                         |
+| ---------------- | --------------------------------------------------------------------------------------------- |
+| **Label**        | Browser E2E                                                                                   |
+| **Variants**     | `none` _(default)_, `playwright`                                                              |
+| **Enables**      | `.wp-env.json`, `playwright.config.js`, `tests/e2e/**`, scripts `wp-env` / `test:e2e`         |
+| **Owned paths**  | `.wp-env.json`, `playwright.config.js`, `tests/e2e/**`                                        |
+| **Dependencies** | Docker for `@wordpress/env`; may emit lean `package.json` even when `js:none`                 |
+| **Presets**      | `full` → `playwright`; others → `none`                                                        |
+| **Toggle**       | `wpdev add e2eTest --variant playwright` / `wpdev remove e2eTest` (or `add … --variant none`) |
 
 Stack: Playwright + `@wordpress/e2e-test-utils-playwright` + `@wordpress/scripts` `test-playwright`.
 Cypress is **not** a catalog variant.

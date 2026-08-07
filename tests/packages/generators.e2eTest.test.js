@@ -37,11 +37,15 @@ describe("e2eTest generator", () => {
     });
     expect(out.files[".wp-env.json"]).toMatch(/plugins/);
     expect(out.files["playwright.config.js"]).toMatch(/tests\/e2e/);
+    expect(out.files["playwright.config.js"]).toMatch(/createRequire/);
     expect(out.files["tests/e2e/config/global-setup.js"]).toMatch(
       /RequestUtils/,
     );
     expect(out.files["tests/e2e/specs/admin-smoke.spec.js"]).toMatch(
       /@wordpress\/e2e-test-utils-playwright/,
+    );
+    expect(out.files["tests/e2e/specs/admin-smoke.spec.js"]).toMatch(
+      /My Project/,
     );
     expect(out.files["tests/e2e/specs/frontend-smoke.spec.js"]).toMatch(
       /createPost/,
@@ -71,6 +75,23 @@ describe("e2eTest generator", () => {
     });
     expect(out.files[".github/workflows/ci.yml"]).toMatch(/npm run test:e2e/);
     expect(out.files[".github/workflows/ci.yml"]).toMatch(/playwright install/);
+  });
+
+  test("ci emits e2e-only workflow when no php/js tests", () => {
+    const out = ciRun({
+      features: {
+        ci: "auto",
+        phpTest: "none",
+        js: "none",
+        jsTest: "none",
+        e2eTest: "playwright",
+      },
+    });
+    const yml = out.files[".github/workflows/ci.yml"];
+    expect(yml).toBeDefined();
+    expect(yml).toMatch(/^\s+e2e:/m);
+    expect(yml).toMatch(/npm run test:e2e/);
+    expect(yml).not.toMatch(/^\s+test:/m);
   });
 });
 
@@ -109,6 +130,26 @@ describe("e2eTest scaffold + presets + CLI", () => {
       "utf8",
     );
     expect(ci).toMatch(/test:e2e/);
+  });
+
+  test("js:none + e2eTest:playwright emits lean package.json", async () => {
+    const res = await scaffoldProject(tmp, goodAnswers, {
+      features: {
+        ...defaultFeatures(),
+        js: "none",
+        jsTest: "none",
+        e2eTest: "playwright",
+      },
+    });
+    expect(res.ok).toBe(true);
+    const pkg = JSON.parse(
+      await fs.readFile(path.join(tmp, "package.json"), "utf8"),
+    );
+    expect(pkg.scripts["test:e2e"]).toMatch(/test-playwright/);
+    expect(pkg.scripts.build).toBeUndefined();
+    expect(pkg.devDependencies["@wordpress/env"]).toBeDefined();
+    expect(pkg.devDependencies["@wordpress/scripts"]).toBeDefined();
+    expect(pkg.devDependencies.webpack).toBeUndefined();
   });
 
   test("full preset enables playwright; standard does not", () => {

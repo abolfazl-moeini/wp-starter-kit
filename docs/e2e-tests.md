@@ -8,22 +8,25 @@
 ```bash
 wpdev create my-plugin --e2e-test=playwright
 wpdev create my-plugin --preset=full          # includes e2eTest=playwright
-wpdev add e2eTest=playwright                  # existing project
+wpdev add e2eTest --variant playwright        # existing project
 ```
 
 Defaults: `e2eTest: none` on `minimal` / `standard` / `woocommerce`.
 Requires **Docker** for `wp-env`.
 
+> **Note:** Bare `wpdev add e2eTest` applies the catalog default (`none`).
+> Always pass `--variant playwright` to enable browser E2E.
+
 ## What gets scaffolded
 
-| Path                                     | Purpose                                                                |
-| ---------------------------------------- | ---------------------------------------------------------------------- |
-| `.wp-env.json`                           | Maps `"."` as the plugin; pretty-permalink lifecycle                   |
-| `playwright.config.js`                   | Extends `@wordpress/scripts` Playwright config; `testDir: ./tests/e2e` |
-| `tests/e2e/config/global-setup.js`       | REST login + `storageState` + content reset                            |
-| `tests/e2e/specs/admin-smoke.spec.js`    | Dashboard / Plugins smoke                                              |
-| `tests/e2e/specs/frontend-smoke.spec.js` | Front-end + REST-created post                                          |
-| `package.json`                           | Scripts `wp-env`, `test:e2e`; Playwright-related `devDependencies`     |
+| Path                                     | Purpose                                                                                               |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `.wp-env.json`                           | Maps `"."` as the plugin; pretty-permalink lifecycle                                                  |
+| `playwright.config.js`                   | Extends `@wordpress/scripts` Playwright config via `createRequire` (ESM-safe); `testDir: ./tests/e2e` |
+| `tests/e2e/config/global-setup.js`       | REST login + `storageState` + content reset                                                           |
+| `tests/e2e/specs/admin-smoke.spec.js`    | Dashboard / Plugins smoke                                                                             |
+| `tests/e2e/specs/frontend-smoke.spec.js` | Front-end + REST-created post                                                                         |
+| `package.json`                           | Scripts `wp-env`, `test:e2e`; Playwright-related `devDependencies`                                    |
 
 Generator: `packages/create-wp-project/src/generators/e2eTest.js`  
 Templates: `packages/create-wp-project/src/generators/templates/e2e/`
@@ -74,10 +77,13 @@ This is separate from the **kit** workflows in [ci.md](ci.md)
 ## Disable
 
 ```bash
-wpdev set e2eTest=none
-# or
 wpdev remove e2eTest
+# or switch variant without removing files first:
+wpdev add e2eTest --variant none
 ```
+
+Do **not** use `wpdev set e2eTest=…` — `e2eTest` is an add/remove feature,
+not a config-only id (`phpMinVersion` / `license` / `ci`).
 
 Owned paths (`.wp-env.json`, `playwright.config.js`, `tests/e2e/**`) are
 removed; package.json scripts/devDeps and CI are refreshed.
@@ -86,7 +92,7 @@ removed; package.json scripts/devDeps and CI are refreshed.
 
 `@wpdev/create-wp-project` **2.5.0** backfills `features.e2eTest=none` on
 existing manifests (`wpdev update`). Files are not added until you
-`wpdev add e2eTest=playwright`.
+`wpdev add e2eTest --variant playwright`.
 
 ## See also
 
