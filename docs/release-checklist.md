@@ -9,6 +9,16 @@ prevents most registry and consumer breakage.
 
 ---
 
+## Consumer plugin dist zip
+
+Scaffolded plugins use `npm run release` / `composer release:dist`
+(`dev/release/prepare-release.js`). By default that **runs enabled unit and
+e2e suites before writing `dist/`**. Use `--skip-tests` or `WPDEV_SKIP_TESTS=1`
+only for intentional bypass. See [scaffold.md](scaffold.md) and
+[e2e-tests.md](e2e-tests.md).
+
+---
+
 ## Overview
 
 A kit release has two surfaces:

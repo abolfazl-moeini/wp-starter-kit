@@ -131,6 +131,12 @@ Owned paths are removed; `refreshGlue` updates **only** feature glue
 (`package.json`, `composer.json` patches, `tsconfig.json`, `wpdev.json`, CI) —
 it must **not** rewrite plugin bootstrap PHP, README, or `packages/*`.
 
+## Release
+
+With `e2eTest=playwright`, `npm run release` / `composer release:dist` runs
+`npm run test:e2e` before writing `dist/` (default ON). Use `--skip-tests` or
+`WPDEV_SKIP_TESTS=1` only when you intentionally bypass. See [docs/e2e-tests.md](../../docs/e2e-tests.md).
+
 ## Human docs
 
 - [docs/e2e-tests.md](../../docs/e2e-tests.md)

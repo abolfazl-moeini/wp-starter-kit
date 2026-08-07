@@ -15,6 +15,11 @@
  *   node dev/release/prepare-release.js --out=dist --skip-composer
  *   node dev/release/prepare-release.js --skip-rector
  *   node dev/release/prepare-release.js --skip-zip
+ *   node dev/release/prepare-release.js --skip-tests
+ *
+ * Pre-dist gate (default ON): runs enabled PHP/JS unit tests and Playwright
+ * e2e from wpdev.json features before mutating dist/. Bypass with
+ * --skip-tests or WPDEV_SKIP_TESTS=1.
  *
  * Wired as:
  *   npm run release  →  npm run build && node dev/release/prepare-release.js
@@ -39,6 +44,7 @@ import {
   releaseCopyExcludeNames,
   shouldStripRelativePath,
 } from "./prepareComposer.js";
+import { gateReleaseTests } from "./releaseTests.js";
 
 function parseArgs(argv) {
   const opts = {
@@ -46,12 +52,14 @@ function parseArgs(argv) {
     skipComposer: false,
     skipRector: false,
     skipZip: false,
+    skipTests: false,
     root: process.cwd(),
   };
   for (const arg of argv) {
     if (arg === "--skip-composer") opts.skipComposer = true;
     else if (arg === "--skip-rector") opts.skipRector = true;
     else if (arg === "--skip-zip") opts.skipZip = true;
+    else if (arg === "--skip-tests") opts.skipTests = true;
     else if (arg.startsWith("--out=")) opts.out = arg.slice("--out=".length);
     else if (arg.startsWith("--root="))
       opts.root = path.resolve(arg.slice("--root=".length));
@@ -319,7 +327,7 @@ function createReleaseZip(outAbs, slug) {
 /**
  * Programmatic entry (for tests and CLI).
  *
- * @param {{ root?: string, out?: string, skipComposer?: boolean, skipRector?: boolean, skipZip?: boolean }} options
+ * @param {{ root?: string, out?: string, skipComposer?: boolean, skipRector?: boolean, skipZip?: boolean, skipTests?: boolean }} options
  * @returns {Promise<{ distRoot: string, zipPath: string|null, slug: string, phpMinVersion: string }>}
  */
 export async function prepareRelease(options = {}) {
@@ -328,6 +336,10 @@ export async function prepareRelease(options = {}) {
   const skipComposer = Boolean(options.skipComposer);
   const skipRector = Boolean(options.skipRector);
   const skipZip = Boolean(options.skipZip);
+  const skipTests = Boolean(options.skipTests);
+
+  // Gate BEFORE wiping dist so a failed suite leaves an existing package intact.
+  gateReleaseTests(root, { skipTests });
 
   const { slug, phpMinVersion } = readProjectConfig(root);
   const outAbs = path.join(root, outBase);
@@ -380,12 +392,16 @@ function printHelp() {
 Prepare a production plugin package under dist/{slug}/ (and
 dist/{slug}.zip) without modifying the source tree.
 
+By default, enabled PHP/JS unit tests and Playwright e2e (from
+wpdev.json features) run before packaging. Failures block dist/.
+
 Options:
   --out=DIR          Output base directory (default: dist)
   --root=DIR         Project root (default: cwd)
   --skip-composer    Skip composer install --no-dev
   --skip-rector      Skip PHP downgrade (rector:build) on dist/
   --skip-zip         Skip creating dist/{slug}.zip
+  --skip-tests       Skip pre-dist unit/e2e suites (or set WPDEV_SKIP_TESTS=1)
   -h, --help         Show this help
 `);
 }

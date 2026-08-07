@@ -113,6 +113,19 @@ This is separate from the **kit** workflows in [ci.md](ci.md)
 `tests/`, `.wp-env.json`, and root `playwright.config.js` are removed from
 `dist/` by the release packager — E2E must not ship in the plugin zip.
 
+When `e2eTest=playwright`, `composer release:dist` / `npm run release` **runs
+`npm run test:e2e` before packaging** (Docker/wp-env required). Failures block
+the zip. Bypass only when intentional:
+
+```bash
+node dev/release/prepare-release.js --skip-tests
+# or
+WPDEV_SKIP_TESTS=1 composer release:dist
+```
+
+Migration **2.6.0** refreshes the packager with this gate
+(`wpdev update --run`).
+
 ## Disable
 
 ```bash
@@ -132,6 +145,9 @@ removed; package.json scripts/devDeps and CI are refreshed.
 `@wpdev/create-wp-project` **2.5.0** backfills `features.e2eTest=none` on
 existing manifests (`wpdev update`). Files are not added until you
 `wpdev add e2eTest --variant playwright`.
+
+**2.6.0** refreshes `dev/release/*` so release runs e2e (and unit suites)
+before writing `dist/` unless `--skip-tests` / `WPDEV_SKIP_TESTS=1`.
 
 ## See also
 

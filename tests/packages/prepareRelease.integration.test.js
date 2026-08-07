@@ -89,7 +89,11 @@ describe("prepareRelease integration", () => {
   });
 
   test("packages into dist/{slug} without mutating source", async () => {
-    const result = await prepareRelease({ root: tmp, skipComposer: true });
+    const result = await prepareRelease({
+      root: tmp,
+      skipComposer: true,
+      skipTests: true,
+    });
     expect(result.slug).toBe("demo-plugin");
     expect(result.distRoot).toBe(path.join(tmp, "dist", "demo-plugin"));
 
@@ -145,6 +149,7 @@ describe("prepareRelease integration", () => {
       root: tmp,
       skipComposer: true,
       skipZip: true,
+      skipTests: true,
     });
     expect(result.zipPath).toBeNull();
     await expect(

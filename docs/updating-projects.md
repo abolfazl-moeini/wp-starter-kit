@@ -123,8 +123,9 @@ A **migration** is a small script under
 `packages/create-wp-project/src/migrations/<version>.js` that
 patches the consumer project's **glue files** to move from one
 kit version to the next. Registered versions include `0.2.0`, `0.3.0`,
-`0.4.0`, `1.0.0` (framework-as-dependency), through **`2.5.0`**
-(`e2eTest` feature backfill — see [e2e-tests.md](e2e-tests.md)).
+`0.4.0`, `1.0.0` (framework-as-dependency), through **`2.6.0`**
+(pre-dist release test gate — see [scaffold.md](scaffold.md) § Release packaging;
+`2.5.0` was the `e2eTest` feature backfill — see [e2e-tests.md](e2e-tests.md)).
 
 ### Registry
 

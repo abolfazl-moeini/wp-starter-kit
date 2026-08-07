@@ -65,10 +65,13 @@ composer release:dist     # copy shippable tree to dist/{slug}/ + zip (+ rector 
 ```
 
 `composer release` (kit monorepo) still runs first-party Rector prefix only.
-`composer release:dist` (consumers) copies production files, runs `rector:build`
-**inside `dist/{slug}/`** using the host `vendor/bin/rector` (before stripping
-`dev/`), strips root `composer.json` / `composer.lock`, writes `.dist-built`,
-and zips to `dist/{slug}.zip`. Pass `--skip-rector` / `--skip-zip` to opt out.
+`composer release:dist` (consumers) **first runs enabled unit/e2e suites**
+(`composer test` / `npm test` / `npm run test:e2e` from `wpdev.json` features;
+fail-fast; bypass `--skip-tests` or `WPDEV_SKIP_TESTS=1`), then copies production
+files, runs `rector:build` **inside `dist/{slug}/`** using the host
+`vendor/bin/rector` (before stripping `dev/`), strips root `composer.json` /
+`composer.lock`, writes `.dist-built`, and zips to `dist/{slug}.zip`.
+Pass `--skip-rector` / `--skip-zip` / `--skip-tests` to opt out of those steps.
 
 ### Rector layout (consumers)
 

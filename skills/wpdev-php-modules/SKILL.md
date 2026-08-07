@@ -317,12 +317,12 @@ Anti-patterns:
 Write source at **`phpSourceVersion`** (default 8.1). Ship / test runtime at
 **`phpMinVersion`** (default 7.4). Both live in `wpdev.json`.
 
-| Command                   | Role                                                                                                                       |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `composer rector:build`   | Downgrade tree to `phpMinVersion` (run on host PHP ≥ source version)                                                       |
-| `composer rector:prefix`  | Optional first-party namespace rename at release                                                                           |
-| `composer rector:upgrade` | Modernise / quality sets toward PHP 8.1                                                                                    |
-| `composer release:dist`   | Copies to `dist/{slug}/`, runs **rector:build on dist**, strips `dev/` + root composer manifests, writes `dist/{slug}.zip` |
+| Command                   | Role                                                                                                                                                                                                                                |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `composer rector:build`   | Downgrade tree to `phpMinVersion` (run on host PHP ≥ source version)                                                                                                                                                                |
+| `composer rector:prefix`  | Optional first-party namespace rename at release                                                                                                                                                                                    |
+| `composer rector:upgrade` | Modernise / quality sets toward PHP 8.1                                                                                                                                                                                             |
+| `composer release:dist`   | Runs enabled unit/e2e suites first (fail blocks zip; `--skip-tests` / `WPDEV_SKIP_TESTS=1` bypass), then copies to `dist/{slug}/`, runs **rector:build on dist**, strips `dev/` + root composer manifests, writes `dist/{slug}.zip` |
 
 Configs: `dev/rector-config.php`, `dev/rector-build.php`, `dev/rector-upgrade.php`,
 `dev/rector-prefix.php` (scaffolded; migration `2.2.0` for older projects).

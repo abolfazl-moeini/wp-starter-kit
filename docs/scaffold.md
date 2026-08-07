@@ -54,14 +54,20 @@ composer release:dist
 # equivalent: node dev/release/prepare-release.js
 ```
 
-The packager **never mutates the source tree**. It copies into `dist/{slug}/`, then:
+The packager **never mutates the source tree**. Before copying, it runs enabled
+**unit + e2e suites** from `wpdev.json` features (`composer test`, `npm test`,
+`npm run test:e2e`). Failures block `dist/`. Bypass with `--skip-tests` or
+`WPDEV_SKIP_TESTS=1` (default: tests ON).
+
+It then copies into `dist/{slug}/`, then:
 
 1. **Composer** (if `composer.json` exists): ensures `require.php` is `>={phpMinVersion}`, sets `config.platform.php`, forces path repositories to `options.symlink: false`, runs `composer install --no-dev`.
 2. **Strip** dev-only paths: `tests/`, `docs/`, `packages/`, `docker-phpunit/`, `dev/`, `node_modules/`, root `composer.json` / `composer.lock`, `package.json` (+ lockfiles), `coverage.xml*`, `phpunit.xml*`, `playwright.config.*`, `CLAUDE.md` / `context.md` / `AGENTS.md`, and hidden (`.*/`) directories (includes `.wp-env.json`).
 3. **Zip** `dist/{slug}/` → `dist/{slug}.zip` (WordPress-style: `{slug}/…` as archive root). Pass `--skip-zip` to keep the folder only.
 
-Existing projects can pick this up via `wpdev update` (migrations `2.1.0`–`2.5.0`).
+Existing projects can pick this up via `wpdev update` (migrations `2.1.0`–`2.6.0`).
 Migration **2.5.0** backfills `features.e2eTest=none` without scaffolding files.
+Migration **2.6.0** refreshes the release packager with the pre-dist test gate.
 
 ## Usage
 

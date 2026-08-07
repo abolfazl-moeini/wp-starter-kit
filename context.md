@@ -359,7 +359,7 @@ CLI UX: `packages/cli/`. Wrapper: `npm create @wpdev/plugin@latest` (when publis
 ## 9. Vendor scoping & release
 
 - Dev: normal Composer + npm.
-- Release dist: Strauss (`extra.strauss` / scripts) + Rector prefix/downgrade (`dev/rector-*.php`; consumers get them via scaffold / migration `2.2.0`; `release:dist` downgrades `dist/`).
+- Release dist: Strauss (`extra.strauss` / scripts) + Rector prefix/downgrade (`dev/rector-*.php`; consumers get them via scaffold / migration `2.2.0`; `release:dist` downgrades `dist/`). Pre-dist gate (migration `2.6.0`): runs enabled PHP/JS/e2e suites before packaging; bypass `--skip-tests` / `WPDEV_SKIP_TESTS=1`.
 - **Never** ship plugins that depend on another plugin’s `vendor/` for class resolution.
 - `platform-check` often disabled; runtime PHP gate lives in main plugin file.
 

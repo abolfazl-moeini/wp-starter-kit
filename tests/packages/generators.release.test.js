@@ -62,15 +62,22 @@ describe("core generator — release packager", () => {
     );
   });
 
-  test("emits prepare-release.js and prepareComposer.js", () => {
+  test("emits prepare-release.js, prepareComposer.js, and releaseTests.js", () => {
     const contrib = coreRun(makeCtx());
     expect(contrib.files["dev/release/prepare-release.js"]).toBeDefined();
     expect(contrib.files["dev/release/prepareComposer.js"]).toBeDefined();
+    expect(contrib.files["dev/release/releaseTests.js"]).toBeDefined();
     expect(contrib.files["dev/release/prepare-release.js"]).toMatch(
       /prepareRelease/,
     );
     expect(contrib.files["dev/release/prepareComposer.js"]).toMatch(
       /prepareComposerForRelease/,
+    );
+    expect(contrib.files["dev/release/releaseTests.js"]).toMatch(
+      /resolveReleaseTestPlan/,
+    );
+    expect(contrib.files["dev/release/prepare-release.js"]).toMatch(
+      /skip-tests/,
     );
   });
 
@@ -112,6 +119,9 @@ describe("scaffoldProject — release packager on disk", () => {
     ).resolves.toBeTruthy();
     await expect(
       fs.stat(path.join(tmp, "dev/release/prepareComposer.js")),
+    ).resolves.toBeTruthy();
+    await expect(
+      fs.stat(path.join(tmp, "dev/release/releaseTests.js")),
     ).resolves.toBeTruthy();
 
     const pkg = JSON.parse(
