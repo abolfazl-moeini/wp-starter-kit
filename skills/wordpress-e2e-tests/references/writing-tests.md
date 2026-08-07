@@ -59,6 +59,13 @@ in the spec when used once.
 - No `page.waitForTimeout()` — use `expect` auto-wait.
 - Default wp-env Playwright config uses `workers: 1`.
 - Prefer `--ui` when a selector is wrong.
+- Gutenberg `TextControl`: clear + `pressSequentially` — `fill()` may not update React state.
+- After create+redirect, assert URL / list / REST, not a toast.
+- Duplicate admin labels → `.page-title-action` / scoped `toplevel_page_*`.
+- WPDev settings tabs → `#tab-selector-{section}-link`.
+- Soft-dep WPDev → `.wp-env.json` plugins `["../wpdev", "."]`.
+
+See [wpdev-and-admin-ui.md](wpdev-and-admin-ui.md).
 
 ## Safety
 

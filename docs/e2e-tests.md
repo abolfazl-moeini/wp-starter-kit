@@ -19,14 +19,14 @@ Requires **Docker** for `wp-env`.
 
 ## What gets scaffolded
 
-| Path                                     | Purpose                                                                                               |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `.wp-env.json`                           | Maps `"."` as the plugin; pretty-permalink lifecycle                                                  |
-| `playwright.config.js`                   | Extends `@wordpress/scripts` Playwright config via `createRequire` (ESM-safe); `testDir: ./tests/e2e` |
-| `tests/e2e/config/global-setup.js`       | REST login + `storageState` + content reset                                                           |
-| `tests/e2e/specs/admin-smoke.spec.js`    | Dashboard / Plugins smoke                                                                             |
-| `tests/e2e/specs/frontend-smoke.spec.js` | Front-end + REST-created post                                                                         |
-| `package.json`                           | Scripts `wp-env`, `test:e2e`; Playwright-related `devDependencies`                                    |
+| Path                                     | Purpose                                                                                                                                                                    |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.wp-env.json`                           | Maps `"."` as the plugin; pretty-permalink lifecycle. With `phpFramework=wpdev`, also mounts `../wpdev` **before** `"."` so `Requires Plugins: wpdev` activation succeeds. |
+| `playwright.config.js`                   | Extends `@wordpress/scripts` Playwright config via `createRequire` (ESM-safe); `testDir: ./tests/e2e`                                                                      |
+| `tests/e2e/config/global-setup.js`       | REST login + `storageState` + content reset                                                                                                                                |
+| `tests/e2e/specs/admin-smoke.spec.js`    | Dashboard / Plugins smoke                                                                                                                                                  |
+| `tests/e2e/specs/frontend-smoke.spec.js` | Front-end + REST-created post                                                                                                                                              |
+| `package.json`                           | Scripts `wp-env`, `test:e2e`; Playwright-related `devDependencies`                                                                                                         |
 
 Generator: `packages/create-wp-project/src/generators/e2eTest.js`  
 Templates: `packages/create-wp-project/src/generators/templates/e2e/`
@@ -41,8 +41,40 @@ npm run test:e2e -- --headed         # visible browser
 ```
 
 Against an existing site (skip wp-env auto-start): set `WP_BASE_URL`,
-`WP_USERNAME`, `WP_PASSWORD` and adjust `playwright.config.js` `webServer`
-(see skill references).
+`WP_USERNAME`, `WP_PASSWORD`. The scaffolded `playwright.config.js` clears
+`webServer` whenever `WP_BASE_URL` is set (no manual config edit needed).
+
+### Port conflicts
+
+If another wp-env already owns `8888`/`8889`, set alternate ports:
+
+```bash
+WP_ENV_PORT=8908 WP_ENV_TESTS_PORT=8909 npx wp-env start
+WP_ENV_PORT=8908 WP_ENV_TESTS_PORT=8909 WP_BASE_URL=http://localhost:8909 npm run test:e2e
+```
+
+Or bake them into `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "wp-env": "WP_ENV_PORT=8898 WP_ENV_TESTS_PORT=8899 wp-env",
+    "test:e2e": "WP_ENV_PORT=8898 WP_ENV_TESTS_PORT=8899 WP_BASE_URL=http://localhost:8899 wp-scripts test-playwright"
+  }
+}
+```
+
+### Front-end smoke (block themes)
+
+Assert published posts on `post.link` (`h1`). Blog-index titles are often `h2`
+under block themes; home title is the plugin slug, not always “WordPress”.
+
+### Projects without `wpdev.json`
+
+Older plugins cannot use `wpdev add e2eTest`. Hand-copy templates from
+`packages/create-wp-project/src/generators/templates/e2e/` (or the shared
+skill `assets/templates/`) and add a lean root `package.json` with the
+scripts/devDeps above.
 
 ## Writing specs
 
@@ -60,11 +92,18 @@ test("dashboard loads", async ({ admin, page }) => {
 Use `requestUtils` for content setup; prefer `getByRole` locators.
 Do **not** import `test` from `@playwright/test` in specs.
 
+WPDev / React admin pitfalls (TextControl, tabs, soft-dep mount, ports):
+[`skills/wordpress-e2e-tests/references/wpdev-and-admin-ui.md`](../skills/wordpress-e2e-tests/references/wpdev-and-admin-ui.md).
+
 ## Consumer CI
 
 When `ci` is not `off` and `e2eTest=playwright`, the generated
 `.github/workflows/ci.yml` includes an `e2e` job (`playwright install` +
 `npm run test:e2e`). Toggling the feature refreshes CI via `refreshGlue`.
+
+`refreshGlue` only rewrites feature glue (`package.json`, composer
+patches, `tsconfig.json`, `wpdev.json`, CI). It must **not** overwrite
+plugin bootstrap PHP, README, or `packages/*` on mature projects.
 
 This is separate from the **kit** workflows in [ci.md](ci.md)
 (`installer-e2e` = CLI scaffold smoke, not browser tests).
@@ -100,5 +139,6 @@ existing manifests (`wpdev update`). Files are not added until you
 - [cli-reference.md](cli-reference.md) — `--e2e-test=`
 - [php-test-tools.md](php-test-tools.md) — PHPUnit / Jest (unit layer)
 - Kit skill: [`skills/wordpress-e2e-tests/`](../skills/wordpress-e2e-tests/SKILL.md)
+- WPDev / React pitfalls: [`skills/wordpress-e2e-tests/references/wpdev-and-admin-ui.md`](../skills/wordpress-e2e-tests/references/wpdev-and-admin-ui.md)
 - Upstream patterns: [WordPress Developer Blog — Playwright E2E](https://developer.wordpress.org/news/2026/05/getting-started-writing-wordpress-e2e-tests-with-playwright/)
 - Shared skill repo: [abolfazl-moeini/wordpress-e2e-tests](https://github.com/abolfazl-moeini/wordpress-e2e-tests)

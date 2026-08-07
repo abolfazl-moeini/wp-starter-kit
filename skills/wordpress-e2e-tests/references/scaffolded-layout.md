@@ -21,6 +21,9 @@ Emitted by `packages/create-wp-project/src/generators/e2eTest.js` from templates
 - `playwright.config.js`
 - `tests/e2e/**`
 
+When `phpFramework=wpdev`, the generator rewrites `.wp-env.json` plugins to
+`["../wpdev", "."]` so soft-dep activation succeeds.
+
 Safe for `wpdev add e2eTest --variant playwright` / `wpdev remove e2eTest`
 (or `wpdev add e2eTest --variant none`).
 
@@ -32,6 +35,9 @@ Safe for `wpdev add e2eTest --variant playwright` / `wpdev remove e2eTest`
   "test:e2e": "wp-scripts test-playwright"
 }
 ```
+
+If ports `8888`/`8889` are taken, prefix with `WP_ENV_PORT` /
+`WP_ENV_TESTS_PORT` / `WP_BASE_URL` (see [wpdev-and-admin-ui.md](wpdev-and-admin-ui.md)).
 
 PHP-only plugins (`js:none`) still get a lean `package.json` when E2E is on.
 

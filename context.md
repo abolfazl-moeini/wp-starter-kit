@@ -339,16 +339,16 @@ Agent playbook: **`skills/wpdev-js-modules/SKILL.md`**.
 
 Internals (`packages/create-wp-project/src/`):
 
-| File                                 | Role                                                  |
-| ------------------------------------ | ----------------------------------------------------- |
-| `features.js`                        | Catalog + validation                                  |
-| `generators/*`                       | Emit files per feature                                |
-| `manifest.js`                        | Read/write consumer `wpdev.json`                      |
-| `addFeature.js` / `removeFeature.js` | Mutate features + dump-autoload                       |
-| `refresh-glue.js`                    | Re-emit core-owned package.json / composer / tsconfig |
-| `composer-dump.js`                   | Best-effort `composer dump-autoload`                  |
-| `migrations/`                        | Versioned upgrade steps                               |
-| `plan-update.js`                     | Pure plan JSON (no disk writes)                       |
+| File                                 | Role                                                                                                                                    |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `features.js`                        | Catalog + validation                                                                                                                    |
+| `generators/*`                       | Emit files per feature                                                                                                                  |
+| `manifest.js`                        | Read/write consumer `wpdev.json`                                                                                                        |
+| `addFeature.js` / `removeFeature.js` | Mutate features + dump-autoload                                                                                                         |
+| `refresh-glue.js`                    | Re-emit feature glue only: package.json / composer patches / tsconfig / wpdev.json (+ CI) — never bootstrap PHP, README, or packages/\* |
+| `composer-dump.js`                   | Best-effort `composer dump-autoload`                                                                                                    |
+| `migrations/`                        | Versioned upgrade steps                                                                                                                 |
+| `plan-update.js`                     | Pure plan JSON (no disk writes)                                                                                                         |
 
 CLI UX: `packages/cli/`. Wrapper: `npm create @wpdev/plugin@latest` (when published).
 

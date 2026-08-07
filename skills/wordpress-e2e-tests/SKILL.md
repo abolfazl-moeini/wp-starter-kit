@@ -40,13 +40,13 @@ Bare `wpdev add e2eTest` applies catalog default `none` — always pass `--varia
 
 See [references/scaffolded-layout.md](references/scaffolded-layout.md).
 
-| Path                               | Role                                           |
-| ---------------------------------- | ---------------------------------------------- |
-| `.wp-env.json`                     | Maps `"."` as the plugin; permalink lifecycle  |
-| `playwright.config.js`             | Extends `@wordpress/scripts` Playwright config |
-| `tests/e2e/config/global-setup.js` | REST auth + storageState + content reset       |
-| `tests/e2e/specs/*.spec.js`        | Admin + front-end smoke specs                  |
-| `package.json` scripts             | `wp-env`, `test:e2e`                           |
+| Path                               | Role                                                                                                                         |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `.wp-env.json`                     | Maps `"."` as the plugin; permalink lifecycle. When `phpFramework=wpdev`, plugins are `["../wpdev", "."]` (framework first). |
+| `playwright.config.js`             | Extends `@wordpress/scripts` Playwright config                                                                               |
+| `tests/e2e/config/global-setup.js` | REST auth + storageState + content reset                                                                                     |
+| `tests/e2e/specs/*.spec.js`        | Admin + front-end smoke specs                                                                                                |
+| `package.json` scripts             | `wp-env`, `test:e2e`                                                                                                         |
 
 Canonical templates live in
 `packages/create-wp-project/src/generators/templates/e2e/`.
@@ -88,8 +88,9 @@ Minimal front-end:
 ```javascript
 test("published post is visible", async ({ requestUtils, page }) => {
   const title = "E2E smoke post";
-  await requestUtils.createPost({ title, status: "publish" });
-  await page.goto("/");
+  const post = await requestUtils.createPost({ title, status: "publish" });
+  // Block themes: assert on the single (h1), not the blog index (often h2).
+  await page.goto(post.link);
   await expect(
     page.getByRole("heading", { name: title, level: 1 }),
   ).toBeVisible();
@@ -97,6 +98,7 @@ test("published post is visible", async ({ requestUtils, page }) => {
 ```
 
 More patterns: [references/writing-tests.md](references/writing-tests.md).
+WPDev / React admin pitfalls: [references/wpdev-and-admin-ui.md](references/wpdev-and-admin-ui.md).
 
 ## Commands
 
@@ -106,7 +108,12 @@ npx wp-env start                     # or let webServer start it
 npm run test:e2e
 npm run test:e2e -- --ui
 npm run test:e2e -- --headed
+
+# Alternate ports (8888/8889 busy) — template skips webServer when WP_BASE_URL is set:
+WP_ENV_PORT=8908 WP_ENV_TESTS_PORT=8909 WP_BASE_URL=http://localhost:8909 npm run test:e2e
 ```
+
+Port conflicts / soft-dep mounts: [references/wpdev-and-admin-ui.md](references/wpdev-and-admin-ui.md).
 
 Existing Docker site (no wp-env webServer): [references/existing-environment.md](references/existing-environment.md).
 
@@ -120,7 +127,9 @@ wpdev add e2eTest --variant none
 
 Do not use `wpdev set e2eTest=…` (`e2eTest` is add/remove, not config-settable).
 
-Owned paths are removed; `refreshGlue` updates `package.json` scripts/devDeps and `.github/workflows/ci.yml`.
+Owned paths are removed; `refreshGlue` updates **only** feature glue
+(`package.json`, `composer.json` patches, `tsconfig.json`, `wpdev.json`, CI) —
+it must **not** rewrite plugin bootstrap PHP, README, or `packages/*`.
 
 ## Human docs
 

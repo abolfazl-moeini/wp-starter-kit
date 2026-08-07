@@ -20,8 +20,21 @@ process.env.STORAGE_STATE_PATH ??= path.join(
   "storage-states/admin.json",
 );
 
+// When WP_BASE_URL is set (alternate ports or an existing site), do not
+// let @wordpress/scripts start a second wp-env on the default 8888/8889.
+const usingExistingSite = Boolean(process.env.WP_BASE_URL);
+
 export default defineConfig({
   ...baseConfig,
   testDir: "./tests/e2e",
   globalSetup: require.resolve("./tests/e2e/config/global-setup.js"),
+  ...(usingExistingSite
+    ? {
+        webServer: undefined,
+        use: {
+          ...baseConfig.use,
+          baseURL: process.env.WP_BASE_URL,
+        },
+      }
+    : {}),
 });

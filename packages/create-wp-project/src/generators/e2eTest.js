@@ -81,6 +81,25 @@ export function run(ctx) {
 
   const files = loadE2eFiles(slug, pluginName);
 
+  // Soft-dep WPDev framework: mount sibling plugin first so Requires Plugins
+  // activation succeeds (consumer slug often sorts before "wpdev" alphabetically).
+  if (ctx.features?.phpFramework === "wpdev" && files[".wp-env.json"]) {
+    try {
+      const env = JSON.parse(files[".wp-env.json"]);
+      const plugins = Array.isArray(env.plugins) ? env.plugins : ["."];
+      const withoutWpdev = plugins.filter(
+        (p) => p !== "../wpdev" && p !== "wpdev",
+      );
+      env.plugins = ["../wpdev", ...withoutWpdev];
+      if (!env.plugins.includes(".")) {
+        env.plugins.push(".");
+      }
+      files[".wp-env.json"] = `${JSON.stringify(env, null, 2)}\n`;
+    } catch {
+      // Keep template body if JSON parse fails.
+    }
+  }
+
   return {
     files,
     dirs: ["tests/e2e"],

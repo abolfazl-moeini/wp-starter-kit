@@ -250,9 +250,9 @@ exits `0` with guidance to use `wpdev set` instead.
 ### What gets deleted
 
 Files matching the feature's `owns` globs are deleted unless another **on**
-feature also owns the path. Glue files (`package.json`, `composer.json`, CI
-workflow) may be refreshed via `refreshGlue` without deleting user code outside
-`owns`.
+feature also owns the path. Glue files (`package.json`, `composer.json` patches, CI workflow) may be
+refreshed via `refreshGlue` without rewriting plugin bootstrap PHP, README,
+`packages/*`, or other product code.
 
 ---
 

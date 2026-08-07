@@ -2,9 +2,9 @@
  * Code-review fix — refreshGlue after addFeature / removeFeature.
  *
  * Glue files (package.json scripts, tsconfig.json, composer.json
- * extra/strauss, bootstrap PHP) depend on the full feature set.
- * Feature mutations must re-run the core generator so glue stays
- * consistent.
+ * patches) depend on the full feature set. Feature mutations must
+ * re-run the core generator for those paths only — never product
+ * files (plugin bootstrap PHP, README, packages/*).
  */
 
 import { describe, test, expect, beforeEach, afterEach } from "@jest/globals";
@@ -117,6 +117,60 @@ describe("refreshGlue after feature mutations", () => {
 
     const after = JSON.parse(await fs.readFile(cfgPath, "utf8"));
     expect(after.restNamespace).toBe("custom/v1");
+  });
+
+  test("refreshGlue does not overwrite plugin bootstrap, README, or packages/*", async () => {
+    const features = {
+      ...defaultFeatures(),
+      js: "none",
+      jsTest: "none",
+      husky: "off",
+      e2eTest: "none",
+    };
+    await seedProject(tmp, features);
+    await refreshGlue(tmp, features);
+
+    const bootstrap = path.join(tmp, "my-project.php");
+    const readme = path.join(tmp, "README.md");
+    const pkgDir = path.join(tmp, "packages", "framework", "src");
+    await fs.mkdir(pkgDir, { recursive: true });
+    await fs.writeFile(bootstrap, "<?php // CUSTOM BOOTSTRAP\n", "utf8");
+    await fs.writeFile(readme, "# Custom README\n", "utf8");
+    await fs.writeFile(
+      path.join(pkgDir, "Custom.php"),
+      "<?php // keep me\n",
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(tmp, "composer.json"),
+      JSON.stringify(
+        {
+          name: "acme/custom",
+          require: { php: ">=8.1" },
+          autoload: { files: ["src/custom-register.php"] },
+        },
+        null,
+        2,
+      ) + "\n",
+      "utf8",
+    );
+
+    const res = await addFeature(tmp, "e2eTest", "playwright");
+    expect(res.ok).toBe(true);
+
+    expect(await fs.readFile(bootstrap, "utf8")).toContain("CUSTOM BOOTSTRAP");
+    expect(await fs.readFile(readme, "utf8")).toContain("Custom README");
+    expect(
+      await fs.readFile(path.join(pkgDir, "Custom.php"), "utf8"),
+    ).toContain("keep me");
+
+    const composer = JSON.parse(
+      await fs.readFile(path.join(tmp, "composer.json"), "utf8"),
+    );
+    expect(composer.name).toBe("acme/custom");
+    expect(composer.autoload.files).toEqual(["src/custom-register.php"]);
+    expect(await fileExists(path.join(tmp, ".wp-env.json"))).toBe(true);
+    expect(await fileExists(path.join(tmp, "playwright.config.js"))).toBe(true);
   });
 
   test("removeFeature(js) drops package.json and tsconfig.json when husky is off", async () => {

@@ -3,12 +3,19 @@
  *
  * addFeature / removeFeature only write a single feature's owned
  * paths. Glue that depends on the full feature set (package.json
- * scripts, tsconfig.json, composer.json extra/strauss, bootstrap PHP)
- * lives in the core generator — refreshGlue re-runs core + merges
- * generator deps the same way scaffoldProject does.
+ * scripts, tsconfig.json, composer.json patches) lives in the core
+ * generator — refreshGlue re-runs core + merges generator deps the
+ * same way scaffoldProject does.
+ *
+ * IMPORTANT: refreshGlue must NOT rewrite product / hand-edited
+ * scaffold files (plugin bootstrap PHP, README, vendored packages/*,
+ * assets, release scripts). Doing so destroyed customized plugins
+ * when agents ran `wpdev add e2eTest` (Access Manager incident).
+ * Only feature-driven glue is refreshed — see REFRESHABLE_GLUE.
  */
 
 import { promises as fs } from "node:fs";
+import { existsSync } from "node:fs";
 import * as path from "node:path";
 import minimatch from "minimatch";
 
@@ -28,6 +35,18 @@ import {
 
 const CONDITIONAL_GLUE = ["tsconfig.json", "package.json"];
 const CI_PATH = ".github/workflows/ci.yml";
+
+/**
+ * Paths refreshGlue may overwrite after add/remove/set.
+ * Keep this narrow — core.owns is larger (scaffold ownership) and
+ * must not be re-emitted wholesale onto mature projects.
+ */
+const REFRESHABLE_GLUE = new Set([
+  "package.json",
+  "tsconfig.json",
+  "wpdev.json",
+  "composer.json",
+]);
 
 /**
  * `package.json` is omitted when the project has no Node toolchain
@@ -113,8 +132,17 @@ export async function refreshGlue(dir, features) {
     delete files["package.json"];
   }
 
+  // composer.json: never replace a customized on-disk file with a
+  // fresh scaffold. Patch require/autoload/scripts onto the existing
+  // composer when present; only emit the core template when missing.
   if ("composer.json" in files) {
-    let composer = JSON.parse(files["composer.json"]);
+    const composerAbs = path.join(dir, "composer.json");
+    let composer;
+    if (existsSync(composerAbs)) {
+      composer = JSON.parse(await fs.readFile(composerAbs, "utf8"));
+    } else {
+      composer = JSON.parse(files["composer.json"]);
+    }
     if (composerPatches) {
       composer = applyComposerPatches(composer, composerPatches);
     }
@@ -141,6 +169,7 @@ export async function refreshGlue(dir, features) {
   const written = [];
   for (const [rel, content] of Object.entries(files)) {
     if (!isOwnedByCore(rel)) continue;
+    if (!REFRESHABLE_GLUE.has(rel)) continue;
     const abs = path.join(dir, rel);
     await fs.mkdir(path.dirname(abs), { recursive: true });
     await fs.writeFile(abs, content, "utf8");
