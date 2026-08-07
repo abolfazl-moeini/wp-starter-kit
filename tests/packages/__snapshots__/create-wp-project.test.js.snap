@@ -202,6 +202,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
   "features": {
     "ci": "auto",
     "css": "none",
+    "e2eTest": "none",
     "exampleFeature": "on",
     "faultTolerance": "on",
     "frontendStack": "none",
@@ -233,6 +234,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
   "features": {
     "ci": "auto",
     "css": "none",
+    "e2eTest": "none",
     "exampleFeature": "on",
     "faultTolerance": "on",
     "frontendStack": "none",

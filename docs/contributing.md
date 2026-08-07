@@ -184,12 +184,12 @@ Nightly `coverage-report` uploads to Codecov — see [ci.md](ci.md).
 
 **Test types:**
 
-| Type              | Where                               | Tools                 | When                     |
-| ----------------- | ----------------------------------- | --------------------- | ------------------------ |
-| Unit              | `tests/packages/`, `tests/phpunit/` | Jest, PHPUnit         | All PRs                  |
-| Integration       | `tests/integration/`                | Jest (with mocked WP) | All PRs                  |
-| E2E               | `tests/e2e/`                        | Playwright            | Optional, runs nightly   |
-| Visual regression | `tests/visual/`                     | Percy                 | Optional, runs on demand |
+| Type            | Where                               | Tools                 | When                                                 |
+| --------------- | ----------------------------------- | --------------------- | ---------------------------------------------------- |
+| Unit            | `tests/packages/`, `tests/phpunit/` | Jest, PHPUnit         | All PRs                                              |
+| Integration     | `tests/integration/`                | Jest (with mocked WP) | All PRs                                              |
+| Installer smoke | CI `installer-e2e`                  | `wpdev create`        | All PRs                                              |
+| Consumer E2E    | scaffolded `tests/e2e/`             | Playwright + wp-env   | Feature `e2eTest=playwright` (opt-in; `full` preset) |
 
 ## Reviewing PRs
 

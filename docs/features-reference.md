@@ -1,6 +1,6 @@
 # Features reference
 
-> Full catalog of all 19 installer features (including `ci`). For the manifest
+> Full catalog of all **20** installer features (including `ci`). For the manifest
 > model and ownership rules, see [features-and-manifest.md](features-and-manifest.md).
 > Engine validation: `validateFeatureSet()` in
 > `packages/create-wp-project/src/features.js`.
@@ -27,6 +27,8 @@
 | `phpMinVersion`  | PHP                  | 7.4–8.3                       | 7.4        | —                                       | —                           | **set**    |
 | `phpFramework`   | PHP Framework        | none, wpdev                   | none       | —                                       | prefixes ≠ `wpdev`/`wpdev_` | add/remove |
 | `phpTest`        | PHP Testing          | phpunit, none                 | phpunit    | —                                       | —                           | add/remove |
+| `phpUnitDocker`  | PHPUnit Docker       | off, on                       | off        | `phpTest=phpunit`                       | —                           | add/remove |
+| `e2eTest`        | Browser E2E          | none, playwright              | none       | Docker for wp-env                       | —                           | add/remove |
 | `restBatch`      | REST Batch           | off, on                       | off        | `js ≠ none`                             | —                           | add/remove |
 | `faultTolerance` | Fault Tolerance      | off, on                       | off        | — (dual-mode Real/Stub)                 | —                           | add/remove |
 | `vendorScoping`  | Vendor Scoping       | on, off                       | on         | —                                       | —                           | add/remove |
@@ -38,7 +40,7 @@
 | `i18n`           | Internationalization | on, off                       | on         | —                                       | —                           | add/remove |
 | `frontendStack`  | Frontend Stack       | none, polaris                 | none       | `js=typescript`, `jsLib∈{preact,react}` | `css=tailwind` (v1)         | add/remove |
 | `mcpAbilities`   | MCP Abilities        | off, on                       | off        | WP 6.9+ runtime                         | —                           | add/remove |
-| `ci`             | CI                   | auto, off                     | auto       | any test runner for emission            | —                           | **set**    |
+| `ci`             | CI                   | auto, off                     | auto       | any unit or e2e runner for emission     | —                           | **set**    |
 
 ---
 
@@ -140,6 +142,40 @@ See [wpdev-adapter.md](wpdev-adapter.md).
 | **Enables**     | `phpunit.xml`, `tests/phpunit/bootstrap.php`, Composer dev deps |
 | **Owned paths** | `phpunit.xml`, `tests/phpunit/bootstrap.php`                    |
 | **Toggle**      | `wpdev add phpTest` / `wpdev remove phpTest`                    |
+
+See [php-test-tools.md](php-test-tools.md).
+
+---
+
+### `phpUnitDocker` — PHPUnit Docker
+
+| Property         | Value                                                                |
+| ---------------- | -------------------------------------------------------------------- |
+| **Label**        | PHPUnit Docker                                                       |
+| **Variants**     | `off` _(default)_, `on`                                              |
+| **Enables**      | `tests/docker-phpunit/` Compose stack; Composer script `test:docker` |
+| **Owned paths**  | `tests/docker-phpunit/**`                                            |
+| **Dependencies** | `phpTest=phpunit` (normalized off otherwise)                         |
+| **Toggle**       | `wpdev add phpUnitDocker` / `wpdev remove phpUnitDocker`             |
+
+---
+
+### `e2eTest` — Browser E2E
+
+| Property         | Value                                                                                        |
+| ---------------- | -------------------------------------------------------------------------------------------- |
+| **Label**        | Browser E2E                                                                                  |
+| **Variants**     | `none` _(default)_, `playwright`                                                             |
+| **Enables**      | `.wp-env.json`, `playwright.config.js`, `tests/e2e/**`, scripts `wp-env` / `test:e2e`        |
+| **Owned paths**  | `.wp-env.json`, `playwright.config.js`, `tests/e2e/**`                                       |
+| **Dependencies** | Docker for `@wordpress/env`; may emit lean `package.json` even when `js:none`                |
+| **Presets**      | `full` → `playwright`; others → `none`                                                       |
+| **Toggle**       | `wpdev add e2eTest --variant playwright` / `wpdev set e2eTest none` / `wpdev remove e2eTest` |
+
+Stack: Playwright + `@wordpress/e2e-test-utils-playwright` + `@wordpress/scripts` `test-playwright`.
+Cypress is **not** a catalog variant.
+
+See [e2e-tests.md](e2e-tests.md).
 
 ---
 
@@ -303,17 +339,18 @@ See [mcp-integration.md](mcp-integration.md).
 
 ### `ci` — CI
 
-| Property        | Value                                                 |
-| --------------- | ----------------------------------------------------- |
-| **Label**       | CI                                                    |
-| **Variants**    | `auto` _(default)_, `off`                             |
-| **Enables**     | `.github/workflows/ci.yml` when any test runner is on |
-| **Owned paths** | `.github/workflows/ci.yml`                            |
-| **Toggle**      | `wpdev set ci off` / `wpdev set ci auto`              |
+| Property        | Value                                                                                     |
+| --------------- | ----------------------------------------------------------------------------------------- |
+| **Label**       | CI                                                                                        |
+| **Variants**    | `auto` _(default)_, `off`                                                                 |
+| **Enables**     | `.github/workflows/ci.yml` when PHPUnit, JS unit tests, and/or `e2eTest:playwright` is on |
+| **Owned paths** | `.github/workflows/ci.yml`                                                                |
+| **Toggle**      | `wpdev set ci off` / `wpdev set ci auto`                                                  |
 
 With `ci:auto` and all test runners off, the workflow file is not emitted.
+When `e2eTest:playwright`, the workflow includes a separate `e2e` job.
 
-See [ci.md](ci.md).
+See [ci.md](ci.md) (kit workflows) and [e2e-tests.md](e2e-tests.md) (consumer E2E job).
 
 ---
 
@@ -358,6 +395,8 @@ const result = validateFeatureSet({
 | `restBatch`     | `off`                    |
 | `frontendStack` | `none` (if was not none) |
 
+When `phpTest ≠ phpunit`, `phpUnitDocker` is coerced to `off`.
+
 Use normalization when merging flags and presets to avoid stale dependent values.
 
 ---
@@ -377,6 +416,7 @@ Warnings do not set `ok: false`. The CLI surfaces them before scaffold.
 
 - [features-and-manifest.md](features-and-manifest.md) — manifest schema
 - [cli-reference.md](cli-reference.md) — commands and flags
+- [e2e-tests.md](e2e-tests.md) — Playwright / wp-env consumer E2E
 - [api/cli-engine-reference.md](api/cli-engine-reference.md) — `getFeatureCatalog`, `validateFeatureSet`
 - [troubleshooting.md](troubleshooting.md) — validation and toggle failures
 - [mcp-integration.md](mcp-integration.md) — `mcpAbilities` integration guide

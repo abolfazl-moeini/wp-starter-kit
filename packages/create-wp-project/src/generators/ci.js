@@ -2,18 +2,13 @@
  * @wpdev/create-wp-project — CI workflow generator (Phase 26.4).
  *
  * Emits `.github/workflows/ci.yml` for the consumer when at least
- * one test runner is enabled (phpTest:phpunit and/or jsTest ≠ none).
+ * one test runner is enabled (phpTest:phpunit, jsTest ≠ none,
+ * and/or e2eTest:playwright).
  */
 
-const TEMPLATE_CI = `name: CI
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
+function buildCiYml(hasUnit, hasE2e) {
+  const unitJob = hasUnit
+    ? `
   test:
     runs-on: ubuntu-latest
     steps:
@@ -44,7 +39,43 @@ jobs:
       - name: Run JS tests
         if: hashFiles('package.json') != ''
         run: npm test
-`;
+`
+    : "";
+
+  const e2eJob = hasE2e
+    ? `
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+`
+    : "";
+
+  return `name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:${unitJob}${e2eJob}`;
+}
 
 export function run(ctx) {
   if (ctx.features.ci === "off") {
@@ -55,12 +86,13 @@ export function run(ctx) {
     ctx.features.js !== "none" &&
     ctx.features.jsTest &&
     ctx.features.jsTest !== "none";
-  if (!hasPhp && !hasJs) {
+  const hasE2e = ctx.features.e2eTest === "playwright";
+  if (!hasPhp && !hasJs && !hasE2e) {
     return { files: {}, dirs: [], deps: {}, devDeps: {} };
   }
   return {
     files: {
-      ".github/workflows/ci.yml": TEMPLATE_CI,
+      ".github/workflows/ci.yml": buildCiYml(hasPhp || hasJs, hasE2e),
     },
     dirs: [".github/workflows"],
     deps: {},

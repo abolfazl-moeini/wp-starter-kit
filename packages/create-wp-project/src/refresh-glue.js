@@ -13,6 +13,7 @@ import * as path from "node:path";
 import minimatch from "minimatch";
 
 import { descriptor as coreDescriptor } from "./generators/core.js";
+import { descriptor as ciDescriptor } from "./generators/ci.js";
 import { getGenerators } from "./generators/index.js";
 import { tplVars } from "./generators/_templates.js";
 import {
@@ -26,6 +27,7 @@ import {
 } from "./project-config-io.js";
 
 const CONDITIONAL_GLUE = ["tsconfig.json", "package.json"];
+const CI_PATH = ".github/workflows/ci.yml";
 
 /**
  * `package.json` is omitted when the project has no Node toolchain
@@ -44,6 +46,8 @@ const CONDITIONAL_GLUE = ["tsconfig.json", "package.json"];
  */
 export function shouldEmitPackageJson(features) {
   const f = features || {};
+  // Browser E2E needs npm scripts (test:e2e / wp-env) even for PHP-only plugins.
+  if (f.e2eTest === "playwright") return true;
   return !(f.js === "none" && f.husky === "off");
 }
 
@@ -141,6 +145,24 @@ export async function refreshGlue(dir, features) {
     await fs.mkdir(path.dirname(abs), { recursive: true });
     await fs.writeFile(abs, content, "utf8");
     written.push(rel);
+  }
+
+  // Re-emit CI when the ci generator is enabled so e2eTest / phpTest /
+  // jsTest toggles refresh .github/workflows/ci.yml after add/remove.
+  const ciOut = ciDescriptor.run(ctx);
+  if (ciOut.files && ciOut.files[CI_PATH]) {
+    const abs = path.join(dir, CI_PATH);
+    await fs.mkdir(path.dirname(abs), { recursive: true });
+    await fs.writeFile(abs, ciOut.files[CI_PATH], "utf8");
+    written.push(CI_PATH);
+  } else {
+    const abs = path.join(dir, CI_PATH);
+    try {
+      await fs.unlink(abs);
+      written.push(`-${CI_PATH}`);
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
   }
 
   for (const rel of CONDITIONAL_GLUE) {

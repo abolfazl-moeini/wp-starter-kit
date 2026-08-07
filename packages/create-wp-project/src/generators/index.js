@@ -48,6 +48,7 @@ import { descriptor as ci } from "./ci.js";
 import { descriptor as faultTolerance } from "./faultTolerance.js";
 import { descriptor as frontendStack } from "./frontendStack.js";
 import { descriptor as mcpAbilities } from "./mcpAbilities.js";
+import { descriptor as e2eTest } from "./e2eTest.js";
 
 /* -------------------------------------------------------------------- */
 /* Full catalog                                                          */
@@ -80,6 +81,7 @@ const ALL = [
   faultTolerance,
   frontendStack,
   mcpAbilities,
+  e2eTest,
 ];
 
 /* -------------------------------------------------------------------- */
@@ -191,7 +193,9 @@ export function getGenerators(features) {
     else if (
       g.id === "ci" &&
       f.ci !== "off" &&
-      (f.phpTest === "phpunit" || (f.jsTest && f.jsTest !== "none"))
+      (f.phpTest === "phpunit" ||
+        (f.jsTest && f.jsTest !== "none") ||
+        f.e2eTest === "playwright")
     )
       enabled.push(g);
     else if (g.id === "faultTolerance" && f.faultTolerance === "on")
@@ -200,6 +204,7 @@ export function getGenerators(features) {
       enabled.push(g);
     else if (g.id === "mcpAbilities" && f.mcpAbilities === "on")
       enabled.push(g);
+    else if (g.id === "e2eTest" && f.e2eTest === "playwright") enabled.push(g);
   }
   return enabled;
 }

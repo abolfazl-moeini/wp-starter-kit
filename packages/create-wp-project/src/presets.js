@@ -94,6 +94,7 @@ function buildFull() {
     phpMinVersion: "8.2",
     frontendStack: "polaris",
     restBatch: "on",
+    e2eTest: "playwright",
   };
 }
 

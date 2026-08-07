@@ -104,6 +104,7 @@ export function tplVars(answers, cfg) {
 export function packageJsonForAnswers(answers, features) {
   const uiFramework = deriveUiFramework(features, answers);
   const huskyOn = !features || features.husky !== "off";
+  const e2eOn = features && features.e2eTest === "playwright";
   const projectType = answers.projectType || "plugin";
   const description =
     projectType === "theme"
@@ -122,9 +123,46 @@ export function packageJsonForAnswers(answers, features) {
   //                    source files are .js with the // @flow pragma)
   //   - "none"       → no package.json at all (caller must gate on this;
   //                    this function is only reached when js !== "none")
+  //                    OR when e2eTest=playwright (lean e2e-only package.json)
   const jsVariant = (features && features.js) || answers.js || "typescript";
   const jsTestVariant =
     (features && features.jsTest) || answers.jsTest || "jest";
+
+  const packageVendor = String(answers.npmScope || "")
+    .replace(/^@/, "")
+    .trim();
+
+  const e2eScripts = e2eOn
+    ? {
+        "wp-env": "wp-env",
+        "test:e2e": "wp-scripts test-playwright",
+      }
+    : {};
+  const e2eDevDeps = e2eOn
+    ? {
+        "@playwright/test": "^1.58.2",
+        "@wordpress/e2e-test-utils-playwright": "^1.41.0",
+        "@wordpress/env": "^10.39.0",
+        "@wordpress/scripts": "^30.0.0",
+      }
+    : {};
+
+  // PHP-only + Playwright: emit a lean package.json (no JS build toolchain).
+  if (jsVariant === "none" && e2eOn) {
+    return {
+      name: `@${packageVendor}/${answers.slug}`,
+      version: "0.1.0",
+      description,
+      private: true,
+      type: "module",
+      scripts: {
+        ...e2eScripts,
+      },
+      devDependencies: {
+        ...e2eDevDeps,
+      },
+    };
+  }
 
   // Phase 23.B4: read the kit's dep-versions registry and
   // surface the @wpdev/* framework packages to the consumer.
@@ -158,9 +196,6 @@ export function packageJsonForAnswers(answers, features) {
     CONSUMER_BUILD_WPDEV_PACKAGES.map((name) => [name, versionOf(name)]),
   );
 
-  const packageVendor = String(answers.npmScope || "")
-    .replace(/^@/, "")
-    .trim();
   return {
     // npm scoped name: @vendor/project  (Composer uses vendor/project)
     name: `@${packageVendor}/${answers.slug}`,
@@ -188,6 +223,7 @@ export function packageJsonForAnswers(answers, features) {
         : jsTestVariant === "jest"
           ? { test: "jest" }
           : {}),
+      ...e2eScripts,
       typecheck: "tsc --noEmit",
       "lint:js": "eslint . --ext .js,.jsx,.ts,.tsx",
       "format:check":
@@ -256,6 +292,7 @@ export function packageJsonForAnswers(answers, features) {
             "babel-jest": "^29.7.0",
           }
         : {}),
+      ...e2eDevDeps,
       // Pin TypeScript for `npm run typecheck`. Without a direct dep,
       // tsc may resolve from transitive packages (e.g. commitlint → TS 7)
       // and break generated tsconfig (baseUrl/paths).

@@ -33,6 +33,8 @@ has a stable `id`, a list of allowed `variants`, and a default
 | `phpMinVersion`  | `7.4`, `8.0`, `8.1`, `8.2`, `8.3`     | `7.4`        | Lowest PHP version to support (drives Rector downgrade).                                                                |
 | `phpFramework`   | `none`, `wpdev`                       | `none`       | Soft-dep on WPDev Admin Framework (site plugin). Adds bridge, adapter, main-file admin notice. No `companion-plugins/`. |
 | `phpTest`        | `phpunit`, `none`                     | `phpunit`    | PHP unit testing. PHPUnit on by default.                                                                                |
+| `phpUnitDocker`  | `off`, `on`                           | `off`        | Docker Compose PHPUnit stack under `tests/docker-phpunit/`.                                                             |
+| `e2eTest`        | `none`, `playwright`                  | `none`       | Playwright + wp-env browser E2E under `tests/e2e/`. Opt-in; `full` preset enables.                                      |
 | `restBatch`      | `off`, `on`                           | `off`        | REST batch endpoint + `@scope/fetch` JS client.                                                                         |
 | `faultTolerance` | `off`, `on`                           | `off`        | Dual-mode FT package under `packages/php-fault-tolerance/` (Composer `symlink: false`).                                 |
 | `vendorScoping`  | `on`, `off`                           | `on`         | Strauss vendor scoping on release.                                                                                      |

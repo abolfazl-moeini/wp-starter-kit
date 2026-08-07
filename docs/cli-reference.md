@@ -101,6 +101,8 @@ Source of truth: `KNOWN_FLAGS` in `packages/cli/src/flags.js`.
 | `--php-min=<ver>`             | `features.phpMinVersion`  | `7.4` … `8.3`                                        |
 | `--php-framework=<opt>`       | `features.phpFramework`   | `none` / `wpdev` (alias `wpdev-framework` → `wpdev`) |
 | `--php-test=<opt>`            | `features.phpTest`        | `phpunit` / `none`                                   |
+| `--phpunit-docker=<on\|off>`  | `features.phpUnitDocker`  | Docker PHPUnit stack (`tests/docker-phpunit/`)       |
+| `--e2e-test=<opt>`            | `features.e2eTest`        | `none` / `playwright` (Playwright + wp-env)          |
 | `--license=<id>`              | `features.license`        | `gpl2` / `gpl3` / `mit`                              |
 | `--wp-min=<ver>`              | `features.wpMinVersion`   | `5.8` / `6.0` / `6.2` / `6.4` / `6.6`                |
 | `--rest-batch=<on\|off>`      | `features.restBatch`      | REST batch endpoint + client                         |
@@ -144,7 +146,7 @@ wpdev create my-plugin --yes --preset=minimal --install
 
 # Full stack with explicit flags overriding preset
 wpdev create my-plugin --yes --preset=standard \
-  --js-lib=react  --frontend-stack=polaris
+  --js-lib=react --frontend-stack=polaris --e2e-test=playwright
 
 # Force overwrite in CI
 wpdev create my-plugin --yes --force --dir=/tmp/my-plugin
@@ -440,12 +442,12 @@ wpdev list | grep '^js='
 
 ## Presets
 
-| Preset        | Summary                                                            |
-| ------------- | ------------------------------------------------------------------ |
-| `minimal`     | PHP-only (`js:none`), no example, no i18n, husky off               |
-| `standard`    | TypeScript + PHPUnit + Jest (catalog defaults; `--yes` default)    |
-| `full`        | All optional features on (polaris, fault tolerance, rest batch, …) |
-| `woocommerce` | `standard` + Preact, example feature off                           |
+| Preset        | Summary                                                                 |
+| ------------- | ----------------------------------------------------------------------- |
+| `minimal`     | PHP-only (`js:none`), no example, no i18n, husky off                    |
+| `standard`    | TypeScript + PHPUnit + Jest (catalog defaults; `e2eTest:none`)          |
+| `full`        | Optional features on (polaris, rest batch, **`e2eTest:playwright`**, …) |
+| `woocommerce` | `standard` + Preact, example feature off                                |
 
 Flags override preset values after merge. `--preset` skips interactive feature
 prompts (branding may still prompt unless `--yes`).
@@ -511,6 +513,7 @@ Full symptom/cause/fix catalog: [troubleshooting.md](troubleshooting.md).
 
 - [installer.md](installer.md) — getting started narrative
 - [features-reference.md](features-reference.md) — full feature catalog
+- [e2e-tests.md](e2e-tests.md) — Playwright consumer E2E (`--e2e-test=`)
 - [api/cli-engine-reference.md](api/cli-engine-reference.md) — engine API
 - [updating-projects.md](updating-projects.md) — migration mechanism
 - [troubleshooting.md](troubleshooting.md) — common problems and fixes

@@ -58,6 +58,7 @@ import * as migration_2_1_0 from "./2.1.0.js";
 import * as migration_2_2_0 from "./2.2.0.js";
 import * as migration_2_3_0 from "./2.3.0.js";
 import * as migration_2_4_0 from "./2.4.0.js";
+import * as migration_2_5_0 from "./2.5.0.js";
 
 /* -------------------------------------------------------------------- */
 /* Migration catalog                                                     */
@@ -79,6 +80,7 @@ const MIGRATIONS = [
   migration_2_2_0,
   migration_2_3_0,
   migration_2_4_0,
+  migration_2_5_0,
 ];
 
 /** Schema migrations run before version migrations (newest kit schema first). */

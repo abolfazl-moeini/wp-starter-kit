@@ -246,7 +246,10 @@ export function run(ctx) {
   //     match the chosen js variant. The default (js:typescript)
   //     is unchanged from Phase 23 — the `features` arg is the
   //     same one the engine validated upstream.
-  if (features.js && features.js !== "none") {
+  if (
+    (features.js && features.js !== "none") ||
+    features.e2eTest === "playwright"
+  ) {
     files["package.json"] =
       JSON.stringify(packageJsonForAnswers(answers, features), null, 2) + "\n";
   } else if (features.husky === "on") {

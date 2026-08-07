@@ -90,6 +90,14 @@ const FEATURE_CATALOG = [
       "Scaffold tests/docker-phpunit/ (Docker Compose PHP + MySQL) for running PHPUnit without local MySQL. Only applies when phpTest=phpunit.",
   },
   {
+    id: "e2eTest",
+    label: "Browser E2E",
+    variants: ["none", "playwright"],
+    default: "none",
+    notes:
+      "Playwright + @wordpress/env + @wordpress/e2e-test-utils-playwright under tests/e2e/. Requires Docker for wp-env. Opt-in (none = default).",
+  },
+  {
     id: "restBatch",
     label: "REST Batch",
     variants: ["off", "on"],
@@ -193,7 +201,7 @@ export function fillFeatureDefaults(features) {
 }
 
 /** New catalog ids backfilled when absent (older manifests / partial sets). */
-const BACKFILL_ON_VALIDATE = ["ci", "phpUnitDocker"];
+const BACKFILL_ON_VALIDATE = ["ci", "phpUnitDocker", "e2eTest"];
 
 /**
  * @param {Record<string, string>} features

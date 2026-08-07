@@ -123,27 +123,28 @@ Single branding/runtime source of truth (kit + consumers after scaffold):
 Source of truth: `packages/create-wp-project/src/features.js`
 (`getFeatureCatalog()`, `defaultFeatures()`, `validateFeatureSet()`, `normalizeFeatureSet()`).
 
-| Feature id       | Variants (typical)                       | Notes                                                         |
-| ---------------- | ---------------------------------------- | ------------------------------------------------------------- |
-| `js`             | `typescript` / `pure` / `flow` / `none`  | JS pipeline                                                   |
-| `jsLib`          | `none` / `preact` / `react`              | Requires `js ≠ none` for real libs                            |
-| `jsTest`         | `jest` / `vitest` / `none`               |                                                               |
-| `phpMinVersion`  | `7.4`…`8.3`                              |                                                               |
-| `phpFramework`   | `none` / `wpdev`                         | Soft-dep; **no** companion-plugins; admin notice in main file |
-| `phpTest`        | `phpunit` / `none`                       |                                                               |
-| `phpUnitDocker`  | `off` / `on`                             | Needs phpunit                                                 |
-| `restBatch`      | `off` / `on`                             | Needs `js ≠ none`                                             |
-| `faultTolerance` | `on` / `off`                             | Default **on**; dual-mode Real/Stub (no force-off on PHP 7.4) |
-| `vendorScoping`  | `on` / `off`                             |                                                               |
-| `husky`          | `on` / `off`                             |                                                               |
-| `css`            | `none` / `sass` / `tailwind` / `postcss` | Needs js; polaris ⊕ tailwind conflict                         |
-| `license`        | `gpl2` / `gpl3` / `mit`                  | MIT → warning for .org                                        |
-| `wpMinVersion`   | `6.0`…                                   |                                                               |
-| `exampleFeature` | `on` / `off`                             | Canonical module demo                                         |
-| `i18n`           | `on` / `off`                             |                                                               |
-| `frontendStack`  | `none` / `polaris`                       | Needs typescript + preact\|react                              |
-| `mcpAbilities`   | `off` / `on`                             | WP 6.9+ runtime warning                                       |
-| `ci`             | `auto` / …                               |                                                               |
+| Feature id       | Variants (typical)                       | Notes                                                             |
+| ---------------- | ---------------------------------------- | ----------------------------------------------------------------- |
+| `js`             | `typescript` / `pure` / `flow` / `none`  | JS pipeline                                                       |
+| `jsLib`          | `none` / `preact` / `react`              | Requires `js ≠ none` for real libs                                |
+| `jsTest`         | `jest` / `vitest` / `none`               |                                                                   |
+| `phpMinVersion`  | `7.4`…`8.3`                              |                                                                   |
+| `phpFramework`   | `none` / `wpdev`                         | Soft-dep; **no** companion-plugins; admin notice in main file     |
+| `phpTest`        | `phpunit` / `none`                       |                                                                   |
+| `phpUnitDocker`  | `off` / `on`                             | Needs phpunit                                                     |
+| `e2eTest`        | `none` / `playwright`                    | Opt-in; Playwright + wp-env under `tests/e2e/` (`full` preset on) |
+| `restBatch`      | `off` / `on`                             | Needs `js ≠ none`                                                 |
+| `faultTolerance` | `on` / `off`                             | Default **on**; dual-mode Real/Stub (no force-off on PHP 7.4)     |
+| `vendorScoping`  | `on` / `off`                             |                                                                   |
+| `husky`          | `on` / `off`                             |                                                                   |
+| `css`            | `none` / `sass` / `tailwind` / `postcss` | Needs js; polaris ⊕ tailwind conflict                             |
+| `license`        | `gpl2` / `gpl3` / `mit`                  | MIT → warning for .org                                            |
+| `wpMinVersion`   | `6.0`…                                   |                                                                   |
+| `exampleFeature` | `on` / `off`                             | Canonical module demo                                             |
+| `i18n`           | `on` / `off`                             |                                                                   |
+| `frontendStack`  | `none` / `polaris`                       | Needs typescript + preact\|react                                  |
+| `mcpAbilities`   | `off` / `on`                             | WP 6.9+ runtime warning                                           |
+| `ci`             | `auto` / …                               |                                                                   |
 
 **Adding a feature id is a contract change** — update catalog, generator, tests, docs.
 

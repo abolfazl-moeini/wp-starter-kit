@@ -211,7 +211,14 @@ the starter's own `jest.config.mjs` ignores foreign test trees:
 - `node_modules/`
 - `dist/`
 
+## Browser E2E (Playwright)
 
+Unit tests above are **not** browser E2E. For real wp-admin / front-end
+flows in a **scaffolded plugin**, enable feature `e2eTest:playwright`
+(`wpdev add e2eTest=playwright` or `--e2e-test=playwright`).
+
+See [e2e-tests.md](e2e-tests.md) and the kit skill
+[`skills/wordpress-e2e-tests/`](../skills/wordpress-e2e-tests/SKILL.md).
 
 ## CI integration
 

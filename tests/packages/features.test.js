@@ -35,6 +35,8 @@ describe("getFeatureCatalog() — feature data model (Phase 20.1/20.2)", () => {
       "phpMinVersion",
       "phpFramework",
       "phpTest",
+      "phpUnitDocker",
+      "e2eTest",
       "restBatch",
       "faultTolerance",
       "vendorScoping",
@@ -72,6 +74,7 @@ describe("getFeatureCatalog() — feature data model (Phase 20.1/20.2)", () => {
       phpFramework: "none",
       phpTest: "phpunit",
       phpUnitDocker: "off",
+      e2eTest: "none",
       restBatch: "off",
       faultTolerance: "on",
       vendorScoping: "on",
@@ -104,6 +107,8 @@ describe("getFeatureCatalog() — feature data model (Phase 20.1/20.2)", () => {
     ]);
     expect(byId.phpFramework.variants).toEqual(["none", "wpdev"]);
     expect(byId.phpTest.variants).toEqual(["phpunit", "none"]);
+    expect(byId.phpUnitDocker.variants).toEqual(["off", "on"]);
+    expect(byId.e2eTest.variants).toEqual(["none", "playwright"]);
     expect(byId.restBatch.variants).toEqual(["off", "on"]);
     expect(byId.faultTolerance.variants).toEqual(["on", "off"]);
     expect(byId.vendorScoping.variants).toEqual(["on", "off"]);
@@ -170,6 +175,7 @@ describe("defaultFeatures() — all-default feature set (Phase 20.2)", () => {
       phpFramework: "none",
       phpTest: "phpunit",
       phpUnitDocker: "off",
+      e2eTest: "none",
       restBatch: "off",
       faultTolerance: "on",
       vendorScoping: "on",

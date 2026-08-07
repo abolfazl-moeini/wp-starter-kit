@@ -1,0 +1,11 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/wp-env.json",
+  "plugins": ["."],
+  "config": {
+    "WP_DEBUG": true,
+    "SCRIPT_DEBUG": true
+  },
+  "lifecycleScripts": {
+    "afterStart": "for SERVICE in cli tests-cli; do wp-env run \"$SERVICE\" wp rewrite structure '/%postname%/' --hard; wp-env run \"$SERVICE\" wp rewrite flush --hard; done"
+  }
+}

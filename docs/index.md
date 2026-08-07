@@ -97,7 +97,8 @@
 | [signals.md](signals.md)                     | Rule engine signal tuples                  | You're authoring declarative rules       |
 | [fetch-batch.md](fetch-batch.md)             | REST batch client                          | You're batching admin API lookups        |
 | [patch.md](patch.md)                         | Legacy patches and upgrade notes           | You need historical upgrade context      |
-| [php-test-tools.md](php-test-tools.md)       | PHPUnit, PHPCS, and PHPStan setup          | You're writing tests or fixing lint      |
+| [php-test-tools.md](php-test-tools.md)       | PHPUnit, PHPCS, and PHPStan setup          | You're writing unit tests or fixing lint |
+| [e2e-tests.md](e2e-tests.md)                 | Playwright + wp-env consumer browser E2E   | You're testing wp-admin / front-end UI   |
 
 ## Contributing and ADRs
 

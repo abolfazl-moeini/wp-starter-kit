@@ -2,14 +2,15 @@
 
 Skills for AI agents working on **wp-starter-kit** and on **plugins generated from this boilerplate**.
 
-| Skill                 | Path                                                       | Use when                                                                                  |
-| --------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| **wpdev-php-modules** | [wpdev-php-modules/SKILL.md](./wpdev-php-modules/SKILL.md) | Modular PHP features, `src/Modules`, RestSetup/CLI/shortcodes, framework Support packages |
-| **wpdev-js-modules**  | [wpdev-js-modules/SKILL.md](./wpdev-js-modules/SKILL.md)   | Module JS entries, Polaris, `@wpdev/*` packages, esbuild bundles, no relative path hell   |
+| Skill                   | Path                                                           | Use when                                                                                  |
+| ----------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **wpdev-php-modules**   | [wpdev-php-modules/SKILL.md](./wpdev-php-modules/SKILL.md)     | Modular PHP features, `src/Modules`, RestSetup/CLI/shortcodes, framework Support packages |
+| **wpdev-js-modules**    | [wpdev-js-modules/SKILL.md](./wpdev-js-modules/SKILL.md)       | Module JS entries, Polaris, `@wpdev/*` packages, esbuild bundles, no relative path hell   |
+| **wordpress-e2e-tests** | [wordpress-e2e-tests/SKILL.md](./wordpress-e2e-tests/SKILL.md) | Playwright + wp-env browser E2E (`e2eTest=playwright`), wp-admin + front-end smoke specs  |
 
 ## Invoke
 
-- Slash (if registered in your agent host): `/wpdev-php-modules`, `/wpdev-js-modules`
+- Slash (if registered in your agent host): `/wpdev-php-modules`, `/wpdev-js-modules`, `/wordpress-e2e-tests`
 - Or open the `SKILL.md` and follow it as the system playbook for that domain
 
 ## Scope
@@ -18,8 +19,26 @@ These skills describe the **post-scaffold** consumer layout:
 
 - PHP: `{slug}.php` + `packages/framework` + `src/Modules/*`
 - JS: `src/Modules/*/assets/entries/*` + `assets/bundles/*` + package-name imports
+- E2E: `.wp-env.json` + `playwright.config.js` + `tests/e2e/**` when `e2eTest=playwright`
 
-They complement kit docs (`docs/module-guide.md`, `packages/polaris-stack/context.md`) and are written as **agent instructions** (rules + checklists), not marketing docs.
+They complement kit docs (`docs/module-guide.md`, `docs/e2e-tests.md`,
+`packages/polaris-stack/context.md`) and are written as **agent instructions**
+(rules + checklists), not marketing docs.
+
+Skills are **not** copied into generated projects — agents read them from the kit
+(or from a registered personal skill path).
+
+## Related human docs
+
+| Topic             | Doc                                                         |
+| ----------------- | ----------------------------------------------------------- |
+| Feature catalog   | [docs/features-reference.md](../docs/features-reference.md) |
+| Browser E2E guide | [docs/e2e-tests.md](../docs/e2e-tests.md)                   |
+| CLI flags         | [docs/cli-reference.md](../docs/cli-reference.md)           |
+| PHPUnit / Jest    | [docs/php-test-tools.md](../docs/php-test-tools.md)         |
+
+Shared Playwright skill repo:
+[abolfazl-moeini/wordpress-e2e-tests](https://github.com/abolfazl-moeini/wordpress-e2e-tests)
 
 ## Cross-cutting: WP 6.7 i18n
 

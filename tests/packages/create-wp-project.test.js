@@ -284,6 +284,7 @@ describe("@wpdev/create-wp-project", () => {
           phpFramework: "none",
           phpTest: "phpunit",
           phpUnitDocker: "off",
+          e2eTest: "none",
           restBatch: "off",
           faultTolerance: "on",
           vendorScoping: "on",

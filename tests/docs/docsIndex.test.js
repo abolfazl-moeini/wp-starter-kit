@@ -18,7 +18,7 @@ const requiredDocs = [
   "updating-projects.md",
   "js-variants.md",
   "wpdev-adapter.md",
-    "css-variants.md",
+  "css-variants.md",
   "cli-reference.md",
   "features-reference.md",
   "packages-overview.md",
@@ -28,6 +28,8 @@ const requiredDocs = [
   "api/cli-engine-reference.md",
   "api/hooks-reference.md",
   "troubleshooting.md",
+  "php-test-tools.md",
+  "e2e-tests.md",
   "mcp-integration.md",
 ];
 

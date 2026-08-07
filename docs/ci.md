@@ -54,6 +54,11 @@ triggers. Three jobs:
 3. **`coverage-report`** — runs both test suites with coverage,
    uploads to Codecov. Coverage badge on the README points here.
 
+**Note:** Nightly “translation E2E” is **not** Playwright. Browser E2E for
+**consumer plugins** is the opt-in feature `e2eTest:playwright` documented in
+[e2e-tests.md](e2e-tests.md). Kit PR CI also has an `installer-e2e` job that
+only smoke-tests `wpdev create` (CLI), not a real browser.
+
 **Why cron-only:** these jobs take 5-10 minutes each and aren't
 needed on every PR. If they fail, the next morning's run will
 report to the team.

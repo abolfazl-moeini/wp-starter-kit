@@ -28,12 +28,16 @@ Generated projects include **test stubs before implementation**:
 - `jsTest: jest` + `exampleFeature: on` →
   `src/Modules/ExampleFeature/assets/entries/__tests__/admin.test.ts`
   (`test.todo` placeholder).
+- `e2eTest: playwright` →
+  `.wp-env.json`, `playwright.config.js`, `tests/e2e/**` smoke specs
+  (real browser; see [e2e-tests.md](e2e-tests.md)).
 
 Workflow:
 
 1. Run `composer test` or `npm test` — stubs should pass (or show `todo`).
 2. Add failing tests for the behavior you want.
 3. Implement until green, then refactor.
+4. Optional: `npm run test:e2e` when Playwright is enabled (Docker required).
 
 See [contributing.md](contributing.md#red--green--refactor) for the full loop.
 
@@ -53,10 +57,11 @@ composer release:dist
 The packager **never mutates the source tree**. It copies into `dist/{slug}/`, then:
 
 1. **Composer** (if `composer.json` exists): ensures `require.php` is `>={phpMinVersion}`, sets `config.platform.php`, forces path repositories to `options.symlink: false`, runs `composer install --no-dev`.
-2. **Strip** dev-only paths: `tests/`, `docs/`, `packages/`, `docker-phpunit/`, `dev/`, `node_modules/`, root `composer.json` / `composer.lock`, `package.json` (+ lockfiles), `coverage.xml*`, `phpunit.xml*`, `CLAUDE.md` / `context.md` / `AGENTS.md`, and hidden (`.*/`) directories.
+2. **Strip** dev-only paths: `tests/`, `docs/`, `packages/`, `docker-phpunit/`, `dev/`, `node_modules/`, root `composer.json` / `composer.lock`, `package.json` (+ lockfiles), `coverage.xml*`, `phpunit.xml*`, `playwright.config.*`, `CLAUDE.md` / `context.md` / `AGENTS.md`, and hidden (`.*/`) directories (includes `.wp-env.json`).
 3. **Zip** `dist/{slug}/` → `dist/{slug}.zip` (WordPress-style: `{slug}/…` as archive root). Pass `--skip-zip` to keep the folder only.
 
-Existing projects can pick this up via `wpdev update` (migrations `2.1.0`–`2.3.0`).
+Existing projects can pick this up via `wpdev update` (migrations `2.1.0`–`2.5.0`).
+Migration **2.5.0** backfills `features.e2eTest=none` without scaffolding files.
 
 ## Usage
 
