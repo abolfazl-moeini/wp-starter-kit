@@ -73,7 +73,7 @@ describe("wpdev create from empty folder outside the kit", () => {
     expect(bootstrap).toMatch(/MY_PLUGIN_VERSION/);
 
     const pkg = JSON.parse(readFileSync(join(target, "package.json"), "utf8"));
-    expect(pkg.scripts.release).toMatch(/prepare-release\.js/);
+    expect(pkg.scripts.release).toMatch(/run-release\.js/);
 
     const composer = JSON.parse(
       readFileSync(join(target, "composer.json"), "utf8"),

@@ -147,8 +147,8 @@ export function packageJsonForAnswers(answers, features) {
       }
     : {};
 
-  // PHP-only + Playwright: emit a lean package.json (no JS build toolchain).
-  if (jsVariant === "none" && e2eOn) {
+  // PHP-only: emit a lean package.json (no JS build toolchain, but release + e2e + husky scripts).
+  if (jsVariant === "none") {
     return {
       name: `@${packageVendor}/${answers.slug}`,
       version: "0.1.0",
@@ -156,9 +156,28 @@ export function packageJsonForAnswers(answers, features) {
       private: true,
       type: "module",
       scripts: {
+        release: "node dev/release/run-release.js",
+        ...(huskyOn ? { prepare: "husky" } : {}),
         ...e2eScripts,
       },
+      ...(huskyOn
+        ? {
+            "lint-staged": {
+              "*.{js,jsx,ts,tsx,json,md,yml,yaml,css}": [
+                "prettier --write --ignore-unknown",
+              ],
+            },
+          }
+        : {}),
       devDependencies: {
+        ...(huskyOn
+          ? {
+              husky: "^9.0.0",
+              "lint-staged": "^15.0.0",
+              "@commitlint/cli": "^19.8.1",
+              "@commitlint/config-conventional": "^19.8.1",
+            }
+          : {}),
         ...e2eDevDeps,
       },
     };
