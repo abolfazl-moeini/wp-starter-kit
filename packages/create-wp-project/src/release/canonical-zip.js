@@ -120,6 +120,13 @@ export async function createCanonicalZip({ sourceRoot, outputZip, rootName }) {
   end.writeUInt32LE(offset, 16);
   end.writeUInt16LE(0, 20);
   await fs.mkdir(path.dirname(archive), { recursive: true });
-  await fs.writeFile(archive, Buffer.concat([...local, centralBytes, end]));
+  const temporary = `${archive}.tmp-${process.pid}-${Date.now()}`;
+  try {
+    await fs.writeFile(temporary, Buffer.concat([...local, centralBytes, end]));
+    await fs.rename(temporary, archive);
+  } catch (error) {
+    await fs.rm(temporary, { force: true }).catch(() => {});
+    throw error;
+  }
   return archive;
 }

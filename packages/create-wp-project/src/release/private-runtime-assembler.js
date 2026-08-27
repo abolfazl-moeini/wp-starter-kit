@@ -129,6 +129,12 @@ async function assertNoSymlinkPath(root, relative) {
   }
 }
 
+async function assertRegularFile(root, relative) {
+  const stat = await fs.lstat(path.join(root, relative));
+  if (!stat.isFile())
+    throw new Error(`closure path must be a regular file: ${relative}`);
+}
+
 /**
  * Assemble one policy allow-list into an output tree. This function never
  * removes source files and rejects symlinks, unsafe paths and output nesting.
@@ -193,6 +199,7 @@ export async function assemblePrivateRuntime({
     if (!FILE_ROLES.has(role) || role === "exclude")
       throw new Error(`missing/invalid role for ${relative}`);
     await assertNoSymlinkPath(sourceRoot, relative);
+    await assertRegularFile(sourceRoot, relative);
   }
   await fs.mkdir(outputRoot, { recursive: true });
   const mapping = {

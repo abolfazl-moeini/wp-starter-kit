@@ -259,6 +259,49 @@ describe("private runtime fixture contract", () => {
     await fs.rm(outside, { recursive: true, force: true });
   });
 
+  test("rejects closure directories instead of copying them", async () => {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), "private-runtime-directory-"),
+    );
+    await fs.mkdir(path.join(root, "nested"), { recursive: true });
+    await fs.writeFile(
+      path.join(root, "protection-policy.json"),
+      JSON.stringify({
+        artifactId: "fixture-admin-001",
+        slug: "private-runtime-fixture",
+        runtimePrefix: "FixtureAdmin001PrivateRuntimeFixtureRt",
+        vendorPrefix: "FixtureAdmin001PrivateRuntimeFixtureVendor",
+        closure: ["nested"],
+        fileRoles: { nested: "static-public" },
+      }),
+    );
+    await expect(
+      assemblePrivateRuntime({
+        root,
+        output: path.join(
+          os.tmpdir(),
+          `private-runtime-directory-out-${Date.now()}`,
+        ),
+        registry: {
+          version: 1,
+          artifacts: [
+            {
+              artifactId: "fixture-admin-001",
+              slug: "private-runtime-fixture",
+              runtimePrefix: "FixtureAdmin001PrivateRuntimeFixtureRt",
+              vendorPrefix: "FixtureAdmin001PrivateRuntimeFixtureVendor",
+              sourceDigest:
+                "329e3485ab18b3df166e295525277fba55dc4619cef131852ca6cdee6fe5db54",
+              toolDigest:
+                "bf7aa9ba869a7ae30be01d045f8d2d52a93b955941def3058e409b256ac47923",
+            },
+          ],
+        },
+      }),
+    ).rejects.toThrow(/regular file/i);
+    await fs.rm(root, { recursive: true, force: true });
+  });
+
   test("uses the checked-in registry and preserves CSS relative asset topology", async () => {
     const registry = JSON.parse(
       await fs.readFile(
