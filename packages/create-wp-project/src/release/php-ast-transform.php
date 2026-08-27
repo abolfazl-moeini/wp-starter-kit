@@ -51,11 +51,22 @@ try {
 			}
 
 			public function enterNode( Node $node ) {
+				if ( $node instanceof Node\Stmt\Function_ && isset( $this->mapping[ $node->name->toString() ] ) ) {
+					$node->name = new Node\Identifier(
+						$this->mapping[ $node->name->toString() ],
+						$node->name->getAttributes()
+					);
+
+					return $node;
+				}
 				if ( $node instanceof Node\Expr\FuncCall && ! $node->name instanceof Node\Name ) {
 					throw new RuntimeException( 'unresolved dynamic framework call' );
 				}
 				if ( $node instanceof Node\Name && isset( $this->mapping[ $node->toString() ] ) ) {
 					return new Node\Name( $this->mapping[ $node->toString() ], $node->getAttributes() );
+				}
+				if ( $node instanceof Node\Scalar\String_ && isset( $this->mapping[ $node->value ] ) ) {
+					throw new RuntimeException( 'unresolved dynamic framework callable' );
 				}
 				if ( $node instanceof Node\Expr\BinaryOp\Concat && $node->left instanceof Node\Scalar\String_ && false !== strpos( $node->left->value, 'wpdev_' ) ) {
 					throw new RuntimeException( 'unresolved dynamic framework call' );

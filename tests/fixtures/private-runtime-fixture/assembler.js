@@ -13,7 +13,7 @@ export function assemblePrivateRuntime(options) {
     ...options,
     astTransformScript: path.join(
       process.cwd(),
-      "tests/fixtures/private-runtime-fixture/php-ast-transform.php",
+      "packages/create-wp-project/src/release/php-ast-transform.php",
     ),
   });
 }

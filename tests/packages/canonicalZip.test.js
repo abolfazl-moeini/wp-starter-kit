@@ -13,6 +13,30 @@ const digest = async (file) =>
     .digest("hex");
 
 describe("canonical ZIP writer", () => {
+  test("records deterministic Unix regular-file permissions", async () => {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), "wpdev-canonical-zip-mode-"),
+    );
+    const source = path.join(root, "plugin");
+    await fs.mkdir(source);
+    await fs.writeFile(path.join(source, "index.php"), "<?php\n");
+    const output = path.join(root, "plugin.zip");
+
+    await createCanonicalZip({
+      sourceRoot: source,
+      outputZip: output,
+      rootName: "plugin",
+    });
+
+    const listing = spawnSync("unzip", ["-Z", "-l", output], {
+      encoding: "utf8",
+    });
+    expect(listing.status).toBe(0);
+    expect(listing.stdout).toContain("-rw-r--r--");
+
+    await fs.rm(root, { recursive: true, force: true });
+  });
+
   test("rejects an archive path inside the source tree", async () => {
     const root = await fs.mkdtemp(
       path.join(os.tmpdir(), "wpdev-canonical-zip-inside-"),

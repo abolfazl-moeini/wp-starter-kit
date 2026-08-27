@@ -118,6 +118,23 @@ function isInside(parent, child) {
   );
 }
 
+async function resolvePhysicalCandidate(candidate) {
+  let current = path.resolve(candidate);
+  const missing = [];
+  for (;;) {
+    try {
+      const physicalParent = await fs.realpath(current);
+      return path.join(physicalParent, ...missing.reverse());
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+      const parent = path.dirname(current);
+      if (parent === current) throw error;
+      missing.push(path.basename(current));
+      current = parent;
+    }
+  }
+}
+
 async function assertNoSymlinkPath(root, relative) {
   const parts = relative.split("/");
   let current = root;
@@ -137,6 +154,9 @@ async function assertRegularFile(root, relative) {
 
 function isSafeRelativeFile(value) {
   if (typeof value !== "string" || value === "") return false;
+  // Treat Windows separators as path separators on every host; otherwise a
+  // POSIX build could accept a traversal that becomes dangerous on Windows.
+  if (value.includes("\\")) return false;
   const normalized = path.posix.normalize(value);
   return (
     normalized === value &&
@@ -147,9 +167,13 @@ function isSafeRelativeFile(value) {
 
 function hasReviewBlockers(blockers) {
   if (!blockers || typeof blockers !== "object") return false;
-  return Object.values(blockers).some(
-    (value) => Array.isArray(value) && value.length > 0,
-  );
+  return Object.values(blockers).some((value) => {
+    if (Array.isArray(value)) return value.length > 0;
+    if (value && typeof value === "object")
+      return Object.keys(value).length > 0;
+    if (typeof value === "string") return value.trim() !== "";
+    return value === true || (typeof value === "number" && value !== 0);
+  });
 }
 
 async function assertApprovedClosureReviewManifest(sourceRoot, policy) {
@@ -167,23 +191,41 @@ async function assertApprovedClosureReviewManifest(sourceRoot, policy) {
   ) {
     throw new Error("closure review manifest is not approved for build input");
   }
-  if (!Array.isArray(manifest.candidatePaths) || hasReviewBlockers(manifest.blockers))
-    throw new Error("closure review manifest has unresolved candidates or blockers");
+  if (
+    !Array.isArray(manifest.candidatePaths) ||
+    hasReviewBlockers(manifest.blockers)
+  )
+    throw new Error(
+      "closure review manifest has unresolved candidates or blockers",
+    );
 
   const candidates = new Map();
   for (const candidate of manifest.candidatePaths) {
-    if (!candidate || !isSafeRelativeFile(candidate.path) || candidates.has(candidate.path))
+    if (
+      !candidate ||
+      !isSafeRelativeFile(candidate.path) ||
+      candidates.has(candidate.path)
+    )
       throw new Error("closure review manifest has invalid candidate paths");
     if (candidate.status !== "approved")
-      throw new Error(`closure review manifest candidate is not approved: ${candidate.path}`);
+      throw new Error(
+        `closure review manifest candidate is not approved: ${candidate.path}`,
+      );
     if (candidate.proposedRole !== policy.fileRoles?.[candidate.path])
-      throw new Error(`closure review manifest role mismatch: ${candidate.path}`);
+      throw new Error(
+        `closure review manifest role mismatch: ${candidate.path}`,
+      );
     candidates.set(candidate.path, candidate);
   }
 
   const closure = new Set(policy.closure);
-  if (candidates.size !== closure.size || [...closure].some((file) => !candidates.has(file)))
-    throw new Error("closure review manifest does not exactly match policy closure");
+  if (
+    candidates.size !== closure.size ||
+    [...closure].some((file) => !candidates.has(file))
+  )
+    throw new Error(
+      "closure review manifest does not exactly match policy closure",
+    );
 }
 
 /**
@@ -201,7 +243,12 @@ export async function assemblePrivateRuntime({
   const sourceStat = await fs.lstat(sourceRoot);
   if (sourceStat.isSymbolicLink() || !sourceStat.isDirectory())
     throw new Error("source root must be a real directory");
-  if (isInside(sourceRoot, outputRoot))
+  const sourcePhysical = await fs.realpath(sourceRoot);
+  const outputPhysical = await resolvePhysicalCandidate(outputRoot);
+  if (
+    isInside(sourceRoot, outputRoot) ||
+    isInside(sourcePhysical, outputPhysical)
+  )
     throw new Error("output must be outside the immutable source tree");
   // Never merge into an existing output tree: stale files could otherwise
   // survive a narrower closure and accidentally become part of the artifact.
@@ -240,12 +287,7 @@ export async function assemblePrivateRuntime({
   if (files.length !== policy.closure.length)
     throw new Error("duplicate closure path");
   for (const relative of files) {
-    const normalized = path.posix.normalize(relative);
-    if (
-      normalized !== relative ||
-      normalized.startsWith("../") ||
-      path.isAbsolute(relative)
-    )
+    if (!isSafeRelativeFile(relative))
       throw new Error(`unsafe closure path: ${relative}`);
     const role = policy.fileRoles?.[relative];
     if (!FILE_ROLES.has(role) || role === "exclude")

@@ -1,6 +1,8 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
+let temporarySequence = 0;
+
 const CRC_TABLE = (() => {
   const table = new Uint32Array(256);
   for (let i = 0; i < 256; i += 1) {
@@ -94,7 +96,7 @@ export async function createCanonicalZip({ sourceRoot, outputZip, rootName }) {
 
     const entry = Buffer.alloc(46);
     entry.writeUInt32LE(0x02014b50, 0);
-    entry.writeUInt16LE(20, 4); // made by version
+    entry.writeUInt16LE(0x0314, 4); // ZIP 2.0, Unix origin.
     entry.writeUInt16LE(20, 6); // needed version
     entry.writeUInt16LE(0x800, 8);
     entry.writeUInt16LE(0, 10);
@@ -108,7 +110,7 @@ export async function createCanonicalZip({ sourceRoot, outputZip, rootName }) {
     entry.writeUInt16LE(0, 32);
     entry.writeUInt16LE(0, 34);
     entry.writeUInt16LE(0, 36);
-    entry.writeUInt32LE(0, 38);
+    entry.writeUInt32LE((0o100644 << 16) >>> 0, 38);
     entry.writeUInt32LE(offset, 42);
     central.push(entry, name);
     offset += header.length + name.length + data.length;
@@ -124,7 +126,7 @@ export async function createCanonicalZip({ sourceRoot, outputZip, rootName }) {
   end.writeUInt32LE(offset, 16);
   end.writeUInt16LE(0, 20);
   await fs.mkdir(path.dirname(archive), { recursive: true });
-  const temporary = `${archive}.tmp-${process.pid}-${Date.now()}`;
+  const temporary = `${archive}.tmp-${process.pid}-${temporarySequence++}`;
   try {
     await fs.writeFile(temporary, Buffer.concat([...local, centralBytes, end]));
     await fs.rename(temporary, archive);

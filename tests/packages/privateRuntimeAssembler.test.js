@@ -98,6 +98,18 @@ describe("private runtime fixture contract", () => {
       "FixtureAdmin001PrivateRuntimeFixtureRt_register_table",
     );
     expect(result.php["src/Module.php"]).not.toContain("wpdev_register_table");
+    expect(result.php["private-runtime/TableBuilder.php"]).toContain(
+      "function FixtureAdmin001PrivateRuntimeFixtureRt_register_table",
+    );
+    expect(result.php["private-runtime/RuntimeKernel.php"]).toContain(
+      "function FixtureAdmin001PrivateRuntimeFixtureRt_register_form",
+    );
+    expect(result.php["private-runtime/TableBuilder.php"]).not.toContain(
+      "function wpdev_register_table",
+    );
+    expect(result.php["private-runtime/RuntimeKernel.php"]).not.toContain(
+      "function wpdev_register_form",
+    );
     expect(result.php["src/Module.php"]).toContain("static function");
     expect(result.php["src/Module.php"]).toContain("add_menu_page");
     expect(result.php["src/Module.php"]).toContain(
@@ -157,6 +169,49 @@ describe("private runtime fixture contract", () => {
     ).rejects.toThrow(/unresolved dynamic/i);
   });
 
+  test("fails closed on unresolved framework callable strings", async () => {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), "private-runtime-callable-string-"),
+    );
+    await fs.mkdir(path.join(root, "src"));
+    await fs.writeFile(
+      path.join(root, "src/Callable.php"),
+      "<?php add_action( 'init', 'wpdev_register_table' );\n",
+    );
+    await fs.writeFile(
+      path.join(root, "protection-policy.json"),
+      JSON.stringify({
+        artifactId: "fixture-admin-001",
+        slug: "private-runtime-fixture",
+        runtimePrefix: "FixtureAdmin001PrivateRuntimeFixtureRt",
+        vendorPrefix: "FixtureAdmin001PrivateRuntimeFixtureVendor",
+        closure: ["src/Callable.php"],
+        fileRoles: { "src/Callable.php": "encode" },
+      }),
+    );
+
+    await expect(
+      assemblePrivateRuntime({
+        root,
+        output: path.join(
+          os.tmpdir(),
+          `private-runtime-callable-out-${Date.now()}`,
+        ),
+        registry: JSON.parse(
+          await fs.readFile(
+            path.join(
+              process.cwd(),
+              "config/protection-artifact-registry.json",
+            ),
+            "utf8",
+          ),
+        ),
+      }),
+    ).rejects.toThrow(/unresolved dynamic framework callable/i);
+
+    await fs.rm(root, { recursive: true, force: true });
+  });
+
   test("rejects a closure review manifest until every candidate is approved", async () => {
     const root = await fs.mkdtemp(
       path.join(os.tmpdir(), "private-runtime-review-required-"),
@@ -189,10 +244,16 @@ describe("private runtime fixture contract", () => {
     await expect(
       assemblePrivateRuntime({
         root,
-        output: path.join(os.tmpdir(), `private-runtime-review-out-${Date.now()}`),
+        output: path.join(
+          os.tmpdir(),
+          `private-runtime-review-out-${Date.now()}`,
+        ),
         registry: JSON.parse(
           await fs.readFile(
-            path.join(process.cwd(), "config/protection-artifact-registry.json"),
+            path.join(
+              process.cwd(),
+              "config/protection-artifact-registry.json",
+            ),
             "utf8",
           ),
         ),
@@ -216,16 +277,105 @@ describe("private runtime fixture contract", () => {
     await expect(
       assemblePrivateRuntime({
         root,
-        output: path.join(os.tmpdir(), `private-runtime-approved-review-out-${Date.now()}`),
+        output: path.join(
+          os.tmpdir(),
+          `private-runtime-approved-review-out-${Date.now()}`,
+        ),
         registry: JSON.parse(
           await fs.readFile(
-            path.join(process.cwd(), "config/protection-artifact-registry.json"),
+            path.join(
+              process.cwd(),
+              "config/protection-artifact-registry.json",
+            ),
             "utf8",
           ),
         ),
       }),
     ).resolves.toMatchObject({ files: expect.arrayContaining(policy.closure) });
 
+    await fs.rm(root, { recursive: true, force: true });
+  });
+
+  test("rejects Windows-style traversal in closure review paths", async () => {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), "private-runtime-backslash-"),
+    );
+    await fs.cp(
+      path.join(process.cwd(), "tests/fixtures/private-runtime-fixture"),
+      root,
+      { recursive: true },
+    );
+    const policyPath = path.join(root, "protection-policy.json");
+    const policy = JSON.parse(await fs.readFile(policyPath, "utf8"));
+    policy.closureReviewManifest = "dev\\..\\closure-review-manifest.json";
+    await fs.writeFile(policyPath, JSON.stringify(policy));
+    await expect(
+      assemblePrivateRuntime({
+        root,
+        output: path.join(
+          os.tmpdir(),
+          `private-runtime-backslash-out-${Date.now()}`,
+        ),
+        registry: JSON.parse(
+          await fs.readFile(
+            path.join(
+              process.cwd(),
+              "config/protection-artifact-registry.json",
+            ),
+            "utf8",
+          ),
+        ),
+      }),
+    ).rejects.toThrow(/unsafe closure review manifest path/i);
+    await fs.rm(root, { recursive: true, force: true });
+  });
+
+  test("rejects non-empty structured review blockers", async () => {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), "private-runtime-blocker-"),
+    );
+    await fs.cp(
+      path.join(process.cwd(), "tests/fixtures/private-runtime-fixture"),
+      root,
+      { recursive: true },
+    );
+    const policyPath = path.join(root, "protection-policy.json");
+    const policy = JSON.parse(await fs.readFile(policyPath, "utf8"));
+    policy.closureReviewManifest = "dev/closure-review-manifest.json";
+    await fs.writeFile(policyPath, JSON.stringify(policy));
+    await fs.mkdir(path.join(root, "dev"));
+    await fs.writeFile(
+      path.join(root, policy.closureReviewManifest),
+      JSON.stringify({
+        schema: 1,
+        status: "approved",
+        buildInput: true,
+        candidatePaths: policy.closure.map((file) => ({
+          path: file,
+          status: "approved",
+          proposedRole: policy.fileRoles[file],
+        })),
+        blockers: { unresolvedIncludes: { path: "src/Module.php" } },
+      }),
+    );
+    await expect(
+      assemblePrivateRuntime({
+        root,
+        output: path.join(
+          os.tmpdir(),
+          `private-runtime-blocker-out-${Date.now()}`,
+        ),
+        registry: JSON.parse(
+          await fs.readFile(
+            path.join(
+              process.cwd(),
+              "config/protection-artifact-registry.json",
+            ),
+            "utf8",
+          ),
+        ),
+      }),
+    ).rejects.toThrow(/unresolved candidates or blockers/i);
     await fs.rm(root, { recursive: true, force: true });
   });
   test("rejects an output nested in the immutable source tree", async () => {
@@ -251,6 +401,38 @@ describe("private runtime fixture contract", () => {
         ),
       }),
     ).rejects.toThrow(/outside the immutable source tree/i);
+  });
+
+  test("rejects an output physically nested in source through a symlinked parent", async () => {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), "private-runtime-physical-root-"),
+    );
+    const source = path.join(root, "source");
+    await fs.cp(
+      path.join(process.cwd(), "tests/fixtures/private-runtime-fixture"),
+      source,
+      { recursive: true },
+    );
+    const linkedParent = path.join(root, "linked-source");
+    await fs.symlink(source, linkedParent, "dir");
+
+    await expect(
+      assemblePrivateRuntime({
+        root: source,
+        output: path.join(linkedParent, "generated"),
+        registry: JSON.parse(
+          await fs.readFile(
+            path.join(
+              process.cwd(),
+              "config/protection-artifact-registry.json",
+            ),
+            "utf8",
+          ),
+        ),
+      }),
+    ).rejects.toThrow(/outside the immutable source tree/i);
+
+    await fs.rm(root, { recursive: true, force: true });
   });
 
   test("rejects a non-empty output so stale files cannot leak into an artifact", async () => {
