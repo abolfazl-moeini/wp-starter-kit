@@ -276,6 +276,12 @@ class Settings {
 		// earlier cache. It updates only fields resolved by this runtime.
 		$settings = $this->storage()->replace_registered( $settings );
 
+		if ( false === $settings ) {
+			do_action( 'wpdev_settings_write_conflict', $settings_to_save, $reset );
+
+			return false;
+		}
+
 		$this->settings = $settings;
 
 		do_action('wpdev_after_save_settings', $settings, $settings_to_save, $saved_settings);

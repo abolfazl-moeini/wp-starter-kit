@@ -668,6 +668,8 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 		wp_enqueue_script('wpdev-vue');
 		wp_enqueue_script('wpdev-selectizer');
 
+		$this->settings_write_conflict_notice();
+
 		do_action('wpdev_render_settings');
 
 		$template = class_exists( 'WPDev\\Modules\\AdminPageBuilder\\Page_Template_Registry' )
@@ -717,13 +719,37 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 		} // end if;
 
-		wpdev()->settings->save_settings($_POST);
+		$saved = wpdev()->settings->save_settings($_POST);
 
-		wp_redirect(add_query_arg('updated', 1, wpdev_get_current_url()));
+		if ( false === $saved ) {
+			wp_safe_redirect( add_query_arg( 'wpdev_settings_write_conflict', 1, wpdev_get_current_url() ) );
+
+			exit;
+		}
+
+		wp_safe_redirect(add_query_arg('updated', 1, wpdev_get_current_url()));
 
 		exit;
 
 	} // end default_handler;
+
+	/**
+	 * Display a retryable notice when the shared settings write lock timed out.
+	 *
+	 * @since 2.6.1
+	 * @return void
+	 */
+	public function settings_write_conflict_notice() {
+
+		if ( ! wpdev_request( 'wpdev_settings_write_conflict' ) ) {
+			return;
+		}
+
+		echo '<div class="notice notice-warning is-dismissible"><p>';
+		echo esc_html__( 'Settings were not saved because another settings update was in progress. Please try again.', 'wpdev' );
+		echo '</p></div>';
+
+	} // end settings_write_conflict_notice;
 
 	/**
 	 * Default method for views.

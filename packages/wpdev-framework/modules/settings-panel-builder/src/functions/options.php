@@ -9,6 +9,16 @@
 // Exit if accessed directly
 defined('ABSPATH') || exit;
 
+require_once __DIR__ . '/../class-settings-write-lock.php';
+
+if ( ! function_exists( 'wpdev_with_option_lock' ) ) {
+	function wpdev_with_option_lock($option_name, $callback, $timeout = 2000) {
+
+		return \WPDevFramework\Modules\SettingsPanelBuilder\Settings_Write_Lock::run( $option_name, $callback, $timeout );
+
+	} // end wpdev_with_option_lock;
+}
+
 /**
  * Get the value of a slugfied network option
  *

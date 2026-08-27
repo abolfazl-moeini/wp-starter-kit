@@ -14,6 +14,8 @@ namespace WPDevFramework\Modules\SettingsPanelBuilder;
 
 defined( 'ABSPATH' ) || exit;
 
+require_once __DIR__ . '/class-settings-write-lock.php';
+
 /**
  * Reads and writes the WPDev settings option with a request-level cache.
  */
@@ -123,13 +125,19 @@ class Settings_Storage {
 	 */
 	public function replace_registered( array $resolved_settings ) {
 
-		$latest = wpdev_get_option( self::KEY );
-		$latest = is_array( $latest ) ? $latest : array();
-		$settings = Settings_Save::merge_with_saved( $latest, $resolved_settings );
+		$save = function () use ( $resolved_settings ) {
+			$latest = wpdev_get_option( self::KEY );
+			$latest = is_array( $latest ) ? $latest : array();
+			$settings = Settings_Save::merge_with_saved( $latest, $resolved_settings );
 
-		$this->replace( $settings );
+			if ( ! $this->replace( $settings ) ) {
+				return false;
+			}
 
-		return $settings;
+			return $settings;
+		};
+
+		return Settings_Write_Lock::run( self::KEY, $save );
 
 	} // end replace_registered;
 
