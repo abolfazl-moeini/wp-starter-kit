@@ -65,6 +65,8 @@ export async function createCanonicalZip({ sourceRoot, outputZip, rootName }) {
     if (error?.code !== "ENOENT") throw error;
   }
   const files = await filesUnder(root);
+  if (files.length > 0xffff)
+    throw new Error("ZIP32 entry-count limit exceeded");
   const local = [];
   const central = [];
   let offset = 0;
@@ -73,6 +75,8 @@ export async function createCanonicalZip({ sourceRoot, outputZip, rootName }) {
     if (data.length > 0xffffffff || offset > 0xffffffff)
       throw new Error("ZIP32 limit exceeded");
     const name = Buffer.from(`${rootName}/${relative}`, "utf8");
+    if (name.length > 0xffff)
+      throw new Error(`ZIP entry name is too long: ${relative}`);
     const crc = crc32(data);
     const header = Buffer.alloc(30);
     header.writeUInt32LE(0x04034b50, 0);
