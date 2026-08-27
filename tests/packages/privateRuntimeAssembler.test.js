@@ -209,6 +209,56 @@ describe("private runtime fixture contract", () => {
     await fs.rm(output, { recursive: true, force: true });
   });
 
+  test("rejects closure files reached through a symlinked parent directory", async () => {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), "private-runtime-symlink-parent-"),
+    );
+    const outside = await fs.mkdtemp(
+      path.join(os.tmpdir(), "private-runtime-symlink-target-"),
+    );
+    await fs.writeFile(path.join(outside, "file.txt"), "outside\n");
+    await fs.symlink(outside, path.join(root, "linked"), "dir");
+    await fs.writeFile(
+      path.join(root, "protection-policy.json"),
+      JSON.stringify({
+        artifactId: "fixture-admin-001",
+        slug: "private-runtime-fixture",
+        runtimePrefix: "FixtureAdmin001PrivateRuntimeFixtureRt",
+        vendorPrefix: "FixtureAdmin001PrivateRuntimeFixtureVendor",
+        closure: ["linked/file.txt"],
+        fileRoles: { "linked/file.txt": "static-public" },
+      }),
+    );
+
+    await expect(
+      assemblePrivateRuntime({
+        root,
+        output: path.join(
+          os.tmpdir(),
+          `private-runtime-symlink-out-${Date.now()}`,
+        ),
+        registry: {
+          version: 1,
+          artifacts: [
+            {
+              artifactId: "fixture-admin-001",
+              slug: "private-runtime-fixture",
+              runtimePrefix: "FixtureAdmin001PrivateRuntimeFixtureRt",
+              vendorPrefix: "FixtureAdmin001PrivateRuntimeFixtureVendor",
+              sourceDigest:
+                "329e3485ab18b3df166e295525277fba55dc4619cef131852ca6cdee6fe5db54",
+              toolDigest:
+                "bf7aa9ba869a7ae30be01d045f8d2d52a93b955941def3058e409b256ac47923",
+            },
+          ],
+        },
+      }),
+    ).rejects.toThrow(/symlink/i);
+
+    await fs.rm(root, { recursive: true, force: true });
+    await fs.rm(outside, { recursive: true, force: true });
+  });
+
   test("uses the checked-in registry and preserves CSS relative asset topology", async () => {
     const registry = JSON.parse(
       await fs.readFile(

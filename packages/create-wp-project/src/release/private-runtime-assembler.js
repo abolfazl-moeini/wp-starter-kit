@@ -118,6 +118,17 @@ function isInside(parent, child) {
   );
 }
 
+async function assertNoSymlinkPath(root, relative) {
+  const parts = relative.split("/");
+  let current = root;
+  for (const part of parts) {
+    current = path.join(current, part);
+    const stat = await fs.lstat(current);
+    if (stat.isSymbolicLink())
+      throw new Error(`symlinked closure path is not allowed: ${relative}`);
+  }
+}
+
 /**
  * Assemble one policy allow-list into an output tree. This function never
  * removes source files and rejects symlinks, unsafe paths and output nesting.
@@ -130,6 +141,9 @@ export async function assemblePrivateRuntime({
 }) {
   const sourceRoot = toPath(root);
   const outputRoot = toPath(output);
+  const sourceStat = await fs.lstat(sourceRoot);
+  if (sourceStat.isSymbolicLink() || !sourceStat.isDirectory())
+    throw new Error("source root must be a real directory");
   if (isInside(sourceRoot, outputRoot))
     throw new Error("output must be outside the immutable source tree");
   // Never merge into an existing output tree: stale files could otherwise
@@ -178,9 +192,7 @@ export async function assemblePrivateRuntime({
     const role = policy.fileRoles?.[relative];
     if (!FILE_ROLES.has(role) || role === "exclude")
       throw new Error(`missing/invalid role for ${relative}`);
-    const stat = await fs.lstat(path.join(sourceRoot, relative));
-    if (stat.isSymbolicLink())
-      throw new Error(`symlinked closure path is not allowed: ${relative}`);
+    await assertNoSymlinkPath(sourceRoot, relative);
   }
   await fs.mkdir(outputRoot, { recursive: true });
   const mapping = {
