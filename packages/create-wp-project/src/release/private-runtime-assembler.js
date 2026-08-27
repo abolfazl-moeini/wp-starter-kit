@@ -132,6 +132,19 @@ export async function assemblePrivateRuntime({
   const outputRoot = toPath(output);
   if (isInside(sourceRoot, outputRoot))
     throw new Error("output must be outside the immutable source tree");
+  // Never merge into an existing output tree: stale files could otherwise
+  // survive a narrower closure and accidentally become part of the artifact.
+  // Cleanup is deliberately left to the caller so this function remains
+  // non-destructive.
+  try {
+    const outputStat = await fs.lstat(outputRoot);
+    if (outputStat.isSymbolicLink() || !outputStat.isDirectory())
+      throw new Error("output must be a real directory");
+    const existing = await fs.readdir(outputRoot);
+    if (existing.length > 0) throw new Error("output directory must be empty");
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
   const policy = await readJson(
     path.join(sourceRoot, "protection-policy.json"),
   );

@@ -182,6 +182,33 @@ describe("private runtime fixture contract", () => {
     ).rejects.toThrow(/outside the immutable source tree/i);
   });
 
+  test("rejects a non-empty output so stale files cannot leak into an artifact", async () => {
+    const root = path.join(
+      process.cwd(),
+      "tests/fixtures/private-runtime-fixture",
+    );
+    const output = await fs.mkdtemp(
+      path.join(os.tmpdir(), "private-runtime-stale-output-"),
+    );
+    await fs.writeFile(path.join(output, "stale.php"), "<?php");
+    await expect(
+      assemblePrivateRuntime({
+        root,
+        output,
+        registry: JSON.parse(
+          await fs.readFile(
+            path.join(
+              process.cwd(),
+              "config/protection-artifact-registry.json",
+            ),
+            "utf8",
+          ),
+        ),
+      }),
+    ).rejects.toThrow(/output directory must be empty/i);
+    await fs.rm(output, { recursive: true, force: true });
+  });
+
   test("uses the checked-in registry and preserves CSS relative asset topology", async () => {
     const registry = JSON.parse(
       await fs.readFile(
