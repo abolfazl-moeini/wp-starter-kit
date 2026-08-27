@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "artifactId": "fixture-admin-001",
+  "slug": "private-runtime-fixture",
+  "runtimePrefix": "FixtureAdmin001PrivateRuntimeFixtureRt",
+  "vendorPrefix": "FixtureAdmin001PrivateRuntimeFixtureVendor",
+  "closure": ["src/Dynamic.php"],
+  "fileRoles": { "src/Dynamic.php": "encode" }
+}

@@ -1,0 +1,8 @@
+.private-runtime-fixture-admin {
+  background-image: url("img/icon.svg");
+  font-family: "Fixture", sans-serif;
+}
+@font-face {
+  font-family: "Fixture";
+  src: url("fonts/test.woff2") format("woff2");
+}

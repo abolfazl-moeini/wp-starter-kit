@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "artifactId": "fixture-admin-001",
+  "slug": "private-runtime-fixture",
+  "runtimePrefix": "FixtureAdmin001PrivateRuntimeFixtureRt",
+  "vendorPrefix": "FixtureAdmin001PrivateRuntimeFixtureVendor",
+  "dropExternalWpdev": true,
+  "closure": [
+    "private-runtime/RuntimeKernel.php",
+    "private-runtime/TableBuilder.php",
+    "src/Module.php",
+    "src/Installer.php",
+    "src/Bootstrap.php",
+    "assets/admin.css",
+    "assets/fonts/test.woff2",
+    "assets/img/icon.svg"
+  ],
+  "publicContracts": {
+    "rest": ["private-runtime-fixture/v1/items"],
+    "hooks": ["private_runtime_fixture_saved"],
+    "assets": ["private-runtime-fixture-admin"]
+  },
+  "restMap": {
+    "private-runtime-fixture/v1/items": {
+      "methods": ["GET"],
+      "owner": "fixture-admin-001"
+    }
+  },
+  "hookMap": {
+    "private_runtime_fixture_saved": {
+      "owner": "fixture-admin-001",
+      "kind": "action"
+    }
+  },
+  "assetMap": {
+    "private-runtime-fixture-admin": [
+      "assets/admin.css",
+      "assets/fonts/test.woff2",
+      "assets/img/icon.svg"
+    ]
+  },
+  "settingsOwnership": { "fixture_setting": "fixture-admin-001" },
+  "capabilityOwnership": ["manage_private_runtime_fixture"],
+  "schemaOwnership": ["wp_private_runtime_fixture"],
+  "fileRoles": {
+    "private-runtime/RuntimeKernel.php": "encode",
+    "private-runtime/TableBuilder.php": "encode",
+    "src/Module.php": "encode",
+    "src/Installer.php": "readable-migration-recovery",
+    "src/Bootstrap.php": "encode",
+    "assets/admin.css": "static-public",
+    "assets/fonts/test.woff2": "static-public",
+    "assets/img/icon.svg": "static-public",
+    "private-runtime/ActionScheduler.php": "exclude",
+    "src/unused.php": "exclude",
+    "src/autoload-trap.php": "exclude",
+    "composer.json": "exclude"
+  }
+}

@@ -47,6 +47,7 @@ import {
   shouldStripRelativePath,
 } from "./prepareComposer.js";
 import { gateReleaseTests } from "./releaseTests.js";
+import { createCanonicalZip } from "./canonical-zip.js";
 
 function parseArgs(argv) {
   const opts = {
@@ -293,37 +294,16 @@ function runRectorBuildOnDist(root, distRoot) {
  * @param {string} slug Plugin slug / folder name inside outAbs
  * @returns {string} Absolute path to the zip file
  */
-function createReleaseZip(outAbs, slug) {
+async function createReleaseZip(outAbs, slug) {
   const zipPath = path.join(outAbs, `${slug}.zip`);
   if (existsSync(zipPath)) {
     rmSync(zipPath, { force: true });
   }
-
-  let result;
-  if (process.platform === "win32") {
-    // Compress-Archive includes the folder name as the zip root entry.
-    result = spawnSync(
-      "powershell.exe",
-      [
-        "-NoProfile",
-        "-Command",
-        `Compress-Archive -Path '${slug.replace(/'/g, "''")}' -DestinationPath '${slug.replace(/'/g, "''")}.zip' -Force`,
-      ],
-      { cwd: outAbs, encoding: "utf8" },
-    );
-  } else {
-    result = spawnSync("zip", ["-r", "-q", `${slug}.zip`, slug], {
-      cwd: outAbs,
-      encoding: "utf8",
-    });
-  }
-
-  if (result.status !== 0) {
-    const out = `${result.stdout || ""}\n${result.stderr || ""}`.trim();
-    throw new Error(
-      `zip failed for ${zipPath} (exit ${result.status}):\n${out}`,
-    );
-  }
+  await createCanonicalZip({
+    sourceRoot: path.join(outAbs, slug),
+    outputZip: zipPath,
+    rootName: slug,
+  });
   if (!existsSync(zipPath)) {
     throw new Error(`zip reported success but ${zipPath} was not created`);
   }
@@ -387,7 +367,7 @@ export async function prepareRelease(options = {}) {
     "utf8",
   );
 
-  const zipPath = skipZip ? null : createReleaseZip(outAbs, slug);
+  const zipPath = skipZip ? null : await createReleaseZip(outAbs, slug);
 
   return { distRoot, zipPath, slug, phpMinVersion };
 }

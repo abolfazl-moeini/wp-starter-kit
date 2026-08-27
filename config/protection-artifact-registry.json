@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "registryPurpose": "private-runtime-artifacts",
+  "digestScheme": "sha256(sorted-posix-path\\0file-bytes\\0)",
+  "artifacts": [
+    {
+      "artifactId": "fixture-admin-001",
+      "slug": "private-runtime-fixture",
+      "runtimePrefix": "FixtureAdmin001PrivateRuntimeFixtureRt",
+      "vendorPrefix": "FixtureAdmin001PrivateRuntimeFixtureVendor",
+      "sourceDigest": "329e3485ab18b3df166e295525277fba55dc4619cef131852ca6cdee6fe5db54",
+      "toolDigest": "bf7aa9ba869a7ae30be01d045f8d2d52a93b955941def3058e409b256ac47923",
+      "publicContracts": {
+        "rest": ["private-runtime-fixture/v1/items"],
+        "hooks": ["private_runtime_fixture_saved"],
+        "assets": ["private-runtime-fixture-admin"]
+      },
+      "restMap": {
+        "private-runtime-fixture/v1/items": {
+          "methods": ["GET"],
+          "owner": "fixture-admin-001"
+        }
+      },
+      "hookMap": {
+        "private_runtime_fixture_saved": {
+          "owner": "fixture-admin-001",
+          "kind": "action"
+        }
+      },
+      "assetMap": {
+        "private-runtime-fixture-admin": [
+          "assets/admin.css",
+          "assets/fonts/test.woff2",
+          "assets/img/icon.svg"
+        ]
+      },
+      "settingsOwnership": { "fixture_setting": "fixture-admin-001" },
+      "capabilityOwnership": ["manage_private_runtime_fixture"],
+      "schemaOwnership": ["wp_private_runtime_fixture"],
+      "fileRoles": {
+        "private-runtime/RuntimeKernel.php": "encode",
+        "private-runtime/TableBuilder.php": "encode",
+        "src/Module.php": "encode",
+        "src/Installer.php": "readable-migration-recovery",
+        "src/Bootstrap.php": "encode",
+        "assets/admin.css": "static-public",
+        "assets/fonts/test.woff2": "static-public",
+        "assets/img/icon.svg": "static-public"
+      }
+    }
+  ]
+}

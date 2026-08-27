@@ -268,6 +268,10 @@ export function run(ctx) {
     loadReleaseScript("prepareComposer.js");
   files["dev/release/releaseTests.js"] = loadReleaseScript("releaseTests.js");
   files["dev/release/run-release.js"] = loadReleaseScript("run-release.js");
+  files["dev/release/php-ast-transform.php"] = loadReleaseScript(
+    "php-ast-transform.php",
+  );
+  files["dev/release/canonical-zip.js"] = loadReleaseScript("canonical-zip.js");
   dirs.push("dev/release");
 
   // 12. Rector pipeline — downgrade / prefix / upgrade (same as kit

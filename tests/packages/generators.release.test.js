@@ -62,12 +62,17 @@ describe("core generator — release packager", () => {
     );
   });
 
-  test("emits prepare-release.js, prepareComposer.js, releaseTests.js, and run-release.js", () => {
+  test("emits release scripts and the PHP 7.4 AST transform helper", () => {
     const contrib = coreRun(makeCtx());
     expect(contrib.files["dev/release/prepare-release.js"]).toBeDefined();
     expect(contrib.files["dev/release/prepareComposer.js"]).toBeDefined();
     expect(contrib.files["dev/release/releaseTests.js"]).toBeDefined();
     expect(contrib.files["dev/release/run-release.js"]).toBeDefined();
+    expect(contrib.files["dev/release/php-ast-transform.php"]).toBeDefined();
+    expect(contrib.files["dev/release/canonical-zip.js"]).toBeDefined();
+    expect(contrib.files["dev/release/php-ast-transform.php"]).toMatch(
+      /createForVersion\( PhpVersion::fromString\( '7\.4' \) \)/,
+    );
     expect(contrib.files["dev/release/prepare-release.js"]).toMatch(
       /prepareRelease/,
     );

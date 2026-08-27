@@ -1,0 +1,5 @@
+{
+  "slug": "private-runtime-fixture",
+  "phpMinVersion": "7.4",
+  "restNamespace": "private-runtime-fixture/v1"
+}
