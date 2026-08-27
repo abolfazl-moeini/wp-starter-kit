@@ -13,6 +13,67 @@ const digest = async (file) =>
     .digest("hex");
 
 describe("canonical ZIP writer", () => {
+  test("rejects an archive path inside the source tree", async () => {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), "wpdev-canonical-zip-inside-"),
+    );
+    const source = path.join(root, "plugin");
+    await fs.mkdir(source);
+    await fs.writeFile(path.join(source, "index.php"), "<?php\n");
+
+    await expect(
+      createCanonicalZip({
+        sourceRoot: source,
+        outputZip: path.join(source, "dist.zip"),
+        rootName: "plugin",
+      }),
+    ).rejects.toThrow(/outside the source tree/i);
+
+    await fs.rm(root, { recursive: true, force: true });
+  });
+
+  test("rejects a symlink output path", async () => {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), "wpdev-canonical-zip-link-"),
+    );
+    const source = path.join(root, "plugin");
+    const target = path.join(root, "target.zip");
+    const output = path.join(root, "output.zip");
+    await fs.mkdir(source);
+    await fs.writeFile(path.join(source, "index.php"), "<?php\n");
+    await fs.writeFile(target, "existing");
+    await fs.symlink(target, output);
+
+    await expect(
+      createCanonicalZip({
+        sourceRoot: source,
+        outputZip: output,
+        rootName: "plugin",
+      }),
+    ).rejects.toThrow(/regular file/i);
+
+    await fs.rm(root, { recursive: true, force: true });
+  });
+
+  test("rejects traversal or separator characters in the archive root name", async () => {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), "wpdev-canonical-zip-root-"),
+    );
+    const source = path.join(root, "plugin");
+    await fs.mkdir(source);
+    await fs.writeFile(path.join(source, "file.txt"), "ok\n");
+
+    await expect(
+      createCanonicalZip({
+        sourceRoot: source,
+        outputZip: path.join(root, "out.zip"),
+        rootName: "../escape",
+      }),
+    ).rejects.toThrow(/rootName/i);
+
+    await fs.rm(root, { recursive: true, force: true });
+  });
+
   test("is deterministic, sorted, and extractable", async () => {
     const root = await fs.mkdtemp(
       path.join(os.tmpdir(), "wpdev-canonical-zip-"),

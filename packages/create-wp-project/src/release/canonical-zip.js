@@ -38,7 +38,32 @@ async function filesUnder(root) {
 
 /** Create a deterministic ZIP using stored entries and fixed DOS metadata. */
 export async function createCanonicalZip({ sourceRoot, outputZip, rootName }) {
+  if (
+    typeof rootName !== "string" ||
+    rootName === "." ||
+    rootName === ".." ||
+    !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(rootName)
+  ) {
+    throw new Error("rootName must be a single safe archive path segment");
+  }
   const root = path.resolve(sourceRoot);
+  const archive = path.resolve(outputZip);
+  const relativeArchive = path.relative(root, archive);
+  if (
+    relativeArchive === "" ||
+    (!relativeArchive.startsWith(`..${path.sep}`) &&
+      relativeArchive !== ".." &&
+      !path.isAbsolute(relativeArchive))
+  ) {
+    throw new Error("output ZIP must be outside the source tree");
+  }
+  try {
+    const archiveStat = await fs.lstat(archive);
+    if (archiveStat.isSymbolicLink() || !archiveStat.isFile())
+      throw new Error("output ZIP must be a regular file");
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+  }
   const files = await filesUnder(root);
   const local = [];
   const central = [];
@@ -94,7 +119,7 @@ export async function createCanonicalZip({ sourceRoot, outputZip, rootName }) {
   end.writeUInt32LE(centralBytes.length, 12);
   end.writeUInt32LE(offset, 16);
   end.writeUInt16LE(0, 20);
-  await fs.mkdir(path.dirname(path.resolve(outputZip)), { recursive: true });
-  await fs.writeFile(outputZip, Buffer.concat([...local, centralBytes, end]));
-  return path.resolve(outputZip);
+  await fs.mkdir(path.dirname(archive), { recursive: true });
+  await fs.writeFile(archive, Buffer.concat([...local, centralBytes, end]));
+  return archive;
 }
