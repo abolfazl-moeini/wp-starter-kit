@@ -23,6 +23,22 @@ defined( 'ABSPATH' ) || exit;
 class Settings_Save {
 
 	/**
+	 * Apply values resolved from this runtime's registered fields without
+	 * removing fields owned by another consumer of the shared option.
+	 *
+	 * @since 2.6.1
+	 *
+	 * @param array $saved_settings Latest full shared option value.
+	 * @param array $resolved_settings Values resolved for registered fields.
+	 * @return array Full shared option value with owned fields updated.
+	 */
+	public static function merge_with_saved( array $saved_settings, array $resolved_settings ) {
+
+		return array_replace( $saved_settings, $resolved_settings );
+
+	} // end merge_with_saved;
+
+	/**
 	 * Resolve the settings array to save.
 	 *
 	 * @since 2.6.0

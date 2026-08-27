@@ -271,7 +271,10 @@ class Settings {
 		 */
 		$settings = apply_filters('wpdev_pre_save_settings', $settings, $settings_to_save, $saved_settings);
 
-		$this->storage()->replace($settings);
+		// The storage collaborator re-reads the shared option immediately before
+		// writing so concurrent sibling saves cannot be based on this request's
+		// earlier cache. It updates only fields resolved by this runtime.
+		$settings = $this->storage()->replace_registered( $settings );
 
 		$this->settings = $settings;
 
