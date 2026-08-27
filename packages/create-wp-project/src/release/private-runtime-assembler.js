@@ -135,6 +135,57 @@ async function assertRegularFile(root, relative) {
     throw new Error(`closure path must be a regular file: ${relative}`);
 }
 
+function isSafeRelativeFile(value) {
+  if (typeof value !== "string" || value === "") return false;
+  const normalized = path.posix.normalize(value);
+  return (
+    normalized === value &&
+    !normalized.startsWith("../") &&
+    !path.isAbsolute(value)
+  );
+}
+
+function hasReviewBlockers(blockers) {
+  if (!blockers || typeof blockers !== "object") return false;
+  return Object.values(blockers).some(
+    (value) => Array.isArray(value) && value.length > 0,
+  );
+}
+
+async function assertApprovedClosureReviewManifest(sourceRoot, policy) {
+  const manifestRelative = policy.closureReviewManifest;
+  if (manifestRelative === undefined) return;
+  if (!isSafeRelativeFile(manifestRelative))
+    throw new Error("unsafe closure review manifest path");
+  await assertNoSymlinkPath(sourceRoot, manifestRelative);
+  await assertRegularFile(sourceRoot, manifestRelative);
+  const manifest = await readJson(path.join(sourceRoot, manifestRelative));
+  if (
+    manifest?.schema !== 1 ||
+    manifest.status !== "approved" ||
+    manifest.buildInput !== true
+  ) {
+    throw new Error("closure review manifest is not approved for build input");
+  }
+  if (!Array.isArray(manifest.candidatePaths) || hasReviewBlockers(manifest.blockers))
+    throw new Error("closure review manifest has unresolved candidates or blockers");
+
+  const candidates = new Map();
+  for (const candidate of manifest.candidatePaths) {
+    if (!candidate || !isSafeRelativeFile(candidate.path) || candidates.has(candidate.path))
+      throw new Error("closure review manifest has invalid candidate paths");
+    if (candidate.status !== "approved")
+      throw new Error(`closure review manifest candidate is not approved: ${candidate.path}`);
+    if (candidate.proposedRole !== policy.fileRoles?.[candidate.path])
+      throw new Error(`closure review manifest role mismatch: ${candidate.path}`);
+    candidates.set(candidate.path, candidate);
+  }
+
+  const closure = new Set(policy.closure);
+  if (candidates.size !== closure.size || [...closure].some((file) => !candidates.has(file)))
+    throw new Error("closure review manifest does not exactly match policy closure");
+}
+
 /**
  * Assemble one policy allow-list into an output tree. This function never
  * removes source files and rejects symlinks, unsafe paths and output nesting.
@@ -184,6 +235,7 @@ export async function assemblePrivateRuntime({
   }
   if (!Array.isArray(policy.closure) || policy.closure.length === 0)
     throw new Error("policy closure must be a non-empty allow-list");
+  await assertApprovedClosureReviewManifest(sourceRoot, policy);
   const files = [...new Set(policy.closure)].sort();
   if (files.length !== policy.closure.length)
     throw new Error("duplicate closure path");

@@ -157,6 +157,77 @@ describe("private runtime fixture contract", () => {
     ).rejects.toThrow(/unresolved dynamic/i);
   });
 
+  test("rejects a closure review manifest until every candidate is approved", async () => {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), "private-runtime-review-required-"),
+    );
+    await fs.cp(
+      path.join(process.cwd(), "tests/fixtures/private-runtime-fixture"),
+      root,
+      { recursive: true },
+    );
+    const policyPath = path.join(root, "protection-policy.json");
+    const policy = JSON.parse(await fs.readFile(policyPath, "utf8"));
+    policy.closureReviewManifest = "dev/closure-review-manifest.json";
+    await fs.writeFile(policyPath, JSON.stringify(policy));
+    await fs.mkdir(path.join(root, "dev"));
+    await fs.writeFile(
+      path.join(root, policy.closureReviewManifest),
+      JSON.stringify({
+        schema: 1,
+        status: "review-required",
+        buildInput: false,
+        candidatePaths: policy.closure.map((file) => ({
+          path: file,
+          status: "unclassified",
+          proposedRole: null,
+        })),
+        blockers: { unresolvedIncludes: [{ path: "src/Module.php" }] },
+      }),
+    );
+
+    await expect(
+      assemblePrivateRuntime({
+        root,
+        output: path.join(os.tmpdir(), `private-runtime-review-out-${Date.now()}`),
+        registry: JSON.parse(
+          await fs.readFile(
+            path.join(process.cwd(), "config/protection-artifact-registry.json"),
+            "utf8",
+          ),
+        ),
+      }),
+    ).rejects.toThrow(/closure review manifest is not approved/i);
+
+    await fs.writeFile(
+      path.join(root, policy.closureReviewManifest),
+      JSON.stringify({
+        schema: 1,
+        status: "approved",
+        buildInput: true,
+        candidatePaths: policy.closure.map((file) => ({
+          path: file,
+          status: "approved",
+          proposedRole: policy.fileRoles[file],
+        })),
+        blockers: {},
+      }),
+    );
+    await expect(
+      assemblePrivateRuntime({
+        root,
+        output: path.join(os.tmpdir(), `private-runtime-approved-review-out-${Date.now()}`),
+        registry: JSON.parse(
+          await fs.readFile(
+            path.join(process.cwd(), "config/protection-artifact-registry.json"),
+            "utf8",
+          ),
+        ),
+      }),
+    ).resolves.toMatchObject({ files: expect.arrayContaining(policy.closure) });
+
+    await fs.rm(root, { recursive: true, force: true });
+  });
   test("rejects an output nested in the immutable source tree", async () => {
     await expect(
       assemblePrivateRuntime({
