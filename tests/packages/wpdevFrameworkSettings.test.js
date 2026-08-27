@@ -33,3 +33,31 @@ echo json_encode($storage->replace_registered(array('theme' => 'new')));
     tickets: "latest",
   });
 });
+
+test("scheduler wrappers degrade without a host Action Scheduler provider", async () => {
+  const scheduler = path.join(
+    process.cwd(),
+    "packages/wpdev-framework/modules/core/src/functions/scheduler.php",
+  );
+  const script = path.join(
+    await fs.mkdtemp(path.join(os.tmpdir(), "wpdev-scheduler-")),
+    "scheduler.php",
+  );
+  const source = `<?php
+define('ABSPATH', __DIR__);
+function wpdev_switch_blog_and_run($callback) { return call_user_func($callback); }
+require ${JSON.stringify(scheduler)};
+echo json_encode(array(
+  wpdev_enqueue_async_action('test'),
+  wpdev_schedule_single_action(time(), 'test'),
+  wpdev_next_scheduled_action('test'),
+  wpdev_get_scheduled_actions(array(), 'ids')
+));
+`;
+  await fs.writeFile(script, source, "utf8");
+  const result = spawnSync("php", [script], { encoding: "utf8" });
+  await fs.rm(path.dirname(script), { recursive: true, force: true });
+
+  expect(result.status).toBe(0);
+  expect(JSON.parse(result.stdout)).toEqual([false, false, false, []]);
+});

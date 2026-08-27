@@ -10,6 +10,25 @@
 defined('ABSPATH') || exit;
 
 /**
+ * Whether the host has initialized the Action Scheduler API required by a
+ * wrapper. Protected runtimes delegate to WooCommerce/the AS plugin and never
+ * load a bundled copy merely to make these helpers callable.
+ *
+ * @since 2.6.1
+ * @param string $function Action Scheduler public function name.
+ * @return bool
+ */
+function wpdev_action_scheduler_available( $function = '' ) {
+
+	if ( '' === $function ) {
+		return class_exists( 'ActionScheduler', false );
+	}
+
+	return function_exists( $function );
+
+} // end wpdev_action_scheduler_available;
+
+/**
  * Returns how much time it takes until the next queue. In seconds.
  *
  * @since 2.0.0
@@ -39,6 +58,10 @@ function wpdev_get_next_queue_run() {
  */
 function wpdev_enqueue_async_action($hook, $args = array(), $group = '') {
 
+	if ( ! wpdev_action_scheduler_available( 'as_enqueue_async_action' ) ) {
+		return false;
+	}
+
 	return wpdev_switch_blog_and_run(fn() => as_enqueue_async_action($hook, $args, $group));
 
 } // end wpdev_enqueue_async_action;
@@ -56,6 +79,10 @@ function wpdev_enqueue_async_action($hook, $args = array(), $group = '') {
  * @return int The action ID.
  */
 function wpdev_schedule_single_action($timestamp, $hook, $args = array(), $group = '') {
+
+	if ( ! wpdev_action_scheduler_available( 'as_schedule_single_action' ) ) {
+		return false;
+	}
 
 	return wpdev_switch_blog_and_run(fn() => as_schedule_single_action($timestamp, $hook, $args, $group));
 
@@ -75,6 +102,10 @@ function wpdev_schedule_single_action($timestamp, $hook, $args = array(), $group
  * @return int The action ID.
  */
 function wpdev_schedule_recurring_action($timestamp, $interval_in_seconds, $hook, $args = array(), $group = '') {
+
+	if ( ! wpdev_action_scheduler_available( 'as_schedule_recurring_action' ) ) {
+		return false;
+	}
 
 	return wpdev_switch_blog_and_run(fn() => as_schedule_recurring_action($timestamp, $interval_in_seconds, $hook, $args, $group));
 
@@ -107,6 +138,10 @@ function wpdev_schedule_recurring_action($timestamp, $interval_in_seconds, $hook
  */
 function wpdev_schedule_cron_action($timestamp, $schedule, $hook, $args = array(), $group = '') {
 
+	if ( ! wpdev_action_scheduler_available( 'as_schedule_cron_action' ) ) {
+		return false;
+	}
+
 	return wpdev_switch_blog_and_run(fn() => as_schedule_cron_action($timestamp, $schedule, $hook, $args, $group));
 
 } // end wpdev_schedule_cron_action;
@@ -124,6 +159,10 @@ function wpdev_schedule_cron_action($timestamp, $schedule, $hook, $args = array(
  */
 function wpdev_unschedule_action($hook, $args = array(), $group = '') {
 
+	if ( ! wpdev_action_scheduler_available( 'as_unschedule_action' ) ) {
+		return false;
+	}
+
 	return wpdev_switch_blog_and_run(fn() => as_unschedule_action($hook, $args, $group));
 
 } // end wpdev_unschedule_action;
@@ -138,6 +177,10 @@ function wpdev_unschedule_action($hook, $args = array(), $group = '') {
  * @param string $group The group the job is assigned to.
  */
 function wpdev_unschedule_all_actions($hook, $args = array(), $group = '' ) {
+
+	if ( ! wpdev_action_scheduler_available( 'as_unschedule_all_actions' ) ) {
+		return false;
+	}
 
 	return wpdev_switch_blog_and_run(fn() => as_unschedule_all_actions($hook, $args, $group));
 
@@ -162,6 +205,10 @@ function wpdev_unschedule_all_actions($hook, $args = array(), $group = '' ) {
  */
 function wpdev_next_scheduled_action($hook, $args = null, $group = '') {
 
+	if ( ! wpdev_action_scheduler_available( 'as_next_scheduled_action' ) ) {
+		return false;
+	}
+
 	return wpdev_switch_blog_and_run(fn() => as_next_scheduled_action($hook, $args, $group));
 
 } // end wpdev_next_scheduled_action;
@@ -177,6 +224,10 @@ function wpdev_next_scheduled_action($hook, $args = null, $group = '') {
  * @return array
  */
 function wpdev_get_scheduled_actions($args = array(), $return_format = OBJECT) {
+
+	if ( ! wpdev_action_scheduler_available( 'as_get_scheduled_actions' ) ) {
+		return array();
+	}
 
 	return wpdev_switch_blog_and_run(fn() => as_get_scheduled_actions($args, $return_format));
 
