@@ -12,11 +12,16 @@ function git(repo, args) {
     encoding: "utf8",
   }).trim();
 }
-function canonical(value) {
-  return JSON.stringify(value, Object.keys(value).sort());
-}
 function sha(value) {
   return crypto.createHash("sha256").update(value).digest("hex");
+}
+
+function safeNewJsonOutput(output) {
+  const resolved = path.resolve(output);
+  if (path.extname(resolved) !== ".json")
+    fail("output must be a new .json review-evidence file");
+  if (fs.existsSync(resolved)) fail("refusing to overwrite an existing output");
+  return resolved;
 }
 
 export function createReport({ repo, commit, manifestPath }) {
@@ -27,10 +32,11 @@ export function createReport({ repo, commit, manifestPath }) {
   const pinned = git(repo, ["rev-parse", `${commit}^{commit}`]);
   if (git(repo, ["status", "--porcelain"]))
     fail("refusing dirty worktree; digest only pinned clean inputs");
-  if (!fs.statSync(manifestPath).isFile())
-    fail("manifest must be a regular file");
+  const manifestStat = fs.lstatSync(manifestPath);
+  if (!manifestStat.isFile() || manifestStat.isSymbolicLink())
+    fail("manifest must be a non-symlink regular file");
   const manifestBytes = fs.readFileSync(manifestPath);
-  const tree = git(repo, ["ls-tree", "-r", pinned]);
+  const tree = git(repo, ["rev-parse", `${pinned}^{tree}`]);
   return {
     schema: 1,
     purpose: "pre-registry-digest-report",
@@ -38,7 +44,7 @@ export function createReport({ repo, commit, manifestPath }) {
     recordStatus: "review-only",
     buildInput: false,
     pinnedCommit: pinned,
-    sourceDigest: sha(`git-tree-v1\0${tree}\0`),
+    sourceDigest: sha(`git-tree-id-v1\0${tree}\0`),
     toolDigest: sha(`tool-input-v1\0${manifestBytes}`),
     warnings: [],
     blockers: [
@@ -55,11 +61,13 @@ if (
     const [repo, commit, manifestPath, output] = process.argv.slice(2);
     const report = createReport({ repo, commit, manifestPath });
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
-    if (output)
+    if (output) {
       fs.writeFileSync(
-        path.resolve(output),
+        safeNewJsonOutput(output),
         `${JSON.stringify(report, null, 2)}\n`,
+        { flag: "wx" },
       );
+    }
   } catch (error) {
     process.stderr.write(`pre-registry-digest-report: ${error.message}\n`);
     process.exitCode = 1;
