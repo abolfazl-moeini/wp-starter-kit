@@ -6,7 +6,7 @@
  * build). Bypass tests with --skip-tests or WPDEV_SKIP_TESTS=1.
  */
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import * as path from "node:path";
 
@@ -20,6 +20,7 @@ function parseArgs(argv) {
     skipRector: false,
     skipZip: false,
     skipTests: false,
+    candidate: false,
     root: process.cwd(),
   };
   for (const arg of argv) {
@@ -27,6 +28,7 @@ function parseArgs(argv) {
     else if (arg === "--skip-rector") opts.skipRector = true;
     else if (arg === "--skip-zip") opts.skipZip = true;
     else if (arg === "--skip-tests") opts.skipTests = true;
+    else if (arg === "--candidate") opts.candidate = true;
     else if (arg.startsWith("--out=")) opts.out = arg.slice("--out=".length);
     else if (arg.startsWith("--root="))
       opts.root = path.resolve(arg.slice("--root=".length));
@@ -41,7 +43,38 @@ function printHelp() {
 Run pre-dist tests, then npm run build (if defined), then package dist/.
 
 Options match prepare-release.js (--skip-tests, --skip-zip, …).
+
+--candidate  Emit a deterministic, review-only candidate report. It never builds,
+             mutates the registry, promotes an artifact, or creates a ZIP.
 `);
+}
+
+function createCandidateReport(root) {
+  const files = [
+    "config/protection-artifact-registry.json",
+    "config/protection-artifact-registry-proposals.json",
+  ];
+  return {
+    mode: "candidate",
+    reviewOnly: true,
+    promotionReady: false,
+    buildInput: false,
+    registryMutated: false,
+    zipCreated: false,
+    root,
+    inputs: files.map((relativePath) => {
+      const absolutePath = path.join(root, relativePath);
+      return {
+        path: relativePath,
+        present: existsSync(absolutePath),
+        bytes: existsSync(absolutePath) ? statSync(absolutePath).size : null,
+      };
+    }),
+    blockers: [
+      "candidate report is not an approval or immutable artifact record",
+      "exact source, tool, and artifact digests remain required before promotion",
+    ],
+  };
 }
 
 function runNpmBuild(root) {
@@ -81,6 +114,12 @@ async function main() {
   }
 
   const root = path.resolve(opts.root);
+  if (opts.candidate) {
+    process.stdout.write(
+      `${JSON.stringify(createCandidateReport(root), null, 2)}\n`,
+    );
+    return;
+  }
   gateReleaseTests(root, { skipTests: opts.skipTests });
   runNpmBuild(root);
 
@@ -110,4 +149,4 @@ if (isDirect) {
   });
 }
 
-export { parseArgs, runNpmBuild };
+export { createCandidateReport, parseArgs, runNpmBuild };
