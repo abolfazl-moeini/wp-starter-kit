@@ -2,7 +2,7 @@
   "schema": 1,
   "purpose": "canonical-consumer-source-resolution",
   "consumers": {
-    "tavangary-theme-panel": "plugins/tavangary-theme-panel-dev"
+    "tavangary-theme-panel": "plugins/tavangary-theme-panel"
   },
   "rule": "The map changes only where read-only protection evidence is found. Consumer IDs, artifact slugs, and public release names remain canonical."
 }
