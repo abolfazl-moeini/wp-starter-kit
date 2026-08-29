@@ -101,11 +101,13 @@ describe("polaris-stack layout.css", () => {
     expect(LAYOUT_CSS).toContain("padding-inline-start: var(--ps-pl,");
   });
 
-  test("Switcher limit uses nth-child overflow rules", () => {
+  test("Switcher limit uses the generic CSS variable pattern", () => {
     expect(LAYOUT_CSS).toContain(
-      '.ps-switcher[data-limit="4"] > :nth-child(n + 5)',
+      '.ps-switcher[data-limit]:not([data-limit=""])',
     );
-    expect(LAYOUT_CSS).not.toContain("flex-grow: 0");
+    expect(LAYOUT_CSS).toContain("var(--ps-limit, 1)");
+    // No hardcoded per-value rules anymore.
+    expect(LAYOUT_CSS).not.toContain('[data-limit="2"]');
   });
 
   test("every var(--ps-*) in layout.css is defined in tokens.css", () => {
@@ -128,6 +130,7 @@ describe("polaris-stack layout.css", () => {
       "--ps-side-width",
       "--ps-content-min",
       "--ps-threshold",
+      "--ps-limit",
       "--ps-divider-size",
       "--ps-divider-line",
       "--ps-cover-min",
@@ -185,11 +188,11 @@ describe("polaris-stack layout render", () => {
     );
   });
 
-  test("Switcher sets data-limit attribute", () => {
+  test("Switcher sets data-limit attribute and --ps-limit style", () => {
     const root = document.createElement("div");
     render(h(Switcher, { limit: 4 }, "items"), root);
-    expect(root.querySelector(".ps-switcher")?.getAttribute("data-limit")).toBe(
-      "4",
-    );
+    const el = root.querySelector(".ps-switcher");
+    expect(el?.getAttribute("data-limit")).toBe("4");
+    expect(el?.style.getPropertyValue("--ps-limit")).toBe("4");
   });
 });
