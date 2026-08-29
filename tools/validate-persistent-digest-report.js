@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+import fs from "node:fs";
+import path from "node:path";
+
 const HEX64 = /^[0-9a-f]{64}$/i;
 const HEX40 = /^[0-9a-f]{40}$/i;
 
@@ -11,6 +14,10 @@ const forbidden = new Set([
   "registryEntry",
   "buildInputOverride",
   "production",
+  "promotionReady",
+  "promote",
+  "promoted",
+  "releaseReady",
 ]);
 
 function walk(value, key = "") {
@@ -44,7 +51,9 @@ export function validatePersistentDigestReport(report, options = {}) {
   if (
     !input ||
     typeof input.manifestPath !== "string" ||
-    !input.manifestPath.startsWith("/") ||
+    !path.isAbsolute(input.manifestPath) ||
+    input.manifestPath.includes("\0") ||
+    input.manifestPath.includes("..") ||
     !Number.isInteger(input.byteLength) ||
     input.byteLength < 0 ||
     !HEX64.test(input.rawSha256)
@@ -57,6 +66,12 @@ export function validatePersistentDigestReport(report, options = {}) {
     throw new Error("toolInput is not linked to the candidate manifest");
   if (options.pinnedCommit && report.pinnedCommit !== options.pinnedCommit)
     throw new Error("report is linked to a different pinned commit");
+  if (options.sourceDigest && report.sourceDigest !== options.sourceDigest)
+    throw new Error("report is linked to a different source digest");
+  if (options.toolDigest && report.toolDigest !== options.toolDigest)
+    throw new Error("report is linked to a different tool digest");
+  if (options.rawSha256 && input.rawSha256 !== options.rawSha256)
+    throw new Error("toolInput rawSha256 mismatch");
   if (
     !Array.isArray(report.blockers) ||
     report.blockers.length === 0 ||
@@ -66,4 +81,25 @@ export function validatePersistentDigestReport(report, options = {}) {
   )
     throw new Error("persistent review report must retain blockers");
   return true;
+}
+
+if (
+  process.argv[1] &&
+  process.argv[1].endsWith("validate-persistent-digest-report.js")
+) {
+  try {
+    const reportPath = process.argv[2];
+    if (!reportPath) throw new Error("report path is required");
+    const stat = fs.lstatSync(reportPath);
+    if (!stat.isFile() || stat.isSymbolicLink())
+      throw new Error("report must be a non-symlink regular file");
+    const report = JSON.parse(fs.readFileSync(reportPath, "utf8"));
+    validatePersistentDigestReport(report);
+    process.stdout.write("valid-persistent-digest-report\n");
+  } catch (error) {
+    process.stderr.write(
+      `validate-persistent-digest-report: ${error.message}\n`,
+    );
+    process.exitCode = 1;
+  }
 }
