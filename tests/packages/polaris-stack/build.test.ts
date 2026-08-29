@@ -34,10 +34,12 @@ beforeAll(() => {
 });
 
 describe("polaris-stack styles.css build contract", () => {
-  test("minified output is license-headered and version-stamped", () => {
+  test("minified output is license-headered and build-stamped", () => {
     const css = readFileSync(STYLES_CSS, "utf8");
-    expect(css.startsWith("/*! @wpdev/polaris-stack v9.9.9-test | MIT")).toBe(
-      true,
+    // Header contract: version + git sha + ISO build timestamp, then license.
+    expect(css.startsWith("/*! @wpdev/polaris-stack v9.9.9-test+")).toBe(true);
+    expect(css).toMatch(
+      /^\/\*! @wpdev\/polaris-stack v9\.9\.9-test\+[0-9a-f]+ @ \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[^|]* | MIT \| /,
     );
     expect(css).toContain(".ps-button{");
   });
