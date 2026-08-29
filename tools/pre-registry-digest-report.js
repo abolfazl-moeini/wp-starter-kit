@@ -24,6 +24,25 @@ function safeNewJsonOutput(output) {
   return resolved;
 }
 
+function readManifestBytes(manifestPath) {
+  const manifestStat = fs.lstatSync(manifestPath);
+  if (!manifestStat.isFile() || manifestStat.isSymbolicLink())
+    fail("manifest must be a non-symlink regular file");
+
+  // Keep the lstat/read pair race-safe: O_NOFOLLOW prevents an attacker from
+  // swapping the reviewed file for a symlink between those operations.
+  const noFollow = fs.constants.O_NOFOLLOW ?? 0;
+  const fd = fs.openSync(manifestPath, fs.constants.O_RDONLY | noFollow);
+  try {
+    const openedStat = fs.fstatSync(fd);
+    if (!openedStat.isFile())
+      fail("manifest must be a non-symlink regular file");
+    return fs.readFileSync(fd);
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
 export function createReport({
   repo,
   commit,
@@ -37,15 +56,13 @@ export function createReport({
   const pinned = git(repo, ["rev-parse", `${commit}^{commit}`]);
   if (git(repo, ["status", "--porcelain"]))
     fail("refusing dirty worktree; digest only pinned clean inputs");
-  const manifestStat = fs.lstatSync(manifestPath);
-  if (!manifestStat.isFile() || manifestStat.isSymbolicLink())
-    fail("manifest must be a non-symlink regular file");
-  const manifestBytes = fs.readFileSync(manifestPath);
+  const manifestBytes = readManifestBytes(manifestPath);
   const resolvedManifestPath = path.resolve(manifestPath);
   const manifestSha256 = sha(manifestBytes);
   if (
-    expectedManifestSha256 &&
-    (!/^[0-9a-f]{64}$/i.test(expectedManifestSha256) ||
+    expectedManifestSha256 !== undefined &&
+    (typeof expectedManifestSha256 !== "string" ||
+      !/^[0-9a-f]{64}$/i.test(expectedManifestSha256) ||
       expectedManifestSha256.toLowerCase() !== manifestSha256)
   )
     fail("manifest raw-byte SHA-256 mismatch");

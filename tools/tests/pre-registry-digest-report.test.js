@@ -43,6 +43,9 @@ test("includes independently auditable raw manifest metadata", () => {
       expectedManifestSha256: "0".repeat(64),
     }),
   ).toThrow(/raw-byte SHA-256 mismatch/);
+  expect(() => createReport({ ...input, expectedManifestSha256: 123 })).toThrow(
+    /raw-byte SHA-256 mismatch/,
+  );
 });
 test("uses the pinned commit tree, not the checked-out tree representation", () => {
   const input = fixture();
