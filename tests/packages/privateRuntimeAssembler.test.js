@@ -12,6 +12,10 @@ import {
   buildPrivateStateKey,
   validateArtifactRegistry,
 } from "../fixtures/private-runtime-fixture/assembler.js";
+// Imported directly, bypassing the fixture wrapper that injects an explicit
+// astTransformScript. Real consumers have no dev/release/php-ast-transform.php,
+// so the assembler must resolve its own AST transform script.
+import { assemblePrivateRuntime as assembleWithoutExplicitTransform } from "../../packages/create-wp-project/src/release/private-runtime-assembler.js";
 
 describe("private runtime fixture contract", () => {
   test("validates the fixture registry and derives a stable prefix", () => {
@@ -658,6 +662,42 @@ describe("private runtime fixture contract", () => {
         .update(await fs.readFile(path.join(root, "src/Module.php")))
         .digest("hex"),
     ).toBe(before);
+  });
+
+  test("resolves its own AST transform script so consumers without dev/release/php-ast-transform.php can assemble", async () => {
+    const root = path.join(
+      process.cwd(),
+      "tests/fixtures/private-runtime-fixture",
+    );
+    const registry = JSON.parse(
+      await fs.readFile(
+        path.join(process.cwd(), "config/protection-artifact-registry.json"),
+        "utf8",
+      ),
+    );
+    const output = path.join(
+      os.tmpdir(),
+      `private-runtime-fixture-default-transform-${Date.now()}-${Math.random()
+        .toString(16)
+        .slice(2)}`,
+    );
+    // No astTransformScript on purpose: production consumers do not ship
+    // dev/release/php-ast-transform.php, so the kit must resolve its own copy.
+    const result = await assembleWithoutExplicitTransform({
+      root,
+      output,
+      registry,
+    });
+    expect(result.files.length).toBeGreaterThan(0);
+    const sources = Object.values(result.php).join("\n");
+    expect(sources).toContain(
+      `${result.runtimePrefix}_register_table`,
+      "AST transform must have rewritten the call sites to the private prefix",
+    );
+    expect(sources).not.toContain(
+      "wpdev_register_table",
+      "no unprefixed framework call site may survive the transform",
+    );
   });
 
   test("shortens private transient keys symmetrically within WordPress limits", () => {

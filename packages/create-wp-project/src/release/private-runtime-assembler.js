@@ -3,6 +3,34 @@ import { spawnSync } from "node:child_process";
 import path from "node:path";
 import crypto from "node:crypto";
 
+// The AST transform is release tooling owned by this package; consumers do not
+// ship their own copy. Resolution is explicit and fail-closed: a consumer
+// override wins, then the kit's bundled copy, otherwise the build stops rather
+// than silently skipping the PHP rewrite.
+const AST_TRANSFORM_SCRIPT_NAME = "php-ast-transform.php";
+
+async function resolveAstTransformScript(sourceRoot) {
+  const candidates = [
+    path.join(sourceRoot, "dev", "release", AST_TRANSFORM_SCRIPT_NAME),
+    path.resolve(
+      process.cwd(),
+      "packages/create-wp-project/src/release",
+      AST_TRANSFORM_SCRIPT_NAME,
+    ),
+  ];
+  for (const candidate of candidates) {
+    try {
+      const stat = await fs.lstat(candidate);
+      if (stat.isFile() && !stat.isSymbolicLink()) return candidate;
+    } catch {
+      // Fall through to the next candidate.
+    }
+  }
+  throw new Error(
+    `AST transform script not found; expected one of: ${candidates.join(", ")}`,
+  );
+}
+
 export const FILE_ROLES = new Set([
   "encode",
   "readable-preflight",
@@ -301,8 +329,7 @@ export async function assemblePrivateRuntime({
     wpdev_register_form: `${policy.runtimePrefix}_register_form`,
   };
   const helper =
-    astTransformScript ||
-    path.join(sourceRoot, "dev/release/php-ast-transform.php");
+    astTransformScript || (await resolveAstTransformScript(sourceRoot));
   const php = {};
   const ownership = {};
   for (const relative of files) {
