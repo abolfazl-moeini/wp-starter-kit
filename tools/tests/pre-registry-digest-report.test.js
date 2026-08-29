@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import crypto from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -26,6 +27,22 @@ test("hashes the same pinned inputs deterministically", () => {
   const input = fixture();
   expect(createReport(input)).toEqual(createReport(input));
   expect(createReport(input).buildInput).toBe(false);
+});
+test("includes independently auditable raw manifest metadata", () => {
+  const input = fixture();
+  const report = createReport(input);
+  const bytes = fs.readFileSync(input.manifestPath);
+  expect(report.toolInput).toEqual({
+    manifestPath: path.resolve(input.manifestPath),
+    byteLength: bytes.length,
+    rawSha256: crypto.createHash("sha256").update(bytes).digest("hex"),
+  });
+  expect(() =>
+    createReport({
+      ...input,
+      expectedManifestSha256: "0".repeat(64),
+    }),
+  ).toThrow(/raw-byte SHA-256 mismatch/);
 });
 test("uses the pinned commit tree, not the checked-out tree representation", () => {
   const input = fixture();

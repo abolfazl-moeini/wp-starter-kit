@@ -24,7 +24,12 @@ function safeNewJsonOutput(output) {
   return resolved;
 }
 
-export function createReport({ repo, commit, manifestPath }) {
+export function createReport({
+  repo,
+  commit,
+  manifestPath,
+  expectedManifestSha256,
+}) {
   if (!repo || !commit || !manifestPath)
     fail("repo, pinned commit, and manifestPath are required");
   if (!/^[0-9a-f]{7,40}$/i.test(commit))
@@ -36,6 +41,14 @@ export function createReport({ repo, commit, manifestPath }) {
   if (!manifestStat.isFile() || manifestStat.isSymbolicLink())
     fail("manifest must be a non-symlink regular file");
   const manifestBytes = fs.readFileSync(manifestPath);
+  const resolvedManifestPath = path.resolve(manifestPath);
+  const manifestSha256 = sha(manifestBytes);
+  if (
+    expectedManifestSha256 &&
+    (!/^[0-9a-f]{64}$/i.test(expectedManifestSha256) ||
+      expectedManifestSha256.toLowerCase() !== manifestSha256)
+  )
+    fail("manifest raw-byte SHA-256 mismatch");
   const tree = git(repo, ["rev-parse", `${pinned}^{tree}`]);
   return {
     schema: 1,
@@ -46,6 +59,11 @@ export function createReport({ repo, commit, manifestPath }) {
     pinnedCommit: pinned,
     sourceDigest: sha(`git-tree-id-v1\0${tree}\0`),
     toolDigest: sha(`tool-input-v1\0${manifestBytes}`),
+    toolInput: {
+      manifestPath: resolvedManifestPath,
+      byteLength: manifestBytes.length,
+      rawSha256: manifestSha256,
+    },
     warnings: [],
     blockers: [
       "human acceptance of exact source, tool inputs and artifact is pending",
