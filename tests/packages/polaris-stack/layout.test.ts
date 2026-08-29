@@ -128,7 +128,6 @@ describe("polaris-stack layout.css", () => {
       "--ps-side-width",
       "--ps-content-min",
       "--ps-threshold",
-      "--ps-limit",
       "--ps-divider-size",
       "--ps-divider-line",
       "--ps-cover-min",

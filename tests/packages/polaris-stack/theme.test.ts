@@ -108,4 +108,13 @@ describe("polaris-stack theme", () => {
     eval(createPolarisThemeInitScript());
     expect(document.documentElement.dataset.theme).toBe("dark");
   });
+
+  test("createPolarisThemeInitScript ignores invalid stored theme", () => {
+    localStorage.setItem("polaris-theme", "banana");
+    mockMatchMedia(false);
+    // eslint-disable-next-line no-eval
+    eval(createPolarisThemeInitScript());
+    // Falls back to the resolved default instead of an unknown data-theme.
+    expect(document.documentElement.dataset.theme).toBe("light");
+  });
 });

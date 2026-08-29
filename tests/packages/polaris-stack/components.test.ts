@@ -112,6 +112,17 @@ describe("polaris-stack component render", () => {
     expect(link?.getAttribute("type")).toBeNull();
   });
 
+  test("Button as anchor with loading uses aria-disabled, not disabled", () => {
+    const root = document.createElement("div");
+    render(h(Button, { as: "a", href: "#", loading: true }, "Link"), root);
+    const link = root.querySelector("a.ps-button");
+    expect(link).not.toBeNull();
+    // `disabled` is invalid on anchors — aria-disabled is the a11y equivalent.
+    expect(link?.getAttribute("disabled")).toBeNull();
+    expect(link?.getAttribute("aria-disabled")).toBe("true");
+    expect(link?.getAttribute("aria-busy")).toBe("true");
+  });
+
   test("Card renders with elevation and interactive classes", () => {
     const root = document.createElement("div");
     render(h(Card, { elevation: 3, interactive: true }, "content"), root);
