@@ -88,6 +88,7 @@
     "@wordpress/api-fetch": "^7.48.0",
     "@wpdev/build": "^1.0.0",
     "@wpdev/dependency-extraction-esbuild-plugin": "^1.0.0",
+    "axe-core": "^4.13.0",
     "babel-jest": "^29.7.0",
     "chalk": "^5.4.1",
     "cross-env": "^7.0.3",

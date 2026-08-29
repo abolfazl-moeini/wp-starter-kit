@@ -1,5 +1,6 @@
 /** @jest-environment jsdom */
 import { describe, test, expect, beforeAll } from "@jest/globals";
+import axe from "axe-core";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
@@ -177,5 +178,78 @@ describe("polaris-stack component render", () => {
     render(h(IconButton, { label: "Close" }, "×"), root);
     const btn = root.querySelector(".ps-button-icon-only");
     expect(btn?.getAttribute("aria-label")).toBe("Close");
+  });
+});
+
+describe("polaris-stack component a11y (axe-core)", () => {
+  // Page-level rules and layout-dependent rules can't apply here: we render
+  // fragments (not full documents) and jsdom has no layout engine, so
+  // color-contrast can only ever report "incomplete". Disable them for
+  // deterministic scans of the component markup itself.
+  const DISABLED_RULES = {
+    region: { enabled: false },
+    "page-has-heading-one": { enabled: false },
+    "landmark-one-main": { enabled: false },
+    bypass: { enabled: false },
+    "html-has-lang": { enabled: false },
+    "color-contrast": { enabled: false },
+  };
+
+  async function expectNoAxeViolations(node: any): Promise<void> {
+    const root = document.createElement("div");
+    document.body.appendChild(root);
+    render(node, root);
+    try {
+      const results = await axe.run(root, { rules: DISABLED_RULES });
+      expect(results.violations).toEqual([]);
+    } finally {
+      root.remove();
+    }
+  }
+
+  test("Button has no axe violations", async () => {
+    await expectNoAxeViolations(h(Button, { variant: "solid" }, "Save"));
+  });
+
+  test("Button as anchor has no axe violations", async () => {
+    await expectNoAxeViolations(h(Button, { as: "a", href: "#" }, "Link"));
+  });
+
+  test("Button in loading state has no axe violations", async () => {
+    await expectNoAxeViolations(h(Button, { loading: true }, "Saving"));
+  });
+
+  test("Card has no axe violations", async () => {
+    await expectNoAxeViolations(
+      h(Card, { elevation: 2, interactive: true }, "content"),
+    );
+  });
+
+  test("Text has no axe violations", async () => {
+    await expectNoAxeViolations(h(Text, { tone: "muted" }, "label"));
+  });
+
+  test("Heading has no axe violations", async () => {
+    await expectNoAxeViolations(h(Heading, { level: 2 }, "Title"));
+  });
+
+  test("Badge has no axe violations", async () => {
+    await expectNoAxeViolations(h(Badge, { tone: "success" }, "OK"));
+  });
+
+  test("Alert has no axe violations", async () => {
+    await expectNoAxeViolations(h(Alert, { tone: "warning" }, "Heads up"));
+  });
+
+  test("Spinner has no axe violations", async () => {
+    await expectNoAxeViolations(h(Spinner, { label: "Busy" }));
+  });
+
+  test("Kbd has no axe violations", async () => {
+    await expectNoAxeViolations(h(Kbd, null, "⌘K"));
+  });
+
+  test("IconButton has no axe violations", async () => {
+    await expectNoAxeViolations(h(IconButton, { label: "Close" }, "×"));
   });
 });
