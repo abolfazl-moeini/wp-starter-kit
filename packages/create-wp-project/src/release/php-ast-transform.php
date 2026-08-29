@@ -76,7 +76,17 @@ try {
 		}
 	);
 	$ast = $traverser->traverse( $ast ?? array() );
-	file_put_contents( $argv[3], ( new Standard() )->prettyPrintFile( $ast ) . "\n" );
+	// Plan 1 §7 step 9 requires the parser AND the printer to target PHP 7.4.
+	// php-parser currently defaults the printer to 7.4, but an inherited
+	// default is not a pinned target: an upgrade could silently retarget it.
+	$printer = new Standard( array( 'phpVersion' => PhpVersion::fromString( '7.4' ) ) );
+	// Fail-closed: an unwritten transform must never report success, or a later
+	// stage promotes a stale or missing file as the rewritten artifact.
+	$written = file_put_contents( $argv[3], $printer->prettyPrintFile( $ast ) . "\n" );
+	if ( false === $written ) {
+		fwrite( STDERR, "unable to write transform output: {$argv[3]}\n" );
+		exit( 5 );
+	}
 } catch ( Throwable $error ) {
 	fwrite( STDERR, $error->getMessage() . "\n" );
 	exit( 4 );
