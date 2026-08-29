@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "purpose": "pre-registry-digest-report",
+  "authority": "non-authoritative-review-evidence",
+  "recordStatus": "review-only",
+  "buildInput": false,
+  "pinnedCommit": "452510a4ffe65535b75a14c46acf0ae4ff6de56c",
+  "sourceDigest": "8a6a4e12967c64dad1cfc9a6a6e7b60ff95314bd95de89bfabcfc6d4173483cf",
+  "toolDigest": "5890deb92fd1a0f7644d55b53b4ed10161cf24b5f817c7de0167c30308c8c8d8",
+  "toolInput": {
+    "manifestPath": "/tmp/candidate2.json",
+    "byteLength": 1608,
+    "rawSha256": "c84cee6b1dc97edc91309d2ebdb0420a5b46b4e96219010693fb891336ccdb21"
+  },
+  "warnings": [],
+  "blockers": [
+    "human acceptance of exact source, tool inputs and artifact is pending"
+  ]
+}
