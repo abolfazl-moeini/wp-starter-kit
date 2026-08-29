@@ -46,3 +46,14 @@ test("rejects a report detached from the candidate manifest", () => {
     }),
   ).toThrow(/linked/);
 });
+test("rejects ambiguous manifest paths and empty blockers", () => {
+  expect(() =>
+    validatePersistentDigestReport({
+      ...valid,
+      toolInput: { ...valid.toolInput, manifestPath: "candidate.json" },
+    }),
+  ).toThrow(/metadata/);
+  expect(() =>
+    validatePersistentDigestReport({ ...valid, blockers: [""] }),
+  ).toThrow(/blockers/);
+});

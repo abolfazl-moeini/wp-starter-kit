@@ -44,6 +44,7 @@ export function validatePersistentDigestReport(report, options = {}) {
   if (
     !input ||
     typeof input.manifestPath !== "string" ||
+    !input.manifestPath.startsWith("/") ||
     !Number.isInteger(input.byteLength) ||
     input.byteLength < 0 ||
     !HEX64.test(input.rawSha256)
@@ -56,7 +57,13 @@ export function validatePersistentDigestReport(report, options = {}) {
     throw new Error("toolInput is not linked to the candidate manifest");
   if (options.pinnedCommit && report.pinnedCommit !== options.pinnedCommit)
     throw new Error("report is linked to a different pinned commit");
-  if (!Array.isArray(report.blockers) || report.blockers.length === 0)
+  if (
+    !Array.isArray(report.blockers) ||
+    report.blockers.length === 0 ||
+    report.blockers.some(
+      (blocker) => typeof blocker !== "string" || blocker.trim() === "",
+    )
+  )
     throw new Error("persistent review report must retain blockers");
   return true;
 }
