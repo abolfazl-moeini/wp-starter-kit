@@ -56,6 +56,7 @@ function parseArgs(argv) {
     skipRector: false,
     skipZip: false,
     skipTests: false,
+    obfuscate: false,
     root: process.cwd(),
   };
   for (const arg of argv) {
@@ -63,6 +64,8 @@ function parseArgs(argv) {
     else if (arg === "--skip-rector") opts.skipRector = true;
     else if (arg === "--skip-zip") opts.skipZip = true;
     else if (arg === "--skip-tests") opts.skipTests = true;
+    else if (arg === "--obfuscate" || arg === "--profile=s")
+      opts.obfuscate = true;
     else if (arg.startsWith("--out=")) opts.out = arg.slice("--out=".length);
     else if (arg.startsWith("--root="))
       opts.root = path.resolve(arg.slice("--root=".length));
@@ -359,6 +362,42 @@ export async function prepareRelease(options = {}) {
   }
 
   stripDist(distRoot);
+
+  // Opt-in Profile S Obfuscation (Clean by default)
+  if (options.obfuscate) {
+    const candidates = [
+      path.resolve(root, "../tools/plan3/transformer.php"),
+      path.resolve(root, "../../tools/plan3/transformer.php"),
+      path.resolve(root, "../../../tools/plan3/transformer.php"),
+    ];
+    const toolsTransformer = candidates.find((c) => existsSync(c));
+    if (toolsTransformer) {
+      process.stderr.write(
+        "release: applying Profile S AST obfuscation transformer…\n",
+      );
+      const mapFile = path.join(distRoot, "symbol-map.json");
+      const seed = `profile-s-${slug}-seed`;
+      const dumpRes = spawnSync(
+        "php",
+        [toolsTransformer, "--dump-map", distRoot, mapFile, seed],
+        { stdio: "inherit" },
+      );
+      if (dumpRes.status === 0) {
+        spawnSync(
+          "php",
+          [toolsTransformer, "--batch", distRoot, mapFile, seed, `${slug}.php`],
+          { stdio: "inherit" },
+        );
+      }
+      if (existsSync(mapFile)) {
+        rmSync(mapFile, { force: true });
+      }
+    } else {
+      process.stderr.write(
+        "release: warning, tools/plan3/transformer.php not found, skipping obfuscation\n",
+      );
+    }
+  }
 
   // Marker only (no wall-clock stamp in the emitted scaffold body).
   writeFileSync(

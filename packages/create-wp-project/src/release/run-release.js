@@ -21,6 +21,7 @@ function parseArgs(argv) {
     skipZip: false,
     skipTests: false,
     candidate: false,
+    obfuscate: false,
     root: process.cwd(),
   };
   for (const arg of argv) {
@@ -29,6 +30,8 @@ function parseArgs(argv) {
     else if (arg === "--skip-zip") opts.skipZip = true;
     else if (arg === "--skip-tests") opts.skipTests = true;
     else if (arg === "--candidate") opts.candidate = true;
+    else if (arg === "--obfuscate" || arg === "--profile=s")
+      opts.obfuscate = true;
     else if (arg.startsWith("--out=")) opts.out = arg.slice("--out=".length);
     else if (arg.startsWith("--root="))
       opts.root = path.resolve(arg.slice("--root=".length));
