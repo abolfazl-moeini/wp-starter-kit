@@ -6,7 +6,11 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { inlineWpdevClosure, minifyAssetsInTree } from "../inline-wpdev-closure.mjs";
+import {
+  assertFrameworkClosureMinifiedAssets,
+  inlineWpdevClosure,
+  minifyAssetsInTree,
+} from "../inline-wpdev-closure.mjs";
 
 test("Inliner: copies multi-module files without basename collision or silent overwrite", async () => {
   const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "inliner-collision-test-"));
@@ -59,6 +63,51 @@ test("Inliner: copies multi-module files without basename collision or silent ov
     const adminEntry = manifest.files.find(f => f.destination.includes("admin-page-builder/src/class-component-registry.php"));
     assert.ok(adminEntry, "Manifest must contain admin-page-builder entry");
     assert.equal(adminEntry.sha256, crypto.createHash("sha256").update(adminRegistryContent).digest("hex"));
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("Minifier: writes SCRIPT_DEBUG=.min siblings next to unminified FrameworkClosure assets", async () => {
+  const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "minifier-min-sibling-"));
+  const assetsDir = path.join(tmpDir, "src/FrameworkClosure/assets/js/functions");
+  await mkdir(assetsDir, { recursive: true });
+  await writeFile(path.join(assetsDir, "functions-core.js"), "function wpdev_on_load(){return true;}");
+  await writeFile(path.join(assetsDir, "functions-utils.js"), "function wpdev_noop(){return 1;}");
+
+  const contentRoot =
+    process.env.WPDEV_CONTENT_ROOT ||
+    "/Users/moeini/Dev/tavangary.new/wordpress/wp-content";
+  try {
+    const result = await minifyAssetsInTree(tmpDir, contentRoot);
+    assert.ok(result.minSiblingsWritten >= 2, "Must emit .min.js siblings for unminified JS");
+    assert.equal(
+      fs.existsSync(path.join(assetsDir, "functions-core.min.js")),
+      true,
+      "functions-core.min.js must exist for production SCRIPT_DEBUG=false",
+    );
+    assert.equal(
+      fs.existsSync(path.join(assetsDir, "functions-core.js")),
+      true,
+      "Unminified functions-core.js must be kept",
+    );
+    const minSrc = await readFile(path.join(assetsDir, "functions-core.min.js"), "utf8");
+    assert.ok(minSrc.includes("wpdev_on_load"), "Minified sibling must still define wpdev_on_load");
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("assertFrameworkClosureMinifiedAssets fails closed when production .min files are missing", async () => {
+  const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "min-asset-gate-"));
+  const assetsDir = path.join(tmpDir, "src/FrameworkClosure/assets/js/functions");
+  await mkdir(assetsDir, { recursive: true });
+  await writeFile(path.join(assetsDir, "functions-core.js"), "function wpdev_on_load(){}");
+  try {
+    assert.throws(
+      () => assertFrameworkClosureMinifiedAssets(tmpDir),
+      /functions-core\.min\.js/,
+    );
   } finally {
     await rm(tmpDir, { recursive: true, force: true });
   }

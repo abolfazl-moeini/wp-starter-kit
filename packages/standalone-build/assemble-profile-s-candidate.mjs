@@ -22,7 +22,11 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
 import { runPlan3EligibilitySpike } from "./run-plan3-eligibility-spike.mjs";
-import { inlineWpdevClosure, minifyAssetsInTree } from "./inline-wpdev-closure.mjs";
+import {
+  assertFrameworkClosureMinifiedAssets,
+  inlineWpdevClosure,
+  minifyAssetsInTree,
+} from "./inline-wpdev-closure.mjs";
 import { purgeDevelopmentTree, getRsyncExcludeArgs } from "./dev-purge-policy.mjs";
 import { validateClassCompleteness } from "./class-completeness-gate.mjs";
 import { generateArtifactManifest, normalizeStagingTree, verifyZipAgainstManifest } from "./canonical-artifact-manifest.mjs";
@@ -283,7 +287,10 @@ async function run() {
 
     console.log("==> 5b. Minifying 100% of first-party JS and CSS assets...");
     const minResult = await minifyAssetsInTree(stagingPlugin, contentRoot);
-    console.log(`==> Minified ${minResult.minifiedAssets} first-party JS/CSS assets in staging!`);
+    console.log(
+      `==> Minified ${minResult.minifiedAssets} first-party JS/CSS assets in staging (${minResult.minSiblingsWritten || 0} .min siblings)!`,
+    );
+    assertFrameworkClosureMinifiedAssets(stagingPlugin);
 
     // Phase 3: Dump optimized autoloader classmap so all mangled classes are registered in Composer classmap
     if (fs.existsSync(path.join(stagingPlugin, "vendor"))) {

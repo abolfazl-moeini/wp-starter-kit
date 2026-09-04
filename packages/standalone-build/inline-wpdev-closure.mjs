@@ -553,6 +553,12 @@ defined('ABSPATH') || exit;
 if (!defined('WPDEV_LOADED')) {
     define('WPDEV_LOADED', true);
 }
+if (!defined('WPDEV_PLUGIN_DIR')) {
+    define('WPDEV_PLUGIN_DIR', __DIR__ . '/');
+}
+if (!defined('WPDEV_PLUGIN_URL') && function_exists('plugins_url')) {
+    define('WPDEV_PLUGIN_URL', rtrim(plugins_url('', __FILE__), '/\\\\') . '/');
+}
 
 // Preload and alias Core Primitives with existence guards across plugins
 $wpdev_closure_core_map = array(
@@ -921,6 +927,11 @@ if (!function_exists('wpdev_boot_closure_lifecycle')) {
   for (const relDir of REQUIRED_WPDEV_ASSET_DIRS) {
     const srcDir = path.join(wpdevPluginDir, relDir);
     await copyDirRecursive(srcDir, assetsDir, srcDir);
+    // Keep module-local copies so wpdev_get_module_asset_url can
+    // is_readable() + fall back from .min.js to .js.
+    if (relDir.startsWith("modules/") && relDir.endsWith("/assets")) {
+      await copyDirRecursive(srcDir, path.join(targetDir, relDir), srcDir);
+    }
   }
 
   // Copy packages/framework/src/ into src/FrameworkClosure/Core/
@@ -1063,6 +1074,52 @@ export async function scopeFrameworkCoreForConsumer(coreDestDir, stagingPlugin, 
   return { consumerNs };
 }
 
+/**
+ * Production SCRIPT_DEBUG=false rewrites foo.js → foo.min.js in
+ * wpdev_get_asset() / wpdev_get_module_asset_url(). The inliner used to
+ * minify in place and leave the original filename, so standalone ZIPs
+ * 404'd functions-core.min.js / jalaali.min.js and admin.min.js then
+ * threw `wpdev_on_load is not defined`.
+ */
+export const REQUIRED_FRAMEWORK_CLOSURE_MIN_ASSETS = Object.freeze([
+  "js/admin.min.js",
+  "js/functions/functions-core.min.js",
+  "js/functions/functions-utils.min.js",
+  "js/lib/jalaali.min.js",
+  "js/lib/flatpickr-l10n/fa.min.js",
+]);
+
+const MINIFY_SKIP_DIRS = new Set([
+  "vendor",
+  "node_modules",
+  ".git",
+  "tests",
+  "dist",
+  "packages",
+]);
+
+function minifiedSiblingPath(file) {
+  return file.replace(/(\.js|\.css)$/i, ".min$1");
+}
+
+export function assertFrameworkClosureMinifiedAssets(stagingPlugin) {
+  const assetsRoot = path.join(stagingPlugin, "src/FrameworkClosure/assets");
+  const missing = [];
+  for (const rel of REQUIRED_FRAMEWORK_CLOSURE_MIN_ASSETS) {
+    const full = path.join(assetsRoot, rel);
+    if (!fs.existsSync(full)) {
+      missing.push(rel);
+    }
+  }
+  if (missing.length > 0) {
+    throw new Error(
+      "FrameworkClosure is missing production .min assets (SCRIPT_DEBUG=false 404s, then wpdev_on_load is not defined):\n" +
+        missing.map((rel) => `  - src/FrameworkClosure/assets/${rel}`).join("\n"),
+    );
+  }
+  return { checked: REQUIRED_FRAMEWORK_CLOSURE_MIN_ASSETS.length };
+}
+
 export async function minifyAssetsInTree(dir, contentRoot = "") {
   let minifiedCount = 0;
   const filesToMinify = [];
@@ -1096,8 +1153,13 @@ export async function minifyAssetsInTree(dir, contentRoot = "") {
     for (const entry of entries) {
       const full = path.join(current, entry.name);
       if (entry.isDirectory()) {
+        if (MINIFY_SKIP_DIRS.has(entry.name)) {
+          continue;
+        }
         await visit(full);
-      } else if (entry.isFile()) {
+        continue;
+      }
+      if (entry.isFile()) {
         const name = entry.name.toLowerCase();
         if (name.endsWith(".js") || name.endsWith(".css")) {
           filesToMinify.push(full);
@@ -1111,7 +1173,7 @@ export async function minifyAssetsInTree(dir, contentRoot = "") {
   if (esbuild && typeof esbuild.transform === "function") {
     await Promise.all(
       filesToMinify.map(async (file) => {
-        const ext = file.endsWith(".js") ? "js" : "css";
+        const ext = file.endsWith(".css") ? "css" : "js";
         const content = await readFile(file, "utf8");
         try {
           const res = await esbuild.transform(content, { minify: true, loader: ext });
@@ -1140,5 +1202,20 @@ export async function minifyAssetsInTree(dir, contentRoot = "") {
     );
   }
 
-  return { totalAssets: filesToMinify.length, minifiedAssets: minifiedCount };
+  let siblingsWritten = 0;
+  for (const file of filesToMinify) {
+    const name = path.basename(file).toLowerCase();
+    if (name.includes(".min.")) {
+      continue;
+    }
+    const sibling = minifiedSiblingPath(file);
+    await copyFile(file, sibling);
+    siblingsWritten += 1;
+  }
+
+  return {
+    totalAssets: filesToMinify.length,
+    minifiedAssets: minifiedCount,
+    minSiblingsWritten: siblingsWritten,
+  };
 }
