@@ -12,7 +12,11 @@ final class ShortcodesSetup
     /** @var array<string, string|Shortcode> */
     private static array $shortcodes = [];
 
-    public static function register(string $tag, string|Shortcode $handler): bool
+    /**
+     * @param string $tag
+     * @param string|Shortcode $handler
+     */
+    public static function register(string $tag, $handler): bool
     {
         self::$shortcodes[$tag] = $handler;
         return true;

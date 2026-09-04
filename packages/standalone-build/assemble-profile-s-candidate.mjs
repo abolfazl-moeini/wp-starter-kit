@@ -139,6 +139,9 @@ async function validatePhpSyntaxTree(dir) {
           } catch (\\ParseError $e) {
               $errors[] = $path . ': ' . $e->getMessage();
           }
+          if (preg_match('/\\bfunction\\s+[a-zA-Z0-9_]+\\s*\\([^)]*\\|[^)]*\\)/', $code, $m)) {
+              $errors[] = $path . ': PHP 7.4 incompatibility: union type parameter detected: ' . $m[0];
+          }
       }
   }
   if (!empty($errors)) {
@@ -195,6 +198,34 @@ async function run() {
     });
     if (inlined.inlinedFiles > 0) {
       console.log(`==> Inlined ${inlined.inlinedFiles} WPDev framework files into self-contained staging tree!`);
+    }
+
+    // 3a. Downgrade all PHP files to PHP 7.4 via Rector
+    const starterKitRoot = path.resolve(scriptDir, "../..");
+    const rectorBin = path.join(starterKitRoot, "vendor/bin/rector");
+    const rectorConfig = path.join(scriptDir, "rector-downgrade-php74.php");
+
+    if (fs.existsSync(rectorBin) && fs.existsSync(rectorConfig)) {
+      console.log("==> 3a. Running Rector PHP 7.4 Downgrade pipeline on staging tree...");
+      try {
+        await execFileAsync("php", [
+          rectorBin,
+          "process",
+          "-c",
+          rectorConfig,
+          "--clear-cache",
+          "--no-progress-bar",
+        ], {
+          cwd: starterKitRoot,
+          env: {
+            ...process.env,
+            RECTOR_TARGET_DIR: stagingPlugin,
+          },
+        });
+        console.log("==> Rector downgrade to PHP 7.4 completed successfully!");
+      } catch (err) {
+        console.warn(`==> Rector downgrade notice: ${err.message}`);
+      }
     }
 
     if (isObfuscate) {
@@ -258,9 +289,14 @@ async function run() {
     if (fs.existsSync(path.join(stagingPlugin, "vendor"))) {
       const devSourceDir = resolvedSource.sourceDir;
 
+      const stagingCompJson = path.join(stagingPlugin, "composer.json");
       const srcCompJson = devSourceDir ? path.join(devSourceDir, "composer.json") : null;
       let compData = {};
-      if (srcCompJson && fs.existsSync(srcCompJson)) {
+      if (fs.existsSync(stagingCompJson)) {
+        try {
+          compData = JSON.parse(fs.readFileSync(stagingCompJson, "utf8"));
+        } catch {}
+      } else if (srcCompJson && fs.existsSync(srcCompJson)) {
         try {
           compData = JSON.parse(fs.readFileSync(srcCompJson, "utf8"));
         } catch {}
@@ -294,7 +330,10 @@ async function run() {
         autoload: {
           ...(compData.autoload || {}),
           "classmap": candidateDirs.length > 0 ? candidateDirs.map(d => d + "/") : ["./"],
-          "psr-4": compData.autoload?.["psr-4"] || {},
+          "psr-4": {
+            ...(compData.autoload?.["psr-4"] || {}),
+            "WPDev\\": "src/FrameworkClosure/Core/",
+          },
           "files": Array.from(discoveredFiles).filter(f => fs.existsSync(path.join(stagingPlugin, f)))
         }
       };
@@ -302,6 +341,66 @@ async function run() {
       console.log("==> Dumping optimized Composer classmap for mangled symbols...");
       await execFileAsync("composer", ["dump-autoload", "--no-dev", "--optimize", "--no-scripts", "--no-plugins"], { cwd: stagingPlugin });
       await rm(path.join(stagingPlugin, "composer.json"), { force: true });
+
+      const classmapFile = path.join(stagingPlugin, "vendor/composer/autoload_classmap.php");
+      const mapFile = path.join(stagingRoot, "symbol-map.json");
+      if (fs.existsSync(classmapFile)) {
+        let cmap = await readFile(classmapFile, "utf8");
+        const coreEntries = [
+          { cls: "WPDev\\\\Core\\\\AbstractModule", rel: "/src/FrameworkClosure/Core/Core/AbstractModule.php" },
+          { cls: "WPDev\\\\Core\\\\ModuleInterface", rel: "/src/FrameworkClosure/Core/Core/ModuleInterface.php" },
+          { cls: "WPDev\\\\Core\\\\ModuleLoader", rel: "/src/FrameworkClosure/Core/Core/ModuleLoader.php" },
+          { cls: "WPDev\\\\Core\\\\Plugin", rel: "/src/FrameworkClosure/Core/Core/Plugin.php" },
+        ];
+
+        if (fs.existsSync(mapFile)) {
+          try {
+            const symMap = JSON.parse(await readFile(mapFile, "utf8"));
+            if (symMap.classes) {
+              for (const [fqcn, mangled] of Object.entries(symMap.classes)) {
+                if (fqcn.startsWith("\\") || fqcn.includes("\\_c_")) continue;
+                const escMangled = `'${mangled}' => \\$baseDir \\. '([^']+)'`;
+                const m = cmap.match(new RegExp(escMangled));
+                if (m && m[1]) {
+                  const escapedFqcn = fqcn.replace(/\\/g, "\\\\");
+                  coreEntries.push({ cls: escapedFqcn, rel: m[1] });
+                }
+              }
+            }
+          } catch {}
+        }
+
+        let additions = [];
+        for (const entry of coreEntries) {
+          if (fs.existsSync(path.join(stagingPlugin, entry.rel.slice(1))) && !cmap.includes(`'${entry.cls}'`)) {
+            additions.push(`    '${entry.cls}' => $baseDir . '${entry.rel}',`);
+          }
+        }
+        if (additions.length > 0) {
+          cmap = cmap.replace("return array(", `return array(\n${additions.join("\n")}`);
+          await writeFile(classmapFile, cmap, "utf8");
+        }
+
+        const staticFile = path.join(stagingPlugin, "vendor/composer/autoload_static.php");
+        if (fs.existsSync(staticFile)) {
+          let sContent = await readFile(staticFile, "utf8");
+          if (sContent.includes("public static $classMap = array(")) {
+            let staticAdditions = [];
+            for (const entry of coreEntries) {
+              if (fs.existsSync(path.join(stagingPlugin, entry.rel.slice(1))) && !sContent.includes(`'${entry.cls}'`)) {
+                staticAdditions.push(`        '${entry.cls}' => __DIR__ . '/../..' . '${entry.rel}',`);
+              }
+            }
+            if (staticAdditions.length > 0) {
+              sContent = sContent.replace(
+                "public static $classMap = array(",
+                `public static $classMap = array(\n${staticAdditions.join("\n")}`
+              );
+              await writeFile(staticFile, sContent, "utf8");
+            }
+          }
+        }
+      }
     }
 
 

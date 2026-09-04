@@ -520,6 +520,19 @@ ${phpWrapperScript}
   }
   await normalizeClosureRequires(targetDir);
 
+  const CONSUMER_NAMESPACES = {
+    "drm-connector": "DRMConnector",
+    "tavangary-core": "TavangaryCore",
+    "tavangary-theme-panel": "TavangaryThemePanel",
+    "wpdev-analytics": "WpdevAnalytics",
+    "wpdev-crm": "WpdevCrm",
+    "wpdev-tickets": "WpdevTickets",
+    "wpdev-woo-persian": "WpdevWooPersian",
+  };
+  const consumerNs = CONSUMER_NAMESPACES[consumer] || consumer
+    .replace(/[-_]([a-z])/g, (_, c) => c.toUpperCase())
+    .replace(/^[a-z]/, c => c.toUpperCase());
+
   // Create comprehensive master functions-closure.php
   const helperCode = `<?php
 defined('ABSPATH') || exit;
@@ -530,6 +543,10 @@ if (!defined('WPDEV_LOADED')) {
 
 // Preload and alias Core Primitives with existence guards across plugins
 $wpdev_closure_core_map = array(
+    'WPDev\\\\Core\\\\ModuleInterface'                 => __DIR__ . '/Core/Core/ModuleInterface.php',
+    'WPDev\\\\Core\\\\AbstractModule'                  => __DIR__ . '/Core/Core/AbstractModule.php',
+    'WPDev\\\\Core\\\\ModuleLoader'                    => __DIR__ . '/Core/Core/ModuleLoader.php',
+    'WPDev\\\\Core\\\\Plugin'                          => __DIR__ . '/Core/Core/Plugin.php',
     'WPDev\\\\Dependencies\\\\BerlinDB\\\\Database\\\\Base'  => __DIR__ . '/modules/core/dependencies/berlindb/core/src/Database/Base.php',
     'WPDev\\\\Dependencies\\\\BerlinDB\\\\Database\\\\Table' => __DIR__ . '/modules/core/dependencies/berlindb/core/src/Database/Table.php',
     'WPDevFramework\\\\Database\\\\Engine\\\\Base'           => __DIR__ . '/modules/core/src/Database/engine/class-base.php',
@@ -540,8 +557,21 @@ $wpdev_closure_core_map = array(
     'WPDevFramework\\\\Admin_Pages\\\\List_Admin_Page'       => __DIR__ . '/modules/admin-page-builder/src/admin/class-list-admin-page.php',
 );
 foreach ($wpdev_closure_core_map as $wpdev_c_cls => $wpdev_c_f) {
-    if (!class_exists($wpdev_c_cls, false) && !trait_exists($wpdev_c_cls, false) && file_exists($wpdev_c_f)) {
+    if (!class_exists($wpdev_c_cls, false) && !interface_exists($wpdev_c_cls, false) && !trait_exists($wpdev_c_cls, false) && file_exists($wpdev_c_f)) {
         require_once $wpdev_c_f;
+    }
+}
+
+foreach (array('ModuleInterface', 'AbstractModule', 'ModuleLoader', 'Plugin') as $wpdev_ci) {
+    if (class_exists("WPDev\\\\Core\\\\{$wpdev_ci}", false) && !class_exists("${consumerNs}\\\\Core\\\\{$wpdev_ci}", false)) {
+        class_alias("WPDev\\\\Core\\\\{$wpdev_ci}", "${consumerNs}\\\\Core\\\\{$wpdev_ci}");
+    } elseif (class_exists("${consumerNs}\\\\Core\\\\{$wpdev_ci}", false) && !class_exists("WPDev\\\\Core\\\\{$wpdev_ci}", false)) {
+        class_alias("${consumerNs}\\\\Core\\\\{$wpdev_ci}", "WPDev\\\\Core\\\\{$wpdev_ci}");
+    }
+    if (interface_exists("WPDev\\\\Core\\\\{$wpdev_ci}", false) && !interface_exists("${consumerNs}\\\\Core\\\\{$wpdev_ci}", false)) {
+        class_alias("WPDev\\\\Core\\\\{$wpdev_ci}", "${consumerNs}\\\\Core\\\\{$wpdev_ci}");
+    } elseif (interface_exists("${consumerNs}\\\\Core\\\\{$wpdev_ci}", false) && !interface_exists("WPDev\\\\Core\\\\{$wpdev_ci}", false)) {
+        class_alias("${consumerNs}\\\\Core\\\\{$wpdev_ci}", "WPDev\\\\Core\\\\{$wpdev_ci}");
     }
 }
 
@@ -576,6 +606,16 @@ if (class_exists('WPDevFramework\\\\List_Tables\\\\Base_List_Table', false) && !
 }
 
 spl_autoload_register(function ($class) {
+    // Framework Core Classes fallback
+    if (0 === strpos($class, 'WPDev\\\\Core\\\\') || 0 === strpos($class, '${consumerNs}\\\\Core\\\\')) {
+        $basename = basename(str_replace('\\\\', '/', $class));
+        $core_file = __DIR__ . '/Core/Core/' . $basename . '.php';
+        if (file_exists($core_file)) {
+            require_once $core_file;
+            return;
+        }
+    }
+
     // Admin Pages
     if (0 === strpos($class, 'WPDevFramework\\\\Admin_Pages\\\\') || 0 === strpos($class, 'WPDev\\\\Admin_Pages\\\\')) {
         $trait_w = __DIR__ . '/modules/metabox-builder/src/admin/trait-edit-page-widgets.php';
@@ -882,7 +922,7 @@ if (!function_exists('wpdev_boot_closure_lifecycle')) {
   }
 
   // Scope framework core to consumer namespace
-  const { consumerNs } = await scopeFrameworkCoreForConsumer(coreDestDir, stagingPlugin, consumer);
+  await scopeFrameworkCoreForConsumer(coreDestDir, stagingPlugin, consumer);
 
   // Write inlined files manifest
   const manifestData = {
