@@ -493,6 +493,19 @@ ${phpWrapperScript}
       } else if (entry.isFile() && entry.name.endsWith(".php") && entry.name !== "functions-closure.php") {
         let content = await readFile(full, "utf8");
         const replaced = content.replace(/require(?:_once)?\s+[^;]+\/((?:trait|class)-[a-zA-Z0-9_-]+\.php)['"][^;]*;/g, (match, filename) => {
+          if (filename === 'class-wp-list-table.php' || match.includes('wp-admin')) {
+            return `if (!class_exists('WP_List_Table', false) && defined('ABSPATH')) {
+                if (file_exists(ABSPATH . 'wp-admin/includes/template.php')) {
+                    require_once ABSPATH . 'wp-admin/includes/template.php';
+                }
+                if (file_exists(ABSPATH . 'wp-admin/includes/screen.php')) {
+                    require_once ABSPATH . 'wp-admin/includes/screen.php';
+                }
+                if (file_exists(ABSPATH . 'wp-admin/includes/class-wp-list-table.php')) {
+                    require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
+                }
+            }`;
+          }
           return `$_req_candidates = [
               __DIR__ . '/${filename}',
               dirname(__DIR__) . '/${filename}',

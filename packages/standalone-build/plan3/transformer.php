@@ -138,6 +138,7 @@ class Plan3_Transformer {
 		'AbstractModule',
 		'Base_Admin_Page',
 		'List_Admin_Page',
+		'Base_List_Table',
 		'Edit_Admin_Page',
 		'Wizard_Admin_Page',
 		'Customizer_Admin_Page',
