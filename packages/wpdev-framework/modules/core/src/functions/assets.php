@@ -21,12 +21,24 @@ defined('ABSPATH') || exit;
  */
 function wpdev_get_asset($asset, $assets_dir = 'img', $base_dir = 'assets') {
 
+	$original = $asset;
+
 	if (!defined('SCRIPT_DEBUG') || !SCRIPT_DEBUG) {
 
 		$asset = preg_replace('/(?<!\.min)(\.js|\.css)/', '.min$1', $asset);
 
 	} // end if;
 
-	return wpdev_url("$base_dir/$assets_dir/$asset");
+	$relative = "$base_dir/$assets_dir/$asset";
+
+	if (
+		$asset !== $original
+		&& function_exists('wpdev_path')
+		&& ! is_readable(wpdev_path($relative))
+	) {
+		$relative = "$base_dir/$assets_dir/$original";
+	}
+
+	return wpdev_url($relative);
 
 } // end wpdev_get_asset;
