@@ -70,6 +70,16 @@ describe("core generator — release packager", () => {
     expect(contrib.files["dev/release/run-release.js"]).toBeDefined();
     expect(contrib.files["dev/release/php-ast-transform.php"]).toBeDefined();
     expect(contrib.files["dev/release/canonical-zip.js"]).toBeDefined();
+    expect(
+      contrib.files["dev/release/resolve-profile-s-transformer.js"],
+    ).toBeDefined();
+    expect(
+      contrib.files["dev/release/module-loader-coexistence-gate.js"],
+    ).toBeDefined();
+    expect(contrib.files["dev/release/plan3/transformer.php"]).toBeDefined();
+    expect(contrib.files["dev/release/prepare-release.js"]).toMatch(
+      /requireProfileSTransformer/,
+    );
     expect(contrib.files["dev/release/php-ast-transform.php"]).toMatch(
       /createForVersion\( PhpVersion::fromString\( '7\.4' \) \)/,
     );

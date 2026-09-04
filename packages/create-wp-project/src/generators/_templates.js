@@ -1252,9 +1252,9 @@ final class ModuleLoader
         \$this->hookPrefix = \$hookPrefix;
     }
 
-    public function register(ModuleInterface \$module): void
+    public function register(object \$module): void
     {
-        \$slug = \$module->get_slug();
+        \$slug = \\method_exists(\$module, 'get_slug') ? \$module->get_slug() : '';
         if (\$slug === '') {
             throw new \\InvalidArgumentException(
                 'Module slug must be a non-empty string'
@@ -1277,13 +1277,18 @@ final class ModuleLoader
         \$this->modules = \$this->filter_modules(\$this->modules);
 
         foreach (\$this->modules as \$module) {
-            \$module->boot();
+            if (\\method_exists(\$module, 'should_boot') && !\$module->should_boot()) {
+                continue;
+            }
+            if (\\method_exists(\$module, 'boot')) {
+                \$module->boot();
+            }
         }
 
         \$this->fire_loaded_action();
     }
 
-    public function get(string \$slug): ?ModuleInterface
+    public function get(string \$slug): ?object
     {
         return \$this->modules[\$slug] ?? null;
     }

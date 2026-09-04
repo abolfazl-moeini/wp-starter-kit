@@ -40,6 +40,7 @@ import {
 } from "node:fs";
 import { spawnSync } from "node:child_process";
 import * as path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   prepareComposerForRelease,
@@ -48,6 +49,31 @@ import {
 } from "./prepareComposer.js";
 import { gateReleaseTests } from "./releaseTests.js";
 import { createCanonicalZip } from "./canonical-zip.js";
+import { requireProfileSTransformer } from "./resolve-profile-s-transformer.js";
+
+import {
+  rewriteModuleLoaderRegisterToDuckTyped,
+  assertDuckTypedModuleLoaders,
+} from "./module-loader-coexistence-gate.js";
+
+function getReleaseScriptDir() {
+  try {
+    const metaUrl = Function(
+      "try { return typeof import.meta !== 'undefined' && import.meta.url; } catch (e) { return null; }",
+    )();
+    if (typeof metaUrl === "string" && metaUrl.length > 0) {
+      return path.dirname(fileURLToPath(metaUrl));
+    }
+  } catch {
+    /* Jest/babel CJS fallback */
+  }
+  return typeof __dirname !== "undefined" ? __dirname : process.cwd();
+}
+
+function normalizeStandaloneModuleLoaders(distRoot) {
+  rewriteModuleLoaderRegisterToDuckTyped(distRoot);
+  assertDuckTypedModuleLoaders(distRoot);
+}
 
 function parseArgs(argv) {
   const opts = {
@@ -363,41 +389,39 @@ export async function prepareRelease(options = {}) {
 
   stripDist(distRoot);
 
-  // Opt-in Profile S Obfuscation (Clean by default)
+  // Opt-in Profile S Obfuscation (off by default; fail closed when requested).
   if (options.obfuscate) {
-    const candidates = [
-      path.resolve(root, "../tools/plan3/transformer.php"),
-      path.resolve(root, "../../tools/plan3/transformer.php"),
-      path.resolve(root, "../../../tools/plan3/transformer.php"),
-    ];
-    const toolsTransformer = candidates.find((c) => existsSync(c));
-    if (toolsTransformer) {
-      process.stderr.write(
-        "release: applying Profile S AST obfuscation transformer…\n",
-      );
-      const mapFile = path.join(distRoot, "symbol-map.json");
-      const seed = `profile-s-${slug}-seed`;
-      const dumpRes = spawnSync(
-        "php",
-        [toolsTransformer, "--dump-map", distRoot, mapFile, seed],
-        { stdio: "inherit" },
-      );
-      if (dumpRes.status === 0) {
-        spawnSync(
-          "php",
-          [toolsTransformer, "--batch", distRoot, mapFile, seed, `${slug}.php`],
-          { stdio: "inherit" },
-        );
-      }
-      if (existsSync(mapFile)) {
-        rmSync(mapFile, { force: true });
-      }
-    } else {
-      process.stderr.write(
-        "release: warning, tools/plan3/transformer.php not found, skipping obfuscation\n",
-      );
+    const toolsTransformer = requireProfileSTransformer({
+      fromDir: getReleaseScriptDir(),
+      pluginRoot: root,
+    });
+    process.stderr.write(
+      `release: applying Profile S AST obfuscation transformer (${toolsTransformer})\n`,
+    );
+    const mapFile = path.join(distRoot, "symbol-map.json");
+    const seed = `profile-s-${slug}-seed`;
+    const dumpRes = spawnSync(
+      "php",
+      [toolsTransformer, "--dump-map", distRoot, mapFile, seed],
+      { stdio: "inherit" },
+    );
+    if (dumpRes.status !== 0) {
+      throw new Error("Profile S transformer --dump-map failed");
+    }
+    const batchRes = spawnSync(
+      "php",
+      [toolsTransformer, "--batch", distRoot, mapFile, seed, `${slug}.php`],
+      { stdio: "inherit" },
+    );
+    if (batchRes.status !== 0) {
+      throw new Error("Profile S transformer --batch failed");
+    }
+    if (existsSync(mapFile)) {
+      rmSync(mapFile, { force: true });
     }
   }
+
+  await normalizeStandaloneModuleLoaders(distRoot);
 
   // Marker only (no wall-clock stamp in the emitted scaffold body).
   writeFileSync(
@@ -427,6 +451,7 @@ Options:
   --skip-rector      Skip PHP downgrade (rector:build) on dist/
   --skip-zip         Skip creating dist/{slug}.zip
   --skip-tests       Skip pre-dist unit/e2e suites (or set WPDEV_SKIP_TESTS=1)
+  --obfuscate        Opt-in Profile S AST obfuscation (off by default; fails if transformer missing)
   -h, --help         Show this help
 `);
 }

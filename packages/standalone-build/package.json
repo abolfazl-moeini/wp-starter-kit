@@ -1,0 +1,17 @@
+{
+  "name": "@wpdev/standalone-build",
+  "version": "1.0.0",
+  "description": "Standalone plugin assemble/deploy pipeline with optional Profile S AST obfuscation",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "wpdev-standalone-build": "./build-all-standalone-plugins.mjs"
+  },
+  "exports": {
+    ".": "./build-all-standalone-plugins.mjs",
+    "./resolve-content-root": "./resolve-content-root.mjs"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs tests-docker/*.test.mjs"
+  }
+}

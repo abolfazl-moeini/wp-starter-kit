@@ -272,7 +272,20 @@ export function run(ctx) {
     "php-ast-transform.php",
   );
   files["dev/release/canonical-zip.js"] = loadReleaseScript("canonical-zip.js");
-  dirs.push("dev/release");
+  files["dev/release/resolve-profile-s-transformer.js"] = loadReleaseScript(
+    "resolve-profile-s-transformer.js",
+  );
+  files["dev/release/module-loader-coexistence-gate.js"] = loadReleaseScript(
+    "module-loader-coexistence-gate.js",
+  );
+  files["dev/release/plan3/transformer.php"] = readFileSync(
+    path.join(
+      resolveEngineSrcDir(),
+      "../../standalone-build/plan3/transformer.php",
+    ),
+    "utf8",
+  );
+  dirs.push("dev/release", "dev/release/plan3");
 
   // 12. Rector pipeline — downgrade / prefix / upgrade (same as kit
   //     `dev/rector-*.php`). Consumers run `composer rector:build` on a

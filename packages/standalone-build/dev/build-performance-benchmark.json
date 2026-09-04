@@ -1,0 +1,752 @@
+{
+  "schemaVersion": "3.0.0",
+  "command": "node tools/dev/run-benchmark.mjs",
+  "generatedAt": "2026-09-01T19:37:51.729Z",
+  "git": {
+    "head": "704357214fe3ca230e09f6c4e5e467bd9da20046",
+    "isDirty": true,
+    "statusSummary": "47 modified/untracked entries"
+  },
+  "system": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "nodeVersion": "v22.19.0",
+    "cpuModel": "Apple M4",
+    "cpuCount": 10,
+    "jobsLimit": 4,
+    "totalMemoryBytes": 17179869184,
+    "totalMemoryGb": 16
+  },
+  "metrics": {
+    "fingerprinting": {
+      "iterations": 5,
+      "minWallMs": 125.41,
+      "p50WallMs": 139.83,
+      "meanWallMs": 149.92,
+      "maxWallMs": 188.34,
+      "meanCpuUserMs": 133.65,
+      "meanCpuSystemMs": 236.87,
+      "maxRssMb": 122.19,
+      "samples": [
+        {
+          "iteration": 1,
+          "jobs": 8,
+          "exitCode": 0,
+          "wallMs": 125.41,
+          "cpuUserMs": 128.5,
+          "cpuSystemMs": 212.05,
+          "rssBytes": 101761024,
+          "rssMb": 97.05,
+          "workloadHash": "b9b5469080ad0979"
+        },
+        {
+          "iteration": 2,
+          "jobs": 8,
+          "exitCode": 0,
+          "wallMs": 162.13,
+          "cpuUserMs": 125.61,
+          "cpuSystemMs": 240.16,
+          "rssBytes": 122028032,
+          "rssMb": 116.38,
+          "workloadHash": "b9b5469080ad0979"
+        },
+        {
+          "iteration": 3,
+          "jobs": 8,
+          "exitCode": 0,
+          "wallMs": 188.34,
+          "cpuUserMs": 174.78,
+          "cpuSystemMs": 264.63,
+          "rssBytes": 126976000,
+          "rssMb": 121.09,
+          "workloadHash": "b9b5469080ad0979"
+        },
+        {
+          "iteration": 4,
+          "jobs": 8,
+          "exitCode": 0,
+          "wallMs": 139.83,
+          "cpuUserMs": 121.67,
+          "cpuSystemMs": 238.1,
+          "rssBytes": 127418368,
+          "rssMb": 121.52,
+          "workloadHash": "b9b5469080ad0979"
+        },
+        {
+          "iteration": 5,
+          "jobs": 8,
+          "exitCode": 0,
+          "wallMs": 133.91,
+          "cpuUserMs": 117.68,
+          "cpuSystemMs": 229.4,
+          "rssBytes": 128122880,
+          "rssMb": 122.19,
+          "workloadHash": "b9b5469080ad0979"
+        }
+      ]
+    },
+    "coldBuild": {
+      "iterations": 2,
+      "minWallMs": 12306.79,
+      "p50WallMs": 12497.1,
+      "meanWallMs": 12401.94,
+      "maxWallMs": 12497.1,
+      "meanCpuUserMs": 17620,
+      "meanCpuSystemMs": 22870,
+      "maxRssMb": 166.33,
+      "samples": [
+        {
+          "iteration": 1,
+          "jobs": 4,
+          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts",
+          "args": [
+            "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+            "--jobs=4",
+            "--force",
+            "--build-only",
+            "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist",
+            "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
+            "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts"
+          ],
+          "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+          "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist",
+          "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
+          "exitCode": 0,
+          "wallMs": 12497.1,
+          "cpuUserMs": 17680,
+          "cpuSystemMs": 23180,
+          "rssBytes": 174407680,
+          "rssMb": 166.33,
+          "rssSupported": true,
+          "rebuiltCount": 4,
+          "cacheHitCount": 0,
+          "stderrSummary": "338329  messages received\n                1701  signals received\n               24864  voluntary context switches\n             1042036  involuntary context switches\n          5662443812  instructions retired\n          2226188554  cycles elapsed\n            74357312  peak memory footprint",
+          "stdoutSummary": "0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 12.46s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+        },
+        {
+          "iteration": 2,
+          "jobs": 4,
+          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts",
+          "args": [
+            "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+            "--jobs=4",
+            "--force",
+            "--build-only",
+            "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist",
+            "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
+            "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts"
+          ],
+          "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+          "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist",
+          "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
+          "exitCode": 0,
+          "wallMs": 12306.79,
+          "cpuUserMs": 17560,
+          "cpuSystemMs": 22560,
+          "rssBytes": 173211648,
+          "rssMb": 165.19,
+          "rssSupported": true,
+          "rebuiltCount": 4,
+          "cacheHitCount": 0,
+          "stderrSummary": "338330  messages received\n                1808  signals received\n               19053  voluntary context switches\n             1004015  involuntary context switches\n          5442955919  instructions retired\n          2206180327  cycles elapsed\n            71998040  peak memory footprint",
+          "stdoutSummary": "0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 12.27s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+        }
+      ]
+    },
+    "warmNoOp": {
+      "iterations": 2,
+      "minWallMs": 358.88,
+      "p50WallMs": 380.88,
+      "meanWallMs": 369.88,
+      "maxWallMs": 380.88,
+      "meanCpuUserMs": 315,
+      "meanCpuSystemMs": 260,
+      "maxRssMb": 115.84,
+      "samples": [
+        {
+          "iteration": 1,
+          "jobs": 4,
+          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts",
+          "args": [
+            "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+            "--jobs=4",
+            "--build-only",
+            "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist",
+            "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
+            "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts"
+          ],
+          "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+          "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist",
+          "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
+          "exitCode": 0,
+          "wallMs": 380.88,
+          "cpuUserMs": 320,
+          "cpuSystemMs": 260,
+          "rssBytes": 119259136,
+          "rssMb": 113.73,
+          "rssSupported": true,
+          "rebuiltCount": 0,
+          "cacheHitCount": 4,
+          "stderrSummary": "1  messages received\n                   0  signals received\n                2182  voluntary context switches\n               34040  involuntary context switches\n          5265514005  instructions retired\n          1994859354  cycles elapsed\n            84891696  peak memory footprint",
+          "stdoutSummary": ": 0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 0.34s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+        },
+        {
+          "iteration": 2,
+          "jobs": 4,
+          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts",
+          "args": [
+            "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+            "--jobs=4",
+            "--build-only",
+            "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist",
+            "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
+            "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts"
+          ],
+          "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+          "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist",
+          "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
+          "exitCode": 0,
+          "wallMs": 358.88,
+          "cpuUserMs": 310,
+          "cpuSystemMs": 260,
+          "rssBytes": 121470976,
+          "rssMb": 115.84,
+          "rssSupported": true,
+          "rebuiltCount": 0,
+          "cacheHitCount": 4,
+          "stderrSummary": "1  messages received\n                   0  signals received\n                1588  voluntary context switches\n               33206  involuntary context switches\n          5229531290  instructions retired\n          1981364142  cycles elapsed\n            87021496  peak memory footprint",
+          "stdoutSummary": ": 0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 0.32s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+        }
+      ]
+    },
+    "incrementalBuild": {
+      "iterations": 2,
+      "minWallMs": 9179.27,
+      "p50WallMs": 9843.01,
+      "meanWallMs": 9511.14,
+      "maxWallMs": 9843.01,
+      "meanCpuUserMs": 5355,
+      "meanCpuSystemMs": 5350,
+      "maxRssMb": 162.89,
+      "samples": [
+        {
+          "iteration": 1,
+          "jobs": 4,
+          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.deploy-receipts",
+          "args": [
+            "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+            "--jobs=4",
+            "--changed",
+            "--build-only",
+            "--plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/plugins",
+            "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist",
+            "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.build-cache.json",
+            "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.deploy-receipts"
+          ],
+          "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+          "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist",
+          "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.build-cache.json",
+          "exitCode": 0,
+          "wallMs": 9179.27,
+          "cpuUserMs": 5290,
+          "cpuSystemMs": 5080,
+          "rssBytes": 168656896,
+          "rssMb": 160.84,
+          "rssSupported": true,
+          "rebuiltCount": 1,
+          "cacheHitCount": 3,
+          "stderrSummary": "107701  messages received\n                 501  signals received\n                6402  voluntary context switches\n              282199  involuntary context switches\n          5726530945  instructions retired\n          2164832872  cycles elapsed\n            74323440  peak memory footprint",
+          "stdoutSummary": ": 0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 9.14s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+        },
+        {
+          "iteration": 2,
+          "jobs": 4,
+          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.deploy-receipts",
+          "args": [
+            "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+            "--jobs=4",
+            "--changed",
+            "--build-only",
+            "--plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/plugins",
+            "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist",
+            "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.build-cache.json",
+            "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.deploy-receipts"
+          ],
+          "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+          "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist",
+          "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.build-cache.json",
+          "exitCode": 0,
+          "wallMs": 9843.01,
+          "cpuUserMs": 5420,
+          "cpuSystemMs": 5620,
+          "rssBytes": 170803200,
+          "rssMb": 162.89,
+          "rssSupported": true,
+          "rebuiltCount": 1,
+          "cacheHitCount": 3,
+          "stderrSummary": "107616  messages received\n                 582  signals received\n                9553  voluntary context switches\n              300488  involuntary context switches\n          5868517263  instructions retired\n          2247288353  cycles elapsed\n            72996576  peak memory footprint",
+          "stdoutSummary": ": 0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 9.80s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+        }
+      ]
+    }
+  },
+  "concurrencyScaling": {
+    "jobs_1": {
+      "coldBuild": {
+        "iterations": 1,
+        "minWallMs": 31973.32,
+        "p50WallMs": 31973.32,
+        "meanWallMs": 31973.32,
+        "maxWallMs": 31973.32,
+        "meanCpuUserMs": 17310,
+        "meanCpuSystemMs": 18000,
+        "maxRssMb": 153.02,
+        "samples": [
+          {
+            "iteration": 1,
+            "jobs": 1,
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=1 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.deploy-receipts",
+            "args": [
+              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "--jobs=1",
+              "--force",
+              "--build-only",
+              "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist",
+              "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.build-cache.json",
+              "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.deploy-receipts"
+            ],
+            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist",
+            "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.build-cache.json",
+            "exitCode": 0,
+            "wallMs": 31973.32,
+            "cpuUserMs": 17310,
+            "cpuSystemMs": 18000,
+            "rssBytes": 160448512,
+            "rssMb": 153.02,
+            "rssSupported": true,
+            "rebuiltCount": 4,
+            "cacheHitCount": 0,
+            "stderrSummary": "338222  messages received\n                1554  signals received\n               21426  voluntary context switches\n              983571  involuntary context switches\n          5265494791  instructions retired\n          2337806167  cycles elapsed\n            69866824  peak memory footprint",
+            "stdoutSummary": "0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 31.93s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+          }
+        ]
+      },
+      "warmNoOp": {
+        "iterations": 1,
+        "minWallMs": 876.91,
+        "p50WallMs": 876.91,
+        "meanWallMs": 876.91,
+        "maxWallMs": 876.91,
+        "meanCpuUserMs": 360,
+        "meanCpuSystemMs": 300,
+        "maxRssMb": 113.44,
+        "samples": [
+          {
+            "iteration": 1,
+            "jobs": 1,
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=1 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.deploy-receipts",
+            "args": [
+              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "--jobs=1",
+              "--build-only",
+              "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist",
+              "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.build-cache.json",
+              "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.deploy-receipts"
+            ],
+            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist",
+            "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.build-cache.json",
+            "exitCode": 0,
+            "wallMs": 876.91,
+            "cpuUserMs": 360,
+            "cpuSystemMs": 300,
+            "rssBytes": 118947840,
+            "rssMb": 113.44,
+            "rssSupported": true,
+            "rebuiltCount": 0,
+            "cacheHitCount": 4,
+            "stderrSummary": "1  messages received\n                   0  signals received\n                3102  voluntary context switches\n               55337  involuntary context switches\n          5494622219  instructions retired\n          2250632157  cycles elapsed\n            84432560  peak memory footprint",
+            "stdoutSummary": ": 0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 0.83s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+          }
+        ]
+      },
+      "incrementalBuild": {
+        "iterations": 1,
+        "minWallMs": 9298.28,
+        "p50WallMs": 9298.28,
+        "meanWallMs": 9298.28,
+        "maxWallMs": 9298.28,
+        "meanCpuUserMs": 5360,
+        "meanCpuSystemMs": 5100,
+        "maxRssMb": 163.48,
+        "samples": [
+          {
+            "iteration": 1,
+            "jobs": 1,
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=1 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist/.deploy-receipts",
+            "args": [
+              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "--jobs=1",
+              "--changed",
+              "--build-only",
+              "--plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/plugins",
+              "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist",
+              "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist/.build-cache.json",
+              "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist/.deploy-receipts"
+            ],
+            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist",
+            "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist/.build-cache.json",
+            "exitCode": 0,
+            "wallMs": 9298.28,
+            "cpuUserMs": 5360,
+            "cpuSystemMs": 5100,
+            "rssBytes": 171425792,
+            "rssMb": 163.48,
+            "rssSupported": true,
+            "rebuiltCount": 1,
+            "cacheHitCount": 3,
+            "stderrSummary": "107720  messages received\n                 555  signals received\n                6387  voluntary context switches\n              301131  involuntary context switches\n          6001628543  instructions retired\n          2110863236  cycles elapsed\n            73144896  peak memory footprint",
+            "stdoutSummary": ": 0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 9.26s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+          }
+        ]
+      }
+    },
+    "jobs_2": {
+      "coldBuild": {
+        "iterations": 1,
+        "minWallMs": 16046.63,
+        "p50WallMs": 16046.63,
+        "meanWallMs": 16046.63,
+        "maxWallMs": 16046.63,
+        "meanCpuUserMs": 16600,
+        "meanCpuSystemMs": 17980,
+        "maxRssMb": 166.28,
+        "samples": [
+          {
+            "iteration": 1,
+            "jobs": 2,
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=2 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.deploy-receipts",
+            "args": [
+              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "--jobs=2",
+              "--force",
+              "--build-only",
+              "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist",
+              "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.build-cache.json",
+              "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.deploy-receipts"
+            ],
+            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist",
+            "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.build-cache.json",
+            "exitCode": 0,
+            "wallMs": 16046.63,
+            "cpuUserMs": 16600,
+            "cpuSystemMs": 17980,
+            "rssBytes": 174358528,
+            "rssMb": 166.28,
+            "rssSupported": true,
+            "rebuiltCount": 4,
+            "cacheHitCount": 0,
+            "stderrSummary": "338264  messages received\n                1881  signals received\n               24660  voluntary context switches\n              942721  involuntary context switches\n          5859487427  instructions retired\n          2291642326  cycles elapsed\n            69670144  peak memory footprint",
+            "stdoutSummary": "0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 16.01s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+          }
+        ]
+      },
+      "warmNoOp": {
+        "iterations": 1,
+        "minWallMs": 495.72,
+        "p50WallMs": 495.72,
+        "meanWallMs": 495.72,
+        "maxWallMs": 495.72,
+        "meanCpuUserMs": 330,
+        "meanCpuSystemMs": 260,
+        "maxRssMb": 109.59,
+        "samples": [
+          {
+            "iteration": 1,
+            "jobs": 2,
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=2 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.deploy-receipts",
+            "args": [
+              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "--jobs=2",
+              "--build-only",
+              "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist",
+              "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.build-cache.json",
+              "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.deploy-receipts"
+            ],
+            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist",
+            "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.build-cache.json",
+            "exitCode": 0,
+            "wallMs": 495.72,
+            "cpuUserMs": 330,
+            "cpuSystemMs": 260,
+            "rssBytes": 114917376,
+            "rssMb": 109.59,
+            "rssSupported": true,
+            "rebuiltCount": 0,
+            "cacheHitCount": 4,
+            "stderrSummary": "1  messages received\n                   0  signals received\n                2402  voluntary context switches\n               42261  involuntary context switches\n          5381059563  instructions retired\n          2047229667  cycles elapsed\n            80270832  peak memory footprint",
+            "stdoutSummary": ": 0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 0.46s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+          }
+        ]
+      },
+      "incrementalBuild": {
+        "iterations": 1,
+        "minWallMs": 8795.9,
+        "p50WallMs": 8795.9,
+        "meanWallMs": 8795.9,
+        "maxWallMs": 8795.9,
+        "meanCpuUserMs": 5310,
+        "meanCpuSystemMs": 5030,
+        "maxRssMb": 162.34,
+        "samples": [
+          {
+            "iteration": 1,
+            "jobs": 2,
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=2 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist/.deploy-receipts",
+            "args": [
+              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "--jobs=2",
+              "--changed",
+              "--build-only",
+              "--plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/plugins",
+              "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist",
+              "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist/.build-cache.json",
+              "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist/.deploy-receipts"
+            ],
+            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist",
+            "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist/.build-cache.json",
+            "exitCode": 0,
+            "wallMs": 8795.9,
+            "cpuUserMs": 5310,
+            "cpuSystemMs": 5030,
+            "rssBytes": 170229760,
+            "rssMb": 162.34,
+            "rssSupported": true,
+            "rebuiltCount": 1,
+            "cacheHitCount": 3,
+            "stderrSummary": "107671  messages received\n                 582  signals received\n                8300  voluntary context switches\n              294846  involuntary context switches\n          5916075161  instructions retired\n          2131347624  cycles elapsed\n            74438416  peak memory footprint",
+            "stdoutSummary": ": 0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 8.76s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+          }
+        ]
+      }
+    },
+    "jobs_4": {
+      "coldBuild": {
+        "iterations": 2,
+        "minWallMs": 12306.79,
+        "p50WallMs": 12497.1,
+        "meanWallMs": 12401.94,
+        "maxWallMs": 12497.1,
+        "meanCpuUserMs": 17620,
+        "meanCpuSystemMs": 22870,
+        "maxRssMb": 166.33,
+        "samples": [
+          {
+            "iteration": 1,
+            "jobs": 4,
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts",
+            "args": [
+              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "--jobs=4",
+              "--force",
+              "--build-only",
+              "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist",
+              "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
+              "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts"
+            ],
+            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist",
+            "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
+            "exitCode": 0,
+            "wallMs": 12497.1,
+            "cpuUserMs": 17680,
+            "cpuSystemMs": 23180,
+            "rssBytes": 174407680,
+            "rssMb": 166.33,
+            "rssSupported": true,
+            "rebuiltCount": 4,
+            "cacheHitCount": 0,
+            "stderrSummary": "338329  messages received\n                1701  signals received\n               24864  voluntary context switches\n             1042036  involuntary context switches\n          5662443812  instructions retired\n          2226188554  cycles elapsed\n            74357312  peak memory footprint",
+            "stdoutSummary": "0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 12.46s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+          },
+          {
+            "iteration": 2,
+            "jobs": 4,
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts",
+            "args": [
+              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "--jobs=4",
+              "--force",
+              "--build-only",
+              "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist",
+              "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
+              "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts"
+            ],
+            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist",
+            "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
+            "exitCode": 0,
+            "wallMs": 12306.79,
+            "cpuUserMs": 17560,
+            "cpuSystemMs": 22560,
+            "rssBytes": 173211648,
+            "rssMb": 165.19,
+            "rssSupported": true,
+            "rebuiltCount": 4,
+            "cacheHitCount": 0,
+            "stderrSummary": "338330  messages received\n                1808  signals received\n               19053  voluntary context switches\n             1004015  involuntary context switches\n          5442955919  instructions retired\n          2206180327  cycles elapsed\n            71998040  peak memory footprint",
+            "stdoutSummary": "0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 12.27s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+          }
+        ]
+      },
+      "warmNoOp": {
+        "iterations": 2,
+        "minWallMs": 358.88,
+        "p50WallMs": 380.88,
+        "meanWallMs": 369.88,
+        "maxWallMs": 380.88,
+        "meanCpuUserMs": 315,
+        "meanCpuSystemMs": 260,
+        "maxRssMb": 115.84,
+        "samples": [
+          {
+            "iteration": 1,
+            "jobs": 4,
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts",
+            "args": [
+              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "--jobs=4",
+              "--build-only",
+              "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist",
+              "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
+              "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts"
+            ],
+            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist",
+            "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
+            "exitCode": 0,
+            "wallMs": 380.88,
+            "cpuUserMs": 320,
+            "cpuSystemMs": 260,
+            "rssBytes": 119259136,
+            "rssMb": 113.73,
+            "rssSupported": true,
+            "rebuiltCount": 0,
+            "cacheHitCount": 4,
+            "stderrSummary": "1  messages received\n                   0  signals received\n                2182  voluntary context switches\n               34040  involuntary context switches\n          5265514005  instructions retired\n          1994859354  cycles elapsed\n            84891696  peak memory footprint",
+            "stdoutSummary": ": 0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 0.34s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+          },
+          {
+            "iteration": 2,
+            "jobs": 4,
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts",
+            "args": [
+              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "--jobs=4",
+              "--build-only",
+              "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist",
+              "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
+              "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts"
+            ],
+            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist",
+            "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
+            "exitCode": 0,
+            "wallMs": 358.88,
+            "cpuUserMs": 310,
+            "cpuSystemMs": 260,
+            "rssBytes": 121470976,
+            "rssMb": 115.84,
+            "rssSupported": true,
+            "rebuiltCount": 0,
+            "cacheHitCount": 4,
+            "stderrSummary": "1  messages received\n                   0  signals received\n                1588  voluntary context switches\n               33206  involuntary context switches\n          5229531290  instructions retired\n          1981364142  cycles elapsed\n            87021496  peak memory footprint",
+            "stdoutSummary": ": 0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 0.32s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+          }
+        ]
+      },
+      "incrementalBuild": {
+        "iterations": 2,
+        "minWallMs": 9179.27,
+        "p50WallMs": 9843.01,
+        "meanWallMs": 9511.14,
+        "maxWallMs": 9843.01,
+        "meanCpuUserMs": 5355,
+        "meanCpuSystemMs": 5350,
+        "maxRssMb": 162.89,
+        "samples": [
+          {
+            "iteration": 1,
+            "jobs": 4,
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.deploy-receipts",
+            "args": [
+              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "--jobs=4",
+              "--changed",
+              "--build-only",
+              "--plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/plugins",
+              "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist",
+              "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.build-cache.json",
+              "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.deploy-receipts"
+            ],
+            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist",
+            "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.build-cache.json",
+            "exitCode": 0,
+            "wallMs": 9179.27,
+            "cpuUserMs": 5290,
+            "cpuSystemMs": 5080,
+            "rssBytes": 168656896,
+            "rssMb": 160.84,
+            "rssSupported": true,
+            "rebuiltCount": 1,
+            "cacheHitCount": 3,
+            "stderrSummary": "107701  messages received\n                 501  signals received\n                6402  voluntary context switches\n              282199  involuntary context switches\n          5726530945  instructions retired\n          2164832872  cycles elapsed\n            74323440  peak memory footprint",
+            "stdoutSummary": ": 0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 9.14s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+          },
+          {
+            "iteration": 2,
+            "jobs": 4,
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.deploy-receipts",
+            "args": [
+              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "--jobs=4",
+              "--changed",
+              "--build-only",
+              "--plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/plugins",
+              "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist",
+              "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.build-cache.json",
+              "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.deploy-receipts"
+            ],
+            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist",
+            "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.build-cache.json",
+            "exitCode": 0,
+            "wallMs": 9843.01,
+            "cpuUserMs": 5420,
+            "cpuSystemMs": 5620,
+            "rssBytes": 170803200,
+            "rssMb": 162.89,
+            "rssSupported": true,
+            "rebuiltCount": 1,
+            "cacheHitCount": 3,
+            "stderrSummary": "107616  messages received\n                 582  signals received\n                9553  voluntary context switches\n              300488  involuntary context switches\n          5868517263  instructions retired\n          2247288353  cycles elapsed\n            72996576  peak memory footprint",
+            "stdoutSummary": ": 0\nDeploy skipped: 0\nTests selected: 0\nTests skipped by impact map: 0\nTotal wall time: 9.80s\n================================================================================\n✅ PIPELINE EXECUTION FINISHED SUCCESSFULLY!\n================================================================================"
+          }
+        ]
+      }
+    }
+  },
+  "summary": {
+    "fingerprintMeanWallMs": 149.92,
+    "coldBuildMeanWallMs": 12401.94,
+    "warmNoOpMeanWallMs": 369.88,
+    "incrementalBuildMeanWallMs": 9511.14,
+    "maxRssMb": 166.33
+  }
+}

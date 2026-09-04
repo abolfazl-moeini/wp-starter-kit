@@ -24,7 +24,8 @@ wp-starter-kit/
 │   ├── php-fault-tolerance/  # Optional HTTP batch / circuit breaker (PHP 8.1+)
 │   ├── hooks, utils, rest-utils, html-utils, ui-components, translation, …
 │   ├── mcp-integration/      # wpdev/mcp-integration (Abilities API)
-│   └── php-test-tools/       # PHPUnit helpers + patch runner
+│   ├── php-test-tools/       # PHPUnit helpers + patch runner
+│   └── standalone-build/     # Clean/obfuscated standalone assemble + deploy engine
 ├── core/packages/            # JS workspaces consumed by the build
 │   ├── build/                # esbuild CLIs (deps, components, styles)
 │   ├── dependency-extraction-esbuild-plugin/

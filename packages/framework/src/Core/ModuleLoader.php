@@ -57,15 +57,15 @@ final class ModuleLoader {
 	/**
 	 * Register a module under its slug.
 	 *
-	 * @param ModuleInterface $module The module to register.
+	 * @param object $module The module to register.
 	 *
 	 * @throws \InvalidArgumentException When a module with the same
 	 *                                   slug has already been
 	 *                                   registered on this loader,
 	 *                                   or when the slug is empty.
 	 */
-	public function register( ModuleInterface $module ): void {
-		$slug = $module->get_slug();
+	public function register( object $module ): void {
+		$slug = method_exists( $module, 'get_slug' ) ? $module->get_slug() : '';
 		if ( '' === $slug ) {
 			throw new \InvalidArgumentException(
 				'Module slug must be a non-empty string'
