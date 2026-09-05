@@ -14,7 +14,7 @@
 import { execFile } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
-import { chmod, lstat, mkdir, mkdtemp, readdir, readFile, rm, utimes, writeFile } from "node:fs/promises";
+import { chmod, lstat, mkdir, readdir, readFile, rm, utimes, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -82,6 +82,61 @@ function uint16(buffer, offset) {
   return buffer.readUInt16LE(offset);
 }
 
+const SKIP_ZIP_RELATIVE_NAMES = new Set([
+  "artifact-manifest.json",
+  "release-manifest.json",
+  "release-manifest.sig",
+]);
+
+function hashZipPayload(bytes, {
+  name,
+  compressionMethod,
+  compressedSize,
+  uncompressedSize,
+  localHeaderOffset,
+  localNameLength,
+  localExtraLength,
+  isDirectory,
+}) {
+  if (isDirectory) {
+    return null;
+  }
+  const dataOffset = localHeaderOffset + 30 + localNameLength + localExtraLength;
+  if (dataOffset + compressedSize > bytes.length) {
+    throw new Error(`candidate ZIP payload is truncated: ${name}`);
+  }
+  const compressed = bytes.subarray(dataOffset, dataOffset + compressedSize);
+  let payload;
+  if (compressionMethod === 0) {
+    payload = compressed;
+  } else if (compressionMethod === 8) {
+    try {
+      payload = zlib.inflateRawSync(compressed);
+    } catch (err) {
+      throw new Error(`candidate ZIP payload inflate failed: ${name}: ${err.message}`);
+    }
+  } else {
+    throw new Error(`unsupported ZIP compression method ${compressionMethod}: ${name}`);
+  }
+  if (payload.length !== uncompressedSize) {
+    throw new Error(
+      `candidate ZIP payload size mismatch: ${name} (expected ${uncompressedSize}, got ${payload.length})`,
+    );
+  }
+  return crypto.createHash("sha256").update(payload).digest("hex");
+}
+
+function zipEntryRelativePath(entryName, consumer) {
+  const prefix = consumer ? `${consumer}/` : "";
+  if (prefix && (entryName === consumer || entryName === prefix)) {
+    return "";
+  }
+  if (prefix && entryName.startsWith(prefix)) {
+    return entryName.slice(prefix.length);
+  }
+  return entryName;
+}
+
 export function readZipEntries(bytes) {
   const earliest = Math.max(0, bytes.length - 0x10016);
   let eocd = -1;
@@ -115,6 +170,8 @@ export function readZipEntries(bytes) {
       throw new Error("candidate ZIP has an invalid central-directory entry");
     }
     const flags = uint16(bytes, offset + 8);
+    const compressionMethod = uint16(bytes, offset + 10);
+    const compressedSize = uint32(bytes, offset + 20);
     const uncompressedSize = uint32(bytes, offset + 24);
     const nameLength = uint16(bytes, offset + 28);
     const extraLength = uint16(bytes, offset + 30);
@@ -165,11 +222,26 @@ export function readZipEntries(bytes) {
       throw new Error(`candidate ZIP local name does not match central directory name: ${name}`);
     }
 
+    const isDirectory = name.endsWith("/");
+    const sha256 = hashZipPayload(bytes, {
+      name,
+      compressionMethod,
+      compressedSize,
+      uncompressedSize,
+      localHeaderOffset,
+      localNameLength,
+      localExtraLength,
+      isDirectory,
+    });
+
     entries.push({
       name,
+      compressionMethod,
+      compressedSize,
       uncompressedSize,
-      isDirectory: name.endsWith("/"),
+      isDirectory,
       externalAttributes,
+      sha256,
     });
 
     offset = end;
@@ -542,25 +614,40 @@ export async function verifyArtifactManifest({
     blockers.push(`Disk scanning error: ${err.message}`);
   }
 
-  // If ZIP validation requested, verify ZIP entries against manifest
+  // If ZIP validation requested, hash inflated payloads (never name-only).
   if (expectedZipPath && fs.existsSync(expectedZipPath)) {
     try {
-      const { stdout } = await execFileAsync("unzip", ["-Z1", expectedZipPath]);
-      const zipEntries = stdout.trim().split("\n").filter(Boolean);
-      const prefix = consumer ? `${consumer}/` : "";
-
-      for (const entry of zipEntries) {
-        if (entry.endsWith("/")) continue; // directory entry
-        const rel = prefix && entry.startsWith(prefix) ? entry.slice(prefix.length) : entry;
-        if (
-          rel === "artifact-manifest.json" ||
-          rel === "release-manifest.json" ||
-          rel === "release-manifest.sig"
-        ) {
-          continue;
+      const zipStat = await lstat(expectedZipPath);
+      if (zipStat.isSymbolicLink() || !zipStat.isFile()) {
+        blockers.push("expected ZIP must be a regular non-symlink file");
+      } else {
+        const zipBytes = await readFile(expectedZipPath);
+        const zipEntries = readZipEntries(zipBytes);
+        const zipFileMap = new Map();
+        for (const entry of zipEntries) {
+          if (entry.isDirectory) continue;
+          const rel = zipEntryRelativePath(entry.name, consumer);
+          if (!rel || SKIP_ZIP_RELATIVE_NAMES.has(rel)) continue;
+          zipFileMap.set(rel, entry);
+          if (!manifestFileMap.has(rel)) {
+            unexpectedFiles.push(rel);
+          }
         }
-        if (!manifestFileMap.has(rel)) {
-          unexpectedFiles.push(`zip:${entry}`);
+        for (const [rel, file] of manifestFileMap) {
+          const zipEntry = zipFileMap.get(rel);
+          if (!zipEntry) {
+            missingFiles.push(rel);
+            continue;
+          }
+          if (zipEntry.uncompressedSize !== file.size || zipEntry.sha256 !== file.sha256) {
+            modifiedFiles.push({
+              path: rel,
+              expectedSha: file.sha256,
+              actualSha: zipEntry.sha256,
+              expectedSize: file.size,
+              actualSize: zipEntry.uncompressedSize,
+            });
+          }
         }
       }
     } catch (err) {
@@ -629,7 +716,7 @@ export async function verifyZipAgainstManifest({
     };
   }
 
-  // 1. Preflight binary check
+  // 1. Preflight binary check (names, traversal, symlink, payload hashes)
   let entries;
   try {
     entries = readZipEntries(zipBytes);
@@ -663,45 +750,124 @@ export async function verifyZipAgainstManifest({
     }
   }
 
-  // 3. Extract to sandbox
-  const tmpExtract = await mkdtemp(path.join(os.tmpdir(), `zip-verify-${consumer}-`));
-  try {
-    await execFileAsync("unzip", ["-q", zipPath, "-d", tmpExtract]);
-    const extractedPluginDir = path.join(tmpExtract, consumer);
-    if (!fs.existsSync(extractedPluginDir)) {
+  // 3. Resolve manifest from the caller or the embedded ZIP payload (no unzip).
+  let resolvedManifest = manifest;
+  if (!resolvedManifest) {
+    const embedded = readEmbeddedManifestFromZip(zipBytes, consumer);
+    if (!embedded.valid) {
       return {
         schemaVersion: 1,
         status: "invalid_manifest",
         severity: "high",
         fatal: false,
-        blockers: [`Expected root directory '${consumer}' missing from extracted ZIP`],
+        blockers: [embedded.reason || "embedded artifact-manifest.json is invalid"],
         missingFiles: [],
         unexpectedFiles: [],
         modifiedFiles: [],
       };
     }
+    resolvedManifest = embedded.manifest;
+  }
 
-    const report = await verifyArtifactManifest({
-      rootDir: extractedPluginDir,
-      manifestObject: manifest,
-      expectedZipPath: zipPath,
-      consumer,
-    });
-    return report;
-  } catch (err) {
+  const structureBlockers = validateArtifactManifestObject(resolvedManifest, { consumer });
+  if (structureBlockers.length > 0 || !resolvedManifest || !Array.isArray(resolvedManifest.files)) {
     return {
       schemaVersion: 1,
       status: "invalid_manifest",
       severity: "high",
       fatal: false,
-      blockers: [`ZIP extraction/verification error: ${err.message}`],
+      blockers: structureBlockers.length > 0
+        ? structureBlockers
+        : ["artifact-manifest.json has unsupported schema or invalid files array"],
       missingFiles: [],
       unexpectedFiles: [],
       modifiedFiles: [],
     };
-  } finally {
-    await rm(tmpExtract, { recursive: true, force: true });
   }
+
+  if (typeof resolvedManifest.manifestDigest === "string" && /^[a-f0-9]{64}$/.test(resolvedManifest.manifestDigest)) {
+    const computedDigest = computeManifestDigest(resolvedManifest);
+    if (computedDigest !== resolvedManifest.manifestDigest) {
+      structureBlockers.push(
+        `Manifest digest mismatch: expected ${resolvedManifest.manifestDigest}, computed ${computedDigest}`,
+      );
+    }
+  }
+  if (structureBlockers.length > 0) {
+    return {
+      schemaVersion: 1,
+      status: "invalid_manifest",
+      severity: "high",
+      fatal: false,
+      blockers: structureBlockers,
+      missingFiles: [],
+      unexpectedFiles: [],
+      modifiedFiles: [],
+    };
+  }
+
+  const missingFiles = [];
+  const unexpectedFiles = [];
+  const modifiedFiles = [];
+  const manifestFileMap = new Map();
+  for (const file of resolvedManifest.files) {
+    if (!file || typeof file.path !== "string") continue;
+    manifestFileMap.set(file.path, file);
+  }
+
+  const zipFileMap = new Map();
+  for (const entry of entries) {
+    if (entry.isDirectory) continue;
+    const rel = zipEntryRelativePath(entry.name, consumer);
+    if (!rel || SKIP_ZIP_RELATIVE_NAMES.has(rel)) continue;
+    zipFileMap.set(rel, entry);
+  }
+
+  for (const [rel, file] of manifestFileMap) {
+    const zipEntry = zipFileMap.get(rel);
+    if (!zipEntry) {
+      missingFiles.push(rel);
+      continue;
+    }
+    if (zipEntry.uncompressedSize !== file.size || zipEntry.sha256 !== file.sha256) {
+      modifiedFiles.push({
+        path: rel,
+        expectedSha: file.sha256,
+        actualSha: zipEntry.sha256,
+        expectedSize: file.size,
+        actualSize: zipEntry.uncompressedSize,
+      });
+    }
+  }
+  for (const rel of zipFileMap.keys()) {
+    if (!manifestFileMap.has(rel)) {
+      unexpectedFiles.push(rel);
+    }
+  }
+
+  let status = "valid";
+  if (modifiedFiles.length > 0) {
+    status = "modified";
+  } else if (missingFiles.length > 0) {
+    status = "missing";
+  } else if (unexpectedFiles.length > 0) {
+    status = "unexpected";
+  }
+
+  return {
+    schemaVersion: 1,
+    status,
+    severity: status === "valid" ? "none" : "high",
+    fatal: false,
+    consumer: resolvedManifest.consumer,
+    artifactId: resolvedManifest.artifactId,
+    manifestDigest: resolvedManifest.manifestDigest,
+    signingStatus: resolvedManifest.signingStatus || "not-configured",
+    blockers: [],
+    missingFiles,
+    unexpectedFiles,
+    modifiedFiles,
+  };
 }
 
 export function readEmbeddedManifestFromZip(zipBytes, consumer) {

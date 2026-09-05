@@ -45,28 +45,30 @@ add_filter(
  */
 function wpdev_register_module_admin_pages( $module_id, array $page_classes, $priority = 10, array $overrides_map = array() ) {
 
-	add_action(
-		'wpdev_admin_pages',
-		static function () use ( $module_id, $page_classes, $overrides_map ) {
+	$instantiate = static function () use ( $module_id, $page_classes, $overrides_map ) {
+		if ( ! apply_filters( 'wpdev_module_enabled', true, $module_id ) ) {
+			return;
+		}
 
-			if ( ! apply_filters( 'wpdev_module_enabled', true, $module_id ) ) {
-				return;
+		foreach ( $page_classes as $class_name ) {
+			if ( ! class_exists( $class_name ) ) {
+				continue;
 			}
 
-			foreach ( $page_classes as $class_name ) {
-				if ( ! class_exists( $class_name ) ) {
-					continue;
-				}
+			$overrides = $overrides_map[ $class_name ] ?? array();
 
-				$overrides = $overrides_map[ $class_name ] ?? array();
+			new $class_name( is_array( $overrides ) ? $overrides : array() );
+		}
 
-				new $class_name( is_array( $overrides ) ? $overrides : array() );
-			}
+		do_action( 'wpdev_module_admin_pages_registered', $module_id, $page_classes );
+	};
 
-			do_action( 'wpdev_module_admin_pages_registered', $module_id, $page_classes );
-		},
-		$priority
-	);
+	if ( function_exists( 'did_action' ) && did_action( 'wpdev_admin_pages' ) ) {
+		$instantiate();
+		return;
+	}
+
+	add_action( 'wpdev_admin_pages', $instantiate, $priority );
 
 } // end wpdev_register_module_admin_pages;
 

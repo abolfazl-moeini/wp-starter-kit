@@ -356,6 +356,23 @@ export const CANONICAL_TEST_REGISTRY = {
     "releaseSameRun": false,
     "tier": "contract"
   },
+  "profile-s-fail-closed.test.mjs": {
+    "tools": [
+      "tools/profile-s-fail-closed.mjs",
+      "tools/assemble-profile-s-candidate.mjs",
+      "tools/build-all-standalone-plugins.mjs"
+    ],
+    "artifacts": [],
+    "requiredBy": [],
+    "criticality": "normal",
+    "allowedModes": [
+      "affected",
+      "full",
+      "release"
+    ],
+    "releaseSameRun": false,
+    "tier": "unit"
+  },
   "production-namespace-tests-retention.test.mjs": {
     "tools": [
       "tools/build-cache-engine.mjs"

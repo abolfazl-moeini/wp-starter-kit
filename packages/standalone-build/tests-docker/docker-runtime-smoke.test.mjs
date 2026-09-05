@@ -8,12 +8,53 @@ import { promisify } from "node:util";
 import fs from "node:fs";
 import crypto from "node:crypto";
 import { validateDeployReceiptRecord } from "../build-cache-engine.mjs";
+import { resolveContentRoot } from "../resolve-content-root.mjs";
 
 const execFileAsync = promisify(execFile);
-const composeFile = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../../docker-compose.yml");
-const receiptsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../dist/.deploy-receipts");
+const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+function resolveSmokeContentRoot() {
+  try {
+    return resolveContentRoot({ scriptDir: packageRoot, cwd: process.cwd(), env: process.env });
+  } catch (err) {
+    const fallback = "/Users/moeini/Dev/tavangary.new/wordpress/wp-content";
+    if (fs.existsSync(fallback)) {
+      return fallback;
+    }
+    throw err;
+  }
+}
 
 test("Docker Runtime Smoke: verifies TestRegistry and standalone plugins match deployed receipts", async (t) => {
+  let contentRoot;
+  try {
+    contentRoot = resolveSmokeContentRoot();
+  } catch (err) {
+    if (process.env.ALLOW_DOCKER_SKIP === "1") {
+      t.skip(`Skipping Docker smoke: ${err.message}`);
+      return;
+    }
+    throw err;
+  }
+
+  const composeFile = path.resolve(contentRoot, "../../docker-compose.yml");
+  const receiptsDir = path.resolve(contentRoot, "dist/.deploy-receipts");
+
+  if (!fs.existsSync(composeFile) || !fs.existsSync(receiptsDir)) {
+    if (process.env.ALLOW_DOCKER_SKIP === "1") {
+      t.skip("Skipping Docker smoke: compose file or receipts directory not found");
+      return;
+    }
+    throw new Error(`Docker smoke preflight failed: composeFile (${composeFile}) or receiptsDir (${receiptsDir}) does not exist`);
+  }
+
+  // Ensure diagnostic verifier is present in dist/ for the container
+  const verifierSrc = path.resolve(packageRoot, "diagnostic-artifact-verifier.php");
+  const verifierDest = path.resolve(contentRoot, "dist/.diagnostic-artifact-verifier.php");
+  if (fs.existsSync(verifierSrc)) {
+    await fs.promises.copyFile(verifierSrc, verifierDest);
+  }
+
   const plugins = ["tavangary-core", "tavangary-theme-panel", "wpdev-crm", "wpdev-tickets"];
   const expectedReceipts = {};
   for (const p of plugins) {
@@ -64,7 +105,7 @@ foreach ($allTests as $slug => $testObj) {
 }
 echo "ALL_TESTS_UNIQUE_AND_VALID: YES\\n";
 
-require_once "/var/www/html/wp-content/tools/diagnostic-artifact-verifier.php";
+require_once "/var/www/html/wp-content/dist/.diagnostic-artifact-verifier.php";
 $plugins = ["tavangary-core", "tavangary-theme-panel", "wpdev-crm", "wpdev-tickets"];
 foreach ($plugins as $p) {
     $receiptPath = "/var/www/html/wp-content/dist/.deploy-receipts/" . $p . ".receipt.json";
@@ -142,5 +183,13 @@ echo "DOCKER_SMOKE_ALL_PASS\\n";
       return;
     }
     throw new Error(`Docker runtime smoke check failed (fail-closed): ${message}`);
+  } finally {
+    try {
+      if (fs.existsSync(verifierDest)) {
+        await fs.promises.unlink(verifierDest);
+      }
+    } catch {
+      // ignore cleanup errors
+    }
   }
 });

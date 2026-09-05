@@ -58,19 +58,23 @@ import {
 import { BuildDag } from "./build-dag-runner.mjs";
 import { TARGET_REGISTRY, listStandaloneConsumers } from "./target-registry.mjs";
 import { resolveContentRoot } from "./resolve-content-root.mjs";
+import { parseClosedProfileFlags } from "./profile-s-fail-closed.mjs";
 
 const execFileAsync = promisify(execFile);
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 function getContentRoot() {
-  return resolveContentRoot({ scriptDir });
-}
-const contentRoot = (() => {
   try {
-    return getContentRoot();
-  } catch {
-    return process.cwd();
+    return resolveContentRoot({ scriptDir });
+  } catch (err) {
+    // node --test imports this module from the package directory.
+    // Release CLI invocations must not silently build the wrong tree.
+    if (process.env.NODE_TEST_CONTEXT) {
+      return process.cwd();
+    }
+    throw err;
   }
-})();
+}
+const contentRoot = getContentRoot();
 const distDir = path.join(contentRoot, "dist");
 const pluginsDir = path.join(contentRoot, "plugins");
 const cacheFile = path.join(distDir, ".build-cache.json");
@@ -573,7 +577,7 @@ export function parsePipelineArgs(argv = process.argv) {
   const isForce = argv.includes("--force");
   const isChanged = argv.includes("--changed");
   const isWatch = argv.includes("--watch");
-  const isObfuscate = argv.includes("--obfuscate") || argv.includes("--profile=s");
+  const { profile, isObfuscate } = parseClosedProfileFlags(argv);
 
   const jobsArg = argv.find((a) => a.startsWith("--jobs="));
   const jobsLimit = jobsArg ? parseInt(jobsArg.split("=")[1], 10) : Math.max(1, Math.min(4, os.cpus().length));
@@ -626,6 +630,7 @@ export function parsePipelineArgs(argv = process.argv) {
     isChanged,
     isWatch,
     isObfuscate,
+    profile,
     jobsLimit,
     suite,
     testMode,

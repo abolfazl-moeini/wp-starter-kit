@@ -8,15 +8,8 @@ return static function (RectorConfig $rectorConfig): void {
     $targetDir = getenv('RECTOR_TARGET_DIR');
     $paths = [];
     if ($targetDir && is_dir($targetDir)) {
-        if (is_dir($targetDir . '/src')) {
-            $paths[] = $targetDir . '/src';
-        }
-        foreach (glob($targetDir . '/*.php') as $mainPhp) {
-            $paths[] = $mainPhp;
-        }
-        if (empty($paths)) {
-            $paths[] = $targetDir;
-        }
+        $paths[] = $targetDir;
+        $rectorConfig->cacheDirectory(sys_get_temp_dir() . '/rector_cache_' . md5($targetDir));
     } else {
         $paths[] = __DIR__;
     }

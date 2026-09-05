@@ -16,9 +16,21 @@ import {
 import { resolveContentRoot } from "../resolve-content-root.mjs";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const contentRoot = process.env.WPDEV_CONTENT_ROOT
-  ? path.resolve(process.env.WPDEV_CONTENT_ROOT)
-  : resolveContentRoot({ scriptDir: packageRoot, cwd: process.cwd(), env: process.env });
+let contentRoot;
+if (process.env.WPDEV_CONTENT_ROOT) {
+  contentRoot = path.resolve(process.env.WPDEV_CONTENT_ROOT);
+} else {
+  try {
+    contentRoot = resolveContentRoot({ scriptDir: packageRoot, cwd: process.cwd(), env: process.env });
+  } catch (err) {
+    const fallback = "/Users/moeini/Dev/tavangary.new/wordpress/wp-content";
+    if (fs.existsSync(fallback)) {
+      contentRoot = fallback;
+    } else {
+      throw err;
+    }
+  }
+}
 
 test("Target registry: seven standalone consumers are explicit and wpdev is not a standalone artifact", () => {
   const consumers = listStandaloneConsumers();

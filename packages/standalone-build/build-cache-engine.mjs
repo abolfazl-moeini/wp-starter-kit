@@ -15,6 +15,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import { copyFile, lstat, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 import { pLimit } from "./build-dag-runner.mjs";
@@ -2002,8 +2003,9 @@ export async function computeToolchainFingerprint(signal = null) {
     `platform:${process.platform}`,
     `arch:${process.arch}`,
   ];
+  const execOpts = signal ? { signal } : {};
   try {
-    const { stdout } = await execFileAsync("php", ["-r", "echo PHP_VERSION;"], signal ? { signal } : {});
+    const { stdout } = await execFileAsync("php", ["-r", "echo PHP_VERSION;"], execOpts);
     parts.push(`php:${stdout.trim()}`);
   } catch (err) {
     if (signal?.aborted || err.name === "AbortError") {
@@ -2011,6 +2013,23 @@ export async function computeToolchainFingerprint(signal = null) {
     }
     parts.push("php:unavailable");
   }
+
+  const kitRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+  const rectorBin = path.join(kitRoot, "vendor/bin/rector");
+  if (fs.existsSync(rectorBin)) {
+    try {
+      const { stdout } = await execFileAsync("php", [rectorBin, "--version"], execOpts);
+      parts.push(`rector:${String(stdout || "").trim()}`);
+    } catch (err) {
+      if (signal?.aborted || err.name === "AbortError") {
+        throw err;
+      }
+      parts.push("rector:unreadable");
+    }
+  } else {
+    parts.push("rector:unavailable");
+  }
+
   return crypto.createHash("sha256").update(parts.sort().join("\n"), "utf8").digest("hex");
 }
 

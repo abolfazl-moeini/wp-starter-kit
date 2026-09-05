@@ -5,12 +5,27 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-
+import { fileURLToPath } from "node:url";
 import {
   assertFrameworkClosureMinifiedAssets,
   inlineWpdevClosure,
   minifyAssetsInTree,
 } from "../inline-wpdev-closure.mjs";
+
+test("Inliner: preloads Settings_Admin_Page so host SettingsPage class files can declare", async () => {
+  const inlinerSrc = await readFile(
+    fileURLToPath(new URL("../inline-wpdev-closure.mjs", import.meta.url)),
+    "utf8",
+  );
+  assert.ok(
+    inlinerSrc.includes("Settings_Admin_Page"),
+    "functions-closure must eager-load Settings_Admin_Page before autoloading host SettingsPage.php",
+  );
+  assert.ok(
+    inlinerSrc.includes("Wizard_Admin_Page"),
+    "Settings_Admin_Page extends Wizard_Admin_Page; both must be preloaded",
+  );
+});
 
 test("Inliner: copies multi-module files without basename collision or silent overwrite", async () => {
   const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "inliner-collision-test-"));

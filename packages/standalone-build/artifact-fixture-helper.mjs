@@ -26,7 +26,7 @@ import { resolveContentRoot } from "./resolve-content-root.mjs";
 
 const execFileAsync = promisify(execFile);
 
-function getDefaultZipPath(consumer) {
+export function getDefaultZipPath(consumer) {
   let root;
   try {
     root = resolveContentRoot({
@@ -35,7 +35,12 @@ function getDefaultZipPath(consumer) {
       env: process.env,
     });
   } catch {
-    root = process.cwd();
+    const fallback = "/Users/moeini/Dev/tavangary.new/wordpress/wp-content";
+    if (fs.existsSync(fallback)) {
+      root = fallback;
+    } else {
+      root = process.cwd();
+    }
   }
   return path.resolve(root, `dist/${consumer}-profile-s.zip`);
 }

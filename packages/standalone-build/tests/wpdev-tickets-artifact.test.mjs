@@ -4,11 +4,11 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import test, { before, after } from "node:test";
 import { promisify } from "node:util";
-import { prepareArtifactFixture } from "../artifact-fixture-helper.mjs";
+import { getDefaultZipPath, prepareArtifactFixture } from "../artifact-fixture-helper.mjs";
 
 const execFileAsync = promisify(execFile);
 const CONSUMER = "wpdev-tickets";
-const ZIP_PATH = path.resolve(`dist/${CONSUMER}-profile-s.zip`);
+const ZIP_PATH = getDefaultZipPath(CONSUMER);
 
 let fixture;
 

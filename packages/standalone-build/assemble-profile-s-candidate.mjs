@@ -35,14 +35,19 @@ import {
   assertDuckTypedModuleLoaders,
   rewriteModuleLoaderRegisterToDuckTyped,
 } from "./module-loader-coexistence-gate.mjs";
+import {
+  assertRequiredBuildTools,
+  collectFirstPartyPhpFiles,
+  parseClosedProfileFlags,
+  parseTransformerBatchLog,
+  requireRectorForProfileS,
+  secureUnlinkSymbolMap,
+  validatePhpSyntaxTree,
+} from "./profile-s-fail-closed.mjs";
+import { resolveContentRoot } from "./resolve-content-root.mjs";
 
 const execFileAsync = promisify(execFile);
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const contentRoot = path.resolve(process.argv[2] || path.join(scriptDir, ".."));
-const consumer = process.argv[3] || "tavangary-theme-panel";
-const outputDir = path.resolve(process.argv[4] || path.join(contentRoot, "dist"));
-const pluginsDirArg = process.argv[5] && !process.argv[5].startsWith("--") && process.argv[5] !== "null" && process.argv[5] !== "undefined" ? path.resolve(process.argv[5]) : null;
-const isObfuscate = process.argv.includes("--obfuscate") || process.argv.includes("--profile=s");
 
 const CRC_TABLE = (() => {
   const table = new Uint32Array(256);
@@ -129,38 +134,29 @@ async function createCanonicalZip({ sourceRoot, outputZip, rootName }) {
   return archive;
 }
 
-async function validatePhpSyntaxTree(dir) {
-  const phpValidatorScript = `
-  $dir = $argv[1];
-  $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS));
-  $errors = [];
-  foreach ($iterator as $file) {
-      if ($file->isFile() && $file->getExtension() === 'php') {
-          $path = $file->getPathname();
-          $code = file_get_contents($path);
-          try {
-              token_get_all($code, TOKEN_PARSE);
-          } catch (\\ParseError $e) {
-              $errors[] = $path . ': ' . $e->getMessage();
-          }
-          if (preg_match('/\\bfunction\\s+[a-zA-Z0-9_]+\\s*\\([^)]*\\|[^)]*\\)/', $code, $m)) {
-              $errors[] = $path . ': PHP 7.4 incompatibility: union type parameter detected: ' . $m[0];
-          }
-      }
+function parseAssembleCli(argv = process.argv) {
+  const positional = [];
+  for (const arg of argv.slice(2)) {
+    if (arg.startsWith("--")) continue;
+    positional.push(arg);
   }
-  if (!empty($errors)) {
-      fwrite(STDERR, implode("\\n", $errors) . "\\n");
-      exit(1);
-  }
-  echo "SYNTAX_OK\\n";
-  `;
-  const { stdout } = await execFileAsync("php", ["-r", phpValidatorScript, "--", dir]);
-  if (!stdout.includes("SYNTAX_OK")) {
-    throw new Error(`PHP syntax error in transformed files: ${stdout}`);
-  }
+  const { isObfuscate } = parseClosedProfileFlags(argv);
+  const contentRoot = positional[0]
+    ? path.resolve(positional[0])
+    : resolveContentRoot({ scriptDir });
+  const consumer = positional[1] || "tavangary-theme-panel";
+  const outputDir = path.resolve(positional[2] || path.join(contentRoot, "dist"));
+  const pluginsRaw = positional[3];
+  const pluginsDirArg = pluginsRaw && pluginsRaw !== "null" && pluginsRaw !== "undefined"
+    ? path.resolve(pluginsRaw)
+    : null;
+  return { contentRoot, consumer, outputDir, pluginsDirArg, isObfuscate };
 }
 
 async function run() {
+  const { contentRoot, consumer, outputDir, pluginsDirArg, isObfuscate } = parseAssembleCli();
+  await assertRequiredBuildTools();
+
   console.log("==> 1. Locating plugin development source...");
   const resolvedSource = await resolveConsumerSource({ contentRoot, consumer, pluginsDir: pluginsDirArg });
   const devDir = resolvedSource.sourceDir;
@@ -204,32 +200,38 @@ async function run() {
       console.log(`==> Inlined ${inlined.inlinedFiles} WPDev framework files into self-contained staging tree!`);
     }
 
-    // 3a. Downgrade all PHP files to PHP 7.4 via Rector
+    // 3a. Downgrade all PHP files to PHP 7.4 via Rector (fail-closed for Profile S)
     const starterKitRoot = path.resolve(scriptDir, "../..");
-    const rectorBin = path.join(starterKitRoot, "vendor/bin/rector");
-    const rectorConfig = path.join(scriptDir, "rector-downgrade-php74.php");
+    const { rectorBin, rectorConfig } = requireRectorForProfileS({
+      rectorBin: path.join(starterKitRoot, "vendor/bin/rector"),
+      rectorConfig: path.join(scriptDir, "rector-downgrade-php74.php"),
+    });
 
-    if (fs.existsSync(rectorBin) && fs.existsSync(rectorConfig)) {
-      console.log("==> 3a. Running Rector PHP 7.4 Downgrade pipeline on staging tree...");
-      try {
-        await execFileAsync("php", [
-          rectorBin,
-          "process",
-          "-c",
-          rectorConfig,
-          "--clear-cache",
-          "--no-progress-bar",
-        ], {
-          cwd: starterKitRoot,
-          env: {
-            ...process.env,
-            RECTOR_TARGET_DIR: stagingPlugin,
-          },
-        });
-        console.log("==> Rector downgrade to PHP 7.4 completed successfully!");
-      } catch (err) {
-        console.warn(`==> Rector downgrade notice: ${err.message}`);
-      }
+    console.log("==> 3a. Running Rector PHP 7.4 Downgrade pipeline on staging tree...");
+    try {
+      await execFileAsync("php", [
+        "-d",
+        "xdebug.mode=off",
+        "-d",
+        "memory_limit=2G",
+        rectorBin,
+        "process",
+        "-c",
+        rectorConfig,
+        "--clear-cache",
+        "--no-progress-bar",
+      ], {
+        cwd: starterKitRoot,
+        maxBuffer: 50 * 1024 * 1024,
+        env: {
+          ...process.env,
+          RECTOR_TARGET_DIR: stagingPlugin,
+        },
+      });
+      console.log("==> Rector downgrade to PHP 7.4 completed successfully!");
+    } catch (err) {
+      const details = [err.message, err.stdout, err.stderr].filter(Boolean).join("\n");
+      throw new Error(`Rector PHP 7.4 downgrade failed: ${details}`);
     }
 
     if (isObfuscate) {
@@ -253,10 +255,13 @@ async function run() {
         stagingPlugin,
         mapFile,
         seed,
-      ]);
+      ], {
+        maxBuffer: 50 * 1024 * 1024,
+      });
 
       // Phase 2: Transform all first-party PHP files using high-speed batch mode
       const mainFile = `${consumer}.php`;
+      const expectedPhpFiles = collectFirstPartyPhpFiles(stagingPlugin);
       const { stdout: batchOut } = await execFileAsync("php", [
         transformerScript,
         "--batch",
@@ -264,11 +269,10 @@ async function run() {
         mapFile,
         seed,
         mainFile,
-      ]);
-      let manifestLog = [];
-      try {
-        manifestLog = JSON.parse(batchOut.trim());
-      } catch {}
+      ], {
+        maxBuffer: 50 * 1024 * 1024,
+      });
+      const manifestLog = parseTransformerBatchLog(batchOut, { expectedFiles: expectedPhpFiles });
       console.log(`==> Transformed ${manifestLog.length} files with complete symbol mangling & comment stripping in batch mode!`);
     } else {
       console.log("==> 4. [Clean Build] Skipping AST Transformer & Symbol Mangling (Preserving Clean Readable Production Code)");
@@ -280,10 +284,9 @@ async function run() {
       `==> 5a. ModuleLoader coexistence gate: ${loaderRewrite.scanned} file(s) scanned, ${loaderRewrite.rewritten} register() hint(s) normalized to object`,
     );
 
-    const protectedRegs = await protectCrossPluginModuleRegistrations(stagingPlugin, consumer);
-    if (protectedRegs.protectedCount > 0) {
-      console.log(`==> 5a2. Protected ${protectedRegs.protectedCount} module registration call(s) with defensive fallback!`);
-    }
+    // Do not wrap ->register() in catch-and-boot: duplicate Help Hub / menu
+    // pages are created when Module::boot() runs both from boot_all() and
+    // from a Throwable fallback. Late modules boot via ModuleLoader::$booted.
 
     console.log("==> 5b. Minifying 100% of first-party JS and CSS assets...");
     const minResult = await minifyAssetsInTree(stagingPlugin, contentRoot);
@@ -300,13 +303,9 @@ async function run() {
       const srcCompJson = devSourceDir ? path.join(devSourceDir, "composer.json") : null;
       let compData = {};
       if (fs.existsSync(stagingCompJson)) {
-        try {
-          compData = JSON.parse(fs.readFileSync(stagingCompJson, "utf8"));
-        } catch {}
+        compData = JSON.parse(fs.readFileSync(stagingCompJson, "utf8"));
       } else if (srcCompJson && fs.existsSync(srcCompJson)) {
-        try {
-          compData = JSON.parse(fs.readFileSync(srcCompJson, "utf8"));
-        } catch {}
+        compData = JSON.parse(fs.readFileSync(srcCompJson, "utf8"));
       }
 
       const candidateDirs = ["src", "includes", "inc", "classes", "src/FrameworkClosure"].filter(d => fs.existsSync(path.join(stagingPlugin, d)));
@@ -361,20 +360,18 @@ async function run() {
         ];
 
         if (fs.existsSync(mapFile)) {
-          try {
-            const symMap = JSON.parse(await readFile(mapFile, "utf8"));
-            if (symMap.classes) {
-              for (const [fqcn, mangled] of Object.entries(symMap.classes)) {
-                if (fqcn.startsWith("\\") || fqcn.includes("\\_c_")) continue;
-                const escMangled = `'${mangled}' => \\$baseDir \\. '([^']+)'`;
-                const m = cmap.match(new RegExp(escMangled));
-                if (m && m[1]) {
-                  const escapedFqcn = fqcn.replace(/\\/g, "\\\\");
-                  coreEntries.push({ cls: escapedFqcn, rel: m[1] });
-                }
+          const symMap = JSON.parse(await readFile(mapFile, "utf8"));
+          if (symMap.classes) {
+            for (const [fqcn, mangled] of Object.entries(symMap.classes)) {
+              if (fqcn.startsWith("\\") || fqcn.includes("\\_c_")) continue;
+              const escMangled = `'${mangled}' => \\$baseDir \\. '([^']+)'`;
+              const m = cmap.match(new RegExp(escMangled));
+              if (m && m[1]) {
+                const escapedFqcn = fqcn.replace(/\\/g, "\\\\");
+                coreEntries.push({ cls: escapedFqcn, rel: m[1] });
               }
             }
-          } catch {}
+          }
         }
 
         let additions = [];
@@ -410,6 +407,8 @@ async function run() {
       }
     }
 
+
+    await secureUnlinkSymbolMap(path.join(stagingRoot, "symbol-map.json"));
 
     console.log("==> 6. Validating PHP syntax across all transformed files...");
     await validatePhpSyntaxTree(stagingPlugin);
@@ -475,66 +474,12 @@ async function run() {
 }
 
 export async function protectCrossPluginModuleRegistrations(stagingPlugin, consumer) {
-  let protectedCount = 0;
-  async function scanDir(dir) {
-    let entries;
-    try {
-      entries = await readdir(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-    for (const entry of entries) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name === "vendor" || entry.name === "vendor-prefixed" || entry.name === "FrameworkClosure") continue;
-        await scanDir(full);
-      } else if (entry.isFile() && entry.name.endsWith(".php")) {
-        let code = await readFile(full, "utf8");
-        if (code.includes("->register(") && !code.includes("catch (\\Throwable") && !code.includes("catch ( \\Throwable")) {
-          const lines = code.split("\n");
-          let modified = false;
-          for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const match = line.match(/^(\s*)([^\s;]+->register\(\s*([^;]+)\s*\);)/);
-            if (match) {
-              const indent = match[1];
-              const call = match[2];
-              const arg = match[3];
-              const replacement = [
-                `${indent}try {`,
-                `${indent}    ${call}`,
-                `${indent}} catch (\\Throwable $e) {`,
-                `${indent}    $__boot_module = ${arg};`,
-                `${indent}    $__boot_fn = static function () use ($__boot_module): void {`,
-                `${indent}        if (is_object($__boot_module) && method_exists($__boot_module, 'boot')) {`,
-                `${indent}            if (!method_exists($__boot_module, 'should_boot') || $__boot_module->should_boot()) {`,
-                `${indent}                $__boot_module->boot();`,
-                `${indent}            }`,
-                `${indent}        }`,
-                `${indent}    };`,
-                `${indent}    if (function_exists('did_action') && did_action('plugins_loaded')) {`,
-                `${indent}        $__boot_fn();`,
-                `${indent}    } elseif (function_exists('add_action')) {`,
-                `${indent}        add_action('plugins_loaded', $__boot_fn, 11);`,
-                `${indent}    } else {`,
-                `${indent}        $__boot_fn();`,
-                `${indent}    }`,
-                `${indent}}`
-              ].join("\n");
-              lines[i] = replacement;
-              modified = true;
-              protectedCount++;
-            }
-          }
-          if (modified) {
-            await writeFile(full, lines.join("\n"), "utf8");
-          }
-        }
-      }
-    }
-  }
-  await scanDir(stagingPlugin);
-  return { protectedCount };
+  void stagingPlugin;
+  void consumer;
+  // Intentionally a no-op. Catch-and-boot on ->register() re-runs Module::boot()
+  // after boot_all(), so Help Hub (and any page with a portable Registrar)
+  // registers admin_menu callbacks twice and duplicates brand-menu items.
+  return { protectedCount: 0 };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

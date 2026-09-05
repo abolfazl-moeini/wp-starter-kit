@@ -10,6 +10,7 @@ import { promisify } from "node:util";
 
 import {
   generateArtifactManifest,
+  readZipEntries,
   verifyZipAgainstManifest,
 } from "../canonical-artifact-manifest.mjs";
 
@@ -118,6 +119,164 @@ test("Reproducible ZIP: identical source tree produces identical outer ZIP SHA-2
     const hash2 = crypto.createHash("sha256").update(await readFile(zip2)).digest("hex");
 
     assert.equal(hash1, hash2, "Identical inputs with normalized timestamps must produce identical ZIP SHA-256");
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+const CRC_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let i = 0; i < 256; i += 1) {
+    let c = i;
+    for (let bit = 0; bit < 8; bit += 1) {
+      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    }
+    table[i] = c >>> 0;
+  }
+  return table;
+})();
+
+function crc32(data) {
+  let value = 0xffffffff;
+  for (const byte of data) value = CRC_TABLE[(value ^ byte) & 0xff] ^ (value >>> 8);
+  return (value ^ 0xffffffff) >>> 0;
+}
+
+function u16(n) {
+  const buf = Buffer.alloc(2);
+  buf.writeUInt16LE(n);
+  return buf;
+}
+
+function u32(n) {
+  const buf = Buffer.alloc(4);
+  buf.writeUInt32LE(n);
+  return buf;
+}
+
+function buildStoredZip(files) {
+  const locals = [];
+  const centrals = [];
+  let offset = 0;
+  for (const file of files) {
+    const name = Buffer.from(file.name, "utf8");
+    const data = Buffer.isBuffer(file.data) ? file.data : Buffer.from(file.data || "");
+    const crc = crc32(data);
+    const unixMode = file.unixMode ?? 0o100644;
+    const local = Buffer.concat([
+      Buffer.from([0x50, 0x4b, 0x03, 0x04]),
+      u16(20),
+      u16(0),
+      u16(0),
+      u16(0),
+      u16(0),
+      u32(crc),
+      u32(data.length),
+      u32(data.length),
+      u16(name.length),
+      u16(0),
+      name,
+      data,
+    ]);
+    const central = Buffer.concat([
+      Buffer.from([0x50, 0x4b, 0x01, 0x02]),
+      u16(20),
+      u16(20),
+      u16(0),
+      u16(0),
+      u16(0),
+      u16(0),
+      u32(crc),
+      u32(data.length),
+      u32(data.length),
+      u16(name.length),
+      u16(0),
+      u16(0),
+      u16(0),
+      u16(0),
+      u32((unixMode << 16) >>> 0),
+      u32(offset),
+      name,
+    ]);
+    locals.push(local);
+    centrals.push(central);
+    offset += local.length;
+  }
+  const localBuf = Buffer.concat(locals);
+  const centralBuf = Buffer.concat(centrals);
+  const eocd = Buffer.concat([
+    Buffer.from([0x50, 0x4b, 0x05, 0x06]),
+    u16(0),
+    u16(0),
+    u16(files.length),
+    u16(files.length),
+    u32(centralBuf.length),
+    u32(localBuf.length),
+    u16(0),
+  ]);
+  return Buffer.concat([localBuf, centralBuf, eocd]);
+}
+
+test("readZipEntries hashes inflated payloads and rejects traversal, absolute, symlink, and duplicate names before extract", () => {
+  const payload = Buffer.from("<?php echo 'ok';");
+  const safe = buildStoredZip([{ name: "my-plugin/src/entry.php", data: payload }]);
+  const entries = readZipEntries(safe);
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].sha256, crypto.createHash("sha256").update(payload).digest("hex"));
+
+  const traversal = buildStoredZip([{ name: "../escape.php", data: payload }]);
+  assert.throws(() => readZipEntries(traversal), /unsafe entry path/);
+
+  const absolute = buildStoredZip([{ name: "/tmp/escape.php", data: payload }]);
+  assert.throws(() => readZipEntries(absolute), /unsafe entry path/);
+
+  const symlinkZip = buildStoredZip([{ name: "my-plugin/link.php", data: payload, unixMode: 0o120777 }]);
+  assert.throws(() => readZipEntries(symlinkZip), /symlink/);
+
+  const duplicate = buildStoredZip([
+    { name: "my-plugin/a.php", data: payload },
+    { name: "my-plugin/a.php", data: payload },
+  ]);
+  assert.throws(() => readZipEntries(duplicate), /duplicate/);
+});
+
+test("verifyZipAgainstManifest detects a payload digest mismatch without extracting", async () => {
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "zip-payload-hash-"));
+  try {
+    const staging = path.join(tmpDir, "my-plugin");
+    await mkdir(path.join(staging, "src"), { recursive: true });
+    await writeFile(path.join(staging, "src/entry.php"), "<?php echo 'legit';");
+    const manifest = await generateArtifactManifest({
+      rootDir: staging,
+      consumer: "my-plugin",
+      profile: "Profile S",
+    });
+
+    const original = Buffer.from("<?php echo 'legit';");
+    const tampered = Buffer.from("<?php echo 'HACKED';");
+    const zipPath = path.join(tmpDir, "tampered.zip");
+    await writeFile(
+      zipPath,
+      buildStoredZip([
+        { name: "my-plugin/src/entry.php", data: tampered },
+        {
+          name: "my-plugin/artifact-manifest.json",
+          data: Buffer.from(JSON.stringify(manifest)),
+        },
+      ]),
+    );
+
+    const report = await verifyZipAgainstManifest({
+      zipPath,
+      consumer: "my-plugin",
+      manifest,
+    });
+    assert.equal(report.status, "modified");
+    assert.ok(report.modifiedFiles.some((file) => file.path === "src/entry.php"));
+    assert.notEqual(
+      report.modifiedFiles[0].actualSha,
+      crypto.createHash("sha256").update(original).digest("hex"),
+    );
   } finally {
     await rm(tmpDir, { recursive: true, force: true });
   }

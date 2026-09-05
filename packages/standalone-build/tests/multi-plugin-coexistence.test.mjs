@@ -60,7 +60,7 @@ final class ModuleLoader {
   }
 });
 
-test("Multi-Plugin Coexistence: protectCrossPluginModuleRegistrations wraps bare register calls in defensive try/catch", async () => {
+test("Multi-Plugin Coexistence: assembler must not catch-and-boot on ->register()", async () => {
   const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "coexistence-protect-test-"));
   const stagingPlugin = path.join(tmpDir, "test-plugin");
   await mkdir(path.join(stagingPlugin, "src"), { recursive: true });
@@ -73,12 +73,10 @@ $loader->register($module);
 
   try {
     const res = await protectCrossPluginModuleRegistrations(stagingPlugin, "test-plugin");
-    assert.equal(res.protectedCount, 1, "Must protect 1 bare registration call");
+    assert.equal(res.protectedCount, 0, "Catch-and-boot wrappers duplicate admin pages (Help Hub x3)");
 
     const protectedCode = await readFile(path.join(stagingPlugin, "src/my-register.php"), "utf8");
-    assert.ok(protectedCode.includes("try {"), "Code must have try block");
-    assert.ok(protectedCode.includes("catch (\\Throwable $e)"), "Code must catch \\Throwable");
-    assert.ok(protectedCode.includes("$__boot_fn = static function ()"), "Code must contain fallback boot closure");
+    assert.equal(protectedCode, dummyRegisterPhp, "Register files must stay as register() without Throwable reboot");
   } finally {
     await rm(tmpDir, { recursive: true, force: true });
   }

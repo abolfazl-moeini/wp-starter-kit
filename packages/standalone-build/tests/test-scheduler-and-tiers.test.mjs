@@ -49,10 +49,10 @@ test("Test Tiers: validateCanonicalTestRegistry validates disjoint tier partitio
   const val = validateCanonicalTestRegistry(testsDir, contentRoot);
   assert.equal(val.valid, true, `Registry must be valid: ${val.reason}`);
   assert.equal(val.tiers.meta, 1);
-  assert.equal(val.tiers.unit, 19);
+  assert.equal(val.tiers.unit, 20);
   assert.equal(val.tiers.contract, 37);
   assert.equal(val.tiers.integration, 2);
-  assert.equal(val.totalTests, 59);
+  assert.equal(val.totalTests, 60);
 });
 
 test("Recursion Guard: runTestScheduler and runFullSuiteProfiling reject nested recursive invocation", async () => {

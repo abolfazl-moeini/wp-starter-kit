@@ -6,11 +6,27 @@ import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
+import fs from "node:fs";
 import { resolveContentRoot } from "../resolve-content-root.mjs";
 
 const execFileAsync = promisify(execFile);
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const contentRoot = resolveContentRoot({ scriptDir: packageRoot, cwd: process.cwd(), env: process.env });
+
+let contentRoot;
+if (process.env.WPDEV_CONTENT_ROOT) {
+  contentRoot = path.resolve(process.env.WPDEV_CONTENT_ROOT);
+} else {
+  try {
+    contentRoot = resolveContentRoot({ scriptDir: packageRoot, cwd: process.cwd(), env: process.env });
+  } catch (err) {
+    const fallback = "/Users/moeini/Dev/tavangary.new/wordpress/wp-content";
+    if (fs.existsSync(fallback)) {
+      contentRoot = fallback;
+    } else {
+      throw err;
+    }
+  }
+}
 const script = path.resolve(packageRoot, "run-protection-gates.mjs");
 
 test("aggregates blocked read-only gates without mutating the workspace", async () => {

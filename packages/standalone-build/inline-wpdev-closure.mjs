@@ -574,6 +574,8 @@ $wpdev_closure_core_map = array(
     'WPDevFramework\\\\Admin_Pages\\\\Edit_Page_Widgets'    => __DIR__ . '/modules/metabox-builder/src/admin/trait-edit-page-widgets.php',
     'WPDevFramework\\\\Admin_Pages\\\\Base_Admin_Page'       => __DIR__ . '/modules/admin-page-builder/src/admin/class-base-admin-page.php',
     'WPDevFramework\\\\Admin_Pages\\\\List_Admin_Page'       => __DIR__ . '/modules/admin-page-builder/src/admin/class-list-admin-page.php',
+    'WPDevFramework\\\\Admin_Pages\\\\Wizard_Admin_Page'     => __DIR__ . '/modules/admin-page-builder/src/admin/class-wizard-admin-page.php',
+    'WPDevFramework\\\\Admin_Pages\\\\Settings_Admin_Page'   => __DIR__ . '/modules/admin-setting-page/src/class-settings-admin-page.php',
 );
 foreach ($wpdev_closure_core_map as $wpdev_c_cls => $wpdev_c_f) {
     if (!class_exists($wpdev_c_cls, false) && !interface_exists($wpdev_c_cls, false) && !trait_exists($wpdev_c_cls, false) && file_exists($wpdev_c_f)) {

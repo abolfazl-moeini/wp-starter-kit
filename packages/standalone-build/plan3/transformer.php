@@ -141,6 +141,7 @@ class Plan3_Transformer {
 		'Base_List_Table',
 		'Edit_Admin_Page',
 		'Wizard_Admin_Page',
+		'Settings_Admin_Page',
 		'Customizer_Admin_Page',
 		'Base_Customer_Facing_Admin_Page',
 		'Edit_Page_Widgets',

@@ -315,4 +315,12 @@ test("Pipeline CLI: unknown modes fail closed and suite/test-mode conflicts are 
     () => parsePipelineArgs(["--build-only", "--deploy"]),
     /cannot be combined with --deploy/
   );
+
+  assert.equal(parsePipelineArgs(["--obfuscate"]).profile, "s");
+  assert.equal(parsePipelineArgs(["--profile=s"]).isObfuscate, true);
+  assert.throws(() => parsePipelineArgs(["--profile=a"]), /Invalid --profile 'a'/);
+  assert.throws(
+    () => parsePipelineArgs(["--obfuscate", "--profile=clean"]),
+    /Conflicting profile flags/,
+  );
 });

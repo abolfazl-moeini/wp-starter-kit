@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import test, { before, after } from "node:test";
-import { prepareArtifactFixture } from "../artifact-fixture-helper.mjs";
+import { getDefaultZipPath, prepareArtifactFixture } from "../artifact-fixture-helper.mjs";
 
 const CONSUMER = "tavangary-core";
-const ZIP_PATH = path.resolve(`dist/${CONSUMER}-profile-s.zip`);
+const ZIP_PATH = getDefaultZipPath(CONSUMER);
 
 let fixture;
 

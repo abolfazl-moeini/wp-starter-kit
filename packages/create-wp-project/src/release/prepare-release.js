@@ -92,7 +92,19 @@ function parseArgs(argv) {
     else if (arg === "--skip-tests") opts.skipTests = true;
     else if (arg === "--obfuscate" || arg === "--profile=s")
       opts.obfuscate = true;
-    else if (arg.startsWith("--out=")) opts.out = arg.slice("--out=".length);
+    else if (arg.startsWith("--profile=")) {
+      const value = arg.slice("--profile=".length).trim().toLowerCase();
+      if (value === "s") opts.obfuscate = true;
+      else if (value === "clean") {
+        if (opts.obfuscate) {
+          throw new Error(
+            "Conflicting profile flags: --obfuscate and --profile=clean",
+          );
+        }
+      } else {
+        throw new Error(`Invalid --profile '${value}'. Allowed: s, clean`);
+      }
+    } else if (arg.startsWith("--out=")) opts.out = arg.slice("--out=".length);
     else if (arg.startsWith("--root="))
       opts.root = path.resolve(arg.slice("--root=".length));
     else if (arg === "--help" || arg === "-h") opts.help = true;
@@ -290,10 +302,58 @@ function runComposerInstall(distRoot) {
  * @param {string} root Project root (has vendor/bin/rector).
  * @param {string} distRoot Copied tree still containing dev/rector-*.php.
  */
-function runRectorBuildOnDist(root, distRoot) {
+function parseTransformerBatchLog(stdout) {
+  const trimmed = String(stdout || "").trim();
+  if (!trimmed) {
+    throw new Error("Profile S transformer --batch produced empty stdout");
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch (first) {
+    const start = trimmed.indexOf("[");
+    const end = trimmed.lastIndexOf("]");
+    if (start >= 0 && end > start) {
+      try {
+        parsed = JSON.parse(trimmed.slice(start, end + 1));
+      } catch {
+        throw new Error(
+          `Profile S transformer --batch did not emit valid JSON: ${first.message}`,
+        );
+      }
+    } else {
+      throw new Error(
+        `Profile S transformer --batch did not emit valid JSON: ${first.message}`,
+      );
+    }
+  }
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error(
+      "Profile S transformer --batch JSON must be a non-empty array of file records",
+    );
+  }
+  for (const rec of parsed) {
+    if (
+      !rec ||
+      typeof rec !== "object" ||
+      typeof rec.file !== "string" ||
+      rec.file.length === 0
+    ) {
+      throw new Error("Profile S transformer --batch record missing file path");
+    }
+  }
+  return parsed;
+}
+
+function runRectorBuildOnDist(root, distRoot, { required = false } = {}) {
   const rectorBin = path.join(root, "vendor/bin/rector");
   const config = path.join(distRoot, "dev/rector-build.php");
   if (!existsSync(rectorBin) || !existsSync(config)) {
+    if (required) {
+      throw new Error(
+        `Profile S requires Rector PHP 7.4 downgrade (missing ${!existsSync(rectorBin) ? rectorBin : config})`,
+      );
+    }
     return { skipped: true, reason: "rector binary or config missing" };
   }
 
@@ -367,9 +427,15 @@ export async function prepareRelease(options = {}) {
 
   copyTree(root, distRoot, releaseCopyExcludeNames());
 
+  if (options.obfuscate && skipRector) {
+    throw new Error("Profile S cannot combine --obfuscate with --skip-rector");
+  }
+
   // Downgrade *before* composer --no-dev and before stripping `dev/`.
   if (!skipRector) {
-    runRectorBuildOnDist(root, distRoot);
+    runRectorBuildOnDist(root, distRoot, {
+      required: Boolean(options.obfuscate),
+    });
   }
 
   const composerPath = path.join(distRoot, "composer.json");
@@ -411,11 +477,15 @@ export async function prepareRelease(options = {}) {
     const batchRes = spawnSync(
       "php",
       [toolsTransformer, "--batch", distRoot, mapFile, seed, `${slug}.php`],
-      { stdio: "inherit" },
+      { encoding: "utf8" },
     );
+    if (batchRes.stderr) {
+      process.stderr.write(batchRes.stderr);
+    }
     if (batchRes.status !== 0) {
       throw new Error("Profile S transformer --batch failed");
     }
+    parseTransformerBatchLog(batchRes.stdout);
     if (existsSync(mapFile)) {
       rmSync(mapFile, { force: true });
     }
