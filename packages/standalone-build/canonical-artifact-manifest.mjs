@@ -14,7 +14,7 @@
 import { execFile } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
-import { chmod, lstat, mkdir, readdir, readFile, rm, utimes, writeFile } from "node:fs/promises";
+import { chmod, cp, lstat, mkdir, readdir, readFile, rm, utimes, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -297,6 +297,32 @@ export function validateArtifactManifestObject(manifest, { consumer = null } = {
   if (typeof manifest.manifestDigest !== "string" || !/^[a-f0-9]{64}$/.test(manifest.manifestDigest)) {
     blockers.push("Manifest manifestDigest must be a lowercase SHA-256 digest");
   }
+  if (manifest.resolvedProfile !== undefined && manifest.resolvedProfile !== "s" && manifest.resolvedProfile !== "clean") {
+    blockers.push("Manifest resolvedProfile must be 's' or 'clean' when present");
+  }
+  if (manifest.obfuscate !== undefined && typeof manifest.obfuscate !== "boolean") {
+    blockers.push("Manifest obfuscate must be a boolean when present");
+  }
+  if (manifest.dynamicEdges !== undefined && !Array.isArray(manifest.dynamicEdges)) {
+    blockers.push("Manifest dynamicEdges must be an array when present");
+  }
+  if (manifest.obfuscate !== undefined && manifest.resolvedProfile !== undefined) {
+    if ((manifest.obfuscate && manifest.resolvedProfile !== "s") || (!manifest.obfuscate && manifest.resolvedProfile !== "clean")) {
+      blockers.push("Manifest obfuscate flag is inconsistent with resolvedProfile");
+    }
+  }
+  if (manifest.toolchain !== undefined) {
+    if (typeof manifest.toolchain !== "object" || Array.isArray(manifest.toolchain) || manifest.toolchain === null) {
+      blockers.push("Manifest toolchain must be an object when present");
+    } else {
+      const requiredTools = ["node", "php", "zip", "unzip", "rsync", "composer"];
+      for (const tool of requiredTools) {
+        if (typeof manifest.toolchain[tool] !== "string" || manifest.toolchain[tool].trim().length === 0) {
+          blockers.push(`Manifest toolchain must contain a non-empty string for '${tool}'`);
+        }
+      }
+    }
+  }
   for (const [index, file] of manifest.files.entries()) {
     if (!file || typeof file !== "object" || Array.isArray(file)) {
       blockers.push(`Manifest file entry ${index} must be an object`);
@@ -412,6 +438,10 @@ export async function generateArtifactManifest({
   phpTarget = "7.4+",
   composerLockSha256 = null,
   buildId = null,
+  toolchain = null,
+  resolvedProfile = null,
+  obfuscate = null,
+  dynamicEdges = null,
 }) {
   const files = await collectCanonicalFiles(rootDir);
   const normalizedConsumer = consumer || path.basename(rootDir);
@@ -436,6 +466,18 @@ export async function generateArtifactManifest({
     signingStatus: "not-configured",
     files,
   };
+  if (toolchain && typeof toolchain === "object" && !Array.isArray(toolchain)) {
+    payload.toolchain = toolchain;
+  }
+  if (typeof resolvedProfile === "string" && resolvedProfile.length > 0) {
+    payload.resolvedProfile = resolvedProfile;
+  }
+  if (typeof obfuscate === "boolean") {
+    payload.obfuscate = obfuscate;
+  }
+  if (Array.isArray(dynamicEdges)) {
+    payload.dynamicEdges = dynamicEdges;
+  }
 
   const manifestDigest = computeManifestDigest(payload);
   const finalManifest = {
@@ -748,6 +790,18 @@ export async function verifyZipAgainstManifest({
         modifiedFiles: [],
       };
     }
+    if (/(^|\/)(?:symbol[-_]map|symbols)[^/]*\.json$/i.test(entry.name)) {
+      return {
+        schemaVersion: 1,
+        status: "invalid_manifest",
+        severity: "high",
+        fatal: false,
+        blockers: [`secret build intermediate packaged in ZIP: ${entry.name}`],
+        missingFiles: [],
+        unexpectedFiles: [],
+        modifiedFiles: [],
+      };
+    }
   }
 
   // 3. Resolve manifest from the caller or the embedded ZIP payload (no unzip).
@@ -991,7 +1045,7 @@ export async function createCanonicalZip({ sourceRoot, outputZip, rootName }) {
   } else {
     const tmpStage = await (await import("node:fs/promises")).mkdtemp(path.join(os.tmpdir(), `zip-${rootName}-`));
     const targetDir = path.join(tmpStage, rootName);
-    await execFileAsync("cp", ["-R", root, targetDir]);
+    await cp(root, targetDir, { recursive: true });
     await normalizeStagingTree(targetDir);
     await execFileAsync("zip", [
       "-r", "-q", "-X", archive, rootName,

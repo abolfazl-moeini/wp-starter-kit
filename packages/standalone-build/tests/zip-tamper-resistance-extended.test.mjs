@@ -281,3 +281,67 @@ test("verifyZipAgainstManifest detects a payload digest mismatch without extract
     await rm(tmpDir, { recursive: true, force: true });
   }
 });
+
+test("verifyZipAgainstManifest rejects a packaged symbol-map.json or symbols.json", async () => {
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "zip-secret-map-"));
+  try {
+    const staging = path.join(tmpDir, "my-plugin");
+    await mkdir(staging, { recursive: true });
+    await writeFile(path.join(staging, "plugin.php"), "<?php echo 1;");
+    const manifest = await generateArtifactManifest({
+      rootDir: staging,
+      consumer: "my-plugin",
+      profile: "Profile S",
+    });
+    const zipPath = path.join(tmpDir, "secret.zip");
+    await writeFile(
+      zipPath,
+      buildStoredZip([
+        { name: "my-plugin/plugin.php", data: Buffer.from("<?php echo 1;") },
+        { name: "my-plugin/symbols.json", data: Buffer.from('{"classes":{}}') },
+        { name: "my-plugin/artifact-manifest.json", data: Buffer.from(JSON.stringify(manifest)) },
+      ]),
+    );
+    const report = await verifyZipAgainstManifest({
+      zipPath,
+      consumer: "my-plugin",
+      manifest,
+    });
+    assert.equal(report.status, "invalid_manifest");
+    assert.ok(report.blockers.some((b) => /secret build intermediate/i.test(b)));
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("validateArtifactManifestObject enforces strict toolchain, obfuscate, and profile invariants", async () => {
+  const { validateArtifactManifestObject } = await import("../canonical-artifact-manifest.mjs");
+  const baseManifest = {
+    schemaVersion: 1,
+    consumer: "my-plugin",
+    profile: "Profile S",
+    artifactId: "my-plugin-profile-s",
+    manifestDigest: "a".repeat(64),
+    files: [
+      { path: "plugin.php", sha256: "b".repeat(64), size: 10, isFile: true, isSymlink: false },
+    ],
+  };
+
+  // Valid base
+  assert.deepEqual(validateArtifactManifestObject(baseManifest), []);
+
+  // Inconsistent profile & obfuscate
+  const inconsistent1 = { ...baseManifest, resolvedProfile: "clean", obfuscate: true };
+  assert.ok(validateArtifactManifestObject(inconsistent1).some((b) => /inconsistent/i.test(b)));
+
+  const inconsistent2 = { ...baseManifest, resolvedProfile: "s", obfuscate: false };
+  assert.ok(validateArtifactManifestObject(inconsistent2).some((b) => /inconsistent/i.test(b)));
+
+  // Malformed dynamicEdges
+  const badEdges = { ...baseManifest, dynamicEdges: "invalid-string" };
+  assert.ok(validateArtifactManifestObject(badEdges).some((b) => /dynamicEdges must be an array/i.test(b)));
+
+  // Incomplete toolchain
+  const badToolchain = { ...baseManifest, toolchain: { node: "v20" } };
+  assert.ok(validateArtifactManifestObject(badToolchain).some((b) => /toolchain must contain.*php/i.test(b)));
+});

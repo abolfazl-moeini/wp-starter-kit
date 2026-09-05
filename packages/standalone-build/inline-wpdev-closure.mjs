@@ -969,8 +969,8 @@ if (!function_exists('wpdev_boot_closure_lifecycle')) {
   if (fs.existsSync(composerJsonPath)) {
     try {
       composerData = JSON.parse(await readFile(composerJsonPath, "utf8"));
-    } catch {
-      // Ignored if composer.json parsing fails
+    } catch (err) {
+      throw new Error(`staging composer.json is invalid JSON: ${err.message}`);
     }
   }
   composerData.autoload = composerData.autoload || {};
@@ -1137,7 +1137,9 @@ export async function minifyAssetsInTree(dir, contentRoot = "") {
   if (esbuildModulePath) {
     try {
       esbuild = await import(esbuildModulePath);
-    } catch {}
+    } catch (err) {
+      throw new Error(`esbuild module exists but failed to load (${esbuildModulePath}): ${err.message}`);
+    }
   }
 
   const localEsbuildBin = [

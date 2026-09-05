@@ -25,12 +25,28 @@ const REQUIRED_BUILD_TOOLS = [
 
 export function parseClosedProfileFlags(argv = []) {
   const selected = [];
-  for (const arg of argv) {
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
     if (arg === "--obfuscate") {
       selected.push("s");
       continue;
     }
-    if (arg === "--profile" || arg === "--profile=") {
+    if (arg === "--profile") {
+      const next = argv[i + 1];
+      if (!next || next.startsWith("--")) {
+        throw new Error("Invalid --profile: a value is required (s or clean)");
+      }
+      const value = next.trim().toLowerCase();
+      if (!ALLOWED_BUILD_PROFILES.has(value)) {
+        throw new Error(
+          `Invalid --profile '${value}'. Allowed: ${Array.from(ALLOWED_BUILD_PROFILES).join(", ")}`,
+        );
+      }
+      selected.push(value);
+      i++;
+      continue;
+    }
+    if (arg === "--profile=") {
       throw new Error("Invalid --profile: a value is required (s or clean)");
     }
     if (typeof arg === "string" && arg.startsWith("--profile=")) {
@@ -145,6 +161,159 @@ function extractJsonArray(stdout) {
   }
 }
 
+export const CRITICAL_ELIGIBILITY_PATTERNS = new Set([
+  "eval",
+  "create_function",
+  "string_assert",
+  "preg_replace_e",
+]);
+
+export function assertEligibilityAllowsObfuscation(eligibility) {
+  const patterns = Array.isArray(eligibility?.forbiddenPatterns) ? eligibility.forbiddenPatterns : [];
+  const critical = patterns.filter((item) => CRITICAL_ELIGIBILITY_PATTERNS.has(item.pattern));
+  if (critical.length > 0) {
+    throw new Error(`Critical security violation in eligibility spike: ${JSON.stringify(critical)}`);
+  }
+  return patterns;
+}
+
+export function assertSymbolMapHasNoCollisions(symMap) {
+  if (!symMap || typeof symMap !== "object" || Array.isArray(symMap)) {
+    throw new Error("symbol map must be an object");
+  }
+  let totalChecked = 0;
+  for (const section of ["classes", "functions", "constants"]) {
+    const table = symMap[section] && typeof symMap[section] === "object" ? symMap[section] : {};
+    const fqcnsByMangled = new Map();
+    const globalsByMangled = new Map();
+    const shortNamesFqcnCount = new Map();
+    const caseInsensitive = section === "classes" || section === "functions";
+
+    // First pass: register all FQCNs (containing backslash)
+    for (const [symbol, rawMangled] of Object.entries(table)) {
+      if (typeof symbol !== "string" || symbol.startsWith("\\")) continue;
+      const mangled = String(rawMangled || "").replace(/^\\/, "");
+      if (!mangled) continue;
+
+      if (symbol.includes("\\")) {
+        const mangledKey = caseInsensitive ? mangled.toLowerCase() : mangled;
+        if (fqcnsByMangled.has(mangledKey)) {
+          const existing = fqcnsByMangled.get(mangledKey);
+          const isSameSymbol = caseInsensitive
+            ? existing.toLowerCase() === symbol.toLowerCase()
+            : existing === symbol;
+          if (!isSameSymbol) {
+            throw new Error(
+              `symbol map collision in ${section}: ${existing} and ${symbol} both mangle to ${mangled}`,
+            );
+          }
+        }
+        fqcnsByMangled.set(mangledKey, symbol);
+
+        const shortName = symbol.slice(symbol.lastIndexOf("\\") + 1);
+        const shortKey = caseInsensitive ? shortName.toLowerCase() : shortName;
+        shortNamesFqcnCount.set(shortKey, (shortNamesFqcnCount.get(shortKey) || 0) + 1);
+        totalChecked++;
+      }
+    }
+
+    // Second pass: register short names and globals (no backslash)
+    for (const [symbol, rawMangled] of Object.entries(table)) {
+      if (typeof symbol !== "string" || symbol.startsWith("\\") || symbol.includes("\\")) continue;
+      const mangled = String(rawMangled || "").replace(/^\\/, "");
+      if (!mangled) continue;
+
+      const mangledKey = caseInsensitive ? mangled.toLowerCase() : mangled;
+      const shortKey = caseInsensitive ? symbol.toLowerCase() : symbol;
+
+      if ((shortNamesFqcnCount.get(shortKey) || 0) > 1) {
+        throw new Error(
+          `symbol map collision in ${section}: ambiguous short name '${symbol}' belongs to multiple FQCNs and cannot be mapped`,
+        );
+      }
+
+      if (fqcnsByMangled.has(mangledKey)) {
+        const fqcn = fqcnsByMangled.get(mangledKey);
+        const fqcnShort = fqcn.slice(fqcn.lastIndexOf("\\") + 1);
+        const matchesShort = caseInsensitive
+          ? fqcnShort.toLowerCase() === symbol.toLowerCase()
+          : fqcnShort === symbol;
+        if (!matchesShort) {
+          throw new Error(
+            `symbol map collision in ${section}: ${fqcn} and ${symbol} both mangle to ${mangled}`,
+          );
+        }
+        // Valid short alias of the same class.
+      } else {
+        if (globalsByMangled.has(mangledKey)) {
+          const existing = globalsByMangled.get(mangledKey);
+          const isSameSymbol = caseInsensitive
+            ? existing.toLowerCase() === symbol.toLowerCase()
+            : existing === symbol;
+          if (!isSameSymbol) {
+            throw new Error(
+              `symbol map collision in ${section}: ${existing} and ${symbol} both mangle to ${mangled}`,
+            );
+          }
+        }
+        globalsByMangled.set(mangledKey, symbol);
+        totalChecked++;
+      }
+    }
+  }
+  return totalChecked;
+}
+
+export function assertZipHasNoSecretIntermediates(entries) {
+  const secrets = [];
+  const secretPattern = /(^|\/)(?:symbol[-_]map|symbols)[^/]*\.json$/i;
+  for (const entry of entries || []) {
+    const name = typeof entry === "string" ? entry : entry?.name;
+    if (!name) continue;
+    if (secretPattern.test(name)) secrets.push(name);
+  }
+  if (secrets.length > 0) {
+    throw new Error(`secret build intermediate packaged in ZIP: ${secrets.join(", ")}`);
+  }
+}
+
+async function firstLineVersion(command, args) {
+  const { stdout, stderr } = await execFileAsync(command, args);
+  const lines = String(stdout || stderr).trim().split("\n").map((l) => l.trim()).filter(Boolean);
+  const versionLine = lines.find((l) => /(?:version|v\d|\bzip\s+\d|\b\d+\.\d+)/i.test(l)) || lines[0] || "";
+  return versionLine.slice(0, 240);
+}
+
+export async function collectToolchainEvidence({ rectorBin = null } = {}) {
+  const evidence = {
+    node: process.version,
+    platform: process.platform,
+    arch: process.arch,
+  };
+  const probes = [
+    ["php", ["-r", "echo PHP_VERSION;"], "php"],
+    ["zip", ["-v"], "zip"],
+    ["unzip", ["-v"], "unzip"],
+    ["rsync", ["--version"], "rsync"],
+    ["composer", ["--version"], "composer"],
+  ];
+  for (const [command, args, key] of probes) {
+    try {
+      evidence[key] = await firstLineVersion(command, args);
+    } catch (err) {
+      throw new Error(`Profile S toolchain preflight failed: ${command} (${err.message})`);
+    }
+  }
+  if (rectorBin) {
+    try {
+      evidence.rector = await firstLineVersion("php", [rectorBin, "--version"]);
+    } catch (err) {
+      throw new Error(`Profile S toolchain preflight failed: rector (${err.message})`);
+    }
+  }
+  return evidence;
+}
+
 export async function assertRequiredBuildTools(commands = REQUIRED_BUILD_TOOLS) {
   const missing = [];
   for (const [command, args] of commands) {
@@ -160,7 +329,15 @@ export async function assertRequiredBuildTools(commands = REQUIRED_BUILD_TOOLS) 
 }
 
 export async function secureUnlinkSymbolMap(mapFile) {
-  if (!mapFile) return;
+  if (!mapFile || !fs.existsSync(mapFile)) return;
+  try {
+    const stat = fs.statSync(mapFile);
+    if (stat.isFile() && stat.size > 0) {
+      fs.writeFileSync(mapFile, Buffer.alloc(Math.min(stat.size, 64 * 1024 * 1024), 0));
+    }
+  } catch {
+    // Still unlink even if the overwrite fails.
+  }
   await rm(mapFile, { force: true });
 }
 

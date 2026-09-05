@@ -6,6 +6,7 @@ Standalone plugin assemble/deploy pipeline for wp-starter-kit consumers.
 - Profile S obfuscation is **opt-in**: `--obfuscate` or `--profile=s`. Closed profile values are `s` and `clean`; unknown or conflicting flags fail.
 - `--obfuscate` fails closed if `plan3/transformer.php` cannot be resolved, Rector is missing, or transformer `--batch` JSON is invalid.
 - Release CLI requires `WPDEV_CONTENT_ROOT` or a `wp-content`-shaped cwd. There is no silent `process.cwd()` fallback outside `node --test`.
+- The orchestrator calls `assembleProfileSCandidate()` in-process (library API). Plugin-local `prepare-release.js` remains a thin packager that reuses the same Profile S fail-closed gates when `--obfuscate` is set; it is not a second assembler.
 
 ## Commands
 

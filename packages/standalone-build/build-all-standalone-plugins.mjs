@@ -59,6 +59,7 @@ import { BuildDag } from "./build-dag-runner.mjs";
 import { TARGET_REGISTRY, listStandaloneConsumers } from "./target-registry.mjs";
 import { resolveContentRoot } from "./resolve-content-root.mjs";
 import { parseClosedProfileFlags } from "./profile-s-fail-closed.mjs";
+import { assembleProfileSCandidate } from "./assemble-profile-s-candidate.mjs";
 
 const execFileAsync = promisify(execFile);
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -699,7 +700,7 @@ export async function runPipelineOrchestration(options = {}) {
   let cache = {};
   if (!activeIsForce) {
     const loaded = await loadBuildCacheRecord(customCacheFile, {
-      expectedConsumers: targetPlugins,
+      expectedConsumers: ALLOWED_CONSUMERS,
       expectedDistDir: customDistDir,
     });
     if (loaded.status === "valid") {
@@ -1052,21 +1053,14 @@ export async function runPipelineOrchestration(options = {}) {
             signal: taskOptions?.signal,
           });
         } else {
-          const assembleArgs = [
-            path.join(customScriptDir, "assemble-profile-s-candidate.mjs"),
-            customContentRoot,
-            plugin,
-            customDistDir,
-            customPluginsDir,
-          ];
-          if (activeIsObfuscate) {
-            assembleArgs.push("--obfuscate");
-          }
-          await execFileAsync(
-            process.execPath,
-            assembleArgs,
-            { cwd: customContentRoot, signal: taskOptions?.signal }
-          );
+          await assembleProfileSCandidate({
+            contentRoot: customContentRoot,
+            consumer: plugin,
+            outputDir: customDistDir,
+            pluginsDir: customPluginsDir,
+            isObfuscate: activeIsObfuscate,
+            signal: taskOptions?.signal,
+          });
         }
 
         if (fs.existsSync(profileSZip)) {
@@ -1439,6 +1433,15 @@ export async function runPipelineOrchestration(options = {}) {
 
           if (skipDeploy) {
             console.log(`⏩ [${plugin}] DEPLOY SKIP: Already deployed and verified on disk (${currentZipSha.slice(0, 8)}...)`);
+            const loadedRcpt = loadedReceipt.receipt;
+            await txManager.update(async (state) => {
+              const tgt = state.targets.find((t) => t.consumer === plugin);
+              if (tgt) {
+                tgt.candidateZipSha = currentZipSha;
+                tgt.candidateManifestDigest = bRes?.manifestDigest || stagedCache.artifacts?.[plugin]?.manifestDigest || loadedRcpt.manifestDigest;
+              }
+            });
+            stagedReceipts[plugin] = loadedRcpt;
             return { status: "skipped" };
           }
 
@@ -1856,6 +1859,7 @@ async function main(options = {}) {
   console.log(`Auto-deploy to local plugins dir: ${activeShouldDeploy ? "YES" : "NO"}`);
   console.log(`Build mode: ${activeIsForce ? "FORCE" : (activeIsChanged ? "CHANGED-ONLY" : "INCREMENTAL")}`);
   console.log(`Concurrency limit (jobs): ${jobsLimit}`);
+  console.log(`Protection profile: ${parsed.profile || "clean"} (obfuscate=${Boolean(parsed.isObfuscate)})`);
   console.log(`Test mode: ${activeTestMode || "NONE"}\n`);
 
   const startTime = Date.now();

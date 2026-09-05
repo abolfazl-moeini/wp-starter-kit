@@ -3153,6 +3153,26 @@ test("Failure Scenario 42: Publication state machine forbids restored/deleted ou
   const res3 = validateJournalTransition(publishedState, mutatedDigestState);
   assert.equal(res3.valid, false);
   assert.match(res3.reason, /Published receipt 'tavangary-core' digests cannot be mutated|must have finalDigest equal to stagedDigest/i);
+
+  // 4. Transitioning published to restored or deleted is strictly permitted during rolling_back phase
+  const rollbackIntent = structuredClone(publishedState);
+  rollbackIntent.revision = 4;
+  rollbackIntent.phase = "rolling_back";
+  const rollingState = structuredClone(rollbackIntent);
+  rollingState.revision = 5;
+  rollingState.publication.receipts["tavangary-core"].publishStatus = "restored";
+  rollingState.publication.cache.publishStatus = "restored";
+  const resRollback = validateJournalTransition(rollbackIntent, rollingState);
+  assert.equal(resRollback.valid, true, resRollback.reason);
+
+  // 5. Transitioning published to restored outside rollback phase is rejected
+  const illegalPublishedRestore = structuredClone(publishedState);
+  illegalPublishedRestore.revision = 4;
+  illegalPublishedRestore.phase = "committed";
+  illegalPublishedRestore.publication.receipts["tavangary-core"].publishStatus = "restored";
+  const resIllegal = validateJournalTransition(publishedState, illegalPublishedRestore);
+  assert.equal(resIllegal.valid, false);
+  assert.match(resIllegal.reason, /cannot transition away from 'published'|outside rollback phase/i);
 });
 
 test("Failure Scenario 43: Committed recovery verifies destination artifact integrity before cleanup and fails closed on tampering", async () => {

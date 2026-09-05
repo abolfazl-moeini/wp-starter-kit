@@ -85,3 +85,21 @@ test("rejects dynamic include and callable edges", async () => {
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("records reflection, class_exists strings, and serialize as dynamic-name edges", async () => {
+  const root = await createFixture();
+  try {
+    await writeFile(
+      path.join(root, "src/DynamicNames.php"),
+      "<?php\n$r = new ReflectionClass($name);\nclass_exists('App\\\\Hidden');\nunserialize($blob);\n",
+      "utf8",
+    );
+    const report = await runPlan3EligibilitySpike({ rootDir: root });
+    assert.equal(report.status, "blocked");
+    assert.ok(report.forbiddenPatterns.some((p) => p.pattern === "reflection"));
+    assert.ok(report.forbiddenPatterns.some((p) => p.pattern === "class_exists_string"));
+    assert.ok(report.forbiddenPatterns.some((p) => p.pattern === "serialize_callback"));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

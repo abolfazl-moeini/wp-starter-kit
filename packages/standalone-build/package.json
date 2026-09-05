@@ -9,6 +9,8 @@
   },
   "exports": {
     ".": "./build-all-standalone-plugins.mjs",
+    "./assemble-profile-s-candidate": "./assemble-profile-s-candidate.mjs",
+    "./profile-s-fail-closed": "./profile-s-fail-closed.mjs",
     "./resolve-content-root": "./resolve-content-root.mjs"
   },
   "scripts": {

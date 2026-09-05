@@ -56,7 +56,7 @@ In standard development, Tavangary plugins depend on a shared framework (`plugin
     │   ├── ast-assertion-audit-report.json # Static audit ground truth artifact
     │   ├── runner-invocation-trace.json   # 3-way live OS process trace artifact
     │   └── build-performance-benchmark.json # Production hardware benchmark artifact
-    ├── tests/                             # 56 Canonical Test Suites (388 subtests, 100% green)
+    ├── tests/                             # Canonical suites: `npm test` / CANONICAL_TEST_REGISTRY (currently 60 files)
     ├── tests-docker/                      # 1 Docker Runtime Smoke Test (Excluded from default Node suite)
     └── FULL_BUILD_OBFUSCATOR_AUDIT_AND_REMEDIATION.md # Comprehensive 1,160-line audit & handoff document
 ```
@@ -91,7 +91,7 @@ When you inspect the history, you will observe the following major architectural
    - _Previous Defect:_ `Regression 21` and `22` in `performance-and-evidence-regressions.test.mjs` were executing full multi-minute production builds inside unit tests.
    - _Fix:_ Refactored `Regression 21` with dependency injection and synthetic schemas to test 100% of mathematical and failure invariants in 3.5ms. Separated `Regression 22` (incremental cache invariant: `1 rebuilt / 3 hit`) and `Regression 23` (AST transformation integration test with `php -l`). Full production benchmarks were moved strictly to `node tools/dev/run-benchmark.mjs`.
 3. **Acorn-Based AST Assertion & Declaration Auditor:**
-   - Built [`tools/dev/ast-assertion-auditor.mjs`](file:///Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/dev/ast-assertion-auditor.mjs) using Acorn JS parser. It proved that across all 56 canonical files, exactly **419 AST test blocks**, **1,218 assertions**, and **204 negative/throw error branches** exist with **0 skips, 0 todos, and 0 onlys**.
+   - Built [`dev/ast-assertion-auditor.mjs`](dev/ast-assertion-auditor.mjs) using Acorn JS parser. Re-run it after adding suites; do not treat historical 56-file / 388-subtest figures as current inventory.
 4. **WAL Transaction Journal & Atomic Crash Recovery:**
    - Implemented `TransactionJournalManager` in `build-cache-engine.mjs` with nested `deepFreeze` snapshot immutability, exact `+1` revision sequence validation, and fail-closed state transitions tested across **45 failure and rollback scenarios** in `pipeline-failure-and-rollback.test.mjs`.
 5. **Real 3-Way Process Tracing:**
@@ -105,12 +105,12 @@ When you inspect the history, you will observe the following major architectural
 +-------------------------------------------------------------------------------+
 | METRIC DIMENSION                      | GROUND TRUTH VALUE                    |
 +-------------------------------------------------------------------------------+
-| Canonical Test Files                  | 56 files (tools/tests/)               |
-| Docker Smoke Test Files               | 1 file (tools/tests-docker/)          |
-| Static AST Test Declarations          | 419 blocks (Acorn Parser)             |
-| Runtime TAP Subtests (Passed)         | 388 subtests (0 fail, 0 skip, 0 todo) |
-| Static AST Assertions (assert.*)      | 1,218 assertions                      |
-| Negative & Error Branches (AST)       | 204 checks (196 rejects + 8 throws)   |
+| Canonical Test Files                  | `npm test` / registry (60 files in tests/) |
+| Docker Smoke Test Files               | 1 file (tests-docker/)                |
+| Static AST Test Declarations          | 454 blocks (Acorn Parser)             |
+| Runtime TAP Subtests (Passed)         | 423 subtests (0 fail, 0 skip, 0 todo) |
+| Static AST Assertions (assert.*)      | 1,344 assertions                      |
+| Negative & Error Branches (AST)       | 238 checks (198 rejects + 40 throws)  |
 | Direct Node Wall Time (node --test)   | 5.18s – 5.97s (Concurrency: 1)        |
 | Bounded Scheduler Time (--tier=full)  | 6.97s – 13.90s (Concurrency: 4)       |
 | Fast Tier Wall Time (--tier=fast)     | 5.90s – 8.19s (53 files / 306 tests)  |

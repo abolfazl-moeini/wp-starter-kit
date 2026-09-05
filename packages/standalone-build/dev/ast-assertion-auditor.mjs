@@ -15,16 +15,24 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolveContentRoot } from "../resolve-content-root.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const toolsDir = path.resolve(__dirname, "..");
-const contentRoot = path.resolve(toolsDir, "..");
+let contentRoot;
+try {
+  contentRoot = resolveContentRoot({ scriptDir: toolsDir });
+} catch {
+  contentRoot = path.resolve(toolsDir, "..");
+}
 const defaultTestsDir = path.join(toolsDir, "tests");
 const outputJsonPath = path.join(toolsDir, "dev", "ast-assertion-audit-report.json");
 
 // Dynamic resolver for Acorn
 async function loadAcorn() {
   const candidates = [
+    path.join(toolsDir, "node_modules/acorn/dist/acorn.mjs"),
+    path.join(toolsDir, "../../node_modules/acorn/dist/acorn.mjs"),
     path.join(contentRoot, "themes/tavangary/node_modules/acorn/dist/acorn.mjs"),
     path.join(contentRoot, "plugins/wpdev-crm-dev/node_modules/acorn/dist/acorn.mjs"),
     path.join(contentRoot, "plugins/tavangary-core-dev/node_modules/acorn/dist/acorn.mjs"),

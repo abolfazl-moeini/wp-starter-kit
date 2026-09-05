@@ -1,13 +1,13 @@
 {
   "schemaVersion": "1.0.0",
-  "generatedAt": "2026-09-01T20:26:54.101Z",
-  "testsDir": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/tests",
-  "totalFiles": 56,
-  "totalRootTests": 419,
-  "totalAssertions": 1218,
-  "totalRejections": 196,
-  "totalThrows": 8,
-  "totalNegativeChecks": 204,
+  "generatedAt": "2026-09-05T06:16:01.803Z",
+  "testsDir": "/Users/moeini/Documents/ideas/extend-kit/wp-starter-kit/packages/standalone-build/tests",
+  "totalFiles": 60,
+  "totalRootTests": 454,
+  "totalAssertions": 1344,
+  "totalRejections": 198,
+  "totalThrows": 40,
+  "totalNegativeChecks": 238,
   "totalSkips": 0,
   "totalTodos": 0,
   "totalOnlys": 0,
@@ -318,10 +318,10 @@
     {
       "file": "atomic-deploy-and-cache-integrity.test.mjs",
       "testCount": 11,
-      "assertions": 35,
+      "assertions": 39,
       "rejections": 4,
-      "throws": 4,
-      "negativeChecks": 8,
+      "throws": 6,
+      "negativeChecks": 10,
       "skips": 0,
       "todos": 0,
       "onlys": 0,
@@ -439,10 +439,10 @@
         {
           "name": "Pipeline CLI: unknown modes fail closed and suite/test-mode conflicts are explicit",
           "line": 295,
-          "assertions": 8,
+          "assertions": 12,
           "rejects": 0,
-          "throwsCount": 4,
-          "negativeBranches": 4,
+          "throwsCount": 6,
+          "negativeBranches": 6,
           "isSkip": false,
           "isTodo": false,
           "isOnly": false
@@ -865,18 +865,29 @@
     },
     {
       "file": "inliner-collision-and-manifest.test.mjs",
-      "testCount": 2,
-      "assertions": 11,
+      "testCount": 5,
+      "assertions": 18,
       "rejections": 0,
-      "throws": 0,
-      "negativeChecks": 0,
+      "throws": 1,
+      "negativeChecks": 1,
       "skips": 0,
       "todos": 0,
       "onlys": 0,
       "tests": [
         {
+          "name": "Inliner: preloads Settings_Admin_Page so host SettingsPage class files can declare",
+          "line": 15,
+          "assertions": 2,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
           "name": "Inliner: copies multi-module files without basename collision or silent overwrite",
-          "line": 11,
+          "line": 30,
           "assertions": 10,
           "rejects": 0,
           "throwsCount": 0,
@@ -886,8 +897,133 @@
           "isOnly": false
         },
         {
+          "name": "Minifier: writes SCRIPT_DEBUG=.min siblings next to unminified FrameworkClosure assets",
+          "line": 86,
+          "assertions": 4,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "assertFrameworkClosureMinifiedAssets fails closed when production .min files are missing",
+          "line": 116,
+          "assertions": 1,
+          "rejects": 0,
+          "throwsCount": 1,
+          "negativeBranches": 1,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
           "name": "Minifier: fails closed and reports errors when JS/CSS has invalid syntax",
-          "line": 67,
+          "line": 131,
+          "assertions": 1,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        }
+      ]
+    },
+    {
+      "file": "module-loader-coexistence-gate.test.mjs",
+      "testCount": 4,
+      "assertions": 14,
+      "rejections": 1,
+      "throws": 1,
+      "negativeChecks": 2,
+      "skips": 0,
+      "todos": 0,
+      "onlys": 0,
+      "tests": [
+        {
+          "name": "inspectModuleLoaderRegister flags ModuleInterface and mangled class type hints",
+          "line": 50,
+          "assertions": 6,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "assertDuckTypedModuleLoaders fails closed on a typed vendor copy",
+          "line": 66,
+          "assertions": 1,
+          "rejects": 0,
+          "throwsCount": 1,
+          "negativeBranches": 1,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "rewrite converts typed and mangled register() hints to object",
+          "line": 78,
+          "assertions": 5,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "typed winner ModuleLoader TypeErrors on a foreign DRM module; object hint does not",
+          "line": 100,
+          "assertions": 2,
+          "rejects": 1,
+          "throwsCount": 0,
+          "negativeBranches": 1,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        }
+      ]
+    },
+    {
+      "file": "multi-plugin-coexistence.test.mjs",
+      "testCount": 3,
+      "assertions": 9,
+      "rejections": 0,
+      "throws": 0,
+      "negativeChecks": 0,
+      "skips": 0,
+      "todos": 0,
+      "onlys": 0,
+      "tests": [
+        {
+          "name": "Multi-Plugin Coexistence: scopeFrameworkCoreForConsumer isolates Core to consumer namespace",
+          "line": 15,
+          "assertions": 6,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "Multi-Plugin Coexistence: assembler must not catch-and-boot on ->register()",
+          "line": 63,
+          "assertions": 2,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "Multi-Plugin Coexistence: PHP runtime loads DRM then ThemePanel and ThemePanel then DRM without collisions",
+          "line": 85,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -932,7 +1068,7 @@
           "isOnly": false
         },
         {
-          "name": "Regression 3: multi-consumer test evidence allows all 4 artifacts to reach tests-passed, and isolates invalidations",
+          "name": "Regression 3: multi-consumer test evidence allows all standalone artifacts to reach tests-passed, and isolates invalidations",
           "line": 161,
           "assertions": 4,
           "rejects": 0,
@@ -944,7 +1080,7 @@
         },
         {
           "name": "Regression 4: runSelectedNodeTests fail-closed validation on jobsLimit bounds and test file paths",
-          "line": 262,
+          "line": 270,
           "assertions": 6,
           "rejects": 6,
           "throwsCount": 0,
@@ -955,7 +1091,7 @@
         },
         {
           "name": "Regression 5: computeTreeContentHash concurrent work queue halts immediately on abort and tracks zero ops after abort",
-          "line": 304,
+          "line": 312,
           "assertions": 2,
           "rejects": 1,
           "throwsCount": 0,
@@ -966,7 +1102,7 @@
         },
         {
           "name": "Regression 6: pipeline deploy requires verified test coverage and rejects fast mode or incomplete coverage",
-          "line": 340,
+          "line": 348,
           "assertions": 2,
           "rejects": 2,
           "throwsCount": 0,
@@ -977,7 +1113,7 @@
         },
         {
           "name": "Regression 7: validateTestEvidenceRecord strictly rejects duplicate bindings, unauthorized consumers, and malformed bindings",
-          "line": 382,
+          "line": 390,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -988,7 +1124,7 @@
         },
         {
           "name": "Regression 8: validateBuildCacheSchema performs deep fail-closed validation on artifacts, gates, toolchain, and paths",
-          "line": 405,
+          "line": 413,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -999,7 +1135,7 @@
         },
         {
           "name": "Regression 9: loadDeployReceiptRecord strictly rejects symlinks, non-regular files, malformed JSON, and invalid schema",
-          "line": 434,
+          "line": 442,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -1010,7 +1146,7 @@
         },
         {
           "name": "Regression 10: writeAtomicCacheFile categorizes durability outcomes and does NOT claim target preservation on during_dir_sync",
-          "line": 454,
+          "line": 462,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -1021,7 +1157,7 @@
         },
         {
           "name": "Regression 11: validateDeployJournalSchema and loadDeployJournalRecord strictly reject path injection, traversal, symlinks, and invalid tokens",
-          "line": 477,
+          "line": 485,
           "assertions": 17,
           "rejects": 0,
           "throwsCount": 0,
@@ -1032,7 +1168,7 @@
         },
         {
           "name": "Regression 12: deriveJournalPaths strictly checks directory containment and prevents traversal",
-          "line": 573,
+          "line": 581,
           "assertions": 6,
           "rejects": 0,
           "throwsCount": 0,
@@ -1043,7 +1179,7 @@
         },
         {
           "name": "Regression 13: BoundedTailBuffer byte-slices large chunks, handles multi-megabyte streams, and outputs structured metadata",
-          "line": 607,
+          "line": 615,
           "assertions": 7,
           "rejects": 0,
           "throwsCount": 0,
@@ -1054,7 +1190,7 @@
         },
         {
           "name": "Regression 14: validateCanonicalTestRegistry validates 100% test file matching on disk, tool file existence, and critical test releaseSameRun constraint",
-          "line": 629,
+          "line": 637,
           "assertions": 5,
           "rejects": 0,
           "throwsCount": 0,
@@ -1065,7 +1201,7 @@
         },
         {
           "name": "unnamed",
-          "line": 631,
+          "line": 639,
           "assertions": 0,
           "rejects": 0,
           "throwsCount": 0,
@@ -1076,7 +1212,7 @@
         },
         {
           "name": "Regression 15: BoundedTailBuffer UTF-8 boundary trimming discards split continuation bytes without Unicode replacement corruption",
-          "line": 640,
+          "line": 648,
           "assertions": 4,
           "rejects": 0,
           "throwsCount": 0,
@@ -1087,7 +1223,7 @@
         },
         {
           "name": "Regression 16: computeTreeContentHash enforces strictly bounded active promise concurrency under high directory volume",
-          "line": 654,
+          "line": 662,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -1098,7 +1234,7 @@
         },
         {
           "name": "Regression 17: validateBenchmarkSchema validates comprehensive benchmark report and rejects invalid schema",
-          "line": 696,
+          "line": 704,
           "assertions": 6,
           "rejects": 0,
           "throwsCount": 0,
@@ -1109,7 +1245,7 @@
         },
         {
           "name": "Regression 18: parseBsdTimeOutput accurately parses macOS /usr/bin/time -l output",
-          "line": 713,
+          "line": 721,
           "assertions": 7,
           "rejects": 0,
           "throwsCount": 0,
@@ -1120,7 +1256,7 @@
         },
         {
           "name": "Regression 19: validateBenchmarkSchema enforces statistical consistency between samples and reported metrics",
-          "line": 733,
+          "line": 741,
           "assertions": 4,
           "rejects": 0,
           "throwsCount": 0,
@@ -1131,7 +1267,7 @@
         },
         {
           "name": "Regression 20: fsyncDir validates directory integrity, rejects symlinks and files, and propagates durability errors",
-          "line": 754,
+          "line": 762,
           "assertions": 4,
           "rejects": 4,
           "throwsCount": 0,
@@ -1142,7 +1278,7 @@
         },
         {
           "name": "Regression 21: Benchmark harness validates zero workspace mutations via pre/post workspace hashing",
-          "line": 782,
+          "line": 790,
           "assertions": 14,
           "rejects": 3,
           "throwsCount": 0,
@@ -1153,7 +1289,7 @@
         },
         {
           "name": "Regression 22: Incremental build planner invariant: exactly 1 rebuilt and 3 cache-hits on touched source",
-          "line": 946,
+          "line": 954,
           "assertions": 13,
           "rejects": 0,
           "throwsCount": 0,
@@ -1164,7 +1300,7 @@
         },
         {
           "name": "Regression 23: AST Transformer integration: transforms representative PHP fixture, mangles symbols, strips comments, and verifies valid PHP syntax",
-          "line": 1115,
+          "line": 1125,
           "assertions": 6,
           "rejects": 0,
           "throwsCount": 0,
@@ -1188,7 +1324,7 @@
       "tests": [
         {
           "name": "Content-based cache: modifying 1 byte in source file creates cache miss",
-          "line": 25,
+          "line": 28,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -1199,7 +1335,7 @@
         },
         {
           "name": "Content-based cache: updating mtime/timestamp WITHOUT changing content results in cache hit",
-          "line": 43,
+          "line": 46,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -1210,7 +1346,7 @@
         },
         {
           "name": "Dependency graph: changing shared plugins/wpdev propagates to all dependent plugins",
-          "line": 63,
+          "line": 66,
           "assertions": 4,
           "rejects": 0,
           "throwsCount": 0,
@@ -1221,7 +1357,7 @@
         },
         {
           "name": "Dependency graph: changing only a single consumer only rebuilds that consumer",
-          "line": 93,
+          "line": 96,
           "assertions": 4,
           "rejects": 0,
           "throwsCount": 0,
@@ -1232,7 +1368,7 @@
         },
         {
           "name": "Dependency graph: toolchain fingerprint changes invalidate cached artifacts",
-          "line": 123,
+          "line": 126,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -1243,7 +1379,7 @@
         },
         {
           "name": "ZIP verification: tampered byte inside ZIP fails verification",
-          "line": 148,
+          "line": 151,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -1254,7 +1390,7 @@
         },
         {
           "name": "ZIP verification: missing entry inside ZIP fails verification",
-          "line": 190,
+          "line": 193,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -1265,7 +1401,7 @@
         },
         {
           "name": "PHP verifier: rejects symlinks and directory traversal safely without warnings or fatal errors",
-          "line": 222,
+          "line": 225,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -1279,7 +1415,7 @@
     {
       "file": "pipeline-failure-and-rollback.test.mjs",
       "testCount": 45,
-      "assertions": 191,
+      "assertions": 194,
       "rejections": 10,
       "throws": 2,
       "negativeChecks": 12,
@@ -1289,7 +1425,7 @@
       "tests": [
         {
           "name": "Failure Scenario 1: Test failure after build prevents cache commit and deployment",
-          "line": 60,
+          "line": 62,
           "assertions": 7,
           "rejects": 0,
           "throwsCount": 0,
@@ -1300,7 +1436,7 @@
         },
         {
           "name": "Failure Scenario 2: ZIP corruption on cache hit triggers validation failure and safe rebuild requirement",
-          "line": 118,
+          "line": 120,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -1311,7 +1447,7 @@
         },
         {
           "name": "Failure Scenario 3: Deploy failure after tests restores backup and leaves target intact",
-          "line": 158,
+          "line": 160,
           "assertions": 4,
           "rejects": 0,
           "throwsCount": 0,
@@ -1322,7 +1458,7 @@
         },
         {
           "name": "Failure Scenario 4: Target file drift on disk is detected and prevents false deploy skip",
-          "line": 198,
+          "line": 200,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -1333,7 +1469,7 @@
         },
         {
           "name": "Failure Scenario 5: Clean re-run after failure executes required DAG nodes successfully",
-          "line": 225,
+          "line": 227,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -1344,7 +1480,7 @@
         },
         {
           "name": "Failure Scenario 6: Production orchestrator strictly rejects invalid cache files in deploy/release mode",
-          "line": 268,
+          "line": 270,
           "assertions": 2,
           "rejects": 2,
           "throwsCount": 0,
@@ -1355,7 +1491,7 @@
         },
         {
           "name": "Failure Scenario 7: Production orchestrator rollback on smoke failure leaves target directory, receipts, and cache untouched",
-          "line": 319,
+          "line": 321,
           "assertions": 8,
           "rejects": 0,
           "throwsCount": 0,
@@ -1366,7 +1502,7 @@
         },
         {
           "name": "Failure Scenario 8: Failure immediately after swap (during_swap) on non-existent initial target cleans up new target",
-          "line": 496,
+          "line": 498,
           "assertions": 4,
           "rejects": 0,
           "throwsCount": 0,
@@ -1377,7 +1513,7 @@
         },
         {
           "name": "Failure Scenario 9: Multi-file commit failure (during_commit) leaves zero receipts and untouched cache",
-          "line": 627,
+          "line": 629,
           "assertions": 4,
           "rejects": 0,
           "throwsCount": 0,
@@ -1388,7 +1524,7 @@
         },
         {
           "name": "Failure Scenario 10: Startup journal recovery restores interrupted deployment before running new build",
-          "line": 761,
+          "line": 763,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -1399,7 +1535,7 @@
         },
         {
           "name": "Failure Scenario 11: Crash after backup_renamed but before candidate_swapped is safely recovered by startup recovery",
-          "line": 894,
+          "line": 896,
           "assertions": 5,
           "rejects": 0,
           "throwsCount": 0,
@@ -1410,7 +1546,7 @@
         },
         {
           "name": "Failure Scenario 12: Rollback failure preserves journal with rollback_failed phase and halts future builds",
-          "line": 1038,
+          "line": 1040,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -1421,7 +1557,7 @@
         },
         {
           "name": "Failure Scenario 13: Deploy-skip integrity check rejects tampered non-bootstrap file or symlink",
-          "line": 1105,
+          "line": 1107,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -1432,7 +1568,7 @@
         },
         {
           "name": "Failure Scenario 14: Rollback of previously-absent files (cache/receipt not existing prior to tx) deletes newly published files",
-          "line": 1155,
+          "line": 1157,
           "assertions": 5,
           "rejects": 0,
           "throwsCount": 0,
@@ -1443,7 +1579,7 @@
         },
         {
           "name": "Failure Scenario 15: Crash in the middle of individual receipt publication recovers cleanly",
-          "line": 1248,
+          "line": 1250,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -1454,7 +1590,7 @@
         },
         {
           "name": "Failure Scenario 16: Startup recovery in committed phase verifies integrity and completes forward cleanup",
-          "line": 1334,
+          "line": 1336,
           "assertions": 6,
           "rejects": 0,
           "throwsCount": 0,
@@ -1465,7 +1601,7 @@
         },
         {
           "name": "Failure Scenario 17: Recovery strictly rejects symlinks in txBackupDir, txStagingDir, and .deploy-receipts",
-          "line": 1425,
+          "line": 1427,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -1476,7 +1612,7 @@
         },
         {
           "name": "Failure Scenario 18: validateJournalTransition strictly rejects invalid transitions and non-monotonic revisions",
-          "line": 1475,
+          "line": 1477,
           "assertions": 7,
           "rejects": 0,
           "throwsCount": 0,
@@ -1487,7 +1623,7 @@
         },
         {
           "name": "Failure Scenario 19: Release same-run test evidence replay from prior transaction is rejected",
-          "line": 1548,
+          "line": 1550,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -1498,7 +1634,7 @@
         },
         {
           "name": "Failure Scenario 20: Strict Intent-Before-Completion enforcement in validateJournalTransition",
-          "line": 1589,
+          "line": 1591,
           "assertions": 6,
           "rejects": 0,
           "throwsCount": 0,
@@ -1509,7 +1645,7 @@
         },
         {
           "name": "Failure Scenario 21: validateJournalTransition enforces exact +1 revision increment",
-          "line": 1657,
+          "line": 1659,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -1520,7 +1656,7 @@
         },
         {
           "name": "Failure Scenario 22: Rejection of extra or unknown keys in deploy journal schema",
-          "line": 1684,
+          "line": 1686,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -1531,7 +1667,7 @@
         },
         {
           "name": "Failure Scenario 23: Rollback fails safely when existedBefore backup is missing, symlink, or corrupt",
-          "line": 1723,
+          "line": 1725,
           "assertions": 2,
           "rejects": 1,
           "throwsCount": 0,
@@ -1542,7 +1678,7 @@
         },
         {
           "name": "Failure Scenario 24: Recovery in committed phase is idempotent across multiple invocations",
-          "line": 1785,
+          "line": 1787,
           "assertions": 6,
           "rejects": 0,
           "throwsCount": 0,
@@ -1553,7 +1689,7 @@
         },
         {
           "name": "Failure Scenario 25: TransactionJournalManager serializes mutations, increments revision by exactly +1, and rejects writes after termination",
-          "line": 1866,
+          "line": 1868,
           "assertions": 12,
           "rejects": 1,
           "throwsCount": 0,
@@ -1564,7 +1700,7 @@
         },
         {
           "name": "Failure Scenario 26: TransactionJournalManager serializes concurrent asynchronous updates without transition race conditions",
-          "line": 1953,
+          "line": 1955,
           "assertions": 4,
           "rejects": 0,
           "throwsCount": 0,
@@ -1575,7 +1711,7 @@
         },
         {
           "name": "Failure Scenario 27: validateJournalTransition strictly rejects adding, removing, or reordering targets after registration",
-          "line": 2030,
+          "line": 2032,
           "assertions": 6,
           "rejects": 0,
           "throwsCount": 0,
@@ -1586,7 +1722,7 @@
         },
         {
           "name": "Failure Scenario 28: State machine enforces Commit Point Invariant: transition from committed to rolling_back is strictly rejected",
-          "line": 2098,
+          "line": 2100,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -1597,7 +1733,7 @@
         },
         {
           "name": "Failure Scenario 29: State machine strictly rejects published status with mismatched finalDigest vs stagedDigest",
-          "line": 2154,
+          "line": 2156,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -1608,7 +1744,7 @@
         },
         {
           "name": "Failure Scenario 30: State machine rejects backupsPurged=true unless phase is cleanup_complete",
-          "line": 2195,
+          "line": 2197,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -1619,7 +1755,7 @@
         },
         {
           "name": "Failure Scenario 31: Disallowed or extra keys inside error object are rejected by schema validation",
-          "line": 2221,
+          "line": 2223,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -1630,7 +1766,7 @@
         },
         {
           "name": "Failure Scenario 32: Multi-target deployment with candidate digest transition and verification on isolated fixture",
-          "line": 2247,
+          "line": 2249,
           "assertions": 10,
           "rejects": 0,
           "throwsCount": 0,
@@ -1641,7 +1777,7 @@
         },
         {
           "name": "Failure Scenario 33: Target candidateZipSha mutability invariant strictly enforced",
-          "line": 2416,
+          "line": 2428,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -1652,7 +1788,7 @@
         },
         {
           "name": "Failure Scenario 34: Missing or corrupted target backup directory during rollback transitions to rollback_failed",
-          "line": 2466,
+          "line": 2478,
           "assertions": 3,
           "rejects": 1,
           "throwsCount": 0,
@@ -1663,7 +1799,7 @@
         },
         {
           "name": "Failure Scenario 35: Missing, symlink, or corrupt backup receipt/cache during rollback transitions to rollback_failed",
-          "line": 2525,
+          "line": 2537,
           "assertions": 3,
           "rejects": 1,
           "throwsCount": 0,
@@ -1674,7 +1810,7 @@
         },
         {
           "name": "Failure Scenario 36: Committed crash with failed post-commit cleanup leaves journal committed and recovery is idempotent",
-          "line": 2587,
+          "line": 2599,
           "assertions": 10,
           "rejects": 0,
           "throwsCount": 0,
@@ -1685,7 +1821,7 @@
         },
         {
           "name": "Failure Scenario 37: TransactionJournalManager rejects queued writes when terminate() is called concurrently",
-          "line": 2686,
+          "line": 2698,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -1696,7 +1832,7 @@
         },
         {
           "name": "Failure Scenario 38: Publication state machine enforces strict staged -> publishing -> published sequence",
-          "line": 2757,
+          "line": 2769,
           "assertions": 5,
           "rejects": 0,
           "throwsCount": 0,
@@ -1707,7 +1843,7 @@
         },
         {
           "name": "Failure Scenario 39: Docker smoke node fails if any artifact binding is missing or empty",
-          "line": 2817,
+          "line": 2829,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -1718,7 +1854,7 @@
         },
         {
           "name": "Failure Scenario 40: deepFreeze ensures nested mutations on snapshots cannot tamper with TransactionJournalManager state",
-          "line": 2906,
+          "line": 2925,
           "assertions": 11,
           "rejects": 0,
           "throwsCount": 2,
@@ -1729,7 +1865,7 @@
         },
         {
           "name": "Failure Scenario 41: TransactionJournalManager handles in-flight mutation termination and rejects queued promises",
-          "line": 2991,
+          "line": 3010,
           "assertions": 7,
           "rejects": 0,
           "throwsCount": 0,
@@ -1740,8 +1876,8 @@
         },
         {
           "name": "Failure Scenario 42: Publication state machine forbids restored/deleted outside rollback and forbids mutating published records",
-          "line": 3066,
-          "assertions": 5,
+          "line": 3085,
+          "assertions": 8,
           "rejects": 0,
           "throwsCount": 0,
           "negativeBranches": 0,
@@ -1751,7 +1887,7 @@
         },
         {
           "name": "Failure Scenario 43: Committed recovery verifies destination artifact integrity before cleanup and fails closed on tampering",
-          "line": 3139,
+          "line": 3178,
           "assertions": 3,
           "rejects": 1,
           "throwsCount": 0,
@@ -1762,7 +1898,7 @@
         },
         {
           "name": "Failure Scenario 44: Release mode rejects legacy test evidence schema v2 and enforces releaseSameRun",
-          "line": 3224,
+          "line": 3263,
           "assertions": 5,
           "rejects": 0,
           "throwsCount": 0,
@@ -1773,7 +1909,7 @@
         },
         {
           "name": "Failure Scenario 45: Fault injection in rollback atomic journal write raises compound failure",
-          "line": 3279,
+          "line": 3318,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -1797,7 +1933,7 @@
       "tests": [
         {
           "name": "Plan 3: strips comments while preserving main plugin header and license notices",
-          "line": 11,
+          "line": 15,
           "assertions": 5,
           "rejects": 0,
           "throwsCount": 0,
@@ -1808,7 +1944,7 @@
         },
         {
           "name": "Plan 3: mangles private symbols while preserving public contracts and gettext %1$s",
-          "line": 53,
+          "line": 57,
           "assertions": 7,
           "rejects": 0,
           "throwsCount": 0,
@@ -1819,7 +1955,7 @@
         },
         {
           "name": "Plan 3: preserves public property lists and rewrites private static calls",
-          "line": 103,
+          "line": 107,
           "assertions": 5,
           "rejects": 0,
           "throwsCount": 0,
@@ -1830,7 +1966,7 @@
         },
         {
           "name": "Plan 3: flattens namespaces and removes internal use statements into global scope",
-          "line": 129,
+          "line": 133,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -1841,7 +1977,7 @@
         },
         {
           "name": "Plan 3: disambiguates classes sharing identical short names in different namespaces",
-          "line": 179,
+          "line": 183,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -1852,7 +1988,7 @@
         },
         {
           "name": "Plan 3: dump-map records declaration kinds including enum and enum declaration stays valid PHP",
-          "line": 226,
+          "line": 230,
           "assertions": 9,
           "rejects": 0,
           "throwsCount": 0,
@@ -1863,7 +1999,7 @@
         },
         {
           "name": "Plan 3: preserves WordPress hook names and unrelated strings while mangling private callbacks",
-          "line": 300,
+          "line": 304,
           "assertions": 10,
           "rejects": 0,
           "throwsCount": 0,
@@ -1874,7 +2010,7 @@
         },
         {
           "name": "Plan 3: mangles private members through the nullsafe operator and keeps runtime behavior",
-          "line": 338,
+          "line": 342,
           "assertions": 5,
           "rejects": 0,
           "throwsCount": 0,
@@ -1885,7 +2021,7 @@
         },
         {
           "name": "Plan 3: does not rewrite public methods that share a class short name",
-          "line": 376,
+          "line": 380,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -1896,7 +2032,7 @@
         },
         {
           "name": "Plan 3: preserves distinctive WordPress globals instead of mangling them",
-          "line": 419,
+          "line": 423,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -1907,7 +2043,7 @@
         },
         {
           "name": "Plan 3: rewrites compact() names to follow mangled locals",
-          "line": 452,
+          "line": 456,
           "assertions": 5,
           "rejects": 0,
           "throwsCount": 0,
@@ -1918,7 +2054,7 @@
         },
         {
           "name": "Plan 3: brace namespaces dump the real FQCN and flatten to a runnable class",
-          "line": 494,
+          "line": 498,
           "assertions": 5,
           "rejects": 0,
           "throwsCount": 0,
@@ -1929,7 +2065,7 @@
         },
         {
           "name": "Plan 3: drops ambiguous short class names when two FQCNs share one",
-          "line": 544,
+          "line": 548,
           "assertions": 4,
           "rejects": 0,
           "throwsCount": 0,
@@ -2077,6 +2213,173 @@
       ]
     },
     {
+      "file": "profile-s-fail-closed.test.mjs",
+      "testCount": 14,
+      "assertions": 58,
+      "rejections": 1,
+      "throws": 23,
+      "negativeChecks": 24,
+      "skips": 0,
+      "todos": 0,
+      "onlys": 0,
+      "tests": [
+        {
+          "name": "parseClosedProfileFlags accepts --obfuscate and --profile=s as Profile S",
+          "line": 21,
+          "assertions": 5,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "parseClosedProfileFlags rejects unknown and conflicting profiles",
+          "line": 29,
+          "assertions": 4,
+          "rejects": 0,
+          "throwsCount": 4,
+          "negativeBranches": 4,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "parsePipelineArgs exposes the closed profile and rejects unknown values",
+          "line": 39,
+          "assertions": 4,
+          "rejects": 0,
+          "throwsCount": 1,
+          "negativeBranches": 1,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "requireRectorForProfileS fails closed when the binary or config is missing",
+          "line": 46,
+          "assertions": 1,
+          "rejects": 0,
+          "throwsCount": 1,
+          "negativeBranches": 1,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "parseTransformerBatchLog requires valid JSON records for every expected PHP file",
+          "line": 53,
+          "assertions": 7,
+          "rejects": 0,
+          "throwsCount": 6,
+          "negativeBranches": 6,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "validatePhpSyntaxTree rejects leftover PHP 8 tokens after a skipped downgrade",
+          "line": 74,
+          "assertions": 1,
+          "rejects": 1,
+          "throwsCount": 0,
+          "negativeBranches": 1,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "assemble and orchestrator CLIs resolve the same closed profile with both --profile=s and --profile s",
+          "line": 96,
+          "assertions": 12,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "assertEligibilityAllowsObfuscation fails closed on critical eval/code injection but records non-critical dynamic edges",
+          "line": 117,
+          "assertions": 6,
+          "rejects": 0,
+          "throwsCount": 2,
+          "negativeBranches": 2,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "assertSymbolMapHasNoCollisions rejects two FQCNs or functions that share a mangled name",
+          "line": 145,
+          "assertions": 3,
+          "rejects": 0,
+          "throwsCount": 2,
+          "negativeBranches": 2,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "assertSymbolMapHasNoCollisions enforces PHP case-insensitivity for classes and functions",
+          "line": 169,
+          "assertions": 3,
+          "rejects": 0,
+          "throwsCount": 3,
+          "negativeBranches": 3,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "assertSymbolMapHasNoCollisions rejects ambiguous short names mapped to a single symbol",
+          "line": 193,
+          "assertions": 1,
+          "rejects": 0,
+          "throwsCount": 1,
+          "negativeBranches": 1,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "assertZipHasNoSecretIntermediates rejects symbol map variants",
+          "line": 207,
+          "assertions": 3,
+          "rejects": 0,
+          "throwsCount": 3,
+          "negativeBranches": 3,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "collectToolchainEvidence records valid version strings with digits for php/node/zip/composer",
+          "line": 223,
+          "assertions": 6,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "collectFirstPartyPhpFiles skips vendor trees",
+          "line": 233,
+          "assertions": 2,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        }
+      ]
+    },
+    {
       "file": "protection-inventory.test.mjs",
       "testCount": 5,
       "assertions": 9,
@@ -2157,7 +2460,7 @@
       "tests": [
         {
           "name": "recomputes stale pinned digests from live tool bytes",
-          "line": 57,
+          "line": 60,
           "assertions": 7,
           "rejects": 0,
           "throwsCount": 0,
@@ -2168,7 +2471,7 @@
         },
         {
           "name": "is a no-op when every pinned digest already matches",
-          "line": 75,
+          "line": 78,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -2179,7 +2482,7 @@
         },
         {
           "name": "fails closed without writing when a pinned tool input is missing",
-          "line": 84,
+          "line": 87,
           "assertions": 2,
           "rejects": 1,
           "throwsCount": 0,
@@ -2190,7 +2493,7 @@
         },
         {
           "name": "refuses symlinked tool inputs and symlinked manifest",
-          "line": 96,
+          "line": 99,
           "assertions": 2,
           "rejects": 2,
           "throwsCount": 0,
@@ -2201,7 +2504,7 @@
         },
         {
           "name": "refuses unexpected manifest filenames and non-review-only records",
-          "line": 117,
+          "line": 120,
           "assertions": 2,
           "rejects": 2,
           "throwsCount": 0,
@@ -2212,7 +2515,7 @@
         },
         {
           "name": "rejects traversal and duplicate tool input paths",
-          "line": 136,
+          "line": 139,
           "assertions": 2,
           "rejects": 2,
           "throwsCount": 0,
@@ -2223,7 +2526,7 @@
         },
         {
           "name": "rejects relative or missing paths",
-          "line": 159,
+          "line": 162,
           "assertions": 2,
           "rejects": 2,
           "throwsCount": 0,
@@ -2235,9 +2538,55 @@
       ]
     },
     {
+      "file": "resolve-content-root.test.mjs",
+      "testCount": 3,
+      "assertions": 3,
+      "rejections": 0,
+      "throws": 1,
+      "negativeChecks": 1,
+      "skips": 0,
+      "todos": 0,
+      "onlys": 0,
+      "tests": [
+        {
+          "name": "resolveContentRoot uses WPDEV_CONTENT_ROOT",
+          "line": 9,
+          "assertions": 1,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "resolveContentRoot detects a wp-content-shaped cwd",
+          "line": 26,
+          "assertions": 1,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "resolveContentRoot fails closed when it cannot infer wp-content",
+          "line": 41,
+          "assertions": 1,
+          "rejects": 0,
+          "throwsCount": 1,
+          "negativeBranches": 1,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        }
+      ]
+    },
+    {
       "file": "run-plan3-eligibility-spike.test.mjs",
-      "testCount": 5,
-      "assertions": 13,
+      "testCount": 6,
+      "assertions": 17,
       "rejections": 0,
       "throws": 0,
       "negativeChecks": 0,
@@ -2299,6 +2648,17 @@
           "isSkip": false,
           "isTodo": false,
           "isOnly": false
+        },
+        {
+          "name": "records reflection, class_exists strings, and serialize as dynamic-name edges",
+          "line": 89,
+          "assertions": 4,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
         }
       ]
     },
@@ -2315,7 +2675,7 @@
       "tests": [
         {
           "name": "aggregates blocked read-only gates without mutating the workspace",
-          "line": 16,
+          "line": 32,
           "assertions": 10,
           "rejects": 1,
           "throwsCount": 0,
@@ -2339,7 +2699,7 @@
       "tests": [
         {
           "name": "preserves gettext %1$s placeholders and sprintf strings with zero corruption",
-          "line": 11,
+          "line": 15,
           "assertions": 4,
           "rejects": 0,
           "throwsCount": 0,
@@ -2350,7 +2710,7 @@
         },
         {
           "name": "renames private methods and properties while preserving public/protected ones",
-          "line": 47,
+          "line": 51,
           "assertions": 5,
           "rejects": 0,
           "throwsCount": 0,
@@ -2361,7 +2721,7 @@
         },
         {
           "name": "renames private static calls and removes non-essential comments",
-          "line": 88,
+          "line": 92,
           "assertions": 5,
           "rejects": 0,
           "throwsCount": 0,
@@ -2533,8 +2893,8 @@
       "onlys": 0,
       "tests": [
         {
-          "name": "Target registry: four standalone consumers are explicit and wpdev is not a standalone artifact",
-          "line": 18,
+          "name": "Target registry: seven standalone consumers are explicit and wpdev is not a standalone artifact",
+          "line": 35,
           "assertions": 10,
           "rejects": 0,
           "throwsCount": 0,
@@ -2545,7 +2905,7 @@
         },
         {
           "name": "Target registry: real in-repo sources resolve to *-dev and never to deploy output",
-          "line": 39,
+          "line": 64,
           "assertions": 4,
           "rejects": 0,
           "throwsCount": 0,
@@ -2556,7 +2916,7 @@
         },
         {
           "name": "Target registry: missing -dev source is fail-closed and must not fall back to deploy output",
-          "line": 49,
+          "line": 74,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -2567,7 +2927,7 @@
         },
         {
           "name": "Target registry: unknown consumer, wpdev standalone, symlink and traversal are rejected",
-          "line": 65,
+          "line": 90,
           "assertions": 3,
           "rejects": 3,
           "throwsCount": 0,
@@ -2927,8 +3287,8 @@
     },
     {
       "file": "test-scheduler-and-tiers.test.mjs",
-      "testCount": 16,
-      "assertions": 31,
+      "testCount": 18,
+      "assertions": 35,
       "rejections": 2,
       "throws": 0,
       "negativeChecks": 2,
@@ -2981,8 +3341,30 @@
           "isOnly": false
         },
         {
-          "name": "Recursion Guard: runTestScheduler and runFullSuiteProfiling reject nested recursive invocation",
+          "name": "canonical npm test inventory matches package.json and files on disk",
           "line": 58,
+          "assertions": 4,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "unnamed",
+          "line": 63,
+          "assertions": 0,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "Recursion Guard: runTestScheduler and runFullSuiteProfiling reject nested recursive invocation",
+          "line": 69,
           "assertions": 2,
           "rejects": 2,
           "throwsCount": 0,
@@ -2993,7 +3375,7 @@
         },
         {
           "name": "unnamed",
-          "line": 66,
+          "line": 77,
           "assertions": 0,
           "rejects": 0,
           "throwsCount": 0,
@@ -3004,7 +3386,7 @@
         },
         {
           "name": "unnamed",
-          "line": 74,
+          "line": 85,
           "assertions": 0,
           "rejects": 0,
           "throwsCount": 0,
@@ -3015,7 +3397,7 @@
         },
         {
           "name": "Test Scheduler (Synthetic Isolation): Executes bounded concurrency without nested suite overhead",
-          "line": 87,
+          "line": 98,
           "assertions": 8,
           "rejects": 0,
           "throwsCount": 0,
@@ -3026,7 +3408,7 @@
         },
         {
           "name": "unnamed",
-          "line": 108,
+          "line": 119,
           "assertions": 0,
           "rejects": 0,
           "throwsCount": 0,
@@ -3037,7 +3419,7 @@
         },
         {
           "name": "unnamed",
-          "line": 115,
+          "line": 126,
           "assertions": 0,
           "rejects": 0,
           "throwsCount": 0,
@@ -3048,7 +3430,7 @@
         },
         {
           "name": "Test Scheduler (Synthetic Isolation): Early cancellation terminates child processes on bail",
-          "line": 135,
+          "line": 146,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -3059,7 +3441,7 @@
         },
         {
           "name": "unnamed",
-          "line": 151,
+          "line": 162,
           "assertions": 0,
           "rejects": 0,
           "throwsCount": 0,
@@ -3070,7 +3452,7 @@
         },
         {
           "name": "Test Profiler (Synthetic Isolation): Accurately profiles synthetic test files and tracks process count",
-          "line": 167,
+          "line": 178,
           "assertions": 6,
           "rejects": 0,
           "throwsCount": 0,
@@ -3081,7 +3463,7 @@
         },
         {
           "name": "unnamed",
-          "line": 182,
+          "line": 193,
           "assertions": 0,
           "rejects": 0,
           "throwsCount": 0,
@@ -3092,7 +3474,7 @@
         },
         {
           "name": "unnamed",
-          "line": 188,
+          "line": 199,
           "assertions": 0,
           "rejects": 0,
           "throwsCount": 0,
@@ -3103,7 +3485,7 @@
         },
         {
           "name": "Test Scheduler: Running scheduler causes zero mutations to workspace tools directory",
-          "line": 204,
+          "line": 215,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -3127,7 +3509,7 @@
       "tests": [
         {
           "name": "Transformer Matrix: handles class, interface, trait, enum, anonymous classes and duplicate short names with class_alias",
-          "line": 13,
+          "line": 17,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -3151,7 +3533,7 @@
       "tests": [
         {
           "name": "Transformer Engine: class, multiple constants, method, and variable transformation",
-          "line": 12,
+          "line": 16,
           "assertions": 13,
           "rejects": 0,
           "throwsCount": 0,
@@ -3175,7 +3557,7 @@
       "tests": [
         {
           "name": "accepts review-only closure evidence",
-          "line": 11,
+          "line": 15,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -3186,7 +3568,7 @@
         },
         {
           "name": "rejects promotion input and unsafe candidates",
-          "line": 12,
+          "line": 16,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3197,7 +3579,7 @@
         },
         {
           "name": "rejects malformed unresolved includes",
-          "line": 13,
+          "line": 17,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3208,7 +3590,7 @@
         },
         {
           "name": "resolves canonical mapped source directory and rejects symlinked source map",
-          "line": 14,
+          "line": 18,
           "assertions": 2,
           "rejects": 1,
           "throwsCount": 0,
@@ -3219,7 +3601,7 @@
         },
         {
           "name": "accepts an approved build-input closure manifest with roles and empty blockers",
-          "line": 34,
+          "line": 38,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -3230,7 +3612,7 @@
         },
         {
           "name": "rejects an approved manifest with a missing or unknown role",
-          "line": 47,
+          "line": 51,
           "assertions": 2,
           "rejects": 2,
           "throwsCount": 0,
@@ -3241,7 +3623,7 @@
         },
         {
           "name": "rejects an approved manifest with unapproved candidates or unresolved blockers",
-          "line": 53,
+          "line": 57,
           "assertions": 2,
           "rejects": 2,
           "throwsCount": 0,
@@ -3252,7 +3634,7 @@
         },
         {
           "name": "rejects review-required evidence that claims build input",
-          "line": 59,
+          "line": 63,
           "assertions": 2,
           "rejects": 2,
           "throwsCount": 0,
@@ -3467,7 +3849,7 @@
       "tests": [
         {
           "name": "accepts a fully proven dynamic identifier domain",
-          "line": 62,
+          "line": 66,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -3478,7 +3860,7 @@
         },
         {
           "name": "rejects a producer whose recorded line does not contain the template",
-          "line": 69,
+          "line": 73,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3489,7 +3871,7 @@
         },
         {
           "name": "rejects a producer file that does not exist",
-          "line": 77,
+          "line": 81,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3500,7 +3882,7 @@
         },
         {
           "name": "rejects an identifier that is not actually registered",
-          "line": 85,
+          "line": 89,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3511,7 +3893,7 @@
         },
         {
           "name": "rejects an observed identifier that does not match the matcher",
-          "line": 93,
+          "line": 97,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3522,7 +3904,7 @@
         },
         {
           "name": "rejects an observed identifier whose variable part is not enumerated",
-          "line": 101,
+          "line": 105,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3533,7 +3915,7 @@
         },
         {
           "name": "rejects a domain with no producers",
-          "line": 109,
+          "line": 113,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3544,7 +3926,7 @@
         },
         {
           "name": "rejects a manifest that leaves an inventory dynamic hook unproven",
-          "line": 117,
+          "line": 121,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3555,7 +3937,7 @@
         },
         {
           "name": "rejects unsafe absolute and traversal paths",
-          "line": 123,
+          "line": 127,
           "assertions": 2,
           "rejects": 2,
           "throwsCount": 0,
@@ -3566,7 +3948,7 @@
         },
         {
           "name": "rejects an empty residual risk statement",
-          "line": 135,
+          "line": 139,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3577,7 +3959,7 @@
         },
         {
           "name": "accepts a template whose placeholder is followed by a literal suffix",
-          "line": 146,
+          "line": 150,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -3588,7 +3970,7 @@
         },
         {
           "name": "rejects a suffixed template whose variable part is not enumerated",
-          "line": 173,
+          "line": 177,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3599,7 +3981,7 @@
         },
         {
           "name": "rejects a manifest that is not the expected purpose",
-          "line": 195,
+          "line": 199,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3623,7 +4005,7 @@
       "tests": [
         {
           "name": "accepts review-only hook evidence while retaining blockers",
-          "line": 11,
+          "line": 15,
           "assertions": 3,
           "rejects": 0,
           "throwsCount": 0,
@@ -3634,7 +4016,7 @@
         },
         {
           "name": "rejects malformed dynamic producer evidence",
-          "line": 12,
+          "line": 16,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3645,7 +4027,7 @@
         },
         {
           "name": "rejects absolute and traversal evidence paths",
-          "line": 13,
+          "line": 17,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3737,7 +4119,7 @@
       "tests": [
         {
           "name": "rejects a dirty candidate and accepts strict metadata",
-          "line": 10,
+          "line": 14,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -3748,7 +4130,7 @@
         },
         {
           "name": "rejects dirty worktree",
-          "line": 19,
+          "line": 23,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3759,7 +4141,7 @@
         },
         {
           "name": "accepts a 40-character SHA-1 tree object",
-          "line": 23,
+          "line": 27,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -3770,7 +4152,7 @@
         },
         {
           "name": "rejects tool inputs containing platform path separators",
-          "line": 32,
+          "line": 36,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -3781,7 +4163,7 @@
         },
         {
           "name": "rejects missing or relative contentRoot",
-          "line": 40,
+          "line": 44,
           "assertions": 2,
           "rejects": 2,
           "throwsCount": 0,
@@ -3792,7 +4174,7 @@
         },
         {
           "name": "rejects duplicate tool inputs and promotion flags",
-          "line": 49,
+          "line": 53,
           "assertions": 3,
           "rejects": 3,
           "throwsCount": 0,
@@ -4570,7 +4952,7 @@
       "tests": [
         {
           "name": "accepts review-only serialized callback evidence",
-          "line": 13,
+          "line": 16,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -4581,39 +4963,6 @@
         },
         {
           "name": "rejects promotion input and mismatched findings",
-          "line": 14,
-          "assertions": 1,
-          "rejects": 1,
-          "throwsCount": 0,
-          "negativeBranches": 1,
-          "isSkip": false,
-          "isTodo": false,
-          "isOnly": false
-        },
-        {
-          "name": "rejects symlinked evidence",
-          "line": 15,
-          "assertions": 1,
-          "rejects": 1,
-          "throwsCount": 0,
-          "negativeBranches": 1,
-          "isSkip": false,
-          "isTodo": false,
-          "isOnly": false
-        },
-        {
-          "name": "rejects an inventory without an explicit findings array",
-          "line": 16,
-          "assertions": 1,
-          "rejects": 1,
-          "throwsCount": 0,
-          "negativeBranches": 1,
-          "isSkip": false,
-          "isTodo": false,
-          "isOnly": false
-        },
-        {
-          "name": "rejects review approval with empty limitations",
           "line": 17,
           "assertions": 1,
           "rejects": 1,
@@ -4624,8 +4973,41 @@
           "isOnly": false
         },
         {
-          "name": "resolves canonical mapped source directory and rejects symlinked source map",
+          "name": "rejects symlinked evidence",
           "line": 18,
+          "assertions": 1,
+          "rejects": 1,
+          "throwsCount": 0,
+          "negativeBranches": 1,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "rejects an inventory without an explicit findings array",
+          "line": 19,
+          "assertions": 1,
+          "rejects": 1,
+          "throwsCount": 0,
+          "negativeBranches": 1,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "rejects review approval with empty limitations",
+          "line": 20,
+          "assertions": 1,
+          "rejects": 1,
+          "throwsCount": 0,
+          "negativeBranches": 1,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "resolves canonical mapped source directory and rejects symlinked source map",
+          "line": 21,
           "assertions": 2,
           "rejects": 1,
           "throwsCount": 0,
@@ -4807,7 +5189,7 @@
       "tests": [
         {
           "name": "accepts review-only template evidence",
-          "line": 7,
+          "line": 15,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -4818,7 +5200,7 @@
         },
         {
           "name": "rejects promotion state and missing resolved file",
-          "line": 8,
+          "line": 16,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -4829,7 +5211,7 @@
         },
         {
           "name": "rejects unsafe or missing external listener scan roots",
-          "line": 9,
+          "line": 17,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -4840,7 +5222,7 @@
         },
         {
           "name": "resolves calls and literals relative to declared framework",
-          "line": 10,
+          "line": 18,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -4864,7 +5246,7 @@
       "tests": [
         {
           "name": "accepts review-only resolver evidence",
-          "line": 13,
+          "line": 17,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -4875,7 +5257,7 @@
         },
         {
           "name": "accepts resolver evidence covered by the closure unresolved include",
-          "line": 14,
+          "line": 18,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -4886,7 +5268,7 @@
         },
         {
           "name": "rejects stale resolver coverage in the closure unresolved includes",
-          "line": 22,
+          "line": 26,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -4897,7 +5279,7 @@
         },
         {
           "name": "rejects unresolved coverage entries with missing expression",
-          "line": 29,
+          "line": 33,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -4908,7 +5290,7 @@
         },
         {
           "name": "rejects promotion input and unsafe paths",
-          "line": 36,
+          "line": 40,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -4919,7 +5301,7 @@
         },
         {
           "name": "rejects normalized paths containing parent traversal",
-          "line": 37,
+          "line": 41,
           "assertions": 1,
           "rejects": 1,
           "throwsCount": 0,
@@ -4930,7 +5312,7 @@
         },
         {
           "name": "accepts an approved resolver contract whose closure manifest records the resolution",
-          "line": 38,
+          "line": 42,
           "assertions": 1,
           "rejects": 0,
           "throwsCount": 0,
@@ -4941,7 +5323,7 @@
         },
         {
           "name": "rejects an approved resolver contract without resolution evidence",
-          "line": 47,
+          "line": 51,
           "assertions": 2,
           "rejects": 2,
           "throwsCount": 0,
@@ -4952,7 +5334,7 @@
         },
         {
           "name": "rejects an approved resolver contract whose edge is still unresolved in the closure",
-          "line": 57,
+          "line": 61,
           "assertions": 2,
           "rejects": 2,
           "throwsCount": 0,
@@ -5156,7 +5538,7 @@
       "tests": [
         {
           "name": "verifies that the assembled Profile S ZIP passes all black-box execution probes",
-          "line": 9,
+          "line": 11,
           "assertions": 4,
           "rejects": 0,
           "throwsCount": 0,
@@ -5167,7 +5549,7 @@
         },
         {
           "name": "Profile S verifier refuses extraction when ZIP preflight fails",
-          "line": 22,
+          "line": 29,
           "assertions": 2,
           "rejects": 0,
           "throwsCount": 0,
@@ -5248,8 +5630,8 @@
     },
     {
       "file": "wpdev-tickets-artifact.test.mjs",
-      "testCount": 5,
-      "assertions": 12,
+      "testCount": 6,
+      "assertions": 16,
       "rejections": 0,
       "throws": 0,
       "negativeChecks": 0,
@@ -5311,23 +5693,34 @@
           "isSkip": false,
           "isTodo": false,
           "isOnly": false
+        },
+        {
+          "name": "WPDev Tickets Artifact: verifies TicketListAdminPage and cross-plugin ModuleLoader duck typing",
+          "line": 128,
+          "assertions": 4,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
         }
       ]
     },
     {
       "file": "zip-tamper-resistance-extended.test.mjs",
-      "testCount": 2,
-      "assertions": 9,
+      "testCount": 6,
+      "assertions": 25,
       "rejections": 0,
-      "throws": 0,
-      "negativeChecks": 0,
+      "throws": 4,
+      "negativeChecks": 4,
       "skips": 0,
       "todos": 0,
       "onlys": 0,
       "tests": [
         {
           "name": "Extended ZIP Tamper Resistance: validates exact file-set parity, symlink/traversal rejection, and content integrity",
-          "line": 18,
+          "line": 19,
           "assertions": 8,
           "rejects": 0,
           "throwsCount": 0,
@@ -5338,8 +5731,52 @@
         },
         {
           "name": "Reproducible ZIP: identical source tree produces identical outer ZIP SHA-256 hash",
-          "line": 77,
+          "line": 78,
           "assertions": 1,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "readZipEntries hashes inflated payloads and rejects traversal, absolute, symlink, and duplicate names before extract",
+          "line": 220,
+          "assertions": 6,
+          "rejects": 0,
+          "throwsCount": 4,
+          "negativeBranches": 4,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "verifyZipAgainstManifest detects a payload digest mismatch without extracting",
+          "line": 243,
+          "assertions": 3,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "verifyZipAgainstManifest rejects a packaged symbol-map.json or symbols.json",
+          "line": 285,
+          "assertions": 2,
+          "rejects": 0,
+          "throwsCount": 0,
+          "negativeBranches": 0,
+          "isSkip": false,
+          "isTodo": false,
+          "isOnly": false
+        },
+        {
+          "name": "validateArtifactManifestObject enforces strict toolchain, obfuscate, and profile invariants",
+          "line": 317,
+          "assertions": 5,
           "rejects": 0,
           "throwsCount": 0,
           "negativeBranches": 0,

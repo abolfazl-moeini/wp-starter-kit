@@ -55,6 +55,17 @@ test("Test Tiers: validateCanonicalTestRegistry validates disjoint tier partitio
   assert.equal(val.totalTests, 60);
 });
 
+test("canonical npm test inventory matches package.json and files on disk", () => {
+  const pkg = JSON.parse(fs.readFileSync(path.join(toolsDir, "package.json"), "utf8"));
+  assert.equal(pkg.scripts.test, "node --test tests/*.test.mjs tests-docker/*.test.mjs");
+  const testsDir = path.join(toolsDir, "tests");
+  const onDisk = fs.readdirSync(testsDir).filter((name) => name.endsWith(".test.mjs")).sort();
+  const val = validateCanonicalTestRegistry(testsDir, contentRoot);
+  assert.equal(val.valid, true, val.reason);
+  assert.equal(val.totalTests, onDisk.length);
+  assert.deepEqual(Object.keys(CANONICAL_TEST_REGISTRY).sort(), onDisk);
+});
+
 test("Recursion Guard: runTestScheduler and runFullSuiteProfiling reject nested recursive invocation", async () => {
   const originalRunActive = process.env.__ANTIGRAVITY_RUN_TESTS_ACTIVE;
   const originalProfileActive = process.env.__ANTIGRAVITY_PROFILE_ACTIVE;

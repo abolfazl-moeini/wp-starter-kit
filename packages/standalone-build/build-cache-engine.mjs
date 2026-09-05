@@ -394,7 +394,7 @@ export function validateJournalTransition(previous, next) {
     pending: ["pending", "staged", "restored", "deleted"],
     staged: ["staged", "publishing", "restored", "deleted"],
     publishing: ["publishing", "published", "restored", "deleted"],
-    published: ["published"],
+    published: ["published", "restored", "deleted"],
     restored: ["restored"],
     deleted: ["deleted"],
   };
@@ -413,14 +413,16 @@ export function validateJournalTransition(previous, next) {
           return { valid: false, reason: `Publication receipt '${consumer}' cannot transition to '${nextR.publishStatus}' outside rollback phase` };
         }
         if (prevR.publishStatus === "published") {
-          if (nextR.publishStatus !== "published") {
+          if (nextR.publishStatus !== "published" && (!isRollbackPhase || (nextR.publishStatus !== "restored" && nextR.publishStatus !== "deleted"))) {
             return { valid: false, reason: `Published receipt '${consumer}' cannot transition away from 'published'` };
           }
-          if (nextR.stagedDigest !== prevR.stagedDigest || nextR.finalDigest !== prevR.finalDigest) {
-            return { valid: false, reason: `Published receipt '${consumer}' digests cannot be mutated` };
-          }
-          if (nextR.existedBefore !== prevR.existedBefore || nextR.preDigest !== prevR.preDigest || nextR.backupStatus !== prevR.backupStatus) {
-            return { valid: false, reason: `Published receipt '${consumer}' metadata cannot be mutated` };
+          if (nextR.publishStatus === "published") {
+            if (nextR.stagedDigest !== prevR.stagedDigest || nextR.finalDigest !== prevR.finalDigest) {
+              return { valid: false, reason: `Published receipt '${consumer}' digests cannot be mutated` };
+            }
+            if (nextR.existedBefore !== prevR.existedBefore || nextR.preDigest !== prevR.preDigest || nextR.backupStatus !== prevR.backupStatus) {
+              return { valid: false, reason: `Published receipt '${consumer}' metadata cannot be mutated` };
+            }
           }
         }
       } else if (nextR.publishStatus === "restored" || nextR.publishStatus === "deleted") {
@@ -446,14 +448,16 @@ export function validateJournalTransition(previous, next) {
         return { valid: false, reason: `Publication cache cannot transition to '${nextC.publishStatus}' outside rollback phase` };
       }
       if (prevC.publishStatus === "published") {
-        if (nextC.publishStatus !== "published") {
+        if (nextC.publishStatus !== "published" && (!isRollbackPhase || (nextC.publishStatus !== "restored" && nextC.publishStatus !== "deleted"))) {
           return { valid: false, reason: "Published cache cannot transition away from 'published'" };
         }
-        if (nextC.stagedDigest !== prevC.stagedDigest || nextC.finalDigest !== prevC.finalDigest) {
-          return { valid: false, reason: "Published cache digests cannot be mutated" };
-        }
-        if (nextC.existedBefore !== prevC.existedBefore || nextC.preDigest !== prevC.preDigest || nextC.backupStatus !== prevC.backupStatus) {
-          return { valid: false, reason: "Published cache metadata cannot be mutated" };
+        if (nextC.publishStatus === "published") {
+          if (nextC.stagedDigest !== prevC.stagedDigest || nextC.finalDigest !== prevC.finalDigest) {
+            return { valid: false, reason: "Published cache digests cannot be mutated" };
+          }
+          if (nextC.existedBefore !== prevC.existedBefore || nextC.preDigest !== prevC.preDigest || nextC.backupStatus !== prevC.backupStatus) {
+            return { valid: false, reason: "Published cache metadata cannot be mutated" };
+          }
         }
       }
     } else if (nextC.publishStatus === "restored" || nextC.publishStatus === "deleted") {

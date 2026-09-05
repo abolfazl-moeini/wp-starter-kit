@@ -9,7 +9,10 @@ export const FORBIDDEN_CHECKS = [
   { name: "string_assert", regex: /\bassert\s*\(\s*["']/i, message: "Runtime string assert() forbidden" },
   { name: "preg_replace_e", regex: /\bpreg_replace\s*\(\s*["'][^"']*\/e["']/i, message: "preg_replace /e modifier forbidden" },
   { name: "dynamic_include", regex: /\b(?:include|include_once|require|require_once)\s*(?:\(|)\s*\$[a-z_]/i, message: "Dynamic include/require path is not eligible" },
-  { name: "dynamic_callable", regex: /\bcall_user_func(?:_array)?\s*\(|\$[a-z_][a-z0-9_]*\s*\(/i, message: "Dynamic callable domain is not proven" },
+  { name: "dynamic_callable", regex: /\bcall_user_func(?:_array)?\s*\(/i, message: "Dynamic callable domain is not proven" },
+  { name: "reflection", regex: /\bnew\s+\\?Reflection(?:Class|Function|Method|Object)\b/i, message: "Reflection-based names are not proven for mangling" },
+  { name: "class_exists_string", regex: /\b(?:class_exists|interface_exists|trait_exists)\s*\(\s*['"]/i, message: "String class_exists names can evade the symbol inventory" },
+  { name: "serialize_callback", regex: /\b(?:serialize|unserialize)\s*\(/i, message: "Serialized values can hide class names from the inventory" },
 ];
 
 export async function scanPhpFiles(dir, baseDir = dir) {
