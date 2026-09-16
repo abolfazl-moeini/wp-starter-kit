@@ -285,6 +285,13 @@ export function run(ctx) {
     ),
     "utf8",
   );
+  files["dev/release/plan3/symbol-analyzer.php"] = readFileSync(
+    path.join(
+      resolveEngineSrcDir(),
+      "../../standalone-build/plan3/symbol-analyzer.php",
+    ),
+    "utf8",
+  );
   dirs.push("dev/release", "dev/release/plan3");
 
   // 12. Rector pipeline — downgrade / prefix / upgrade (same as kit

@@ -53,4 +53,66 @@ describe("resolveProfileSTransformer", () => {
     });
     expect(resolved).toMatch(/standalone-build\/plan3\/transformer\.php$/);
   });
+
+  test("finds dev/release/plan3/transformer.php in pluginRoot", () => {
+    const tmpRoot = path.join(
+      os.tmpdir(),
+      `wpdev-root-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    );
+    const plan3Dir = path.join(tmpRoot, "dev/release/plan3");
+    mkdirSync(plan3Dir, { recursive: true });
+    const transformer = path.join(plan3Dir, "transformer.php");
+    writeFileSync(transformer, "<?php // transformer\n");
+    try {
+      const resolved = resolveProfileSTransformer({
+        pluginRoot: tmpRoot,
+        env: {},
+      });
+      expect(resolved).toBe(path.resolve(transformer));
+    } finally {
+      rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("finds plan3/transformer.php in pluginRoot", () => {
+    const tmpRoot = path.join(
+      os.tmpdir(),
+      `wpdev-root-p3-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    );
+    const plan3Dir = path.join(tmpRoot, "plan3");
+    mkdirSync(plan3Dir, { recursive: true });
+    const transformer = path.join(plan3Dir, "transformer.php");
+    writeFileSync(transformer, "<?php // transformer\n");
+    try {
+      const resolved = resolveProfileSTransformer({
+        pluginRoot: tmpRoot,
+        env: {},
+      });
+      expect(resolved).toBe(path.resolve(transformer));
+    } finally {
+      rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("finds transformer walking up from pluginRoot", () => {
+    const tmpRoot = path.join(
+      os.tmpdir(),
+      `wpdev-root-walk-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    );
+    const subPlugin = path.join(tmpRoot, "plugins/demo-plugin");
+    const plan3Dir = path.join(tmpRoot, "packages/standalone-build/plan3");
+    mkdirSync(subPlugin, { recursive: true });
+    mkdirSync(plan3Dir, { recursive: true });
+    const transformer = path.join(plan3Dir, "transformer.php");
+    writeFileSync(transformer, "<?php // transformer\n");
+    try {
+      const resolved = resolveProfileSTransformer({
+        pluginRoot: subPlugin,
+        env: {},
+      });
+      expect(resolved).toBe(path.resolve(transformer));
+    } finally {
+      rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  });
 });

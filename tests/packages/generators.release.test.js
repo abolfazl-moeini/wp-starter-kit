@@ -77,6 +77,9 @@ describe("core generator — release packager", () => {
       contrib.files["dev/release/module-loader-coexistence-gate.js"],
     ).toBeDefined();
     expect(contrib.files["dev/release/plan3/transformer.php"]).toBeDefined();
+    expect(
+      contrib.files["dev/release/plan3/symbol-analyzer.php"],
+    ).toBeDefined();
     expect(contrib.files["dev/release/prepare-release.js"]).toMatch(
       /requireProfileSTransformer/,
     );
@@ -137,6 +140,12 @@ describe("scaffoldProject — release packager on disk", () => {
     ).resolves.toBeTruthy();
     await expect(
       fs.stat(path.join(tmp, "dev/release/releaseTests.js")),
+    ).resolves.toBeTruthy();
+    await expect(
+      fs.stat(path.join(tmp, "dev/release/plan3/transformer.php")),
+    ).resolves.toBeTruthy();
+    await expect(
+      fs.stat(path.join(tmp, "dev/release/plan3/symbol-analyzer.php")),
     ).resolves.toBeTruthy();
 
     const pkg = JSON.parse(

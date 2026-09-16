@@ -42,6 +42,7 @@ import { spawnSync } from "node:child_process";
 import * as path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import * as os from "node:os";
 import {
   prepareComposerForRelease,
   releaseCopyExcludeNames,
@@ -56,18 +57,24 @@ import {
   assertDuckTypedModuleLoaders,
 } from "./module-loader-coexistence-gate.js";
 
-function getReleaseScriptDir() {
-  try {
-    const metaUrl = Function(
-      "try { return typeof import.meta !== 'undefined' && import.meta.url; } catch (e) { return null; }",
-    )();
-    if (typeof metaUrl === "string" && metaUrl.length > 0) {
-      return path.dirname(fileURLToPath(metaUrl));
-    }
-  } catch {
-    /* Jest/babel CJS fallback */
+function getReleaseScriptDir(pluginRoot) {
+  if (typeof __dirname !== "undefined") {
+    return __dirname;
   }
-  return typeof __dirname !== "undefined" ? __dirname : process.cwd();
+  if (process.argv[1] && typeof process.argv[1] === "string") {
+    const resolved = path.resolve(process.argv[1]);
+    try {
+      if (existsSync(resolved) && lstatSync(resolved).isFile()) {
+        return path.dirname(resolved);
+      }
+    } catch {
+      /* fallback */
+    }
+  }
+  if (pluginRoot && existsSync(path.join(pluginRoot, "dev/release"))) {
+    return path.join(pluginRoot, "dev/release");
+  }
+  return process.cwd();
 }
 
 function normalizeStandaloneModuleLoaders(distRoot) {
@@ -83,6 +90,8 @@ export const CANONICAL_CONSUMERS = new Set([
   "wpdev-analytics",
   "wpdev-woo-persian",
   "drm-connector",
+  "wpdev-woocommerce",
+  "wpdev-bulk-price-manager",
 ]);
 
 export function registerCanonicalConsumer(slug) {
@@ -107,6 +116,18 @@ export function resolveCanonicalAssembler({
     candidates.push(
       path.join(
         starterKit,
+        "packages/standalone-build/assemble-profile-s-candidate.mjs",
+      ),
+    );
+  }
+  const defaultKit = path.join(
+    os.homedir(),
+    "Documents/ideas/extend-kit/wp-starter-kit",
+  );
+  if (existsSync(defaultKit)) {
+    candidates.push(
+      path.join(
+        defaultKit,
         "packages/standalone-build/assemble-profile-s-candidate.mjs",
       ),
     );
@@ -164,8 +185,10 @@ export function parseArgs(argv) {
     skipZip: false,
     skipTests: false,
     obfuscate: false,
-    profile: "clean",
+    profile: null,
     root: process.cwd(),
+    spaghetti: false,
+    inlineFramework: undefined,
   };
   const selectedProfiles = [];
   for (let i = 0; i < argv.length; i++) {
@@ -174,25 +197,51 @@ export function parseArgs(argv) {
     else if (arg === "--skip-rector") opts.skipRector = true;
     else if (arg === "--skip-zip") opts.skipZip = true;
     else if (arg === "--skip-tests") opts.skipTests = true;
-    else if (arg === "--obfuscate") {
+    else if (arg === "--inline-framework") opts.inlineFramework = true;
+    else if (arg === "--no-inline-framework") opts.inlineFramework = false;
+    else if (arg === "--standalone") {
+      selectedProfiles.push("standalone");
+    } else if (arg === "--no-standalone") {
+      opts.inlineFramework = false;
+    } else if (arg === "--spaghetti") {
+      selectedProfiles.push("spaghetti");
+    } else if (arg === "--obfuscate") {
       selectedProfiles.push("s");
     } else if (arg === "--profile") {
       const next = argv[i + 1];
       if (!next || next.startsWith("--")) {
-        throw new Error("Invalid --profile: a value is required (s or clean)");
+        throw new Error(
+          "Invalid --profile: a value is required (spaghetti, standalone, clean, or s)",
+        );
       }
       const val = next.trim().toLowerCase();
-      if (val !== "s" && val !== "clean") {
-        throw new Error(`Invalid --profile '${val}'. Allowed: s, clean`);
+      if (
+        val !== "s" &&
+        val !== "clean" &&
+        val !== "spaghetti" &&
+        val !== "standalone"
+      ) {
+        throw new Error(
+          `Invalid --profile '${val}'. Allowed: spaghetti, standalone, clean, s`,
+        );
       }
       selectedProfiles.push(val);
       i++;
     } else if (arg === "--profile=") {
-      throw new Error("Invalid --profile: a value is required (s or clean)");
+      throw new Error(
+        "Invalid --profile: a value is required (spaghetti, standalone, clean, or s)",
+      );
     } else if (typeof arg === "string" && arg.startsWith("--profile=")) {
       const val = arg.slice("--profile=".length).trim().toLowerCase();
-      if (val !== "s" && val !== "clean") {
-        throw new Error(`Invalid --profile '${val}'. Allowed: s, clean`);
+      if (
+        val !== "s" &&
+        val !== "clean" &&
+        val !== "spaghetti" &&
+        val !== "standalone"
+      ) {
+        throw new Error(
+          `Invalid --profile '${val}'. Allowed: spaghetti, standalone, clean, s`,
+        );
       }
       selectedProfiles.push(val);
     } else if (typeof arg === "string" && arg.startsWith("--out=")) {
@@ -214,6 +263,10 @@ export function parseArgs(argv) {
   if (unique.length === 1) {
     opts.profile = unique[0];
     opts.obfuscate = unique[0] === "s";
+    opts.spaghetti = unique[0] === "spaghetti";
+    if (unique[0] === "standalone") {
+      opts.inlineFramework = true;
+    }
   }
   return opts;
 }
@@ -249,17 +302,69 @@ function readProjectConfig(root) {
   };
 }
 
-function shouldExcludeOnCopy(relative, excludeNames) {
+export function resolveProjectVersion(root, slug, raw = {}) {
+  const pkgPath = path.join(root, "package.json");
+  let pkgVersion = null;
+  if (existsSync(pkgPath)) {
+    try {
+      const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+      if (typeof pkg.version === "string" && pkg.version.trim()) {
+        pkgVersion = pkg.version.trim();
+      }
+    } catch {}
+  }
+
+  let headerVersion = null;
+  const mainPhpCandidates = [
+    path.join(root, `${slug}.php`),
+    path.join(root, "plugin.php"),
+  ];
+  for (const mainPhp of mainPhpCandidates) {
+    if (existsSync(mainPhp)) {
+      try {
+        const content = readFileSync(mainPhp, "utf8");
+        const match = content.match(/^[ \t/*#@]*Version:\s*([0-9A-Za-z.-]+)/im);
+        if (match) {
+          headerVersion = match[1].trim();
+          break;
+        }
+      } catch {}
+    }
+  }
+
+  const rawVersion =
+    typeof raw?.version === "string" && raw.version.trim()
+      ? raw.version.trim()
+      : null;
+
+  return pkgVersion || headerVersion || rawVersion || "1.0.0";
+}
+
+function shouldExcludeOnCopy(relative, excludeNames, outBase) {
   const normalized = relative.replace(/\\/g, "/");
   const segments = normalized.split("/").filter(Boolean);
+  if (segments.length === 0) return false;
+
+  const rootSegment = segments[0];
+  if (outBase && rootSegment === outBase) return true;
+
+  // Global exclusions at any depth
+  const globalExcludes = ["node_modules", ".git"];
   for (const seg of segments) {
-    if (excludeNames.includes(seg)) return true;
+    if (globalExcludes.includes(seg)) return true;
+    if (seg.startsWith(".") && seg !== "." && seg !== "..") return true;
   }
+
+  // Root-only directory / file exclusions
+  if (excludeNames.includes(rootSegment)) return true;
+
   return false;
 }
 
-function copyTree(srcRoot, destRoot, excludeNames) {
+function copyTree(srcRoot, destRoot, excludeNames, outAbs) {
   mkdirSync(destRoot, { recursive: true });
+  const outBase = outAbs ? path.basename(outAbs) : null;
+  const resolvedOutAbs = outAbs ? path.resolve(outAbs) : null;
   const stack = [""];
   while (stack.length) {
     const rel = stack.pop();
@@ -272,8 +377,14 @@ function copyTree(srcRoot, destRoot, excludeNames) {
     }
     for (const entry of entries) {
       const childRel = rel ? `${rel}/${entry.name}` : entry.name;
-      if (shouldExcludeOnCopy(childRel, excludeNames)) continue;
+      if (shouldExcludeOnCopy(childRel, excludeNames, outBase)) continue;
       const from = path.join(srcRoot, childRel);
+      if (
+        resolvedOutAbs &&
+        (from === resolvedOutAbs || from.startsWith(resolvedOutAbs + path.sep))
+      ) {
+        continue;
+      }
       const to = path.join(destRoot, childRel);
       let st;
       try {
@@ -519,45 +630,87 @@ export async function prepareRelease(options = {}) {
   const skipRector = Boolean(options.skipRector);
   const skipZip = Boolean(options.skipZip);
   const skipTests = Boolean(options.skipTests);
-  const isObfuscate = Boolean(options.obfuscate || options.profile === "s");
-  const profile = options.profile || (isObfuscate ? "s" : "clean");
+
+  const { slug, phpMinVersion, raw } = readProjectConfig(root);
+  const version = resolveProjectVersion(root, slug, raw);
+  const defaultProfile = raw?.releaseProfile || raw?.profile || "clean";
+  const profile =
+    options.profile ||
+    (options.obfuscate
+      ? "s"
+      : options.spaghetti
+        ? "spaghetti"
+        : defaultProfile);
+  const isObfuscate = Boolean(options.obfuscate || profile === "s");
+  const isSpaghetti = Boolean(options.spaghetti || profile === "spaghetti");
 
   // Preflight validation BEFORE any filesystem mutations or test suites
   if (isObfuscate && skipRector) {
     throw new Error("Profile S cannot combine --obfuscate with --skip-rector");
   }
   if (
-    options.profile &&
-    options.profile !== "s" &&
-    options.profile !== "clean"
+    profile &&
+    profile !== "s" &&
+    profile !== "clean" &&
+    profile !== "spaghetti" &&
+    profile !== "standalone"
   ) {
-    throw new Error(`Invalid profile '${options.profile}'. Allowed: s, clean`);
+    throw new Error(
+      `Invalid profile '${profile}'. Allowed: spaghetti, standalone, clean, s`,
+    );
   }
   if (options.obfuscate && options.profile === "clean") {
     throw new Error(
       "Conflicting profile flags: --obfuscate and --profile=clean",
     );
   }
+  if (options.obfuscate && options.profile === "spaghetti") {
+    throw new Error(
+      "Conflicting profile flags: --obfuscate and --profile=spaghetti",
+    );
+  }
+  if (options.spaghetti && options.profile === "clean") {
+    throw new Error(
+      "Conflicting profile flags: --spaghetti and --profile=clean",
+    );
+  }
+  if (options.spaghetti && options.profile === "s") {
+    throw new Error("Conflicting profile flags: --spaghetti and --profile=s");
+  }
+  if (options.obfuscate && options.spaghetti) {
+    throw new Error("Conflicting profile flags: --obfuscate and --spaghetti");
+  }
 
   // Gate BEFORE wiping dist so a failed suite leaves an existing package intact.
   gateReleaseTests(root, { skipTests });
 
-  const { slug, phpMinVersion, raw } = readProjectConfig(root);
   const outAbs = path.join(root, outBase);
 
   // Check if this consumer can delegate to canonical standalone assembler
   const canonicalAssemblerPath = resolveCanonicalAssembler({
-    fromDir: getReleaseScriptDir(),
+    fromDir: getReleaseScriptDir(root),
     pluginRoot: root,
   });
 
-  const isRegisteredConsumer = CANONICAL_CONSUMERS.has(slug);
+  const isRegisteredConsumer =
+    CANONICAL_CONSUMERS.has(slug) ||
+    Boolean(
+      raw?.features?.phpFramework === "wpdev" ||
+      raw?.phpFramework === "wpdev" ||
+      raw?.framework === "wpdev" ||
+      raw?.kitVersion ||
+      existsSync(path.join(root, "includes/framework")) ||
+      existsSync(path.join(root, "packages/framework")),
+    );
   const shouldDelegateCanonical =
     Boolean(canonicalAssemblerPath) &&
     options.useCanonicalAssembler !== false &&
     (isRegisteredConsumer ||
       options.useCanonicalAssembler === true ||
       isObfuscate ||
+      isSpaghetti ||
+      Boolean(options.inlineFramework) ||
+      profile === "standalone" ||
       Boolean(raw?.canonicalAssembler || raw?.features?.canonicalAssembler));
 
   if (shouldDelegateCanonical) {
@@ -566,8 +719,15 @@ export async function prepareRelease(options = {}) {
         ? canonicalAssemblerPath
         : pathToFileURL(canonicalAssemblerPath).href;
     const { assembleProfileSCandidate } = await import(importUrl);
-    const pluginsDir = path.dirname(root);
-    const contentRoot = path.dirname(pluginsDir);
+    let contentRoot = null;
+    let pluginsDir = null;
+    if (process.env.WPDEV_CONTENT_ROOT) {
+      contentRoot = path.resolve(process.env.WPDEV_CONTENT_ROOT);
+      pluginsDir = path.join(contentRoot, "plugins");
+    } else {
+      pluginsDir = path.dirname(root);
+      contentRoot = path.dirname(pluginsDir);
+    }
 
     const result = await assembleProfileSCandidate({
       contentRoot,
@@ -576,11 +736,11 @@ export async function prepareRelease(options = {}) {
       consumer: slug,
       outputDir: outAbs,
       isObfuscate:
-        options.isObfuscate ?? (options.obfuscate || options.profile === "s"),
-      obfuscate: options.obfuscate,
-      profile: options.profile,
+        options.isObfuscate ?? (options.obfuscate || profile === "s"),
+      obfuscate: options.obfuscate ?? profile === "s",
+      profile: profile,
       inlineFramework: options.inlineFramework,
-      spaghetti: options.spaghetti,
+      spaghetti: options.spaghetti ?? profile === "spaghetti",
       minifyAssets: options.minifyAssets,
       skipZip,
       targetPhp:
@@ -621,6 +781,7 @@ export async function prepareRelease(options = {}) {
       distRoot,
       zipPath,
       slug,
+      version: result.manifest?.version || version,
       phpMinVersion,
       manifest: result,
     };
@@ -634,7 +795,7 @@ export async function prepareRelease(options = {}) {
   }
   mkdirSync(outAbs, { recursive: true });
 
-  copyTree(root, distRoot, releaseCopyExcludeNames());
+  copyTree(root, distRoot, releaseCopyExcludeNames(), outAbs);
 
   // Downgrade *before* composer --no-dev and before stripping `dev/`.
   if (!skipRector) {
@@ -660,35 +821,57 @@ export async function prepareRelease(options = {}) {
 
   stripDist(distRoot);
 
-  // Opt-in Profile S Obfuscation (off by default; fail closed when requested).
-  if (isObfuscate) {
+  // Profile transformation: Profile S (obfuscated) or Spaghetti (unobfuscated).
+  if (isObfuscate || isSpaghetti) {
     const toolsTransformer = requireProfileSTransformer({
-      fromDir: getReleaseScriptDir(),
+      fromDir: getReleaseScriptDir(root),
       pluginRoot: root,
     });
     process.stderr.write(
-      `release: applying Profile S AST obfuscation transformer (${toolsTransformer})\n`,
+      `release: applying ${isSpaghetti && !isObfuscate ? "Spaghetti (unobfuscated)" : "Profile S AST obfuscation"} transformer (${toolsTransformer})\n`,
     );
     const mapFile = path.join(distRoot, "symbol-map.json");
     const seed = `profile-s-${slug}-seed`;
-    const dumpRes = spawnSync(
-      "php",
-      [toolsTransformer, "--dump-map", distRoot, mapFile, seed],
-      { stdio: "inherit" },
-    );
+    const flattenFlag =
+      isSpaghetti || isObfuscate ? "--flatten=1" : "--flatten=0";
+    const mangleFlag = isObfuscate ? "--mangle=1" : "--mangle=0";
+    const stripFlag = isObfuscate ? "--strip-comments=1" : "--strip-comments=0";
+
+    const dumpArgs = [
+      "-d",
+      "memory_limit=1G",
+      toolsTransformer,
+      "--dump-map",
+      distRoot,
+      mapFile,
+      seed,
+      flattenFlag,
+      mangleFlag,
+      stripFlag,
+    ];
+    const dumpRes = spawnSync("php", dumpArgs, { stdio: "inherit" });
     if (dumpRes.status !== 0) {
-      throw new Error("Profile S transformer --dump-map failed");
+      throw new Error("Transformer --dump-map failed");
     }
-    const batchRes = spawnSync(
-      "php",
-      [toolsTransformer, "--batch", distRoot, mapFile, seed, `${slug}.php`],
-      { encoding: "utf8" },
-    );
+    const batchArgs = [
+      "-d",
+      "memory_limit=1G",
+      toolsTransformer,
+      "--batch",
+      distRoot,
+      mapFile,
+      seed,
+      `${slug}.php`,
+      flattenFlag,
+      mangleFlag,
+      stripFlag,
+    ];
+    const batchRes = spawnSync("php", batchArgs, { encoding: "utf8" });
     if (batchRes.stderr) {
       process.stderr.write(batchRes.stderr);
     }
     if (batchRes.status !== 0) {
-      throw new Error("Profile S transformer --batch failed");
+      throw new Error("Transformer --batch failed");
     }
     parseTransformerBatchLog(batchRes.stdout);
     if (existsSync(mapFile)) {
@@ -706,20 +889,55 @@ export async function prepareRelease(options = {}) {
           compData = JSON.parse(readFileSync(tempCompPath, "utf8"));
         } catch {}
       }
+      const rootComposerPath = path.join(root, "composer.json");
+      let originalAutoload = {};
+      let originalRequire = {};
+      let rootComp = null;
+      if (existsSync(rootComposerPath)) {
+        try {
+          rootComp = JSON.parse(readFileSync(rootComposerPath, "utf8"));
+          if (rootComp.autoload && typeof rootComp.autoload === "object") {
+            originalAutoload = rootComp.autoload;
+          }
+          if (rootComp.require && typeof rootComp.require === "object") {
+            originalRequire = rootComp.require;
+          }
+        } catch {}
+      }
       const candidateDirs = ["src", "includes", "inc", "classes"].filter((d) =>
         existsSync(path.join(distRoot, d)),
       );
+      const originalClassmap = Array.isArray(originalAutoload.classmap)
+        ? originalAutoload.classmap
+        : [];
+      const discoveredClassmap =
+        candidateDirs.length > 0 ? candidateDirs.map((d) => d + "/") : ["./"];
+      const mergedClassmap = [
+        ...new Set([...originalClassmap, ...discoveredClassmap]),
+      ];
+
       const tempComp = {
         ...compData,
         name: compData.name || "release/" + slug,
+        version: compData.version || version,
+        require: originalRequire,
+        config: {
+          ...(rootComp?.config || {}),
+          platform: {
+            php: phpMinVersion,
+            ...(rootComp?.config?.platform || {}),
+          },
+          "platform-check": false,
+        },
         autoload: {
+          ...originalAutoload,
           ...(compData.autoload || {}),
-          classmap:
-            candidateDirs.length > 0
-              ? candidateDirs.map((d) => d + "/")
-              : ["./"],
+          classmap: mergedClassmap,
         },
       };
+      if (rootComp?.repositories) {
+        tempComp.repositories = rootComp.repositories;
+      }
       writeFileSync(
         tempCompPath,
         JSON.stringify(tempComp, null, 2) + "\n",
@@ -743,9 +961,7 @@ export async function prepareRelease(options = {}) {
         rmSync(tempCompPath, { force: true });
       }
       if (dumpRes.status !== 0) {
-        throw new Error(
-          "composer dump-autoload failed after Profile S transformation",
-        );
+        throw new Error("composer dump-autoload failed after transformation");
       }
     }
   }
@@ -766,7 +982,7 @@ export async function prepareRelease(options = {}) {
 
   const zipPath = skipZip ? null : await createReleaseZip(outAbs, slug);
 
-  return { distRoot, zipPath, slug, phpMinVersion };
+  return { distRoot, zipPath, slug, version, phpMinVersion };
 }
 
 function printHelp() {
@@ -785,7 +1001,9 @@ Options:
   --skip-rector      Skip PHP downgrade (rector:build) on dist/
   --skip-zip         Skip creating dist/{slug}.zip
   --skip-tests       Skip pre-dist unit/e2e suites (or set WPDEV_SKIP_TESTS=1)
+  --spaghetti        Opt-in Spaghetti transformation (flatten namespaces without obfuscation)
   --obfuscate        Opt-in Profile S AST obfuscation (off by default; fails if transformer missing)
+  --profile=NAME     Build profile (spaghetti, clean, or s)
   -h, --help         Show this help
 `);
 }

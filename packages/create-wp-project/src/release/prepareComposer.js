@@ -114,6 +114,9 @@ export function releaseCopyExcludeNames() {
     ".git",
     "coverage",
     ".phpunit.result.cache",
+    "skills",
+    "artifacts",
+    "unit-tests",
   ];
 }
 
@@ -125,6 +128,7 @@ export function releaseCopyExcludeNames() {
 export function releaseStripDirNames() {
   return [
     "tests",
+    "unit-tests",
     "docker-phpunit",
     "docs",
     "packages",
@@ -139,6 +143,10 @@ export function releaseStripDirNames() {
     ".cursor",
     ".kiro",
     ".claude",
+    "skills",
+    "artifacts",
+    "addons",
+    "bin",
   ];
 }
 
@@ -200,6 +208,32 @@ export function releaseStripFileNames() {
     ".gitattributes",
     ".npmrc",
     ".nvmrc",
+    "commitlint.config.js",
+    "commitlint.config.cjs",
+    "commitlint.config.mjs",
+    "commitlint.config.ts",
+    "commitlint.config.json",
+    "postcss.config.js",
+    "postcss.config.cjs",
+    "postcss.config.mjs",
+    "postcss.config.ts",
+    "postcss.config.json",
+    "tailwind.config.js",
+    "tailwind.config.cjs",
+    "tailwind.config.mjs",
+    "tailwind.config.ts",
+    "webpack.config.js",
+    "webpack.config.cjs",
+    "webpack.config.mjs",
+    "webpack.config.ts",
+    "rollup.config.js",
+    "rollup.config.mjs",
+    "rollup.config.ts",
+    "vite.config.js",
+    "vite.config.ts",
+    "vite.config.mjs",
+    "esbuild.config.js",
+    "esbuild.config.mjs",
   ];
 }
 
@@ -210,7 +244,18 @@ export function releaseStripFileNames() {
  * @returns {string[]}
  */
 export function releaseStripFileGlobs() {
-  return ["coverage.xml*", "phpunit.xml*", "phpunit.xml"];
+  return [
+    "coverage.xml*",
+    "phpunit.xml*",
+    "phpunit.xml",
+    "commitlint.config.*",
+    "postcss.config.*",
+    "tailwind.config.*",
+    "webpack.config.*",
+    "vite.config.*",
+    "rollup.config.*",
+    "esbuild.config.*",
+  ];
 }
 
 /**

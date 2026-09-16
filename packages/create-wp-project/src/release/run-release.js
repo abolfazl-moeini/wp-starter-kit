@@ -22,8 +22,10 @@ export function parseArgs(argv) {
     skipTests: false,
     candidate: false,
     obfuscate: false,
-    profile: "clean",
+    profile: null,
     root: process.cwd(),
+    spaghetti: false,
+    inlineFramework: undefined,
   };
   const selectedProfiles = [];
   for (let i = 0; i < argv.length; i++) {
@@ -33,25 +35,51 @@ export function parseArgs(argv) {
     else if (arg === "--skip-zip") opts.skipZip = true;
     else if (arg === "--skip-tests") opts.skipTests = true;
     else if (arg === "--candidate") opts.candidate = true;
-    else if (arg === "--obfuscate") {
+    else if (arg === "--inline-framework") opts.inlineFramework = true;
+    else if (arg === "--no-inline-framework") opts.inlineFramework = false;
+    else if (arg === "--standalone") {
+      selectedProfiles.push("standalone");
+    } else if (arg === "--no-standalone") {
+      opts.inlineFramework = false;
+    } else if (arg === "--spaghetti") {
+      selectedProfiles.push("spaghetti");
+    } else if (arg === "--obfuscate") {
       selectedProfiles.push("s");
     } else if (arg === "--profile") {
       const next = argv[i + 1];
       if (!next || next.startsWith("--")) {
-        throw new Error("Invalid --profile: a value is required (s or clean)");
+        throw new Error(
+          "Invalid --profile: a value is required (spaghetti, standalone, clean, or s)",
+        );
       }
       const val = next.trim().toLowerCase();
-      if (val !== "s" && val !== "clean") {
-        throw new Error(`Invalid --profile '${val}'. Allowed: s, clean`);
+      if (
+        val !== "s" &&
+        val !== "clean" &&
+        val !== "spaghetti" &&
+        val !== "standalone"
+      ) {
+        throw new Error(
+          `Invalid --profile '${val}'. Allowed: spaghetti, standalone, clean, s`,
+        );
       }
       selectedProfiles.push(val);
       i++;
     } else if (arg === "--profile=") {
-      throw new Error("Invalid --profile: a value is required (s or clean)");
+      throw new Error(
+        "Invalid --profile: a value is required (spaghetti, standalone, clean, or s)",
+      );
     } else if (typeof arg === "string" && arg.startsWith("--profile=")) {
       const val = arg.slice("--profile=".length).trim().toLowerCase();
-      if (val !== "s" && val !== "clean") {
-        throw new Error(`Invalid --profile '${val}'. Allowed: s, clean`);
+      if (
+        val !== "s" &&
+        val !== "clean" &&
+        val !== "spaghetti" &&
+        val !== "standalone"
+      ) {
+        throw new Error(
+          `Invalid --profile '${val}'. Allowed: spaghetti, standalone, clean, s`,
+        );
       }
       selectedProfiles.push(val);
     } else if (typeof arg === "string" && arg.startsWith("--out=")) {
@@ -69,6 +97,10 @@ export function parseArgs(argv) {
   if (unique.length === 1) {
     opts.profile = unique[0];
     opts.obfuscate = unique[0] === "s";
+    opts.spaghetti = unique[0] === "spaghetti";
+    if (unique[0] === "standalone") {
+      opts.inlineFramework = true;
+    }
   }
   return opts;
 }
@@ -167,6 +199,24 @@ async function main() {
   process.stdout.write(`Release package ready: ${result.distRoot}\n`);
   if (result.zipPath) {
     process.stdout.write(`Release zip ready: ${result.zipPath}\n`);
+    const smokeCandidates = [
+      path.join(root, "dev/release/smoke-standalone-zip.sh"),
+      path.join(root, "dev/release/smoke-zip.sh"),
+    ];
+    for (const smokeScript of smokeCandidates) {
+      if (existsSync(smokeScript)) {
+        process.stdout.write(
+          `Running smoke verification (${path.basename(smokeScript)})...\n`,
+        );
+        const smoke = spawnSync("bash", [smokeScript], {
+          cwd: root,
+          stdio: "inherit",
+        });
+        if (smoke.status !== 0) {
+          throw new Error(`${path.basename(smokeScript)} verification failed!`);
+        }
+      }
+    }
   }
 }
 

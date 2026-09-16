@@ -37,10 +37,15 @@ export function resolveProfileSTransformer({
 
   if (fromDir) {
     candidates.push(path.join(fromDir, "plan3/transformer.php"));
+    candidates.push(path.join(fromDir, "dev/release/plan3/transformer.php"));
     let dir = path.resolve(fromDir);
     for (let i = 0; i < 10; i += 1) {
       candidates.push(
         path.join(dir, "packages/standalone-build/plan3/transformer.php"),
+        path.join(
+          dir,
+          "wp-starter-kit/packages/standalone-build/plan3/transformer.php",
+        ),
       );
       const parent = path.dirname(dir);
       if (parent === dir) break;
@@ -49,6 +54,24 @@ export function resolveProfileSTransformer({
   }
 
   if (pluginRoot) {
+    candidates.push(
+      path.join(pluginRoot, "dev/release/plan3/transformer.php"),
+      path.join(pluginRoot, "plan3/transformer.php"),
+      path.join(pluginRoot, "packages/standalone-build/plan3/transformer.php"),
+    );
+    let dir = path.resolve(pluginRoot);
+    for (let i = 0; i < 10; i += 1) {
+      candidates.push(
+        path.join(
+          dir,
+          "wp-starter-kit/packages/standalone-build/plan3/transformer.php",
+        ),
+        path.join(dir, "packages/standalone-build/plan3/transformer.php"),
+      );
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
     candidates.push(
       path.resolve(pluginRoot, "../tools/plan3/transformer.php"),
       path.resolve(pluginRoot, "../../tools/plan3/transformer.php"),
