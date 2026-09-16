@@ -8,8 +8,11 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import {
   assertFrameworkClosureMinifiedAssets,
+  detectConsumerFrameworkUsage,
   inlineWpdevClosure,
+  KNOWN_CONSUMERS,
   minifyAssetsInTree,
+  resolveConsumerNamespace,
 } from "../inline-wpdev-closure.mjs";
 
 test("Inliner: preloads Settings_Admin_Page so host SettingsPage class files can declare", async () => {
@@ -228,4 +231,97 @@ test("V3-13: Module assets with identical relative paths do not collide during i
     await rm(tmpDir, { recursive: true, force: true });
   }
 });
+
+test("detectConsumerFrameworkUsage: detects consumer dynamically from wpdev.json", async () => {
+  const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "dyn-consumer-wpdev-"));
+  try {
+    await writeFile(
+      path.join(tmpDir, "wpdev.json"),
+      JSON.stringify({
+        slug: "custom-ecommerce-addon",
+        features: {
+          phpFramework: "wpdev",
+        },
+      })
+    );
+
+    const result = detectConsumerFrameworkUsage({
+      consumer: "custom-ecommerce-addon",
+      stagingPlugin: tmpDir,
+    });
+
+    assert.equal(result.isFrameworkConsumer, true);
+    assert.equal(result.reason, "wpdev_config_framework");
+    assert.ok(result.metadata.wpdevConfig);
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("detectConsumerFrameworkUsage: detects consumer dynamically from composer.json", async () => {
+  const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "dyn-consumer-composer-"));
+  try {
+    await writeFile(
+      path.join(tmpDir, "composer.json"),
+      JSON.stringify({
+        name: "vendor/custom-plugin",
+        require: {
+          php: ">=7.4",
+          "wpdev/framework": "*",
+        },
+      })
+    );
+
+    const result = detectConsumerFrameworkUsage({
+      consumer: "custom-plugin",
+      stagingPlugin: tmpDir,
+    });
+
+    assert.equal(result.isFrameworkConsumer, true);
+    assert.equal(result.reason, "composer_require_wpdev");
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("detectConsumerFrameworkUsage: detects consumer dynamically from embedded framework dir", async () => {
+  const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "dyn-consumer-embedded-"));
+  try {
+    const frameworkDir = path.join(tmpDir, "includes", "framework");
+    await mkdir(frameworkDir, { recursive: true });
+    await writeFile(path.join(frameworkDir, "framework.php"), "<?php // embedded");
+
+    const result = detectConsumerFrameworkUsage({
+      consumer: "embedded-plugin",
+      stagingPlugin: tmpDir,
+    });
+
+    assert.equal(result.isFrameworkConsumer, true);
+    assert.equal(result.reason, "embedded_framework_dir");
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("detectConsumerFrameworkUsage: falls back to KNOWN_CONSUMERS for backward compatibility", () => {
+  for (const c of KNOWN_CONSUMERS) {
+    const result = detectConsumerFrameworkUsage({ consumer: c });
+    assert.equal(result.isFrameworkConsumer, true);
+    assert.equal(result.reason, "known_consumer_fallback");
+  }
+
+  const independent = detectConsumerFrameworkUsage({ consumer: "my-standalone-plugin" });
+  assert.equal(independent.isFrameworkConsumer, false);
+});
+
+test("resolveConsumerNamespace: resolves namespace from wpdev.json globalName", () => {
+  const ns = resolveConsumerNamespace({
+    consumer: "custom-woo",
+    wpdevConfig: {
+      globalName: "WPDev.CustomWoo",
+    },
+  });
+  assert.equal(ns, "WPDev\\CustomWoo");
+});
+
 

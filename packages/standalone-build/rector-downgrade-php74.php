@@ -25,6 +25,8 @@ return static function (RectorConfig $rectorConfig): void {
         '*/node_modules/*',
         '*/tests/*',
         '*/dev/*',
+        '*/demo/*',
+        '*/examples/*',
         '*/packages/php-fault-tolerance/src/Real/*',
     ]);
 };

@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { validatePhpSyntaxTree } from "../profile-s-fail-closed.mjs";
+import { validatePhpSyntaxTree as validateFromBuildPlan } from "../build-plan.mjs";
 
 test("F07: validatePhpSyntaxTree rejects constructor property promotion", async () => {
   const tmpDir = await mkdtemp(path.join(os.tmpdir(), "f07-promo-"));
@@ -116,3 +117,51 @@ class Compliant {
     await rm(tmpDir, { recursive: true, force: true }).catch(() => {});
   }
 });
+
+test("F07: validatePhpSyntaxTree is re-exported from build-plan.mjs", () => {
+  assert.equal(typeof validateFromBuildPlan, "function");
+});
+
+test("F07: validatePhpSyntaxTree verifies batched clean files and handles large data tables without crashing", async () => {
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "f07-batch-"));
+  try {
+    for (let i = 0; i < 25; i++) {
+      await writeFile(
+        path.join(tmpDir, `clean_${i}.php`),
+        `<?php
+declare(strict_types=1);
+namespace TestBatch\\File${i};
+
+class Handler${i} {
+    private $id;
+    public function __construct(int $id) {
+        $this->id = $id;
+    }
+    public function getId(): int {
+        return $this->id;
+    }
+}
+`
+      );
+    }
+
+    const rows = [];
+    for (let j = 0; j < 6000; j++) {
+      rows.push(`  "row_${j}" => [${j}, "value_${j}"],`);
+    }
+    const largeDataContent = `<?php
+return [
+${rows.join("\n")}
+];
+`;
+    assert.ok(largeDataContent.length > 200000, `Expected large data file size > 200KB, got ${largeDataContent.length}`);
+    await writeFile(path.join(tmpDir, "large-dataset.php"), largeDataContent);
+
+    const res = await validatePhpSyntaxTree(tmpDir, { targetPhp: "7.4" });
+    assert.ok(res.interpreter);
+    assert.equal(res.targetPhp, "7.4");
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+  }
+});
+

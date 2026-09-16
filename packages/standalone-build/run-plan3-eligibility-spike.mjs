@@ -25,6 +25,7 @@ export async function scanPhpFiles(dir, baseDir = dir) {
       entry.name.startsWith(".") ||
       entry.name === "node_modules" ||
       entry.name === "vendor" ||
+      entry.name === "dependencies" ||
       entry.name === "tests" ||
       entry.name === "dev" ||
       entry.name === "dist"

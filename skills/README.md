@@ -51,3 +51,10 @@ Privileged actions (mutating REST routes, admin AJAX handlers, settings saves, C
 ## Cross-cutting: WP 6.7 i18n
 
 Host plugins must load `load_plugin_textdomain` on `init` (prefer priority `1`) and must **not** call `__( …, '{textDomain}' )` before `init`. `wpdev_load` fires inside `plugins_loaded` — defer host settings registration that uses `__()` until `init`. See `docs/plugin-bootstrap.md` § Text-domain loading and wpdev-core skill `wpdev-settings-dashboard/references/settings-sections.md` § WP 6.7+ i18n timing.
+
+## Cross-cutting: Release Pipeline (Batch Changes Before Build)
+
+`npm run release` and `composer release:dist` are heavy, full-lifecycle distribution pipelines (running Docker PHPUnit test suites, asset compilation, Rector AST downgrades, Strauss namespace isolation, and ZIP creation).
+
+- **NEVER** run release packaging in an iterative micro-loop (e.g. edit a file -> release build -> bump version -> release build).
+- **ALWAYS** batch all source code changes, documentation, and version manifest bumps (`wpdev.json`, main plugin file, `composer.json`, `package.json`, `readme.txt`) first. Verify with fast targeted tests (`composer test`, `npm run typecheck`), then run the release build **once** at the end.

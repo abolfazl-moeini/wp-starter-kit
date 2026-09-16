@@ -70,6 +70,10 @@ vendor/                       # Composer only; never put feature code here
   [references/support-packages.md](references/support-packages.md).
 - **NEVER** scatter feature-level `current_user_can('manage_*'|'edit_products'|…)`
   once an Access class exists for that gate — use the named rule instead.
+- **NEVER** run release packaging (`npm run release` / `composer release:dist`) in an iterative micro-loop with single-line edits or sequential version bumps. Apply all code, version, and dependency changes FIRST, verify with fast targeted unit tests, and run release packaging ONCE at the end.
+- **NEVER** use case-mismatched file paths, directory names, or namespace segments. macOS APFS is case-insensitive, but production Linux (ext4) is strictly case-sensitive. Always match casing character-for-character.
+- **NEVER** rely on `packages/` for runtime code that must survive release packaging. Release packaging (`release:dist`) strips `packages/`. Any embedded runtime dependencies must live in `dependencies/` or `vendor/`.
+- **ALWAYS** provide an executable bootstrap smoke test for distribution zips (`smoke-standalone-zip.sh`) that executes real PHP (`php -r`) asserting critical classes and functions, never relying on superficial `test -f` or `is_readable` checks (False Greens).
 - Object-level `current_user_can('edit_post'|'edit_user', $id)` on metabox/profile
   saves may stay **inline** (AccessManager is for feature-level gates).
 
@@ -356,6 +360,26 @@ when the current source is below the new min. CI uses
 Docker PHPUnit should use an image matching **`phpMinVersion`** when verifying
 compat. Prefer `release:dist` for shipping rather than mutating authoring source
 in place (unless you intentionally author at `phpMinVersion`).
+
+### Release packaging anti-patterns (Batch changes before build)
+
+Running `npm run release` or `composer release:dist` is an **end-of-lifecycle distribution pipeline**. It executes Docker PHPUnit test suites, asset compilation (esbuild/webpack/postcss), Rector AST downgrades, namespace scoping (Strauss), and ZIP packaging.
+
+| Anti-Pattern                                                                                                                                                               | Why it fails                                                                                                                                                                                       | Correct Workflow                                                                                                                                                                     |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Iterative micro-releases:** Making a single-line edit or bumping a version, running `npm run release`, finding another oversight, editing again, and re-running release. | Extremely slow feedback loop (wastes 10–20+ minutes per cycle on Docker spin-up, full test suites, asset bundling, and Rector AST passes). Masks source syntax errors behind transpiled artifacts. | **Batch all edits first.** Apply all code modifications, documentation, and version bumps across manifests in one go. Verify with fast unit tests, then run `release:dist` **once**. |
+| **Fixing bugs inside `dist/` directly:** Editing files in `dist/{slug}/` after running a release build.                                                                    | Changes in `dist/` are ephemeral and wiped on the next build. Source code in `src/` remains broken.                                                                                                | Always edit files in `src/`, `packages/`, or root manifests, then rebuild cleanly.                                                                                                   |
+| **Using `release:dist` as a local dev test:** Running full distribution builds just to see if a PHP method or admin screen works.                                          | Extremely heavy and slow feedback loop.                                                                                                                                                            | Run fast targeted unit tests (`vendor/bin/phpunit --filter ...`) or test directly in a local WP environment without full release bundling.                                           |
+| **Shallow `test -f` / `is_readable` smoke tests:** Relying on simple file existence checks for release zips.                                                               | Produces **False Greens**. Files can exist while containing broken class references, missing runtime dependencies, or fatal errors.                                                                | Use executable smoke tests (`smoke-standalone-zip.sh`) that run real PHP execution (`php -r`) booting the plugin in an isolated process.                                             |
+| **Assuming macOS file casing works on production Linux:** Ignoring letter casing differences in paths and namespaces.                                                      | macOS APFS is case-insensitive, masking broken `require` or autoloading. Production Linux (ext4) throws fatal `Class not found` or `Failed opening required`.                                      | Strictly match disk casing character-for-character across all paths, and verify bootstraps inside a Linux Docker container.                                                          |
+
+#### Safe 5-step Release Procedure
+
+1. **Batch Code & Configuration:** Finish all features, bug fixes, and refactors in source files.
+2. **Synchronize Version Manifests:** Bump versions across `wpdev.json`, `{slug}.php`, `composer.json`, `package.json`, and `readme.txt` simultaneously.
+3. **Targeted Verification:** Run fast linting and unit tests (`npm run typecheck`, targeted PHPUnit).
+4. **Single Packaging Run:** Execute `npm run release` (or `composer release:dist`) **once**.
+5. **Final Sanity Check:** Verify the resulting artifact in `dist/` or smoke-test the generated zip.
 
 ## Security baseline (every module)
 

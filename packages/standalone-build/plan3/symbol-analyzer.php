@@ -158,7 +158,7 @@ class Plan3_Symbol_Analyzer {
 		foreach ( $iterator as $file ) {
 			if ( $file->isFile() && $file->getExtension() === 'php' ) {
 				$path = $file->getPathname();
-				if ( strpos( $path, '/vendor/' ) !== false || strpos( $path, '/vendor-prefixed/' ) !== false ) {
+				if ( strpos( $path, '/vendor/' ) !== false || strpos( $path, '/vendor-prefixed/' ) !== false || strpos( $path, '/dependencies/' ) !== false ) {
 					continue;
 				}
 				$content = @file_get_contents( $path );

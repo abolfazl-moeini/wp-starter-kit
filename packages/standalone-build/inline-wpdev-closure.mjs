@@ -84,6 +84,8 @@ const REQUIRED_WPDEV_MODULE_FILES = [
   "modules/core/src/class-admin-notices.php",
   "modules/core/src/class-scripts.php",
   "modules/core/src/class-module-loader.php",
+  "modules/core/src/class-module-autoloader.php",
+  "modules/core/src/class-legacy-shim-autoloader.php",
   "modules/core/src/ajax/class-ajax.php",
   "modules/core/src/ajax/class-ajax-response.php",
   "modules/core/src/ajax/class-ajax-tab-loader.php",
@@ -186,28 +188,175 @@ const REQUIRED_WPDEV_ASSET_DIRS = [
   "modules/wizard/assets",
 ];
 
+export const KNOWN_CONSUMERS = Object.freeze([
+  "drm-connector",
+  "tavangary-core",
+  "tavangary-theme-panel",
+  "wpdev-analytics",
+  "wpdev-crm",
+  "wpdev-tickets",
+  "wpdev-woo-persian",
+  "wpdev-woocommerce",
+  "wpdev-bulk-price-manager",
+]);
+// Alias for backward compatibility
+export const knownConsumers = KNOWN_CONSUMERS;
+
 export const CONSUMER_NAMESPACES = Object.freeze({
   "drm-connector": "DRMConnector",
   "tavangary-core": "TavangaryCore",
-  "tavangary-theme-panel": "TavangaryThemePanel",
+  "tavangary-theme-panel": "TavangaryTheme",
   "wpdev-analytics": "WpdevAnalytics",
+  "wpdev-bulk-price-manager": "WpdevBulkPriceManager",
   "wpdev-crm": "WpdevCrm",
   "wpdev-tickets": "WpdevTickets",
   "wpdev-woo-persian": "WpdevWooPersian",
+  "wpdev-woocommerce": "WpdevWoocommerce",
 });
+
+/**
+ * Dynamically detects whether a consumer plugin depends on or uses the WPDev framework.
+ *
+ * Inspects multiple sources in priority order:
+ * 1. Plugin header ("Requires Plugins: ...wpdev")
+ * 2. wpdev.json / project.config.json (in staging or source root)
+ * 3. composer.json (require / require-dev for wpdev/*)
+ * 4. Embedded framework directories (includes/framework, packages/framework)
+ * 5. Backward-compatible fallback for KNOWN_CONSUMERS
+ *
+ * @param {Object} options
+ * @returns {{ isFrameworkConsumer: boolean, reason: string|null, metadata: Object }}
+ */
+export function detectConsumerFrameworkUsage({
+  consumer,
+  stagingPlugin = null,
+  sourceRoot = null,
+  mainPhpHeader = "",
+  sourceComposerModel = null,
+  wpdevConfig = null,
+} = {}) {
+  const metadata = {
+    wpdevConfig: null,
+    composerModel: null,
+    embeddedFrameworkDir: null,
+  };
+
+  // 1. Check main PHP header
+  if (mainPhpHeader && /Requires Plugins:.*wpdev/i.test(mainPhpHeader)) {
+    return { isFrameworkConsumer: true, reason: "header_requires_wpdev", metadata };
+  }
+
+  // 2. Resolve and inspect wpdev.json or project.config.json
+  let resolvedConfig = wpdevConfig;
+  if (!resolvedConfig) {
+    const configCandidates = [
+      stagingPlugin ? path.join(stagingPlugin, "wpdev.json") : null,
+      sourceRoot ? path.join(sourceRoot, "wpdev.json") : null,
+      stagingPlugin ? path.join(stagingPlugin, "project.config.json") : null,
+      sourceRoot ? path.join(sourceRoot, "project.config.json") : null,
+    ].filter(Boolean);
+
+    for (const cfgPath of configCandidates) {
+      if (fs.existsSync(cfgPath)) {
+        try {
+          resolvedConfig = JSON.parse(fs.readFileSync(cfgPath, "utf8"));
+          break;
+        } catch {}
+      }
+    }
+  }
+  if (resolvedConfig && typeof resolvedConfig === "object") {
+    metadata.wpdevConfig = resolvedConfig;
+    const phpFramework = resolvedConfig.features?.phpFramework || resolvedConfig.phpFramework || resolvedConfig.framework;
+    if (phpFramework === "wpdev") {
+      return { isFrameworkConsumer: true, reason: "wpdev_config_framework", metadata };
+    }
+    if (resolvedConfig.kitVersion || resolvedConfig.schema || resolvedConfig.vendorPrefix?.toLowerCase().includes("wpdev")) {
+      return { isFrameworkConsumer: true, reason: "wpdev_kit_manifest", metadata };
+    }
+  }
+
+  // 3. Inspect composer.json
+  let resolvedComposer = sourceComposerModel;
+  if (!resolvedComposer) {
+    const composerCandidates = [
+      stagingPlugin ? path.join(stagingPlugin, "composer.json") : null,
+      sourceRoot ? path.join(sourceRoot, "composer.json") : null,
+    ].filter(Boolean);
+
+    for (const cPath of composerCandidates) {
+      if (fs.existsSync(cPath)) {
+        try {
+          resolvedComposer = JSON.parse(fs.readFileSync(cPath, "utf8"));
+          break;
+        } catch {}
+      }
+    }
+  }
+  if (resolvedComposer && typeof resolvedComposer === "object") {
+    metadata.composerModel = resolvedComposer;
+    const req = { ...(resolvedComposer.require || {}), ...(resolvedComposer["require-dev"] || {}) };
+    for (const pkg of Object.keys(req)) {
+      if (pkg === "wpdev/framework" || pkg.startsWith("wpdev/")) {
+        return { isFrameworkConsumer: true, reason: "composer_require_wpdev", metadata };
+      }
+    }
+    // Check PSR-4 autoload for WPDev namespaces
+    const psr4 = resolvedComposer.autoload?.["psr-4"] || {};
+    for (const ns of Object.keys(psr4)) {
+      if (/^WPDev\\/i.test(ns)) {
+        return { isFrameworkConsumer: true, reason: "composer_psr4_wpdev", metadata };
+      }
+    }
+  }
+
+  // 4. Check for embedded framework directory
+  const embeddedCandidates = [
+    stagingPlugin ? path.join(stagingPlugin, "includes/framework") : null,
+    sourceRoot ? path.join(sourceRoot, "includes/framework") : null,
+    stagingPlugin ? path.join(stagingPlugin, "packages/framework") : null,
+    sourceRoot ? path.join(sourceRoot, "packages/framework") : null,
+  ].filter(Boolean);
+
+  for (const dir of embeddedCandidates) {
+    if (fs.existsSync(dir) && fs.readdirSync(dir).length > 0) {
+      metadata.embeddedFrameworkDir = dir;
+      return { isFrameworkConsumer: true, reason: "embedded_framework_dir", metadata };
+    }
+  }
+
+  // 5. Backward-compatible fallback for known consumers
+  if (consumer && KNOWN_CONSUMERS.includes(consumer)) {
+    return { isFrameworkConsumer: true, reason: "known_consumer_fallback", metadata };
+  }
+
+  return { isFrameworkConsumer: false, reason: null, metadata };
+}
 
 export function resolveConsumerNamespace({
   consumer,
   sourceComposerModel = null,
   explicitNamespace = null,
+  wpdevConfig = null,
 } = {}) {
   if (explicitNamespace && typeof explicitNamespace === "string" && explicitNamespace.trim()) {
     return explicitNamespace.trim().replace(/^\\+|\\+$/g, "");
   }
 
+  // Check wpdevConfig / wpdev.json globalName or namespace
+  if (wpdevConfig && typeof wpdevConfig === "object") {
+    const candidateName = wpdevConfig.globalName || wpdevConfig.namespace || wpdevConfig.rootNamespace;
+    if (typeof candidateName === "string" && candidateName.trim()) {
+      return candidateName.trim().replace(/\./g, "\\").replace(/^\\+|\\+$/g, "");
+    }
+  }
+
   const psr4 = sourceComposerModel?.autoload?.["psr-4"];
   if (psr4 && typeof psr4 === "object") {
-    const keys = Object.keys(psr4).map((k) => k.replace(/^\\+|\\+$/g, "")).filter(Boolean);
+    const rawKeys = Object.keys(psr4).map((k) => k.replace(/^\\+|\\+$/g, "")).filter(Boolean);
+    // Ignore framework namespaces when resolving the consumer's own root namespace
+    const nonFrameworkKeys = rawKeys.filter((k) => !/^WPDev(\\|$)/i.test(k));
+    const keys = nonFrameworkKeys.length > 0 ? nonFrameworkKeys : rawKeys;
     if (keys.length === 1) {
       return keys[0];
     }
@@ -215,7 +364,7 @@ export function resolveConsumerNamespace({
       const normConsumer = String(consumer || "").toLowerCase().replace(/[^a-z0-9]/g, "");
       const match = keys.find((k) => {
         const norm = k.toLowerCase().replace(/[^a-z0-9]/g, "");
-        return norm === normConsumer || norm.endsWith(normConsumer);
+        return norm === normConsumer || norm.endsWith(normConsumer) || normConsumer.startsWith(norm);
       });
       if (match) {
         return match;
@@ -223,6 +372,9 @@ export function resolveConsumerNamespace({
       const rootPrefixes = new Set(keys.map((k) => k.split("\\")[0]));
       if (rootPrefixes.size === 1) {
         return [...rootPrefixes][0];
+      }
+      if (consumer && CONSUMER_NAMESPACES[consumer]) {
+        return CONSUMER_NAMESPACES[consumer];
       }
       throw new Error(
         `Ambiguous PSR-4 configuration for consumer '${consumer}': multiple root namespaces [${keys.join(
@@ -256,6 +408,7 @@ export function resolveStaticPhpPathExpression(expr, origDir) {
   const parts = [];
   let current = "";
   let inQuote = null;
+  let parenDepth = 0;
   for (let i = 0; i < clean.length; i++) {
     const c = clean[i];
     if (inQuote) {
@@ -266,12 +419,23 @@ export function resolveStaticPhpPathExpression(expr, origDir) {
     } else if (c === '"' || c === "'") {
       inQuote = c;
       current += c;
-    } else if (c === ".") {
+    } else if (c === "(") {
+      parenDepth++;
+      current += c;
+    } else if (c === ")") {
+      parenDepth--;
+      current += c;
+    } else if (parenDepth === 0 && (c === "," || c === "[" || c === "]" || c === "{" || c === "}" || c === ";")) {
+      return null;
+    } else if (c === "." && parenDepth === 0) {
       parts.push(current.trim());
       current = "";
     } else {
       current += c;
     }
+  }
+  if (inQuote || parenDepth !== 0) {
+    return null;
   }
   if (current.trim()) {
     parts.push(current.trim());
@@ -289,9 +453,15 @@ export function resolveStaticPhpPathExpression(expr, origDir) {
     } else if (/^dirname\s*\(/.test(part)) {
       let count = 0;
       let p = part;
-      while (/^dirname\s*\(/.test(p)) {
-        count++;
-        p = p.replace(/^dirname\s*\(\s*/, "").replace(/\s*\)$/, "");
+      const levelsMatch = p.match(/^dirname\s*\(\s*(.+?)\s*,\s*(\d+)\s*\)$/);
+      if (levelsMatch) {
+        count = parseInt(levelsMatch[2], 10);
+        p = levelsMatch[1];
+      } else {
+        while (/^dirname\s*\(/.test(p)) {
+          count++;
+          p = p.replace(/^dirname\s*\(\s*/, "").replace(/\s*\)$/, "");
+        }
       }
       let baseDir = origDir;
       if (p === "__FILE__") {
@@ -372,30 +542,36 @@ export async function inlineWpdevClosure({
   consumerNamespace = null,
   bootstrapFile = null,
 }) {
-  const wpdevPluginDir = frameworkProvider
-    || wpdevPluginDirOverride
-    || path.join(contentRoot, "plugins/wpdev");
+  const candidateProviderDirs = [
+    frameworkProvider,
+    wpdevPluginDirOverride,
+    sourceRoot ? path.join(sourceRoot, "includes/framework") : null,
+    path.join(stagingPlugin, "includes/framework"),
+    sourceRoot ? path.join(sourceRoot, "packages/framework") : null,
+    path.join(stagingPlugin, "packages/framework"),
+    contentRoot ? path.join(contentRoot, "plugins/wpdev") : null,
+    path.join(process.cwd(), "plugins/wpdev"),
+  ].filter(Boolean);
+  const wpdevPluginDir = candidateProviderDirs.find((d) => fs.existsSync(d)) || candidateProviderDirs[0];
   const bootstrapFileName = bootstrapFile || `${consumer}.php`;
   const mainPhpPath = path.join(stagingPlugin, bootstrapFileName);
   const mainPhpExists = fs.existsSync(mainPhpPath);
   const mainPhpHeader = mainPhpExists ? await readFile(mainPhpPath, "utf8") : "";
   const headerRequiresWpdev = /Requires Plugins:.*wpdev/i.test(mainPhpHeader);
 
-  const knownConsumers = [
-    "wpdev-crm",
-    "wpdev-tickets",
-    "tavangary-core",
-    "tavangary-theme-panel",
-    "drm-connector",
-    "wpdev-analytics",
-    "wpdev-woo-persian",
-  ];
+  const frameworkUsage = detectConsumerFrameworkUsage({
+    consumer,
+    stagingPlugin,
+    sourceRoot,
+    mainPhpHeader,
+    sourceComposerModel,
+  });
+
   const shouldInline = inlineFramework === true
     || (inlineFramework !== false && (
-      knownConsumers.includes(consumer)
+      frameworkUsage.isFrameworkConsumer
       || wpdevPluginDirOverride !== null
       || Boolean(frameworkProvider)
-      || headerRequiresWpdev
     ));
 
   if (!shouldInline) {
@@ -465,12 +641,15 @@ export async function inlineWpdevClosure({
         const full = path.join(curDir, entry.name);
         if (entry.isDirectory()) {
           const lower = entry.name.toLowerCase();
-          if (["tests", "unit-tests", "node_modules", ".git", "vendor"].includes(lower)) {
+          if (["tests", "unit-tests", "node_modules", ".git", "vendor", "dependencies", "functions"].includes(lower)) {
             continue;
           }
           await visitDir(full);
         } else if (entry.isFile() && entry.name.endsWith(".php")) {
-          const rel = path.relative(wpdevPluginDir, full);
+          const rel = path.relative(wpdevPluginDir, full).replace(/\\/g, "/");
+          if (REQUIRED_WPDEV_FUNCTION_FILES.includes(rel)) {
+            continue;
+          }
           if (rel.includes("/src/")) {
             const dest = path.join(targetDir, rel);
             await safeCopyFile(full, dest);
@@ -519,6 +698,9 @@ export async function inlineWpdevClosure({
   // Wrap all function definitions with if (!function_exists('...')) guards using PHP token_get_all
   const phpWrapperScript = `
 function wrap_php_functions($code) {
+    if (stripos($code, 'function') === false) {
+        return $code;
+    }
     $tokens = token_get_all($code);
     $output = "";
     $in_class = 0;
@@ -590,6 +772,9 @@ function wrap_php_functions($code) {
     return $output;
 }
 function wrap_traits_and_interfaces($code) {
+    if (stripos($code, 'trait') === false && stripos($code, 'interface') === false) {
+        return $code;
+    }
     $tokens = token_get_all($code);
     $output = "";
     $ns = "";
@@ -660,7 +845,7 @@ foreach ($argv as $idx => $f) {
 }
 `;
   if (functionFilesToProcess.length > 0) {
-    await execFileAsync("php", ["-r", phpWrapperScript, "--", ...functionFilesToProcess]);
+    await execFileAsync("php", ["-d", "memory_limit=1G", "-r", phpWrapperScript, "--", ...functionFilesToProcess]);
   }
 
   // Also apply trait/interface wrapper to all files in FrameworkClosure
@@ -672,6 +857,9 @@ ${phpWrapperScript}
       if ($file->isFile() && $file->getExtension() === 'php') {
           $p = $file->getPathname();
           $code = file_get_contents($p);
+          if (stripos($code, 'trait') === false && stripos($code, 'interface') === false) {
+              continue;
+          }
           $wrapped = wrap_traits_and_interfaces($code);
           if ($wrapped !== $code) {
               file_put_contents($p, $wrapped);
@@ -679,73 +867,242 @@ ${phpWrapperScript}
       }
   }
 `;
-  await execFileAsync("php", ["-r", wrapTraitsScript, "--", targetDir]);
+  await execFileAsync("php", ["-d", "memory_limit=1G", "-r", wrapTraitsScript, "--", targetDir]);
 
   // Normalize internal cross-module requires in all FrameworkClosure php files
-  async function normalizeClosureRequires(dir) {
-    if (!fs.existsSync(dir)) return;
-    const entries = await readdir(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        await normalizeClosureRequires(full);
-      } else if (entry.isFile() && entry.name.endsWith(".php") && entry.name !== "functions-closure.php") {
-        let content = await readFile(full, "utf8");
-        const originalSrc = destToSourceMap.get(path.resolve(full));
-        const origDir = originalSrc ? path.dirname(originalSrc) : null;
-
-        const replaced = content.replace(
-          /(\b(?:require_once|require|include_once|include)\b)\s*\(?([^;]+?)\)?\s*;/g,
-          (match, keyword, expr) => {
-            if (expr.includes("class-wp-list-table.php") || match.includes("wp-admin")) {
-              return `if (!class_exists('WP_List_Table', false) && defined('ABSPATH')) {
-                  if (file_exists(ABSPATH . 'wp-admin/includes/template.php')) {
-                      require_once ABSPATH . 'wp-admin/includes/template.php';
-                  }
-                  if (file_exists(ABSPATH . 'wp-admin/includes/screen.php')) {
-                      require_once ABSPATH . 'wp-admin/includes/screen.php';
-                  }
-                  if (file_exists(ABSPATH . 'wp-admin/includes/class-wp-list-table.php')) {
-                      require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
-                  }
-              }`;
-            }
-
-            if (!origDir) {
-              return match;
-            }
-
-            const targetSrcPath = resolveStaticPhpPathExpression(expr, origDir);
-            if (!targetSrcPath) {
-              return match;
-            }
-
-            const targetDest = sourceToDestMap.get(path.resolve(targetSrcPath));
-            if (targetDest) {
-              const rel = path.relative(path.dirname(full), targetDest).replace(/\\/g, "/");
-              return `${keyword} __DIR__ . '/${rel}';`;
-            }
-
-            // If target path was within wpdevPluginDir or sourceRoot, it was an expected inlined dependency
-            const isInternalFramework = wpdevPluginDir && targetSrcPath.startsWith(path.resolve(wpdevPluginDir));
-            const isInternalSource = sourceRoot && targetSrcPath.startsWith(path.resolve(sourceRoot));
-            const isLocalRelative = originalSrc && targetSrcPath.startsWith(path.dirname(originalSrc));
-            if (isInternalFramework || isInternalSource || isLocalRelative) {
-              if (!fs.existsSync(targetSrcPath)) {
-                throw new Error(`Missing required inlined path '${targetSrcPath}' referenced in ${full}`);
-              }
-            }
-
-            return match;
-          }
-        );
-        if (replaced !== content) {
-          await writeFile(full, replaced, "utf8");
-        }
-      }
+  // using PHP's token_get_all to ensure 100% immunity to comments, docblocks, and strings
+  const normalizeRequiresScript = `
+function resolve_static_php_path_expr($expr, $orig_dir) {
+    $clean = trim($expr);
+    if (strpos($clean, '(') === 0 && substr($clean, -1) === ')') {
+        $clean = trim(substr($clean, 1, -1));
     }
+    $tokens = token_get_all('<?php ' . $clean . ';');
+    $parts = [];
+    $current = '';
+    $parenDepth = 0;
+    $count = count($tokens);
+    for ($i = 1; $i < $count - 1; $i++) {
+        $t = $tokens[$i];
+        $s = is_array($t) ? $t[1] : $t;
+        if ($s === '(') {
+            $parenDepth++;
+        } elseif ($s === ')') {
+            $parenDepth--;
+        } elseif ($parenDepth === 0 && ($s === ',' || $s === '[' || $s === ']' || $s === '{' || $s === '}' || $s === ';')) {
+            return null;
+        } elseif ($parenDepth === 0 && $s === '.') {
+            $parts[] = trim($current);
+            $current = '';
+            continue;
+        }
+        $current .= $s;
+    }
+    if ($parenDepth !== 0) {
+        return null;
+    }
+    if (trim($current) !== '') {
+        $parts[] = trim($current);
+    }
+
+    $resolved = '';
+    foreach ($parts as $part) {
+        if ((strpos($part, "'") === 0 && substr($part, -1) === "'") || (strpos($part, '"') === 0 && substr($part, -1) === '"')) {
+            $lit = substr($part, 1, -1);
+            $base = $resolved !== '' ? $resolved : $orig_dir;
+            $resolved = rtrim($base, '/\\\\') . '/' . ltrim($lit, '/\\\\');
+        } elseif ($part === '__DIR__') {
+            $resolved = $orig_dir;
+        } elseif ($part === '__FILE__') {
+            $resolved = $orig_dir . '/file.php';
+        } elseif (preg_match('/^dirname\\s*\\(/', $part)) {
+            $count = 0;
+            $p = $part;
+            if (preg_match('/^dirname\\s*\\(\\s*(.+?)\\s*,\\s*(\\d+)\\s*\\)$/', $p, $m)) {
+                $count = (int)$m[2];
+                $p = $m[1];
+            } else {
+                while (preg_match('/^dirname\\s*\\(\\s*/', $p)) {
+                    $count++;
+                    $p = preg_replace('/^dirname\\s*\\(\\s*/', '', $p);
+                    $p = preg_replace('/\\s*\\)$/', '', $p);
+                }
+            }
+            $baseDir = $orig_dir;
+            if ($p === '__FILE__') $count--;
+            for ($k = 0; $k < $count; $k++) {
+                $baseDir = dirname($baseDir);
+            }
+            $resolved = $baseDir;
+        } else {
+            return null;
+        }
+    }
+    if ($resolved !== '') {
+        $real = realpath($resolved);
+        return $real ? $real : $resolved;
+    }
+    return null;
+}
+
+function get_relative_closure_path($from_dir, $to_path) {
+    $from = explode('/', rtrim(str_replace('\\\\', '/', $from_dir), '/'));
+    $to = explode('/', rtrim(str_replace('\\\\', '/', $to_path), '/'));
+    while (count($from) && count($to) && ($from[0] === $to[0])) {
+        array_shift($from);
+        array_shift($to);
+    }
+    return str_repeat('../', count($from)) . implode('/', $to);
+}
+
+$cfg_file = $argv[1];
+$cfg = json_decode(file_get_contents($cfg_file), true);
+$target_dir = $cfg['targetDir'];
+$source_to_dest = $cfg['sourceToDest'];
+$dest_to_source = $cfg['destToSource'];
+$wpdev_dir = !empty($cfg['wpdevPluginDir']) ? realpath($cfg['wpdevPluginDir']) : null;
+$source_root = !empty($cfg['sourceRoot']) ? realpath($cfg['sourceRoot']) : null;
+
+$iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($target_dir, RecursiveDirectoryIterator::SKIP_DOTS));
+foreach ($iterator as $file) {
+    if (!$file->isFile() || $file->getExtension() !== 'php' || $file->getFilename() === 'functions-closure.php') {
+        continue;
+    }
+    $full = $file->getPathname();
+    $code = file_get_contents($full);
+    if (stripos($code, 'require') === false && stripos($code, 'include') === false) {
+        continue;
+    }
+
+    $dest_norm = str_replace('\\\\', '/', $full);
+    $dest_real = realpath($full);
+    $orig_src = null;
+    if (isset($dest_to_source[$dest_norm])) {
+        $orig_src = $dest_to_source[$dest_norm];
+    } elseif ($dest_real && isset($dest_to_source[$dest_real])) {
+        $orig_src = $dest_to_source[$dest_real];
+    } elseif (strpos($dest_norm, '/private/var') === 0 && isset($dest_to_source[substr($dest_norm, 8)])) {
+        $orig_src = $dest_to_source[substr($dest_norm, 8)];
+    } elseif (strpos($dest_norm, '/var') === 0 && isset($dest_to_source['/private' . $dest_norm])) {
+        $orig_src = $dest_to_source['/private' . $dest_norm];
+    }
+    $orig_dir = $orig_src ? dirname($orig_src) : null;
+    $orig_real = $orig_src ? realpath($orig_src) : null;
+    $dest_dir = dirname($full);
+
+    $tokens = token_get_all($code);
+    $count = count($tokens);
+    $output = '';
+    $modified = false;
+
+    for ($i = 0; $i < $count; $i++) {
+        $tok = $tokens[$i];
+        if (is_array($tok) && in_array($tok[0], [T_REQUIRE, T_REQUIRE_ONCE, T_INCLUDE, T_INCLUDE_ONCE])) {
+            $keyword = $tok[1];
+            $expr = '';
+            $raw_stmt = $keyword;
+            $i++;
+            while ($i < $count) {
+                $t = $tokens[$i];
+                $raw_stmt .= is_array($t) ? $t[1] : $t;
+                $t_str = is_array($t) ? $t[1] : $t;
+                if ($t_str === ';') {
+                    break;
+                }
+                $expr .= $t_str;
+                $i++;
+            }
+            $clean_expr = trim($expr);
+
+            // Guard WP_List_Table loading
+            if (strpos($clean_expr, 'class-wp-list-table.php') !== false) {
+                $output .= "if (!class_exists('WP_List_Table', false) && defined('ABSPATH')) {\\n" .
+                    "    if (file_exists(ABSPATH . 'wp-admin/includes/template.php')) {\\n" .
+                    "        require_once ABSPATH . 'wp-admin/includes/template.php';\\n" .
+                    "    }\\n" .
+                    "    if (file_exists(ABSPATH . 'wp-admin/includes/screen.php')) {\\n" .
+                    "        require_once ABSPATH . 'wp-admin/includes/screen.php';\\n" .
+                    "    }\\n" .
+                    "    if (file_exists(ABSPATH . 'wp-admin/includes/class-wp-list-table.php')) {\\n" .
+                    "        require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';\\n" .
+                    "    }\\n" .
+                    "}";
+                $modified = true;
+                continue;
+            }
+
+            if (!$orig_dir) {
+                $output .= $raw_stmt;
+                continue;
+            }
+
+            $targetSrcPath = resolve_static_php_path_expr($clean_expr, $orig_dir);
+            if (!$targetSrcPath) {
+                $output .= $raw_stmt;
+                continue;
+            }
+
+            $targetDest = isset($source_to_dest[$targetSrcPath]) ? $source_to_dest[$targetSrcPath] : null;
+            if (!$targetDest) {
+                $targetReal = realpath($targetSrcPath);
+                if ($targetReal && isset($source_to_dest[$targetReal])) {
+                    $targetDest = $source_to_dest[$targetReal];
+                } elseif (strpos($targetSrcPath, '/private/var') === 0 && isset($source_to_dest[substr($targetSrcPath, 8)])) {
+                    $targetDest = $source_to_dest[substr($targetSrcPath, 8)];
+                } elseif (strpos($targetSrcPath, '/var') === 0 && isset($source_to_dest['/private' . $targetSrcPath])) {
+                    $targetDest = $source_to_dest['/private' . $targetSrcPath];
+                }
+            }
+            if ($targetDest) {
+                $rel = ltrim(get_relative_closure_path($dest_dir, $targetDest), '/');
+                $output .= $keyword . " __DIR__ . '/" . $rel . "';";
+                $modified = true;
+                continue;
+            }
+
+            $real_wpdev = $wpdev_dir ? realpath($wpdev_dir) : null;
+            $real_source_root = $source_root ? realpath($source_root) : null;
+            $isInternalFramework = ($wpdev_dir && strpos($targetSrcPath, $wpdev_dir) === 0) || ($real_wpdev && strpos($targetSrcPath, $real_wpdev) === 0);
+            $isInternalSource = ($source_root && strpos($targetSrcPath, $source_root) === 0) || ($real_source_root && strpos($targetSrcPath, $real_source_root) === 0);
+            $isLocalRelative = ($orig_src && strpos($targetSrcPath, dirname($orig_src)) === 0) || ($orig_real && strpos($targetSrcPath, dirname($orig_real)) === 0);
+            if ($isInternalFramework || $isInternalSource || $isLocalRelative) {
+                if (!file_exists($targetSrcPath)) {
+                    throw new Exception("Missing required inlined path '{$targetSrcPath}' referenced in {$full}");
+                }
+            }
+
+            $output .= $raw_stmt;
+            continue;
+        }
+
+        $output .= is_array($tok) ? $tok[1] : $tok;
+    }
+
+    if ($modified && $output !== $code) {
+        file_put_contents($full, $output);
+    }
+}
+`;
+
+  const cfgFile = path.join(targetDir, ".closure-normalize-cfg.json");
+  try {
+    await writeFile(
+      cfgFile,
+      JSON.stringify({
+        targetDir,
+        sourceToDest: Object.fromEntries(sourceToDestMap),
+        destToSource: Object.fromEntries(destToSourceMap),
+        wpdevPluginDir: wpdevPluginDir ? path.resolve(wpdevPluginDir) : null,
+        sourceRoot: sourceRoot ? path.resolve(sourceRoot) : null,
+      }),
+      "utf8"
+    );
+    await execFileAsync("php", ["-d", "memory_limit=1G", "-r", normalizeRequiresScript, "--", cfgFile]);
+  } finally {
+    try {
+      await rm(cfgFile, { force: true });
+    } catch {}
   }
-  await normalizeClosureRequires(targetDir);
 
   const consumerNs = resolveConsumerNamespace({
     consumer,
@@ -783,11 +1140,19 @@ $wpdev_closure_core_map = array(
     'WPDevFramework\\\\Admin_Pages\\\\List_Admin_Page'       => __DIR__ . '/modules/admin-page-builder/src/admin/class-list-admin-page.php',
     'WPDevFramework\\\\Admin_Pages\\\\Wizard_Admin_Page'     => __DIR__ . '/modules/admin-page-builder/src/admin/class-wizard-admin-page.php',
     'WPDevFramework\\\\Admin_Pages\\\\Settings_Admin_Page'   => __DIR__ . '/modules/admin-setting-page/src/class-settings-admin-page.php',
+    'WPDevFramework\\\\Traits\\\\Singleton'                  => __DIR__ . '/modules/core/src/traits/trait-singleton.php',
+    'WPDevFramework\\\\Managers\\\\Base_Manager'            => __DIR__ . '/modules/core/src/managers/class-base-manager.php',
+    'WPDevFramework\\\\Models\\\\Base_Model'                => __DIR__ . '/modules/core/src/Model/class-base-model.php',
+    'WPDevFramework\\\\Core\\\\Module_Loader'               => __DIR__ . '/modules/core/src/class-module-loader.php',
 );
 foreach ($wpdev_closure_core_map as $wpdev_c_cls => $wpdev_c_f) {
     if (!class_exists($wpdev_c_cls, false) && !interface_exists($wpdev_c_cls, false) && !trait_exists($wpdev_c_cls, false) && file_exists($wpdev_c_f)) {
         require_once $wpdev_c_f;
     }
+}
+
+if (trait_exists('WPDevFramework\\\\Traits\\\\Singleton', false) && !trait_exists('Singleton', false)) {
+    class_alias('WPDevFramework\\\\Traits\\\\Singleton', 'Singleton');
 }
 
 foreach (array('ModuleInterface', 'AbstractModule', 'ModuleLoader', 'Plugin') as $wpdev_ci) {
@@ -823,7 +1188,10 @@ if (trait_exists('WPDevFramework\\\\Admin_Pages\\\\Edit_Page_Widgets', false) &&
 }
 
 if (!function_exists('wpdev_register_module_admin_pages')) {
-    $wpdev_closure_fn_managers = __DIR__ . '/modules/core/src/functions-module-managers.php';
+    $wpdev_closure_fn_managers = __DIR__ . '/functions/functions-module-managers.php';
+    if (!file_exists($wpdev_closure_fn_managers)) {
+        $wpdev_closure_fn_managers = __DIR__ . '/modules/core/src/functions-module-managers.php';
+    }
     if (file_exists($wpdev_closure_fn_managers)) {
         require_once $wpdev_closure_fn_managers;
     }
@@ -831,6 +1199,19 @@ if (!function_exists('wpdev_register_module_admin_pages')) {
 
 if (class_exists('WPDevFramework\\\\List_Tables\\\\Base_List_Table', false) && !class_exists('WPDev\\\\List_Tables\\\\Base_List_Table', false)) {
     class_alias('WPDevFramework\\\\List_Tables\\\\Base_List_Table', 'WPDev\\\\List_Tables\\\\Base_List_Table');
+}
+
+if (!class_exists('WPDevFramework\\\\Core\\\\Module_Autoloader', false) && file_exists(__DIR__ . '/modules/core/src/class-module-autoloader.php')) {
+    require_once __DIR__ . '/modules/core/src/class-module-autoloader.php';
+}
+if (class_exists('WPDevFramework\\\\Core\\\\Module_Autoloader')) {
+    \\WPDevFramework\\Core\\Module_Autoloader::init();
+}
+if (!class_exists('WPDevFramework\\\\Core\\\\Legacy_Shim_Autoloader', false) && file_exists(__DIR__ . '/modules/core/src/class-legacy-shim-autoloader.php')) {
+    require_once __DIR__ . '/modules/core/src/class-legacy-shim-autoloader.php';
+}
+if (class_exists('WPDevFramework\\\\Core\\\\Legacy_Shim_Autoloader')) {
+    \\WPDevFramework\\Core\\Legacy_Shim_Autoloader::init();
 }
 
 spl_autoload_register(function ($class) {
@@ -904,14 +1285,19 @@ spl_autoload_register(function ($class) {
         }
     }
 
-    // Database Engine & BerlinDB
-    if (0 === strpos($class, 'WPDevFramework\\\\Database\\\\Engine\\\\') || 0 === strpos($class, 'WPDev\\\\Dependencies\\\\BerlinDB\\\\Database\\\\') || 0 === strpos($class, 'BerlinDB\\\\Database\\\\')) {
+    // Database Engine
+    if (0 === strpos($class, 'WPDevFramework\\\\Database\\\\Engine\\\\')) {
         $basename = basename(str_replace('\\\\', '/', $class));
         $engine_file = __DIR__ . '/modules/core/src/Database/engine/class-' . strtolower(str_replace('_', '-', $basename)) . '.php';
         if (file_exists($engine_file)) {
             require_once $engine_file;
             return;
         }
+    }
+
+    // BerlinDB
+    if (0 === strpos($class, 'WPDev\\\\Dependencies\\\\BerlinDB\\\\Database\\\\') || 0 === strpos($class, 'BerlinDB\\\\Database\\\\')) {
+        $basename = basename(str_replace('\\\\', '/', $class));
         $berlin_file = __DIR__ . '/modules/core/dependencies/berlindb/core/src/Database/' . $basename . '.php';
         if (file_exists($berlin_file)) {
             require_once $berlin_file;
@@ -955,70 +1341,64 @@ spl_autoload_register(function ($class) {
     }
 }, true, true);
 
-if (!function_exists('wpdev_path')) {
-    function wpdev_path($dir = '') {
-        if ('views' === $dir || 'views/' === $dir || (is_string($dir) && 0 === strpos($dir, 'views/'))) {
-            $sub = ltrim(substr((string)$dir, 5), '/');
-            return __DIR__ . '/views' . ($sub !== '' ? '/' . $sub : '');
+if (!defined('WPDEV_BOOTSTRAP_FILE')) {
+    if (!function_exists('wpdev_path')) {
+        function wpdev_path($dir = '') {
+            if ('views' === $dir || 'views/' === $dir || (is_string($dir) && 0 === strpos($dir, 'views/'))) {
+                $sub = ltrim(substr((string)$dir, 5), '/');
+                return __DIR__ . '/views' . ($sub !== '' ? '/' . $sub : '');
+            }
+            return defined('WPDEV_PLUGIN_DIR') ? WPDEV_PLUGIN_DIR . $dir : dirname(__DIR__) . '/' . ltrim((string)$dir, '/');
         }
-        return defined('WPDEV_PLUGIN_DIR') ? WPDEV_PLUGIN_DIR . $dir : dirname(__DIR__) . '/' . ltrim((string)$dir, '/');
     }
-}
 
-if (!function_exists('wpdev_url')) {
-    function wpdev_url($dir = '') {
-        return defined('WPDEV_PLUGIN_URL') ? apply_filters('wpdev_url', WPDEV_PLUGIN_URL . $dir) : plugins_url(ltrim((string)$dir, '/'), __FILE__);
-    }
-}
-
-if (!function_exists('wpdev_require_public_function')) {
-    function wpdev_require_public_function($basename) {
-        $name = preg_replace('/\\.php$/i', '', (string) $basename);
-        $local = __DIR__ . "/functions/{$name}.php";
-        if (!file_exists($local)) {
-            return false;
+    if (!function_exists('wpdev_url')) {
+        function wpdev_url($dir = '') {
+            return defined('WPDEV_PLUGIN_URL') ? apply_filters('wpdev_url', WPDEV_PLUGIN_URL . $dir) : plugins_url(ltrim((string)$dir, '/'), __FILE__);
         }
-        require_once $local;
-        return true;
     }
-}
 
-if (!function_exists('wpdev_services')) {
-    function wpdev_services($id = null) {
-        if (class_exists('\\WPDevFramework\\Core\\Service_Registry')) {
-            return null === $id ? \\WPDevFramework\\Core\\Service_Registry::all() : \\WPDevFramework\\Core\\Service_Registry::get($id);
+    if (!function_exists('wpdev_require_public_function')) {
+        function wpdev_require_public_function($basename) {
+            $name = preg_replace('/\\.php$/i', '', (string) $basename);
+            $local = __DIR__ . "/functions/{$name}.php";
+            if (!file_exists($local)) {
+                return false;
+            }
+            require_once $local;
+            return true;
         }
-        return null;
     }
-}
 
-if (!function_exists('wpdev_kses_data')) {
-    function wpdev_kses_data($data) {
-        if (function_exists('wp_kses_data')) {
-            return wp_kses_data($data);
+    if (!function_exists('wpdev_services')) {
+        function wpdev_services($id = null) {
+            if (class_exists('\\WPDevFramework\\Core\\Service_Registry')) {
+                return null === $id ? \\WPDevFramework\\Core\\Service_Registry::all() : \\WPDevFramework\\Core\\Service_Registry::get($id);
+            }
+            return null;
         }
-        return $data;
     }
-}
 
-if (!function_exists('wpdev_get_isset')) {
-    function wpdev_get_isset($arr, $key, $default = null) {
-        return is_array($arr) && isset($arr[$key]) ? $arr[$key] : $default;
+    if (!function_exists('wpdev_kses_data')) {
+        function wpdev_kses_data($data) {
+            if (function_exists('wp_kses_data')) {
+                return wp_kses_data($data);
+            }
+            return $data;
+        }
     }
-}
 
-if (!function_exists('wpdev_request')) {
-    function wpdev_request($key, $default = false) {
-        $value = isset($_REQUEST[$key]) ? (function_exists('stripslashes_deep') ? stripslashes_deep($_REQUEST[$key]) : $_REQUEST[$key]) : $default;
-        return function_exists('apply_filters') ? apply_filters('wpdev_request', $value, $key, $default) : $value;
+    if (!function_exists('wpdev_get_isset')) {
+        function wpdev_get_isset($arr, $key, $default = null) {
+            return is_array($arr) && isset($arr[$key]) ? $arr[$key] : $default;
+        }
     }
-}
 
-// Load all inlined function definitions from functions/ directory
-$closure_funcs = glob(__DIR__ . '/functions/*.php');
-if (is_array($closure_funcs)) {
-    foreach ($closure_funcs as $f) {
-        require_once $f;
+    if (!function_exists('wpdev_request')) {
+        function wpdev_request($key, $default = false) {
+            $value = isset($_REQUEST[$key]) ? (function_exists('stripslashes_deep') ? stripslashes_deep($_REQUEST[$key]) : $_REQUEST[$key]) : $default;
+            return function_exists('apply_filters') ? apply_filters('wpdev_request', $value, $key, $default) : $value;
+        }
     }
 }
 
@@ -1050,38 +1430,40 @@ if (class_exists('\\WPDevFramework\\Core\\Module_View_Registry')) {
     \\WPDevFramework\\Core\\Module_View_Registry::register('closure-root', __DIR__ . '/views');
 }
 
-if (!function_exists('wpdev_get_version')) {
-    function wpdev_get_version() {
-        return defined('WPDEV_VERSION') ? WPDEV_VERSION : '2.10.0';
+if (!defined('WPDEV_BOOTSTRAP_FILE')) {
+    if (!function_exists('wpdev_get_version')) {
+        function wpdev_get_version() {
+            return defined('WPDEV_VERSION') ? WPDEV_VERSION : '2.10.0';
+        }
     }
-}
 
-if (!function_exists('wpdev_boot_closure_lifecycle')) {
-    function wpdev_boot_closure_lifecycle() {
-        if (!did_action('wpdev_load')) {
-            do_action('wpdev_load');
-        }
-        if (!did_action('wpdev_admin_pages')) {
-            do_action('wpdev_admin_pages');
-        }
-    }
-    if (function_exists('add_action')) {
-        add_action('plugins_loaded', 'wpdev_boot_closure_lifecycle', 20);
-        add_action('init', function() {
-            wpdev_boot_closure_lifecycle();
-            if (function_exists('wp_script_is') && class_exists('\\WPDevFramework\\Scripts')) {
-                \\WPDevFramework\\Scripts::ensure_defaults_registered();
+    if (!function_exists('wpdev_boot_closure_lifecycle')) {
+        function wpdev_boot_closure_lifecycle() {
+            if (!did_action('wpdev_load')) {
+                do_action('wpdev_load');
             }
-        }, 1);
-        add_action('admin_enqueue_scripts', function() {
-            if (function_exists('wp_script_is') && class_exists('\\WPDevFramework\\Scripts')) {
-                \\WPDevFramework\\Scripts::ensure_defaults_registered();
+            if (!did_action('wpdev_admin_pages')) {
+                do_action('wpdev_admin_pages');
             }
-        }, 1);
-        if (function_exists('did_action') && did_action('init') > 0) {
-            wpdev_boot_closure_lifecycle();
-            if (function_exists('wp_script_is') && class_exists('\\WPDevFramework\\Scripts')) {
-                \\WPDevFramework\\Scripts::ensure_defaults_registered();
+        }
+        if (function_exists('add_action')) {
+            add_action('plugins_loaded', 'wpdev_boot_closure_lifecycle', 20);
+            add_action('init', function() {
+                wpdev_boot_closure_lifecycle();
+                if (function_exists('wp_script_is') && class_exists('\\WPDevFramework\\Scripts')) {
+                    \\WPDevFramework\\Scripts::ensure_defaults_registered();
+                }
+            }, 1);
+            add_action('admin_enqueue_scripts', function() {
+                if (function_exists('wp_script_is') && class_exists('\\WPDevFramework\\Scripts')) {
+                    \\WPDevFramework\\Scripts::ensure_defaults_registered();
+                }
+            }, 1);
+            if (function_exists('did_action') && did_action('init') > 0) {
+                wpdev_boot_closure_lifecycle();
+                if (function_exists('wp_script_is') && class_exists('\\WPDevFramework\\Scripts')) {
+                    \\WPDevFramework\\Scripts::ensure_defaults_registered();
+                }
             }
         }
     }
@@ -1149,13 +1531,16 @@ if (!function_exists('wpdev_boot_closure_lifecycle')) {
 
   // Copy packages/framework/src/ into src/FrameworkClosure/Core/
   const devPackagesSrc = path.join(contentRoot, "plugins", `${consumer}-dev`, "packages/framework/src");
+  const devVendorSrc = path.join(contentRoot, "plugins", `${consumer}-dev`, "vendor/wpdev/framework/src");
+  const starterKitFrameworkSrc = path.join(scriptDir, "../framework/src");
   const coreCandidates = [
     sourceRoot ? path.join(sourceRoot, "packages/framework/src") : null,
-    sourceRoot ? path.join(sourceRoot, "src/Core") : null,
+    sourceRoot ? path.join(sourceRoot, "vendor/wpdev/framework/src") : null,
     devPackagesSrc,
+    devVendorSrc,
+    starterKitFrameworkSrc,
     path.join(wpdevPluginDir, "packages/framework/src"),
-    path.join(wpdevPluginDir, "src/Core"),
-    path.join(wpdevPluginDir, "modules/core/src"),
+    path.join(wpdevPluginDir, "vendor/wpdev/framework/src"),
   ].filter(Boolean);
   const frameworkSrcToCopy = coreCandidates.find((d) => fs.existsSync(d)) || null;
   const coreDestDir = path.join(targetDir, "Core");
@@ -1217,6 +1602,17 @@ if (!function_exists('wpdev_boot_closure_lifecycle')) {
     mainPhp = mainPhp.replace(/add_action\(\s*'admin_notices',\s*'[^']+_wpdev_dependency_notice'\s*\);/g, "");
     mainPhp = injectFunctionsClosureLoader(mainPhp);
     await writeFile(mainPhpPath, mainPhp, "utf8");
+  }
+
+  // When framework closure has been inlined, clean up any embedded framework tree in staging
+  // so the output bundle does not double-ship the entire framework.
+  const stagingEmbeddedFw = path.join(stagingPlugin, "includes/framework");
+  if (fs.existsSync(stagingEmbeddedFw)) {
+    await rm(stagingEmbeddedFw, { recursive: true, force: true });
+  }
+  const stagingPackagesFw = path.join(stagingPlugin, "packages/framework");
+  if (fs.existsSync(stagingPackagesFw)) {
+    await rm(stagingPackagesFw, { recursive: true, force: true });
   }
 
   return { inlinedFiles: inlinedCount, manifestDigest: manifestData.manifestDigest };

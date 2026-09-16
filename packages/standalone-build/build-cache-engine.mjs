@@ -1561,7 +1561,7 @@ export function validateBuildCacheSchema(data, options = {}) {
     if (record.consumer !== consumer) {
       return { valid: false, reason: `Artifact key '${consumer}' does not match record.consumer '${record.consumer}'` };
     }
-    if (record.artifactId !== `${consumer}-profile-s`) {
+    if (typeof record.artifactId !== "string" || (!record.artifactId.startsWith(`${consumer}-`) && record.artifactId !== consumer)) {
       return { valid: false, reason: `ArtifactId '${record.artifactId}' is invalid for '${consumer}'` };
     }
     if (typeof record.zipSha256 !== "string" || !/^[a-f0-9]{64}$/.test(record.zipSha256)) {
@@ -1928,8 +1928,19 @@ export function validateDeployReceiptRecord({
   if (expectedPluginsDir && (!ALLOWED_CONSUMERS.has(receipt.consumer) && !isValidConsumerName(receipt.consumer))) {
     return { valid: false, reason: `Disallowed consumer '${receipt.consumer}' in deploy receipt` };
   }
-  if (receipt.artifactId !== (artifactId || `${consumer}-profile-s`)) {
-    return { valid: false, reason: `Deploy receipt artifactId mismatch for ${consumer}` };
+  if (artifactId) {
+    if (receipt.artifactId !== artifactId) {
+      return { valid: false, reason: `Deploy receipt artifactId mismatch for ${consumer}` };
+    }
+  } else {
+    const isProfileS = receipt.artifactId === `${consumer}-profile-s`;
+    const isSpaghetti = receipt.artifactId === `${consumer}-standalone-spaghetti`;
+    const isClean = receipt.artifactId === `${consumer}-clean`;
+    const isCustom = receipt.artifactId === `${consumer}-custom`;
+    const isBare = receipt.artifactId === consumer;
+    if (!isProfileS && !isSpaghetti && !isClean && !isCustom && !isBare && !receipt.artifactId?.startsWith(`${consumer}-`)) {
+      return { valid: false, reason: `Deploy receipt artifactId mismatch for ${consumer}` };
+    }
   }
   if (transactionId && receipt.transactionId !== transactionId) {
     return { valid: false, reason: `Deploy receipt transactionId mismatch (expected ${transactionId}, got ${receipt.transactionId})` };

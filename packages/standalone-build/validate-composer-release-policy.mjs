@@ -46,6 +46,13 @@ async function discoverConsumers() {
   const consumers = [];
   for (const entry of entries) {
     if (!entry.isDirectory() || !isInScopeConsumer(entry.name)) continue;
+    if (!entry.name.endsWith("-dev")) {
+      const devCompanion = path.join(contentRoot, "plugins", `${entry.name}-dev`);
+      try {
+        const devStat = await fs.stat(devCompanion);
+        if (devStat.isDirectory()) continue;
+      } catch {}
+    }
     const composerPath = path.join(contentRoot, "plugins", entry.name, "composer.json");
     try {
       const stat = await fs.lstat(composerPath);

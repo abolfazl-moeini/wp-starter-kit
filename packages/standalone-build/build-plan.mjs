@@ -71,6 +71,20 @@ export const LEGACY_PRESETS = Object.freeze({
     minifyAssets: false,
     stripComments: false,
   }),
+  standalone: Object.freeze({
+    inlineFramework: true,
+    spaghetti: false,
+    obfuscate: false,
+    minifyAssets: false,
+    stripComments: false,
+  }),
+  spaghetti: Object.freeze({
+    inlineFramework: false,
+    spaghetti: true,
+    obfuscate: false,
+    minifyAssets: false,
+    stripComments: false,
+  }),
   s: Object.freeze({
     inlineFramework: true,
     spaghetti: true,
@@ -242,8 +256,8 @@ export function createBuildPlan(rawOptions = {}) {
   const rawProfile = rawOptions.profile !== undefined && rawOptions.profile !== null
     ? String(rawOptions.profile).trim().toLowerCase()
     : null;
-  if (rawProfile !== null && rawProfile !== "clean" && rawProfile !== "s" && rawProfile !== "custom") {
-    throw new Error(`Invalid profile '${rawOptions.profile}'. Allowed: clean, s, custom`);
+  if (rawProfile !== null && rawProfile !== "clean" && rawProfile !== "s" && rawProfile !== "spaghetti" && rawProfile !== "standalone" && rawProfile !== "custom") {
+    throw new Error(`Invalid profile '${rawOptions.profile}'. Allowed: clean, s, spaghetti, standalone, custom`);
   }
 
   // Resolve target PHP
@@ -277,6 +291,11 @@ export function createBuildPlan(rawOptions = {}) {
       "Contradictory options: profile='clean' cannot be combined with obfuscate=true or spaghetti=true"
     );
   }
+  if (legacyProfile === "spaghetti" && (rawOptions.obfuscate === true || legacyIsObfuscate === true)) {
+    throw new Error(
+      "Contradictory options: profile='spaghetti' cannot be combined with obfuscate=true"
+    );
+  }
 
   if (hasIndependentCapability) {
     inlineFramework = Boolean(rawOptions.inlineFramework);
@@ -288,6 +307,11 @@ export function createBuildPlan(rawOptions = {}) {
         "Contradictory options: profile='clean' cannot be combined with obfuscate=true or spaghetti=true"
       );
     }
+    if (legacyProfile === "spaghetti" && obfuscate) {
+      throw new Error(
+        "Contradictory options: profile='spaghetti' cannot be combined with obfuscate=true"
+      );
+    }
     if (legacyProfile === "s" && !(inlineFramework && spaghetti && obfuscate)) {
       throw new Error(
         "Contradictory options: profile='s' requires inlineFramework, spaghetti, and obfuscate"
@@ -297,6 +321,14 @@ export function createBuildPlan(rawOptions = {}) {
     inlineFramework = LEGACY_PRESETS.clean.inlineFramework;
     spaghetti = LEGACY_PRESETS.clean.spaghetti;
     obfuscate = LEGACY_PRESETS.clean.obfuscate;
+  } else if (legacyProfile === "standalone") {
+    inlineFramework = LEGACY_PRESETS.standalone.inlineFramework;
+    spaghetti = LEGACY_PRESETS.standalone.spaghetti;
+    obfuscate = LEGACY_PRESETS.standalone.obfuscate;
+  } else if (legacyProfile === "spaghetti") {
+    inlineFramework = LEGACY_PRESETS.spaghetti.inlineFramework;
+    spaghetti = LEGACY_PRESETS.spaghetti.spaghetti;
+    obfuscate = LEGACY_PRESETS.spaghetti.obfuscate;
   } else if (legacyProfile === "s" || legacyIsObfuscate === true || rawOptions.obfuscate) {
     inlineFramework = LEGACY_PRESETS.s.inlineFramework;
     spaghetti = LEGACY_PRESETS.s.spaghetti;
@@ -438,3 +470,5 @@ export function validateBuildPlan(plan) {
   }
   return true;
 }
+
+export { validatePhpSyntaxTree } from "./profile-s-fail-closed.mjs";

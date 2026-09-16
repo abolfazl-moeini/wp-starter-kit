@@ -109,22 +109,42 @@ export async function verifyProfileSArtifact({
       failures.push("Main plugin header is missing in entry file");
     }
 
+    const expectStripComments = stripComments !== undefined
+      ? Boolean(stripComments)
+      : (profile === "s");
+
     const batchScript = `
     $main = $argv[1];
     $files = array_slice($argv, 2);
     $syntaxErrors = [];
     $commentErrors = [];
 
-    foreach ($files as $f) {
-        $code = file_get_contents($f);
+    function verifySingleFile($f, $main, &$syntaxErrors, &$commentErrors) {
+        $fileSize = filesize($f);
+        if ($fileSize > 200000) {
+            $escaped = escapeshellarg($f);
+            $phpBin = defined('PHP_BINARY') && PHP_BINARY ? PHP_BINARY : 'php';
+            exec(escapeshellarg($phpBin) . " -l $escaped 2>&1", $lintOut, $lintCode);
+            if ($lintCode !== 0) {
+                $syntaxErrors[] = $f . ': ' . implode(' ', $lintOut);
+                return;
+            }
+            $code = file_get_contents($f);
+            if (!preg_match('/(?:\\/\\*|\\/\\/|#)/', $code)) {
+                return;
+            }
+        } else {
+            $code = file_get_contents($f);
+        }
+
         try {
             $tokens = token_get_all($code, TOKEN_PARSE);
         } catch (Throwable $e) {
             $syntaxErrors[] = $f . ': ' . $e->getMessage();
-            continue;
+            return;
         }
         if (basename($f) === $main || strpos($f, '/vendor/') !== false) {
-            continue;
+            return;
         }
         foreach ($tokens as $t) {
             if (is_array($t) && ($t[0] === T_DOC_COMMENT || $t[0] === T_COMMENT)) {
@@ -135,6 +155,10 @@ export async function verifyProfileSArtifact({
                 break;
             }
         }
+    }
+
+    foreach ($files as $f) {
+        verifySingleFile($f, $main, $syntaxErrors, $commentErrors);
     }
 
     $flags = defined('JSON_INVALID_UTF8_SUBSTITUTE') ? JSON_INVALID_UTF8_SUBSTITUTE : 0;
@@ -148,7 +172,7 @@ export async function verifyProfileSArtifact({
     const chunkSize = 100;
     for (let i = 0; i < phpFiles.length; i += chunkSize) {
       const chunk = phpFiles.slice(i, i + chunkSize);
-      const { stdout } = await execFileAsync(activePhpBin, ["-r", batchScript, "--", `${consumer}.php`, ...chunk]);
+      const { stdout } = await execFileAsync(activePhpBin, ["-d", "memory_limit=256M", "-r", batchScript, "--", `${consumer}.php`, ...chunk]);
       const res = JSON.parse(stdout.trim());
       if (res.syntaxErrors && res.syntaxErrors.length > 0) {
         syntaxPassed = false;
@@ -156,7 +180,7 @@ export async function verifyProfileSArtifact({
           failures.push(`Syntax error in ${path.relative(stagingRoot, errFile)}`);
         }
       }
-      if (res.commentErrors && res.commentErrors.length > 0) {
+      if (expectStripComments && res.commentErrors && res.commentErrors.length > 0) {
         commentStrippingPassed = false;
         for (const cErr of res.commentErrors) {
           failures.push(`DocBlock found in internal file: ${cErr}`);
@@ -172,9 +196,6 @@ export async function verifyProfileSArtifact({
       results.details.push({ test: "PHP Syntax Lint", status: "failed" });
     }
 
-    const expectStripComments = stripComments !== undefined
-      ? Boolean(stripComments)
-      : (profile === "s");
 
     if (!expectStripComments) {
       results.testsPassed++;
@@ -277,6 +298,7 @@ class MockWpdb {
     public function replace($table, $data, $format = null) { return 1; }
     public function get_var($query = null) { return null; }
     public function get_row($query = null) { return null; }
+    public function get_col($query = null, $x = 0) { return []; }
     public function get_results($query = null) { return []; }
     public function prepare($query, ...$args) { return $query; }
 }

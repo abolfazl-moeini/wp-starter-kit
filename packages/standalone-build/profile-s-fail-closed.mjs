@@ -13,7 +13,7 @@ import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 
-export const ALLOWED_BUILD_PROFILES = new Set(["s", "clean"]);
+export const ALLOWED_BUILD_PROFILES = new Set(["s", "clean", "spaghetti", "standalone"]);
 
 const REQUIRED_BUILD_TOOLS = [
   ["php", ["-v"]],
@@ -78,11 +78,11 @@ export function parseClosedProfileFlags(argv = []) {
       sawObfuscateFlag = true;
       continue;
     }
-    if (arg === "--inline-framework") {
+    if (arg === "--inline-framework" || arg === "--standalone") {
       inlineFramework = true;
       continue;
     }
-    if (arg === "--no-inline-framework") {
+    if (arg === "--no-inline-framework" || arg === "--no-standalone") {
       inlineFramework = false;
       continue;
     }
@@ -129,7 +129,7 @@ export function parseClosedProfileFlags(argv = []) {
     if (arg === "--profile") {
       const next = argv[i + 1];
       if (!next || next.startsWith("--")) {
-        throw new Error("Invalid --profile: a value is required (s or clean)");
+        throw new Error("Invalid --profile: a value is required (s, clean, spaghetti, or standalone)");
       }
       const value = next.trim().toLowerCase();
       if (!ALLOWED_BUILD_PROFILES.has(value)) {
@@ -142,7 +142,7 @@ export function parseClosedProfileFlags(argv = []) {
       continue;
     }
     if (arg === "--profile=") {
-      throw new Error("Invalid --profile: a value is required (s or clean)");
+      throw new Error("Invalid --profile: a value is required (s, clean, spaghetti, or standalone)");
     }
     if (typeof arg === "string" && arg.startsWith("--profile=")) {
       const value = arg.slice("--profile=".length).trim().toLowerCase();
@@ -170,8 +170,11 @@ export function parseClosedProfileFlags(argv = []) {
     if (legacyProfile === "clean" && (obfuscate || spaghetti === true)) {
       throw new Error("Conflicting profile flags: clean, s");
     }
-    const inlineResolved = inlineFramework ?? (legacyProfile === "s" ? true : false);
-    const spaghettiResolved = spaghetti ?? (legacyProfile === "s" ? true : false);
+    if (legacyProfile === "spaghetti" && obfuscate) {
+      throw new Error("Conflicting profile flags: spaghetti, s");
+    }
+    const inlineResolved = inlineFramework ?? (legacyProfile === "s" || legacyProfile === "clean" || legacyProfile === "standalone" ? true : false);
+    const spaghettiResolved = spaghetti ?? (legacyProfile === "s" || legacyProfile === "spaghetti" ? true : false);
     return {
       profile: legacyProfile || "custom",
       isObfuscate: obfuscate,
@@ -190,8 +193,8 @@ export function parseClosedProfileFlags(argv = []) {
   return {
     profile,
     isObfuscate: profile === "s",
-    inlineFramework: profile === "s" || profile === "clean" ? true : false,
-    spaghetti: profile === "s",
+    inlineFramework: profile === "s" || profile === "clean" || profile === "standalone" ? true : false,
+    spaghetti: profile === "s" || profile === "spaghetti",
     obfuscate: profile === "s",
     minifyAssets: minifyAssets ?? (profile === "s"),
     skipZip,
@@ -214,7 +217,7 @@ export function requireRectorForProfileS({ rectorBin, rectorConfig }) {
 }
 
 export function collectFirstPartyPhpFiles(rootDir) {
-  const skipDirs = new Set(["vendor", "vendor-prefixed", "node_modules", ".git"]);
+  const skipDirs = new Set(["vendor", "vendor-prefixed", "dependencies", "node_modules", ".git"]);
   const files = [];
 
   function walk(dir) {
@@ -469,8 +472,12 @@ export function assertSymbolMapHasNoCollisions(symMap, options = {}) {
     // C1 Gate: Check short-name collisions across distinct FQCNs under namespace flattening
     if (checkFlattenCollisions) {
       for (const [shortKey, fqcns] of shortNamesToFqcns.entries()) {
-        if (fqcns.length > 1) {
-          const pathDetails = fqcns
+        const flattenedFqcns = fqcns.filter((s) => {
+          const sNs = s.includes("\\") ? s.slice(0, s.lastIndexOf("\\")) : "";
+          return !sNs || !retainedNamespaces.has(sNs);
+        });
+        if (flattenedFqcns.length > 1) {
+          const pathDetails = flattenedFqcns
             .map((s) => (symbolPaths[s] ? `${s} (${symbolPaths[s]})` : s))
             .join(", ");
           throw new Error(
@@ -489,7 +496,10 @@ export function assertSymbolMapHasNoCollisions(symMap, options = {}) {
       const mangledKey = caseInsensitive ? mangled.toLowerCase() : mangled;
       const shortKey = caseInsensitive ? symbol.toLowerCase() : symbol;
 
-      const fqcnsForShort = shortNamesToFqcns.get(shortKey) || [];
+      const fqcnsForShort = (shortNamesToFqcns.get(shortKey) || []).filter((s) => {
+        const sNs = s.includes("\\") ? s.slice(0, s.lastIndexOf("\\")) : "";
+        return !sNs || !retainedNamespaces.has(sNs);
+      });
       if (fqcnsForShort.length > 1) {
         const pathDetails = fqcnsForShort
           .map((s) => (symbolPaths[s] ? `${s} (${symbolPaths[s]})` : s))
@@ -515,7 +525,9 @@ export function assertSymbolMapHasNoCollisions(symMap, options = {}) {
           (symbolPaths[symbol] && symbolPaths[fqcn] && symbolPaths[symbol] !== symbolPaths[fqcn]) ||
           (classesMeta[symbol] && classesMeta[fqcn])
         );
-        if (isDistinctDeclaration && checkFlattenCollisions) {
+        const fqcnNs = fqcn.includes("\\") ? fqcn.slice(0, fqcn.lastIndexOf("\\")) : "";
+        const isFqcnFlattened = !fqcnNs || !retainedNamespaces.has(fqcnNs);
+        if (isDistinctDeclaration && checkFlattenCollisions && isFqcnFlattened) {
           const path1 = symbolPaths[fqcn] ? `${fqcn} (${symbolPaths[fqcn]})` : fqcn;
           const path2 = symbolPaths[symbol] ? `${symbol} (${symbolPaths[symbol]})` : symbol;
           throw new Error(
@@ -527,17 +539,22 @@ export function assertSymbolMapHasNoCollisions(symMap, options = {}) {
         }
       } else {
         if (checkFlattenCollisions && shortNamesToFqcns.has(shortKey)) {
-          const collidingFqcns = shortNamesToFqcns.get(shortKey) || [];
-          const isDistinctDeclaration = Boolean(
-            (symbolPaths[symbol] && collidingFqcns.some((f) => symbolPaths[f] && symbolPaths[f] !== symbolPaths[symbol])) ||
-            classesMeta[symbol]
-          );
-          if (isDistinctDeclaration) {
-            const path1 = symbolPaths[collidingFqcns[0]] ? `${collidingFqcns[0]} (${symbolPaths[collidingFqcns[0]]})` : collidingFqcns[0];
-            const path2 = symbolPaths[symbol] ? `${symbol} (${symbolPaths[symbol]})` : symbol;
-            throw new Error(
-              `symbol map collision in ${section}: global declaration '${symbol}' collides with namespaced declaration '${collidingFqcns[0]}' under namespace flattening: [${path2}, ${path1}]`,
+          const collidingFqcns = (shortNamesToFqcns.get(shortKey) || []).filter((f) => {
+            const fNs = f.includes("\\") ? f.slice(0, f.lastIndexOf("\\")) : "";
+            return !fNs || !retainedNamespaces.has(fNs);
+          });
+          if (collidingFqcns.length > 0) {
+            const isDistinctDeclaration = Boolean(
+              (symbolPaths[symbol] && collidingFqcns.some((f) => symbolPaths[f] && symbolPaths[f] !== symbolPaths[symbol])) ||
+              classesMeta[symbol]
             );
+            if (isDistinctDeclaration) {
+              const path1 = symbolPaths[collidingFqcns[0]] ? `${collidingFqcns[0]} (${symbolPaths[collidingFqcns[0]]})` : collidingFqcns[0];
+              const path2 = symbolPaths[symbol] ? `${symbol} (${symbolPaths[symbol]})` : symbol;
+              throw new Error(
+                `symbol map collision in ${section}: global declaration '${symbol}' collides with namespaced declaration '${collidingFqcns[0]}' under namespace flattening: [${path2}, ${path1}]`,
+              );
+            }
           }
         }
         if (globalsByMangled.has(mangledKey)) {
@@ -698,10 +715,54 @@ export async function validatePhpSyntaxTree(
     phpBin,
     enforceTarget,
   });
+
+  const phpFiles = [];
+  async function walk(current) {
+    let entries;
+    try {
+      entries = await fs.promises.readdir(current, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        // Dual-load libraries: Real/ implementation is PHP 8.1+ only and conditionally loaded on runtime.
+        if (fullPath.includes(path.join("php-fault-tolerance", "src", "Real"))) {
+          continue;
+        }
+        await walk(fullPath);
+      } else if (entry.isFile() && entry.name.endsWith(".php")) {
+        phpFiles.push(fullPath);
+      }
+    }
+  }
+
+  let dirStat;
+  try {
+    dirStat = await fs.promises.stat(dir);
+  } catch (e) {
+    throw new Error(`Directory or file to validate does not exist: ${dir}`);
+  }
+
+  if (dirStat.isFile()) {
+    if (dir.endsWith(".php")) {
+      phpFiles.push(dir);
+    }
+  } else if (dirStat.isDirectory()) {
+    await walk(dir);
+  }
+
+  if (phpFiles.length === 0) {
+    return {
+      interpreter: { bin: interpreter.bin, version: interpreter.version },
+      targetPhp,
+      enforceTarget: Boolean(enforceTarget),
+      targetPhpVerified: interpreter.isExactTarget,
+    };
+  }
+
   const phpValidatorScript = `
-  $dir = $argv[1];
-  $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS));
-  $errors = [];
   $php8TokenIds = [];
   foreach (['T_ENUM', 'T_READONLY', 'T_MATCH', 'T_NULLSAFE_OBJECT_OPERATOR'] as $const) {
       if (defined($const)) {
@@ -712,7 +773,7 @@ export async function validatePhpSyntaxTree(
   $fnId = defined('T_FN') ? constant('T_FN') : T_FUNCTION;
   $ellipsisId = defined('T_ELLIPSIS') ? constant('T_ELLIPSIS') : -1;
   $doubleArrowId = defined('T_DOUBLE_ARROW') ? constant('T_DOUBLE_ARROW') : -1;
-  // Significant-token helper: previous/next non-whitespace/comment index.
+
   $prevSig = function($tokens, $idx) {
       for ($j = $idx - 1; $j >= 0; $j--) {
           $t = $tokens[$j];
@@ -729,22 +790,40 @@ export async function validatePhpSyntaxTree(
       }
       return null;
   };
-  foreach ($iterator as $file) {
-      if (!$file->isFile() || $file->getExtension() !== 'php') {
-          continue;
-      }
-      $path = $file->getPathname();
+
+  function validateSingleFile($path, $php8TokenIds, $attrId, $fnId, $ellipsisId, $doubleArrowId, $prevSig, $nextSig) {
+      if (!is_file($path)) return null;
+      $fileSize = filesize($path);
       // Dual-load libraries: Real/ implementation is PHP 8.1+ only and conditionally loaded on runtime.
       if (strpos($path, 'php-fault-tolerance' . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Real') !== false) {
-          continue;
+          return null;
       }
-      // Validate all runtime PHP files including vendor and vendor-prefixed
-      $code = file_get_contents($path);
+
+      // Large files (> 200KB) such as massive lookup tables or datasets:
+      // check whether any suspect syntax tokens/keywords exist before allocating huge token streams.
+      if ($fileSize > 200000) {
+          $escaped = escapeshellarg($path);
+          $phpBin = defined('PHP_BINARY') && PHP_BINARY ? PHP_BINARY : 'php';
+          exec(escapeshellarg($phpBin) . " -l $escaped 2>&1", $lintOut, $lintCode);
+          if ($lintCode !== 0) {
+              return $path . ': ' . implode(' ', $lintOut);
+          }
+          $sample = file_get_contents($path);
+          $suspectPattern = '/(?:#\\[|\\?->|\\.\\.\\.|\\benum\\s+|\\breadonly\\s+|\\bmatch\\s*[\\(\\s]|\\bfunction\\b|\\bfn\\b|\\bcatch\\s*[\\(\\s]|\\bconst\\s+)/i';
+          if (!preg_match($suspectPattern, $sample)) {
+              unset($sample);
+              return null;
+          }
+          $code = $sample;
+          unset($sample);
+      } else {
+          $code = file_get_contents($path);
+      }
+
       try {
           $tokens = token_get_all($code, TOKEN_PARSE);
       } catch (\\ParseError $e) {
-          $errors[] = $path . ': ' . $e->getMessage();
-          continue;
+          return $path . ': ' . $e->getMessage();
       }
       $count = count($tokens);
       for ($i = 0; $i < $count; $i++) {
@@ -753,16 +832,14 @@ export async function validatePhpSyntaxTree(
           $tokenText = is_array($token) ? $token[1] : $token;
 
           if ($tokenId !== null && isset($php8TokenIds[$tokenId])) {
-              $errors[] = $path . ': PHP 7.4 incompatibility: ' . $php8TokenIds[$tokenId] . ' remains after downgrade';
-              break;
+              return $path . ': PHP 7.4 incompatibility: ' . $php8TokenIds[$tokenId] . ' remains after downgrade';
           }
 
           if ($tokenId === $ellipsisId || $tokenText === '...') {
               $pi = $prevSig($tokens, $i);
               $ni = $nextSig($tokens, $i, $count);
               if ($pi !== null && $ni !== null && $tokens[$pi] === '(' && $tokens[$ni] === ')') {
-                  $errors[] = $path . ': PHP 7.4 incompatibility: first-class callable syntax (...) detected';
-                  break;
+                  return $path . ': PHP 7.4 incompatibility: first-class callable syntax (...) detected';
               }
           }
 
@@ -776,8 +853,7 @@ export async function validatePhpSyntaxTree(
               $attrName = trim(implode('', $attrTokens));
               $cleanAttrName = ltrim($attrName, "\\\\");
               if (!in_array($cleanAttrName, ['ReturnTypeWillChange', 'AllowDynamicProperties', 'Override'], true)) {
-                  $errors[] = $path . ': PHP 7.4 incompatibility: T_ATTRIBUTE remains after downgrade: ' . $attrName;
-                  break;
+                  return $path . ': PHP 7.4 incompatibility: T_ATTRIBUTE remains after downgrade: ' . $attrName;
               }
               $i = $j;
               continue;
@@ -805,8 +881,7 @@ export async function validatePhpSyntaxTree(
                   break;
               }
               if ($lastSigParam === ',') {
-                  $errors[] = $path . ': PHP 7.4 incompatibility: trailing comma detected in parameter list';
-                  break;
+                  return $path . ': PHP 7.4 incompatibility: trailing comma detected in parameter list';
               }
               $inDefault = false;
               $visibilityTokens = [T_PUBLIC, T_PROTECTED, T_PRIVATE];
@@ -817,25 +892,19 @@ export async function validatePhpSyntaxTree(
                   if ($pt === '=') $inDefault = true;
                   elseif ($pt === ',') $inDefault = false;
                   elseif ($inDefault && ($ptId === T_NEW || $ptText === 'new')) {
-                      $errors[] = $path . ': PHP 7.4 incompatibility: new in initializer detected in parameter default';
-                      break;
+                      return $path . ': PHP 7.4 incompatibility: new in initializer detected in parameter default';
                   }
                   elseif (!$inDefault && $pt === '|') {
-                      $errors[] = $path . ': PHP 7.4 incompatibility: union type parameter detected in function declaration';
-                      break;
+                      return $path . ': PHP 7.4 incompatibility: union type parameter detected in function declaration';
                   }
-                  // PHP 8.0+ standalone types that Rector must have downgraded.
-                  // Note: 'static' tokenizes as T_STATIC, not T_STRING.
                   if (!$inDefault && ($ptId === T_STRING || (defined('T_STATIC') && $ptId === constant('T_STATIC')))) {
                       $lowerPt = strtolower($ptText);
                       if (in_array($lowerPt, ['mixed', 'never', 'static', 'false', 'true', 'null'], true)) {
-                          $errors[] = $path . ': PHP 7.4 incompatibility: ' . $ptText . ' type detected in parameter list';
-                          break;
+                          return $path . ': PHP 7.4 incompatibility: ' . $ptText . ' type detected in parameter list';
                       }
                   }
                   if (in_array($ptId, $visibilityTokens, true)) {
-                      $errors[] = $path . ': PHP 7.4 incompatibility: constructor property promotion detected in parameter list';
-                      break;
+                      return $path . ': PHP 7.4 incompatibility: constructor property promotion detected in parameter list';
                   }
               }
               for ($pIdx = 0; $pIdx < count($paramTokens); $pIdx++) {
@@ -843,22 +912,18 @@ export async function validatePhpSyntaxTree(
                   $pId = is_array($pToken) ? $pToken[0] : null;
                   $pText = is_array($pToken) ? $pToken[1] : $pToken;
                   if (defined('T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG') && $pId === constant('T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG')) {
-                      $errors[] = $path . ': PHP 7.4 incompatibility: intersection type parameter detected';
-                      break;
+                      return $path . ': PHP 7.4 incompatibility: intersection type parameter detected';
                   }
                   if ($pText === '&') {
                       $nextP = $paramTokens[$pIdx + 1] ?? null;
                       $nextId = is_array($nextP) ? $nextP[0] : null;
-                      // '&...$args' (by-ref variadic) is valid PHP 7.4; only flag
-                      // '&' that is neither by-ref var nor by-ref variadic.
                       if ($nextId === $ellipsisId) {
                           $afterEllipsis = $paramTokens[$pIdx + 2] ?? null;
                           $afterId = is_array($afterEllipsis) ? $afterEllipsis[0] : null;
                           if ($afterId === T_VARIABLE) continue;
                       }
                       if ($nextId !== T_VARIABLE) {
-                          $errors[] = $path . ': PHP 7.4 incompatibility: intersection type parameter detected';
-                          break;
+                          return $path . ': PHP 7.4 incompatibility: intersection type parameter detected';
                       }
                   }
               }
@@ -877,20 +942,16 @@ export async function validatePhpSyntaxTree(
                       $rtId = is_array($rt) ? $rt[0] : null;
                       $rtText = is_array($rt) ? $rt[1] : $rt;
                       if ($rtText === '|') {
-                          $errors[] = $path . ': PHP 7.4 incompatibility: union return type detected in function declaration';
-                          break;
+                          return $path . ': PHP 7.4 incompatibility: union return type detected in function declaration';
                       }
                       if ($rtId === T_STRING && in_array(strtolower($rtText), ['mixed', 'never', 'static', 'true', 'false', 'null'], true)) {
-                          $errors[] = $path . ': PHP 7.4 incompatibility: ' . $rtText . ' return type detected in function declaration';
-                          break;
+                          return $path . ': PHP 7.4 incompatibility: ' . $rtText . ' return type detected in function declaration';
                       }
                       if (defined('T_STATIC') && $rtId === constant('T_STATIC')) {
-                          $errors[] = $path . ': PHP 7.4 incompatibility: static return type detected in function declaration';
-                          break;
+                          return $path . ': PHP 7.4 incompatibility: static return type detected in function declaration';
                       }
                       if ($rtText === '&' || (defined('T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG') && $rtId === constant('T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG'))) {
-                          $errors[] = $path . ': PHP 7.4 incompatibility: intersection return type detected in function declaration';
-                          break;
+                          return $path . ': PHP 7.4 incompatibility: intersection return type detected in function declaration';
                       }
                   }
               }
@@ -910,8 +971,7 @@ export async function validatePhpSyntaxTree(
                       $j++;
                   }
                   if (!$hasVar) {
-                      $errors[] = $path . ': PHP 7.4 incompatibility: non-capturing catch detected';
-                      break;
+                      return $path . ': PHP 7.4 incompatibility: non-capturing catch detected';
                   }
               }
           }
@@ -921,15 +981,11 @@ export async function validatePhpSyntaxTree(
               if ($n1 !== null && is_array($tokens[$n1]) && $tokens[$n1][0] === T_STRING) {
                   $n2 = $nextSig($tokens, $n1, $count);
                   if ($n2 !== null && is_array($tokens[$n2]) && $tokens[$n2][0] === T_STRING) {
-                      $errors[] = $path . ': PHP 7.4 incompatibility: typed class constant detected';
-                      break;
+                      return $path . ': PHP 7.4 incompatibility: typed class constant detected';
                   }
               }
           }
 
-          // Named arguments 'foo(name: $v)' are PHP 8.0+. A top-level 'Name:'
-          // at the start of a call argument (prev significant '(' or ',',
-          // next significant not ':' to exclude '::') is a named argument.
           if ($tokenId === T_STRING) {
               $ni = $nextSig($tokens, $i, $count);
               if ($ni !== null && $tokens[$ni] === ':') {
@@ -939,26 +995,66 @@ export async function validatePhpSyntaxTree(
                   $isScopeOrTernaryQ = ($prevTok === '?' || (is_array($prevTok) && $prevTok[1] === '?'));
                   if ($nni !== null && $tokens[$nni] !== ':' && (is_array($tokens[$nni]) ? $tokens[$nni][1] !== ':' : true)
                       && ($prevTok === '(' || $prevTok === ',') && !$isScopeOrTernaryQ) {
-                      $errors[] = $path . ': PHP 7.4 incompatibility: named argument detected: ' . $tokenText;
-                      break;
+                      return $path . ': PHP 7.4 incompatibility: named argument detected: ' . $tokenText;
                   }
               }
           }
       }
+      return null;
   }
-  if (!empty($errors)) {
-      fwrite(STDERR, implode("\\n", $errors) . "\\n");
+
+  $batchErrors = [];
+  while (($line = fgets(STDIN)) !== false) {
+      $fPath = trim($line);
+      if ($fPath === '') continue;
+      $err = validateSingleFile($fPath, $php8TokenIds, $attrId, $fnId, $ellipsisId, $doubleArrowId, $prevSig, $nextSig);
+      if ($err !== null) {
+          $batchErrors[] = $err;
+      }
+  }
+
+  if (!empty($batchErrors)) {
+      fwrite(STDERR, implode("\\n", $batchErrors) . "\\n");
       exit(1);
   }
   echo "SYNTAX_OK\\n";
   `;
-  const { stdout, stderr } = await execFileAsync(interpreter.bin, ["-d", "xdebug.mode=off", "-r", phpValidatorScript, "--", dir]);
-  if (!stdout.includes("SYNTAX_OK")) {
-    throw new Error(`PHP syntax error in transformed files: ${stdout || stderr}`);
+
+  const BATCH_SIZE = 50;
+  const allErrors = [];
+
+  for (let i = 0; i < phpFiles.length; i += BATCH_SIZE) {
+    const chunk = phpFiles.slice(i, i + BATCH_SIZE);
+    const child = execFile(
+      interpreter.bin,
+      ["-d", "memory_limit=256M", "-d", "xdebug.mode=off", "-r", phpValidatorScript],
+      { maxBuffer: 10 * 1024 * 1024 }
+    );
+    let stdoutData = "";
+    let stderrData = "";
+    child.stdout.on("data", (data) => { stdoutData += data; });
+    child.stderr.on("data", (data) => { stderrData += data; });
+
+    child.stdin.write(chunk.join("\n") + "\n");
+    child.stdin.end();
+
+    const exitCode = await new Promise((resolve, reject) => {
+      child.on("close", resolve);
+      child.on("error", reject);
+    });
+
+    if (exitCode !== 0 || !stdoutData.includes("SYNTAX_OK")) {
+      const errOut = (stderrData || stdoutData).trim();
+      if (errOut) {
+        allErrors.push(errOut);
+      }
+    }
   }
-  // V3-16: surface which interpreter actually performed this gate. Without this, callers
-  // cannot distinguish "validated on the declared target" from "validated on host PHP",
-  // and a 7.4 compatibility claim can be recorded on the back of an 8.x run.
+
+  if (allErrors.length > 0) {
+    throw new Error(`PHP syntax error in transformed files: ${allErrors.join("\n")}`);
+  }
+
   return {
     interpreter: { bin: interpreter.bin, version: interpreter.version },
     targetPhp,

@@ -1306,7 +1306,7 @@ export async function runPipelineOrchestration(options = {}) {
       for (const plugin of targetPlugins) {
         pluginBuildPlans[plugin] = createBuildPlan({
           consumer: plugin,
-          profile: parsedFlags.profile || (activeIsObfuscate ? "s" : "clean"),
+          profile: parsedFlags.profile || (activeIsObfuscate ? "s" : "spaghetti"),
           isObfuscate: activeIsObfuscate,
           obfuscate: parsedFlags.obfuscate,
           inlineFramework: options.inlineFramework ?? parsedFlags.inlineFramework,
@@ -1334,7 +1334,7 @@ export async function runPipelineOrchestration(options = {}) {
         },
         mode: activeIsForce ? "force" : (activeIsChanged ? "changed" : "incremental"),
         pluginBuildPlans,
-        profile: parsedFlags.profile || (activeIsObfuscate ? "s" : "clean"),
+        profile: parsedFlags.profile || (activeIsObfuscate ? "s" : "spaghetti"),
         options: options.buildOptions || {},
       });
     },
@@ -1351,7 +1351,7 @@ export async function runPipelineOrchestration(options = {}) {
         const parsedFlags = options.parsed || {};
         const pluginBuildPlan = createBuildPlan({
           consumer: plugin,
-          profile: parsedFlags.profile || (activeIsObfuscate ? "s" : "clean"),
+          profile: parsedFlags.profile || (activeIsObfuscate ? "s" : "spaghetti"),
           isObfuscate: activeIsObfuscate,
           obfuscate: parsedFlags.obfuscate,
           inlineFramework: options.inlineFramework ?? parsedFlags.inlineFramework,
@@ -1774,11 +1774,34 @@ export async function runPipelineOrchestration(options = {}) {
           const { fingerprint } = results;
           const stagedCache = results["plan:cache"];
           const bRes = results[`build:${plugin}`];
-          // Deploy the artifact tier that was actually built. Clean builds must
-          // never deploy a stale Profile S ZIP (and vice versa).
-          const deployZip = activeIsObfuscate
-            ? path.join(customDistDir, `${plugin}-profile-s.zip`)
-            : path.join(customDistDir, `${plugin}.zip`);
+          const parsedFlags = options.parsed || {};
+          const pluginBuildPlan = createBuildPlan({
+            consumer: plugin,
+            profile: parsedFlags.profile || (activeIsObfuscate ? "s" : "spaghetti"),
+            isObfuscate: activeIsObfuscate,
+            obfuscate: parsedFlags.obfuscate,
+            inlineFramework: options.inlineFramework ?? parsedFlags.inlineFramework,
+            spaghetti: options.spaghetti ?? parsedFlags.spaghetti,
+            minifyAssets: options.minifyAssets ?? parsedFlags.minifyAssets,
+            skipZip: options.skipZip ?? parsedFlags.skipZip,
+            targetPhp: options.targetPhp ?? parsedFlags.targetPhp,
+            frozenClasses: options.frozenClasses ?? parsedFlags.frozenClasses,
+            frozenFunctions: options.frozenFunctions ?? parsedFlags.frozenFunctions,
+            frozenConstants: options.frozenConstants ?? parsedFlags.frozenConstants,
+            frozenProperties: options.frozenProperties ?? parsedFlags.frozenProperties,
+            frozenMethods: options.frozenMethods ?? parsedFlags.frozenMethods,
+            frozenVars: options.frozenVars ?? parsedFlags.frozenVars,
+          });
+          const targetZipName = resolveArtifactZipName(pluginBuildPlan);
+          let deployZip = path.join(customDistDir, targetZipName);
+          if (!fs.existsSync(deployZip)) {
+            const fallbackZip = activeIsObfuscate
+              ? path.join(customDistDir, `${plugin}-profile-s.zip`)
+              : path.join(customDistDir, `${plugin}.zip`);
+            if (fs.existsSync(fallbackZip)) {
+              deployZip = fallbackZip;
+            }
+          }
           if (!fs.existsSync(deployZip)) {
             throw new Error(`Cannot deploy '${plugin}': missing ZIP artifact at ${deployZip}`);
           }
@@ -2085,6 +2108,7 @@ export async function runPipelineOrchestration(options = {}) {
         const loaded = await loadDeployReceiptRecord(stagedReceiptFile, p, {
           transactionId: currentTransactionId,
           expectedPluginsDir: customPluginsDir,
+          artifactId: receipt.artifactId,
         });
         if (loaded.status !== "valid") {
           throw new Error(`Staged receipt validation failed for ${p}: ${loaded.reason}`);
@@ -2196,18 +2220,18 @@ export async function runPipelineOrchestration(options = {}) {
         state.phase = "committed";
       });
 
-      if (activeIsObfuscate) {
-        for (const p of targetPlugins) {
-          const profileSZip = path.join(customDistDir, `${p}-profile-s.zip`);
-          const standardZip = path.join(customDistDir, `${p}.zip`);
-          if (fs.existsSync(profileSZip)) {
-            // Atomic alias publish: temp file + rename + fsync so an interrupted
-            // copy can never leave a truncated live `{p}.zip`.
-            const tmpAlias = path.join(customDistDir, `.${p}.zip.tmp-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
-            await copyFile(profileSZip, tmpAlias);
-            await rename(tmpAlias, standardZip);
-            await fsyncDir(customDistDir);
-          }
+      for (const p of targetPlugins) {
+        const profileSZip = path.join(customDistDir, `${p}-profile-s.zip`);
+        const spaghettiZip = path.join(customDistDir, `${p}-standalone-spaghetti.zip`);
+        const standardZip = path.join(customDistDir, `${p}.zip`);
+        const candidateZip = activeIsObfuscate ? profileSZip : (fs.existsSync(spaghettiZip) ? spaghettiZip : null);
+        if (candidateZip && fs.existsSync(candidateZip)) {
+          // Atomic alias publish: temp file + rename + fsync so an interrupted
+          // copy can never leave a truncated live `{p}.zip`.
+          const tmpAlias = path.join(customDistDir, `.${p}.zip.tmp-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+          await copyFile(candidateZip, tmpAlias);
+          await rename(tmpAlias, standardZip);
+          await fsyncDir(customDistDir);
         }
       }
 

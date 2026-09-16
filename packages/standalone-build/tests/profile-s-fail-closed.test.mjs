@@ -35,12 +35,20 @@ test("parseClosedProfileFlags accepts --obfuscate and --profile=s as Profile S",
     assert.equal(flags.spaghetti, true);
     assert.equal(flags.obfuscate, true);
   }
-  const clean = parseClosedProfileFlags([]);
-  assert.equal(clean.profile, "clean");
-  assert.equal(clean.isObfuscate, false);
-  assert.equal(clean.inlineFramework, true);
-  assert.equal(clean.spaghetti, false);
+  const defaultProfile = parseClosedProfileFlags([]);
+  assert.equal(defaultProfile.profile, "clean");
+  assert.equal(defaultProfile.isObfuscate, false);
+  assert.equal(defaultProfile.inlineFramework, true);
+  assert.equal(defaultProfile.spaghetti, false);
   assert.deepEqual(parseClosedProfileFlags(["--profile=clean"]).profile, "clean");
+  const spaghetti = parseClosedProfileFlags(["--profile=spaghetti"]);
+  assert.equal(spaghetti.profile, "spaghetti");
+  assert.equal(spaghetti.spaghetti, true);
+  assert.equal(spaghetti.inlineFramework, false);
+  const standalone = parseClosedProfileFlags(["--profile=standalone"]);
+  assert.equal(standalone.profile, "standalone");
+  assert.equal(standalone.spaghetti, false);
+  assert.equal(standalone.inlineFramework, true);
 });
 
 test("parseClosedProfileFlags supports independent capability flags without changing --obfuscate-alone", () => {
@@ -69,12 +77,18 @@ test("parseClosedProfileFlags rejects unknown and conflicting profiles", () => {
     () => parseClosedProfileFlags(["--obfuscate", "--profile=clean"]),
     /Conflicting profile flags/,
   );
+  assert.throws(
+    () => parseClosedProfileFlags(["--obfuscate", "--profile=spaghetti"]),
+    /Conflicting profile flags/,
+  );
 });
 
 test("parsePipelineArgs exposes the closed profile and rejects unknown values", () => {
   assert.equal(parsePipelineArgs(["node", "build", "--obfuscate"]).profile, "s");
   assert.equal(parsePipelineArgs(["node", "build", "--profile=s"]).isObfuscate, true);
   assert.equal(parsePipelineArgs(["node", "build"]).profile, "clean");
+  assert.equal(parsePipelineArgs(["node", "build", "--profile=clean"]).profile, "clean");
+  assert.equal(parsePipelineArgs(["node", "build", "--profile=spaghetti"]).profile, "spaghetti");
   assert.throws(() => parsePipelineArgs(["node", "build", "--profile=b"]), /Invalid --profile 'b'/);
 });
 

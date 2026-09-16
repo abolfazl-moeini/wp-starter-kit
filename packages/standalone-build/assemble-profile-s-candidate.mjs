@@ -368,6 +368,8 @@ export async function assembleProfileSCandidate(options = {}) {
       const stripFlag = buildPlan.capabilities.obfuscate ? "--strip-comments=1" : "--strip-comments=0";
 
       await exec("php", [
+        "-d",
+        "memory_limit=1G",
         transformerScript,
         "--dump-map",
         stagingPlugin,
@@ -389,6 +391,8 @@ export async function assembleProfileSCandidate(options = {}) {
       const mainFile = `${consumer}.php`;
       const expectedPhpFiles = collectFirstPartyPhpFiles(stagingPlugin);
       const { stdout: batchOut } = await exec("php", [
+        "-d",
+        "memory_limit=1G",
         transformerScript,
         "--batch",
         stagingPlugin,
@@ -464,6 +468,39 @@ export async function assembleProfileSCandidate(options = {}) {
         };
       } else if (srcCompJson && fs.existsSync(srcCompJson) && !sourceComposerModel) {
         compData = JSON.parse(fs.readFileSync(srcCompJson, "utf8"));
+      }
+
+      // Fallback: If autoload files or psr-4 are missing, harvest them from existing vendor/composer in staging
+      const vendorComposerDir = path.join(stagingPlugin, "vendor/composer");
+      if (fs.existsSync(vendorComposerDir)) {
+        if (!compData.autoload?.files || compData.autoload.files.length === 0) {
+          const autoFilesPath = path.join(vendorComposerDir, "autoload_files.php");
+          if (fs.existsSync(autoFilesPath)) {
+            const content = fs.readFileSync(autoFilesPath, "utf8");
+            const discoveredFiles = [];
+            for (const m of content.matchAll(/\$baseDir\s*\.\s*['"]\/([^'"]+)['"]/g)) {
+              discoveredFiles.push(m[1].replace(/\\/g, "/"));
+            }
+            if (discoveredFiles.length > 0) {
+              compData.autoload = compData.autoload || {};
+              compData.autoload.files = discoveredFiles;
+            }
+          }
+        }
+        if (!compData.autoload?.["psr-4"] || Object.keys(compData.autoload["psr-4"]).length === 0) {
+          const autoPsr4Path = path.join(vendorComposerDir, "autoload_psr4.php");
+          if (fs.existsSync(autoPsr4Path)) {
+            const content = fs.readFileSync(autoPsr4Path, "utf8");
+            const discoveredPsr4 = {};
+            for (const m of content.matchAll(/['"]([^'"]+)['"]\s*=>\s*array\(\$baseDir\s*\.\s*['"]\/([^'"]*)['"]\)/g)) {
+              discoveredPsr4[m[1]] = m[2] ? (m[2].replace(/\\/g, "/") + "/") : "";
+            }
+            if (Object.keys(discoveredPsr4).length > 0) {
+              compData.autoload = compData.autoload || {};
+              compData.autoload["psr-4"] = discoveredPsr4;
+            }
+          }
+        }
       }
 
       const candidateDirs = ["src", "includes", "inc", "classes", "src/FrameworkClosure"].filter(d => fs.existsSync(path.join(stagingPlugin, d)));
