@@ -707,7 +707,14 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 	 */
 	public function default_handler() {
 
-		if (!current_user_can('wpdev_edit_settings')) {
+		$cap = $this->supported_panels['admin_menu'] ?? 'manage_options';
+		$can_save = current_user_can( 'wpdev_edit_settings' )
+			|| current_user_can( 'manage_options' )
+			|| current_user_can( 'manage_network' )
+			|| ( is_string( $cap ) && current_user_can( $cap ) )
+			|| ( function_exists( 'wpdev_admin_capability_for' ) && current_user_can( wpdev_admin_capability_for( 'manage_options' ) ) );
+
+		if ( ! $can_save ) {
 
 			wp_die(__('You do not have the permissions required to change settings.', 'wpdev'));
 
@@ -719,7 +726,14 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 		} // end if;
 
+		$page_cap_filter = static function() use ( $cap ) {
+			return $cap;
+		};
+		add_filter( 'wpdev_settings_current_page_capability', $page_cap_filter );
+
 		$saved = wpdev()->settings->save_settings($_POST);
+
+		remove_filter( 'wpdev_settings_current_page_capability', $page_cap_filter );
 
 		if ( false === $saved ) {
 			wp_safe_redirect( add_query_arg( 'wpdev_settings_write_conflict', 1, wpdev_get_current_url() ) );
@@ -765,7 +779,55 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 		$section = $this->current_section;
 
-		$fields = array_filter($section['fields'], fn($item) => current_user_can($item['capability']));
+		if ( ! is_array( $section ) ) {
+			$section = isset( $sections[ $section_slug ] ) ? $sections[ $section_slug ] : array();
+		} // end if;
+
+		$page_cap    = $this->supported_panels['admin_menu']
+			?? $this->supported_panels['network_admin_menu']
+			?? null;
+		$section_cap = $section['capability'] ?? null;
+
+		$fields = array_filter( (array) ( $section['fields'] ?? array() ), function ( $item ) use ( $page_cap, $section_cap ) {
+			$has_explicit_cap = isset( $item['capability'] ) && null !== $item['capability'] && '' !== $item['capability'];
+			$cap              = $has_explicit_cap ? (string) $item['capability'] : null;
+
+			// If the field explicitly declares a custom capability (other than default manage_network):
+			// Strictly enforce it so sensitive fields requiring higher privileges remain protected.
+			if ( null !== $cap && 'manage_network' !== $cap ) {
+				$check_cap = function_exists( 'wpdev_admin_capability_for' ) ? wpdev_admin_capability_for( $cap ) : $cap;
+				if ( current_user_can( $check_cap ) ) {
+					return true;
+				}
+				if ( current_user_can( 'wpdev_edit_settings' ) || current_user_can( 'manage_network' ) ) {
+					return true;
+				}
+				if ( ! is_multisite() && current_user_can( 'manage_options' ) ) {
+					return true;
+				}
+				return false;
+			}
+
+			// Single-site or multisite super admins / full settings editors can view default fields.
+			if ( current_user_can( 'wpdev_edit_settings' ) || current_user_can( 'manage_network' ) ) {
+				return true;
+			}
+			if ( ! is_multisite() && current_user_can( 'manage_options' ) ) {
+				return true;
+			}
+
+			// Automatic cascading: authorized if user has section capability.
+			if ( ! empty( $section_cap ) && 'manage_network' !== $section_cap && current_user_can( $section_cap ) ) {
+				return true;
+			}
+
+			// Automatic cascading: authorized if user has page capability.
+			if ( ! empty( $page_cap ) && is_string( $page_cap ) && 'manage_network' !== $page_cap && current_user_can( $page_cap ) ) {
+				return true;
+			}
+
+			return false;
+		} );
 
 		uasort($fields, 'wpdev_sort_by_order');
 
@@ -782,7 +844,15 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 			),
 		);
 
-		if (!current_user_can('wpdev_edit_settings')) {
+		$cap = $this->supported_panels['admin_menu'] ?? 'manage_options';
+		$can_save = current_user_can( 'wpdev_edit_settings' )
+			|| current_user_can( 'manage_options' )
+			|| current_user_can( 'manage_network' )
+			|| ( is_string( $cap ) && current_user_can( $cap ) )
+			|| ( ! empty( $section_cap ) && is_string( $section_cap ) && current_user_can( $section_cap ) )
+			|| ( function_exists( 'wpdev_admin_capability_for' ) && current_user_can( wpdev_admin_capability_for( 'manage_options' ) ) );
+
+		if ( ! $can_save ) {
 
 			$fields['save']['html_attr']['disabled'] = 'disabled';
 

@@ -385,7 +385,18 @@ class Settings {
 				'capability' => 'manage_network',
 			));
 
-			$atts['fields'] = apply_filters("wpdev_settings_section_{$section_slug}_fields", array());
+			$fields = apply_filters("wpdev_settings_section_{$section_slug}_fields", array());
+
+			// Cascade section capability to registered fields that have no explicit capability.
+			if ( is_array( $fields ) && ! empty( $atts['capability'] ) && 'manage_network' !== $atts['capability'] ) {
+				foreach ( $fields as $f_key => $f_val ) {
+					if ( is_array( $f_val ) && ( empty( $f_val['capability'] ) || 'manage_network' === $f_val['capability'] ) ) {
+						$fields[ $f_key ]['capability'] = $atts['capability'];
+					}
+				}
+			}
+
+			$atts['fields'] = $fields;
 
 			$sections[$section_slug] = $atts;
 
@@ -424,13 +435,22 @@ class Settings {
 
 			$default_order = (count($fields) + 1) * 10;
 
+			// If capability is not explicitly set on the field, inherit from the section registry if available.
+			$default_capability = 'manage_network';
+			if ( class_exists( Settings_Section_Registry::class ) ) {
+				$section_config = Settings_Section_Registry::get( $section_slug );
+				if ( ! empty( $section_config['capability'] ) ) {
+					$default_capability = $section_config['capability'];
+				}
+			}
+
 			$atts = wp_parse_args($atts, array(
 				'setting_id'        => $field_slug,
 				'title'             => '',
 				'desc'              => '',
 				'order'             => $default_order,
 				'default'           => null,
-				'capability'        => 'manage_network',
+				'capability'        => $default_capability,
 				'wrapper_html_attr' => array(),
 				'require'           => array(),
 				'html_attr'         => array(),

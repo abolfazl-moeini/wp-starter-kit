@@ -53,21 +53,51 @@ class Settings_Save {
 
 		$settings = array();
 
+		$page_capability = function_exists( 'apply_filters' )
+			? apply_filters( 'wpdev_settings_current_page_capability', null )
+			: null;
+
 		foreach ( $sections as $section_slug => $section ) {
 
 			if ( empty( $section['fields'] ) ) {
 				continue;
 			}
 
+			$section_capability = $section['capability'] ?? null;
+
 			foreach ( $section['fields'] as $field_slug => $field_atts ) {
 
-				$field_capability = $field_atts['capability'] ?? 'manage_network';
+				$field_raw_cap  = $field_atts['capability'] ?? null;
+				$can_save_field = false;
 
-				if ( function_exists( 'wpdev_admin_capability_for' ) ) {
-					$field_capability = wpdev_admin_capability_for( $field_capability );
+				if ( ! empty( $field_raw_cap ) && 'manage_network' !== $field_raw_cap ) {
+					// Explicit non-default capability: strictly check user capability, or full admin privileges.
+					$check_cap      = function_exists( 'wpdev_admin_capability_for' ) ? wpdev_admin_capability_for( $field_raw_cap ) : $field_raw_cap;
+					$can_save_field = function_exists( 'current_user_can' ) && (
+						current_user_can( $check_cap )
+						|| current_user_can( 'wpdev_edit_settings' )
+						|| current_user_can( 'manage_network' )
+						|| ( function_exists( 'is_multisite' ) && ! is_multisite() && current_user_can( 'manage_options' ) )
+						|| ( ! function_exists( 'is_multisite' ) && current_user_can( 'manage_options' ) )
+					);
+				} else {
+					// Default manage_network or inherited capability.
+					if ( function_exists( 'current_user_can' ) ) {
+						if ( current_user_can( 'wpdev_edit_settings' ) || current_user_can( 'manage_network' ) ) {
+							$can_save_field = true;
+						} elseif ( function_exists( 'is_multisite' ) && ! is_multisite() && current_user_can( 'manage_options' ) ) {
+							$can_save_field = true;
+						} elseif ( ! function_exists( 'is_multisite' ) && current_user_can( 'manage_options' ) ) {
+							$can_save_field = true;
+						} elseif ( ! empty( $section_capability ) && 'manage_network' !== $section_capability && current_user_can( $section_capability ) ) {
+							$can_save_field = true;
+						} elseif ( ! empty( $page_capability ) && is_string( $page_capability ) && 'manage_network' !== $page_capability && current_user_can( $page_capability ) ) {
+							$can_save_field = true;
+						}
+					}
 				}
 
-				if ( function_exists( 'current_user_can' ) && ! current_user_can( $field_capability ) ) {
+				if ( ! $can_save_field ) {
 					if ( ! $reset && isset( $saved_settings[ $field_slug ] ) ) {
 						$settings[ $field_slug ] = $saved_settings[ $field_slug ];
 					}
