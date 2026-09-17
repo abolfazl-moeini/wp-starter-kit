@@ -1,0 +1,24 @@
+{
+  "note": "W1 graph is a planning SCC seed, not a full AST condensation of the JS monorepo. Phase 1 remaining work: reachable-import trace of standalone-build + create-wp-project.",
+  "levels": [
+    {
+      "level": 0,
+      "units": ["U01", "U06-hash", "covercheck"]
+    },
+    {
+      "level": 1,
+      "units": ["U06-phpencode", "U06-sidecar"]
+    },
+    {
+      "level": 2,
+      "units": ["U30"]
+    }
+  ],
+  "edges": [
+    ["U06-sidecar", "U06-hash"],
+    ["U06-sidecar", "U06-phpencode"],
+    ["U30", "U01"],
+    ["U30", "U06-sidecar"],
+    ["U30", "U06-hash"]
+  ]
+}

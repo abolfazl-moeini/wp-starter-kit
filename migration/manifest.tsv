@@ -1,0 +1,34 @@
+unit	wave	source	deps	status	notes
+U01	W1	core/packages/utils/readProjectConfig.js	—	green	config.Read + oracle mjs
+U06	W1	dependency-extraction generateChecksum/phpFileContent/assetFilePath	U01	green	hash + phpencode + sidecar
+U30	W1	CLI composition	U01,U06	green	help/version/config/hash/sidecar; no deploy
+covercheck	W1	plan §8 checker	—	green	internal/covercheck
+U02	W2	packages/standalone-build/build-plan.mjs	U01	pending	BuildPlan
+U03	W2	fs inventory/copy	U01	pending
+U04	W2	process runner	—	pending
+U05	W2	toolchain	U04	pending
+U07	W2	JSX/aliases	U01	pending
+U08	W2	dependency extraction	U06,U07	pending
+U09	W2	deps bundle	U08	pending
+U10	W2	components	U07	pending
+U11	W2	styles/assets	U06	pending	WriteStyle is a W1 slice of U11
+U12	W2	watch	U09-U11	pending
+U13	W3	purge/composer	U03	pending
+U14	W3	ZIP/manifest	U03	pending
+U15	W3	translation	U04	pending
+U16	W4	framework inventory	U03	pending
+U17	W4	inliner	U16	pending
+U18	W4	PHP adapters	U04	pending
+U19	W5	PHP frontend	—	pending	no parser chosen
+U20	W5	symbol analyzer	U19	pending
+U21	W5	transformer	U20	pending
+U22	W5	private runtime	U19	pending
+U23	W5	gates/verifier	U21	pending
+U24	W6	cache/evidence	U06	pending
+U25	W6	test planner	U24	pending
+U26	W6	DAG	U04	pending
+U27	W6	assembler	U16-U24	pending
+U28	W7	lock/WAL	U03	pending
+U29	W7	deploy/recovery	U28	pending
+U31	W8	generator wiring	U30	pending
+U32	W8	distribution	U30	pending

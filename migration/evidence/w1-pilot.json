@@ -1,0 +1,38 @@
+{
+  "unit": "W1-pilot",
+  "units": ["U01", "U06", "U30", "covercheck"],
+  "source_sha": "8c1e9baf7359750e2a8d2efca58a316744f3e2e6",
+  "rulebook_version": 1,
+  "rules_applied": [
+    "R-001",
+    "R-002",
+    "R-003",
+    "R-004",
+    "R-005",
+    "R-006",
+    "R-007",
+    "R-008",
+    "R-011",
+    "R-015",
+    "R-016"
+  ],
+  "oracle": {
+    "u01": "node migration/fixtures/run-u01-oracle.mjs → PASS",
+    "u06": "node migration/fixtures/run-u06-sidecar-oracle.mjs → PASS",
+    "jest_readProjectConfig": "26 passed"
+  },
+  "clean_red": "go test panicked with unimplemented after go vet ./... passed",
+  "green": "go test -count=1 ./... PASS; go test -race -shuffle=on ./... PASS",
+  "coverage": {
+    "covered": 285,
+    "statements": 292,
+    "ratio": 0.976027397260274,
+    "per_package_minimum": 0.95
+  },
+  "mutation": "not run; gremlins not pinned (see DIVERGENCES.md)",
+  "commands": [
+    "node migration/fixtures/run-u01-oracle.mjs",
+    "node migration/fixtures/run-u06-sidecar-oracle.mjs",
+    "cd packages/build-go && go vet ./... && go test -count=1 ./... && go test -count=1 -race -shuffle=on ./..."
+  ]
+}

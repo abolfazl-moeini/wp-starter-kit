@@ -1,0 +1,4 @@
+/wpdev-build
+*.cover.out
+coverage.out
+/bin/

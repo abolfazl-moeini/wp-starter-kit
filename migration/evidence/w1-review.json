@@ -1,0 +1,46 @@
+{
+  "unit": "W1-review",
+  "date": "2026-09-17",
+  "scope": "Independent code review of U01/U06/U30/covercheck Go port; TDD fixes applied",
+  "source_sha": "8c1e9baf7359750e2a8d2efca58a316744f3e2e6",
+  "rulebook_version": 2,
+  "rulebook_sha256": "68517f766bda728864c5494e8f5a82b7885620fd87449d69fc3a37690ff45169",
+  "rules_added": ["R-001a", "R-003a", "R-005a", "R-007a", "R-008a"],
+  "findings_fixed": [
+    "hash.FileMD5 ignored Node UTF-8 lossy decode (diverged on non-UTF8 bytes); added lossyUTF8, 16 Node-pinned vectors",
+    "hash.CanonicalJSON used Go HTML escaping (<,>,&); disabled to match JSON.stringify",
+    "phpencode float formatting used %f (diverged on 1e21/1e-7); added JS Number toString incl. exponent thresholds",
+    "phpencode rejected map[string]any (decoded-JSON shape); added sorted-key encoding",
+    "config.validateV2 emitted Go type names (float64); now JS typeof names",
+    "config uiFramework error and depsBundle used Go coercion; now JS template-literal coercion ([object Object], 1-deps.js)",
+    "config.truthy only handled float64; extended to all int/uint/float/json.Number kinds",
+    "sidecar.AssetPath conflated bundle rule (case-sensitive, throws) with style rule (case-insensitive strip/append); split into AssetPath (returns error) + StyleAssetPath; WriteStyle now matches buildStyleAssetFile for .js/.txt inputs"
+  ],
+  "divergences_recorded": [
+    "typed Config.Slug keeps '' for truthy non-string slugs (depsBundle still coerced)",
+    "assetFilePath TypeError mapped to Go error value",
+    "CLI config walk is cwd-anchored (R-015); CLI config output keys sorted"
+  ],
+  "verification": {
+    "go_vet": "PASS",
+    "go_test_count1": "PASS (7/7 packages)",
+    "go_test_race_shuffle": "PASS",
+    "gofmt": "clean",
+    "node_u01_oracle": "PASS",
+    "node_u06_oracle": "PASS",
+    "go_vs_node_binary_md5": "MATCH (41c3a42eeaa05d3a05b2d6dac7806210)",
+    "coverage_total": "432/442 = 0.9774",
+    "coverage_per_package_min": "0.9667 (cli); all packages > 0.95",
+    "mutation": "not run; gremlins still unpinned (pre-existing, see DIVERGENCES.md)"
+  },
+  "commands": [
+    "node migration/fixtures/run-u01-oracle.mjs",
+    "node migration/fixtures/run-u06-sidecar-oracle.mjs",
+    "cd packages/build-go && go vet ./... && gofmt -l . && go test -count=1 ./... && go test -count=1 -race -shuffle=on ./... && go test -count=1 -covermode=atomic -coverpkg=./... -coverprofile=unit.cover.out ./..."
+  ],
+  "out_of_scope_noted": [
+    "U02-U32 still pending per manifest.tsv (W2-W8)",
+    "PHP parser (U19) unevaluated; mutation tooling unpinned",
+    "covercheck lacks changed-statement and zero-function gates (plan section 8); deferred to W6/W8"
+  ]
+}
