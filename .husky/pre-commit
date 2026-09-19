@@ -10,9 +10,13 @@ if [ -n "$STAGED_JS" ]; then
   echo "$STAGED_JS" | xargs npx jest --bail --passWithNoTests --findRelatedTests
 fi
 
-# For staged PHP test files, run composer test with filter when practical
+# For staged PHP test files, run docker phpunit or composer test with filter when practical
 STAGED_PHP_TESTS=$(git diff --cached --name-only --diff-filter=ACM | grep -E 'Test\.php$' || true)
 if [ -n "$STAGED_PHP_TESTS" ]; then
   FILTER=$(echo "$STAGED_PHP_TESTS" | xargs -I{} basename {} .php | tr '\n' '|' | sed 's/|$//')
-  composer test -- --filter "$FILTER"
+  if [ -x "tests/docker-phpunit/run-phpunit.sh" ] && command -v docker >/dev/null 2>&1; then
+    tests/docker-phpunit/run-phpunit.sh "$FILTER"
+  else
+    composer test -- --filter "$FILTER"
+  fi
 fi

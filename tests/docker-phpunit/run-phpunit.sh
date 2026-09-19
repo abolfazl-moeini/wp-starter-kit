@@ -68,8 +68,8 @@ render_wp_tests_config() {
     exit 1
   fi
 
-  export WORDPRESS_CORE_CONTAINER_PATH DB_NAME DB_USER DB_PASSWORD
-  envsubst '${WORDPRESS_CORE_CONTAINER_PATH} ${DB_NAME} ${DB_USER} ${DB_PASSWORD}' \
+  export WORDPRESS_CORE_CONTAINER_PATH DB_NAME DB_USER DB_PASSWORD DB_SERVICE
+  envsubst '${WORDPRESS_CORE_CONTAINER_PATH} ${DB_NAME} ${DB_USER} ${DB_PASSWORD} ${DB_SERVICE}' \
     < "${template}" > "${output}"
 }
 

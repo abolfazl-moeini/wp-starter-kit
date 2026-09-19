@@ -11,7 +11,7 @@ define( 'WP_DEBUG', true );
 define( 'DB_NAME', '${DB_NAME}' );
 define( 'DB_USER', '${DB_USER}' );
 define( 'DB_PASSWORD', '${DB_PASSWORD}' );
-define( 'DB_HOST', 'db' );
+define( 'DB_HOST', '${DB_SERVICE}' );
 define( 'DB_CHARSET', 'utf8mb4' );
 define( 'DB_COLLATE', '' );
 
