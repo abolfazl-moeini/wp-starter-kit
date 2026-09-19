@@ -1,9 +1,19 @@
 # RULEBOOK — JS/PHP → Go (wpdev-build)
 
-Version: 4
+Version: 5
 Source freeze: `8c1e9baf7359750e2a8d2efca58a316744f3e2e6`
 
 Cardinal Law: fix this file and regenerate dependent units. Do not hand-patch one-off outputs.
+
+## v5 amendments (W1 source-parity review, 2026-09-17)
+
+These amendments supersede conflicting earlier rules. Existing source units were revised and re-tested; no reproducible generator or historical Clean Red artifacts were available, so this review does not constitute migration acceptance.
+
+- R-002c: Ordered PHP objects enumerate canonical array-index keys from `0` through `4294967294` numerically before other keys. Duplicate keys retain their original position and final value. Plain Go maps remain deterministic but cannot recover source insertion order.
+- R-004d: `phpFileContent` includes `JSON.parse(JSON.stringify(value))` normalization: nonfinite floating-point values become `null`, including nested values. Emitting PHP `NaN` or `Infinity` is not source parity.
+- R-005d: `CanonicalJSON` follows the source canonical serializer, not a lossless JSON-number format. Parse numbers as binary64, normalize negative zero and numeric notation, serialize overflow as `null`, sort keys by UTF-16 code units, emit literal U+2028/U+2029, and preserve escaped lone surrogates. This replaces R-005b for canonical fingerprints. Numeric tests provide bounded evidence, not exhaustive float parity.
+- R-007b: CLI commands validate the entire argument list before file IO. Unknown flags/positionals, duplicate flags, empty values, and flags in place of values return usage exit code 2. Absent `--path` retains config discovery.
+- R-008f: Coverage parsing fails closed on scanner errors, unknown modes, malformed or reversed source ranges, and negative counts. Parser validation alone does not enforce inventory, changed-statement, function, or CI coverage gates.
 
 ## v4 amendments (W1 boost adversarial review & remediation, 2026-09-17)
 

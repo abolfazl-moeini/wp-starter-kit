@@ -8,7 +8,7 @@
   "binary": "wpdev-build",
   "version": "0.1.0-w1-pilot",
   "wave": "W1",
-  "status": "w1-pilot-green",
+  "status": "w1-parity-review-complete",
   "toolchain": {
     "go": "go1.26.5 darwin/arm64",
     "node": "v22.19.0",
@@ -19,11 +19,15 @@
     "hold_after_consecutive_blocked_units": 3
   },
   "coverage_gate": {
-    "total_statements": 292,
-    "covered_statements": 285,
-    "ratio": "285/292",
+    "historical_baseline": {
+      "total_statements": 292,
+      "covered_statements": 285,
+      "ratio": "285/292"
+    },
     "minimum": 0.95,
-    "packages_all_at_or_above": 0.95
+    "packages_all_at_or_above": 0.95,
+    "last_measured": "98.6% via go test -coverprofile (2026-09-17); reported statistic only, not an enforced inventory gate",
+    "gate_wiring": "pending: covercheck.Evaluate is not invoked by any CI/production command; inventory/changed-statement/function gates unimplemented"
   },
   "oracles": [
     "migration/fixtures/run-u01-oracle.mjs",

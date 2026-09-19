@@ -41,8 +41,7 @@ Remediated defects & generalized contracts:
   Corrected to full WHATWG compliance matching Node `Buffer.toString("utf8")`.
 - General nullable preservation in `Config`: Removed the special-cased `vendorPrefix`
   hack and implemented `NullFields` tracking for all optional fields, preserving `null` in JSON.
-- `CanonicalJSON` numeric fidelity: Decodes via `json.NewDecoder` with `UseNumber()` to prevent
-  loss of precision for large 64-bit integers and high-precision floats.
+- Historical `CanonicalJSON` numeric-preservation change: superseded by R-005d in RULEBOOK v5. Preserving numeric spellings and arbitrary precision diverged from source binary64 canonical fingerprints.
 - `AssetPath` basename check: Restricts matches to non-empty basenames, correctly erroring on
   `.js`, `.css`, `dir/.js`, `dir/.css`.
 - Cross-platform `covercheck`: Handles Windows drive paths (e.g. `C:\...`) by splitting on whitespace

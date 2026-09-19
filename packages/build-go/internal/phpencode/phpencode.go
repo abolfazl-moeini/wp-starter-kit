@@ -107,14 +107,8 @@ func encode(v any) (string, error) {
 // magnitude >= 1e21 or (non-zero) < 1e-6 use unpadded exponent form,
 // everything else uses shortest round-trip decimal (R-005).
 func jsNumber(t float64) string {
-	if math.IsNaN(t) {
-		return "NaN"
-	}
-	if math.IsInf(t, 1) {
-		return "Infinity"
-	}
-	if math.IsInf(t, -1) {
-		return "-Infinity"
+	if math.IsNaN(t) || math.IsInf(t, 0) {
+		return "null"
 	}
 	if t == 0 {
 		return "0"
@@ -144,9 +138,6 @@ func jsNumber(t float64) string {
 	return strconv.FormatFloat(t, 'f', -1, 64)
 }
 
-// encodeMap encodes a plain Go map with sorted keys for determinism.
-// Ordered Object preserves source order (R-002); maps only arise from
-// decoded JSON where insertion order is unavailable.
 func encodeMap(m map[string]any) (string, error) {
 	if len(m) == 0 {
 		return "array()", nil
@@ -167,8 +158,26 @@ func encodeObject(obj Object) (string, error) {
 	if len(obj) == 0 {
 		return "array()", nil
 	}
-	parts := make([]string, 0, len(obj))
+	ordered := make(Object, 0, len(obj))
+	positions := make(map[string]int, len(obj))
 	for _, p := range obj {
+		if i, ok := positions[p.Key]; ok {
+			ordered[i].Value = p.Value
+		} else {
+			positions[p.Key] = len(ordered)
+			ordered = append(ordered, p)
+		}
+	}
+	sort.SliceStable(ordered, func(i, j int) bool {
+		left, leftOK := arrayIndex(ordered[i].Key)
+		right, rightOK := arrayIndex(ordered[j].Key)
+		if leftOK != rightOK {
+			return leftOK
+		}
+		return leftOK && left < right
+	})
+	parts := make([]string, 0, len(ordered))
+	for _, p := range ordered {
 		k, err := encode(p.Key)
 		if err != nil {
 			return "", err
@@ -180,6 +189,11 @@ func encodeObject(obj Object) (string, error) {
 		parts = append(parts, k+" => "+val)
 	}
 	return "array(" + strings.Join(parts, ", ") + ")", nil
+}
+
+func arrayIndex(key string) (uint64, bool) {
+	index, err := strconv.ParseUint(key, 10, 32)
+	return index, err == nil && index < math.MaxUint32 && strconv.FormatUint(index, 10) == key
 }
 
 func encodeArray(items []any) (string, error) {

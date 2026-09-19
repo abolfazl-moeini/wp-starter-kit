@@ -1,6 +1,8 @@
 package covercheck_test
 
 import (
+	"bufio"
+	"errors"
 	"strings"
 	"testing"
 
@@ -133,6 +135,119 @@ func TestEvaluate_WindowsBackslashPath(t *testing.T) {
 	}
 	if rep.Packages["C:/Users/dev/project"] != 1.0 {
 		t.Fatalf("expected package key C:/Users/dev/project, got %v", rep.Packages)
+	}
+}
+
+func TestEvaluate_RejectsInvalidMode(t *testing.T) {
+	cases := []string{
+		"mode: bogus\nfile.go:1.1,2.2 1 1\n",
+		"mode:\nfile.go:1.1,2.2 1 1\n",
+		"mode: \nfile.go:1.1,2.2 1 1\n",
+		"mode: ATOMIC\nfile.go:1.1,2.2 1 1\n",
+		"mode: atomic-set\nfile.go:1.1,2.2 1 1\n",
+	}
+	for _, profile := range cases {
+		t.Run(strings.SplitN(profile, "\n", 2)[0], func(t *testing.T) {
+			_, err := covercheck.Evaluate([]byte(profile), covercheck.Thresholds{Total: 0.95, Package: 0.95})
+			if err == nil {
+				t.Fatalf("expected invalid mode error for %q", profile)
+			}
+		})
+	}
+}
+
+func TestEvaluate_AcceptsAllValidModes(t *testing.T) {
+	for _, mode := range []string{"set", "count", "atomic"} {
+		profile := strings.Join([]string{
+			"mode: " + mode,
+			"file.go:1.1,2.2 10 1",
+		}, "\n") + "\n"
+		rep, err := covercheck.Evaluate([]byte(profile), covercheck.Thresholds{Total: 0.95, Package: 0.95})
+		if err != nil {
+			t.Fatalf("valid mode %s rejected: %v", mode, err)
+		}
+		if !rep.Pass || rep.Total != 1.0 {
+			t.Fatalf("mode %s: expected pass, got %+v", mode, rep)
+		}
+	}
+}
+
+func TestEvaluate_RejectsInvalidRange(t *testing.T) {
+	cases := []string{
+		"file.go:1.1 1 1",
+		"file.go:1,2.2 1 1",
+		"file.go:1.1,2 1 1",
+		"file.go:1.1, 1 1",
+		"file.go:.1,2.2 1 1",
+		"file.go:1.,2.2 1 1",
+		"file.go:x.1,2.2 1 1",
+		"file.go:1.1,y.2 1 1",
+		"file.go:-1.1,2.2 1 1",
+		"file.go:1.-1,2.2 1 1",
+		"file.go:1.1,2.-2 1 1",
+		"file.go:1.1,-2.2 1 1",
+		"file.go:2.1,1.2 1 1",
+		"file.go:1.3,1.2 1 1",
+		"file.go:1.1,2.2,3.3 1 1",
+		"file.go:1.1.1,2.2 1 1",
+		"file.go:1.1,2.2suffix 1 1",
+		"file.go:999999999999999999999999.1,2.2 1 1",
+	}
+	for _, block := range cases {
+		t.Run(block, func(t *testing.T) {
+			profile := "mode: atomic\nvalid.go:1.1,2.2 10 1\n" + block + "\n"
+			rep, err := covercheck.Evaluate([]byte(profile), covercheck.Thresholds{Total: 0.95, Package: 0.95})
+			if err == nil || rep.Pass {
+				t.Fatalf("expected invalid range error for %q, got %+v, %v", block, rep, err)
+			}
+		})
+	}
+}
+
+func TestEvaluate_RejectsNegativeCounts(t *testing.T) {
+	for _, counts := range []string{"-1 1", "1 -1", "-1 -1"} {
+		t.Run(counts, func(t *testing.T) {
+			profile := "mode: atomic\nvalid.go:1.1,2.2 10 1\nfile.go:1.1,2.2 " + counts + "\n"
+			rep, err := covercheck.Evaluate([]byte(profile), covercheck.Thresholds{Total: 0.95, Package: 0.95})
+			if err == nil || rep.Pass {
+				t.Fatalf("expected negative count error, got %+v, %v", rep, err)
+			}
+		})
+	}
+}
+
+func TestEvaluate_ValidRangeAndCountBoundaries(t *testing.T) {
+	profile := "mode: count\r\nfile.go:1.1,1.1 0 0\r\nfile.go:1.2,1.3 2 3\r\nfile.go:1.9,2.1 1 0\r\n"
+	rep, err := covercheck.Evaluate([]byte(profile), covercheck.Thresholds{Total: 0.95, Package: 0.95})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.Pass || rep.Stmts != 3 || rep.Covered != 2 || rep.Total != 2.0/3 || rep.Packages["."] != 2.0/3 {
+		t.Fatalf("unexpected report: %+v", rep)
+	}
+}
+
+func TestEvaluate_PropagatesScannerFailure(t *testing.T) {
+	huge := strings.Repeat("a", 70*1024)
+	profile := strings.Join([]string{
+		"mode: atomic",
+		"valid.go:1.1,2.2 10 1",
+		huge + ".go:1.1,2.2 10 0",
+	}, "\n") + "\n"
+	rep, err := covercheck.Evaluate([]byte(profile), covercheck.Thresholds{Total: 0.95, Package: 0.95})
+	if err == nil || rep.Pass {
+		t.Fatalf("scanner failure must surface as error, got report %+v, err %v", rep, err)
+	}
+	if !errors.Is(err, bufio.ErrTooLong) {
+		t.Fatalf("expected scanner error propagation, got %v", err)
+	}
+}
+
+func TestEvaluate_PropagatesInitialScannerFailure(t *testing.T) {
+	profile := "mode: " + strings.Repeat("a", 70*1024)
+	rep, err := covercheck.Evaluate([]byte(profile), covercheck.Thresholds{Total: 0.95, Package: 0.95})
+	if !errors.Is(err, bufio.ErrTooLong) || rep.Pass {
+		t.Fatalf("expected initial scanner error propagation, got %+v, %v", rep, err)
 	}
 }
 

@@ -102,21 +102,36 @@ func runSidecar(args []string, stdout, stderr io.Writer) int {
 }
 
 func flagValue(args []string, name string) (string, error) {
+	var value string
+	seen := false
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
-		if arg == name {
-			if i+1 >= len(args) {
+		key, inline, hasEquals := strings.Cut(arg, "=")
+		if key != name {
+			if strings.HasPrefix(arg, "-") {
+				return "", fmt.Errorf("unknown flag %q", arg)
+			}
+			return "", fmt.Errorf("unexpected argument %q", arg)
+		}
+		if seen {
+			return "", fmt.Errorf("duplicate flag %s", name)
+		}
+		seen = true
+		if hasEquals {
+			value = inline
+		} else {
+			if i+1 >= len(args) || strings.HasPrefix(args[i+1], "-") {
 				return "", fmt.Errorf("missing value for %s", name)
 			}
-			return args[i+1], nil
+			i++
+			value = args[i]
 		}
-		prefix := name + "="
-		if strings.HasPrefix(arg, prefix) {
-			return strings.TrimPrefix(arg, prefix), nil
+		if value == "" {
+			return "", fmt.Errorf("empty value for %s", name)
 		}
 	}
-	if name == "--path" {
-		return "", nil
+	if !seen && name != "--path" {
+		return "", fmt.Errorf("missing %s", name)
 	}
-	return "", fmt.Errorf("missing %s", name)
+	return value, nil
 }

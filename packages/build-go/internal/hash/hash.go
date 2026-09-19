@@ -7,9 +7,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
+	"math"
 	"os"
+	"sort"
+	"strconv"
 	"strings"
+	"unicode/utf16"
+	"unicode/utf8"
 )
 
 func MD5String(s string) string {
@@ -34,26 +38,221 @@ func FileMD5(path string) (string, error) {
 }
 
 func CanonicalJSON(raw []byte) ([]byte, error) {
-	var v any
-	dec := json.NewDecoder(bytes.NewReader(raw))
-	dec.UseNumber()
-	if err := dec.Decode(&v); err != nil {
-		return nil, err
+	if !json.Valid(raw) {
+		return nil, fmt.Errorf("canonical json: invalid JSON")
 	}
-	var extra any
-	if err := dec.Decode(&extra); err != io.EOF {
-		return nil, fmt.Errorf("canonical json: trailing data")
-	}
-	// R-002: encoding/json sorts map keys (canonical) but escapes <, >, &
-	// by default while JSON.stringify does not. Disable HTML escaping so
-	// digests over canonical bytes match Node.
+	parser := canonicalParser{raw: raw}
 	var buf bytes.Buffer
-	enc := json.NewEncoder(&buf)
-	enc.SetEscapeHTML(false)
-	if err := enc.Encode(v); err != nil {
-		return nil, err
+	writeCanonical(&buf, parser.value())
+	return buf.Bytes(), nil
+}
+
+type canonicalString string
+
+type canonicalParser struct {
+	raw []byte
+	pos int
+}
+
+func (p *canonicalParser) space() {
+	for p.pos < len(p.raw) && strings.ContainsRune(" \t\r\n", rune(p.raw[p.pos])) {
+		p.pos++
 	}
-	return []byte(strings.TrimSuffix(buf.String(), "\n")), nil
+}
+
+func (p *canonicalParser) value() any {
+	p.space()
+	switch p.raw[p.pos] {
+	case '"':
+		return p.stringValue()
+	case '{':
+		p.pos++
+		p.space()
+		object := make(map[canonicalString]any)
+		for p.raw[p.pos] != '}' {
+			key := p.stringValue()
+			p.space()
+			p.pos++
+			object[key] = p.value()
+			p.space()
+			if p.raw[p.pos] != ',' {
+				break
+			}
+			p.pos++
+			p.space()
+		}
+		p.pos++
+		return object
+	case '[':
+		p.pos++
+		p.space()
+		array := make([]any, 0)
+		for p.raw[p.pos] != ']' {
+			array = append(array, p.value())
+			p.space()
+			if p.raw[p.pos] != ',' {
+				break
+			}
+			p.pos++
+		}
+		p.pos++
+		return array
+	case 'n':
+		p.pos += 4
+		return nil
+	case 't':
+		p.pos += 4
+		return true
+	case 'f':
+		p.pos += 5
+		return false
+	default:
+		start := p.pos
+		for p.pos < len(p.raw) && strings.ContainsRune("-+0123456789.eE", rune(p.raw[p.pos])) {
+			p.pos++
+		}
+		number, _ := strconv.ParseFloat(string(p.raw[start:p.pos]), 64)
+		return number
+	}
+}
+
+func (p *canonicalParser) stringValue() canonicalString {
+	p.pos++
+	var units []byte
+	appendUnit := func(u uint16) {
+		units = append(units, byte(u>>8), byte(u))
+	}
+	for p.raw[p.pos] != '"' {
+		if p.raw[p.pos] == '\\' {
+			p.pos++
+			escape := p.raw[p.pos]
+			p.pos++
+			switch escape {
+			case 'u':
+				u, _ := strconv.ParseUint(string(p.raw[p.pos:p.pos+4]), 16, 16)
+				appendUnit(uint16(u))
+				p.pos += 4
+			case 'b':
+				appendUnit('\b')
+			case 'f':
+				appendUnit('\f')
+			case 'n':
+				appendUnit('\n')
+			case 'r':
+				appendUnit('\r')
+			case 't':
+				appendUnit('\t')
+			default:
+				appendUnit(uint16(escape))
+			}
+			continue
+		}
+		r, size := utf8.DecodeRune(p.raw[p.pos:])
+		p.pos += size
+		if r > 0xffff {
+			hi, lo := utf16.EncodeRune(r)
+			appendUnit(uint16(hi))
+			appendUnit(uint16(lo))
+		} else {
+			appendUnit(uint16(r))
+		}
+	}
+	p.pos++
+	return canonicalString(units)
+}
+
+func writeCanonical(buf *bytes.Buffer, value any) {
+	switch v := value.(type) {
+	case nil:
+		buf.WriteString("null")
+	case bool:
+		buf.WriteString(strconv.FormatBool(v))
+	case float64:
+		if math.IsInf(v, 0) || math.IsNaN(v) {
+			buf.WriteString("null")
+		} else if v == 0 {
+			buf.WriteByte('0')
+		} else {
+			format := byte('f')
+			if math.Abs(v) < 1e-6 || math.Abs(v) >= 1e21 {
+				format = 'e'
+			}
+			s := strconv.FormatFloat(v, format, -1, 64)
+			if i := strings.IndexByte(s, 'e'); i >= 0 && s[i+2] == '0' {
+				s = s[:i+2] + s[i+3:]
+			}
+			buf.WriteString(s)
+		}
+	case canonicalString:
+		writeCanonicalString(buf, v)
+	case []any:
+		buf.WriteByte('[')
+		for i, item := range v {
+			if i > 0 {
+				buf.WriteByte(',')
+			}
+			writeCanonical(buf, item)
+		}
+		buf.WriteByte(']')
+	case map[canonicalString]any:
+		keys := make([]canonicalString, 0, len(v))
+		for key := range v {
+			keys = append(keys, key)
+		}
+		sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+		buf.WriteByte('{')
+		for i, key := range keys {
+			if i > 0 {
+				buf.WriteByte(',')
+			}
+			writeCanonicalString(buf, key)
+			buf.WriteByte(':')
+			writeCanonical(buf, v[key])
+		}
+		buf.WriteByte('}')
+	}
+}
+
+func writeCanonicalString(buf *bytes.Buffer, value canonicalString) {
+	const digits = "0123456789abcdef"
+	buf.WriteByte('"')
+	for i := 0; i < len(value); i += 2 {
+		u := uint16(value[i])<<8 | uint16(value[i+1])
+		switch u {
+		case '"', '\\':
+			buf.WriteByte('\\')
+			buf.WriteByte(byte(u))
+		case '\b':
+			buf.WriteString(`\b`)
+		case '\f':
+			buf.WriteString(`\f`)
+		case '\n':
+			buf.WriteString(`\n`)
+		case '\r':
+			buf.WriteString(`\r`)
+		case '\t':
+			buf.WriteString(`\t`)
+		default:
+			if u >= 0xd800 && u <= 0xdbff && i+3 < len(value) {
+				lo := uint16(value[i+2])<<8 | uint16(value[i+3])
+				if lo >= 0xdc00 && lo <= 0xdfff {
+					buf.WriteRune(utf16.DecodeRune(rune(u), rune(lo)))
+					i += 2
+					continue
+				}
+			}
+			if u < 0x20 || u >= 0xd800 && u <= 0xdfff {
+				buf.WriteString(`\u`)
+				buf.WriteByte(digits[u>>12])
+				buf.WriteByte(digits[u>>8&15])
+				buf.WriteByte(digits[u>>4&15])
+				buf.WriteByte(digits[u&15])
+			} else {
+				buf.WriteRune(rune(u))
+			}
+		}
+	}
+	buf.WriteByte('"')
 }
 
 // lossyUTF8 replicates Node Buffer.toString("utf8") per WHATWG Encoding Standard:

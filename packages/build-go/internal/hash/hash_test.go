@@ -1,9 +1,15 @@
 package hash_test
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
+	"time"
 
 	"github.com/abolfazl-moeini/wp-starter-kit/packages/build-go/internal/hash"
 )
@@ -158,15 +164,87 @@ func TestCanonicalJSON_DoesNotEscapeHTMLLikeNode(t *testing.T) {
 	}
 }
 
-func TestCanonicalJSON_LargeNumbersPreserved(t *testing.T) {
-	// 64-bit integers exceeding float53 precision must not lose digits.
+func TestCanonicalJSON_LargeNumbersMatchJSNumber(t *testing.T) {
 	raw := []byte(`{"id":9007199254740993,"ratio":1.5}`)
 	got, err := hash.CanonicalJSON(raw)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(got) != `{"id":9007199254740993,"ratio":1.5}` {
-		t.Fatalf("large number lost precision: %s", got)
+	if string(got) != `{"id":9007199254740992,"ratio":1.5}` {
+		t.Fatalf("number differs from JS Number: %s", got)
+	}
+}
+
+func TestCanonicalJSON_SourceRegressions(t *testing.T) {
+	cases := []struct {
+		name string
+		raw  string
+		want string
+	}{
+		{"spellings", `[1.0,1e0,1E+02,-0,-0.0,0e10]`, `[1,1,100,0,0,0]`},
+		{"precision", `[9007199254740993,18446744073709551615,1.234567890123456789]`, `[9007199254740992,18446744073709552000,1.2345678901234567]`},
+		{"notation boundaries", `[1e-7,1e-6,1e20,1e21,-1e21,1.23e-7]`, `[1e-7,0.000001,100000000000000000000,1e+21,-1e+21,1.23e-7]`},
+		{"range", `[1e400,-1e400,1e-400,-1e-400,5e-324,1.7976931348623157e308]`, `[null,null,0,0,5e-324,1.7976931348623157e+308]`},
+		{"utf16 order", `{"\ue000":1,"\ud800\udc00":2,"a":3,"\uffff":4}`, "{\"a\":3,\"𐀀\":2,\"\ue000\":1,\"\uffff\":4}"},
+		{"numeric keys", `{"2":2,"10":10,"1":1,"01":0}`, `{"01":0,"1":1,"10":10,"2":2}`},
+		{"separators", `{"\u2029":"\u2028\u2029<>&","literal":"\\u2028"}`, "{\"literal\":\"\\\\u2028\",\"\u2029\":\"\u2028\u2029<>&\"}"},
+		{"escapes", `["\u0000\u0001\b\t\n\f\r\u001f","\"\\\/","café😀"]`, `["\u0000\u0001\b\t\n\f\r\u001f","\"\\/","café😀"]`},
+		{"surrogates", `{"\udfff":1,"\ud800":2,"\ud800\udc00":3,"v":["\ud800x","\udfff","\ud800\udc00"]}`, `{"v":["\ud800x","\udfff","𐀀"],"\ud800":2,"𐀀":3,"\udfff":1}`},
+		{"nested duplicates", ` { "z": [true, null, {"b":1.00,"a":false}], "a":1,"\u0061":2 } `, `{"a":2,"z":[true,null,{"a":false,"b":1}]}`},
+		{"empty containers", `[{},{"":[]},"",null,false]`, `[{},{"":[]},"",null,false]`},
+	}
+	inputs := make([]string, len(cases))
+	for i, tc := range cases {
+		inputs[i] = tc.raw
+	}
+	input, err := json.Marshal(inputs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("cannot locate source oracle")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "node", "--input-type=module", "-e", `
+import { canonicalJson } from "./packages/standalone-build/build-plan.mjs";
+let input = "";
+for await (const chunk of process.stdin) input += chunk;
+process.stdout.write(JSON.stringify(JSON.parse(input).map(raw => canonicalJson(JSON.parse(raw)))));
+`)
+	cmd.Dir = filepath.Clean(filepath.Join(filepath.Dir(file), "../../../.."))
+	cmd.Stdin = bytes.NewReader(input)
+	output, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("source oracle: %v", err)
+	}
+	var source []string
+	if err := json.Unmarshal(output, &source); err != nil {
+		t.Fatal(err)
+	}
+	if len(source) != len(cases) {
+		t.Fatalf("source returned %d cases, want %d", len(source), len(cases))
+	}
+	for i, tc := range cases {
+		if source[i] != tc.want {
+			t.Fatalf("%s: source=%q pinned=%q", tc.name, source[i], tc.want)
+		}
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := hash.CanonicalJSON([]byte(tc.raw))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(got) != tc.want {
+				t.Fatalf("canonical=%q source=%q", got, tc.want)
+			}
+			again, err := hash.CanonicalJSON(got)
+			if err != nil || !bytes.Equal(again, got) {
+				t.Fatalf("not idempotent: %q, %v", again, err)
+			}
+		})
 	}
 }
 
