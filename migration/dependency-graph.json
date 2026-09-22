@@ -3,11 +3,11 @@
   "levels": [
     {
       "level": 0,
-      "units": ["U01", "U06-hash", "covercheck"]
+      "units": ["U01", "U06-hash", "U06-phpencode", "covercheck"]
     },
     {
       "level": 1,
-      "units": ["U06-phpencode", "U06-sidecar"]
+      "units": ["U06-sidecar"]
     },
     {
       "level": 2,
