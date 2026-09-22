@@ -18,11 +18,12 @@ Default: none accepted.
 
 Accepted intentional divergences (typed Go model, error-value mapping):
 
-- Typed config: a truthy non-string `slug` (e.g. number `1`, object) is
-  accepted for presence checks and `depsBundle` derivation (`1-deps.js`,
-  matching JS coercion) but the typed `Config.Slug` field keeps `""`.
-  JS keeps the raw value; Go cannot without `any` fields. No oracle covers
-  non-string slugs; behavior documented, not hidden.
+- Typed config: a truthy non-string identity field (number, bool, object)
+  is accepted for presence checks. The string field stores the JS template
+  coercion (`1` → `"1"`, object → `"[object Object]"`). The raw JSON value
+  is kept in `Extra` and wins in `MarshalJSON`, so CLI output still emits
+  the number or object. Explicit `null` stays in `NullFields` and marshals
+  as `null`, not `""` and not the default.
 - `assetFilePath` JS `TypeError` on unsupported extensions becomes a Go
   `error` from `AssetPath` (R-007a). Same trigger set, error value instead
   of throw.
@@ -48,6 +49,22 @@ Remediated defects & generalized contracts:
   before looking for range separator colons.
 - Extended `phpencode`: Added native support for `json.Number`, `float32`, signed/unsigned integers,
   and `map[string]string`.
+
+## W1 fix pass (2026-09-22, RULEBOOK v6)
+
+Accepted intentional divergences (approved, tested contracts):
+
+| behavior-A (source)                                          | behavior-B (target)                                                                                                                       | fixture                                                                         | approver         | date       |
+| :----------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------ | :--------------- | :--------- |
+| No Node `config` print command exists                        | `wpdev-build config` emits Go sorted-key JSON with `SetEscapeHTML(false)` (R-007c)                                                        | `TestRun_ConfigJSONNoHTMLEscape` + U01 oracle `<`/U+2028 vectors                | migration review | 2026-09-22 |
+| `getRootPath()` is module-anchored (`path.js`)               | CLI discovery walks from cwd/`StartDir`; library contract is `config.ReadFile` (R-008g)                                                   | `TestRead_DiscoverySkipsDirectoryNamedWpdevJSON`, `TestReadFile_DirectoryFails` | migration review | 2026-09-22 |
+| `covercheck` grouping is posix-only (no such tool in source) | drive letter retained in package key (`C:/...`), locked by `TestEvaluate_WindowsDrivePath` + `TestEvaluate_WindowsBackslashPath` (R-008e) | `covercheck_test.go:107-140`                                                    | migration review | 2026-09-22 |
+
+Superseded (defects, not divergences — fixed in v6):
+
+- R-004c exact-uint64 preservation contradicted `phpFileContent` (`JSON.parse` rounding); replaced by R-004e float64 rule. Oracle: `run-u06-sidecar-oracle.mjs` big-integer vectors.
+- Go `map[string]any`/`map[string]string` sidecar encoding (alphabetical keys) replaced by R-002d error. Tests: `TestFileContent_MapsRejected`.
+- Non-string known config values no longer collapse to `""`. The typed field stores the JS template coercion and `Extra` keeps the raw JSON value for `MarshalJSON`. Null stays in `NullFields`. Oracle: `run-u01-oracle.mjs` num-global/null-prefix/null-deps vectors.
 
 ## W1 Boost Round 2 Review findings (2026-09-17, RULEBOOK v4)
 

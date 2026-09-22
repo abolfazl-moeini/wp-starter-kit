@@ -8,7 +8,7 @@
   "binary": "wpdev-build",
   "version": "0.1.0-w1-pilot",
   "wave": "W1",
-  "status": "w1-parity-review-complete",
+  "status": "draft",
   "toolchain": {
     "go": "go1.26.5 darwin/arm64",
     "node": "v22.19.0",
@@ -33,6 +33,31 @@
     "migration/fixtures/run-u01-oracle.mjs",
     "migration/fixtures/run-u06-sidecar-oracle.mjs",
     "tests/utils/readProjectConfig.test.js",
-    "tests/utils/readProjectConfig.v3.test.js"
+    "tests/utils/readProjectConfig.v3.test.js",
+    "migration/fixtures/plan-fingerprint-vectors.mjs"
+  ],
+  "parity_command": "node migration/parity/run-parity.mjs",
+  "parity_note": "Regenerates parity vectors from the frozen Node sources, fails on drift against the committed testdata, then runs the Go parity tests. This is the dual-run required by the improvement plan; `go test ./...` itself needs neither Node nor the monorepo layout.",
+  "parity_vectors": [
+    "packages/build-go/internal/phpencode/testdata/parity-vectors.json",
+    "packages/build-go/internal/sidecar/testdata/parity-vectors.json",
+    "packages/build-go/internal/hash/testdata/parity-vectors.json"
+  ],
+  "parity_emitter": "migration/fixtures/emit-parity-vectors.mjs",
+  "toolchain_note": "`go` is not on PATH in the agent shell even though /opt/homebrew/bin/go exists. Gate scripts must use an absolute path or set WPDEV_GO_BIN.",
+  "rulebook_version": 6,
+  "blocked_gates": [
+    {
+      "gate": "mutation",
+      "unit": "W1",
+      "reason": "gremlins not pinned; strong assertions + go test -race instead",
+      "expiry": "2026-10-31"
+    },
+    {
+      "gate": "covercheck-wiring",
+      "unit": "covercheck",
+      "reason": "Evaluate not invoked by CI/production; inventory/changed-statement/function gates unimplemented",
+      "expiry": "2026-10-31"
+    }
   ]
 }

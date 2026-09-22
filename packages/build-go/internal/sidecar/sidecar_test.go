@@ -95,6 +95,14 @@ func TestWriteStyle_EmptyPathRejected(t *testing.T) {
 	}
 }
 
+func TestWriteStyle_WhitespaceOnlyIsNotFoundLikeJS(t *testing.T) {
+	// JS `!"   "` is false: whitespace-only falls to existsSync → "not found".
+	_, err := sidecar.WriteStyle("   ")
+	if err == nil || !strings.Contains(err.Error(), "not found at") {
+		t.Fatalf("err=%v, want source-CSS-not-found", err)
+	}
+}
+
 func TestWriteStyle_NonNotExistError(t *testing.T) {
 	_, err := sidecar.WriteStyle(t.TempDir())
 	if err == nil {

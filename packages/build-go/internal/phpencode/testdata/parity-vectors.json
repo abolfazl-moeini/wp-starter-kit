@@ -1,0 +1,286 @@
+{
+  "generatedBy": "migration/fixtures/emit-parity-vectors.mjs",
+  "oracle": "core/packages/dependency-extraction-esbuild-plugin/index.js",
+  "rule": "R-004e",
+  "vectors": [
+    {
+      "name": "hash-only",
+      "object": {
+        "pairs": [
+          [
+            "hash",
+            {
+              "t": "s",
+              "v": "abc"
+            }
+          ]
+        ]
+      },
+      "want": "<?php return array('hash' => 'abc');\n"
+    },
+    {
+      "name": "asset-sidecar",
+      "object": {
+        "pairs": [
+          [
+            "dependencies",
+            {
+              "t": "arr",
+              "v": [
+                {
+                  "t": "s",
+                  "v": "wp-element"
+                },
+                {
+                  "t": "s",
+                  "v": "jquery"
+                }
+              ]
+            }
+          ],
+          [
+            "internal_packages",
+            {
+              "t": "arr",
+              "v": []
+            }
+          ],
+          [
+            "hash",
+            {
+              "t": "s",
+              "v": "deadbeef"
+            }
+          ]
+        ]
+      },
+      "want": "<?php return array('dependencies' => array('wp-element', 'jquery'), 'internal_packages' => array(), 'hash' => 'deadbeef');\n"
+    },
+    {
+      "name": "escaped-quote",
+      "object": {
+        "pairs": [
+          [
+            "hash",
+            {
+              "t": "s",
+              "v": "a'b"
+            }
+          ]
+        ]
+      },
+      "want": "<?php return array('hash' => 'a\\'b');\n"
+    },
+    {
+      "name": "escaped-backslash",
+      "object": {
+        "pairs": [
+          [
+            "hash",
+            {
+              "t": "s",
+              "v": "a\\b"
+            }
+          ]
+        ]
+      },
+      "want": "<?php return array('hash' => 'a\\\\b');\n"
+    },
+    {
+      "name": "bools-and-null",
+      "object": {
+        "pairs": [
+          [
+            "ok",
+            {
+              "t": "b",
+              "v": true
+            }
+          ],
+          [
+            "no",
+            {
+              "t": "b",
+              "v": false
+            }
+          ],
+          [
+            "z",
+            {
+              "t": "null"
+            }
+          ]
+        ]
+      },
+      "want": "<?php return array('ok' => true, 'no' => false, 'z' => null);\n"
+    },
+    {
+      "name": "numbers",
+      "object": {
+        "pairs": [
+          [
+            "n",
+            {
+              "t": "f",
+              "v": 1
+            }
+          ],
+          [
+            "f",
+            {
+              "t": "f",
+              "v": 1.5
+            }
+          ]
+        ]
+      },
+      "want": "<?php return array('n' => 1, 'f' => 1.5);\n"
+    },
+    {
+      "name": "uint64-max",
+      "object": {
+        "pairs": [
+          [
+            "max",
+            {
+              "t": "n",
+              "v": "18446744073709551615"
+            }
+          ]
+        ]
+      },
+      "want": "<?php return array('max' => 18446744073709552000);\n"
+    },
+    {
+      "name": "two-pow-53-plus-1",
+      "object": {
+        "pairs": [
+          [
+            "n",
+            {
+              "t": "n",
+              "v": "9007199254740993"
+            }
+          ]
+        ]
+      },
+      "want": "<?php return array('n' => 9007199254740992);\n"
+    },
+    {
+      "name": "int64-max",
+      "object": {
+        "pairs": [
+          [
+            "n",
+            {
+              "t": "n",
+              "v": "9223372036854775807"
+            }
+          ]
+        ]
+      },
+      "want": "<?php return array('n' => 9223372036854776000);\n"
+    },
+    {
+      "name": "negative-zero",
+      "object": {
+        "pairs": [
+          [
+            "z",
+            {
+              "t": "n",
+              "v": "-0.0"
+            }
+          ]
+        ]
+      },
+      "want": "<?php return array('z' => 0);\n"
+    },
+    {
+      "name": "array-index-order",
+      "object": {
+        "pairs": [
+          [
+            "z",
+            {
+              "t": "s",
+              "v": "first"
+            }
+          ],
+          [
+            "10",
+            {
+              "t": "s",
+              "v": "ten"
+            }
+          ],
+          [
+            "2",
+            {
+              "t": "s",
+              "v": "two"
+            }
+          ],
+          [
+            "a",
+            {
+              "t": "s",
+              "v": "last"
+            }
+          ],
+          [
+            "0",
+            {
+              "t": "s",
+              "v": "zero"
+            }
+          ]
+        ]
+      },
+      "want": "<?php return array('0' => 'zero', '2' => 'two', '10' => 'ten', 'z' => 'first', 'a' => 'last');\n"
+    },
+    {
+      "name": "nonfinite-array",
+      "object": {
+        "pairs": [
+          [
+            "n",
+            {
+              "t": "arr",
+              "v": [
+                {
+                  "t": "nan"
+                },
+                {
+                  "t": "inf"
+                },
+                {
+                  "t": "ninf"
+                },
+                {
+                  "t": "f",
+                  "v": 1.5
+                }
+              ]
+            }
+          ]
+        ]
+      },
+      "want": "<?php return array('n' => array(null, null, null, 1.5));\n"
+    },
+    {
+      "name": "root-nonfinite",
+      "object": {
+        "pairs": [
+          [
+            "n",
+            {
+              "t": "nan"
+            }
+          ]
+        ]
+      },
+      "want": "<?php return array('n' => null);\n"
+    }
+  ]
+}

@@ -7,13 +7,14 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"math"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"unicode/utf16"
 	"unicode/utf8"
+
+	"github.com/abolfazl-moeini/wp-starter-kit/packages/build-go/internal/jsnum"
 )
 
 func MD5String(s string) string {
@@ -42,8 +43,12 @@ func CanonicalJSON(raw []byte) ([]byte, error) {
 		return nil, fmt.Errorf("canonical json: invalid JSON")
 	}
 	parser := canonicalParser{raw: raw}
+	v, err := parser.value()
+	if err != nil {
+		return nil, err
+	}
 	var buf bytes.Buffer
-	writeCanonical(&buf, parser.value())
+	writeCanonical(&buf, v)
 	return buf.Bytes(), nil
 }
 
@@ -54,81 +59,167 @@ type canonicalParser struct {
 	pos int
 }
 
+func (p *canonicalParser) eof() error {
+	return fmt.Errorf("canonical json: unexpected end of input")
+}
+
+func (p *canonicalParser) peek() (byte, error) {
+	if p.pos >= len(p.raw) {
+		return 0, p.eof()
+	}
+	return p.raw[p.pos], nil
+}
+
+func (p *canonicalParser) next() (byte, error) {
+	c, err := p.peek()
+	if err != nil {
+		return 0, err
+	}
+	p.pos++
+	return c, nil
+}
+
 func (p *canonicalParser) space() {
 	for p.pos < len(p.raw) && strings.ContainsRune(" \t\r\n", rune(p.raw[p.pos])) {
 		p.pos++
 	}
 }
 
-func (p *canonicalParser) value() any {
+func (p *canonicalParser) value() (any, error) {
 	p.space()
-	switch p.raw[p.pos] {
+	c, err := p.peek()
+	if err != nil {
+		return nil, err
+	}
+	switch c {
 	case '"':
 		return p.stringValue()
 	case '{':
 		p.pos++
 		p.space()
 		object := make(map[canonicalString]any)
-		for p.raw[p.pos] != '}' {
-			key := p.stringValue()
+		for {
+			c, err := p.peek()
+			if err != nil {
+				return nil, err
+			}
+			if c == '}' {
+				break
+			}
+			key, err := p.stringValue()
+			if err != nil {
+				return nil, err
+			}
 			p.space()
-			p.pos++
-			object[key] = p.value()
+			if _, err := p.next(); err != nil { // ':'
+				return nil, err
+			}
+			val, err := p.value()
+			if err != nil {
+				return nil, err
+			}
+			object[key] = val
 			p.space()
-			if p.raw[p.pos] != ',' {
+			c2, err := p.peek()
+			if err != nil {
+				return nil, err
+			}
+			if c2 != ',' {
 				break
 			}
 			p.pos++
 			p.space()
 		}
-		p.pos++
-		return object
+		if _, err := p.next(); err != nil { // '}'
+			return nil, err
+		}
+		return object, nil
 	case '[':
 		p.pos++
 		p.space()
 		array := make([]any, 0)
-		for p.raw[p.pos] != ']' {
-			array = append(array, p.value())
+		for {
+			c, err := p.peek()
+			if err != nil {
+				return nil, err
+			}
+			if c == ']' {
+				break
+			}
+			val, err := p.value()
+			if err != nil {
+				return nil, err
+			}
+			array = append(array, val)
 			p.space()
-			if p.raw[p.pos] != ',' {
+			c2, err := p.peek()
+			if err != nil {
+				return nil, err
+			}
+			if c2 != ',' {
 				break
 			}
 			p.pos++
 		}
-		p.pos++
-		return array
+		if _, err := p.next(); err != nil { // ']'
+			return nil, err
+		}
+		return array, nil
 	case 'n':
+		if p.pos+4 > len(p.raw) {
+			return nil, p.eof()
+		}
 		p.pos += 4
-		return nil
+		return nil, nil
 	case 't':
+		if p.pos+4 > len(p.raw) {
+			return nil, p.eof()
+		}
 		p.pos += 4
-		return true
+		return true, nil
 	case 'f':
+		if p.pos+5 > len(p.raw) {
+			return nil, p.eof()
+		}
 		p.pos += 5
-		return false
+		return false, nil
 	default:
 		start := p.pos
 		for p.pos < len(p.raw) && strings.ContainsRune("-+0123456789.eE", rune(p.raw[p.pos])) {
 			p.pos++
 		}
 		number, _ := strconv.ParseFloat(string(p.raw[start:p.pos]), 64)
-		return number
+		return number, nil
 	}
 }
 
-func (p *canonicalParser) stringValue() canonicalString {
-	p.pos++
+func (p *canonicalParser) stringValue() (canonicalString, error) {
+	if _, err := p.next(); err != nil { // opening '"'
+		return "", err
+	}
 	var units []byte
 	appendUnit := func(u uint16) {
 		units = append(units, byte(u>>8), byte(u))
 	}
-	for p.raw[p.pos] != '"' {
-		if p.raw[p.pos] == '\\' {
+	for {
+		c, err := p.peek()
+		if err != nil {
+			return "", err
+		}
+		if c == '"' {
+			break
+		}
+		if c == '\\' {
 			p.pos++
-			escape := p.raw[p.pos]
-			p.pos++
+			escape, err := p.next()
+			if err != nil {
+				return "", err
+			}
 			switch escape {
 			case 'u':
+				if p.pos+4 > len(p.raw) {
+					return "", p.eof()
+				}
 				u, _ := strconv.ParseUint(string(p.raw[p.pos:p.pos+4]), 16, 16)
 				appendUnit(uint16(u))
 				p.pos += 4
@@ -158,7 +249,7 @@ func (p *canonicalParser) stringValue() canonicalString {
 		}
 	}
 	p.pos++
-	return canonicalString(units)
+	return canonicalString(units), nil
 }
 
 func writeCanonical(buf *bytes.Buffer, value any) {
@@ -168,21 +259,7 @@ func writeCanonical(buf *bytes.Buffer, value any) {
 	case bool:
 		buf.WriteString(strconv.FormatBool(v))
 	case float64:
-		if math.IsInf(v, 0) || math.IsNaN(v) {
-			buf.WriteString("null")
-		} else if v == 0 {
-			buf.WriteByte('0')
-		} else {
-			format := byte('f')
-			if math.Abs(v) < 1e-6 || math.Abs(v) >= 1e21 {
-				format = 'e'
-			}
-			s := strconv.FormatFloat(v, format, -1, 64)
-			if i := strings.IndexByte(s, 'e'); i >= 0 && s[i+2] == '0' {
-				s = s[:i+2] + s[i+3:]
-			}
-			buf.WriteString(s)
-		}
+		buf.WriteString(jsnum.JSONNumber(v))
 	case canonicalString:
 		writeCanonicalString(buf, v)
 	case []any:

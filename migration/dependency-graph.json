@@ -1,5 +1,5 @@
 {
-  "note": "W1 graph is a planning SCC seed, not a full AST condensation of the JS monorepo. Phase 1 remaining work: reachable-import trace of standalone-build + create-wp-project.",
+  "note": "W1 graph is a planning SCC seed (scc:false), not a full AST condensation of the JS monorepo. Manifest ids U01/U06/U30/covercheck are wave rows; graph sub-ids U06-hash/U06-phpencode/U06-sidecar are slices of manifest U06. Unported U06 exports tracked as manifest U06-rem. Phase 1 remaining work: reachable-import trace of standalone-build + create-wp-project.",
   "levels": [
     {
       "level": 0,
@@ -20,5 +20,6 @@
     ["U30", "U01"],
     ["U30", "U06-sidecar"],
     ["U30", "U06-hash"]
-  ]
+  ],
+  "scc": false
 }

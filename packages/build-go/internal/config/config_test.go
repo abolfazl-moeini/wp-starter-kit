@@ -318,9 +318,48 @@ func TestRead_TruthyNumberSlug(t *testing.T) {
 		t.Fatal(err)
 	}
 	// JS: `${config.slug}-deps.js` coerces the number → "1-deps.js".
-	// The typed Slug field itself keeps "" (documented in DIVERGENCES.md).
+	// The typed field keeps that coercion; Extra keeps the raw number for JSON.
 	if cfg.DepsBundle != "1-deps.js" {
 		t.Fatalf("depsBundle=%q", cfg.DepsBundle)
+	}
+	if cfg.Slug != "1" {
+		t.Fatalf("Slug=%q, want JS coercion \"1\"", cfg.Slug)
+	}
+}
+
+func TestRead_NonStringKnownFieldsPreserveRaw(t *testing.T) {
+	dir := t.TempDir()
+	body := minimal()
+	body["globalName"] = 1.0
+	body["phpFunctionPrefix"] = nil
+	body["depsBundle"] = nil
+	cfg, err := config.Read(config.Options{Path: writeJSON(t, dir, "raw.json", body)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Typed field is the JS template coercion; raw number rides in Extra.
+	if cfg.GlobalName != "1" {
+		t.Fatalf("GlobalName=%q, want JS coercion \"1\"", cfg.GlobalName)
+	}
+	if raw, ok := cfg.Extra["globalName"]; !ok || raw != 1.0 {
+		t.Fatalf("Extra[globalName]=%#v, want 1.0", cfg.Extra["globalName"])
+	}
+	if !cfg.NullFields["phpFunctionPrefix"] || !cfg.NullFields["depsBundle"] {
+		t.Fatalf("NullFields=%#v, want phpFunctionPrefix+depsBundle", cfg.NullFields)
+	}
+	raw, err := json.Marshal(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var round map[string]any
+	if err := json.Unmarshal(raw, &round); err != nil {
+		t.Fatal(err)
+	}
+	if round["globalName"] != 1.0 {
+		t.Fatalf("round-trip globalName=%#v, want 1.0", round["globalName"])
+	}
+	if round["phpFunctionPrefix"] != nil || round["depsBundle"] != nil {
+		t.Fatalf("round-trip nulls=%#v", round)
 	}
 }
 
@@ -439,6 +478,37 @@ func TestRead_PathIsDirectory(t *testing.T) {
 	}
 }
 
+func TestReadFile_DirectoryFails(t *testing.T) {
+	_, err := config.ReadFile(t.TempDir())
+	if err == nil || !strings.Contains(err.Error(), "Failed to read wpdev.json") {
+		t.Fatalf("err=%v", err)
+	}
+}
+
+func TestRead_DiscoverySkipsDirectoryNamedWpdevJSON(t *testing.T) {
+	// Discovery policy (tested): a directory named wpdev.json is skipped;
+	// the parent file is loaded. Explicit paths still fail (see above).
+	root := t.TempDir()
+	parentBody := minimal()
+	parentBody["slug"] = "parent"
+	parent := writeJSON(t, root, "wpdev.json", parentBody)
+	_ = parent
+	child := filepath.Join(root, "child")
+	if err := os.Mkdir(child, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(filepath.Join(child, "wpdev.json"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cfg, err := config.Read(config.Options{StartDir: child})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Slug != "parent" {
+		t.Fatalf("slug=%q, want parent via skipped directory", cfg.Slug)
+	}
+}
+
 func TestRead_JSONNumberRootRejected(t *testing.T) {
 	dir := t.TempDir()
 	_, err := config.Read(config.Options{Path: writeJSON(t, dir, "num.json", "1")})
@@ -488,8 +558,8 @@ func TestRead_ObjectSlugIsTruthy(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.Slug != "" {
-		t.Fatalf("object slug string=%q", cfg.Slug)
+	if cfg.Slug != "[object Object]" {
+		t.Fatalf("object slug string=%q, want JS coercion", cfg.Slug)
 	}
 }
 

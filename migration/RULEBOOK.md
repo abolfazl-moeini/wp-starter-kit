@@ -1,15 +1,24 @@
 # RULEBOOK — JS/PHP → Go (wpdev-build)
 
-Version: 5
+Version: 6
 Source freeze: `8c1e9baf7359750e2a8d2efca58a316744f3e2e6`
 
 Cardinal Law: fix this file and regenerate dependent units. Do not hand-patch one-off outputs.
+
+## v6 amendments (go-implementation-improvement-plan §1, 2026-09-22)
+
+- R-002d: sidecar objects are `phpencode.Object` only. Go `map[string]any` / `map[string]string` must return an error and never be used for file bytes. Canonical JSON key sorting (R-005d) does not apply to PHP output (R-002). Fixture: `migration/fixtures/run-u06-sidecar-oracle.mjs` (big-integer vectors); Go: `TestFileContent_MapsRejected`.
+- R-004e: `phpencode` of a JSON number matches `phpFileContent` for that literal: decode `json.Number` via binary64 `Float64` then `jsNumber`, including values above `2^53` and the `uint64` max (`18446744073709551615` → `18446744073709552000`, `9007199254740993` → `9007199254740992`). Overflow (`1e400`) is `null`, matching `JSON.parse` → `Infinity`. A Go `int64`/`uint64` that binary64 cannot represent exactly is rejected; it is not printed in full. This supersedes R-004c. Fixture: `migration/fixtures/run-u06-sidecar-oracle.mjs`.
+- R-005e: single shared JS number formatter. `config.jsFloat`, `phpencode.jsNumber`, and `hash.writeCanonical` exponent handling must use one helper with bounds-checked exponent rewrite (strip all leading exponent zeros). Vectors: `1e21` → `1e+21`, `1e-7` → `1e-7`, `1e-6` stays decimal, `-0.0` → `0`.
+- R-007c: CLI `config` JSON contract. `wpdev-build config` output uses `SetEscapeHTML(false)` (no `\u0026`/`\u003c`/`\u003e`) with Go sorted-key order documented as the CLI contract; JS `JSON.stringify` insertion order is recorded in `DIVERGENCES.md` as the approved difference (no Node print command exists). Vectors: slug/extra containing `<`, `&`, U+2028.
+- R-008g: library vs CLI config discovery. `config.ReadFile(path)` is the library contract (explicit path; a directory path fails with "Failed to read"). Cwd-anchored walk lives in CLI discovery only and is not `getRootPath` (`core/packages/utils/path.js`). Directory `wpdev.json` under discovery follows the tested discovery policy; explicit-path directories always fail.
+- R-015b: dash-leading CLI values (`--file -foo.css`) are rejected as "missing value" (exit 2) and documented in `--help`. Unknown `Extra` numeric fields round-trip with JS-lossy spelling (`9007199254740993` → `9007199254740992`), not Go formatting.
 
 ## v5 amendments (W1 source-parity review, 2026-09-17)
 
 These amendments supersede conflicting earlier rules. Existing source units were revised and re-tested; no reproducible generator or historical Clean Red artifacts were available, so this review does not constitute migration acceptance.
 
-- R-002c: Ordered PHP objects enumerate canonical array-index keys from `0` through `4294967294` numerically before other keys. Duplicate keys retain their original position and final value. Plain Go maps remain deterministic but cannot recover source insertion order.
+- R-002c: Ordered PHP objects enumerate canonical array-index keys from `0` through `4294967294` numerically before other keys. Duplicate keys retain their original position and final value. Encoding a Go map as a sidecar is rejected (R-002d); maps are not a fallback order.
 - R-004d: `phpFileContent` includes `JSON.parse(JSON.stringify(value))` normalization: nonfinite floating-point values become `null`, including nested values. Emitting PHP `NaN` or `Infinity` is not source parity.
 - R-005d: `CanonicalJSON` follows the source canonical serializer, not a lossless JSON-number format. Parse numbers as binary64, normalize negative zero and numeric notation, serialize overflow as `null`, sort keys by UTF-16 code units, emit literal U+2028/U+2029, and preserve escaped lone surrogates. This replaces R-005b for canonical fingerprints. Numeric tests provide bounded evidence, not exhaustive float parity.
 - R-007b: CLI commands validate the entire argument list before file IO. Unknown flags/positionals, duplicate flags, empty values, and flags in place of values return usage exit code 2. Absent `--path` retains config discovery.
@@ -21,7 +30,7 @@ Defects, gaps, and uncodified mappings caught during independent adversarial cod
 formalized here per the Cardinal Law:
 
 - R-001c: Falsy coercion for `math.NaN()` and `json.Number` in `config.truthy`: `NaN` and numeric zero variants (`0.0`, `-0`, `0.00`, `-0.0`) are strictly falsy, matching JS `Boolean(0) === false` and `Boolean(NaN) === false`. Required fields in `wpdev.json` with these values are correctly flagged as missing.
-- R-004c: Unsigned 64-bit integer preservation in `phpencode`: `json.Number` values exceeding `math.MaxInt64` are parsed via `strconv.ParseUint` before float fallback, preventing precision loss for large unsigned integers.
+- R-004c (SUPERSEDED by R-004e in v6): Unsigned 64-bit integer preservation in `phpencode`: `json.Number` values exceeding `math.MaxInt64` are parsed via `strconv.ParseUint` before float fallback, preventing precision loss for large unsigned integers.
 - R-005c: Negative zero (`-0.0`) numeric normalization: Both `phpencode.jsNumber` and `config.jsFloat` normalize `-0.0` (and `float32(-0.0)`) to `"0"`, matching JavaScript `(-0).toString() === "0"` and `json2php(-0.0) === "0"`.
 - R-008d: `AssetPath` path reconstruction and trailing slash handling: In `sidecar.AssetPath`, trailing slashes are trimmed before deriving `filepath.Dir` and `filepath.Base`, and paths are reconstructed using `filepath.Join(dir, stem+".asset.php")` (or `stem+".asset.php"` if `dir == "."`). Slicing the raw bundle path string is forbidden because trailing slashes or path separators cause incorrect byte offsets.
 - R-008e: Coverage profile path parsing with spaces and backslashes: `covercheck.parseBlock` splits by whitespace and treats the last two tokens as statement count and hit count, joining all preceding tokens to preserve directory paths containing spaces. Paths are normalized cross-platform (`strings.ReplaceAll(file, "\\", "/")`) before passing to `path.Dir`.

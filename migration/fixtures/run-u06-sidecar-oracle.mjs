@@ -84,5 +84,14 @@ assert.equal(
   ])),
   "<?php return array('2' => 'new index', 'z' => array('2' => 2, '10' => 10, 'b' => null, 'a' => 1), 'a' => true);\n",
 );
+// §1.1: JSON numbers round via binary64 before json2php (JSON.parse semantics).
+assert.equal(
+  phpFileContent({ max: 18446744073709551615 }),
+  "<?php return array('max' => 18446744073709552000);\n",
+);
+assert.equal(
+  phpFileContent({ n: 9007199254740993 }),
+  "<?php return array('n' => 9007199254740992);\n",
+);
 
 console.log("U06 sidecar oracle PASS");

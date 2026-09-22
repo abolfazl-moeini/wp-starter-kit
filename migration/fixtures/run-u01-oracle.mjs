@@ -136,6 +136,27 @@ try {
     /vendorPrefix/,
   );
 
+  // §1.3: non-string identity fields keep raw values; null overwrites defaults.
+  const numGlobal = readProjectConfig({
+    path: write("num-global.json", { ...minimal, globalName: 1 }),
+  });
+  assert.equal(numGlobal.globalName, 1);
+  const nullPrefix = readProjectConfig({
+    path: write("null-prefix.json", { ...minimal, phpFunctionPrefix: null }),
+  });
+  assert.equal(nullPrefix.phpFunctionPrefix, null);
+  const nullDeps = readProjectConfig({
+    path: write("null-deps.json", { ...minimal, depsBundle: null }),
+  });
+  assert.equal(nullDeps.depsBundle, null);
+
+  // §1.9: numeric unknown fields keep JS-lossy spelling through stringify.
+  const numExtra = readProjectConfig({
+    path: write("num-extra.json", { ...minimal, features: { limit: 9007199254740993 } }),
+  });
+  assert.equal(numExtra.features.limit, 9007199254740992);
+  assert.ok(JSON.stringify(numExtra).includes("9007199254740992"));
+
   console.log("U01 oracle PASS");
 } finally {
   rmSync(dir, { recursive: true, force: true });

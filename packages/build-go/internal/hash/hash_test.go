@@ -193,42 +193,46 @@ func TestCanonicalJSON_SourceRegressions(t *testing.T) {
 		{"nested duplicates", ` { "z": [true, null, {"b":1.00,"a":false}], "a":1,"\u0061":2 } `, `{"a":2,"z":[true,null,{"a":false,"b":1}]}`},
 		{"empty containers", `[{},{"":[]},"",null,false]`, `[{},{"":[]},"",null,false]`},
 	}
-	inputs := make([]string, len(cases))
-	for i, tc := range cases {
-		inputs[i] = tc.raw
-	}
-	input, err := json.Marshal(inputs)
-	if err != nil {
-		t.Fatal(err)
-	}
-	_, file, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatal("cannot locate source oracle")
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, "node", "--input-type=module", "-e", `
+	if _, err := exec.LookPath("node"); err != nil {
+		t.Log("node not in PATH; Go assertions still run. Live source diff is migration/parity/run-parity.mjs")
+	} else {
+		inputs := make([]string, len(cases))
+		for i, tc := range cases {
+			inputs[i] = tc.raw
+		}
+		input, err := json.Marshal(inputs)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, file, _, ok := runtime.Caller(0)
+		if !ok {
+			t.Fatal("cannot locate source oracle")
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		cmd := exec.CommandContext(ctx, "node", "--input-type=module", "-e", `
 import { canonicalJson } from "./packages/standalone-build/build-plan.mjs";
 let input = "";
 for await (const chunk of process.stdin) input += chunk;
 process.stdout.write(JSON.stringify(JSON.parse(input).map(raw => canonicalJson(JSON.parse(raw)))));
 `)
-	cmd.Dir = filepath.Clean(filepath.Join(filepath.Dir(file), "../../../.."))
-	cmd.Stdin = bytes.NewReader(input)
-	output, err := cmd.Output()
-	if err != nil {
-		t.Fatalf("source oracle: %v", err)
-	}
-	var source []string
-	if err := json.Unmarshal(output, &source); err != nil {
-		t.Fatal(err)
-	}
-	if len(source) != len(cases) {
-		t.Fatalf("source returned %d cases, want %d", len(source), len(cases))
-	}
-	for i, tc := range cases {
-		if source[i] != tc.want {
-			t.Fatalf("%s: source=%q pinned=%q", tc.name, source[i], tc.want)
+		cmd.Dir = filepath.Clean(filepath.Join(filepath.Dir(file), "../../../.."))
+		cmd.Stdin = bytes.NewReader(input)
+		output, err := cmd.Output()
+		if err != nil {
+			t.Fatalf("source oracle: %v", err)
+		}
+		var source []string
+		if err := json.Unmarshal(output, &source); err != nil {
+			t.Fatal(err)
+		}
+		if len(source) != len(cases) {
+			t.Fatalf("source returned %d cases, want %d", len(source), len(cases))
+		}
+		for i, tc := range cases {
+			if source[i] != tc.want {
+				t.Fatalf("%s: source=%q pinned=%q", tc.name, source[i], tc.want)
+			}
 		}
 	}
 	for _, tc := range cases {

@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/abolfazl-moeini/wp-starter-kit/packages/build-go/internal/config"
 	"github.com/abolfazl-moeini/wp-starter-kit/packages/build-go/internal/hash"
+	"github.com/abolfazl-moeini/wp-starter-kit/packages/build-go/internal/jsnum"
 	"github.com/abolfazl-moeini/wp-starter-kit/packages/build-go/internal/sidecar"
 )
 
@@ -47,6 +50,10 @@ Usage:
   wpdev-build hash --file <path>
   wpdev-build sidecar --file <file.css>
 
+Flags use --name value or --name=value. A value starting with "-"
+is rejected as missing (exit 2); use --name=-foo or --name=-foo.css
+for dash-leading paths.
+
 This pilot does not deploy. Deploy remains a later wave with WAL gates.
 `)
 }
@@ -62,13 +69,118 @@ func runConfig(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, err)
 		return 1
 	}
-	raw, err := json.MarshalIndent(cfg, "", "  ")
+	// R-007c: JSON.stringify-compatible output. Key order is the Go
+	// sorted-key contract (documented divergence: JS uses insertion order;
+	// no Node print command exists). String escaping matches JSON.stringify
+	// (no <, >, & or U+2028/U+2029 escaping); Go's Encoder always escapes
+	// U+2028, so a custom writer is used.
+	raw, err := json.Marshal(cfg)
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 1
 	}
-	fmt.Fprintln(stdout, string(raw))
+	var decoded any
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	fmt.Fprintln(stdout, stringifySorted(decoded, ""))
 	return 0
+}
+
+// stringifySorted renders decoded JSON with sorted object keys and
+// JSON.stringify string escaping (only '"', '\\', \b\f\n\r\t and
+// control chars <0x20 escaped; U+2028/U+2029 and <>& pass through raw).
+func stringifySorted(v any, indent string) string {
+	next := indent + "  "
+	switch t := v.(type) {
+	case nil:
+		return "null"
+	case bool:
+		if t {
+			return "true"
+		}
+		return "false"
+	case string:
+		return stringifyString(t)
+	case float64:
+		return jsnum.NumberString(t)
+	case json.Number:
+		if f, err := t.Float64(); err == nil {
+			return jsnum.NumberString(f)
+		}
+		return t.String()
+	case []any:
+		if len(t) == 0 {
+			return "[]"
+		}
+		parts := make([]string, 0, len(t))
+		for _, item := range t {
+			parts = append(parts, next+stringifySorted(item, next))
+		}
+		return "[\n" + strings.Join(parts, ",\n") + "\n" + indent + "]"
+	case map[string]any:
+		if len(t) == 0 {
+			return "{}"
+		}
+		keys := make([]string, 0, len(t))
+		for k := range t {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		parts := make([]string, 0, len(keys))
+		for _, k := range keys {
+			parts = append(parts, next+stringifyString(k)+": "+stringifySorted(t[k], next))
+		}
+		return "{\n" + strings.Join(parts, ",\n") + "\n" + indent + "}"
+	default:
+		return stringifySortedJSONFallback(v)
+	}
+}
+
+func stringifyString(s string) string {
+	var b strings.Builder
+	b.WriteByte('"')
+	for _, r := range s {
+		switch r {
+		case '"':
+			b.WriteString("\\\"")
+		case '\\':
+			b.WriteString("\\\\")
+		case '\b':
+			b.WriteString("\\b")
+		case '\f':
+			b.WriteString("\\f")
+		case '\n':
+			b.WriteString("\\n")
+		case '\r':
+			b.WriteString("\\r")
+		case '\t':
+			b.WriteString("\\t")
+		default:
+			if r < 0x20 {
+				fmt.Fprintf(&b, "\\u%04x", r)
+			} else {
+				b.WriteRune(r)
+			}
+		}
+	}
+	b.WriteByte('"')
+	return b.String()
+}
+
+func stringifySortedJSONFallback(v any) string {
+	switch t := v.(type) {
+	case int:
+		return strconv.Itoa(t)
+	case int64:
+		return strconv.FormatInt(t, 10)
+	case uint64:
+		return strconv.FormatUint(t, 10)
+	case float32:
+		return jsnum.NumberString(float64(t))
+	}
+	return "null"
 }
 
 func runHash(args []string, stdout, stderr io.Writer) int {

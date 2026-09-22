@@ -1,0 +1,64 @@
+{
+  "generatedBy": "migration/fixtures/emit-parity-vectors.mjs",
+  "oracle": "core/packages/dependency-extraction-esbuild-plugin/utils.js",
+  "rule": "R-008d",
+  "assetPath": [
+    {
+      "input": "assets/bundles/wpdev-starter-deps.js",
+      "want": "assets/bundles/wpdev-starter-deps.asset.php",
+      "err": false
+    },
+    {
+      "input": "assets/bundles/style.css",
+      "want": "assets/bundles/style.asset.php",
+      "err": false
+    },
+    {
+      "input": "style.css",
+      "want": "style.asset.php",
+      "err": false
+    },
+    {
+      "input": "dir/bundle.js/",
+      "want": "dir/bundle.asset.php",
+      "err": false
+    },
+    {
+      "input": "style.css/",
+      "want": "style.asset.php",
+      "err": false
+    },
+    {
+      "input": "/",
+      "want": "",
+      "err": true,
+      "errorName": "TypeError"
+    },
+    {
+      "input": "noext",
+      "want": "",
+      "err": true,
+      "errorName": "TypeError"
+    },
+    {
+      "input": "",
+      "want": "",
+      "err": true,
+      "errorName": "TypeError"
+    }
+  ],
+  "md5": [
+    {
+      "input": "",
+      "want": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "input": "hello",
+      "want": "5d41402abc4b2a76b9719d911017c592"
+    },
+    {
+      "input": "سلام",
+      "want": "78903c575b0dda53c4a7644a2dd36d0e"
+    }
+  ]
+}

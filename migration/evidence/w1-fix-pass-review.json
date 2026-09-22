@@ -1,0 +1,145 @@
+{
+  "unit": "W1",
+  "wave": "W1",
+  "status": "draft",
+  "generated": false,
+  "translator": "hand",
+  "pass": "go-implementation-improvement-plan §1 fix pass + independent review",
+  "date": "2026-09-22",
+  "head": "8a93278ecdfe26c2375d34131ae45b562afa72e2",
+  "source_freeze": "8c1e9baf7359750e2a8d2efca58a316744f3e2e6",
+  "rulebook_version": 6,
+  "rulebook_sha256": "37bc981cafbffd41064051fbf129575c66942348e9b18f948b7a81df8c4f227c",
+  "divergences_sha256": "aaa3e97cc0446833816aff6262539ed30102efe704b697f3990859bf092c7d5a",
+  "rules_applied": ["R-002d", "R-004e", "R-005e", "R-007c", "R-008g", "R-015b"],
+  "commands": [
+    {
+      "argv": ["go", "vet", "./..."],
+      "cwd": "packages/build-go",
+      "exit_code": 0,
+      "note": "go1.26.5; `go` is not on PATH in the agent shell, use /opt/homebrew/bin/go"
+    },
+    {
+      "argv": ["gofmt", "-l", "."],
+      "cwd": "packages/build-go",
+      "exit_code": 0,
+      "note": "empty output"
+    },
+    {
+      "argv": ["go", "test", "-count=1", "./..."],
+      "cwd": "packages/build-go",
+      "exit_code": 0,
+      "note": "8 packages ok, WITH node on PATH"
+    },
+    {
+      "argv": ["go", "test", "-count=1", "./..."],
+      "cwd": "packages/build-go",
+      "exit_code": 0,
+      "note": "8 packages ok with node REMOVED from PATH - closes the §6 'no Node' criterion that failed before this pass"
+    },
+    {
+      "argv": ["node", "migration/parity/run-parity.mjs"],
+      "cwd": ".",
+      "exit_code": 0,
+      "note": "regenerate vectors -> drift check -> Go parity tests; PARITY OK"
+    }
+  ],
+  "negative_controls": [
+    {
+      "what": "reverted phpencode json.Number to the pre-fix uint64-preserving path (R-004c)",
+      "command": [
+        "go",
+        "test",
+        "-run",
+        "TestParityVectors",
+        "./internal/phpencode/"
+      ],
+      "expected": "FAIL",
+      "observed": "FAIL on uint64-max, two-pow-53-plus-1 and int64-max with byte diffs",
+      "why": "proves the parity test is not vacuous"
+    },
+    {
+      "what": "tampered a committed vector value in phpencode/testdata/parity-vectors.json",
+      "command": ["node", "migration/parity/run-parity.mjs"],
+      "expected": "exit 1",
+      "observed": "exit 1, PARITY FAILED on the drift check",
+      "why": "proves the drift gate fires"
+    }
+  ],
+  "fixture_digests": {
+    "packages/build-go/internal/phpencode/testdata/parity-vectors.json": "c35fb785388ce3c19cd323ea952c9d7e11c444dcb0ee19bdb4caa17f1ba9aae7",
+    "packages/build-go/internal/sidecar/testdata/parity-vectors.json": "85368edf74f9658a337b45bfc8169c50b08bfd2feb149347982da81b36626170",
+    "packages/build-go/internal/hash/testdata/parity-vectors.json": "14c0bd692bfbe9d74612376a904e2f077c39ec7a9be1c6adc4bb334417c21974"
+  },
+  "parity": {
+    "command": "node migration/parity/run-parity.mjs",
+    "oracle_emitter": "migration/fixtures/emit-parity-vectors.mjs",
+    "emitter_sha256": "89db05e830843f9f0aa4594d5bfebd169a7e99b3c023c8a43cafaa6b032df3a3",
+    "method": "vectors derived from the frozen Node sources, committed into each Go package's testdata/, consumed by Go tests. Regeneration + drift check + dual-run live in the parity command, so `go test` needs neither Node nor the monorepo layout.",
+    "coverage": {
+      "phpencode": "13 vectors (R-004e big-integer rounding, R-002c array-index order, R-004d non-finite, string escapes)",
+      "sidecar": "8 AssetPath + 3 MD5 vectors",
+      "hash": "11 canonicalJson vectors + 2 value-only divergences + 4 computePlanFingerprint digests recorded for U02"
+    },
+    "not_yet_covered": [
+      "No Go subcommand exposes phpencode/hash directly, so the dual-run is library-level (Go tests vs recorded Node output) rather than CLI-level for those two paths. The `config` path is CLI-reachable and was diffed by hand during review; it has no automated dual-run yet.",
+      "U02 BuildPlan has no Go implementation, so the 4 recorded fingerprints are pinned but unasserted against Go."
+    ]
+  },
+  "mutation": {
+    "score": null,
+    "tool": "gremlins (unpinned)",
+    "status": "waived",
+    "waiver_ref": "state.json blocked_gates[mutation]",
+    "note": "Two targeted mutations were run by hand as negative controls (see negative_controls). That is not a mutation score."
+  },
+  "divergences": [
+    "CLI `config` emits Go sorted-key JSON with SetEscapeHTML(false); JS JSON.stringify uses insertion order. Approved in DIVERGENCES.md (R-007c). Approver recorded as \"migration review\" - see review finding F4.",
+    "covercheck retains the drive letter in the package key; locked by TestEvaluate_WindowsDrivePath. Approved in DIVERGENCES.md (R-008e)."
+  ],
+  "review_findings": [
+    {
+      "id": "F1",
+      "severity": "P1",
+      "finding": "The plan's §6 acceptance required a separate dual-run parity command, and §3 required asserting the Go encoder against oracle output rather than a hand-written want string. Neither existed after the implementation pass; the oracles remained Node-asserts-Node and the Go side was locked only by hand-written strings.",
+      "status": "fixed in this pass",
+      "evidence": "migration/fixtures/emit-parity-vectors.mjs, migration/parity/run-parity.mjs, packages/build-go/internal/{phpencode,sidecar,hash}/testdata/parity-vectors.json and the three parity_vectors_test.go files"
+    },
+    {
+      "id": "F2",
+      "severity": "P1",
+      "finding": "migration/fixtures/plan-fingerprint-vectors.mjs was registered in state.json.oracles but consumed by nothing, and it tested canonicalJson([1,undefined,2]) while omitting the plan's actual headline case, the sparse array [1,,2].",
+      "status": "fixed in this pass",
+      "evidence": "emit-parity-vectors.mjs records both value-only cases; hash/parity_vectors_test.go asserts them and fails if either divergence disappears"
+    },
+    {
+      "id": "F3",
+      "severity": "P2",
+      "finding": "No receipt existed for the 2026-09-22 fix pass; migration/evidence/ had no file newer than 2026-09-17 while RULEBOOK v6 and DIVERGENCES.md cited the pass as complete.",
+      "status": "fixed in this pass",
+      "evidence": "this file"
+    },
+    {
+      "id": "F4",
+      "severity": "P2",
+      "finding": "The new DIVERGENCES.md entries record the approver as \"migration review\", i.e. the implementing agent approving its own divergence. The CLI `config` key-order contract is user-facing and the repo's own rule is author != reviewer.",
+      "status": "open - needs a named approver",
+      "evidence": "migration/DIVERGENCES.md W1 fix pass table"
+    },
+    {
+      "id": "F5",
+      "severity": "P2",
+      "finding": "canonicalJson is a VALUE function and JSON.stringify drops undefined-valued keys while canonicalJson renders them as null. computePlanFingerprint passes planData.consumer through unguarded, so a U02 port that canonicalizes json.Marshal output would omit the key instead of emitting \"consumer\":null, changing the fingerprint. Unrecorded before this pass.",
+      "status": "recorded, not yet ruled on",
+      "evidence": "hash/testdata/parity-vectors.json valueOnlyFindings[undefined-object-value]"
+    },
+    {
+      "id": "F6",
+      "severity": "P3",
+      "finding": "migration/manifest.tsv and migration/dependency-graph.json still use different unit identifiers: the graph names U06-hash/U06-phpencode/U06-sidecar, the manifest has a single U06 row plus a new U06-rem row. The two artifacts cannot be cross-validated, so the skill plan's edge-existence check remains unimplementable.",
+      "status": "fixed in this pass",
+      "evidence": "manifest.tsv split U06 into U06-hash, U06-phpencode, U06-sidecar matching dependency-graph.json levels and edges"
+    }
+  ],
+  "status_rationale": "draft, not green: mutation is waived, covercheck is unwired, F4 has no named approver, and the CLI-level dual-run for `config` is still manual. `go test ./...` and the parity command both pass, with and without Node."
+}

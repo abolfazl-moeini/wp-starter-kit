@@ -3,6 +3,7 @@ package phpencode_test
 import (
 	"encoding/json"
 	"math"
+	"strings"
 	"testing"
 
 	"github.com/abolfazl-moeini/wp-starter-kit/packages/build-go/internal/phpencode"
@@ -121,19 +122,9 @@ func TestFileContent_MatchesJson2PHPOracle(t *testing.T) {
 			want:  "<?php return array('n' => 10000000000000000000);\n",
 		},
 		{
-			name:  "map encodes with sorted keys",
-			input: map[string]any{"b": 1, "a": "x"},
-			want:  "<?php return array('a' => 'x', 'b' => 1);\n",
-		},
-		{
 			name:  "nested map inside array",
-			input: []any{map[string]any{"k": true}},
+			input: []any{phpencode.Object{{Key: "k", Value: true}}},
 			want:  "<?php return array(array('k' => true));\n",
-		},
-		{
-			name:  "empty map",
-			input: map[string]any{},
-			want:  "<?php return array();\n",
 		},
 		{
 			name:  "negative small exponent",
@@ -239,11 +230,6 @@ func TestFileContent_MatchesJson2PHPOracle(t *testing.T) {
 			want: "<?php return array('u' => 10, 'u8' => 8, 'u16' => 16, 'u32' => 32, 'u64' => 64, 'i8' => 8, 'i16' => 16);\n",
 		},
 		{
-			name:  "map[string]string sorted keys",
-			input: map[string]string{"b": "beta", "a": "alpha"},
-			want:  "<?php return array('a' => 'alpha', 'b' => 'beta');\n",
-		},
-		{
 			name:  "int slice",
 			input: []int{1, 2, 3},
 			want:  "<?php return array(1, 2, 3);\n",
@@ -264,9 +250,14 @@ func TestFileContent_MatchesJson2PHPOracle(t *testing.T) {
 			want:  "<?php return array('z' => 0);\n",
 		},
 		{
-			name:  "uint64 json.Number preserved",
+			name:  "uint64 json.Number rounds via binary64 like JSON.parse",
 			input: phpencode.Object{{Key: "max", Value: json.Number("18446744073709551615")}},
-			want:  "<?php return array('max' => 18446744073709551615);\n",
+			want:  "<?php return array('max' => 18446744073709552000);\n",
+		},
+		{
+			name:  "2^53+1 json.Number rounds like JSON.parse",
+			input: phpencode.Object{{Key: "n", Value: json.Number("9007199254740993")}},
+			want:  "<?php return array('n' => 9007199254740992);\n",
 		},
 	}
 	for _, tc := range cases {
@@ -279,6 +270,52 @@ func TestFileContent_MatchesJson2PHPOracle(t *testing.T) {
 				t.Fatalf("got  %q\nwant %q", got, tc.want)
 			}
 		})
+	}
+}
+
+func TestFileContent_NonExactIntegerRejected(t *testing.T) {
+	cases := []any{
+		int64(9007199254740993),
+		uint64(18446744073709551615),
+	}
+	for _, input := range cases {
+		_, err := phpencode.FileContent(phpencode.Object{{Key: "n", Value: input}})
+		if err == nil || !strings.Contains(err.Error(), "not a sidecar input") {
+			t.Fatalf("%T: err=%v", input, err)
+		}
+	}
+	// 2^53 is exact in binary64 and stays a plain integer.
+	got, err := phpencode.FileContent(phpencode.Object{{Key: "n", Value: int64(9007199254740992)}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "<?php return array('n' => 9007199254740992);\n" {
+		t.Fatalf("got %q", got)
+	}
+}
+
+func TestFileContent_JSONNumberOverflowIsNull(t *testing.T) {
+	for _, raw := range []string{"1e400", "-1e400"} {
+		got, err := phpencode.FileContent(phpencode.Object{{Key: "n", Value: json.Number(raw)}})
+		if err != nil {
+			t.Fatalf("%s: %v", raw, err)
+		}
+		if got != "<?php return array('n' => null);\n" {
+			t.Fatalf("%s: got %q", raw, got)
+		}
+	}
+}
+
+func TestFileContent_MapsRejected(t *testing.T) {
+	for _, input := range []any{
+		map[string]any{"b": 1, "a": "x"},
+		map[string]any{},
+		map[string]string{"b": "beta", "a": "alpha"},
+		[]any{map[string]any{"k": true}},
+	} {
+		if _, err := phpencode.FileContent(input); err == nil {
+			t.Fatalf("expected map rejection for %#v", input)
+		}
 	}
 }
 

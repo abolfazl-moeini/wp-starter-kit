@@ -2,9 +2,9 @@
 
 > **Target Audience:** Autonomous AI Coding Agents, Senior Systems Engineers, and Core Contributors.  
 > **Repository Root:** `/Users/moeini/Documents/ideas/extend-kit/wp-starter-kit`  
-> **Active Development Branch:** `codex/protection-pilot`  
+> **Active Development Branch:** `migrate/build-go` — confirm with `git rev-parse --abbrev-ref HEAD` before assuming  
 > **Project Type:** Modular WordPress/WooCommerce Plugin Boilerplate, CLI Scaffolder & Standalone Obfuscation Monorepo.  
-> **Last Updated:** 2026-09-10
+> **Last Updated:** 2026-09-22
 
 ---
 
@@ -20,7 +20,7 @@
    - CLI engine (`wpdev` / `npm run scaffold`) that generates and manages plugins from a declarative feature catalog (`features.js`).
    - Pure dry-run update planning (`wpdev update`) and automated migrations (`wpdev update --run`).
 3. **Production Distribution & Standalone Hardening (`packages/standalone-build`):**
-   - Standalone plugin packager that inlines required framework closures (`src/FrameworkClosure/`) so client plugins run without a parent framework dependency.
+   - Standalone plugin packager that inlines required framework closures into the **generated plugin** at `{plugin}/src/FrameworkClosure/` (see `packages/standalone-build/assemble-profile-s-candidate.mjs`) so client plugins run without a parent framework dependency. ⚠️ This path exists inside the build output only — there is no `src/FrameworkClosure/` in this monorepo.
    - **Profile S AST Obfuscator & Spaghettification Engine:** Strips 100% of internal DocBlocks/comments, mangles internal symbols (`_c_...`, `_f_...`, `_p_...`, `$_v_...`), downlevels syntax to PHP 7.4 via Rector, and compresses code into a dense single-use legacy structure to prevent framework theft.
    - **Zero-Regression Invariant:** Enforces strict whitelist preservation for WordPress hooks, filters, globals, WooCommerce APIs, and gettext translations.
    - **Transactional Write-Ahead Log (WAL):** Atomic staging and fail-closed crash rollback during deployment.
@@ -58,7 +58,8 @@ wp-starter-kit/
 │   ├── hooks/ / html-utils/ / utils/  # Lightweight TypeScript/PHP cross-cutting helpers
 │   ├── rule-engine/                   # Conditional rules & dynamic evaluation engine
 │   ├── translation/                   # Gettext translation compiler & extraction scripts
-│   └── ui-components/                 # Reusable Preact/React UI elements
+│   ├── ui-components/                 # Reusable Preact/React UI elements
+│   └── build-go/                      # Go W1 build slice (config, hash, sidecar, CLI). Not wired into npm run build.
 │
 ├── core/packages/                     # JS build workspaces (esbuild orchestration)
 │   ├── build/                         # CLIs for dependencies, components, styles & assets
@@ -78,6 +79,7 @@ wp-starter-kit/
 │   └── obfuscation-and-spaghettification-handoff.md # Pointer to protection engine context
 │
 ├── tests/                             # Root Jest suites (980+ tests) & tests/phpunit/
+├── migration/                         # Go build migration record: RULEBOOK.md, fixtures, evidence
 └── dist/                              # Local scaffold and build outputs (gitignored)
 ```
 

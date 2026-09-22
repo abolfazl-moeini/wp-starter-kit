@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/abolfazl-moeini/wp-starter-kit/packages/build-go/internal/jsnum"
 )
 
 type Options struct {
@@ -85,7 +87,14 @@ func Read(opts Options) (Config, error) {
 		}
 		path = found
 	}
+	return ReadFile(path)
+}
 
+// ReadFile is the library contract for an explicit path (R-008g): no
+// discovery walk. A directory path fails with "Failed to read", matching
+// readProjectConfig's readFileSync throw. Discovery (skip-directories)
+// lives in findWPDevJSON / CLI only and is not getRootPath.
+func ReadFile(path string) (Config, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -170,20 +179,20 @@ func Read(opts Options) (Config, error) {
 	}
 
 	cfg := Config{
-		Slug:              asString(merged["slug"]),
-		GlobalName:        asString(merged["globalName"]),
-		LocalizeVar:       asString(merged["localizeVar"]),
-		TextDomain:        asString(merged["textDomain"]),
-		HookPrefix:        asString(merged["hookPrefix"]),
-		NPMScope:          asString(merged["npmScope"]),
-		DepsBundle:        asString(merged["depsBundle"]),
-		PHPFunctionPrefix: asString(merged["phpFunctionPrefix"]),
-		UIFramework:       asString(merged["uiFramework"]),
-		RESTNamespace:     asString(merged["restNamespace"]),
-		VendorPrefix:      asString(merged["vendorPrefix"]),
-		PHPMinVersion:     asString(merged["phpMinVersion"]),
-		PHPSourceVersion:  asString(merged["phpSourceVersion"]),
-		BatchEndpoint:     asString(merged["batchEndpoint"]),
+		Slug:              storedString(merged["slug"]),
+		GlobalName:        storedString(merged["globalName"]),
+		LocalizeVar:       storedString(merged["localizeVar"]),
+		TextDomain:        storedString(merged["textDomain"]),
+		HookPrefix:        storedString(merged["hookPrefix"]),
+		NPMScope:          storedString(merged["npmScope"]),
+		DepsBundle:        storedString(merged["depsBundle"]),
+		PHPFunctionPrefix: storedString(merged["phpFunctionPrefix"]),
+		UIFramework:       storedString(merged["uiFramework"]),
+		RESTNamespace:     storedString(merged["restNamespace"]),
+		VendorPrefix:      storedString(merged["vendorPrefix"]),
+		PHPMinVersion:     storedString(merged["phpMinVersion"]),
+		PHPSourceVersion:  storedString(merged["phpSourceVersion"]),
+		BatchEndpoint:     storedString(merged["batchEndpoint"]),
 		NullFields:        map[string]bool{},
 		Extra:             map[string]any{},
 	}
@@ -199,6 +208,15 @@ func Read(opts Options) (Config, error) {
 	for k, v := range obj {
 		if _, known := knownFields[k]; !known {
 			cfg.Extra[k] = v
+			continue
+		}
+		// R-001 / §1.3: Extra keeps the raw JSON value so MarshalJSON emits
+		// the number/object, not a coerced string. The typed field holds
+		// the JS template-literal spelling (storedString) for callers.
+		if v != nil {
+			if _, isStr := v.(string); !isStr {
+				cfg.Extra[k] = v
+			}
 		}
 	}
 	return cfg, nil
@@ -295,9 +313,18 @@ func truthy(v any) bool {
 	}
 }
 
-func asString(v any) string {
-	s, _ := v.(string)
-	return s
+// storedString keeps a real string as itself. Null stays "" (NullFields
+// records the null). Any other JSON value is stored as its JS template
+// coercion so callers do not see a silent empty string; MarshalJSON still
+// emits the raw value from Extra.
+func storedString(v any) string {
+	if v == nil {
+		return ""
+	}
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return jsString(v)
 }
 
 // jsString replicates JS template-literal coercion `${v}` used by the source
@@ -360,43 +387,10 @@ func jsish(v any) string {
 	}
 }
 
-// jsFloat renders a float64 with JS Number.prototype.toString rules:
-// integral magnitudes below 1e21 print as digits, |v| >= 1e21 or
-// 0 < |v| < 1e-6 use unpadded exponent form, else shortest decimal.
+// jsFloat renders a float64 with JS Number.prototype.toString rules.
+// Shared implementation lives in internal/jsnum (R-005e).
 func jsFloat(f float64) string {
-	if math.IsNaN(f) {
-		return "NaN"
-	}
-	if math.IsInf(f, 1) {
-		return "Infinity"
-	}
-	if math.IsInf(f, -1) {
-		return "-Infinity"
-	}
-	if f == 0 {
-		return "0"
-	}
-	abs := math.Abs(f)
-	if f == math.Trunc(f) && abs < 1e21 {
-		return strconv.FormatFloat(f, 'f', -1, 64)
-	}
-	if abs >= 1e21 || abs < 1e-6 {
-		s := strconv.FormatFloat(f, 'e', -1, 64)
-		if i := strings.LastIndexByte(s, 'e'); i >= 0 {
-			mant, exp := s[:i], s[i+1:]
-			sign := "+"
-			if strings.HasPrefix(exp, "-") {
-				sign = "-"
-			}
-			exp = strings.TrimLeft(strings.TrimPrefix(strings.TrimPrefix(exp, "+"), "-"), "0")
-			if exp == "" {
-				exp = "0"
-			}
-			return mant + "e" + sign + exp
-		}
-		return s
-	}
-	return strconv.FormatFloat(f, 'f', -1, 64)
+	return jsnum.NumberString(f)
 }
 
 // typeofJS replicates JS typeof for values decoded from JSON, used in

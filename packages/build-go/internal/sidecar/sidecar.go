@@ -45,7 +45,10 @@ func StyleAssetPath(cssPath string) string {
 }
 
 func WriteStyle(cssPath string) (string, error) {
-	if strings.TrimSpace(cssPath) == "" {
+	// Match JS `typeof cssFilePath !== "string" || !cssFilePath`: only the
+	// empty string is rejected here; whitespace-only paths fall through to
+	// the exists check ("not found"), exactly like Node.
+	if cssPath == "" {
 		return "", fmt.Errorf("buildStyleAssetFile: cssFilePath must be a non-empty string")
 	}
 	sum, err := hash.FileMD5(cssPath)
@@ -53,14 +56,16 @@ func WriteStyle(cssPath string) (string, error) {
 		if os.IsNotExist(err) {
 			return "", fmt.Errorf("buildStyleAssetFile: source CSS file not found at %s", cssPath)
 		}
+		return "", fmt.Errorf("buildStyleAssetFile: %v", err)
+	}
+	body, err := phpencode.FileContent(phpencode.Object{{Key: "hash", Value: sum}})
+	if err != nil {
 		return "", err
 	}
-	// MD5 hex cannot fail json2php encoding; FileContent is still used so
-	// sidecar bytes stay on the same encoder as the U06 oracle.
-	body, _ := phpencode.FileContent(phpencode.Object{{Key: "hash", Value: sum}})
 	out := StyleAssetPath(cssPath)
-	if err := os.WriteFile(out, []byte(body), 0o644); err != nil {
-		return "", err
+	// Source writeFile uses 0o666 masked by umask; match it (was 0o644).
+	if err := os.WriteFile(out, []byte(body), 0o666); err != nil {
+		return "", fmt.Errorf("buildStyleAssetFile: %v", err)
 	}
 	return out, nil
 }

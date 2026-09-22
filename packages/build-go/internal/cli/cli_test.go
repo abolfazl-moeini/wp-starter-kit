@@ -68,6 +68,56 @@ func TestRun_ConfigJSON(t *testing.T) {
 	}
 }
 
+func TestRun_ConfigJSONNoHTMLEscape(t *testing.T) {
+	// R-007c: <, >, & and U+2028 pass through like JSON.stringify.
+	dir := t.TempDir()
+	path := filepath.Join(dir, "wpdev.json")
+	body := `{"slug":"a<b&c","globalName":"Pilot","localizeVar":"PilotLoc","textDomain":"pilot","hookPrefix":"pilot","npmScope":"@pilot","custom":"x y"}`
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var out, errBuf bytes.Buffer
+	if code := cli.Run([]string{"wpdev-build", "config", "--path", path}, &out, &errBuf); code != 0 {
+		t.Fatalf("exit %d stderr=%s", code, errBuf.String())
+	}
+	stdout := out.String()
+	if !strings.Contains(stdout, "a<b&c") {
+		t.Fatalf("HTML escaped stdout=%q", stdout)
+	}
+	if strings.Contains(stdout, "\\u0026") || strings.Contains(stdout, "\\u003c") || strings.Contains(stdout, "\\u003e") {
+		t.Fatalf("found HTML escape in stdout=%q", stdout)
+	}
+	if !strings.Contains(stdout, "x y") {
+		t.Fatalf("U+2028 not preserved stdout=%q", stdout)
+	}
+}
+
+func TestRun_DashLeadingValueRejected(t *testing.T) {
+	// R-015b: dash-leading values are "missing value", exit 2. Use --file=-x.
+	var out, errBuf bytes.Buffer
+	code := cli.Run([]string{"wpdev-build", "hash", "--file", "-foo.css"}, &out, &errBuf)
+	if code != 2 || out.Len() != 0 || errBuf.String() != "missing value for --file\n" {
+		t.Fatalf("exit=%d stdout=%q stderr=%q", code, out.String(), errBuf.String())
+	}
+}
+
+func TestRun_ConfigNumericExtraRoundTrip(t *testing.T) {
+	// §1.9: unknown numeric fields keep JS-lossy spelling, not Go formatting.
+	dir := t.TempDir()
+	path := filepath.Join(dir, "wpdev.json")
+	body := `{"slug":"pilot","globalName":"Pilot","localizeVar":"PilotLoc","textDomain":"pilot","hookPrefix":"pilot","npmScope":"@pilot","features":{"limit":9007199254740993}}`
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var out, errBuf bytes.Buffer
+	if code := cli.Run([]string{"wpdev-build", "config", "--path", path}, &out, &errBuf); code != 0 {
+		t.Fatalf("exit %d stderr=%s", code, errBuf.String())
+	}
+	if !strings.Contains(out.String(), "9007199254740992") {
+		t.Fatalf("JS-lossy spelling missing stdout=%s", out.String())
+	}
+}
+
 func TestRun_HashFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "a.txt")

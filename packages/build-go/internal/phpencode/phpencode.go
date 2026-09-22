@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/abolfazl-moeini/wp-starter-kit/packages/build-go/internal/jsnum"
 )
 
 type Pair struct {
@@ -35,40 +37,41 @@ func encode(v any) (string, error) {
 		}
 		return "false", nil
 	case int:
-		return strconv.Itoa(t), nil
+		return encodeSigned(int64(t))
 	case int8:
-		return strconv.FormatInt(int64(t), 10), nil
+		return encodeSigned(int64(t))
 	case int16:
-		return strconv.FormatInt(int64(t), 10), nil
+		return encodeSigned(int64(t))
 	case int32:
-		return strconv.FormatInt(int64(t), 10), nil
+		return encodeSigned(int64(t))
 	case int64:
-		return strconv.FormatInt(t, 10), nil
+		return encodeSigned(t)
 	case uint:
-		return strconv.FormatUint(uint64(t), 10), nil
+		return encodeUnsigned(uint64(t))
 	case uint8:
-		return strconv.FormatUint(uint64(t), 10), nil
+		return encodeUnsigned(uint64(t))
 	case uint16:
-		return strconv.FormatUint(uint64(t), 10), nil
+		return encodeUnsigned(uint64(t))
 	case uint32:
-		return strconv.FormatUint(uint64(t), 10), nil
+		return encodeUnsigned(uint64(t))
 	case uint64:
-		return strconv.FormatUint(t, 10), nil
+		return encodeUnsigned(t)
 	case float32:
 		return jsNumber(float64(t)), nil
 	case float64:
 		return jsNumber(t), nil
 	case json.Number:
-		if i, err := t.Int64(); err == nil {
-			return strconv.FormatInt(i, 10), nil
+		// R-004e: JSON numbers follow phpFileContent = json2php(JSON.parse(JSON.stringify(v))).
+		// JSON.parse rounds to binary64 first. Overflow (1e400) is Infinity there,
+		// and json2php prints that as null. ParseFloat reports ErrRange for the
+		// same overflow and still returns ±Inf; that is null, not an error.
+		f, err := t.Float64()
+		if err != nil {
+			if ne, ok := err.(*strconv.NumError); !ok || ne.Err != strconv.ErrRange {
+				return "", fmt.Errorf("phpencode: invalid json.Number %q", t.String())
+			}
 		}
-		if u, err := strconv.ParseUint(t.String(), 10, 64); err == nil {
-			return strconv.FormatUint(u, 10), nil
-		}
-		if f, err := t.Float64(); err == nil {
-			return jsNumber(f), nil
-		}
-		return "", fmt.Errorf("phpencode: invalid json.Number %q", t.String())
+		return jsNumber(f), nil
 	case string:
 		escaped := strings.ReplaceAll(t, `\`, `\\`)
 		escaped = strings.ReplaceAll(escaped, `'`, `\'`)
@@ -76,13 +79,9 @@ func encode(v any) (string, error) {
 	case Object:
 		return encodeObject(t)
 	case map[string]any:
-		return encodeMap(t)
+		return "", fmt.Errorf("phpencode: map[string]any is not a sidecar encoder; use phpencode.Object to preserve insertion order (R-002)")
 	case map[string]string:
-		m := make(map[string]any, len(t))
-		for k, val := range t {
-			m[k] = val
-		}
-		return encodeMap(m)
+		return "", fmt.Errorf("phpencode: map[string]string is not a sidecar encoder; use phpencode.Object to preserve insertion order (R-002)")
 	case []any:
 		return encodeArray(t)
 	case []string:
@@ -102,56 +101,36 @@ func encode(v any) (string, error) {
 	}
 }
 
+// encodeSigned prints a Go integer only when binary64 can represent it
+// exactly. A non-exact int64 is not a JSON sidecar input: phpFileContent
+// would have rounded it, and printing the full integer would diverge (R-004e).
+func encodeSigned(n int64) (string, error) {
+	f := float64(n)
+	if int64(f) != n {
+		return "", fmt.Errorf("phpencode: integer %d is not an exact binary64 value and is not a sidecar input", n)
+	}
+	return jsNumber(f), nil
+}
+
+// twoTo64 is 2^64. float64(math.MaxUint64) rounds up to this value, which
+// does not fit back into uint64, so it is the exactness ceiling.
+const twoTo64 = 18446744073709551616.0
+
+func encodeUnsigned(n uint64) (string, error) {
+	f := float64(n)
+	if math.IsInf(f, 0) || f >= twoTo64 || uint64(f) != n {
+		return "", fmt.Errorf("phpencode: integer %d is not an exact binary64 value and is not a sidecar input", n)
+	}
+	return jsNumber(f), nil
+}
+
 // jsNumber replicates JS Number.prototype.toString as used by json2php:
 // integral values below 1e21 print as plain digits, values with absolute
 // magnitude >= 1e21 or (non-zero) < 1e-6 use unpadded exponent form,
 // everything else uses shortest round-trip decimal (R-005).
+// Shared implementation lives in internal/jsnum (R-005e).
 func jsNumber(t float64) string {
-	if math.IsNaN(t) || math.IsInf(t, 0) {
-		return "null"
-	}
-	if t == 0 {
-		return "0"
-	}
-	abs := math.Abs(t)
-	if t == math.Trunc(t) && abs < 1e21 {
-		return strconv.FormatFloat(t, 'f', -1, 64)
-	}
-	if abs >= 1e21 || abs < 1e-6 {
-		s := strconv.FormatFloat(t, 'e', -1, 64)
-		if i := strings.LastIndexByte(s, 'e'); i >= 0 {
-			mant, exp := s[:i], s[i+1:]
-			exp = strings.TrimPrefix(exp, "+")
-			exp = strings.TrimPrefix(exp, "-")
-			exp = strings.TrimLeft(exp, "0")
-			if exp == "" {
-				exp = "0"
-			}
-			sign := "+"
-			if s[i+1] == '-' {
-				sign = "-"
-			}
-			s = mant + "e" + sign + exp
-		}
-		return s
-	}
-	return strconv.FormatFloat(t, 'f', -1, 64)
-}
-
-func encodeMap(m map[string]any) (string, error) {
-	if len(m) == 0 {
-		return "array()", nil
-	}
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	obj := make(Object, 0, len(keys))
-	for _, k := range keys {
-		obj = append(obj, Pair{Key: k, Value: m[k]})
-	}
-	return encodeObject(obj)
+	return jsnum.JSONNumber(t)
 }
 
 func encodeObject(obj Object) (string, error) {
