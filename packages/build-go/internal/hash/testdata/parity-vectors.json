@@ -110,8 +110,13 @@
         },
         "targetPhp": "8.1",
         "preservationPolicy": {
-          "frozenClasses": ["B", "A"],
-          "gettextDomains": ["t x"]
+          "frozenClasses": [
+            "B",
+            "A"
+          ],
+          "gettextDomains": [
+            "t x"
+          ]
         }
       },
       "sha256": "da53bb1dbb4ade5826a8146dac9c054e00b9b3db255f78268d0be3bfe95e642b"
