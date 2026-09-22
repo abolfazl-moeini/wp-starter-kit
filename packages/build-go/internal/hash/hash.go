@@ -160,6 +160,7 @@ func (p *canonicalParser) value() (any, error) {
 				break
 			}
 			p.pos++
+			p.space()
 		}
 		if _, err := p.next(); err != nil { // ']'
 			return nil, err
