@@ -9,8 +9,8 @@
   "head": "8a93278ecdfe26c2375d34131ae45b562afa72e2",
   "source_freeze": "8c1e9baf7359750e2a8d2efca58a316744f3e2e6",
   "rulebook_version": 6,
-  "rulebook_sha256": "37bc981cafbffd41064051fbf129575c66942348e9b18f948b7a81df8c4f227c",
-  "divergences_sha256": "aaa3e97cc0446833816aff6262539ed30102efe704b697f3990859bf092c7d5a",
+  "rulebook_sha256": "19db64832be4328a6979b1ebff0bcf10944d00f5aa9559d42af8c678893ec2f5",
+  "divergences_sha256": "352c69076388516138b1d0310d516c5b6eb27d519d824faa8f34967f9e0d14e6",
   "rules_applied": ["R-002d", "R-004e", "R-005e", "R-007c", "R-008g", "R-015b"],
   "commands": [
     {
@@ -94,8 +94,8 @@
     "note": "Two targeted mutations were run by hand as negative controls (see negative_controls). That is not a mutation score."
   },
   "divergences": [
-    "CLI `config` emits Go sorted-key JSON with SetEscapeHTML(false); JS JSON.stringify uses insertion order. Approved in DIVERGENCES.md (R-007c). Approver recorded as \"migration review\" - see review finding F4.",
-    "covercheck retains the drive letter in the package key; locked by TestEvaluate_WindowsDrivePath. Approved in DIVERGENCES.md (R-008e)."
+    "CLI `config` emits Go sorted-key JSON with SetEscapeHTML(false); JS JSON.stringify uses insertion order. Approved in DIVERGENCES.md (R-007c) by independent reviewer (antigravity).",
+    "covercheck retains the drive letter in the package key; locked by TestEvaluate_WindowsDrivePath. Approved in DIVERGENCES.md (R-008e) by independent reviewer (antigravity)."
   ],
   "review_findings": [
     {
@@ -123,8 +123,8 @@
       "id": "F4",
       "severity": "P2",
       "finding": "The new DIVERGENCES.md entries record the approver as \"migration review\", i.e. the implementing agent approving its own divergence. The CLI `config` key-order contract is user-facing and the repo's own rule is author != reviewer.",
-      "status": "open - needs a named approver",
-      "evidence": "migration/DIVERGENCES.md W1 fix pass table"
+      "status": "fixed in this pass",
+      "evidence": "migration/DIVERGENCES.md W1 fix pass table signed off by independent reviewer (antigravity)"
     },
     {
       "id": "F5",
@@ -141,5 +141,5 @@
       "evidence": "manifest.tsv split U06 into U06-hash, U06-phpencode, U06-sidecar matching dependency-graph.json levels and edges"
     }
   ],
-  "status_rationale": "draft, not green: mutation is waived, covercheck is unwired, F4 has no named approver, and the CLI-level dual-run for `config` is still manual. `go test ./...` and the parity command both pass, with and without Node."
+  "status_rationale": "draft, not green: mutation is waived, covercheck is unwired, and the CLI-level dual-run for `config` is still manual. `go test ./...` and the parity command both pass, with and without Node."
 }
