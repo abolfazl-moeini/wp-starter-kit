@@ -222,7 +222,17 @@ final class AssetPipeline {
         $dist_url = (string) $registry['dist_url'];
 
         // Mode B: Enqueue discrete handles + attach host tokens to core handle (R7)
-        if (!self::use_inline_styles() && function_exists('wp_enqueue_style') && $dist_url !== '') {
+        if (!self::use_inline_styles() && function_exists('wp_enqueue_style')) {
+            if ($dist_url === '') {
+                if (defined('WP_DEBUG') && WP_DEBUG && function_exists('_doing_it_wrong')) {
+                    _doing_it_wrong(
+                        __METHOD__,
+                        'Chameleon dist_url is empty. AssetPipeline::init() must be called with a valid dist URL.',
+                        self::ENGINE_VERSION
+                    );
+                }
+                return;
+            }
             wp_enqueue_style('wpdev-polaris-core', $dist_url . '/polaris-core.css', [], self::ENGINE_VERSION);
 
             if (empty($registry['host_tokens_attached'])) {
@@ -321,6 +331,13 @@ final class AssetPipeline {
     private static function print_inlined_styles(string $nonce_attr): void {
         $dist_path = (string) self::registry()['dist_path'];
         if ($dist_path === '') {
+            if (defined('WP_DEBUG') && WP_DEBUG && function_exists('_doing_it_wrong')) {
+                _doing_it_wrong(
+                    __METHOD__,
+                    'Chameleon dist_path is empty. AssetPipeline::init() must be called with a valid dist directory.',
+                    self::ENGINE_VERSION
+                );
+            }
             return;
         }
 

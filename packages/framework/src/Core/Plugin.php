@@ -165,6 +165,7 @@ final class Plugin {
 		self::$instance  = new self();
 		self::$booted    = true;
 		self::$last_hook = $hook_prefix . '_plugin_loaded';
+		self::init_chameleon_assets();
 
 		// Wire module boot into WordPress.
 		//
@@ -423,5 +424,63 @@ final class Plugin {
 		}
 
 		return $root . '/project.config.json';
+	}
+
+	/**
+	 * Initialize Chameleon AssetPipeline if present.
+	 */
+	private static function init_chameleon_assets(): void {
+		if ( ! class_exists( \WPDev\Chameleon\Assets\AssetPipeline::class ) ) {
+			return;
+		}
+
+		$plugin_root = self::$plugin_dir;
+		if ( null === $plugin_root ) {
+			$config_file = self::resolve_default_config_path();
+			$plugin_root = dirname( $config_file );
+		}
+		$root = rtrim( (string) $plugin_root, '/\\' );
+
+		$candidates = array(
+			$root . '/packages/polaris-stack/dist',
+			$root . '/assets/polaris',
+			$root . '/assets/dist',
+			$root . '/vendor/wpdev/polaris-stack/dist',
+			dirname( __DIR__, 3 ) . '/polaris-stack/dist',
+		);
+
+		$dist_path = '';
+		foreach ( $candidates as $candidate ) {
+			if ( is_dir( $candidate ) && is_file( $candidate . '/polaris-core.css' ) ) {
+				$dist_path = $candidate;
+				break;
+			}
+		}
+
+		if ( '' === $dist_path ) {
+			$dist_path = $root . '/assets/polaris';
+		}
+
+		$dist_url = '';
+		if ( class_exists( \WPDev\Support\Assets::class ) ) {
+			$paths     = \WPDev\Support\Assets::resolve_paths();
+			$base_path = rtrim( $paths['base_path'], '/\\' );
+			$base_url  = rtrim( $paths['base_url'], '/' );
+			if ( '' !== $base_path && strpos( $dist_path, $base_path ) === 0 ) {
+				$rel      = substr( $dist_path, strlen( $base_path ) );
+				$dist_url = $base_url . '/' . ltrim( str_replace( '\\', '/', $rel ), '/' );
+			}
+		}
+
+		if ( '' === $dist_url && function_exists( 'plugins_url' ) ) {
+			$dist_url = \plugins_url( 'assets/polaris', $root . '/plugin.php' );
+		}
+
+		if ( function_exists( 'apply_filters' ) ) {
+			$dist_path = (string) \apply_filters( 'wpdev_chameleon_dist_path', $dist_path );
+			$dist_url  = (string) \apply_filters( 'wpdev_chameleon_dist_url', $dist_url );
+		}
+
+		\WPDev\Chameleon\Assets\AssetPipeline::init( $dist_path, $dist_url );
 	}
 }
