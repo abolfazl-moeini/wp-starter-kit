@@ -153,6 +153,12 @@ describe("polaris-stack component render", () => {
     expect(root.querySelector(".ps-badge-success")).not.toBeNull();
   });
 
+  test("Badge defaults to neutral tone class", () => {
+    const root = document.createElement("div");
+    render(h(Badge, {}, "OK"), root);
+    expect(root.querySelector(".ps-badge-neutral")).not.toBeNull();
+  });
+
   test("Alert renders with role status", () => {
     const root = document.createElement("div");
     render(h(Alert, { tone: "warning" }, "Heads up"), root);
