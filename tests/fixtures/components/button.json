@@ -1,0 +1,44 @@
+[
+  {
+    "name": "solid-md",
+    "props": {
+      "variant": "solid",
+      "size": "md",
+      "text": "Submit"
+    },
+    "expectedClasses": ["ps-button", "ps-button-solid", "ps-button-md"]
+  },
+  {
+    "name": "soft-sm",
+    "props": {
+      "variant": "soft",
+      "size": "sm",
+      "text": "Cancel"
+    },
+    "expectedClasses": ["ps-button", "ps-button-soft", "ps-button-sm"]
+  },
+  {
+    "name": "ghost-lg",
+    "props": {
+      "variant": "ghost",
+      "size": "lg",
+      "text": "Options"
+    },
+    "expectedClasses": ["ps-button", "ps-button-ghost", "ps-button-lg"]
+  },
+  {
+    "name": "block-solid",
+    "props": {
+      "variant": "solid",
+      "size": "md",
+      "block": true,
+      "text": "Full Width Action"
+    },
+    "expectedClasses": [
+      "ps-button",
+      "ps-button-solid",
+      "ps-button-md",
+      "ps-button-block"
+    ]
+  }
+]

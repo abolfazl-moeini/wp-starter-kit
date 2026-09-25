@@ -61,6 +61,9 @@ scripts. Safe in Node and browser contexts.
 
 **`@wpdev/polaris-stack`** — Not published to npm in v1. Consumed when
 `frontendStack:polaris`. Requires `js=typescript` and `jsLib=react|preact`.
+Features single-source design token generation via `tokens.json` (`npm run build:tokens`),
+compiling to CSS custom properties, TypeScript declarations, and automated, slug-preserving
+synchronization with WordPress Full Site Editing (`theme.json`).
 
 ---
 

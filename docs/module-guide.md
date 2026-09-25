@@ -244,6 +244,25 @@ public function should_boot(): bool
 
 The loader skips `boot()` when `should_boot()` returns `false`.
 
+## Reusable Submodules (`module-*`)
+
+For cross-plugin features that can be shared across multiple products (e.g. `module-test-users`, `module-user-merge`, `module-design-tokens`), structure the module as an independent Git submodule under `src/Modules/<ModuleName>/`:
+
+### Architectural Rules for Submodules
+
+1. **Brand & Host Agnostic:** Never hardcode host plugin slugs, option names, or brand keys inside the submodule. Use generic namespaces (`WPDev\Modules\<ModuleName>`).
+2. **Filter-Driven Configuration:** Expose filter hooks (e.g., `wpdev_brand_color`, `wpdev_<feature>_options`) to allow the host plugin to inject settings.
+3. **Dual Boot Resilience:** Support both starter-kit loader environments and standalone direct boot:
+   ```php
+   if ( class_exists( '\WPDev\Core\Plugin' ) && method_exists( '\WPDev\Core\Plugin', 'loader' ) ) {
+       \WPDev\Core\Plugin::loader()->register( new \WPDev\Modules\DesignTokens\Module() );
+   } else {
+       ( new \WPDev\Modules\DesignTokens\Module() )->boot();
+   }
+   ```
+4. **Isolated Lifecycle & Cache Invalidation:** Submodules manage their own runtime caching and invalidate on both WPDev settings (`wpdev_v2_settings`) and host-specific option hooks.
+5. **Self-Contained Documentation & Tests:** Each submodule maintains its own `README.md` and test suite within its repository root.
+
 ## See also
 
 - [modules.md](modules.md) — `ModuleInterface` contract

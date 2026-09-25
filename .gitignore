@@ -22,6 +22,7 @@ assets/map/
 # Test artifacts
 .phpunit.result.cache
 coverage/
+budget-ledger.json
 .mavis/
 .mavis/plans/
 
