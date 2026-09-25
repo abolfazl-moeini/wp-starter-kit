@@ -324,10 +324,7 @@ describe("Frontend JS Pipeline & Runtime (Plan 7)", () => {
         "../../packages/polaris-stack/dist/runtime/index.js",
       );
 
-      if (!fs.existsSync(runtimeDistPath)) {
-        console.warn("Skipping budget test: runtime dist not yet built");
-        return;
-      }
+      expect(fs.existsSync(runtimeDistPath)).toBe(true);
 
       const content = fs.readFileSync(runtimeDistPath);
       const gzipLength = zlib.gzipSync(content, { level: 9 }).length;
