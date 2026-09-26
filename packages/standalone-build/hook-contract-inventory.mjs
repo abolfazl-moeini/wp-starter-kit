@@ -17,14 +17,25 @@ const excluded = new Set([
   ".git", "dependencies", "dist", "docs", "examples", "node_modules", "tests", "vendor", "vendor-prefixed",
 ]);
 
+/**
+ * Dot-directories are tooling/editor state, never runtime PHP source, and the
+ * canonical artifact rules already forbid them in production trees. They may
+ * legitimately contain symlinks (skill bundles, shared config), so they are
+ * skipped before the symlink guard instead of aborting the whole inventory.
+ */
+function isToolingDirectory(name) {
+  return name.startsWith(".") && name !== "." && name !== "..";
+}
+
 async function walk(root, relative = "") {
   const files = [];
   for (const entry of await fs.readdir(path.join(root, relative), { withFileTypes: true })) {
     const child = relative ? `${relative}/${entry.name}` : entry.name;
+    if (entry.isDirectory() && (isToolingDirectory(entry.name) || excluded.has(entry.name))) continue;
     if (entry.isSymbolicLink()) {
       throw new Error(`source-tree symlink is not allowed: ${child}`);
     }
-    if (entry.isDirectory() && !excluded.has(entry.name)) files.push(...await walk(root, child));
+    if (entry.isDirectory()) files.push(...await walk(root, child));
     if (entry.isFile() && entry.name.endsWith(".php")) files.push(child);
   }
   return files.sort();

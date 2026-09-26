@@ -3,12 +3,14 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
+import { TARGET_REGISTRY } from "./target-registry.mjs";
+
 const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
 const contentRoot = path.resolve(process.argv[2] || path.join(scriptDirectory, ".."));
 const requestedConsumers = process.argv.slice(3);
 
 function isInScopeConsumer(name) {
-  return name !== "wpdev" && (/^(?:tavangary|wpdev|drm)-/.test(name) || /^tavangary/.test(name));
+  return name !== "wpdev" && (/^(?:tavangary|wpdev|drm)-/.test(name) || /^tavangary/.test(name) || Object.prototype.hasOwnProperty.call(TARGET_REGISTRY, name));
 }
 
 async function regularMetadataFile(pluginRoot, name) {
@@ -34,15 +36,19 @@ async function discoverConsumers() {
       throw new Error(`${entry.name}: consumer directory symlinks are not allowed`);
     }
     if (!entry.isDirectory()) continue;
+    if (!entry.name.endsWith("-dev")) {
+      const devCompanion = path.join(contentRoot, "plugins", `${entry.name}-dev`);
+      try {
+        const devStat = await fs.stat(devCompanion);
+        if (devStat.isDirectory()) continue;
+      } catch {}
+    }
     const pluginRoot = path.join(contentRoot, "plugins", entry.name);
     const [hasWpdev, hasComposer] = await Promise.all([
       regularMetadataFile(pluginRoot, "wpdev.json"),
       regularMetadataFile(pluginRoot, "composer.json"),
     ]);
     if (!hasWpdev && !hasComposer) continue;
-    if (!hasWpdev || !hasComposer) {
-      throw new Error(`${entry.name}: wpdev.json and composer.json must both be regular files for prefix inventory`);
-    }
     discovered.push(entry.name);
   }
   return discovered.sort();
@@ -82,21 +88,37 @@ async function readJson(file) {
   return JSON.parse(await fs.readFile(file, "utf8"));
 }
 
+/**
+ * Composer metadata is optional: a consumer may ship only wpdev.json when it
+ * has no Composer dependencies. A symlinked metadata file is still rejected by
+ * regularMetadataFile(), so the fail-closed guarantee is unchanged.
+ */
+async function readOptionalJson(file) {
+  try {
+    await fs.lstat(file);
+  } catch (error) {
+    if (error.code === "ENOENT") return null;
+    throw error;
+  }
+  return readJson(file);
+}
+
 const artifacts = [];
 for (const consumer of consumers) {
-  const root = path.join(contentRoot, "plugins", consumer);
+  const sourceName = TARGET_REGISTRY[consumer]?.sourceDirectoryName || consumer;
+  const root = path.join(contentRoot, "plugins", sourceName);
   const [wpdev, composer] = await Promise.all([
     readJson(path.join(root, "wpdev.json")),
-    readJson(path.join(root, "composer.json")),
+    readOptionalJson(path.join(root, "composer.json")),
   ]);
-  const strauss = composer.extra?.strauss || {};
+  const strauss = composer?.extra?.strauss || {};
   const current = wpdev.vendorPrefix || strauss.namespace_prefix || null;
   const proposed = `${studly(wpdev.slug || consumer)}Vendor`;
   artifacts.push({
     consumer,
     slug: wpdev.slug || consumer,
     currentVendorPrefix: current,
-    composerVendorPrefix: strauss.namespace_prefix || null,
+    composerVendorPrefix: composer ? strauss.namespace_prefix || null : null,
     proposedVendorPrefix: proposed,
     proposedClassmapPrefix: `${proposed}_`,
     proposedConstantPrefix: `${proposed.toUpperCase()}_`,
@@ -132,7 +154,7 @@ const report = {
     migrationRequired: artifacts.filter((artifact) => artifact.migrationRequired).map((artifact) => artifact.consumer),
   },
   promotionRules: [
-    "The default inventory includes every plugin with an in-scope folder prefix and both wpdev.json and composer.json; the standalone plugins/wpdev folder is always excluded.",
+    "The default inventory includes every plugin with an in-scope folder prefix and at least one regular wpdev.json or composer.json; the standalone plugins/wpdev folder is always excluded.",
     "Do not change a shipped vendor prefix without an accepted migration and coexistence contract.",
     "A future registry must assign one immutable artifact id and unique runtime/vendor prefixes before Profile A assembly.",
     "This inventory is review-only and must not be consumed as a release policy.",

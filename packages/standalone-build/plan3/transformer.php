@@ -185,6 +185,11 @@ class Plan3_Transformer {
 		'Table',
 		'Base',
 		'Plan3_Transformer',
+		'Singleton',
+		'Module_Autoloader',
+		'Module_Loader',
+		'Base_Manager',
+		'Base_Model',
 	);
 
 	protected static $frozen_public_constants = array(
@@ -1034,7 +1039,7 @@ class Plan3_Transformer {
 			if ( $id === T_NAMESPACE ) {
 				$spec = $this->read_namespace_spec( $tokens, $i, $count );
 				$current_ns = $spec['name'];
-				if ( ! $this->mangle_symbols && ( strpos( $current_ns, 'WPDevFramework' ) === 0 || strpos( $current_ns, 'WPDev' ) === 0 || strpos( $current_ns, 'BerlinDB' ) === 0 || strpos( $current_ns, 'Action_Scheduler' ) === 0 || strpos( $current_ns, 'Mercator' ) === 0 ) ) {
+				if ( strpos( $current_ns, 'WPDevFramework' ) === 0 || strpos( $current_ns, 'WPDev' ) === 0 || strpos( $current_ns, 'BerlinDB' ) === 0 || strpos( $current_ns, 'Action_Scheduler' ) === 0 || strpos( $current_ns, 'Mercator' ) === 0 ) {
 					$retained[ $current_ns ] = true;
 				}
 				if ( $spec['terminator'] === '{' ) {
@@ -1113,7 +1118,7 @@ class Plan3_Transformer {
 					foreach ( $detected as $ns => $val ) {
 						$this->retained_namespaces[ $ns ] = true;
 					}
-					if ( ! $this->mangle_symbols && strpos( $pathname, 'FrameworkClosure' ) !== false ) {
+					if ( strpos( $pathname, 'FrameworkClosure' ) !== false ) {
 						for ( $ti = 0; $ti < count( $toks ); $ti++ ) {
 							if ( is_array( $toks[ $ti ] ) && $toks[ $ti ][0] === T_NAMESPACE ) {
 								$spec = $this->read_namespace_spec( $toks, $ti, count( $toks ) );
@@ -1127,82 +1132,90 @@ class Plan3_Transformer {
 			}
 		}
 
-		if ( ! $this->mangle_symbols ) {
-			$classes_by_short_name = array();
-			foreach ( $php_files as $pf ) {
-				$code = @file_get_contents( $pf );
-				if ( $code === false ) {
+		$classes_by_short_name = array();
+		foreach ( $php_files as $pf ) {
+			$code = @file_get_contents( $pf );
+			if ( $code === false ) {
+				continue;
+			}
+			$tokens = token_get_all( $code );
+			$count  = count( $tokens );
+			$curr_ns = '';
+			for ( $i = 0; $i < $count; $i++ ) {
+				if ( ! is_array( $tokens[ $i ] ) ) {
 					continue;
 				}
-				$tokens = token_get_all( $code );
-				$count  = count( $tokens );
-				$curr_ns = '';
-				for ( $i = 0; $i < $count; $i++ ) {
-					if ( ! is_array( $tokens[ $i ] ) ) {
+				$id = $tokens[ $i ][0];
+				if ( $id === T_NAMESPACE ) {
+					$spec = $this->read_namespace_spec( $tokens, $i, $count );
+					$curr_ns = $spec['name'];
+					$i = $spec['end'];
+					continue;
+				}
+				if ( $id === T_CLASS || $id === T_INTERFACE || $id === T_TRAIT || ( defined( 'T_ENUM' ) && $id === T_ENUM ) ) {
+					$prev = $i - 1;
+					while ( $prev >= 0 && is_array( $tokens[ $prev ] ) && $tokens[ $prev ][0] === T_WHITESPACE ) {
+						$prev--;
+					}
+					if ( $prev >= 0 && is_array( $tokens[ $prev ] ) && $tokens[ $prev ][0] === T_DOUBLE_COLON ) {
 						continue;
 					}
-					$id = $tokens[ $i ][0];
-					if ( $id === T_NAMESPACE ) {
-						$spec = $this->read_namespace_spec( $tokens, $i, $count );
-						$curr_ns = $spec['name'];
-						$i = $spec['end'];
-						continue;
+					$next = $i + 1;
+					while ( $next < $count && is_array( $tokens[ $next ] ) && ( $tokens[ $next ][0] === T_WHITESPACE || $tokens[ $next ][0] === T_STATIC || $tokens[ $next ][0] === T_ABSTRACT || $tokens[ $next ][0] === T_FINAL ) ) {
+						$next++;
 					}
-					if ( $id === T_CLASS || $id === T_INTERFACE || $id === T_TRAIT || ( defined( 'T_ENUM' ) && $id === T_ENUM ) ) {
-						$prev = $i - 1;
-						while ( $prev >= 0 && is_array( $tokens[ $prev ] ) && $tokens[ $prev ][0] === T_WHITESPACE ) {
-							$prev--;
-						}
-						if ( $prev >= 0 && is_array( $tokens[ $prev ] ) && $tokens[ $prev ][0] === T_DOUBLE_COLON ) {
-							continue;
-						}
-						$next = $i + 1;
-						while ( $next < $count && is_array( $tokens[ $next ] ) && ( $tokens[ $next ][0] === T_WHITESPACE || $tokens[ $next ][0] === T_STATIC || $tokens[ $next ][0] === T_ABSTRACT || $tokens[ $next ][0] === T_FINAL ) ) {
-							$next++;
-						}
-						if ( $next < $count && is_array( $tokens[ $next ] ) && $tokens[ $next ][0] === T_STRING ) {
-							$short = strtolower( $tokens[ $next ][1] );
-							$classes_by_short_name[ $short ][] = $curr_ns;
-						}
+					if ( $next < $count && is_array( $tokens[ $next ] ) && $tokens[ $next ][0] === T_STRING ) {
+						$short = strtolower( $tokens[ $next ][1] );
+						$classes_by_short_name[ $short ][] = $curr_ns;
 					}
 				}
 			}
-			$cross_plugin_classes = array(
-				'assetsbootstrap',
-				'permissionscatalog',
-				'frameworkbridge',
-				'schema',
-				'roles',
-				'activator',
-				'eventstable',
-				'fqcn',
-				'module',
-			);
-			foreach ( $classes_by_short_name as $short => $ns_list ) {
-				$unique_ns = array_unique( $ns_list );
-				if ( in_array( $short, $cross_plugin_classes, true ) || count( $unique_ns ) > 1 || ( count( $unique_ns ) === 1 && in_array( '', $unique_ns, true ) && count( $ns_list ) > 1 ) ) {
-					foreach ( $unique_ns as $ns ) {
-						if ( ! empty( $ns ) ) {
+		}
+		$cross_plugin_classes = array(
+			'assetsbootstrap',
+			'permissionscatalog',
+			'frameworkbridge',
+			'schema',
+			'roles',
+			'activator',
+			'eventstable',
+			'fqcn',
+			'module',
+		);
+		foreach ( $classes_by_short_name as $short => $ns_list ) {
+			$unique_ns = array_unique( $ns_list );
+			if (
+				( ! $this->mangle_symbols && in_array( $short, $cross_plugin_classes, true ) )
+				|| ( ! $this->mangle_symbols && count( $unique_ns ) > 1 )
+				|| ( count( $unique_ns ) === 1 && in_array( '', $unique_ns, true ) && count( $ns_list ) > 1 )
+			) {
+				foreach ( $unique_ns as $ns ) {
+					if ( ! empty( $ns ) ) {
+						$this->retained_namespaces[ $ns ] = true;
+					}
+				}
+			} elseif ( $this->mangle_symbols && count( $unique_ns ) > 1 ) {
+				foreach ( $unique_ns as $ns ) {
+					if ( ! empty( $ns ) && ( strpos( $ns, 'WPDev' ) === 0 || strpos( $ns, 'FrameworkClosure' ) !== false || $short === 'component_registry' ) ) {
+						$this->retained_namespaces[ $ns ] = true;
+					}
+				}
+			}
+		}
+		$retained_roots = array();
+		foreach ( array_keys( $this->retained_namespaces ) as $r_ns ) {
+			if ( ! empty( $r_ns ) && ( strpos( $r_ns, 'WPDev' ) === 0 || strpos( $r_ns, 'FrameworkClosure' ) !== false ) ) {
+				$parts = explode( '\\', $r_ns );
+				$retained_roots[ $parts[0] ] = true;
+			}
+		}
+		if ( ! empty( $retained_roots ) ) {
+			foreach ( $classes_by_short_name as $ns_list ) {
+				foreach ( $ns_list as $ns ) {
+					if ( ! empty( $ns ) ) {
+						$parts = explode( '\\', $ns );
+						if ( isset( $retained_roots[ $parts[0] ] ) ) {
 							$this->retained_namespaces[ $ns ] = true;
-						}
-					}
-				}
-			}
-			$retained_roots = array();
-			foreach ( array_keys( $this->retained_namespaces ) as $r_ns ) {
-				if ( ! empty( $r_ns ) ) {
-					$parts = explode( '\\', $r_ns );
-					$retained_roots[ $parts[0] ] = true;
-				}
-			}
-			if ( ! empty( $retained_roots ) ) {
-				foreach ( $classes_by_short_name as $ns_list ) {
-					foreach ( $ns_list as $ns ) {
-						if ( ! empty( $ns ) ) {
-							$parts = explode( '\\', $ns );
-							if ( isset( $retained_roots[ $parts[0] ] ) ) {
-								$this->retained_namespaces[ $ns ] = true;
-							}
 						}
 					}
 				}
@@ -1432,7 +1445,9 @@ class Plan3_Transformer {
 						$class_line = isset( $tokens[ $next ][2] ) ? $tokens[ $next ][2] : 1;
 						$hash_key   = ! empty( $current_namespace ) ? ( $current_namespace . '\\' . $class_name ) : $class_name;
 						$this->class_kinds[ $hash_key ] = $kind;
-						$is_frozen = in_array( $class_name, self::$frozen_public_classes, true );
+						$is_frozen = in_array( $class_name, self::$frozen_public_classes, true )
+							|| strpos( $file_path, 'FrameworkClosure' ) !== false
+							|| strpos( $current_namespace, 'WPDevFramework' ) === 0;
 						$this->symbol_paths[ $hash_key ] = $file_path . ':' . $class_line;
 						$this->declarations[] = array(
 							'symbol'               => $hash_key,
@@ -1852,6 +1867,7 @@ class Plan3_Transformer {
 		$class_stack            = array();
 		$pending_class_fqcn     = null;
 		$in_function_header     = false;
+		$in_closure_use         = false;
 		$declared_classes_in_file = array();
 		$pending_ns_brace       = false;
 		$ns_brace_depth         = 0;
@@ -1874,6 +1890,7 @@ class Plan3_Transformer {
 				}
 				if ( $token === '{' ) {
 					$in_function_header = false;
+					$in_closure_use     = false;
 					if ( $pending_ns_brace ) {
 						$pending_ns_brace = false;
 						$ns_brace_depth   = 1;
@@ -1898,6 +1915,7 @@ class Plan3_Transformer {
 					}
 				} elseif ( $token === '}' ) {
 					$in_function_header = false;
+					$in_closure_use     = false;
 					$closing_ns = false;
 					$closing_keep_ns = false;
 					if ( $ns_brace_depth > 0 ) {
@@ -1924,6 +1942,9 @@ class Plan3_Transformer {
 					}
 				} elseif ( $token === ';' ) {
 					$in_function_header = false;
+					$in_closure_use     = false;
+				} elseif ( $token === ')' ) {
+					$in_closure_use     = false;
 				}
 			}
 
@@ -2107,6 +2128,9 @@ class Plan3_Transformer {
 						$prev--;
 					}
 					$is_closure_use = ( $prev >= 0 && is_string( $tokens[ $prev ] ) && $tokens[ $prev ] === ')' );
+					if ( $is_closure_use ) {
+						$in_closure_use = true;
+					}
 					
 					if ( ! $is_closure_use ) {
 						$is_trait_use = ( $in_class && $class_brace_depth >= 1 );
@@ -2531,7 +2555,7 @@ class Plan3_Transformer {
 								} elseif ( strpos( $target, '\\' ) !== false ) {
 									$output .= '\\' . ltrim( $target, '\\' );
 								} else {
-									$output .= $target;
+									$output .= ( ! empty( $current_namespace ) && ! $is_declaration ) ? ( '\\' . $target ) : $target;
 								}
 								continue;
 							} else {
@@ -2539,10 +2563,11 @@ class Plan3_Transformer {
 								continue;
 							}
 						}
-						if ( ! empty( $current_namespace ) && isset( $this->class_map[ $current_namespace . '\\' . $text ] ) ) {
-							$target = $this->class_map[ $current_namespace . '\\' . $text ];
+						$current_fqcn = ! empty( $current_namespace ) ? ( $current_namespace . '\\' . $text ) : $text;
+						if ( ( $is_declaration && isset( $this->class_map[ $current_fqcn ] ) ) || ( ! empty( $current_namespace ) && isset( $this->class_map[ $current_namespace . '\\' . $text ] ) ) ) {
+							$target = isset( $this->class_map[ $current_fqcn ] ) ? $this->class_map[ $current_fqcn ] : $this->class_map[ $current_namespace . '\\' . $text ];
 							if ( $decl_type === T_CLASS || $decl_type === T_INTERFACE || $decl_type === T_TRAIT || ( defined( 'T_ENUM' ) && $decl_type === T_ENUM ) ) {
-								$declared_classes_in_file[ $current_namespace . '\\' . $text ] = array(
+								$declared_classes_in_file[ $current_fqcn ] = array(
 									'mangled' => $target,
 									'type'    => $decl_type,
 								);
@@ -2550,10 +2575,10 @@ class Plan3_Transformer {
 							if ( $this->flatten_namespaces && ! $keep_namespace ) {
 								$output .= ( $is_declaration || empty( $current_namespace ) ) ? $target : ( '\\' . $target );
 							} else {
-								if ( strncmp( $target, $current_namespace . '\\', strlen( $current_namespace ) + 1 ) === 0 ) {
+								if ( ! empty( $current_namespace ) && strncmp( $target, $current_namespace . '\\', strlen( $current_namespace ) + 1 ) === 0 ) {
 									$output .= substr( $target, strlen( $current_namespace ) + 1 );
 								} else {
-									$output .= $target;
+									$output .= ( ! empty( $current_namespace ) && ! $is_declaration && strpos( $target, '\\' ) === false ) ? ( '\\' . $target ) : $target;
 								}
 							}
 							continue;
@@ -2585,7 +2610,7 @@ class Plan3_Transformer {
 							}
 						}
 						$mapped_class = $this->lookup_class_map( $text );
-						if ( $mapped_class !== null && ! $is_fn_call && ! $is_member_name ) {
+						if ( $mapped_class !== null && ! $is_fn_call && ! $is_member_name && ! $is_declaration ) {
 							$target = $mapped_class;
 							if ( ! empty( $current_namespace ) && $keep_namespace && strpos( $target, '\\' ) === false ) {
 								$output .= '\\' . ltrim( $target, '\\' );
@@ -2665,8 +2690,16 @@ class Plan3_Transformer {
 
 				// 7. Variable Mangling
 				if ( $id === T_VARIABLE ) {
+					$prev = $i - 1;
+					while ( $prev >= 0 && is_array( $tokens[ $prev ] ) && $tokens[ $prev ][0] === T_WHITESPACE ) {
+						$prev--;
+					}
+					if ( $prev >= 0 && is_array( $tokens[ $prev ] ) && $tokens[ $prev ][0] === T_DOUBLE_COLON ) {
+						$output .= $text;
+						continue;
+					}
 					$raw_var_name = substr( $text, 1 );
-					if ( $in_function_header ) {
+					if ( $in_function_header && ! $in_closure_use ) {
 						$output .= $text;
 						continue;
 					}
@@ -2816,6 +2849,10 @@ class Plan3_Transformer {
 							$raw_prop = substr( $tokens[ $next ][1], 1 );
 							if ( ! empty( $target_class ) && isset( $this->private_members['properties'][ $target_class ][ $raw_prop ] ) && ! isset( $this->preserved_members[ $target_class ]['properties'][ $raw_prop ] ) ) {
 								$output .= $ws . '$' . $this->private_members['properties'][ $target_class ][ $raw_prop ];
+								$i = $next;
+								continue;
+							} else {
+								$output .= $ws . $tokens[ $next ][1];
 								$i = $next;
 								continue;
 							}

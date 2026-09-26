@@ -284,7 +284,19 @@ function readProjectConfig(root) {
       "wpdev.json (or project.config.json) not found in project root",
     );
   }
-  const raw = JSON.parse(readFileSync(configPath, "utf8"));
+  let raw = null;
+  try {
+    const res = spawnSync("wpdev-build", ["config", "--path", configPath], {
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "ignore"],
+    });
+    if (res && res.status === 0 && res.stdout) {
+      raw = JSON.parse(res.stdout);
+    }
+  } catch {}
+  if (!raw) {
+    raw = JSON.parse(readFileSync(configPath, "utf8"));
+  }
   if (!raw || typeof raw !== "object" || !raw.slug) {
     throw new Error(
       `${path.basename(configPath)} must contain a non-empty "slug"`,

@@ -523,6 +523,21 @@ export const CANONICAL_TEST_REGISTRY = {
     "releaseSameRun": false,
     "tier": "integration"
   },
+  "plan3-namespaced-collision-retention.test.mjs": {
+    "tools": [
+      "tools/plan3/transformer.php"
+    ],
+    "artifacts": [],
+    "requiredBy": [],
+    "criticality": "normal",
+    "allowedModes": [
+      "affected",
+      "full",
+      "release"
+    ],
+    "releaseSameRun": false,
+    "tier": "unit"
+  },
   "plan3-transformer.test.mjs": {
     "tools": [
       "tools/plan3/transformer.php"

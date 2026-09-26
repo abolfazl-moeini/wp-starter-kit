@@ -40,6 +40,7 @@ import {
   assertEligibilityAllowsObfuscation,
   assertRequiredBuildTools,
   assertSymbolMapHasNoCollisions,
+  assertTransformerProvenanceDeclared,
   assertZipHasNoSecretIntermediates,
   collectFirstPartyPhpFiles,
   collectToolchainEvidence,
@@ -350,6 +351,10 @@ export async function assembleProfileSCandidate(options = {}) {
     }
 
     const toolchain = await collectToolchainEvidence({ rectorBin });
+    assertTransformerProvenanceDeclared({ toolchain, capabilities: buildPlan.capabilities, consumer });
+    console.log(
+      `==> Go transformer provenance: ${toolchain.go.available ? `verified (${toolchain.go.version})` : `unavailable (${toolchain.go.reason})`}`
+    );
     let dynamicEdges = [];
 
     const runTransformer = buildPlan.capabilities.obfuscate || buildPlan.capabilities.spaghetti;
@@ -385,6 +390,7 @@ export async function assembleProfileSCandidate(options = {}) {
       assertSymbolMapHasNoCollisions(dumpedMap, {
         spaghetti: buildPlan.capabilities.spaghetti,
         flattenNamespaces: buildPlan.capabilities.spaghetti,
+        retainedNamespaces: dumpedMap.retained_namespaces || dumpedMap.retainedNamespaces,
         buildPlan,
       });
 
@@ -512,9 +518,9 @@ export async function assembleProfileSCandidate(options = {}) {
           throw new Error(`Declared autoload file '${f}' does not exist in staging tree`);
         }
       }
-      const finalAutoloadFiles = [...declaredFiles];
       const closureFunctions = "src/FrameworkClosure/functions-closure.php";
-      if (fs.existsSync(path.join(stagingPlugin, closureFunctions)) && !finalAutoloadFiles.includes(closureFunctions)) {
+      const finalAutoloadFiles = declaredFiles.filter(f => f !== closureFunctions);
+      if (fs.existsSync(path.join(stagingPlugin, closureFunctions))) {
         finalAutoloadFiles.unshift(closureFunctions);
       }
 
@@ -632,13 +638,20 @@ export async function assembleProfileSCandidate(options = {}) {
 
     const manifestProfile = profile === "s" ? "Profile S" : (profile === "clean" ? "clean" : String(buildPlan.artifactIdentity.capabilityTag));
     console.log(`==> 7. Generating canonical artifact manifest (profile: ${manifestProfile})...`);
+    const resolvedProfile = profile === "s" ? "s" : (profile === "spaghetti" || profile === "standalone-spaghetti" ? "standalone-spaghetti" : (profile === "clean" ? "clean" : String(profile)));
     const artifactManifest = await generateArtifactManifest({
       rootDir: stagingPlugin,
       consumer,
       profile: manifestProfile,
       toolchain,
-      resolvedProfile: profile === "s" || profile === "clean" ? profile : "clean",
+      transformerProvenance: {
+        engine: "php-plan3",
+        astTransformer: "plan3/transformer.php",
+        go: toolchain.go,
+      },
+      resolvedProfile,
       obfuscate: isObfuscate,
+      spaghetti: Boolean(buildPlan.capabilities.spaghetti),
       dynamicEdges,
       capabilities: buildPlan.capabilities,
       planFingerprint: buildPlan.artifactIdentity.fingerprint,

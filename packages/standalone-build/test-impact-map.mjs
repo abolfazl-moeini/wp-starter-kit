@@ -40,13 +40,16 @@ export const CONTRACT_TESTS = [
 ];
 
 export const ARTIFACT_TESTS = [
-  "tavangary-core-artifact.test.mjs",
-  "tavangary-theme-panel-artifact.test.mjs",
-  "wpdev-crm-artifact.test.mjs",
-  "wpdev-tickets-artifact.test.mjs",
-  "verify-profile-s-artifact.test.mjs",
-  "artifact-manifest-tamper-resistance.test.mjs",
-  "zip-tamper-resistance-extended.test.mjs",
+  ...new Set([
+    ...Object.values(REQUIRED_ARTIFACT_TESTS).flat(),
+    "tavangary-core-artifact.test.mjs",
+    "tavangary-theme-panel-artifact.test.mjs",
+    "wpdev-crm-artifact.test.mjs",
+    "wpdev-tickets-artifact.test.mjs",
+    "verify-profile-s-artifact.test.mjs",
+    "artifact-manifest-tamper-resistance.test.mjs",
+    "zip-tamper-resistance-extended.test.mjs",
+  ]),
 ];
 
 export const ALLOWED_MODES = new Set([

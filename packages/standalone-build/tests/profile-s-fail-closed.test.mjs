@@ -731,3 +731,39 @@ test("V3-13: BuildPlan separates legacy Profile S asset minification from indepe
   assert.notEqual(defaultMin.artifactIdentity.fingerprint, overwriteMin.artifactIdentity.fingerprint);
 });
 
+
+test("Go transformer provenance is always explicit and verifiable when present", async () => {
+  const { assertTransformerProvenanceDeclared, collectGoProvenance } = await import(
+    "../profile-s-fail-closed.mjs"
+  );
+
+  const provenance = await collectGoProvenance();
+  assert.equal(typeof provenance.available, "boolean");
+  assert.equal(typeof provenance.status, "string");
+  if (provenance.available === true) {
+    assert.match(provenance.sha256, /^[a-f0-9]{64}$/);
+    assert.ok(provenance.binaryPath, "A verified Go toolchain must record its binary path");
+  } else {
+    assert.ok(provenance.reason, "A missing Go toolchain must record why it is absent");
+  }
+
+  // A protected build must never ship without declared provenance.
+  assert.throws(
+    () => assertTransformerProvenanceDeclared({ toolchain: null, capabilities: { obfuscate: true }, consumer: "x" }),
+    /provenance/i
+  );
+  assert.throws(
+    () =>
+      assertTransformerProvenanceDeclared({
+        toolchain: { go: { available: true, status: "verified" } },
+        capabilities: { obfuscate: true },
+        consumer: "x",
+      }),
+    /digest/i
+  );
+
+  // Unprotected builds are not gated by provenance.
+  assert.doesNotThrow(() =>
+    assertTransformerProvenanceDeclared({ toolchain: null, capabilities: { obfuscate: false }, consumer: "x" })
+  );
+});

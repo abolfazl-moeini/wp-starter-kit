@@ -62,7 +62,7 @@ import { TARGET_REGISTRY, listStandaloneConsumers } from "./target-registry.mjs"
 import { resolveContentRoot } from "./resolve-content-root.mjs";
 import { parseClosedProfileFlags } from "./profile-s-fail-closed.mjs";
 import { assembleProfileSCandidate } from "./assemble-profile-s-candidate.mjs";
-import { createBuildPlan, resolveArtifactZipName } from "./build-plan.mjs";
+import { createBuildPlan, resolveArtifactZipName, resolveReleaseProfile } from "./build-plan.mjs";
 
 const execFileAsync = promisify(execFile);
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -898,6 +898,11 @@ export function parsePipelineArgs(argv = process.argv) {
   const targetsArg = argv.find((a) => a.startsWith("--targets=") || a.startsWith("--target="));
   const targetPlugins = targetsArg ? targetsArg.split("=")[1].split(",").map((s) => s.trim()).filter(Boolean) : null;
 
+  const hasExplicitProfile = argv.some((a) => a === "--profile" || a.startsWith("--profile="));
+  const explicitProfile = hasExplicitProfile ? profile : null;
+  const hasExplicitObfuscate = argv.includes("--obfuscate");
+  const explicitObfuscate = hasExplicitObfuscate ? isObfuscate : null;
+
   return {
     shouldDeploy,
     shouldTest,
@@ -907,6 +912,10 @@ export function parsePipelineArgs(argv = process.argv) {
     isWatch,
     isObfuscate,
     profile,
+    hasExplicitProfile,
+    explicitProfile,
+    hasExplicitObfuscate,
+    explicitObfuscate,
     inlineFramework: closedFlags.inlineFramework,
     spaghetti: closedFlags.spaghetti,
     obfuscate: closedFlags.obfuscate,
@@ -955,6 +964,49 @@ export async function runPipelineOrchestration(options = {}) {
   const activeIsForce = options.overrideForce !== undefined ? options.overrideForce : Boolean(options.isForce);
   const activeShouldDeploy = options.overrideDeploy !== undefined ? options.overrideDeploy : Boolean(options.shouldDeploy);
   const activeIsObfuscate = options.overrideObfuscate !== undefined ? options.overrideObfuscate : Boolean(options.isObfuscate || options.parsed?.isObfuscate);
+  const explicitProfile = options.parsed?.explicitProfile ?? (options.profile || null);
+  // Routing: the registry decides the default protection level per target.
+  // An explicit operator request (--profile / --obfuscate) still wins globally.
+  const routedProfileOverride = explicitProfile || (activeIsObfuscate ? "s" : null);
+
+  /**
+   * Build one consumer's plan with registry routing.
+   *
+   * Profile S keeps the documented legacy preset (minify + strip) untouched;
+   * standalone-spaghetti pins inline-framework + flattening without
+   * obfuscation so every consumer gets a deterministic capability set.
+   */
+  function makePluginBuildPlan(plugin, parsedFlags = {}) {
+    const targetProfile = resolveReleaseProfile(plugin, TARGET_REGISTRY[plugin], routedProfileOverride);
+    const targetIsObfuscate = targetProfile === "s";
+    const capabilityOverrides = {};
+
+    if (parsedFlags.hasExplicitProfile) {
+      capabilityOverrides.inlineFramework = options.inlineFramework ?? parsedFlags.inlineFramework;
+      capabilityOverrides.spaghetti = options.spaghetti ?? parsedFlags.spaghetti;
+      capabilityOverrides.obfuscate = options.obfuscate ?? targetIsObfuscate;
+    } else if (!targetIsObfuscate) {
+      capabilityOverrides.inlineFramework = options.inlineFramework ?? true;
+      capabilityOverrides.spaghetti = options.spaghetti ?? true;
+      capabilityOverrides.obfuscate = false;
+    }
+
+    return createBuildPlan({
+      consumer: plugin,
+      profile: targetProfile,
+      isObfuscate: targetIsObfuscate,
+      minifyAssets: options.minifyAssets ?? parsedFlags.minifyAssets,
+      skipZip: options.skipZip ?? parsedFlags.skipZip,
+      targetPhp: options.targetPhp ?? parsedFlags.targetPhp,
+      frozenClasses: options.frozenClasses ?? parsedFlags.frozenClasses,
+      frozenFunctions: options.frozenFunctions ?? parsedFlags.frozenFunctions,
+      frozenConstants: options.frozenConstants ?? parsedFlags.frozenConstants,
+      frozenProperties: options.frozenProperties ?? parsedFlags.frozenProperties,
+      frozenMethods: options.frozenMethods ?? parsedFlags.frozenMethods,
+      frozenVars: options.frozenVars ?? parsedFlags.frozenVars,
+      ...capabilityOverrides,
+    });
+  }
   const jobsLimit = options.jobsLimit || 4;
   const executor = options.executor || null;
   const injectFailure = options.injectFailure || null;
@@ -1304,23 +1356,7 @@ export async function runPipelineOrchestration(options = {}) {
       const parsedFlags = options.parsed || {};
       const pluginBuildPlans = {};
       for (const plugin of targetPlugins) {
-        pluginBuildPlans[plugin] = createBuildPlan({
-          consumer: plugin,
-          profile: parsedFlags.profile || (activeIsObfuscate ? "s" : "spaghetti"),
-          isObfuscate: activeIsObfuscate,
-          obfuscate: parsedFlags.obfuscate,
-          inlineFramework: options.inlineFramework ?? parsedFlags.inlineFramework,
-          spaghetti: options.spaghetti ?? parsedFlags.spaghetti,
-          minifyAssets: options.minifyAssets ?? parsedFlags.minifyAssets,
-          skipZip: options.skipZip ?? parsedFlags.skipZip,
-          targetPhp: options.targetPhp ?? parsedFlags.targetPhp,
-          frozenClasses: options.frozenClasses ?? parsedFlags.frozenClasses,
-          frozenFunctions: options.frozenFunctions ?? parsedFlags.frozenFunctions,
-          frozenConstants: options.frozenConstants ?? parsedFlags.frozenConstants,
-          frozenProperties: options.frozenProperties ?? parsedFlags.frozenProperties,
-          frozenMethods: options.frozenMethods ?? parsedFlags.frozenMethods,
-          frozenVars: options.frozenVars ?? parsedFlags.frozenVars,
-        });
+        pluginBuildPlans[plugin] = makePluginBuildPlan(plugin, parsedFlags);
       }
 
       return planDependencyGraphBuild({
@@ -1349,23 +1385,7 @@ export async function runPipelineOrchestration(options = {}) {
         // alone never flips the tier (prevents clean-plan/S-build divergence).
         const pluginPlan = plan[plugin];
         const parsedFlags = options.parsed || {};
-        const pluginBuildPlan = createBuildPlan({
-          consumer: plugin,
-          profile: parsedFlags.profile || (activeIsObfuscate ? "s" : "spaghetti"),
-          isObfuscate: activeIsObfuscate,
-          obfuscate: parsedFlags.obfuscate,
-          inlineFramework: options.inlineFramework ?? parsedFlags.inlineFramework,
-          spaghetti: options.spaghetti ?? parsedFlags.spaghetti,
-          minifyAssets: options.minifyAssets ?? parsedFlags.minifyAssets,
-          skipZip: options.skipZip ?? parsedFlags.skipZip,
-          targetPhp: options.targetPhp ?? parsedFlags.targetPhp,
-          frozenClasses: options.frozenClasses ?? parsedFlags.frozenClasses,
-          frozenFunctions: options.frozenFunctions ?? parsedFlags.frozenFunctions,
-          frozenConstants: options.frozenConstants ?? parsedFlags.frozenConstants,
-          frozenProperties: options.frozenProperties ?? parsedFlags.frozenProperties,
-          frozenMethods: options.frozenMethods ?? parsedFlags.frozenMethods,
-          frozenVars: options.frozenVars ?? parsedFlags.frozenVars,
-        });
+        const pluginBuildPlan = makePluginBuildPlan(plugin, parsedFlags);
         const activeProfile = pluginBuildPlan.capabilities.inlineFramework
           && pluginBuildPlan.capabilities.spaghetti
           && pluginBuildPlan.capabilities.obfuscate
@@ -1417,7 +1437,7 @@ export async function runPipelineOrchestration(options = {}) {
             customDistDir,
             customPluginsDir,
             customScriptDir,
-            isObfuscate: activeIsObfuscate,
+            isObfuscate: pluginBuildPlan.capabilities.obfuscate,
             profile: activeProfile,
             signal: taskOptions?.signal,
           });
@@ -1775,30 +1795,16 @@ export async function runPipelineOrchestration(options = {}) {
           const stagedCache = results["plan:cache"];
           const bRes = results[`build:${plugin}`];
           const parsedFlags = options.parsed || {};
-          const pluginBuildPlan = createBuildPlan({
-            consumer: plugin,
-            profile: parsedFlags.profile || (activeIsObfuscate ? "s" : "spaghetti"),
-            isObfuscate: activeIsObfuscate,
-            obfuscate: parsedFlags.obfuscate,
-            inlineFramework: options.inlineFramework ?? parsedFlags.inlineFramework,
-            spaghetti: options.spaghetti ?? parsedFlags.spaghetti,
-            minifyAssets: options.minifyAssets ?? parsedFlags.minifyAssets,
-            skipZip: options.skipZip ?? parsedFlags.skipZip,
-            targetPhp: options.targetPhp ?? parsedFlags.targetPhp,
-            frozenClasses: options.frozenClasses ?? parsedFlags.frozenClasses,
-            frozenFunctions: options.frozenFunctions ?? parsedFlags.frozenFunctions,
-            frozenConstants: options.frozenConstants ?? parsedFlags.frozenConstants,
-            frozenProperties: options.frozenProperties ?? parsedFlags.frozenProperties,
-            frozenMethods: options.frozenMethods ?? parsedFlags.frozenMethods,
-            frozenVars: options.frozenVars ?? parsedFlags.frozenVars,
-          });
+          const pluginBuildPlan = makePluginBuildPlan(plugin, parsedFlags);
           const targetZipName = resolveArtifactZipName(pluginBuildPlan);
           let deployZip = path.join(customDistDir, targetZipName);
           if (!fs.existsSync(deployZip)) {
-            const fallbackZip = activeIsObfuscate
-              ? path.join(customDistDir, `${plugin}-profile-s.zip`)
-              : path.join(customDistDir, `${plugin}.zip`);
-            if (fs.existsSync(fallbackZip)) {
+            // Only the profile the plan asked for may be deployed: a mismatch
+            // means the artifact was built with a different protection level.
+            const fallbackZip = fs.existsSync(path.join(customDistDir, `${plugin}.zip`))
+              ? path.join(customDistDir, `${plugin}.zip`)
+              : null;
+            if (fallbackZip) {
               deployZip = fallbackZip;
             }
           }
@@ -2224,8 +2230,16 @@ export async function runPipelineOrchestration(options = {}) {
         const profileSZip = path.join(customDistDir, `${p}-profile-s.zip`);
         const spaghettiZip = path.join(customDistDir, `${p}-standalone-spaghetti.zip`);
         const standardZip = path.join(customDistDir, `${p}.zip`);
-        const candidateZip = activeIsObfuscate ? profileSZip : (fs.existsSync(spaghettiZip) ? spaghettiZip : null);
-        if (candidateZip && fs.existsSync(candidateZip)) {
+        let candidateZip = null;
+        try {
+          const plannedProfile = resolveReleaseProfile(p, TARGET_REGISTRY[p], routedProfileOverride);
+          candidateZip = plannedProfile === "s"
+            ? (fs.existsSync(profileSZip) ? profileSZip : null)
+            : (fs.existsSync(spaghettiZip) ? spaghettiZip : null);
+        } catch {
+          candidateZip = null;
+        }
+        if (candidateZip && fs.existsSync(candidateZip) && candidateZip !== standardZip) {
           // Atomic alias publish: temp file + rename + fsync so an interrupted
           // copy can never leave a truncated live `{p}.zip`.
           const tmpAlias = path.join(customDistDir, `.${p}.zip.tmp-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
@@ -2565,9 +2579,9 @@ async function main(options = {}) {
     pluginsDir: parsed.pluginsDir,
     cacheFile: parsed.cacheFile,
     receiptsDir: parsed.receiptsDir,
-    inlineFramework: parsed.inlineFramework,
-    spaghetti: parsed.spaghetti,
-    obfuscate: parsed.obfuscate,
+    inlineFramework: parsed.hasExplicitProfile ? parsed.inlineFramework : undefined,
+    spaghetti: parsed.hasExplicitProfile ? parsed.spaghetti : undefined,
+    obfuscate: parsed.hasExplicitProfile ? parsed.obfuscate : undefined,
     minifyAssets: parsed.minifyAssets,
     skipZip: parsed.skipZip,
     targetPhp: parsed.targetPhp,

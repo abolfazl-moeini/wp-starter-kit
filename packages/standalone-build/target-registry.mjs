@@ -6,6 +6,9 @@ import path from "node:path";
 
 export const SHARED_FRAMEWORK_ID = "wpdev";
 
+export const PROFILE_S = "s";
+export const STANDALONE_PROFILE = "standalone-spaghetti";
+
 export const TARGET_REGISTRY = Object.freeze({
   "tavangary-core": Object.freeze({
     artifactId: "tavangary-core",
@@ -19,6 +22,7 @@ export const TARGET_REGISTRY = Object.freeze({
     phpTarget: "7.4",
     publicCompatibilityPolicy: "frozen-public-contracts",
     kind: "standalone-plugin",
+    buildProfile: STANDALONE_PROFILE,
   }),
   "tavangary-theme-panel": Object.freeze({
     artifactId: "tavangary-theme-panel",
@@ -32,6 +36,7 @@ export const TARGET_REGISTRY = Object.freeze({
     phpTarget: "7.4",
     publicCompatibilityPolicy: "frozen-public-contracts",
     kind: "standalone-plugin",
+    buildProfile: PROFILE_S,
   }),
   "wpdev-crm": Object.freeze({
     artifactId: "wpdev-crm",
@@ -45,6 +50,7 @@ export const TARGET_REGISTRY = Object.freeze({
     phpTarget: "7.4",
     publicCompatibilityPolicy: "frozen-public-contracts",
     kind: "standalone-plugin",
+    buildProfile: PROFILE_S,
   }),
   "wpdev-tickets": Object.freeze({
     artifactId: "wpdev-tickets",
@@ -58,6 +64,7 @@ export const TARGET_REGISTRY = Object.freeze({
     phpTarget: "7.4",
     publicCompatibilityPolicy: "frozen-public-contracts",
     kind: "standalone-plugin",
+    buildProfile: PROFILE_S,
   }),
   "drm-connector": Object.freeze({
     artifactId: "drm-connector",
@@ -71,6 +78,7 @@ export const TARGET_REGISTRY = Object.freeze({
     phpTarget: "7.4",
     publicCompatibilityPolicy: "frozen-public-contracts",
     kind: "standalone-plugin",
+    buildProfile: STANDALONE_PROFILE,
   }),
   "wpdev-analytics": Object.freeze({
     artifactId: "wpdev-analytics",
@@ -84,6 +92,7 @@ export const TARGET_REGISTRY = Object.freeze({
     phpTarget: "7.4",
     publicCompatibilityPolicy: "frozen-public-contracts",
     kind: "standalone-plugin",
+    buildProfile: PROFILE_S,
   }),
   "wpdev-woo-persian": Object.freeze({
     artifactId: "wpdev-woo-persian",
@@ -97,6 +106,7 @@ export const TARGET_REGISTRY = Object.freeze({
     phpTarget: "7.4",
     publicCompatibilityPolicy: "frozen-public-contracts",
     kind: "standalone-plugin",
+    buildProfile: PROFILE_S,
   }),
 });
 

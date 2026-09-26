@@ -97,6 +97,61 @@ export const LEGACY_PRESETS = Object.freeze({
 const SUPPORTED_PHP_TARGETS = new Set(["7.4", "8.0", "8.1", "8.2", "8.3"]);
 
 /**
+ * Release routing (per-target, registry-driven, fail-closed).
+ *
+ * A target without a declared buildProfile must never silently inherit
+ * another target's protection level: the caller supplies the registry
+ * mapping and an unknown consumer is a hard error.
+ */
+export const RELEASE_PROFILES = Object.freeze({
+  "profile-s": "s",
+  "standalone-spaghetti": "spaghetti",
+});
+
+function normalizeReleaseProfile(value) {
+  const profile = String(value).trim().toLowerCase();
+  if (profile === "s" || profile === "profile-s") {
+    return "s";
+  }
+  if (profile === "spaghetti" || profile === "standalone" || profile === "standalone-spaghetti") {
+    return "spaghetti";
+  }
+  return null;
+}
+
+export function resolveReleaseProfile(consumer, registryEntry, explicitProfile = null) {
+  const raw =
+    explicitProfile === null || explicitProfile === undefined || explicitProfile === ""
+      ? null
+      : String(explicitProfile).trim().toLowerCase();
+
+  // `--profile=auto` means "use the registry default for this consumer".
+  const requested = raw === "auto" ? null : normalizeReleaseProfile(raw);
+
+  if (raw !== null && raw !== "auto" && requested === null) {
+    throw new Error(`Invalid release profile '${explicitProfile}' for consumer '${consumer}'`);
+  }
+
+  if (requested !== null) {
+    return requested;
+  }
+
+  const declared = registryEntry && typeof registryEntry.buildProfile === "string" ? registryEntry.buildProfile : null;
+  if (declared === null) {
+    throw new Error(
+      `Consumer '${consumer}' has no buildProfile in the target registry (fail-closed, no implicit protection level)`
+    );
+  }
+
+  const profile = normalizeReleaseProfile(declared);
+  if (profile === null) {
+    throw new Error(`Consumer '${consumer}' declares unsupported buildProfile '${declared}'`);
+  }
+
+  return profile;
+}
+
+/**
  * Computes a deterministic identity string and SHA-256 fingerprint for a BuildPlan.
  */
 export function canonicalJson(value) {

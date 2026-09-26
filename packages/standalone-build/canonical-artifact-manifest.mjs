@@ -318,8 +318,8 @@ export function validateArtifactManifestObject(manifest, { consumer = null } = {
   if (typeof manifest.manifestDigest !== "string" || !/^[a-f0-9]{64}$/.test(manifest.manifestDigest)) {
     blockers.push("Manifest manifestDigest must be a lowercase SHA-256 digest");
   }
-  if (manifest.resolvedProfile !== undefined && manifest.resolvedProfile !== "s" && manifest.resolvedProfile !== "clean") {
-    blockers.push("Manifest resolvedProfile must be 's' or 'clean' when present");
+  if (manifest.resolvedProfile !== undefined && manifest.resolvedProfile !== "s" && manifest.resolvedProfile !== "clean" && manifest.resolvedProfile !== "standalone-spaghetti") {
+    blockers.push("Manifest resolvedProfile must be 's', 'clean', or 'standalone-spaghetti' when present");
   }
   if (manifest.obfuscate !== undefined && typeof manifest.obfuscate !== "boolean") {
     blockers.push("Manifest obfuscate must be a boolean when present");
@@ -328,8 +328,26 @@ export function validateArtifactManifestObject(manifest, { consumer = null } = {
     blockers.push("Manifest dynamicEdges must be an array when present");
   }
   if (manifest.obfuscate !== undefined && manifest.resolvedProfile !== undefined) {
-    if ((manifest.obfuscate && manifest.resolvedProfile !== "s") || (!manifest.obfuscate && manifest.resolvedProfile !== "clean")) {
+    if ((manifest.obfuscate && manifest.resolvedProfile !== "s") || (!manifest.obfuscate && manifest.resolvedProfile !== "clean" && manifest.resolvedProfile !== "standalone-spaghetti")) {
       blockers.push("Manifest obfuscate flag is inconsistent with resolvedProfile");
+    }
+  }
+  if (manifest.transformerProvenance !== undefined) {
+    const provenance = manifest.transformerProvenance;
+    if (typeof provenance !== "object" || Array.isArray(provenance) || provenance === null) {
+      blockers.push("Manifest transformerProvenance must be an object when present");
+    } else {
+      if (typeof provenance.engine !== "string" || provenance.engine.length === 0) {
+        blockers.push("Manifest transformerProvenance must name the transformation engine");
+      }
+      const go = provenance.go;
+      if (typeof go !== "object" || Array.isArray(go) || go === null) {
+        blockers.push("Manifest transformerProvenance must record explicit Go toolchain provenance");
+      } else if (typeof go.available !== "boolean") {
+        blockers.push("Manifest transformerProvenance.go.available must be a boolean");
+      } else if (go.available === true && !/^[a-f0-9]{64}$/.test(String(go.sha256 || ""))) {
+        blockers.push("Manifest transformerProvenance.go must carry a verifiable binary digest when available");
+      }
     }
   }
   if (manifest.toolchain !== undefined) {
@@ -460,8 +478,10 @@ export async function generateArtifactManifest({
   composerLockSha256 = null,
   buildId = null,
   toolchain = null,
+  transformerProvenance = null,
   resolvedProfile = null,
   obfuscate = null,
+  spaghetti = null,
   dynamicEdges = null,
 }) {
   const files = await collectCanonicalFiles(rootDir);
@@ -490,11 +510,17 @@ export async function generateArtifactManifest({
   if (toolchain && typeof toolchain === "object" && !Array.isArray(toolchain)) {
     payload.toolchain = toolchain;
   }
+  if (transformerProvenance && typeof transformerProvenance === "object" && !Array.isArray(transformerProvenance)) {
+    payload.transformerProvenance = transformerProvenance;
+  }
   if (typeof resolvedProfile === "string" && resolvedProfile.length > 0) {
     payload.resolvedProfile = resolvedProfile;
   }
   if (typeof obfuscate === "boolean") {
     payload.obfuscate = obfuscate;
+  }
+  if (typeof spaghetti === "boolean") {
+    payload.spaghetti = spaghetti;
   }
   if (Array.isArray(dynamicEdges)) {
     payload.dynamicEdges = dynamicEdges;

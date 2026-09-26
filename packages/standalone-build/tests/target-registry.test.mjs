@@ -122,3 +122,52 @@ test("Target registry: unknown consumer, wpdev standalone, symlink and traversal
     await rm(tmp, { recursive: true, force: true });
   }
 });
+
+test("Release routing: every consumer declares a buildProfile and resolves fail-closed", async () => {
+  const { resolveReleaseProfile } = await import("../build-plan.mjs");
+
+  for (const consumer of listStandaloneConsumers()) {
+    const entry = TARGET_REGISTRY[consumer];
+    assert.equal(
+      typeof entry.buildProfile,
+      "string",
+      `${consumer} must declare a buildProfile in the target registry`
+    );
+    const profile = resolveReleaseProfile(consumer, entry, null);
+    assert.ok(
+      profile === "s" || profile === "spaghetti",
+      `${consumer} resolved to an unsupported profile: ${profile}`
+    );
+  }
+
+  assert.equal(resolveReleaseProfile("wpdev-crm", TARGET_REGISTRY["wpdev-crm"], null), "s");
+  assert.equal(resolveReleaseProfile("tavangary-core", TARGET_REGISTRY["tavangary-core"], null), "spaghetti");
+  assert.equal(resolveReleaseProfile("drm-connector", TARGET_REGISTRY["drm-connector"], null), "spaghetti");
+
+  assert.throws(
+    () => resolveReleaseProfile("mystery-plugin", {}, null),
+    /fail-closed|no buildProfile/i,
+    "An unknown consumer without a declared profile must fail closed"
+  );
+  assert.throws(
+    () => resolveReleaseProfile("wpdev-crm", TARGET_REGISTRY["wpdev-crm"], "turbo"),
+    /Invalid release profile/i
+  );
+
+  assert.equal(
+    resolveReleaseProfile("tavangary-core", TARGET_REGISTRY["tavangary-core"], "profile-s"),
+    "s",
+    "An explicit operator override must still win over the registry default"
+  );
+
+  assert.equal(
+    resolveReleaseProfile("tavangary-core", TARGET_REGISTRY["tavangary-core"], "auto"),
+    "spaghetti",
+    "--profile=auto must route tavangary-core to the registry default"
+  );
+  assert.equal(
+    resolveReleaseProfile("wpdev-crm", TARGET_REGISTRY["wpdev-crm"], "auto"),
+    "s",
+    "--profile=auto must route wpdev consumers to Profile S"
+  );
+});

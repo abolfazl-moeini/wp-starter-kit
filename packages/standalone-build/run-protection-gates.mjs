@@ -180,7 +180,6 @@ evidenceGates.push(hookDomainPath
   ? await runReviewEvidenceGate("hook-contract-dynamic-domain", "validate-hook-contract-dynamic-domain.mjs", [
       hookDomainPath,
       contentRoot,
-      hookInventoryPath,
     ])
   : { name: "hook-contract-dynamic-domain", status: "blocked", exitCode: 1, report: { failures: [`no hook contract dynamic domain evidence for ${consumer}`] }, stderr: "hook contract dynamic domain evidence is missing" });
 const resolverContractCandidates = [

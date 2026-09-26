@@ -143,7 +143,7 @@ export async function verifyProfileSArtifact({
             $syntaxErrors[] = $f . ': ' . $e->getMessage();
             return;
         }
-        if (basename($f) === $main || strpos($f, '/vendor/') !== false) {
+        if (basename($f) === $main || strpos($f, '/vendor/') !== false || strpos($f, '/vendor-prefixed/') !== false || strpos($f, '/dependencies/') !== false) {
             return;
         }
         foreach ($tokens as $t) {

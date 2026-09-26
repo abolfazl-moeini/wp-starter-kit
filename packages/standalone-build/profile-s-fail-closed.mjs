@@ -337,14 +337,17 @@ export function assertSymbolMapHasNoCollisions(symMap, options = {}) {
     : Array.isArray(symMap.declarations)
       ? symMap.declarations
       : null;
+  const rawRetained =
+    options.retainedNamespaces ??
+    symMap.retained_namespaces ??
+    symMap.retainedNamespaces ??
+    [];
   const retainedNamespaces = new Set(
-    Array.isArray(options.retainedNamespaces)
-      ? options.retainedNamespaces
-      : Array.isArray(symMap.retained_namespaces)
-        ? symMap.retained_namespaces
-        : (symMap.retained_namespaces && typeof symMap.retained_namespaces === "object")
-          ? Object.keys(symMap.retained_namespaces)
-          : []
+    Array.isArray(rawRetained)
+      ? rawRetained
+      : (rawRetained && typeof rawRetained === "object")
+        ? Object.keys(rawRetained)
+        : []
   );
 
   let totalChecked = 0;
@@ -623,7 +626,83 @@ export async function collectToolchainEvidence({ rectorBin = null } = {}) {
       throw new Error(`Profile S toolchain preflight failed: rector (${err.message})`);
     }
   }
+  evidence.go = await collectGoProvenance();
   return evidence;
+}
+
+/**
+ * Explicit Go transformer provenance.
+ *
+ * A missing optional tool is a recorded fact (never a silent pass), and a
+ * broken installation is a hard failure. Set WPDEV_REQUIRE_GO_TOOLCHAIN=1 to
+ * make an absent Go toolchain fatal for protected builds.
+ */
+export async function collectGoProvenance() {
+  let binaryPath = "";
+  try {
+    const { stdout } = await execFileAsync(process.platform === "win32" ? "where" : "which", ["wpdev-build"]);
+    binaryPath = String(stdout || "").trim().split("\n")[0].trim();
+  } catch {
+    binaryPath = "";
+  }
+
+  if (binaryPath === "") {
+    const required = /^(1|true|yes|on)$/i.test(String(process.env.WPDEV_REQUIRE_GO_TOOLCHAIN || ""));
+    if (required) {
+      throw new Error(
+        "Profile S toolchain preflight failed: wpdev-build is required (WPDEV_REQUIRE_GO_TOOLCHAIN) but was not found on PATH"
+      );
+    }
+    return { available: false, status: "unavailable", reason: "wpdev-build not found on PATH" };
+  }
+
+  try {
+    await execFileAsync(binaryPath, ["--version"]);
+  } catch (err) {
+    throw new Error(
+      `Profile S toolchain preflight failed: wpdev-build found at ${binaryPath} but is not executable (${err.message})`
+    );
+  }
+
+  const digest = await sha256File(binaryPath);
+  return {
+    available: true,
+    status: "verified",
+    binaryPath,
+    version: await firstLineVersion(binaryPath, ["--version"]),
+    sha256: digest,
+  };
+}
+
+/**
+ * @param {string} filePath
+ * @returns {Promise<string>}
+ */
+async function sha256File(filePath) {
+  const crypto = await import("node:crypto");
+  const { readFile } = await import("node:fs/promises");
+  return crypto.createHash("sha256").update(await readFile(filePath)).digest("hex");
+}
+
+/**
+ * Fail-closed provenance gate for protected (Profile S) builds.
+ *
+ * @param {{ toolchain?: any, capabilities?: any, consumer?: string }} params
+ */
+export function assertTransformerProvenanceDeclared({ toolchain = null, capabilities = null, consumer = "unknown" } = {}) {
+  if (!capabilities || !capabilities.obfuscate) {
+    return;
+  }
+  if (!toolchain || typeof toolchain !== "object" || typeof toolchain.go !== "object" || toolchain.go === null) {
+    throw new Error(
+      `Profile S provenance gate failed for '${consumer}': toolchain evidence carries no explicit Go transformer provenance`
+    );
+  }
+  if (toolchain.go.available === true && !/^[a-f0-9]{64}$/.test(String(toolchain.go.sha256 || ""))) {
+    throw new Error(
+      `Profile S provenance gate failed for '${consumer}': Go toolchain is present without a verifiable binary digest`
+    );
+  }
 }
 
 export async function assertRequiredBuildTools(commands = REQUIRED_BUILD_TOOLS) {
