@@ -87,7 +87,7 @@ final class Chain {
 
                 $getWeight = function (string $source) use ($priority) {
                     foreach ($priority as $prefix => $weight) {
-                        if (str_starts_with($source, $prefix)) {
+                        if (strncmp($source, $prefix, strlen($prefix)) === 0) {
                             return $weight;
                         }
                     }

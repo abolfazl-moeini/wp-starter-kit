@@ -210,11 +210,11 @@ final class TokenHarvester {
                         continue;
                     }
                     $clean = null;
-                    if (str_contains($token_name, 'color')) {
+                    if (strpos($token_name, 'color') !== false) {
                         $clean = self::sanitize_css_color((string) $token_val);
-                    } elseif (str_contains($token_name, 'radius') || str_contains($token_name, 'space')) {
+                    } elseif (strpos($token_name, 'radius') !== false || strpos($token_name, 'space') !== false) {
                         $clean = self::sanitize_css_length((string) $token_val);
-                    } elseif (str_contains($token_name, 'font')) {
+                    } elseif (strpos($token_name, 'font') !== false) {
                         $clean = self::sanitize_font_family((string) $token_val);
                     } else {
                         $clean = self::sanitize_css_length((string) $token_val);
