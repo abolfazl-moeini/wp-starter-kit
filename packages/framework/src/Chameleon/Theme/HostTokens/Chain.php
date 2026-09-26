@@ -46,6 +46,9 @@ final class Chain {
         $overrides = function_exists('get_option') ? get_option('wpdev_ps_host_overrides', []) : [];
         if (is_array($overrides)) {
             foreach ($overrides as $role => $rawVal) {
+                if (!is_string($role) || !preg_match('/^[a-zA-Z0-9_.-]+$/', $role)) {
+                    continue;
+                }
                 if (is_string($rawVal) && !empty($rawVal)) {
                     $clean = $this->sanitize_for_role($role, $rawVal);
                     if ($clean !== null) {
@@ -147,13 +150,13 @@ final class Chain {
     }
 
     private function sanitize_for_role(string $role, string $val): ?string {
-        if (str_starts_with($role, 'color.')) {
+        if (strncmp($role, 'color.', 6) === 0) {
             return Sanitizer::sanitize_color($val);
         }
-        if (str_starts_with($role, 'radius.')) {
+        if (strncmp($role, 'radius.', 7) === 0) {
             return Sanitizer::sanitize_length($val);
         }
-        if (str_starts_with($role, 'font.')) {
+        if (strncmp($role, 'font.', 5) === 0) {
             return Sanitizer::sanitize_font_family($val);
         }
         return Sanitizer::sanitize_length($val);

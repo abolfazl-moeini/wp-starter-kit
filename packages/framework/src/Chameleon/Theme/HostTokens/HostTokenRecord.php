@@ -58,6 +58,9 @@ final class HostTokenRecord {
         float $confidence = 1.0,
         ?float $contrast = null
     ) {
+        if (!preg_match('/^[a-zA-Z0-9_.-]+$/', $role)) {
+            throw new \InvalidArgumentException(sprintf('Invalid host token role "%s": must contain only alphanumeric, dash, dot, or underscore characters.', $role));
+        }
         $this->role = $role;
         $this->value = $value;
         $this->source = $source;
@@ -109,7 +112,8 @@ final class HostTokenRecord {
             case self::ROLE_RADIUS_SURFACE:
                 return '--ps-radius-lg';
             default:
-                return '--ps-host-' . str_replace('.', '-', $this->role);
+                $sanitized_role = preg_replace('/[^a-zA-Z0-9_-]/', '-', str_replace('.', '-', $this->role));
+                return '--ps-host-' . $sanitized_role;
         }
     }
 }
