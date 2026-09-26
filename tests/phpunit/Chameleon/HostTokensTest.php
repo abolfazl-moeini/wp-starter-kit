@@ -121,4 +121,24 @@ class HostTokensTest extends WP_UnitTestCase {
         $nextGen = (int) get_option('wpdev_ps_token_generation', 1);
         $this->assertSame($initialGen + 1, $nextGen);
     }
+
+    public function test_role_validation_rejects_css_injection(): void {
+        $this->expectException(\InvalidArgumentException::class);
+        new HostTokenRecord('color:red;}\nbody{display:none', '#ff0000', 'manual');
+    }
+
+    public function test_manual_override_ignores_malicious_roles(): void {
+        update_option('wpdev_ps_host_overrides', [
+            'color:red;}\nbody{display:none' => '#ff0000',
+            'color.primary' => '#123456',
+        ]);
+
+        $chain = new Chain();
+        $css = $chain->generate_css();
+
+        $this->assertStringNotContainsString('display:none', $css);
+        $this->assertStringContainsString('--ps-color-primary: #123456;', $css);
+
+        delete_option('wpdev_ps_host_overrides');
+    }
 }
