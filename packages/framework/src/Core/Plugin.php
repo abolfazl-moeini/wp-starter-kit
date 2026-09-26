@@ -98,12 +98,32 @@ final class Plugin {
 	private static bool $booted = false;
 
 	/**
+	 * Map of booted plugins keyed by slug.
+	 *
+	 * @var array<string, bool>
+	 */
+	private static array $booted_plugins = array();
+
+	/**
+	 * Map of module loaders keyed by plugin slug.
+	 *
+	 * @var array<string, ModuleLoader>
+	 */
+	private static array $loaders = array();
+
+	/**
 	 * Whether feature modules have been booted.
 	 *
 	 * @var bool
 	 */
 	private static bool $modules_booted = false;
 
+	/**
+	 * Map of booted module flags keyed by plugin slug.
+	 *
+	 * @var array<string, bool>
+	 */
+	private static array $modules_booted_plugins = array();
 
 	/**
 	 * Disable instantiation — the class is used statically.
@@ -131,11 +151,15 @@ final class Plugin {
 	 *                           located or read.
 	 */
 	public static function boot( ?string $config_path = null ): void {
-		if ( true === self::$booted ) {
+		$config      = self::config( $config_path );
+		$slug        = isset( $config['slug'] ) && is_string( $config['slug'] )
+			? $config['slug']
+			: ( isset( $config['hookPrefix'] ) && is_string( $config['hookPrefix'] ) ? $config['hookPrefix'] : 'default' );
+
+		if ( isset( self::$booted_plugins[ $slug ] ) ) {
 			return;
 		}
 
-		$config     = self::config( $config_path );
 		$hook_prefix = isset( $config['hookPrefix'] ) && is_string( $config['hookPrefix'] )
 			? $config['hookPrefix']
 			: 'wpdev';
@@ -154,17 +178,16 @@ final class Plugin {
 		// `plugins_loaded` closure, or in a mu-plugin / wp-cli /
 		// test-bootstrap include order). Replacing it would silently
 		// drop every module the caller already registered.
-		//
-		// The pre-existing loader's hook_prefix is used as-is. The
-		// config-derived prefix applies to the newly created loader in
-		// the (more common) case where Plugin::loader() was never
-		// touched before boot().
+		$loader = self::$loaders[ $slug ] ?? ( null === self::$loader ? new ModuleLoader( $hook_prefix ) : self::$loader );
+		self::$loaders[ $slug ] = $loader;
 		if ( null === self::$loader ) {
-			self::$loader = new ModuleLoader( $hook_prefix );
+			self::$loader = $loader;
 		}
-		self::$instance  = new self();
-		self::$booted    = true;
-		self::$last_hook = $hook_prefix . '_plugin_loaded';
+
+		self::$instance                = new self();
+		self::$booted                  = true;
+		self::$booted_plugins[ $slug ] = true;
+		self::$last_hook               = $hook_prefix . '_plugin_loaded';
 		self::init_chameleon_assets();
 
 		// Wire module boot into WordPress.
@@ -205,14 +228,16 @@ final class Plugin {
 	 * registered modules and fire the `_modules_loaded` action.
 	 */
 	public static function on_plugins_loaded(): void {
-		if ( true === self::$modules_booted ) {
-			return;
+		if ( null !== self::$loader && ! self::$modules_booted ) {
+			self::$loader->boot_all();
 		}
-		if ( null === self::$loader ) {
-			return;
+		foreach ( self::$loaders as $slug => $loader ) {
+			if ( empty( self::$modules_booted_plugins[ $slug ] ) ) {
+				self::$modules_booted_plugins[ $slug ] = true;
+				$loader->boot_all();
+			}
 		}
 		self::$modules_booted = true;
-		self::$loader->boot_all();
 	}
 
 	/**
@@ -293,9 +318,13 @@ final class Plugin {
 	/**
 	 * Test seam: did {@see Plugin::boot()} run in this process?
 	 *
+	 * @param string|null $slug Optional plugin slug to check.
 	 * @return bool
 	 */
-	public static function is_booted(): bool {
+	public static function is_booted( ?string $slug = null ): bool {
+		if ( null !== $slug ) {
+			return ! empty( self::$booted_plugins[ $slug ] );
+		}
 		return self::$booted;
 	}
 
@@ -324,14 +353,17 @@ final class Plugin {
 	 * @internal
 	 */
 	public static function reset_for_tests(): void {
-		self::$instance       = null;
-		self::$loader         = null;
-		self::$config_path    = null;
-		self::$config_cache   = null;
-		self::$last_hook      = null;
-		self::$booted         = false;
-		self::$modules_booted = false;
-		self::$plugin_dir     = null;
+		self::$instance               = null;
+		self::$loader                 = null;
+		self::$loaders                = array();
+		self::$config_path            = null;
+		self::$config_cache           = null;
+		self::$last_hook              = null;
+		self::$booted                 = false;
+		self::$booted_plugins         = array();
+		self::$modules_booted         = false;
+		self::$modules_booted_plugins = array();
+		self::$plugin_dir             = null;
 	}
 
 	/**
