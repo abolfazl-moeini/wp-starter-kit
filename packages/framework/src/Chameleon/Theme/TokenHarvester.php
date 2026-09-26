@@ -107,7 +107,11 @@ final class TokenHarvester {
      */
     private static function generate_css(): string {
         $chain = new Chain();
-        $chainCss = $chain->generate_css();
+        try {
+            $chainCss = $chain->generate_css();
+        } catch ( \InvalidArgumentException $e ) {
+            $chainCss = '';
+        }
         if (!empty($chainCss)) {
             return $chainCss;
         }

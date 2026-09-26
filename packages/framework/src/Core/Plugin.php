@@ -228,7 +228,7 @@ final class Plugin {
 	 * registered modules and fire the `_modules_loaded` action.
 	 */
 	public static function on_plugins_loaded(): void {
-		if ( null !== self::$loader && ! self::$modules_booted ) {
+		if ( null !== self::$loader && ! in_array( self::$loader, self::$loaders, true ) && ! self::$modules_booted ) {
 			self::$loader->boot_all();
 		}
 		foreach ( self::$loaders as $slug => $loader ) {
