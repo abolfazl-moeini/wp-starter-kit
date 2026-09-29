@@ -13,7 +13,7 @@ function readJson(rel) {
 }
 
 describe("release version sync (WS-D)", () => {
-  test("starter plugin header, constant, and npm packages agree on 1.0.0", () => {
+  test("starter plugin header, constant, and npm packages agree on 1.1.0", () => {
     const starterPhp = readFileSync(join(ROOT, "wpdev-starter.php"), "utf8");
     const rootPkg = readJson("package.json");
     const enginePkg = readJson("packages/create-wp-project/package.json");

@@ -90,9 +90,9 @@ describe("@wpdev/create-plugin — package shape (I7.3/I7.4)", () => {
     expect(pkg.files.length).toBeGreaterThan(0);
   });
 
-  test("package version is 1.0.0", () => {
+  test("package version is 1.1.0", () => {
     const pkg = loadWrapperPkg();
-    expect(pkg.version).toBe("1.0.0");
+    expect(pkg.version).toBe("1.1.0");
   });
 });
 
@@ -110,9 +110,9 @@ describe("@wpdev/cli — publishability for wrapper dependency (GP-020)", () => 
     expect(pkg.private).not.toBe(true);
   });
 
-  test("@wpdev/cli version is 1.0.0", () => {
+  test("@wpdev/cli version is 1.1.0", () => {
     const pkg = loadCliPkg();
-    expect(pkg.version).toBe("1.0.0");
+    expect(pkg.version).toBe("1.1.0");
   });
 
   test("@wpdev/cli declares bin.wpdev and files whitelist", () => {

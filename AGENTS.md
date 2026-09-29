@@ -59,10 +59,10 @@ wp-starter-kit/
 │   ├── rule-engine/                   # Conditional rules & dynamic evaluation engine
 │   ├── translation/                   # Gettext translation compiler & extraction scripts
 │   ├── ui-components/                 # Reusable Preact/React UI elements
-│   └── build-go/                      # Go W1 build slice (config, hash, sidecar, CLI). Not wired into npm run build.
+│   └── build-go/                      # New Go build system (wpdev-build: config, hash, sidecar, CLI)
 │
 ├── core/packages/                     # JS build workspaces (esbuild orchestration)
-│   ├── build/                         # CLIs for dependencies, components, styles & assets
+│   ├── build/                         # [DEPRECATED] Legacy Node.js build CLIs (deprecated in favor of build-go)
 │   ├── dependency-extraction-esbuild-plugin/ # Emits WordPress .asset.php sidecars
 │   └── utils/                         # Config readers and build helpers
 │

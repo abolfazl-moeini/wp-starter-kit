@@ -1,4 +1,7 @@
-# @wpdev/build
+# @wpdev/build [DEPRECATED]
+
+> **DEPRECATION NOTICE**: This Node.js/esbuild build pipeline is **deprecated** in favor of the new Go-based build system located in [`packages/build-go`](../../packages/build-go) (`wpdev-build`).
+> Please migrate to the Go build system for faster builds and single-binary toolchain workflows.
 
 esbuild-based build pipeline for wp-starter-kit consumers (components, dependencies, styles, assets).
 

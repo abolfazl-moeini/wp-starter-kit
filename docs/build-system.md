@@ -1,5 +1,9 @@
 # Build System
 
+> [!WARNING]
+> **DEPRECATION NOTICE**: The legacy Node.js/esbuild build pipeline described here (`core/packages/build/`) is **deprecated**.
+> A high-performance, single-binary Go build system has been implemented in [`packages/build-go/`](../packages/build-go/) (`wpdev-build`) with zero-drift source parity.
+
 > The `npm run build` pipeline that turns `core/packages/`, `core/components/`,
 > and `core/styles/` into deployable assets in `assets/` and `dist/`. Source
 > files are TypeScript (`.ts`); the build emits ES2020 JavaScript.

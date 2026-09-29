@@ -1,7 +1,8 @@
 {
   "name": "@wpdev/build",
   "version": "1.0.0",
-  "description": "esbuild-based build pipeline for wp-starter-kit consumers (components, dependencies, styles, assets).",
+  "deprecated": "The Node.js build pipeline is deprecated. Use the Go-based build system in packages/build-go instead.",
+  "description": "[DEPRECATED] esbuild-based build pipeline for wp-starter-kit consumers (components, dependencies, styles, assets).",
   "type": "module",
   "main": "index.js",
   "bin": {

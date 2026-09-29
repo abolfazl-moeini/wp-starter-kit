@@ -2,7 +2,14 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getRootPath } from "@core/utils";
 
+/**
+ * @deprecated The Node.js build system is deprecated. Use packages/build-go instead.
+ */
+
 // Validation function
+/**
+ * @deprecated Use packages/build-go instead.
+ */
 export function validateConfig(config) {
   if (!config.assetMappings || !Array.isArray(config.assetMappings)) {
     throw new Error("assetMappings must be an array");
@@ -49,6 +56,9 @@ export function validateConfig(config) {
   }
 }
 
+/**
+ * @deprecated Use Go-based config reader (packages/build-go/internal/config) instead.
+ */
 export async function readBuildConfig() {
   const configPath = join(getRootPath(), "wpdev.json");
   let configData;

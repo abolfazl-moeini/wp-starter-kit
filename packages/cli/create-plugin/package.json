@@ -1,6 +1,6 @@
 {
   "name": "@wpdev/create-plugin",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Tiny shim for `npm create @wpdev/plugin` (plan.installer.md Phase I7 — I7.4). Forwards argv to the @wpdev/cli `create` subcommand. The real scaffolder lives in @wpdev/create-wp-project.",
   "type": "module",
   "license": "MIT",
@@ -14,7 +14,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@wpdev/cli": "^1.0.0"
+    "@wpdev/cli": "^1.1.0"
   },
   "scripts": {
     "prepublishOnly": "node -e \"console.log('Verify: @wpdev/cli is published first');\""

@@ -5,6 +5,23 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-29
+
+### Added
+
+- **Go Build System (`packages/build-go`)**: Reimplemented Wave 1 build system in Go (`wpdev-build`) with zero-drift source parity against Node.js:
+  - `config`: Robust `wpdev.json` discovery, validation, and serialization.
+  - `hash`: Lossy UTF-8 WHATWG-compliant MD5 asset hashing matching Node.js `Buffer.toString("utf8")`.
+  - `sidecar`: Deterministic WordPress `.asset.php` metadata generation.
+  - `jsnum` & `phpencode`: Full JavaScript numeric formatting and PHP array/object serialization parity.
+  - `covercheck`: Coverage profile validation across platforms.
+- **Chameleon Frontend Engine**: Bespoke frontend chameleon engine (`src/Modules/Chameleon/`), token harvester, theme adapters, and frontend JS pipeline.
+- **Standalone Build & Hardening (Profile S)**: Production packager with fail-closed security gates, AST symbol mangling, comment stripping, and transactional WAL deployment.
+
+### Deprecated
+
+- **Node.js Build Pipeline (`core/packages/build`)**: `@wpdev/build` and its associated esbuild CLIs are now deprecated in favor of the single-binary Go build system in `packages/build-go`.
+
 ### Fixed
 
 - **Release**: require `wpdev/framework` into `vendor/` (migration `2.4.0`) so

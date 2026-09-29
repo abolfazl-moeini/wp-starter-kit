@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
 
 /**
+ * @deprecated The Node.js build system is deprecated in favor of packages/build-go.
+ *
  * List of npm script names that constitute the full build pipeline.
  * Order in this array is the canonical "build pipeline" order; when the
  * orchestrator is invoked sequentially (`release` script), entries run
