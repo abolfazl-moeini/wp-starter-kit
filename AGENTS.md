@@ -2,9 +2,9 @@
 
 > **Target Audience:** Autonomous AI Coding Agents, Senior Systems Engineers, and Core Contributors.  
 > **Repository Root:** `/Users/moeini/Documents/ideas/extend-kit/wp-starter-kit`  
-> **Active Development Branch:** `migrate/build-go` — confirm with `git rev-parse --abbrev-ref HEAD` before assuming  
+> **Active Development Branch:** `main` — confirm with `git rev-parse --abbrev-ref HEAD` before assuming  
 > **Project Type:** Modular WordPress/WooCommerce Plugin Boilerplate, CLI Scaffolder & Standalone Obfuscation Monorepo.  
-> **Last Updated:** 2026-09-22
+> **Last Updated:** 2026-09-29 (Release v1.1.0 — Go build system migration, Chameleon frontend engine, Profile S hardening)
 
 ---
 
@@ -105,14 +105,23 @@ Plugins boot through `src/Core/Plugin.php`:
 - If a module includes frontend assets, entries reside in `src/Modules/{ModuleName}/assets/entries/*.{ts,tsx}` and compile automatically into `assets/bundles/{Module}-{entry}.js`.
 - Duck-Typed Module Registration: In standalone/inlined builds, module loaders accept `object` to allow plugins to coexist without strict type-locking collisions.
 
-### 3.3 The 4-Stage Client Build Pipeline
+### 3.3 The Legacy 4-Stage Client Build Pipeline (Deprecated)
 
-Managed by esbuild via `npm run build` or `npm run dev`:
+Managed by esbuild via `npm run build` or `npm run dev` (`core/packages/build/` — **Deprecated**):
 
 1. `build:dependencies`: Extracts vendor libraries into `{slug}-deps.js` with `.asset.php` sidecar.
 2. `build:components`: Scans module entries and compiles Preact/React/Polaris components.
 3. `build:styles`: Bundles CSS with content-hash sidecars.
 4. `build:assets`: Synchronizes third-party assets from `node_modules` into `assets/libraries/`.
+
+### 3.4 The Go Build System (`packages/build-go`)
+
+The next-generation build system is implemented in Go (`packages/build-go` / binary `wpdev-build`) with zero-drift parity:
+
+- **`wpdev-build config`**: Fast `wpdev.json` discovery, validation, and JSON serialization with JS falsy/truthy semantics.
+- **`wpdev-build hash`**: WHATWG-compliant lossy UTF-8 MD5 asset hashing matching Node.js `Buffer.toString("utf8")`.
+- **`wpdev-build sidecar`**: High-performance, deterministic `.asset.php` sidecar generation.
+- **`covercheck`**: Coverage profile parser and enforcement engine.
 
 ---
 
@@ -175,8 +184,11 @@ composer validate:cs
 ### 5.3 Test Execution
 
 ```bash
-# Run all root Jest suites (980+ tests)
+# Run all root Jest suites (166 suites, 1530+ tests)
 npm test
+
+# Run Go build system tests (with race detection)
+cd packages/build-go && go test -race ./...
 
 # Run root PHPUnit tests
 composer test

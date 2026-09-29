@@ -71,7 +71,6 @@
 | Doc                                                        | One-line description                           | Read when…                                |
 | ---------------------------------------------------------- | ---------------------------------------------- | ----------------------------------------- |
 | [wpdev-adapter.md](wpdev-adapter.md)                       | WPDev Admin Framework companion plugin bridge  | You're integrating `phpFramework:wpdev`   |
-| [../integrate.md](../integrate.md)                         | WPDev frontend AJAX/hooks ↔ Polaris plan       | You're aligning WPDev JS with starter-kit |
 | [wpdev-bridge-checkout.md](wpdev-bridge-checkout.md)       | Checkout reference using `@wpdev/wpdev-bridge` | You're validating light-AJAX + nonce flow |
 | [wpdev-bridge-list-tables.md](wpdev-bridge-list-tables.md) | List-table / ajax_button admin AJAX path       | You're migrating admin list refresh       |
 | [wpdev-panel-audit-matrix.md](wpdev-panel-audit-matrix.md) | Per-panel transport/nonce migration matrix     | You're migrating more WPDev panels        |

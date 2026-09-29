@@ -18,6 +18,9 @@ follows [Semantic Versioning](https://semver.org/).
 - **Chameleon Frontend Engine**: Bespoke frontend chameleon engine (`src/Modules/Chameleon/`), token harvester, theme adapters, and frontend JS pipeline.
 - **Standalone Build & Hardening (Profile S)**: Production packager with fail-closed security gates, AST symbol mangling, comment stripping, and transactional WAL deployment.
 
+- **Monorepo Version Lockstep**: Synchronized minor version `1.1.0` across root starter, CLI dispatcher (`@wpdev/cli`), scaffolding engine (`@wpdev/create-wp-project`), and wrapper (`@wpdev/create-plugin`).
+- **Documentation Consolidation**: Consolidated agent guidelines and repository architecture into `AGENTS.md`; cleaned up obsolete scratchpad documents (`STRUCTURE.md`, `context.md`, `integrate.md`).
+
 ### Deprecated
 
 - **Node.js Build Pipeline (`core/packages/build`)**: `@wpdev/build` and its associated esbuild CLIs are now deprecated in favor of the single-binary Go build system in `packages/build-go`.
