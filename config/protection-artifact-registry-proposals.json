@@ -1,0 +1,198 @@
+{
+  "schema": 1,
+  "purpose": "private-runtime-artifact-proposals",
+  "generatedBy": "wp-content/tools/validate-protection-registry-proposals.mjs",
+  "authority": "non-authoritative-review-evidence",
+  "recordRule": "Every record remains review-only until exact source/artifact bytes, tool inputs and migration contract are accepted and hashed into protection-artifact-registry.json.",
+  "artifacts": [
+    {
+      "proposedArtifactId": "drm-connector-profile-a-001",
+      "slug": "drm-connector",
+      "recordStatus": "review-only",
+      "buildInput": false,
+      "sourceDigest": null,
+      "toolDigest": null,
+      "migrationContractDigest": null,
+      "current": { "vendorPrefix": "WpdevVendor" },
+      "target": {
+        "vendorPrefix": "DrmConnectorVendor",
+        "runtimePrefix": "DrmConnectorRt"
+      },
+      "migration": {
+        "legacyLoadability": true,
+        "coexistence": "legacy-and-target-classmaps",
+        "serialization": "frozen-fixtures-required",
+        "publicHooks": "frozen-public",
+        "activationOrdering": "legacy-readable-barrier-before-private-runtime",
+        "rollback": "previous-zip-with-declared-schema-window"
+      },
+      "blockers": [
+        "accepted source/artifact and tool digests are pending",
+        "shared WpdevVendor migration is unapproved"
+      ]
+    },
+    {
+      "proposedArtifactId": "tavangary-core-profile-a-001",
+      "slug": "tavangary-core",
+      "recordStatus": "review-only",
+      "buildInput": false,
+      "sourceDigest": null,
+      "toolDigest": null,
+      "migrationContractDigest": null,
+      "current": { "vendorPrefix": "WpdevVendor" },
+      "target": {
+        "vendorPrefix": "TavangaryCoreVendor",
+        "runtimePrefix": "TavangaryCoreRt"
+      },
+      "migration": {
+        "legacyLoadability": true,
+        "coexistence": "legacy-and-target-classmaps",
+        "serialization": "frozen-fixtures-required",
+        "publicHooks": "frozen-public",
+        "activationOrdering": "legacy-readable-barrier-before-private-runtime",
+        "rollback": "previous-zip-with-declared-schema-window"
+      },
+      "blockers": [
+        "accepted source/artifact and tool digests are pending",
+        "source branch has unrelated user changes",
+        "shared WpdevVendor migration is unapproved"
+      ]
+    },
+    {
+      "proposedArtifactId": "tavangary-theme-panel-profile-a-001",
+      "slug": "tavangary-theme-panel",
+      "recordStatus": "review-only",
+      "buildInput": false,
+      "sourceDigest": null,
+      "toolDigest": null,
+      "migrationContractDigest": null,
+      "current": { "vendorPrefix": "WpdevVendor" },
+      "target": {
+        "vendorPrefix": "TavangaryThemePanelVendor",
+        "classmapPrefix": "TavangaryThemePanelVendor_",
+        "constantPrefix": "TAVANGARYTHEMEPANELVENDOR_",
+        "runtimePrefix": "TavangaryThemePanelRt"
+      },
+      "migration": {
+        "legacyLoadability": true,
+        "coexistence": "legacy-and-target-classmaps",
+        "serialization": "frozen-fixtures-required",
+        "publicHooks": "frozen-public",
+        "templates": "bounded-registered-roots-with-dynamic-listener-review",
+        "settings": "shared-wpdev_v2_settings-owner-scoped-merge",
+        "activationOrdering": "legacy-readable-barrier-before-private-runtime",
+        "rollback": "previous-zip-with-declared-schema-window"
+      },
+      "blockers": [
+        "accepted source/artifact and tool digests are pending",
+        "external template-listener coverage is incomplete",
+        "serialized compatibility fixtures are not accepted",
+        "shared WpdevVendor migration is unapproved"
+      ]
+    },
+    {
+      "proposedArtifactId": "wpdev-analytics-profile-a-001",
+      "slug": "wpdev-analytics",
+      "recordStatus": "review-only",
+      "buildInput": false,
+      "sourceDigest": null,
+      "toolDigest": null,
+      "migrationContractDigest": null,
+      "current": { "vendorPrefix": "WpdevVendor" },
+      "target": {
+        "vendorPrefix": "WpdevAnalyticsVendor",
+        "runtimePrefix": "WpdevAnalyticsRt"
+      },
+      "migration": {
+        "legacyLoadability": true,
+        "coexistence": "legacy-and-target-classmaps",
+        "serialization": "frozen-fixtures-required",
+        "publicHooks": "frozen-public",
+        "activationOrdering": "legacy-readable-barrier-before-private-runtime",
+        "rollback": "previous-zip-with-declared-schema-window"
+      },
+      "blockers": [
+        "accepted source/artifact and tool digests are pending",
+        "shared WpdevVendor migration is unapproved"
+      ]
+    },
+    {
+      "proposedArtifactId": "wpdev-crm-profile-a-001",
+      "slug": "wpdev-crm",
+      "recordStatus": "review-only",
+      "buildInput": false,
+      "sourceDigest": null,
+      "toolDigest": null,
+      "migrationContractDigest": null,
+      "current": { "vendorPrefix": "WpdevVendor" },
+      "target": {
+        "vendorPrefix": "WpdevCrmVendor",
+        "runtimePrefix": "WpdevCrmRt"
+      },
+      "migration": {
+        "legacyLoadability": true,
+        "coexistence": "legacy-and-target-classmaps",
+        "serialization": "frozen-fixtures-required",
+        "publicHooks": "frozen-public",
+        "activationOrdering": "legacy-readable-barrier-before-private-runtime",
+        "rollback": "previous-zip-with-declared-schema-window"
+      },
+      "blockers": [
+        "accepted source/artifact and tool digests are pending",
+        "shared WpdevVendor migration is unapproved"
+      ]
+    },
+    {
+      "proposedArtifactId": "wpdev-tickets-profile-a-001",
+      "slug": "wpdev-tickets",
+      "recordStatus": "review-only",
+      "buildInput": false,
+      "sourceDigest": null,
+      "toolDigest": null,
+      "migrationContractDigest": null,
+      "current": { "vendorPrefix": "WpdevVendor" },
+      "target": {
+        "vendorPrefix": "WpdevTicketsVendor",
+        "runtimePrefix": "WpdevTicketsRt"
+      },
+      "migration": {
+        "legacyLoadability": true,
+        "coexistence": "legacy-and-target-classmaps",
+        "serialization": "frozen-fixtures-required",
+        "publicHooks": "frozen-public",
+        "activationOrdering": "legacy-readable-barrier-before-private-runtime",
+        "rollback": "previous-zip-with-declared-schema-window"
+      },
+      "blockers": [
+        "accepted source/artifact and tool digests are pending",
+        "shared WpdevVendor migration is unapproved"
+      ]
+    },
+    {
+      "proposedArtifactId": "wpdev-woo-persian-profile-a-001",
+      "slug": "wpdev-woo-persian",
+      "recordStatus": "review-only",
+      "buildInput": false,
+      "sourceDigest": null,
+      "toolDigest": null,
+      "migrationContractDigest": null,
+      "current": { "vendorPrefix": "WpdevVendor" },
+      "target": {
+        "vendorPrefix": "WpdevWooPersianVendor",
+        "runtimePrefix": "WpdevWooPersianRt"
+      },
+      "migration": {
+        "legacyLoadability": true,
+        "coexistence": "legacy-and-target-classmaps",
+        "serialization": "frozen-fixtures-required",
+        "publicHooks": "frozen-public",
+        "activationOrdering": "legacy-readable-barrier-before-private-runtime",
+        "rollback": "previous-zip-with-declared-schema-window"
+      },
+      "blockers": [
+        "accepted source/artifact and tool digests are pending",
+        "shared WpdevVendor migration is unapproved"
+      ]
+    }
+  ]
+}

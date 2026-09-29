@@ -535,6 +535,41 @@ public function enqueue_admin_assets(string $hook): void
 See [asset-mappings.md](asset-mappings.md) for how third-party libraries (e.g.
 tabulator-tables) join the deps bundle and static asset tree.
 
+## Submodules (`module-*`) as Pluggable Modules
+
+When a feature is designed for reuse across multiple plugins (e.g. `module-test-users`, `module-user-merge`, or `module-design-tokens`), it can be added as a Git submodule inside `src/Modules/<FeatureName>/`.
+
+A reusable submodule:
+
+- Implements `WPDev\Core\ModuleInterface` (or provides a shim `compat/AbstractModule.php` if loaded outside the kit).
+- Declares a stable slug (`get_slug(): string`).
+- Remains 100% agnostic of host plugin brands, keys, and paths.
+- Provides bidirectional bridges: consumes host configurations via filters (e.g., `wpdev_brand_color`), and broadcasts lifecycle events via public actions (e.g., `wpdev_brand_color_updated`).
+
+Example:
+
+```php
+namespace WPDev\Modules\DesignTokens;
+
+use WPDev\Core\AbstractModule;
+
+final class Module extends AbstractModule
+{
+    public function get_slug(): string
+    {
+        return 'design-tokens';
+    }
+
+    public function boot(): void
+    {
+        ( new Bridge\GutenbergBridge() )->boot();
+        ( new Bridge\BricksBridge() )->boot();
+        ( new Bridge\CacheInvalidator() )->boot();
+        ( new Enqueue\StyleInjector() )->boot();
+    }
+}
+```
+
 ## Related docs
 
 - [plugin-bootstrap.md](plugin-bootstrap.md) — the `{slug}.php`

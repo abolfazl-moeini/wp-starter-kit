@@ -57,6 +57,8 @@ class PluginTest extends \WPDevTest\TestCases\TestCase
         parent::setUp();
         PluginTestStubModule::reset();
 
+        Plugin::reset_for_tests();
+
         // Plugin keeps static state — reset the singleton instance and
         // any internal state between tests by reflecting on the class.
         // We use the public test seam when available, and fall back
@@ -65,13 +67,17 @@ class PluginTest extends \WPDevTest\TestCases\TestCase
         // the WPCS snake_case convention (see Plugin.php).
         $reflection = new ReflectionClass(Plugin::class);
         $defaults = [
-            'instance'     => null,
-            'loader'       => null,
-            'config_path'  => null,
-            'config_cache' => null,
-            'last_hook'    => null,
-            'booted'       => false,
-            'plugin_dir'   => null,
+            'instance'               => null,
+            'loader'                 => null,
+            'loaders'                => [],
+            'config_path'            => null,
+            'config_cache'           => null,
+            'last_hook'              => null,
+            'booted'                 => false,
+            'booted_plugins'         => [],
+            'modules_booted'         => false,
+            'modules_booted_plugins' => [],
+            'plugin_dir'             => null,
         ];
         // PHP 7.x needs setAccessible(true) on private static props;
         // PHP 8.1+ ignores it and emits a deprecation. Guard the call
@@ -179,6 +185,29 @@ class PluginTest extends \WPDevTest\TestCases\TestCase
             Plugin::last_loaded_hook(),
             'Plugin::boot() must record the hook name it fired'
         );
+    }
+
+    public function test_multiple_plugins_can_boot_independently(): void
+    {
+        $path1 = $this->tmpDir . '/plugin1.json';
+        file_put_contents($path1, json_encode([
+            'slug' => 'plugin-alpha',
+            'hookPrefix' => 'alpha',
+        ]));
+
+        $path2 = $this->tmpDir . '/plugin2.json';
+        file_put_contents($path2, json_encode([
+            'slug' => 'plugin-beta',
+            'hookPrefix' => 'beta',
+        ]));
+
+        Plugin::boot($path1);
+        $this->assertTrue(Plugin::is_booted('plugin-alpha'));
+        $this->assertSame('alpha_plugin_loaded', Plugin::last_loaded_hook());
+
+        Plugin::boot($path2);
+        $this->assertTrue(Plugin::is_booted('plugin-beta'), 'Second plugin must boot independently');
+        $this->assertSame('beta_plugin_loaded', Plugin::last_loaded_hook());
     }
 
     public function test_boot_loads_config_from_plugin_root(): void

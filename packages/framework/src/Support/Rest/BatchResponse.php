@@ -16,8 +16,11 @@ final class BatchResponse
     /**
      * Wrap a payload so that the JS batch client can match it to the
      * original request via `extra.cacheKey`.
+     *
+     * @param mixed  $data
+     * @param string $cacheKey
      */
-    public static function wrap(mixed $data, string $cacheKey): WP_REST_Response
+    public static function wrap($data, string $cacheKey): WP_REST_Response
     {
         return new WP_REST_Response([
             'data'  => $data,
@@ -27,8 +30,11 @@ final class BatchResponse
 
     /**
      * Alias for {@see BatchResponse::wrap()} used in integration docs/tests.
+     *
+     * @param mixed  $data
+     * @param string $cacheKey
      */
-    public static function forCacheKey(mixed $data, string $cacheKey): WP_REST_Response
+    public static function forCacheKey($data, string $cacheKey): WP_REST_Response
     {
         return self::wrap($data, $cacheKey);
     }

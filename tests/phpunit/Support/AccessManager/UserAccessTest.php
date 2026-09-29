@@ -85,6 +85,17 @@ class UserAccessTest extends \WPDevTest\TestCases\TestCase
         $this->assertFalse($access->have_access('sample'));
     }
 
+    public function test_all_fails_closed_when_caps_array_is_empty(): void
+    {
+        $this->login('subscriber');
+
+        $access = new SampleUserAccess(static function (BluePrint $bp): void {
+            $bp->describe('restricted')->all();
+        });
+
+        $this->assertFalse($access->have_access('restricted'));
+    }
+
     public function test_custom_callback(): void
     {
         $access = new SampleUserAccess(static function (BluePrint $bp): void {

@@ -10,9 +10,10 @@ export default {
   testEnvironment: 'node',
   transform: {
     '^.+\\.[jt]sx?$': ['babel-jest', { presets: ['@babel/preset-env', '@babel/preset-typescript'] }],
+    '^.+\\.mjs$': ['babel-jest', { presets: ['@babel/preset-env'] }],
   },
   testMatch: ['**/tests/**/*.test.[jt]s'],
-  moduleFileExtensions: ['js', 'json', 'ts', 'tsx'],
+  moduleFileExtensions: ['js', 'json', 'ts', 'tsx', 'mjs'],
 
   transformIgnorePatterns: ['node_modules/(?!(chalk|preact|@preact))'],
 

@@ -40,6 +40,21 @@ Skills are **not** copied into generated projects — agents read them from the 
 Shared Playwright skill repo:
 [abolfazl-moeini/wordpress-e2e-tests](https://github.com/abolfazl-moeini/wordpress-e2e-tests)
 
+## Cross-cutting: Access Control & Two-Gate Defense
+
+Privileged actions (mutating REST routes, admin AJAX handlers, settings saves, CSV exports) must strictly implement the **Two-Gate Defense-in-Depth Model**:
+
+- **Gate 1 (Native WP Capability):** Evaluated via `CapabilityPolicy::can()`, `current_user_can()`, or `$supported_panels`.
+- **Gate 2 (AccessManager Domain Policy):** Evaluated via `CapabilityPolicy::access()` / `have_access()`, or framework `wpdev_can()`.
+- Neither gate may bypass the other. When targeting `phpFramework: wpdev`, register fine-grained permissions via `wpdev_register_permission()` on `wpdev_load`.
+
 ## Cross-cutting: WP 6.7 i18n
 
 Host plugins must load `load_plugin_textdomain` on `init` (prefer priority `1`) and must **not** call `__( …, '{textDomain}' )` before `init`. `wpdev_load` fires inside `plugins_loaded` — defer host settings registration that uses `__()` until `init`. See `docs/plugin-bootstrap.md` § Text-domain loading and wpdev-core skill `wpdev-settings-dashboard/references/settings-sections.md` § WP 6.7+ i18n timing.
+
+## Cross-cutting: Release Pipeline (Batch Changes Before Build)
+
+`npm run release` and `composer release:dist` are heavy, full-lifecycle distribution pipelines (running Docker PHPUnit test suites, asset compilation, Rector AST downgrades, Strauss namespace isolation, and ZIP creation).
+
+- **NEVER** run release packaging in an iterative micro-loop (e.g. edit a file -> release build -> bump version -> release build).
+- **ALWAYS** batch all source code changes, documentation, and version manifest bumps (`wpdev.json`, main plugin file, `composer.json`, `package.json`, `readme.txt`) first. Verify with fast targeted tests (`composer test`, `npm run typecheck`), then run the release build **once** at the end.

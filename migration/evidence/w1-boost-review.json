@@ -1,0 +1,34 @@
+{
+  "unit": "W1-boost-review",
+  "date": "2026-09-17",
+  "scope": "Independent adversarial code review of build-go W1 pilot; issues & gaps identified and fixed with TDD",
+  "source_sha": "8c1e9baf7359750e2a8d2efca58a316744f3e2e6",
+  "rulebook_version": 3,
+  "rulebook_sha256": "bfa087abccceafeca3e7523e2d08aab5c6db7027a963e1ec9c2023a9b9d9a038",
+  "rules_added": ["R-001b", "R-003b", "R-004b", "R-005b", "R-008b", "R-008c"],
+  "findings_fixed": [
+    "FATAL BUG: hash.lossyUTF8 failed WHATWG maximal subpart decoding on truncated invalid continuation bytes (swallowed trailing ASCII bytes) and 3/4-byte sequences (emitted extra U+FFFDs); replaced with standard WHATWG maximal subpart algorithm, verified against Node on [0xe0, 0x28], [0xe2, 0x82, 0x28, 0x61], [0xf0, 0x90, 0x80, 0x28]",
+    "GAP: hash.CanonicalJSON decoded numbers to float64, losing precision on large 64-bit integers and high-precision numbers; switched to json.NewDecoder with UseNumber() and strict io.EOF verification for trailing data",
+    "GAP: sidecar.AssetPath allowed hidden/dot files (e.g. dir/.js, .css) because len(bundle) > len(ext); updated to check filepath.Base(bundle) length exceeding ext, matching JS regex match(/(.+)\\.(?:js|css)$/)",
+    "GAP: config.Config special-cased vendorPrefix null but lost null for all other optional fields (restNamespace, batchEndpoint, etc.), converting them to empty strings; generalized to NullFields map[string]bool",
+    "GAP: phpencode.encode rejected json.Number, float32, uint/int8/int16, and map[string]string; added full numeric and map[string]string support with tests",
+    "ROBUSTNESS: covercheck.parseBlock failed on Windows paths containing drive letters (e.g. C:\\...); fixed to split on whitespace first then use LastIndex for range separator colon",
+    "USABILITY: cli.go printHelp misstated sidecar syntax as <file.css|file.js> when WriteStyle is strictly for stylesheets; corrected to <file.css>"
+  ],
+  "verification": {
+    "go_vet": "PASS",
+    "gofmt": "clean",
+    "go_test_count1": "PASS (7/7 packages)",
+    "go_test_race_shuffle": "PASS",
+    "node_u01_oracle": "PASS",
+    "node_u06_oracle": "PASS",
+    "coverage_total": "98.1%",
+    "coverage_per_package_min": "96.7% (cli); all packages > 95%",
+    "binary_e2e": "wpdev-build hash and config verified against live repository files"
+  },
+  "commands": [
+    "node migration/fixtures/run-u01-oracle.mjs",
+    "node migration/fixtures/run-u06-sidecar-oracle.mjs",
+    "cd packages/build-go && go vet ./... && gofmt -l . && go test -count=1 ./... && go test -count=1 -race -shuffle=on ./... && go test -count=1 -coverprofile=coverage.out ./..."
+  ]
+}

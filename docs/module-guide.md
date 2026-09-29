@@ -133,11 +133,12 @@ final class ItemsController extends RestHandler
 
     public function rest_permission(): bool
     {
-        // Prefer AccessManager named rules (see Access/FeatureAccess.php).
-        return CapabilityPolicy::access(
-            new FeatureAccess(),
-            FeatureAccess::EDIT_ITEMS
-        );
+        // Enforce Two-Gate Defense: Gate 1 (WP cap) + Gate 2 (AccessManager domain policy).
+        return CapabilityPolicy::can('edit_posts')
+            && CapabilityPolicy::access(
+                new FeatureAccess(),
+                FeatureAccess::EDIT_ITEMS
+            );
     }
 
     public function rest_end_point(): string { return 'my-items'; }
@@ -207,7 +208,7 @@ wpdev doctor .       # drift check on the project
 
 Every module must follow WordPress security practices:
 
-- [ ] REST routes implement `permission_callback` (prefer AccessManager `UserAccess` + `CapabilityPolicy::access()`)
+- [ ] REST routes implement `permission_callback` enforcing Two-Gate Defense (Gate 1 WP capability + Gate 2 AccessManager `UserAccess` via `CapabilityPolicy::access()` / `wpdev_can()`)
 - [ ] Input sanitized (`sanitize_text_field`, `absint`, etc.)
 - [ ] Output escaped (`esc_html`, `esc_attr`, `wp_kses_post`)
 - [ ] AJAX handlers verify nonces
@@ -242,6 +243,25 @@ public function should_boot(): bool
 ```
 
 The loader skips `boot()` when `should_boot()` returns `false`.
+
+## Reusable Submodules (`module-*`)
+
+For cross-plugin features that can be shared across multiple products (e.g. `module-test-users`, `module-user-merge`, `module-design-tokens`), structure the module as an independent Git submodule under `src/Modules/<ModuleName>/`:
+
+### Architectural Rules for Submodules
+
+1. **Brand & Host Agnostic:** Never hardcode host plugin slugs, option names, or brand keys inside the submodule. Use generic namespaces (`WPDev\Modules\<ModuleName>`).
+2. **Filter-Driven Configuration:** Expose filter hooks (e.g., `wpdev_brand_color`, `wpdev_<feature>_options`) to allow the host plugin to inject settings.
+3. **Dual Boot Resilience:** Support both starter-kit loader environments and standalone direct boot:
+   ```php
+   if ( class_exists( '\WPDev\Core\Plugin' ) && method_exists( '\WPDev\Core\Plugin', 'loader' ) ) {
+       \WPDev\Core\Plugin::loader()->register( new \WPDev\Modules\DesignTokens\Module() );
+   } else {
+       ( new \WPDev\Modules\DesignTokens\Module() )->boot();
+   }
+   ```
+4. **Isolated Lifecycle & Cache Invalidation:** Submodules manage their own runtime caching and invalidate on both WPDev settings (`wpdev_v2_settings`) and host-specific option hooks.
+5. **Self-Contained Documentation & Tests:** Each submodule maintains its own `README.md` and test suite within its repository root.
 
 ## See also
 

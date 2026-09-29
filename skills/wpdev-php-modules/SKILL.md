@@ -58,13 +58,22 @@ vendor/                       # Composer only; never put feature code here
   `Plugin::config()` otherwise produce empty script URLs (`Unexpected token '<'`)
   or silently drop scripts whose deps never registered.
 - **ALWAYS** security: capability/nonce, sanitize in, escape out, REST `permission_callback`.
+- **ALWAYS** enforce the **Two-Gate Defense-in-Depth Model** on privileged endpoints:
+  - **Gate 1 (Native WP Capability):** role/capability boundaries checked via `current_user_can()`, `$supported_panels`, or `CapabilityPolicy::can()`.
+  - **Gate 2 (AccessManager Domain Policy):** fine-grained domain logic checked via `CapabilityPolicy::access()` / `have_access()` or framework `wpdev_can()`.
 - **ALWAYS** add `src/Modules/{Name}/Access/{Name}Access.php` (extends `UserAccess`)
   when the module has admin ajax / REST / menu / CSV / settings gates. Declare
   named rules in `describe(BluePrint)`; check with `have_access()` or
-  `CapabilityPolicy::access()` / `rest_access()`. See
+  `CapabilityPolicy::access()` / `rest_access()`. When running in the WPDev
+  framework ecosystem (`phpFramework: wpdev`), declare domain permissions with
+  `wpdev_register_permission()` on `wpdev_load`. See
   [references/support-packages.md](references/support-packages.md).
 - **NEVER** scatter feature-level `current_user_can('manage_*'|'edit_products'|…)`
   once an Access class exists for that gate — use the named rule instead.
+- **NEVER** run release packaging (`npm run release` / `composer release:dist`) in an iterative micro-loop with single-line edits or sequential version bumps. Apply all code, version, and dependency changes FIRST, verify with fast targeted unit tests, and run release packaging ONCE at the end.
+- **NEVER** use case-mismatched file paths, directory names, or namespace segments. macOS APFS is case-insensitive, but production Linux (ext4) is strictly case-sensitive. Always match casing character-for-character.
+- **NEVER** rely on `packages/` for runtime code that must survive release packaging. Release packaging (`release:dist`) strips `packages/`. Any embedded runtime dependencies must live in `dependencies/` or `vendor/`.
+- **ALWAYS** provide an executable bootstrap smoke test for distribution zips (`smoke-standalone-zip.sh`) that executes real PHP (`php -r`) asserting critical classes and functions, never relying on superficial `test -f` or `is_readable` checks (False Greens).
 - Object-level `current_user_can('edit_post'|'edit_user', $id)` on metabox/profile
   saves may stay **inline** (AccessManager is for feature-level gates).
 
@@ -245,18 +254,24 @@ final class MyFeatureAccess extends UserAccess
     }
 }
 
-// Runtime (ajax / admin_post / REST permission_callback):
-CapabilityPolicy::access(new MyFeatureAccess(), MyFeatureAccess::EDIT_ITEMS);
-// or: (new MyFeatureAccess())->have_access(MyFeatureAccess::EDIT_ITEMS);
+// Runtime (Two-Gate Defense in REST permission_callback or mutating action):
+public function rest_permission(): bool
+{
+    // Gate 1 (WP Capability) + Gate 2 (AccessManager Domain Policy)
+    return CapabilityPolicy::can(MyFeatureAccess::CAP_EDIT)
+        && CapabilityPolicy::access(new MyFeatureAccess(), MyFeatureAccess::EDIT_ITEMS);
+}
+// or direct: (new MyFeatureAccess())->have_access(MyFeatureAccess::EDIT_ITEMS);
 ```
 
 Checklist when adding a module:
 
 1. Create `Access/{Name}Access.php` with rule-id + `CAP_*` constants.
-2. Replace feature-level `current_user_can(...)` call sites with `have_access` /
+2. Enforce the **Two-Gate Defense-in-Depth Model**: Gate 1 for WP capability boundary, Gate 2 for AccessManager domain rules.
+3. Replace feature-level `current_user_can(...)` call sites with `have_access` /
    `CapabilityPolicy::access`.
-3. Point menu/`$supported_panels` at `XAccess::CAP_*` (string still required by WP).
-4. Add `tests/phpunit/Modules/{Name}/AccessTest.php` (`login('role')` true/false).
+4. Point menu/`$supported_panels` at `XAccess::CAP_*` (Gate 1 string required by WP).
+5. Add `tests/phpunit/Modules/{Name}/AccessTest.php` (`login('role')` true/false).
 
 ### Assets slice
 
@@ -345,6 +360,26 @@ when the current source is below the new min. CI uses
 Docker PHPUnit should use an image matching **`phpMinVersion`** when verifying
 compat. Prefer `release:dist` for shipping rather than mutating authoring source
 in place (unless you intentionally author at `phpMinVersion`).
+
+### Release packaging anti-patterns (Batch changes before build)
+
+Running `npm run release` or `composer release:dist` is an **end-of-lifecycle distribution pipeline**. It executes Docker PHPUnit test suites, asset compilation (esbuild/webpack/postcss), Rector AST downgrades, namespace scoping (Strauss), and ZIP packaging.
+
+| Anti-Pattern                                                                                                                                                               | Why it fails                                                                                                                                                                                       | Correct Workflow                                                                                                                                                                     |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Iterative micro-releases:** Making a single-line edit or bumping a version, running `npm run release`, finding another oversight, editing again, and re-running release. | Extremely slow feedback loop (wastes 10–20+ minutes per cycle on Docker spin-up, full test suites, asset bundling, and Rector AST passes). Masks source syntax errors behind transpiled artifacts. | **Batch all edits first.** Apply all code modifications, documentation, and version bumps across manifests in one go. Verify with fast unit tests, then run `release:dist` **once**. |
+| **Fixing bugs inside `dist/` directly:** Editing files in `dist/{slug}/` after running a release build.                                                                    | Changes in `dist/` are ephemeral and wiped on the next build. Source code in `src/` remains broken.                                                                                                | Always edit files in `src/`, `packages/`, or root manifests, then rebuild cleanly.                                                                                                   |
+| **Using `release:dist` as a local dev test:** Running full distribution builds just to see if a PHP method or admin screen works.                                          | Extremely heavy and slow feedback loop.                                                                                                                                                            | Run fast targeted unit tests (`vendor/bin/phpunit --filter ...`) or test directly in a local WP environment without full release bundling.                                           |
+| **Shallow `test -f` / `is_readable` smoke tests:** Relying on simple file existence checks for release zips.                                                               | Produces **False Greens**. Files can exist while containing broken class references, missing runtime dependencies, or fatal errors.                                                                | Use executable smoke tests (`smoke-standalone-zip.sh`) that run real PHP execution (`php -r`) booting the plugin in an isolated process.                                             |
+| **Assuming macOS file casing works on production Linux:** Ignoring letter casing differences in paths and namespaces.                                                      | macOS APFS is case-insensitive, masking broken `require` or autoloading. Production Linux (ext4) throws fatal `Class not found` or `Failed opening required`.                                      | Strictly match disk casing character-for-character across all paths, and verify bootstraps inside a Linux Docker container.                                                          |
+
+#### Safe 5-step Release Procedure
+
+1. **Batch Code & Configuration:** Finish all features, bug fixes, and refactors in source files.
+2. **Synchronize Version Manifests:** Bump versions across `wpdev.json`, `{slug}.php`, `composer.json`, `package.json`, and `readme.txt` simultaneously.
+3. **Targeted Verification:** Run fast linting and unit tests (`npm run typecheck`, targeted PHPUnit).
+4. **Single Packaging Run:** Execute `npm run release` (or `composer release:dist`) **once**.
+5. **Final Sanity Check:** Verify the resulting artifact in `dist/` or smoke-test the generated zip.
 
 ## Security baseline (every module)
 

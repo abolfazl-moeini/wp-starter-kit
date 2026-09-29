@@ -1,0 +1,34 @@
+{
+  "unit": "W1-boost-review-r2",
+  "date": "2026-09-17",
+  "scope": "Second-round independent adversarial code review of build-go W1 pilot; issues & gaps identified and fixed with TDD",
+  "source_sha": "8c1e9baf7359750e2a8d2efca58a316744f3e2e6",
+  "rulebook_version": 4,
+  "rulebook_sha256": "02aa698b7a0ad16cc9d580e52f10ac341e39d0061681b5b71a49485d0ae3e6ff",
+  "rules_added": ["R-001c", "R-004c", "R-005c", "R-008d", "R-008e"],
+  "findings_fixed": [
+    "FATAL BUG: sidecar.AssetPath sliced raw bundle path (bundle[:len(bundle)-len(ext)]), corrupting trailing-slash and relative paths (e.g. 'style.css/' -> 'style..asset.php', 'dir/bundle.js/' -> 'dir/bundle.j.asset.php'); fixed by trimming trailing separators and reconstructing via filepath.Join(dir, stem+'.asset.php') matching Node path.join(path.dirname, ...)",
+    "FATAL BUG: covercheck.parseBlock required len(fields) == 3, failing on any path containing spaces; fixed by taking the last two fields as stmts and count and joining all preceding fields",
+    "CROSS-PLATFORM BUG: covercheck.Evaluate used path.Dir on Windows backslash paths, returning '.' because path only splits on '/'; fixed by normalizing with strings.ReplaceAll(file, '\\\\', '/')",
+    "NUMERIC DIVERGENCE: phpencode.jsNumber and config.jsFloat produced '-0' for negative zero (-0.0), whereas JS (-0).toString() and json2php(-0.0) strictly produce '0'; fixed with zero guard (if t == 0 { return '0' })",
+    "FALSY DIVERGENCE: config.truthy treated math.NaN() and json.Number zero values ('0.0', '-0', '0.00', '-0.0') as truthy; updated to evaluate via Float64() checking !math.IsNaN(f) && f != 0",
+    "PRECISION GAP: phpencode.encode did not check strconv.ParseUint for json.Number, losing precision on uint64 values exceeding math.MaxInt64; added ParseUint check before float fallback",
+    "CLEANUP: Removed dead math constants (_ = math.MinInt64, _ = math.MaxInt64) in phpencode.go"
+  ],
+  "verification": {
+    "go_vet": "PASS",
+    "gofmt": "clean",
+    "go_test_count1": "PASS (7/7 packages)",
+    "go_test_race_shuffle": "PASS",
+    "node_u01_oracle": "PASS",
+    "node_u06_oracle": "PASS",
+    "coverage_total": "98.5%",
+    "coverage_per_package_min": "96.7% (cli); all packages > 96%",
+    "binary_e2e": "wpdev-build hash, config, and sidecar verified against live repo files"
+  },
+  "commands": [
+    "node migration/fixtures/run-u01-oracle.mjs",
+    "node migration/fixtures/run-u06-sidecar-oracle.mjs",
+    "cd packages/build-go && go vet ./... && gofmt -l . && go test -count=1 ./... && go test -count=1 -race -shuffle=on ./... && go test -count=1 -cover ./..."
+  ]
+}

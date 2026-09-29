@@ -39,9 +39,21 @@ class RestSetupTest extends \WPDevTest\TestCases\TestCase
         $this->assertArrayHasKey('/custom/v2/test-items', $routes, 'REST route must be registered');
     }
 
+    public function test_rest_init_falls_back_to_slug_v1_when_rest_namespace_omitted(): void
+    {
+        $configPath = $this->writeTempConfig(['slug' => 'custom-addon', 'restNamespace' => '']);
+        Plugin::boot($configPath);
+
+        RestSetup::register(TestRestHandler::class);
+        $this->init_rest_server();
+
+        $routes = rest_get_server()->get_routes();
+        $this->assertArrayHasKey('/custom-addon/v1/test-items', $routes, 'REST route should fall back to slug/v1');
+    }
+
     public function test_allow_batch_is_passed_through(): void
     {
-        Plugin::boot(dirname(__DIR__, 4) . '/project.config.json');
+        Plugin::boot();
         RestSetup::register(BatchRestHandler::class);
         $this->init_rest_server();
 
@@ -100,8 +112,11 @@ class RestSetupTest extends \WPDevTest\TestCases\TestCase
 
     private function writeTempConfig(array $overrides): string
     {
+        $configFile = file_exists(dirname(__DIR__, 4) . '/wpdev.json')
+            ? dirname(__DIR__, 4) . '/wpdev.json'
+            : dirname(__DIR__, 4) . '/project.config.json';
         $base = json_decode(
-            (string) file_get_contents(dirname(__DIR__, 4) . '/project.config.json'),
+            (string) file_get_contents($configFile),
             true
         );
         $merged = array_merge($base, $overrides);

@@ -14,6 +14,8 @@ namespace WPDevFramework\Modules\SettingsPanelBuilder;
 
 defined( 'ABSPATH' ) || exit;
 
+require_once __DIR__ . '/class-settings-write-lock.php';
+
 /**
  * Reads and writes the WPDev settings option with a request-level cache.
  */
@@ -107,6 +109,37 @@ class Settings_Storage {
 		return $status;
 
 	} // end replace;
+
+	/**
+	 * Persist registered-field changes without deleting settings registered by
+	 * another consumer of the shared v2_settings option.
+	 *
+	 * A page request may have loaded the option before a sibling request saves.
+	 * Re-read the option immediately before merging so the write starts from the
+	 * newest WordPress value rather than this object's request cache.
+	 *
+	 * @since 2.6.1
+	 *
+	 * @param array $resolved_settings Values resolved for this runtime's fields.
+	 * @return array Persisted full settings array.
+	 */
+	public function replace_registered( array $resolved_settings ) {
+
+		$save = function () use ( $resolved_settings ) {
+			$latest = wpdev_get_option( self::KEY );
+			$latest = is_array( $latest ) ? $latest : array();
+			$settings = Settings_Save::merge_with_saved( $latest, $resolved_settings );
+
+			if ( ! $this->replace( $settings ) ) {
+				return false;
+			}
+
+			return $settings;
+		};
+
+		return Settings_Write_Lock::run( self::KEY, $save );
+
+	} // end replace_registered;
 
 	/**
 	 * Get a single setting value with the legacy filter applied.

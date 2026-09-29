@@ -1,5 +1,6 @@
 /** @jest-environment jsdom */
 import { describe, test, expect, beforeAll } from "@jest/globals";
+import axe from "axe-core";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
@@ -112,6 +113,17 @@ describe("polaris-stack component render", () => {
     expect(link?.getAttribute("type")).toBeNull();
   });
 
+  test("Button as anchor with loading uses aria-disabled, not disabled", () => {
+    const root = document.createElement("div");
+    render(h(Button, { as: "a", href: "#", loading: true }, "Link"), root);
+    const link = root.querySelector("a.ps-button");
+    expect(link).not.toBeNull();
+    // `disabled` is invalid on anchors — aria-disabled is the a11y equivalent.
+    expect(link?.getAttribute("disabled")).toBeNull();
+    expect(link?.getAttribute("aria-disabled")).toBe("true");
+    expect(link?.getAttribute("aria-busy")).toBe("true");
+  });
+
   test("Card renders with elevation and interactive classes", () => {
     const root = document.createElement("div");
     render(h(Card, { elevation: 3, interactive: true }, "content"), root);
@@ -141,6 +153,12 @@ describe("polaris-stack component render", () => {
     expect(root.querySelector(".ps-badge-success")).not.toBeNull();
   });
 
+  test("Badge defaults to neutral tone class", () => {
+    const root = document.createElement("div");
+    render(h(Badge, {}, "OK"), root);
+    expect(root.querySelector(".ps-badge-neutral")).not.toBeNull();
+  });
+
   test("Alert renders with role status", () => {
     const root = document.createElement("div");
     render(h(Alert, { tone: "warning" }, "Heads up"), root);
@@ -166,5 +184,78 @@ describe("polaris-stack component render", () => {
     render(h(IconButton, { label: "Close" }, "×"), root);
     const btn = root.querySelector(".ps-button-icon-only");
     expect(btn?.getAttribute("aria-label")).toBe("Close");
+  });
+});
+
+describe("polaris-stack component a11y (axe-core)", () => {
+  // Page-level rules and layout-dependent rules can't apply here: we render
+  // fragments (not full documents) and jsdom has no layout engine, so
+  // color-contrast can only ever report "incomplete". Disable them for
+  // deterministic scans of the component markup itself.
+  const DISABLED_RULES = {
+    region: { enabled: false },
+    "page-has-heading-one": { enabled: false },
+    "landmark-one-main": { enabled: false },
+    bypass: { enabled: false },
+    "html-has-lang": { enabled: false },
+    "color-contrast": { enabled: false },
+  };
+
+  async function expectNoAxeViolations(node: any): Promise<void> {
+    const root = document.createElement("div");
+    document.body.appendChild(root);
+    render(node, root);
+    try {
+      const results = await axe.run(root, { rules: DISABLED_RULES });
+      expect(results.violations).toEqual([]);
+    } finally {
+      root.remove();
+    }
+  }
+
+  test("Button has no axe violations", async () => {
+    await expectNoAxeViolations(h(Button, { variant: "solid" }, "Save"));
+  });
+
+  test("Button as anchor has no axe violations", async () => {
+    await expectNoAxeViolations(h(Button, { as: "a", href: "#" }, "Link"));
+  });
+
+  test("Button in loading state has no axe violations", async () => {
+    await expectNoAxeViolations(h(Button, { loading: true }, "Saving"));
+  });
+
+  test("Card has no axe violations", async () => {
+    await expectNoAxeViolations(
+      h(Card, { elevation: 2, interactive: true }, "content"),
+    );
+  });
+
+  test("Text has no axe violations", async () => {
+    await expectNoAxeViolations(h(Text, { tone: "muted" }, "label"));
+  });
+
+  test("Heading has no axe violations", async () => {
+    await expectNoAxeViolations(h(Heading, { level: 2 }, "Title"));
+  });
+
+  test("Badge has no axe violations", async () => {
+    await expectNoAxeViolations(h(Badge, { tone: "success" }, "OK"));
+  });
+
+  test("Alert has no axe violations", async () => {
+    await expectNoAxeViolations(h(Alert, { tone: "warning" }, "Heads up"));
+  });
+
+  test("Spinner has no axe violations", async () => {
+    await expectNoAxeViolations(h(Spinner, { label: "Busy" }));
+  });
+
+  test("Kbd has no axe violations", async () => {
+    await expectNoAxeViolations(h(Kbd, null, "⌘K"));
+  });
+
+  test("IconButton has no axe violations", async () => {
+    await expectNoAxeViolations(h(IconButton, { label: "Close" }, "×"));
   });
 });

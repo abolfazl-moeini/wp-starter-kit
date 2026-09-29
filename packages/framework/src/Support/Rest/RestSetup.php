@@ -18,7 +18,10 @@ final class RestSetup
     /** @var array<class-string<RestHandler>> */
     private static array $routes = [];
 
-    public static function register(string|RestHandler $handler): bool
+    /**
+     * @param string|RestHandler $handler
+     */
+    public static function register($handler): bool
     {
         // $handler is `string|RestHandler`; both branches of the
         // ternary return a string (get_class() always does, and the
@@ -33,7 +36,7 @@ final class RestSetup
         // instance. Both are hard to diagnose from a stack trace; the
         // return-false contract here lets the caller log + skip the
         // bad route without breaking the rest of the registration.
-        if ( ! class_exists( $classname ) ) {
+        if ( ! is_string( $classname ) || ! class_exists( $classname ) ) {
             return false;
         }
         if ( ! is_subclass_of( $classname, RestHandler::class ) ) {
@@ -55,7 +58,9 @@ final class RestSetup
     public static function rest_init(): void
     {
         $config = Plugin::config();
-        $namespace = $config['restNamespace'] ?? 'wpdev/v1';
+        $namespace = !empty($config['restNamespace']) && is_string($config['restNamespace'])
+            ? $config['restNamespace']
+            : (!empty($config['slug']) && is_string($config['slug']) ? $config['slug'] . '/v1' : 'wpdev/v1');
 
         foreach (self::$routes as $handlerClass) {
             /** @var RestHandler $handler */
@@ -71,7 +76,17 @@ final class RestSetup
                 $args['allow_batch'] = $handler->allow_batch();
             }
 
-            register_rest_route($namespace, $handler->rest_end_point(), $args);
+            $route_namespaces = [$namespace];
+            if (method_exists($handler, 'rest_namespace')) {
+                $custom_ns = $handler->rest_namespace();
+                if (is_string($custom_ns) && $custom_ns !== '' && $custom_ns !== $namespace) {
+                    $route_namespaces[] = $custom_ns;
+                }
+            }
+
+            foreach ($route_namespaces as $ns) {
+                register_rest_route($ns, $handler->rest_end_point(), $args);
+            }
         }
     }
 

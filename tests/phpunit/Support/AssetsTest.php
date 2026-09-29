@@ -34,7 +34,7 @@ class AssetsTest extends \WPDevTest\TestCases\TestCase
     {
         parent::setUp();
         Plugin::reset_for_tests();
-        $this->tmpDir = sys_get_temp_dir() . '/wpdev-assets-test-' . uniqid('', true);
+        $this->tmpDir = $this->pluginRootPath() . '/tests/tmp/assets-' . uniqid('', true);
         mkdir($this->tmpDir, 0777, true);
 
         // Assets::read_project_config() delegates to Plugin::config(), which

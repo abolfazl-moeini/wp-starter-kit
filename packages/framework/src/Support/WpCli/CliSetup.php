@@ -24,11 +24,11 @@ final class CliSetup
      *
      * @param class-string<Command>|Command $command
      */
-    public static function register(string|Command $command): bool
+    public static function register($command): bool
     {
         $classname = $command instanceof Command ? get_class($command) : $command;
 
-        if (!class_exists($classname)) {
+        if (!is_string($classname) || !class_exists($classname)) {
             return false;
         }
         if (!is_subclass_of($classname, Command::class)) {

@@ -9,3 +9,4 @@ composer.lock
 package-lock.json
 packages/wpdev-framework/
 wp-content/
+packages/build-go/**/testdata/

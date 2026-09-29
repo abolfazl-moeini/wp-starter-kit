@@ -465,7 +465,7 @@ function wpdev_render_settings_panel_section( $section_slug, array $args = array
 	$fields = array();
 
 	foreach ( $section['fields'] as $field_slug => $field ) {
-		$capability = $field['capability'] ?? 'manage_options';
+		$capability = $field['capability'] ?? ( $section['capability'] ?? 'manage_options' );
 
 		if ( current_user_can( $capability ) ) {
 			$fields[ $field_slug ] = $field;

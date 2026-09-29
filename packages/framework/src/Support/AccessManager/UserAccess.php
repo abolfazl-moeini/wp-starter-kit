@@ -22,6 +22,10 @@ abstract class UserAccess extends QualifierBase
      */
     protected function check(array $rules): bool
     {
+        if (empty($rules)) {
+            return false;
+        }
+
         foreach ($rules as $rule) {
             if (!$this->check_access($rule)) {
                 return false;
@@ -68,6 +72,10 @@ abstract class UserAccess extends QualifierBase
      */
     protected function check_all(array $caps, string $type): bool
     {
+        if (empty($caps)) {
+            return false;
+        }
+
         foreach ($caps as $cap) {
             if ($type === 'current' && !$this->current_user_can($cap)) {
                 return false;
