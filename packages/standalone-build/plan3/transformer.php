@@ -2517,7 +2517,7 @@ class Plan3_Transformer {
 					}
 
 					$prev = $i - 1;
-					while ( $prev >= 0 && is_array( $tokens[ $prev ] ) && ( $tokens[ $prev ][0] === T_WHITESPACE || $tokens[ $prev ][0] === T_STATIC || $tokens[ $prev ][0] === T_ABSTRACT || $tokens[ $prev ][0] === T_FINAL ) ) {
+					while ( $prev >= 0 && ( ( is_array( $tokens[ $prev ] ) && ( $tokens[ $prev ][0] === T_WHITESPACE || $tokens[ $prev ][0] === T_STATIC || $tokens[ $prev ][0] === T_ABSTRACT || $tokens[ $prev ][0] === T_FINAL ) ) || $tokens[ $prev ] === '&' || ( is_array( $tokens[ $prev ] ) && $tokens[ $prev ][1] === '&' ) ) ) {
 						$prev--;
 					}
 					$decl_type = ( $prev >= 0 && is_array( $tokens[ $prev ] ) ) ? $tokens[ $prev ][0] : null;
@@ -2867,7 +2867,7 @@ class Plan3_Transformer {
 				$text_lower = strtolower( $text );
 				if ( $id === T_STRING && $in_class && ! empty( $current_class_fqcn ) && isset( $this->private_members['methods'][ $current_class_fqcn ][ $text_lower ] ) && ! isset( $this->preserved_members[ $current_class_fqcn ]['methods'][ $text_lower ] ) ) {
 					$prev = $i - 1;
-					while ( $prev >= 0 && is_array( $tokens[ $prev ] ) && ( $tokens[ $prev ][0] === T_WHITESPACE || $tokens[ $prev ][0] === T_STATIC || $tokens[ $prev ][0] === T_FINAL || ( defined( 'T_ABSTRACT' ) && $tokens[ $prev ][0] === T_ABSTRACT ) ) ) {
+					while ( $prev >= 0 && ( ( is_array( $tokens[ $prev ] ) && ( $tokens[ $prev ][0] === T_WHITESPACE || $tokens[ $prev ][0] === T_STATIC || $tokens[ $prev ][0] === T_FINAL || ( defined( 'T_ABSTRACT' ) && $tokens[ $prev ][0] === T_ABSTRACT ) ) ) || $tokens[ $prev ] === '&' || ( is_array( $tokens[ $prev ] ) && $tokens[ $prev ][1] === '&' ) ) ) {
 						$prev--;
 					}
 					if ( $prev >= 0 && is_array( $tokens[ $prev ] ) && $tokens[ $prev ][0] === T_FUNCTION ) {
