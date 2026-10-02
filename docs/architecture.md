@@ -228,6 +228,18 @@ core/php/                   →  tests/phpunit/
 | Add a new translation string                            | wrap with `__()` in JS or PHP                     |
 | Add a new environment-specific config                   | `dev/<env>/<name>.php` (not `core/php/`)          |
 | Add a new dev tool (CLI, generator)                     | `packages/<name>/` (not `core/packages/`)         |
+| Add a new user manual chapter                           | `docs/user-guide/<number>-<slug>.md`              |
+| Document a new feature module                           | follow `docs/templates/feature-manual.md`         |
 
 If you're unsure, ask: "Will this be consumed at runtime in
 the consumer's bundle?" If yes, `core/`. If no, `packages/` or `dev/`.
+
+## In-Repo Docs-as-Code Architecture
+
+Every plugin generated with `features.docs: "on"` (the default) contains a first-class, version-controlled documentation subsystem:
+
+- `docs/user-guide/`: End-user and administrator manuals (`01-introduction.md`, `02-settings-overview.md`).
+- `docs/technical/`: Developer architecture, API contracts, and hook reference (`architecture.md`).
+- `docs/templates/`: Reusable templates for documenting features (`feature-manual.md`).
+- `docs/assets/`: Screenshots and diagrams.
+- `tools/build-docs.mjs`: Autonomous export CLI (`npm run docs:build`, `npm run docs:pdf`, `npm run docs:docx`) integrating `md-to-docx` with fail-closed asset link validation and `--with-docs` release distribution.

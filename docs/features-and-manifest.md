@@ -46,6 +46,7 @@ has a stable `id`, a list of allowed `variants`, and a default
 | `i18n`           | `on`, `off`                           | `on`         | Translation pipeline.                                                                                                   |
 | `frontendStack`  | `none`, `polaris`                     | `none`       | Optional Polaris Stack design foundation. Requires `js=typescript` and `jsLib=react\|preact`.                           |
 | `mcpAbilities`   | `off`, `on`                           | `off`        | WordPress Abilities API (WP 6.9+).                                                                                      |
+| `docs`           | `on`, `off`                           | `on`         | In-Repo Docs-as-Code hierarchy, starter manuals, and PDF/Docx export.                                                   |
 | `ci`             | `auto`, `off`                         | `auto`       | CI workflow generation. Set via `wpdev set ci`.                                                                         |
 
 For the full per-feature reference (owned paths, toggle commands, conflicts),

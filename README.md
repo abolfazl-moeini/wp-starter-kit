@@ -55,6 +55,9 @@ For the full flag table, presets, and every command, see
   [docs/php-test-tools.md](docs/php-test-tools.md).
 - **Vendor scoping** — Strauss pipeline for shipping Composer deps
   with your plugin. See [docs/vendor-scoping.md](docs/vendor-scoping.md).
+- **In-repo Docs-as-Code** — Automated PDF and Docx client manuals compiled directly
+  from `docs/user-guide/` via `tools/build-docs.mjs` (`npm run docs:build`) with
+  fail-closed image validation and `--with-docs` release packaging.
 
 ## Architecture at a glance
 
@@ -69,7 +72,8 @@ wp-starter-kit/
 │   ├── framework/        # the PHP framework (modules, hooks, REST)
 │   └── create-plugin/    # the `npm create @wpdev/plugin` wrapper
 ├── core/packages/        # JS packages (hooks, signals, fetch, ...)
-├── docs/                 # everything you'd want to read
+├── docs/                 # everything you'd want to read (user-guide, technical, templates)
+├── tools/                # build and documentation tooling (build-docs.mjs)
 └── .github/workflows/    # CI (tests, lint, build, installer job)
 ```
 
@@ -89,6 +93,7 @@ feature set, and hands it to the engine.
 - TypeScript + esbuild build pipeline with optional Preact/React UI
 - PHP version downleveling via Rector (target PHP 7.4+)
 - Feature manifest (`wpdev-kit.json`) with add/remove/set/update CLI
+- In-Repo Docs-as-Code (PDF & Docx export, fail-closed asset checks)
 - Optional fault tolerance, MCP Abilities API
 - PHPUnit + Jest test infrastructure, Strauss vendor scoping
 - Publishable `@wpdev/*` npm packages and `wpdev/framework` Composer package

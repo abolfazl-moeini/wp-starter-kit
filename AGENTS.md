@@ -291,6 +291,10 @@ npm run release:dist -- --with-docs
    - Set a strict `permission_callback` on all REST API routes.
 6. **Preserve Vendor Scoping:**
    - Never commit un-scoped third-party Composer packages to production distributions. Always run `composer scope:vendor` (Strauss) to ensure clean namespace prefixes.
+7. **Maintain In-Repo Documentation Integrity:**
+   - Any new architectural capability, module, or user-facing feature must include corresponding documentation in `docs/user-guide/` or `docs/technical/`.
+   - Never commit broken image links or missing assets in documentation files; all relative assets must exist under `docs/assets/` to satisfy the fail-closed verification gate.
+   - When building client deliverables, always verify that `tools/build-docs.mjs` runs and succeeds without errors.
 
 ---
 

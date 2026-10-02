@@ -1,6 +1,6 @@
 # Features reference
 
-> Full catalog of all **20** installer features (including `ci`). For the manifest
+> Full catalog of all **21** installer features (including `ci` and `docs`). For the manifest
 > model and ownership rules, see [features-and-manifest.md](features-and-manifest.md).
 > Engine validation: `validateFeatureSet()` in
 > `packages/create-wp-project/src/features.js`.
@@ -40,6 +40,7 @@
 | `i18n`           | Internationalization | on, off                       | on         | —                                       | —                           | add/remove |
 | `frontendStack`  | Frontend Stack       | none, polaris                 | none       | `js=typescript`, `jsLib∈{preact,react}` | `css=tailwind` (v1)         | add/remove |
 | `mcpAbilities`   | MCP Abilities        | off, on                       | off        | WP 6.9+ runtime                         | —                           | add/remove |
+| `docs`           | Documentation        | on, off                       | on         | —                                       | —                           | add/remove |
 | `ci`             | CI                   | auto, off                     | auto       | any unit or e2e runner for emission     | —                           | **set**    |
 
 ---
@@ -337,6 +338,21 @@ See [translation.md](translation.md).
 | **Toggle**       | `wpdev add mcpAbilities` / `wpdev remove mcpAbilities`               |
 
 See [mcp-integration.md](mcp-integration.md).
+
+---
+
+### `docs` — Documentation
+
+| Property         | Value                                                                                                                                                                                                 |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Label**        | Documentation                                                                                                                                                                                         |
+| **Variants**     | `on` _(default)_, `off`                                                                                                                                                                               |
+| **Enables**      | In-Repo Docs-as-Code hierarchy, markdown templates, and PDF/Docx compilation runner                                                                                                                   |
+| **Owned paths**  | `docs/user-guide/01-introduction.md`, `docs/user-guide/02-settings-overview.md`, `docs/technical/architecture.md`, `docs/templates/feature-manual.md`, `docs/assets/.gitkeep`, `tools/build-docs.mjs` |
+| **Dependencies** | None (Node.js runtime for `tools/build-docs.mjs`, optional `md-to-docx` or Pandoc for compilation)                                                                                                    |
+| **Toggle**       | `wpdev add docs` / `wpdev remove docs`                                                                                                                                                                |
+
+Generates `npm run docs:build`, `npm run docs:pdf`, and `npm run docs:docx` scripts in `package.json`, and enables `--with-docs` flag on `release:dist`.
 
 ---
 
