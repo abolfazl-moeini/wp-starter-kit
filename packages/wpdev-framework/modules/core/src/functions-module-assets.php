@@ -58,6 +58,8 @@ function wpdev_path_is_within( $path, $root ) {
  */
 function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
 
+	$raw_asset = $asset;
+
 	if ( ! defined( 'SCRIPT_DEBUG' ) || ! SCRIPT_DEBUG ) {
 		$asset = preg_replace( '/(?<!\.min)(\.js|\.css)/', '.min$1', (string) $asset );
 	}
@@ -65,7 +67,7 @@ function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
 	$modules = Module_Loader::all();
 
 	if ( empty( $modules[ $module_id ]['path'] ) ) {
-		return wpdev_get_asset( $asset, $assets_dir );
+		return wpdev_get_asset( $raw_asset, $assets_dir );
 	}
 
 	$module_root = wpdev_normalize_path( rtrim( (string) $modules[ $module_id ]['path'], '/\\' ) );
@@ -77,7 +79,7 @@ function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
 	}
 
 	if ( ! is_readable( $file ) ) {
-		return wpdev_get_asset( $asset, $assets_dir );
+		return wpdev_get_asset( $raw_asset, $assets_dir );
 	}
 
 	$file_norm   = wpdev_normalize_path( $file );

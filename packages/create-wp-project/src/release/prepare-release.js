@@ -187,7 +187,7 @@ export function parseArgs(argv) {
     obfuscate: false,
     profile: null,
     root: process.cwd(),
-    spaghetti: false,
+    spaghetti: undefined,
     inlineFramework: undefined,
   };
   const selectedProfiles = [];
@@ -263,8 +263,8 @@ export function parseArgs(argv) {
   if (unique.length === 1) {
     opts.profile = unique[0];
     opts.obfuscate = unique[0] === "s";
-    opts.spaghetti = unique[0] === "spaghetti";
-    if (unique[0] === "standalone") {
+    opts.spaghetti = unique[0] === "spaghetti" ? true : undefined;
+    if (unique[0] === "standalone" || unique[0] === "s") {
       opts.inlineFramework = true;
     }
   }
@@ -751,9 +751,16 @@ export async function prepareRelease(options = {}) {
         options.isObfuscate ?? (options.obfuscate || profile === "s"),
       obfuscate: options.obfuscate ?? profile === "s",
       profile: profile,
-      inlineFramework: options.inlineFramework,
-      spaghetti: options.spaghetti ?? profile === "spaghetti",
-      minifyAssets: options.minifyAssets,
+      inlineFramework:
+        options.inlineFramework !== undefined
+          ? options.inlineFramework
+          : profile === "s" || profile === "standalone",
+      spaghetti:
+        options.spaghetti !== undefined
+          ? options.spaghetti
+          : profile === "s" || profile === "spaghetti",
+      minifyAssets:
+        options.minifyAssets ?? (profile === "s" ? true : undefined),
       skipZip,
       targetPhp:
         options.targetPhp ||

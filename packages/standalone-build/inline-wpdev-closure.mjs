@@ -1187,13 +1187,30 @@ if (trait_exists('WPDevFramework\\\\Admin_Pages\\\\Edit_Page_Widgets', false) &&
     class_alias('WPDevFramework\\\\Admin_Pages\\\\Edit_Page_Widgets', 'Edit_Page_Widgets');
 }
 
-if (!function_exists('wpdev_register_module_admin_pages')) {
-    $wpdev_closure_fn_managers = __DIR__ . '/functions/functions-module-managers.php';
-    if (!file_exists($wpdev_closure_fn_managers)) {
-        $wpdev_closure_fn_managers = __DIR__ . '/modules/core/src/functions-module-managers.php';
+$wpdev_closure_functions_dir = __DIR__ . '/functions';
+if (is_dir($wpdev_closure_functions_dir)) {
+    $wpdev_closure_fn_files = glob($wpdev_closure_functions_dir . '/*.php');
+    if (is_array($wpdev_closure_fn_files)) {
+        foreach ($wpdev_closure_fn_files as $wpdev_fn_file) {
+            require_once $wpdev_fn_file;
+        }
     }
-    if (file_exists($wpdev_closure_fn_managers)) {
-        require_once $wpdev_closure_fn_managers;
+}
+
+if (class_exists('\\WPDevFramework\\Core\\Module_Loader')) {
+    $closure_modules_dir = __DIR__ . '/modules';
+    if (is_dir($closure_modules_dir)) {
+        $module_dirs = glob($closure_modules_dir . '/*', GLOB_ONLYDIR);
+        if (is_array($module_dirs)) {
+            foreach ($module_dirs as $m_dir) {
+                $m_slug = basename($m_dir);
+                \\WPDevFramework\\Core\\Module_Loader::register($m_slug, array(
+                    'path'         => $m_dir,
+                    'dependencies' => array(),
+                    'enabled'      => true,
+                ));
+            }
+        }
     }
 }
 
@@ -1526,6 +1543,7 @@ if (!defined('WPDEV_BOOTSTRAP_FILE')) {
     // is_readable() + fall back from .min.js to .js without cross-module collisions.
     if (relDir.startsWith("modules/")) {
       await copyDirRecursive(srcDir, path.join(targetDir, relDir), srcDir);
+      await copyDirRecursive(srcDir, assetsDir, srcDir);
     }
   }
 

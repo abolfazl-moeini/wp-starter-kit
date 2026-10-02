@@ -36,7 +36,7 @@ export const TARGET_REGISTRY = Object.freeze({
     phpTarget: "7.4",
     publicCompatibilityPolicy: "frozen-public-contracts",
     kind: "standalone-plugin",
-    buildProfile: PROFILE_S,
+    buildProfile: STANDALONE_PROFILE,
   }),
   "wpdev-crm": Object.freeze({
     artifactId: "wpdev-crm",

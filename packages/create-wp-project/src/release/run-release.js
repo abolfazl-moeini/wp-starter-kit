@@ -24,7 +24,7 @@ export function parseArgs(argv) {
     obfuscate: false,
     profile: null,
     root: process.cwd(),
-    spaghetti: false,
+    spaghetti: undefined,
     inlineFramework: undefined,
   };
   const selectedProfiles = [];
@@ -97,8 +97,8 @@ export function parseArgs(argv) {
   if (unique.length === 1) {
     opts.profile = unique[0];
     opts.obfuscate = unique[0] === "s";
-    opts.spaghetti = unique[0] === "spaghetti";
-    if (unique[0] === "standalone") {
+    opts.spaghetti = unique[0] === "spaghetti" ? true : undefined;
+    if (unique[0] === "standalone" || unique[0] === "s") {
       opts.inlineFramework = true;
     }
   }
@@ -174,6 +174,23 @@ function runNpmBuild(root) {
   return { skipped: false };
 }
 
+function runGoAssetBuild(root) {
+  process.stderr.write("release: building asset sidecars with wpdev-build…\n");
+  const cmd = `find src assets -name '*.css' -o -name '*.js' 2>/dev/null | while read f; do wpdev-build sidecar --file "$f"; done`;
+  const result = spawnSync(cmd, {
+    cwd: root,
+    shell: true,
+    stdio: "inherit",
+    env: process.env,
+  });
+  const status =
+    result && typeof result.status === "number" ? result.status : 1;
+  if (status !== 0) {
+    throw new Error(`wpdev-build sidecar failed (exit ${status})`);
+  }
+  return { skipped: false };
+}
+
 async function main() {
   const opts = parseArgs(process.argv.slice(2));
   if (opts.help) {
@@ -190,6 +207,7 @@ async function main() {
   }
   gateReleaseTests(root, { skipTests: opts.skipTests });
   runNpmBuild(root);
+  runGoAssetBuild(root);
 
   const result = await prepareRelease({
     ...opts,
@@ -235,4 +253,4 @@ if (isDirect) {
   });
 }
 
-export { createCandidateReport, runNpmBuild };
+export { createCandidateReport, runGoAssetBuild, runNpmBuild };
