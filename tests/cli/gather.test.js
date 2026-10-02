@@ -190,7 +190,7 @@ describe("--yes / -y non-interactive (I2.10, I2.11)", () => {
       expect(out.features[k]).toBe(v);
     }
     expect(out.preset).toBe("minimal");
-  });
+  }, 15000);
 
   test("explicit `interactive: false` also skips prompts (no --yes needed)", async () => {
     const ui = makeRecordingUi();

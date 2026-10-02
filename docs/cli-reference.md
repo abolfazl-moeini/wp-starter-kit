@@ -92,27 +92,28 @@ Source of truth: `KNOWN_FLAGS` in `packages/cli/src/flags.js`.
 
 ### Feature flags (`features.*`)
 
-| Flag                          | Maps to                   | Values                                               |
-| ----------------------------- | ------------------------- | ---------------------------------------------------- |
-| `--js=<variant>`              | `features.js`             | `typescript` / `pure` / `flow` / `none`              |
-| `--js-lib=<lib>`              | `features.jsLib`          | `none` / `preact` / `react`                          |
-| `--js-test=<runner>`          | `features.jsTest`         | `jest` / `vitest` / `none`                           |
-| `--css=<flavor>`              | `features.css`            | `none` / `sass` / `tailwind` / `postcss`             |
-| `--php-min=<ver>`             | `features.phpMinVersion`  | `7.4` … `8.3`                                        |
-| `--php-framework=<opt>`       | `features.phpFramework`   | `none` / `wpdev` (alias `wpdev-framework` → `wpdev`) |
-| `--php-test=<opt>`            | `features.phpTest`        | `phpunit` / `none`                                   |
-| `--phpunit-docker=<on\|off>`  | `features.phpUnitDocker`  | Docker PHPUnit stack (`tests/docker-phpunit/`)       |
-| `--e2e-test=<opt>`            | `features.e2eTest`        | `none` / `playwright` (Playwright + wp-env)          |
-| `--license=<id>`              | `features.license`        | `gpl2` / `gpl3` / `mit`                              |
-| `--wp-min=<ver>`              | `features.wpMinVersion`   | `5.8` / `6.0` / `6.2` / `6.4` / `6.6`                |
-| `--rest-batch=<on\|off>`      | `features.restBatch`      | REST batch endpoint + client                         |
-| `--fault-tolerance=<on\|off>` | `features.faultTolerance` | Dual-mode FT (Real ≥8.1 / Stub below)                |
-| `--vendor-scoping=<on\|off>`  | `features.vendorScoping`  | Strauss vendor prefix on release                     |
-| `--husky=<on\|off>`           | `features.husky`          | Git pre-commit hooks                                 |
-| `--example=<on\|off>`         | `features.exampleFeature` | ExampleFeature demo module                           |
-| `--i18n=<on\|off>`            | `features.i18n`           | Translation pipeline                                 |
-| `--frontend-stack=<opt>`      | `features.frontendStack`  | `none` / `polaris`                                   |
-| `--mcp-abilities=<on\|off>`   | `features.mcpAbilities`   | WordPress Abilities API (WP 6.9+)                    |
+| Flag                          | Maps to                   | Values                                                |
+| ----------------------------- | ------------------------- | ----------------------------------------------------- |
+| `--js=<variant>`              | `features.js`             | `typescript` / `pure` / `flow` / `none`               |
+| `--js-lib=<lib>`              | `features.jsLib`          | `none` / `preact` / `react`                           |
+| `--js-test=<runner>`          | `features.jsTest`         | `jest` / `vitest` / `none`                            |
+| `--css=<flavor>`              | `features.css`            | `none` / `sass` / `tailwind` / `postcss`              |
+| `--php-min=<ver>`             | `features.phpMinVersion`  | `7.4` … `8.3`                                         |
+| `--php-framework=<opt>`       | `features.phpFramework`   | `none` / `wpdev` (alias `wpdev-framework` → `wpdev`)  |
+| `--php-test=<opt>`            | `features.phpTest`        | `phpunit` / `none`                                    |
+| `--phpunit-docker=<on\|off>`  | `features.phpUnitDocker`  | Docker PHPUnit stack (`tests/docker-phpunit/`)        |
+| `--e2e-test=<opt>`            | `features.e2eTest`        | `none` / `playwright` (Playwright + wp-env)           |
+| `--license=<id>`              | `features.license`        | `gpl2` / `gpl3` / `mit`                               |
+| `--wp-min=<ver>`              | `features.wpMinVersion`   | `5.8` / `6.0` / `6.2` / `6.4` / `6.6`                 |
+| `--rest-batch=<on\|off>`      | `features.restBatch`      | REST batch endpoint + client                          |
+| `--fault-tolerance=<on\|off>` | `features.faultTolerance` | Dual-mode FT (Real ≥8.1 / Stub below)                 |
+| `--vendor-scoping=<on\|off>`  | `features.vendorScoping`  | Strauss vendor prefix on release                      |
+| `--husky=<on\|off>`           | `features.husky`          | Git pre-commit hooks                                  |
+| `--example=<on\|off>`         | `features.exampleFeature` | ExampleFeature demo module                            |
+| `--i18n=<on\|off>`            | `features.i18n`           | Translation pipeline                                  |
+| `--frontend-stack=<opt>`      | `features.frontendStack`  | `none` / `polaris`                                    |
+| `--mcp-abilities=<on\|off>`   | `features.mcpAbilities`   | WordPress Abilities API (WP 6.9+)                     |
+| `--docs=<on\|off>`            | `features.docs`           | In-repo docs structure & PDF/Docx export (default on) |
 
 ### Run option flags (`runOptions.*`)
 

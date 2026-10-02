@@ -37,10 +37,11 @@ import {
   writeFileSync,
   copyFileSync,
   lstatSync,
+  statSync,
 } from "node:fs";
 import { spawnSync } from "node:child_process";
 import * as path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { pathToFileURL } from "node:url";
 
 import * as os from "node:os";
 import {
@@ -185,6 +186,7 @@ export function parseArgs(argv) {
     skipZip: false,
     skipTests: false,
     obfuscate: false,
+    withDocs: false,
     profile: null,
     root: process.cwd(),
     spaghetti: undefined,
@@ -197,6 +199,7 @@ export function parseArgs(argv) {
     else if (arg === "--skip-rector") opts.skipRector = true;
     else if (arg === "--skip-zip") opts.skipZip = true;
     else if (arg === "--skip-tests") opts.skipTests = true;
+    else if (arg === "--with-docs") opts.withDocs = true;
     else if (arg === "--inline-framework") opts.inlineFramework = true;
     else if (arg === "--no-inline-framework") opts.inlineFramework = false;
     else if (arg === "--standalone") {
@@ -698,6 +701,41 @@ export async function prepareRelease(options = {}) {
 
   const outAbs = path.join(root, outBase);
 
+  let docsPdfPath = null;
+  if (options.withDocs) {
+    const docsRunner = path.join(root, "tools/build-docs.mjs");
+    if (!existsSync(docsRunner)) {
+      throw new Error(
+        `--with-docs requested but tools/build-docs.mjs is missing at ${docsRunner}`,
+      );
+    }
+    process.stderr.write(
+      "release: compiling client documentation manuals (--with-docs)...\n",
+    );
+    const docsRes = spawnSync(
+      process.execPath,
+      [docsRunner, "--format=pdf", `--root=${root}`],
+      {
+        stdio: "inherit",
+      },
+    );
+    if (docsRes.status !== 0) {
+      throw new Error(
+        `release: docs compilation failed with exit code ${docsRes.status}`,
+      );
+    }
+    const expectedPdf = path.join(outAbs, "docs", `${slug}-user-manual.pdf`);
+    if (!existsSync(expectedPdf) || statSync(expectedPdf).size === 0) {
+      throw new Error(
+        `release: expected documentation PDF is missing or empty at ${expectedPdf}`,
+      );
+    }
+    docsPdfPath = expectedPdf;
+    process.stderr.write(
+      `release: client manual verified at ${docsPdfPath} (${statSync(docsPdfPath).size} bytes)\n`,
+    );
+  }
+
   // Check if this consumer can delegate to canonical standalone assembler
   const canonicalAssemblerPath = resolveCanonicalAssembler({
     fromDir: getReleaseScriptDir(root),
@@ -799,6 +837,7 @@ export async function prepareRelease(options = {}) {
     return {
       distRoot,
       zipPath,
+      docsPdfPath,
       slug,
       version: result.manifest?.version || version,
       phpMinVersion,
@@ -1001,7 +1040,7 @@ export async function prepareRelease(options = {}) {
 
   const zipPath = skipZip ? null : await createReleaseZip(outAbs, slug);
 
-  return { distRoot, zipPath, slug, version, phpMinVersion };
+  return { distRoot, zipPath, docsPdfPath, slug, version, phpMinVersion };
 }
 
 function printHelp() {
@@ -1020,6 +1059,7 @@ Options:
   --skip-rector      Skip PHP downgrade (rector:build) on dist/
   --skip-zip         Skip creating dist/{slug}.zip
   --skip-tests       Skip pre-dist unit/e2e suites (or set WPDEV_SKIP_TESTS=1)
+  --with-docs        Compile client PDF manual and preserve in dist/docs/ alongside zip
   --spaghetti        Opt-in Spaghetti transformation (flatten namespaces without obfuscation)
   --obfuscate        Opt-in Profile S AST obfuscation (off by default; fails if transformer missing)
   --profile=NAME     Build profile (spaghetti, clean, or s)
@@ -1038,6 +1078,9 @@ async function main() {
     process.stdout.write(`Release package ready: ${result.distRoot}\n`);
     if (result.zipPath) {
       process.stdout.write(`Release zip ready: ${result.zipPath}\n`);
+    }
+    if (result.docsPdfPath) {
+      process.stdout.write(`Release docs ready: ${result.docsPdfPath}\n`);
     }
   } catch (err) {
     process.stderr.write(

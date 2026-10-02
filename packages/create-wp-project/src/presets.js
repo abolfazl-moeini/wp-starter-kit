@@ -69,6 +69,7 @@ function buildMinimal() {
     license: "gpl2",
     wpMinVersion: "6.0",
     ci: "auto",
+    docs: "off",
   };
 }
 

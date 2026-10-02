@@ -188,6 +188,7 @@ describe("defaultFeatures() — all-default feature set (Phase 20.2)", () => {
       frontendStack: "none",
       mcpAbilities: "off",
       ci: "auto",
+      docs: "on",
     });
   });
 });

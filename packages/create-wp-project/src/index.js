@@ -516,6 +516,20 @@ export async function scaffoldProject(targetDir, answers, options = {}) {
     phpSourceVersion: cfg.phpSourceVersion,
     batchEndpoint: cfg.batchEndpoint,
     projectType: cfg.projectType,
+    ...(features.docs !== "off"
+      ? {
+          docs: {
+            enabled: true,
+            title: "راهنمای کاربری و تنظیمات سامانه",
+            author: "تیم توسعه",
+            user_guide_dir: "docs/user-guide",
+            output_dir: "dist/docs",
+            formats: ["pdf", "docx"],
+            template: "purple_book",
+            direction: "rtl",
+          },
+        }
+      : {}),
     build: {
       assetMappings: [],
       globalMappings: {},

@@ -147,7 +147,16 @@ export function packageJsonForAnswers(answers, features) {
       }
     : {};
 
-  // PHP-only: emit a lean package.json (no JS build toolchain, but release + e2e + husky scripts).
+  const docsOn = !features || features.docs !== "off";
+  const docsScripts = docsOn
+    ? {
+        "docs:build": "node tools/build-docs.mjs",
+        "docs:pdf": "node tools/build-docs.mjs --format=pdf",
+        "docs:docx": "node tools/build-docs.mjs --format=docx",
+      }
+    : {};
+
+  // PHP-only: emit a lean package.json (no JS build toolchain, but release + e2e + husky + docs scripts).
   if (jsVariant === "none") {
     return {
       name: `@${packageVendor}/${answers.slug}`,
@@ -159,6 +168,7 @@ export function packageJsonForAnswers(answers, features) {
         release: "node dev/release/run-release.js",
         ...(huskyOn ? { prepare: "husky" } : {}),
         ...e2eScripts,
+        ...docsScripts,
       },
       ...(huskyOn
         ? {
@@ -236,6 +246,7 @@ export function packageJsonForAnswers(answers, features) {
       // Build production assets, then package a clean dist/{slug}/ tree.
       // Source is never modified; packaging lives in dev/release/.
       release: "node dev/release/run-release.js",
+      ...docsScripts,
       ...(huskyOn ? { prepare: "husky" } : {}),
       ...(jsTestVariant === "vitest"
         ? { test: "vitest run" }
@@ -897,6 +908,19 @@ export const TEMPLATE_WPDEV_JSON = `{
   "phpMinVersion": "{{phpMinVersion}}",
   "phpSourceVersion": "{{phpSourceVersion}}",
   "batchEndpoint": "{{batchEndpoint}}",
+  "docs": {
+    "enabled": true,
+    "title": "راهنمای کاربری و تنظیمات سامانه",
+    "author": "تیم توسعه",
+    "user_guide_dir": "docs/user-guide",
+    "output_dir": "dist/docs",
+    "formats": [
+      "pdf",
+      "docx"
+    ],
+    "template": "purple_book",
+    "direction": "rtl"
+  },
   "features": {},
   "build": {
     "assetMappings": [],

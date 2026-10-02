@@ -187,6 +187,13 @@ const FEATURE_CATALOG = [
     notes:
       "CI workflow generation. `auto` emits `.github/workflows/ci.yml` when any test runner is on; `off` suppresses CI files.",
   },
+  {
+    id: "docs",
+    label: "Documentation",
+    variants: ["on", "off"],
+    default: "on",
+    notes: "In-Repo Docs-as-Code scaffolding and PDF/Docx export tooling.",
+  },
 ];
 
 /**
@@ -201,7 +208,7 @@ export function fillFeatureDefaults(features) {
 }
 
 /** New catalog ids backfilled when absent (older manifests / partial sets). */
-const BACKFILL_ON_VALIDATE = ["ci", "phpUnitDocker", "e2eTest"];
+const BACKFILL_ON_VALIDATE = ["ci", "phpUnitDocker", "e2eTest", "docs"];
 
 /**
  * @param {Record<string, string>} features

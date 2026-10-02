@@ -297,6 +297,17 @@ describe("@wpdev/create-wp-project", () => {
           frontendStack: "none",
           mcpAbilities: "off",
           ci: "auto",
+          docs: "on",
+        },
+        docs: {
+          enabled: true,
+          title: "راهنمای کاربری و تنظیمات سامانه",
+          author: "تیم توسعه",
+          user_guide_dir: "docs/user-guide",
+          output_dir: "dist/docs",
+          formats: ["pdf", "docx"],
+          template: "purple_book",
+          direction: "rtl",
         },
         build: {
           assetMappings: [],

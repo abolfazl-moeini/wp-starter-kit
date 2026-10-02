@@ -22,6 +22,7 @@ export function parseArgs(argv) {
     skipTests: false,
     candidate: false,
     obfuscate: false,
+    withDocs: false,
     profile: null,
     root: process.cwd(),
     spaghetti: undefined,
@@ -35,6 +36,7 @@ export function parseArgs(argv) {
     else if (arg === "--skip-zip") opts.skipZip = true;
     else if (arg === "--skip-tests") opts.skipTests = true;
     else if (arg === "--candidate") opts.candidate = true;
+    else if (arg === "--with-docs") opts.withDocs = true;
     else if (arg === "--inline-framework") opts.inlineFramework = true;
     else if (arg === "--no-inline-framework") opts.inlineFramework = false;
     else if (arg === "--standalone") {

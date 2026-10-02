@@ -5,6 +5,17 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **In-Repo Docs-as-Code Architecture & Export Engine**:
+  - Integrated version-controlled documentation subsystem into generated plugins and starter kit (`docs/user-guide/`, `docs/technical/`, `docs/templates/`, `docs/assets/`).
+  - Added declarative `"docs"` configuration block in `wpdev.json` (`enabled`, `title`, `author`, `user_guide_dir`, `output_dir`, `formats`, `template`, `direction`).
+  - Added standalone Docs-as-Code build runner (`tools/build-docs.mjs`) with turnkey scripts `npm run docs:build`, `npm run docs:pdf`, and `npm run docs:docx`.
+  - Integration with `md-to-docx` (`md2docx`) for native RTL/Persian and Vazirmatn rendering, with resilient fallback to Pandoc, Headless Chrome, and LibreOffice.
+  - Fail-closed asset verification gate scanning markdown `![]()` and HTML `<img src>` to prevent shipping broken links/images (fails with exit code 1 on missing assets).
+  - Added `--with-docs` flag to `release:dist` (`prepare-release.js`) to compile and package `<slug>-user-manual.pdf` alongside the production release zip while excluding raw markdown sources from the runtime zip.
+  - Added `docs` toggle to feature catalog (`FEATURE_CATALOG`), manifests, presets (`minimal: off`, `standard/full: on`), and scaffolding generator (`generators/docs.js`).
+
 ## [1.1.0] - 2026-09-29
 
 ### Added

@@ -14,6 +14,16 @@
   "phpMinVersion": "7.4",
   "phpSourceVersion": "8.1",
   "batchEndpoint": "/batch/v1",
+  "docs": {
+    "enabled": true,
+    "title": "راهنمای کاربری و تنظیمات سامانه",
+    "author": "تیم توسعه",
+    "user_guide_dir": "docs/user-guide",
+    "output_dir": "dist/docs",
+    "formats": ["pdf", "docx"],
+    "template": "purple_book",
+    "direction": "rtl"
+  },
   "build": {
     "assetMappings": [],
     "globalMappings": {},

@@ -83,6 +83,8 @@ export function buildManifest({
   phpSourceVersion,
   batchEndpoint,
   projectType,
+  // docs section
+  docs,
   // build section (from wpdev.json build — now nested)
   build,
 } = {}) {
@@ -131,6 +133,10 @@ export function buildManifest({
   }
 
   manifest.features = sortedFeatures;
+
+  if (docs && typeof docs === "object") {
+    manifest.docs = docs;
+  }
 
   if (build && typeof build === "object") {
     manifest.build = build;

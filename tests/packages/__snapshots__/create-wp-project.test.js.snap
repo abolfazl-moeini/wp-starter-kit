@@ -37,6 +37,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal pr
   "features": {
     "ci": "auto",
     "css": "none",
+    "docs": "off",
     "exampleFeature": "off",
     "faultTolerance": "off",
     "frontendStack": "none",
@@ -67,6 +68,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) minimal pr
   "features": {
     "ci": "auto",
     "css": "none",
+    "docs": "off",
     "exampleFeature": "off",
     "faultTolerance": "off",
     "frontendStack": "none",
@@ -159,6 +161,9 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
     "build:dependencies",
     "build:styles",
     "check",
+    "docs:build",
+    "docs:docx",
+    "docs:pdf",
     "format:check",
     "lint:js",
     "prepare",
@@ -202,6 +207,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
   "features": {
     "ci": "auto",
     "css": "none",
+    "docs": "on",
     "e2eTest": "none",
     "exampleFeature": "on",
     "faultTolerance": "on",
@@ -234,6 +240,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
   "features": {
     "ci": "auto",
     "css": "none",
+    "docs": "on",
     "e2eTest": "none",
     "exampleFeature": "on",
     "faultTolerance": "on",
