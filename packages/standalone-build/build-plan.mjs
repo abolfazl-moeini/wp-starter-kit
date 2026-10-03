@@ -106,6 +106,7 @@ const SUPPORTED_PHP_TARGETS = new Set(["7.4", "8.0", "8.1", "8.2", "8.3"]);
 export const RELEASE_PROFILES = Object.freeze({
   "profile-s": "s",
   "standalone-spaghetti": "spaghetti",
+  "standalone": "standalone",
 });
 
 function normalizeReleaseProfile(value) {
@@ -113,8 +114,11 @@ function normalizeReleaseProfile(value) {
   if (profile === "s" || profile === "profile-s") {
     return "s";
   }
-  if (profile === "spaghetti" || profile === "standalone" || profile === "standalone-spaghetti") {
+  if (profile === "spaghetti" || profile === "standalone-spaghetti") {
     return "spaghetti";
+  }
+  if (profile === "standalone") {
+    return "standalone";
   }
   return null;
 }

@@ -99,6 +99,8 @@ function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
 
 	if ( is_readable( $setup ) && function_exists( 'plugins_url' ) ) {
 		$url = plugins_url( $relative_from_module, $setup );
+	} elseif ( function_exists( 'plugins_url' ) ) {
+		$url = plugins_url( $relative_from_module, $module_root . '/module.php' );
 	}
 
 	/**

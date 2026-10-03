@@ -7,7 +7,7 @@ import path from "node:path";
 export const SHARED_FRAMEWORK_ID = "wpdev";
 
 export const PROFILE_S = "s";
-export const STANDALONE_PROFILE = "standalone-spaghetti";
+export const STANDALONE_PROFILE = "standalone";
 
 export const TARGET_REGISTRY = Object.freeze({
   "tavangary-core": Object.freeze({

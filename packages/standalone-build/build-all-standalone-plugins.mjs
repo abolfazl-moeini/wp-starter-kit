@@ -987,7 +987,7 @@ export async function runPipelineOrchestration(options = {}) {
       capabilityOverrides.obfuscate = options.obfuscate ?? targetIsObfuscate;
     } else if (!targetIsObfuscate) {
       capabilityOverrides.inlineFramework = options.inlineFramework ?? true;
-      capabilityOverrides.spaghetti = options.spaghetti ?? true;
+      capabilityOverrides.spaghetti = options.spaghetti ?? (targetProfile === "spaghetti" || targetProfile === "standalone-spaghetti");
       capabilityOverrides.obfuscate = false;
     }
 
