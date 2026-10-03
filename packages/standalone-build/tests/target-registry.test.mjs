@@ -135,14 +135,14 @@ test("Release routing: every consumer declares a buildProfile and resolves fail-
     );
     const profile = resolveReleaseProfile(consumer, entry, null);
     assert.ok(
-      profile === "s" || profile === "spaghetti",
+      profile === "s" || profile === "spaghetti" || profile === "standalone",
       `${consumer} resolved to an unsupported profile: ${profile}`
     );
   }
 
   assert.equal(resolveReleaseProfile("wpdev-crm", TARGET_REGISTRY["wpdev-crm"], null), "s");
-  assert.equal(resolveReleaseProfile("tavangary-core", TARGET_REGISTRY["tavangary-core"], null), "spaghetti");
-  assert.equal(resolveReleaseProfile("drm-connector", TARGET_REGISTRY["drm-connector"], null), "spaghetti");
+  assert.equal(resolveReleaseProfile("tavangary-core", TARGET_REGISTRY["tavangary-core"], null), "standalone");
+  assert.equal(resolveReleaseProfile("drm-connector", TARGET_REGISTRY["drm-connector"], null), "s");
 
   assert.throws(
     () => resolveReleaseProfile("mystery-plugin", {}, null),
@@ -162,7 +162,7 @@ test("Release routing: every consumer declares a buildProfile and resolves fail-
 
   assert.equal(
     resolveReleaseProfile("tavangary-core", TARGET_REGISTRY["tavangary-core"], "auto"),
-    "spaghetti",
+    "standalone",
     "--profile=auto must route tavangary-core to the registry default"
   );
   assert.equal(

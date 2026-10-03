@@ -198,6 +198,10 @@ export const KNOWN_CONSUMERS = Object.freeze([
   "wpdev-woo-persian",
   "wpdev-woocommerce",
   "wpdev-bulk-price-manager",
+  "wpdev-gateways-persian",
+  "nikamooz",
+  "nikamooz-certificate",
+  "nikamooz-theme-panel",
 ]);
 // Alias for backward compatibility
 export const knownConsumers = KNOWN_CONSUMERS;
@@ -212,6 +216,10 @@ export const CONSUMER_NAMESPACES = Object.freeze({
   "wpdev-tickets": "WpdevTickets",
   "wpdev-woo-persian": "WpdevWooPersian",
   "wpdev-woocommerce": "WpdevWoocommerce",
+  "wpdev-gateways-persian": "WpdevGatewaysPersian",
+  "nikamooz": "NikamoozCore",
+  "nikamooz-certificate": "NikamoozCertificate",
+  "nikamooz-theme-panel": "NikamoozThemePanel",
 });
 
 /**
@@ -364,7 +372,7 @@ export function resolveConsumerNamespace({
       const normConsumer = String(consumer || "").toLowerCase().replace(/[^a-z0-9]/g, "");
       const match = keys.find((k) => {
         const norm = k.toLowerCase().replace(/[^a-z0-9]/g, "");
-        return norm === normConsumer || norm.endsWith(normConsumer) || normConsumer.startsWith(norm);
+        return norm === normConsumer || norm.endsWith(normConsumer) || normConsumer.startsWith(norm) || norm.startsWith(normConsumer);
       });
       if (match) {
         return match;

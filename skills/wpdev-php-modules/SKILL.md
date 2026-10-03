@@ -43,6 +43,11 @@ vendor/                       # Composer only; never put feature code here
 - **NEVER** call `WP_CLI::add_command()` directly — use `CliSetup::register()`.
 - **NEVER** call `add_shortcode()` for kit shortcodes — use `ShortcodesSetup::register()`.
 - **NEVER** hardcode plugin slug/namespace/prefix — use `wpdev.json` / generated constants.
+- **MANDATORY FOR SHARED MODULES (Git Submodules):** Any module intended for reuse across multiple projects MUST:
+  1. Be developed strictly using the brand-agnostic boilerplate (`BrandContext`, canonical `/wpdev/v1/` + dynamic brand alias, generic `WPDev` namespace, dynamic token extraction). Reference: `https://github.com/abolfazl-moeini/module-boilerplate.git`.
+  2. Be deployed and managed as a Git Submodule under `src/Modules/{PascalCase}`.
+  3. Have its Git repository named strictly as `module-{name}` (e.g. `module-test-users`, `module-gift`, `module-help`, `module-user-merge`).
+
 - **NEVER** add files to `composer.json` `autoload.files` and skip `composer dump-autoload`.
 - **ALWAYS** implement `ModuleInterface` (or extend `AbstractModule`) per feature.
 - **ALWAYS** keep module slug stable after release (`get_slug()` is a public contract).

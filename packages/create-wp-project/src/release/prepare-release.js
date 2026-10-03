@@ -93,6 +93,10 @@ export const CANONICAL_CONSUMERS = new Set([
   "drm-connector",
   "wpdev-woocommerce",
   "wpdev-bulk-price-manager",
+  "wpdev-gateways-persian",
+  "nikamooz",
+  "nikamooz-certificate",
+  "nikamooz-theme-panel",
 ]);
 
 export function registerCanonicalConsumer(slug) {
