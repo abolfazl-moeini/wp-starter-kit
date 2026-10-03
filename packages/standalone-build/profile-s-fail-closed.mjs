@@ -810,6 +810,10 @@ export async function validatePhpSyntaxTree(
         if (fullPath.includes(path.join("php-fault-tolerance", "src", "Real"))) {
           continue;
         }
+        const lowerDir = entry.name.toLowerCase();
+        if (["examples", "example", "tests", "test", "docs", "doc", "demo", "demos", "sample", "samples"].includes(lowerDir)) {
+          continue;
+        }
         await walk(fullPath);
       } else if (entry.isFile() && entry.name.endsWith(".php")) {
         phpFiles.push(fullPath);
@@ -963,14 +967,22 @@ export async function validatePhpSyntaxTree(
                   return $path . ': PHP 7.4 incompatibility: trailing comma detected in parameter list';
               }
               $inDefault = false;
+              $nestedDepth = 0;
               $visibilityTokens = [T_PUBLIC, T_PROTECTED, T_PRIVATE];
               if (defined('T_READONLY')) $visibilityTokens[] = constant('T_READONLY');
               foreach ($paramTokens as $pt) {
                   $ptId = is_array($pt) ? $pt[0] : null;
                   $ptText = is_array($pt) ? $pt[1] : $pt;
-                  if ($pt === '=') $inDefault = true;
-                  elseif ($pt === ',') $inDefault = false;
-                  elseif ($inDefault && ($ptId === T_NEW || $ptText === 'new')) {
+                  if ($pt === '(' || $pt === '[') {
+                      $nestedDepth++;
+                  } elseif ($pt === ')' || $pt === ']') {
+                      $nestedDepth--;
+                  }
+                  if ($nestedDepth === 0) {
+                      if ($pt === '=') $inDefault = true;
+                      elseif ($pt === ',') $inDefault = false;
+                  }
+                  if ($inDefault && ($ptId === T_NEW || $ptText === 'new')) {
                       return $path . ': PHP 7.4 incompatibility: new in initializer detected in parameter default';
                   }
                   elseif (!$inDefault && $pt === '|') {
@@ -982,7 +994,7 @@ export async function validatePhpSyntaxTree(
                           return $path . ': PHP 7.4 incompatibility: ' . $ptText . ' type detected in parameter list';
                       }
                   }
-                  if (in_array($ptId, $visibilityTokens, true)) {
+                  if (!$inDefault && in_array($ptId, $visibilityTokens, true)) {
                       return $path . ': PHP 7.4 incompatibility: constructor property promotion detected in parameter list';
                   }
               }

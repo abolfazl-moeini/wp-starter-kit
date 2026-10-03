@@ -125,7 +125,20 @@ export function shouldPurgeDirectory(relPath, isRoot, dirName) {
 
   // In vendor directories
   if (normalizedRel.startsWith("vendor/") || normalizedRel.includes("/vendor/")) {
-    if (lowerName === "tests" || lowerName === "test" || lowerName === "unit-tests" || lowerName === "unit" || lowerName === "docs" || lowerName === "doc") {
+    if (
+      lowerName === "tests" ||
+      lowerName === "test" ||
+      lowerName === "unit-tests" ||
+      lowerName === "unit" ||
+      lowerName === "docs" ||
+      lowerName === "doc" ||
+      lowerName === "examples" ||
+      lowerName === "example" ||
+      lowerName === "demo" ||
+      lowerName === "demos" ||
+      lowerName === "sample" ||
+      lowerName === "samples"
+    ) {
       return true;
     }
     return VENDOR_DEV_DIRS.has(lowerName);
@@ -149,9 +162,6 @@ export function shouldPurgeFile(relPath, fileName) {
   }
 
   if (lowerName.endsWith(".md")) {
-    if (lowerName.includes("license") || lowerName.includes("notice")) {
-      return { purge: false, action: "keep" };
-    }
     return { purge: true, action: "delete" };
   }
 

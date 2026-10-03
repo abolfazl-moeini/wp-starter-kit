@@ -284,6 +284,13 @@ class MockWpdb {
     public $posts = 'wp_posts';
     public $postmeta = 'wp_postmeta';
     public $options = 'wp_options';
+    public $users = 'wp_users';
+    public $usermeta = 'wp_usermeta';
+    public $comments = 'wp_comments';
+    public $commentmeta = 'wp_commentmeta';
+    public $terms = 'wp_terms';
+    public $term_taxonomy = 'wp_term_taxonomy';
+    public $term_relationships = 'wp_term_relationships';
     public function get_blog_prefix($blog_id = null) { return $this->prefix; }
     public function tables($scope = 'all', $prefix = true, $blog_id = 0) { return []; }
     public function get_charset_collate() { return 'DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'; }
@@ -380,6 +387,7 @@ function wp_next_scheduled($hook, $args = []) { return false; }
 function wp_schedule_event($timestamp, $recurrence, $hook, $args = [], $wp_error = false) { return true; }
 function wp_clear_scheduled_hook($hook, $args = []) { return 1; }
 function wp_unschedule_event($timestamp, $hook, $args = [], $wp_error = false) { return true; }
+function current_time($type = 'mysql', $gmt = 0) { return ($type === 'timestamp' || $type === 'U') ? time() : gmdate('Y-m-d H:i:s'); }
 function plugin_dir_path($file) { return dirname($file) . '/'; }
 function plugin_dir_url($file) { return 'http://localhost/wp-content/plugins/' . basename(dirname($file)) . '/'; }
 function plugin_basename($file) { return basename(dirname($file)) . '/' . basename($file); }
@@ -396,6 +404,7 @@ function is_multisite() { return false; }
 function admin_url($path = '') { return 'http://localhost/wp-admin/' . $path; }
 function home_url($path = '') { return 'http://localhost/' . ltrim($path, '/'); }
 function site_url($path = '') { return 'http://localhost/' . ltrim($path, '/'); }
+function get_bloginfo($show = '', $filter = 'raw') { return 'WordPress'; }
 function add_menu_page() { return 'hook'; }
 function add_submenu_page() { return 'hook'; }
 function add_role($role, $display_name, $capabilities = []) { return null; }
@@ -455,6 +464,9 @@ function register_activation_hook() {}
 function register_deactivation_hook() {}
 function register_uninstall_hook() {}
 function plugins_url($path = '', $plugin = '') { return 'http://localhost/wp-content/plugins/' . $path; }
+function add_shortcode($tag, $callback) { return true; }
+function do_shortcode($content) { return $content; }
+function shortcode_atts($pairs, $atts, $shortcode = '') { return $pairs; }
 
 $main_file = '${extractedPlugin}/${consumer}.php';
 if (!file_exists($main_file)) {
