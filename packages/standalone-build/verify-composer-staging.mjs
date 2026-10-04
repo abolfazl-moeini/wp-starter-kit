@@ -6,14 +6,53 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 
+import { loadTargetRegistry } from "./target-registry.mjs";
+
 const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
 const contentRoot = path.resolve(process.argv[2] || path.join(scriptDirectory, ".."));
 const positional = process.argv.slice(3).filter((value) => !value.startsWith("--strauss-bin="));
 const straussArgument = process.argv.slice(3).find((value) => value.startsWith("--strauss-bin="));
 const straussBin = straussArgument ? path.resolve(straussArgument.slice("--strauss-bin=".length)) : null;
 const discoveryFailures = [];
+function resolveBuildConfigPath(argv = process.argv, env = process.env) {
+  const eqArg = (argv || []).find((a) => typeof a === "string" && a.startsWith("--config="));
+  if (eqArg) {
+    const value = eqArg.slice("--config=".length).trim();
+    return value || null;
+  }
+  const idx = (argv || []).findIndex((a) => a === "--config");
+  if (idx !== -1 && typeof argv[idx + 1] === "string" && !argv[idx + 1].startsWith("--")) {
+    return argv[idx + 1];
+  }
+  const fromEnv = env?.WPDEV_BUILD_CONFIG;
+  return typeof fromEnv === "string" && fromEnv.trim() ? fromEnv.trim() : null;
+}
+function isKnownConsumer(name, registry) {
+  if (name === "wpdev") return false;
+  if (Object.prototype.hasOwnProperty.call(registry, name)) return true;
+  // Source-tree convention: `*-dev` directories map to their slug.
+  if (name.endsWith("-dev")) {
+    const slug = name.slice(0, -"-dev".length);
+    if (slug && Object.prototype.hasOwnProperty.call(registry, slug)) return true;
+  }
+  return false;
+}
+async function loadScopeRegistry() {
+  try {
+    const bundle = await loadTargetRegistry(resolveBuildConfigPath(), contentRoot);
+    if (bundle?.registry && Object.keys(bundle.registry).length > 0) return bundle.registry;
+  } catch {
+    // Fall through to convention scope below (fail-closed per-consumer downstream).
+  }
+  return null;
+}
+const scopeRegistry = await loadScopeRegistry();
 function isInScopeConsumer(name) {
-  return name !== "wpdev" && (/^(?:tavangary|wpdev|drm)-/.test(name) || /^tavangary/.test(name));
+  if (name === "wpdev") return false;
+  if (scopeRegistry) return isKnownConsumer(name, scopeRegistry);
+  // Convention fallback (no static allowlist): any plugin directory is in
+  // scope; composer.json/lock presence is still gated in discoverConsumers().
+  return true;
 }
 
 async function discoverConsumers() {

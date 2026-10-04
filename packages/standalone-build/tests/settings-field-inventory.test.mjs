@@ -16,7 +16,7 @@ const script = path.resolve(
 test("records settings fields from sibling files after scanning subdirectories", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "wpdev-settings-inventory-siblings-"));
   try {
-    const plugin = path.join(root, "plugins", "tavangary-theme-panel");
+    const plugin = path.join(root, "plugins", "sample-profile-s-plugin-dev");
     await mkdir(path.join(plugin, "includes"), { recursive: true });
     await writeFile(path.join(plugin, "includes", "nested.php"), "<?php\n");
     await writeFile(
@@ -27,7 +27,7 @@ test("records settings fields from sibling files after scanning subdirectories",
     await execFileAsync(process.execPath, [script, root, output]);
     const report = JSON.parse(await readFile(output, "utf8"));
     assert.deepEqual(
-      report.plugins["tavangary-theme-panel"].fields.owned_field,
+      report.plugins["sample-profile-s-plugin-dev"].fields.owned_field,
       ["register.php"],
       "A subdirectory must not stop the walker from reading sibling PHP files.",
     );
@@ -39,7 +39,7 @@ test("records settings fields from sibling files after scanning subdirectories",
 test("rejects a source-tree symlink instead of silently omitting it from settings evidence", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "wpdev-settings-inventory-symlink-"));
   try {
-    const plugin = path.join(root, "plugins", "tavangary-theme-panel");
+    const plugin = path.join(root, "plugins", "sample-profile-s-plugin-dev");
     await mkdir(plugin, { recursive: true });
     await writeFile(path.join(root, "outside.php"), "<?php wpdev_register_settings_field('section', 'secret_field');\n");
     await symlink(path.join(root, "outside.php"), path.join(plugin, "linked.php"));
@@ -61,11 +61,11 @@ test("rejects a symlinked consumer root instead of scanning outside the content 
   try {
     await mkdir(path.join(root, "plugins"), { recursive: true });
     await mkdir(path.join(root, "outside-plugin"), { recursive: true });
-    await symlink(path.join(root, "outside-plugin"), path.join(root, "plugins/tavangary-theme-panel"));
+    await symlink(path.join(root, "outside-plugin"), path.join(root, "plugins/sample-profile-s-plugin-dev"));
 
     await assert.rejects(
       execFileAsync(process.execPath, [script, root, path.join(root, "settings.json")]),
-      (error) => /source-tree symlink is not allowed: plugins\/tavangary-theme-panel/.test(error.stderr),
+      (error) => /source-tree symlink is not allowed: plugins\/sample-profile-s-plugin-dev/.test(error.stderr),
     );
   } finally {
     await rm(root, { recursive: true, force: true });

@@ -238,6 +238,77 @@ function aggregateSamples(samples) {
   };
 }
 
+/**
+ * Resolve benchmark target plugins without hardcoded consumer defaults.
+ * Precedence: explicit options.targetPlugins > --targets= CLI arg >
+ * build.config.json targets (WPDEV_BUILD_CONFIG / --config / upward search) >
+ * fail-closed error requiring --targets.
+ */
+export function resolveBenchmarkTargets(options = {}) {
+  if (Array.isArray(options.targetPlugins) && options.targetPlugins.length > 0) {
+    return [...options.targetPlugins];
+  }
+  const argv = options.argv || process.argv.slice(2);
+  const cliTargets = parseTargetsCliArg(argv);
+  if (cliTargets) return cliTargets;
+  const configPath = options.configPath || parseConfigCliArg(argv) || process.env.WPDEV_BUILD_CONFIG || null;
+  const fromConfig = readTargetsFromBuildConfig(options.contentRoot || contentRoot, configPath);
+  if (fromConfig) return fromConfig;
+  throw new Error(
+    "runBenchmarkHarness: no benchmark targets resolved (fail-closed). " +
+      "Pass explicit targetPlugins, --targets=a,b, or provide a build.config.json with targets."
+  );
+}
+
+export function parseTargetsCliArg(argv = []) {
+  for (const arg of argv) {
+    if (arg.startsWith("--targets=")) {
+      const list = arg.slice("--targets=".length).split(",").map((s) => s.trim()).filter(Boolean);
+      if (list.length > 0) return list;
+    } else if (arg.startsWith("--target=")) {
+      const single = arg.slice("--target=".length).trim();
+      if (single) return [single];
+    }
+  }
+  return null;
+}
+
+export function parseConfigCliArg(argv = []) {
+  for (const arg of argv) {
+    if (arg.startsWith("--config=")) {
+      const value = arg.slice("--config=".length).trim();
+      if (value) return value;
+    }
+  }
+  return null;
+}
+
+export function readTargetsFromBuildConfig(baseContentRoot, explicitPath = null) {
+  const candidates = [];
+  if (explicitPath) {
+    candidates.push(path.isAbsolute(explicitPath) ? explicitPath : path.resolve(process.cwd(), explicitPath));
+  }
+  let dir = path.resolve(baseContentRoot || contentRoot);
+  for (let depth = 0; depth < 4; depth++) {
+    candidates.push(path.join(dir, "build.config.json"));
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  for (const candidate of candidates) {
+    let raw;
+    try {
+      if (!fs.existsSync(candidate)) continue;
+      raw = JSON.parse(fs.readFileSync(candidate, "utf8"));
+    } catch {
+      continue;
+    }
+    const targets = raw?.targets && typeof raw.targets === "object" ? Object.keys(raw.targets) : [];
+    if (targets.length > 0) return targets;
+  }
+  return null;
+}
+
 export async function runBenchmarkHarness(options = {}) {
   const isMini = Boolean(options.mini);
   const targetJobs = options.jobs || (isMini ? [4] : [1, 2, 4]);
@@ -245,7 +316,7 @@ export async function runBenchmarkHarness(options = {}) {
   const customContentRoot = options.contentRoot || contentRoot;
   const customToolsDir = options.toolsDir || toolsDir;
   const customPluginsDir = options.pluginsDir || path.join(customContentRoot, "plugins");
-  const targetPlugins = options.targetPlugins || (isMini ? ["tavangary-theme-panel"] : ["tavangary-core", "tavangary-theme-panel", "wpdev-crm", "wpdev-tickets"]);
+  const targetPlugins = resolveBenchmarkTargets({ ...options, contentRoot: customContentRoot });
   const customExecutor = options.executor || executeTimedProcess;
   const customFingerprinter = options.fingerprinter || computeAllFingerprintsParallel;
   const writeReport = options.writeReport !== undefined ? options.writeReport : true;
@@ -370,11 +441,11 @@ export async function runBenchmarkHarness(options = {}) {
 
       try {
         if (!options.executor) {
-          // Copy isolated development sources only when running real executor
+          // Copy isolated development sources only when running real executor.
+          // Derived from the resolved benchmark targets (no hardcoded slugs):
+          // each target maps to its `${slug}-dev` source plus the shared framework.
           await fs.promises.mkdir(pluginsDir, { recursive: true });
-          const devSources = isMini
-            ? targetPlugins.map((p) => `${p}-dev`).concat(["wpdev"])
-            : ["tavangary-core-dev", "tavangary-theme-panel-dev", "wpdev-crm-dev", "wpdev-tickets-dev", "wpdev"];
+          const devSources = targetPlugins.map((p) => `${p}-dev`).concat(["wpdev"]);
           for (const p of devSources) {
             const src = path.join(customContentRoot, "plugins", p);
             if (fs.existsSync(src)) {
@@ -520,8 +591,22 @@ export async function runBenchmarkHarness(options = {}) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  runBenchmarkHarness().catch((err) => {
-    console.error("❌ Benchmark failed:", err);
+  const argv = process.argv.slice(2);
+  const cliTargets = parseTargetsCliArg(argv);
+  const cliOptions = {};
+  if (cliTargets) cliOptions.targetPlugins = cliTargets;
+  if (argv.includes("--mini")) cliOptions.mini = true;
+  const configArg = parseConfigCliArg(argv);
+  if (configArg) cliOptions.configPath = configArg;
+  for (const arg of argv) {
+    const jobsMatch = arg.match(/^--jobs=(\d+)$/);
+    if (jobsMatch) cliOptions.jobs = [parseInt(jobsMatch[1], 10)];
+    const iterMatch = arg.match(/^--iterations=(\d+)$/);
+    if (iterMatch) cliOptions.iterations = parseInt(iterMatch[1], 10);
+  }
+  runBenchmarkHarness(cliOptions).catch((err) => {
+    console.error("❌ Benchmark failed:", err.message);
+    console.error("   Hint: pass --targets=slug-a,slug-b or provide a build.config.json with targets.");
     process.exit(1);
   });
 }

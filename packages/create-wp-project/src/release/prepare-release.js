@@ -83,28 +83,6 @@ function normalizeStandaloneModuleLoaders(distRoot) {
   assertDuckTypedModuleLoaders(distRoot);
 }
 
-export const CANONICAL_CONSUMERS = new Set([
-  "tavangary-core",
-  "tavangary-theme-panel",
-  "wpdev-crm",
-  "wpdev-tickets",
-  "wpdev-analytics",
-  "wpdev-woo-persian",
-  "drm-connector",
-  "wpdev-woocommerce",
-  "wpdev-bulk-price-manager",
-  "wpdev-gateways-persian",
-  "nikamooz",
-  "nikamooz-certificate",
-  "nikamooz-theme-panel",
-]);
-
-export function registerCanonicalConsumer(slug) {
-  if (slug && typeof slug === "string") {
-    CANONICAL_CONSUMERS.add(slug.trim());
-  }
-}
-
 export function resolveCanonicalAssembler({
   fromDir,
   pluginRoot,
@@ -746,16 +724,14 @@ export async function prepareRelease(options = {}) {
     pluginRoot: root,
   });
 
-  const isRegisteredConsumer =
-    CANONICAL_CONSUMERS.has(slug) ||
-    Boolean(
-      raw?.features?.phpFramework === "wpdev" ||
-      raw?.phpFramework === "wpdev" ||
-      raw?.framework === "wpdev" ||
-      raw?.kitVersion ||
-      existsSync(path.join(root, "includes/framework")) ||
-      existsSync(path.join(root, "packages/framework")),
-    );
+  const isRegisteredConsumer = Boolean(
+    raw?.features?.phpFramework === "wpdev" ||
+    raw?.phpFramework === "wpdev" ||
+    raw?.framework === "wpdev" ||
+    raw?.kitVersion ||
+    existsSync(path.join(root, "includes/framework")) ||
+    existsSync(path.join(root, "packages/framework")),
+  );
   const shouldDelegateCanonical =
     Boolean(canonicalAssemblerPath) &&
     options.useCanonicalAssembler !== false &&
@@ -775,7 +751,12 @@ export async function prepareRelease(options = {}) {
     const { assembleProfileSCandidate } = await import(importUrl);
     let contentRoot = null;
     let pluginsDir = null;
-    if (process.env.WPDEV_CONTENT_ROOT) {
+    if (
+      process.env.WPDEV_CONTENT_ROOT &&
+      path
+        .resolve(root)
+        .startsWith(path.resolve(process.env.WPDEV_CONTENT_ROOT))
+    ) {
       contentRoot = path.resolve(process.env.WPDEV_CONTENT_ROOT);
       pluginsDir = path.join(contentRoot, "plugins");
     } else {

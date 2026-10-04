@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import {
   IMPACT_ONLY_TARGETS,
   TARGET_REGISTRY,
+  buildRegistryFromConfig,
   listStandaloneConsumers,
   resolveConsumerSource,
 } from "../target-registry.mjs";
@@ -32,8 +33,36 @@ if (process.env.WPDEV_CONTENT_ROOT) {
   }
 }
 
-test("Target registry: seven standalone consumers are explicit and wpdev is not a standalone artifact", () => {
-  const consumers = listStandaloneConsumers();
+// Gate #2: the legacy static registry is intentionally empty and frozen.
+// Consumer targets come from build.config.json via buildRegistryFromConfig().
+// This inline fixture mirrors the production 7-target config shape.
+function buildSevenTargetFixture() {
+  return buildRegistryFromConfig({
+    contentRoot: "./wordpress/wp-content",
+    activeTheme: "tavangary",
+    targets: {
+      "tavangary-core": { buildProfile: "standalone" },
+      "tavangary-theme-panel": { buildProfile: "standalone", themeRelationship: "themes/tavangary" },
+      "wpdev-crm": { buildProfile: "s" },
+      "wpdev-tickets": { buildProfile: "s" },
+      "drm-connector": { buildProfile: "s" },
+      "wpdev-analytics": { buildProfile: "s" },
+      "wpdev-woo-persian": { buildProfile: "s" },
+    },
+    impactTargets: {
+      wpdev: { kind: "shared-framework-source", sourceDir: "wpdev" },
+      "themes/tavangary": { kind: "impact-only-target", sourceDir: "tavangary", sourceKind: "theme" },
+    },
+  });
+}
+
+test("Target registry: legacy static registry is empty/frozen, config provides the seven consumers", async () => {
+  assert.deepEqual(TARGET_REGISTRY, {}, "legacy TARGET_REGISTRY must be empty (targets come from build.config.json)");
+  assert.ok(Object.isFrozen(TARGET_REGISTRY), "legacy TARGET_REGISTRY must stay frozen for compat");
+  assert.deepEqual(listStandaloneConsumers(), [], "legacy listStandaloneConsumers() must be empty (compat export)");
+
+  const { registry, impactTargets } = await buildSevenTargetFixture();
+  const consumers = Object.keys(registry);
   assert.deepEqual(
     [...consumers].sort(),
     [
@@ -46,13 +75,13 @@ test("Target registry: seven standalone consumers are explicit and wpdev is not 
       "wpdev-woo-persian",
     ].sort()
   );
-  assert.equal(TARGET_REGISTRY.wpdev, undefined, "wpdev must not be a standalone registry target");
+  assert.equal(registry.wpdev, undefined, "wpdev must not be a standalone registry target");
   assert.equal(IMPACT_ONLY_TARGETS.wpdev.kind, "shared-framework-source");
   assert.equal(IMPACT_ONLY_TARGETS.wpdev.standaloneArtifact, false);
-  assert.equal(IMPACT_ONLY_TARGETS["themes/tavangary"].kind, "impact-only-target");
+  assert.equal(impactTargets["themes/tavangary"].kind, "impact-only-target");
 
   for (const consumer of consumers) {
-    const entry = TARGET_REGISTRY[consumer];
+    const entry = registry[consumer];
     assert.notEqual(entry.sourceDirectoryName, entry.deployDirectoryName);
     assert.equal(entry.sourceDirectoryName, `${consumer}-dev`);
     assert.equal(entry.deployDirectoryName, consumer);
@@ -61,15 +90,36 @@ test("Target registry: seven standalone consumers are explicit and wpdev is not 
   }
 });
 
-test("Target registry: real in-repo sources resolve to *-dev and never to deploy output", async () => {
+test("Target registry: config-driven sources resolve to *-dev and never to deploy output", async () => {
+  // Empty legacy registry falls through to convention-based auto-discovery.
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "target-registry-convention-"));
+  try {
+    const { registry } = await buildSevenTargetFixture();
+    for (const consumer of ["tavangary-core", "wpdev-crm"]) {
+      const pluginsDir = path.join(tmp, "plugins");
+      const sourceDir = path.join(pluginsDir, `${consumer}-dev`);
+      await mkdir(sourceDir, { recursive: true });
+      await writeFile(path.join(sourceDir, `${consumer}.php`), "<?php // fixture");
+      const resolved = await resolveConsumerSource({ contentRoot: tmp, consumer, registry });
+      assert.equal(path.basename(resolved.sourceDir), `${consumer}-dev`);
+      assert.equal(path.basename(resolved.deployDir), consumer);
+      assert.notEqual(path.resolve(resolved.sourceDir), path.resolve(resolved.deployDir));
+      assert.ok(fs.existsSync(path.join(resolved.sourceDir, resolved.entry.bootstrapFile)));
+    }
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
+
+  // Real in-repo sources (when present) still resolve via auto-discovery.
   let tested = 0;
-  for (const consumer of listStandaloneConsumers()) {
-    const entry = TARGET_REGISTRY[consumer];
+  const { registry } = await buildSevenTargetFixture();
+  for (const consumer of Object.keys(registry)) {
+    const entry = registry[consumer];
     const sourceDir = path.join(contentRoot, "plugins", entry.sourceDirectoryName);
     if (!fs.existsSync(sourceDir)) {
       continue;
     }
-    const resolved = await resolveConsumerSource({ contentRoot, consumer });
+    const resolved = await resolveConsumerSource({ contentRoot, consumer, registry });
     assert.equal(path.basename(resolved.sourceDir), `${consumer}-dev`);
     assert.equal(path.basename(resolved.deployDir), consumer);
     assert.notEqual(path.resolve(resolved.sourceDir), path.resolve(resolved.deployDir));
@@ -125,9 +175,10 @@ test("Target registry: unknown consumer, wpdev standalone, symlink and traversal
 
 test("Release routing: every consumer declares a buildProfile and resolves fail-closed", async () => {
   const { resolveReleaseProfile } = await import("../build-plan.mjs");
+  const { registry } = await buildSevenTargetFixture();
 
-  for (const consumer of listStandaloneConsumers()) {
-    const entry = TARGET_REGISTRY[consumer];
+  for (const consumer of Object.keys(registry)) {
+    const entry = registry[consumer];
     assert.equal(
       typeof entry.buildProfile,
       "string",
@@ -140,9 +191,9 @@ test("Release routing: every consumer declares a buildProfile and resolves fail-
     );
   }
 
-  assert.equal(resolveReleaseProfile("wpdev-crm", TARGET_REGISTRY["wpdev-crm"], null), "s");
-  assert.equal(resolveReleaseProfile("tavangary-core", TARGET_REGISTRY["tavangary-core"], null), "standalone");
-  assert.equal(resolveReleaseProfile("drm-connector", TARGET_REGISTRY["drm-connector"], null), "s");
+  assert.equal(resolveReleaseProfile("wpdev-crm", registry["wpdev-crm"], null), "s");
+  assert.equal(resolveReleaseProfile("tavangary-core", registry["tavangary-core"], null), "standalone");
+  assert.equal(resolveReleaseProfile("drm-connector", registry["drm-connector"], null), "s");
 
   assert.throws(
     () => resolveReleaseProfile("mystery-plugin", {}, null),
@@ -150,23 +201,23 @@ test("Release routing: every consumer declares a buildProfile and resolves fail-
     "An unknown consumer without a declared profile must fail closed"
   );
   assert.throws(
-    () => resolveReleaseProfile("wpdev-crm", TARGET_REGISTRY["wpdev-crm"], "turbo"),
+    () => resolveReleaseProfile("wpdev-crm", registry["wpdev-crm"], "turbo"),
     /Invalid release profile/i
   );
 
   assert.equal(
-    resolveReleaseProfile("tavangary-core", TARGET_REGISTRY["tavangary-core"], "profile-s"),
+    resolveReleaseProfile("tavangary-core", registry["tavangary-core"], "profile-s"),
     "s",
     "An explicit operator override must still win over the registry default"
   );
 
   assert.equal(
-    resolveReleaseProfile("tavangary-core", TARGET_REGISTRY["tavangary-core"], "auto"),
+    resolveReleaseProfile("tavangary-core", registry["tavangary-core"], "auto"),
     "standalone",
     "--profile=auto must route tavangary-core to the registry default"
   );
   assert.equal(
-    resolveReleaseProfile("wpdev-crm", TARGET_REGISTRY["wpdev-crm"], "auto"),
+    resolveReleaseProfile("wpdev-crm", registry["wpdev-crm"], "auto"),
     "s",
     "--profile=auto must route wpdev consumers to Profile S"
   );

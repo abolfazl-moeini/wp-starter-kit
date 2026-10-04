@@ -92,10 +92,10 @@ export const CANONICAL_TEST_REGISTRY = {
       "tools/class-completeness-gate.mjs"
     ],
     "artifacts": [
-      "tavangary-core"
+      "sample-standalone-plugin"
     ],
     "requiredBy": [
-      "tavangary-core"
+      "sample-standalone-plugin"
     ],
     "criticality": "critical",
     "allowedModes": [
@@ -431,8 +431,8 @@ export const CANONICAL_TEST_REGISTRY = {
     ],
     "artifacts": [
       "drm-connector",
-      "tavangary-core",
-      "tavangary-theme-panel",
+      "sample-standalone-plugin",
+      "sample-profile-s-plugin",
       "wpdev-analytics",
       "wpdev-crm",
       "wpdev-tickets",
@@ -440,8 +440,8 @@ export const CANONICAL_TEST_REGISTRY = {
     ],
     "requiredBy": [
       "drm-connector",
-      "tavangary-core",
-      "tavangary-theme-panel",
+      "sample-standalone-plugin",
+      "sample-profile-s-plugin",
       "wpdev-analytics",
       "wpdev-crm",
       "wpdev-tickets",
@@ -591,10 +591,10 @@ export const CANONICAL_TEST_REGISTRY = {
       "tools/build-cache-engine.mjs"
     ],
     "artifacts": [
-      "tavangary-core"
+      "sample-standalone-plugin"
     ],
     "requiredBy": [
-      "tavangary-core"
+      "sample-standalone-plugin"
     ],
     "criticality": "critical",
     "allowedModes": [
@@ -656,10 +656,10 @@ export const CANONICAL_TEST_REGISTRY = {
       "tools/run-plan3-eligibility-spike.mjs"
     ],
     "artifacts": [
-      "tavangary-core"
+      "sample-standalone-plugin"
     ],
     "requiredBy": [
-      "tavangary-core"
+      "sample-standalone-plugin"
     ],
     "criticality": "critical",
     "allowedModes": [
@@ -720,10 +720,10 @@ export const CANONICAL_TEST_REGISTRY = {
       "tools/settings-field-inventory.mjs"
     ],
     "artifacts": [
-      "tavangary-theme-panel"
+      "sample-profile-s-plugin"
     ],
     "requiredBy": [
-      "tavangary-theme-panel"
+      "sample-profile-s-plugin"
     ],
     "criticality": "critical",
     "allowedModes": [
@@ -900,17 +900,17 @@ export const CANONICAL_TEST_REGISTRY = {
     "releaseSameRun": false,
     "tier": "unit"
   },
-  "tavangary-core-artifact.test.mjs": {
+  "sample-standalone-plugin-artifact.test.mjs": {
     "tools": [
       "tools/assemble-profile-s-candidate.mjs",
       "tools/artifact-fixture-helper.mjs",
       "tools/canonical-artifact-manifest.mjs"
     ],
     "artifacts": [
-      "tavangary-core"
+      "sample-standalone-plugin"
     ],
     "requiredBy": [
-      "tavangary-core"
+      "sample-standalone-plugin"
     ],
     "criticality": "critical",
     "allowedModes": [
@@ -921,17 +921,17 @@ export const CANONICAL_TEST_REGISTRY = {
     "releaseSameRun": true,
     "tier": "contract"
   },
-  "tavangary-theme-panel-artifact.test.mjs": {
+  "sample-profile-s-plugin-artifact.test.mjs": {
     "tools": [
       "tools/assemble-profile-s-candidate.mjs",
       "tools/artifact-fixture-helper.mjs",
       "tools/canonical-artifact-manifest.mjs"
     ],
     "artifacts": [
-      "tavangary-theme-panel"
+      "sample-profile-s-plugin"
     ],
     "requiredBy": [
-      "tavangary-theme-panel"
+      "sample-profile-s-plugin"
     ],
     "criticality": "critical",
     "allowedModes": [
@@ -1177,10 +1177,10 @@ export const CANONICAL_TEST_REGISTRY = {
       "tools/validate-settings-ownership-review.mjs"
     ],
     "artifacts": [
-      "tavangary-theme-panel"
+      "sample-profile-s-plugin"
     ],
     "requiredBy": [
-      "tavangary-theme-panel"
+      "sample-profile-s-plugin"
     ],
     "criticality": "critical",
     "allowedModes": [
@@ -1274,8 +1274,8 @@ export const CANONICAL_TEST_REGISTRY = {
     ],
     "artifacts": [
       "drm-connector",
-      "tavangary-core",
-      "tavangary-theme-panel",
+      "sample-standalone-plugin",
+      "sample-profile-s-plugin",
       "wpdev-analytics",
       "wpdev-crm",
       "wpdev-tickets",
@@ -1283,8 +1283,8 @@ export const CANONICAL_TEST_REGISTRY = {
     ],
     "requiredBy": [
       "drm-connector",
-      "tavangary-core",
-      "tavangary-theme-panel",
+      "sample-standalone-plugin",
+      "sample-profile-s-plugin",
       "wpdev-analytics",
       "wpdev-crm",
       "wpdev-tickets",
@@ -1407,11 +1407,11 @@ export const REQUIRED_ARTIFACT_TESTS = {
   "drm-connector": Object.entries(CANONICAL_TEST_REGISTRY)
     .filter(([, v]) => (v.requiredBy || []).includes("drm-connector"))
     .map(([k]) => k),
-  "tavangary-core": Object.entries(CANONICAL_TEST_REGISTRY)
-    .filter(([, v]) => (v.requiredBy || []).includes("tavangary-core"))
+  "sample-standalone-plugin": Object.entries(CANONICAL_TEST_REGISTRY)
+    .filter(([, v]) => (v.requiredBy || []).includes("sample-standalone-plugin"))
     .map(([k]) => k),
-  "tavangary-theme-panel": Object.entries(CANONICAL_TEST_REGISTRY)
-    .filter(([, v]) => (v.requiredBy || []).includes("tavangary-theme-panel"))
+  "sample-profile-s-plugin": Object.entries(CANONICAL_TEST_REGISTRY)
+    .filter(([, v]) => (v.requiredBy || []).includes("sample-profile-s-plugin"))
     .map(([k]) => k),
   "wpdev-analytics": Object.entries(CANONICAL_TEST_REGISTRY)
     .filter(([, v]) => (v.requiredBy || []).includes("wpdev-analytics"))
@@ -1433,8 +1433,8 @@ export const REQUIRED_ARTIFACT_TESTS = {
 function buildDependencyGraph() {
   const graph = {
     _tools: Object.keys(CANONICAL_TEST_REGISTRY),
-    "themes/tavangary": [
-      "tavangary-theme-panel-artifact.test.mjs",
+    "themes/sample-theme": [
+      "sample-profile-s-plugin-artifact.test.mjs",
       "settings-field-inventory.test.mjs",
       "validate-settings-ownership-review.test.mjs",
     ],
@@ -1468,8 +1468,8 @@ export const TEST_DEPENDENCY_GRAPH = buildDependencyGraph();
 
 const ALLOWED_CONSUMER_NAMES = new Set([
   "drm-connector",
-  "tavangary-core",
-  "tavangary-theme-panel",
+  "sample-standalone-plugin",
+  "sample-profile-s-plugin",
   "wpdev-analytics",
   "wpdev-crm",
   "wpdev-tickets",

@@ -67,7 +67,7 @@ test("Dependency graph: changing shared plugins/wpdev propagates to all dependen
   const previousCache = {
     _tools: "tools-hash-v1",
     _wpdev: "wpdev-hash-v1",
-    "tavangary-core": "tools-hash-v1:wpdev-hash-v1:core-hash-v1:profile:clean",
+    "sample-standalone-plugin": "tools-hash-v1:wpdev-hash-v1:core-hash-v1:profile:clean",
     "wpdev-crm": "tools-hash-v1:wpdev-hash-v1:crm-hash-v1:profile:clean",
   };
 
@@ -75,20 +75,20 @@ test("Dependency graph: changing shared plugins/wpdev propagates to all dependen
     tools: "tools-hash-v1",
     wpdev: "wpdev-hash-v2", // changed!
     plugins: {
-      "tavangary-core": "core-hash-v1",
+      "sample-standalone-plugin": "core-hash-v1",
       "wpdev-crm": "crm-hash-v1",
     },
   };
 
   const plan = planDependencyGraphBuild({
-    targetPlugins: ["tavangary-core", "wpdev-crm"],
+    targetPlugins: ["sample-standalone-plugin", "wpdev-crm"],
     previousCache,
     currentFingerprints,
     mode: "changed",
   });
 
-  assert.equal(plan["tavangary-core"].shouldRebuild, true);
-  assert.ok(plan["tavangary-core"].reason.includes("wpdev"));
+  assert.equal(plan["sample-standalone-plugin"].shouldRebuild, true);
+  assert.ok(plan["sample-standalone-plugin"].reason.includes("wpdev"));
   assert.equal(plan["wpdev-crm"].shouldRebuild, true);
   assert.ok(plan["wpdev-crm"].reason.includes("wpdev"));
 });
@@ -99,7 +99,7 @@ test("Dependency graph: changing only a single consumer only rebuilds that consu
     _wpdev: "wpdev-hash-v1",
     // Composite identity always binds the canonical tier (F05): clean builds
     // carry an explicit profile:clean segment.
-    "tavangary-core": "tools-hash-v1:wpdev-hash-v1:core-hash-v1:profile:clean",
+    "sample-standalone-plugin": "tools-hash-v1:wpdev-hash-v1:core-hash-v1:profile:clean",
     "wpdev-crm": "tools-hash-v1:wpdev-hash-v1:crm-hash-v1:profile:clean",
   };
 
@@ -107,30 +107,30 @@ test("Dependency graph: changing only a single consumer only rebuilds that consu
     tools: "tools-hash-v1",
     wpdev: "wpdev-hash-v1",
     plugins: {
-      "tavangary-core": "core-hash-v2", // changed!
+      "sample-standalone-plugin": "core-hash-v2", // changed!
       "wpdev-crm": "crm-hash-v1", // unchanged!
     },
   };
 
   const plan = planDependencyGraphBuild({
-    targetPlugins: ["tavangary-core", "wpdev-crm"],
+    targetPlugins: ["sample-standalone-plugin", "wpdev-crm"],
     previousCache,
     currentFingerprints,
     mode: "changed",
   });
 
-  assert.equal(plan["tavangary-core"].shouldRebuild, true);
-  assert.ok(plan["tavangary-core"].reason.includes("Source code changed"));
+  assert.equal(plan["sample-standalone-plugin"].shouldRebuild, true);
+  assert.ok(plan["sample-standalone-plugin"].reason.includes("Source code changed"));
   assert.equal(plan["wpdev-crm"].shouldRebuild, false);
   assert.equal(plan["wpdev-crm"].reason, "Cached (inputs unchanged)");
 });
 
 test("Dependency graph: toolchain fingerprint changes invalidate cached artifacts", () => {
-  const targetPlugins = ["tavangary-core"];
+  const targetPlugins = ["sample-standalone-plugin"];
   const base = {
     tools: "tools",
     wpdev: "wpdev",
-    plugins: { "tavangary-core": "source" },
+    plugins: { "sample-standalone-plugin": "source" },
     toolchain: "toolchain-v1",
   };
   const initial = planDependencyGraphBuild({
@@ -143,11 +143,11 @@ test("Dependency graph: toolchain fingerprint changes invalidate cached artifact
     previousCache: {
       _tools: base.tools,
       _wpdev: base.wpdev,
-      "tavangary-core": initial["tavangary-core"].compositeFingerprint,
+      "sample-standalone-plugin": initial["sample-standalone-plugin"].compositeFingerprint,
     },
     currentFingerprints: { ...base, toolchain: "toolchain-v2" },
   });
-  assert.equal(changed["tavangary-core"].shouldRebuild, true);
+  assert.equal(changed["sample-standalone-plugin"].shouldRebuild, true);
 });
 
 test("ZIP verification: tampered byte inside ZIP fails verification", async () => {

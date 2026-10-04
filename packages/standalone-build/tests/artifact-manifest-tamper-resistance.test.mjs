@@ -80,14 +80,14 @@ test("1. manifest generation is deterministic for a fixed fixture", async () => 
 
     const m1 = await generateArtifactManifest({
       rootDir: tmpDir,
-      consumer: "tavangary-core",
+      consumer: "sample-standalone-plugin",
       version: "1.0.0",
       profile: "Profile S",
     });
 
     const m2 = await generateArtifactManifest({
       rootDir: tmpDir,
-      consumer: "tavangary-core",
+      consumer: "sample-standalone-plugin",
       version: "1.0.0",
       profile: "Profile S",
     });
@@ -107,7 +107,7 @@ test("2. modifying a single byte in a production file results in modified status
 
     await generateArtifactManifest({
       rootDir: tmpDir,
-      consumer: "tavangary-core",
+      consumer: "sample-standalone-plugin",
       version: "1.0.0",
       profile: "Profile S",
     });
@@ -132,7 +132,7 @@ test("3. deleting a production file results in missing status", async () => {
 
     await generateArtifactManifest({
       rootDir: tmpDir,
-      consumer: "tavangary-core",
+      consumer: "sample-standalone-plugin",
       version: "1.0.0",
       profile: "Profile S",
     });
@@ -156,7 +156,7 @@ test("4. adding an unexpected file results in unexpected status", async () => {
 
     await generateArtifactManifest({
       rootDir: tmpDir,
-      consumer: "tavangary-core",
+      consumer: "sample-standalone-plugin",
       version: "1.0.0",
       profile: "Profile S",
     });
@@ -175,14 +175,14 @@ test("4. adding an unexpected file results in unexpected status", async () => {
 test("5. reordering input file lists does not change canonical digest", async () => {
   const payloadA = {
     schemaVersion: 1,
-    consumer: "tavangary-core",
+    consumer: "sample-standalone-plugin",
     files: [
       { path: "b.php", sha256: "222", size: 20 },
       { path: "a.php", sha256: "111", size: 10 },
     ],
   };
   const payloadB = {
-    consumer: "tavangary-core",
+    consumer: "sample-standalone-plugin",
     schemaVersion: 1,
     files: [
       { path: "a.php", sha256: "111", size: 10 },
@@ -206,7 +206,7 @@ test("6. symlinks in production tree are rejected during manifest generation and
     try {
       await generateArtifactManifest({
         rootDir: tmpDir,
-        consumer: "tavangary-core",
+        consumer: "sample-standalone-plugin",
         version: "1.0.0",
         profile: "Profile S",
       });
@@ -228,7 +228,7 @@ test("7. path traversal entries are rejected during verification", async () => {
 
     const forgedManifest = {
       schemaVersion: 1,
-      consumer: "tavangary-core",
+      consumer: "sample-standalone-plugin",
       files: [
         { path: "../../../etc/passwd", sha256: "abc", size: 100 },
         { path: "src/index.php", sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", size: 16 },
@@ -252,7 +252,7 @@ test("8. duplicate paths in manifest are rejected during verification", async ()
 
     const forgedManifest = {
       schemaVersion: 1,
-      consumer: "tavangary-core",
+      consumer: "sample-standalone-plugin",
       files: [
         { path: "src/index.php", sha256: "111", size: 16 },
         { path: "src/index.php", sha256: "222", size: 16 },
@@ -276,7 +276,7 @@ test("9. manifest file itself is omitted from file list preventing recursion and
 
     const m = await generateArtifactManifest({
       rootDir: tmpDir,
-      consumer: "tavangary-core",
+      consumer: "sample-standalone-plugin",
       version: "1.0.0",
       profile: "Profile S",
     });
@@ -366,14 +366,14 @@ test("12. build from two different current working directories yields identical 
 
     const m1 = await generateArtifactManifest({
       rootDir: tmpDir1,
-      consumer: "tavangary-core",
+      consumer: "sample-standalone-plugin",
       version: "1.0.0",
       profile: "Profile S",
     });
 
     const m2 = await generateArtifactManifest({
       rootDir: tmpDir2,
-      consumer: "tavangary-core",
+      consumer: "sample-standalone-plugin",
       version: "1.0.0",
       profile: "Profile S",
     });
@@ -397,7 +397,7 @@ test("13. production files named Tests like src/Modules/OnlineTest/Tests/TestReg
 
     const m = await generateArtifactManifest({
       rootDir: tmpDir,
-      consumer: "tavangary-core",
+      consumer: "sample-standalone-plugin",
       version: "1.0.0",
       profile: "Profile S",
     });
@@ -423,7 +423,7 @@ test("14. root development files like tests/ and unit-tests/ are rejected or not
     try {
       await generateArtifactManifest({
         rootDir: tmpDir,
-        consumer: "tavangary-core",
+        consumer: "sample-standalone-plugin",
         version: "1.0.0",
         profile: "Profile S",
       });

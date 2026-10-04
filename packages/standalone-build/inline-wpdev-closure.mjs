@@ -188,40 +188,6 @@ const REQUIRED_WPDEV_ASSET_DIRS = [
   "modules/wizard/assets",
 ];
 
-export const KNOWN_CONSUMERS = Object.freeze([
-  "drm-connector",
-  "tavangary-core",
-  "tavangary-theme-panel",
-  "wpdev-analytics",
-  "wpdev-crm",
-  "wpdev-tickets",
-  "wpdev-woo-persian",
-  "wpdev-woocommerce",
-  "wpdev-bulk-price-manager",
-  "wpdev-gateways-persian",
-  "nikamooz",
-  "nikamooz-certificate",
-  "nikamooz-theme-panel",
-]);
-// Alias for backward compatibility
-export const knownConsumers = KNOWN_CONSUMERS;
-
-export const CONSUMER_NAMESPACES = Object.freeze({
-  "drm-connector": "DRMConnector",
-  "tavangary-core": "TavangaryCore",
-  "tavangary-theme-panel": "TavangaryTheme",
-  "wpdev-analytics": "WpdevAnalytics",
-  "wpdev-bulk-price-manager": "WpdevBulkPriceManager",
-  "wpdev-crm": "WpdevCrm",
-  "wpdev-tickets": "WpdevTickets",
-  "wpdev-woo-persian": "WpdevWooPersian",
-  "wpdev-woocommerce": "WpdevWoocommerce",
-  "wpdev-gateways-persian": "WpdevGatewaysPersian",
-  "nikamooz": "NikamoozCore",
-  "nikamooz-certificate": "NikamoozCertificate",
-  "nikamooz-theme-panel": "NikamoozThemePanel",
-});
-
 /**
  * Dynamically detects whether a consumer plugin depends on or uses the WPDev framework.
  *
@@ -230,8 +196,9 @@ export const CONSUMER_NAMESPACES = Object.freeze({
  * 2. wpdev.json / project.config.json (in staging or source root)
  * 3. composer.json (require / require-dev for wpdev/*)
  * 4. Embedded framework directories (includes/framework, packages/framework)
- * 5. Backward-compatible fallback for KNOWN_CONSUMERS
  *
+ * No static consumer allowlist: unknown consumers fail closed
+ * (isFrameworkConsumer: false) unless tiers 1-4 match.
  * @param {Object} options
  * @returns {{ isFrameworkConsumer: boolean, reason: string|null, metadata: Object }}
  */
@@ -333,12 +300,15 @@ export function detectConsumerFrameworkUsage({
     }
   }
 
-  // 5. Backward-compatible fallback for known consumers
-  if (consumer && KNOWN_CONSUMERS.includes(consumer)) {
-    return { isFrameworkConsumer: true, reason: "known_consumer_fallback", metadata };
-  }
-
   return { isFrameworkConsumer: false, reason: null, metadata };
+}
+
+function slugToPascalCase(slug) {
+  return String(slug || "")
+    .split(/[^A-Za-z0-9]+/)
+    .filter(Boolean)
+    .map((part) => part[0].toUpperCase() + part.slice(1))
+    .join("");
 }
 
 export function resolveConsumerNamespace({
@@ -381,25 +351,16 @@ export function resolveConsumerNamespace({
       if (rootPrefixes.size === 1) {
         return [...rootPrefixes][0];
       }
-      if (consumer && CONSUMER_NAMESPACES[consumer]) {
-        return CONSUMER_NAMESPACES[consumer];
-      }
       throw new Error(
         `Ambiguous PSR-4 configuration for consumer '${consumer}': multiple root namespaces [${keys.join(
           ", "
-        )}]. Explicit consumer namespace is required.`
+        )}]. Explicit consumer namespace is required (fail-closed).`
       );
     }
   }
 
-  if (consumer && CONSUMER_NAMESPACES[consumer]) {
-    return CONSUMER_NAMESPACES[consumer];
-  }
-
   if (consumer) {
-    return consumer
-      .replace(/[-_]([a-z])/g, (_, c) => c.toUpperCase())
-      .replace(/^[a-z]/, (c) => c.toUpperCase());
+    return slugToPascalCase(consumer);
   }
 
   throw new Error("Unable to resolve consumer namespace: consumer slug is required");
@@ -550,17 +511,22 @@ export async function inlineWpdevClosure({
   consumerNamespace = null,
   bootstrapFile = null,
 }) {
-  const candidateProviderDirs = [
-    frameworkProvider,
-    wpdevPluginDirOverride,
-    sourceRoot ? path.join(sourceRoot, "includes/framework") : null,
-    path.join(stagingPlugin, "includes/framework"),
-    sourceRoot ? path.join(sourceRoot, "packages/framework") : null,
-    path.join(stagingPlugin, "packages/framework"),
-    contentRoot ? path.join(contentRoot, "plugins/wpdev") : null,
-    path.join(process.cwd(), "plugins/wpdev"),
-  ].filter(Boolean);
-  const wpdevPluginDir = candidateProviderDirs.find((d) => fs.existsSync(d)) || candidateProviderDirs[0];
+  let wpdevPluginDir;
+  if (frameworkProvider) {
+    wpdevPluginDir = frameworkProvider;
+  } else if (wpdevPluginDirOverride) {
+    wpdevPluginDir = wpdevPluginDirOverride;
+  } else {
+    const candidateProviderDirs = [
+      sourceRoot ? path.join(sourceRoot, "includes/framework") : null,
+      path.join(stagingPlugin, "includes/framework"),
+      sourceRoot ? path.join(sourceRoot, "packages/framework") : null,
+      path.join(stagingPlugin, "packages/framework"),
+      contentRoot ? path.join(contentRoot, "plugins/wpdev") : null,
+      path.join(process.cwd(), "plugins/wpdev"),
+    ].filter(Boolean);
+    wpdevPluginDir = candidateProviderDirs.find((d) => fs.existsSync(d)) || candidateProviderDirs[0];
+  }
   const bootstrapFileName = bootstrapFile || `${consumer}.php`;
   const mainPhpPath = path.join(stagingPlugin, bootstrapFileName);
   const mainPhpExists = fs.existsSync(mainPhpPath);
@@ -1425,6 +1391,46 @@ if (!defined('WPDEV_BOOTSTRAP_FILE')) {
             return function_exists('apply_filters') ? apply_filters('wpdev_request', $value, $key, $default) : $value;
         }
     }
+
+    if (!class_exists('WPDev_Standalone_Container', false)) {
+        class WPDev_Standalone_Container {
+            public $tables = array();
+            public function __get($name) {
+                if ('settings' === $name && class_exists('\\WPDevFramework\\Settings')) {
+                    return \\WPDevFramework\\Settings::get_instance();
+                }
+                if ('scripts' === $name && class_exists('\\WPDevFramework\\Scripts')) {
+                    return \\WPDevFramework\\Scripts::get_instance();
+                }
+                if ('notices' === $name && class_exists('\\WPDevFramework\\Admin_Notices')) {
+                    return \\WPDevFramework\\Admin_Notices::get_instance();
+                }
+                if ('helper' === $name && class_exists('\\WPDevFramework\\Helper')) {
+                    return \\WPDevFramework\\Helper::get_instance();
+                }
+                if ('currents' === $name && class_exists('\\WPDevFramework\\Current')) {
+                    return \\WPDevFramework\\Current::get_instance();
+                }
+                return null;
+            }
+            public function __isset($name) {
+                return in_array($name, array('settings', 'scripts', 'notices', 'helper', 'currents', 'tables'), true);
+            }
+            public function is_loaded() {
+                return true;
+            }
+        }
+    }
+
+    if (!function_exists('wpdev')) {
+        function wpdev() {
+            static $instance = null;
+            if (null === $instance) {
+                $instance = new WPDev_Standalone_Container();
+            }
+            return $instance;
+        }
+    }
 }
 
 // Preload foundational framework traits and core registries
@@ -1464,14 +1470,31 @@ if (!defined('WPDEV_BOOTSTRAP_FILE')) {
 
     if (!function_exists('wpdev_boot_closure_lifecycle')) {
         function wpdev_boot_closure_lifecycle() {
+            if (class_exists('\\WPDevFramework\\Light_Ajax')) {
+                \\WPDevFramework\\Light_Ajax::get_instance();
+            }
+            if (class_exists('\\WPDevFramework\\Ajax')) {
+                \\WPDevFramework\\Ajax::get_instance();
+            }
             if (!did_action('wpdev_load')) {
                 do_action('wpdev_load');
             }
             if (!did_action('wpdev_admin_pages')) {
                 do_action('wpdev_admin_pages');
             }
+            if (!did_action('wpdev_register_forms')) {
+                do_action('wpdev_register_forms');
+            }
         }
         if (function_exists('add_action')) {
+            add_action('plugins_loaded', function() {
+                if (class_exists('\\WPDevFramework\\Light_Ajax')) {
+                    \\WPDevFramework\\Light_Ajax::get_instance();
+                }
+                if (class_exists('\\WPDevFramework\\Ajax')) {
+                    \\WPDevFramework\\Ajax::get_instance();
+                }
+            }, 1);
             add_action('plugins_loaded', 'wpdev_boot_closure_lifecycle', 20);
             add_action('init', function() {
                 wpdev_boot_closure_lifecycle();
@@ -1484,7 +1507,7 @@ if (!defined('WPDEV_BOOTSTRAP_FILE')) {
                     \\WPDevFramework\\Scripts::ensure_defaults_registered();
                 }
             }, 1);
-            if (function_exists('did_action') && did_action('init') > 0) {
+            if (function_exists('did_action') && (did_action('plugins_loaded') > 0 || did_action('init') > 0)) {
                 wpdev_boot_closure_lifecycle();
                 if (function_exists('wp_script_is') && class_exists('\\WPDevFramework\\Scripts')) {
                     \\WPDevFramework\\Scripts::ensure_defaults_registered();
@@ -1551,7 +1574,6 @@ if (!defined('WPDEV_BOOTSTRAP_FILE')) {
     // is_readable() + fall back from .min.js to .js without cross-module collisions.
     if (relDir.startsWith("modules/")) {
       await copyDirRecursive(srcDir, path.join(targetDir, relDir), srcDir);
-      await copyDirRecursive(srcDir, assetsDir, srcDir);
     }
   }
 
@@ -1645,7 +1667,16 @@ if (!defined('WPDEV_BOOTSTRAP_FILE')) {
 }
 
 export async function scopeFrameworkCoreForConsumer(coreDestDir, stagingPlugin, consumer, consumerNs = null) {
-  const effectiveNs = consumerNs || resolveConsumerNamespace({ consumer });
+  let wpdevConfig = null;
+  if (stagingPlugin) {
+    const wpdevJsonPath = path.join(stagingPlugin, "wpdev.json");
+    if (fs.existsSync(wpdevJsonPath)) {
+      try {
+        wpdevConfig = JSON.parse(await readFile(wpdevJsonPath, "utf8"));
+      } catch {}
+    }
+  }
+  const effectiveNs = consumerNs || resolveConsumerNamespace({ consumer, wpdevConfig });
 
   // 1. Process Core/Plugin.php in coreDestDir
   const pluginPhp = path.join(coreDestDir, "Core/Plugin.php");

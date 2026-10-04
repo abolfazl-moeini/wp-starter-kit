@@ -183,7 +183,7 @@ test("F05: computeToolchainFingerprint includes zip, unzip, rsync, and composer"
 test("F06: assembleProfileSCandidate does not overwrite existing dist artifact on failure", async () => {
   const tmpRoot = await mkdtemp(path.join(os.tmpdir(), "f06-dist-protect-"));
   try {
-    const consumer = "tavangary-theme-panel";
+    const consumer = "sample-profile-s-plugin";
     const pluginsDir = path.join(tmpRoot, "plugins");
     const distDir = path.join(tmpRoot, "dist");
     await mkdir(pluginsDir, { recursive: true });

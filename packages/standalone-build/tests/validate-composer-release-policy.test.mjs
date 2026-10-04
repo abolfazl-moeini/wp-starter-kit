@@ -12,8 +12,8 @@ let fixtureRoot;
 
 const inScope = [
   "drm-connector",
-  "tavangary-core",
-  "tavangary-theme-panel",
+  "sample-standalone-plugin",
+  "sample-profile-s-plugin",
   "wpdev-analytics",
   "wpdev-crm",
   "wpdev-tickets",
@@ -90,7 +90,7 @@ test("accepts bounded lock-backed first-party wpdev constraints", async () => {
     await fs.writeFile(path.join(pluginRoot, "composer.json"), JSON.stringify(composer));
     await fs.writeFile(path.join(pluginRoot, "composer.lock"), JSON.stringify({ packages: [{ name: "wpdev/framework", version: "1.0.0" }] }));
   }
-  for (const consumer of ["drm-connector", "tavangary-core", "tavangary-theme-panel"]) {
+  for (const consumer of ["drm-connector", "sample-standalone-plugin", "sample-profile-s-plugin"]) {
     const pluginRoot = path.join(fixtureRoot, "plugins", consumer);
     await fs.writeFile(path.join(pluginRoot, "composer.lock"), JSON.stringify({ packages: [] }));
   }
@@ -125,15 +125,15 @@ test("rejects lifecycle fallback when Composer script is a string", async () => 
 });
 
 test("requires Strauss in every release lifecycle entry", async () => {
-  const pluginRoot = path.join(fixtureRoot, "plugins", "tavangary-theme-panel");
+  const pluginRoot = path.join(fixtureRoot, "plugins", "sample-profile-s-plugin");
   const composer = JSON.parse(await fs.readFile(path.join(pluginRoot, "composer.json"), "utf8"));
   delete composer.scripts["post-update-cmd"];
   composer.scripts["scope:vendor"] = "@php tools/not-strauss.php";
   await fs.writeFile(path.join(pluginRoot, "composer.json"), JSON.stringify(composer));
   const result = spawnSync(process.execPath, [tool, fixtureRoot], { encoding: "utf8" });
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /tavangary-theme-panel: post-update-cmd must invoke vendor\/bin\/strauss/);
-  assert.match(result.stderr, /tavangary-theme-panel: scope:vendor must invoke vendor\/bin\/strauss/);
+  assert.match(result.stderr, /sample-profile-s-plugin: post-update-cmd must invoke vendor\/bin\/strauss/);
+  assert.match(result.stderr, /sample-profile-s-plugin: scope:vendor must invoke vendor\/bin\/strauss/);
 });
 
 test("rejects a bounded first-party constraint that excludes the locked version", async () => {

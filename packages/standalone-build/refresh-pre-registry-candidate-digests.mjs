@@ -12,7 +12,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const MANIFEST_NAME = "profile-a-pre-registry-candidate.json";
-const CONTRACT_SUFFIX = "plugins/tavangary-theme-panel/dev/prefix-migration-coexistence-contract.json";
+const CONTRACT_BASENAME = "prefix-migration-coexistence-contract.json";
+// Optional explicit contract suffix pin:
+//   node refresh-pre-registry-candidate-digests.mjs <contentRoot> <manifest> [--contract-suffix=<suffix>]
+// Defaults to `<consumer>/dev/prefix-migration-coexistence-contract.json`
+// derived from the manifest's own consumer slug — no static consumer name.
+const contractSuffixFlag = process.argv.find((a) => typeof a === "string" && a.startsWith("--contract-suffix="));
+const contractSuffixArg = contractSuffixFlag ? contractSuffixFlag.slice("--contract-suffix=".length) : null;
 
 const failures = [];
 const contentRoot = process.argv[2];
@@ -41,14 +47,20 @@ async function liveDigest(root, relative, label) {
     try {
       stat = await lstat(absolute);
     } catch {
-      if (relative.startsWith("plugins/tavangary-theme-panel/")) {
-        const devPath = path.join(root, relative.replace("plugins/tavangary-theme-panel/", "plugins/tavangary-theme-panel-dev/"));
-        const statDev = await lstat(devPath);
-        if (statDev.isFile() && !statDev.isSymbolicLink()) {
-          absolute = devPath;
-          stat = statDev;
-        }
-      } else if (relative.startsWith("tools/")) {
+      // Source-tree convention: `plugins/<consumer>/...` falls back to
+      // `plugins/<consumer>-dev/...` when only the source tree is present.
+      const devMatch = relative.match(/^plugins\/([a-z0-9][a-z0-9-]*)\//);
+      if (devMatch) {
+        const devPath = path.join(root, relative.replace(`plugins/${devMatch[1]}/`, `plugins/${devMatch[1]}-dev/`));
+        try {
+          const statDev = await lstat(devPath);
+          if (statDev.isFile() && !statDev.isSymbolicLink()) {
+            absolute = devPath;
+            stat = statDev;
+          }
+        } catch {}
+      }
+      if (!stat && relative.startsWith("tools/")) {
         const packageDir = path.dirname(fileURLToPath(import.meta.url));
         const altPath = path.join(packageDir, relative.replace(/^tools\//, ""));
         try {
@@ -141,10 +153,14 @@ if (manifest && !failures.length) {
   }
 
   const contract = manifest.migrationContract;
+  const expectedSuffix = contractSuffixArg
+    || (typeof manifest.consumer === "string" && /^[a-z0-9][a-z0-9-]*$/.test(manifest.consumer)
+      ? `plugins/${manifest.consumer}/dev/${CONTRACT_BASENAME}`
+      : null);
   if (!object(contract) || !safe(contract.path) || !hex(contract.sha256)) {
     failures.push("migrationContract path and sha256 are required");
-  } else if (!contract.path.endsWith(CONTRACT_SUFFIX)) {
-    failures.push(`migrationContract path must be ${CONTRACT_SUFFIX}`);
+  } else if (expectedSuffix && !contract.path.endsWith(expectedSuffix) && path.posix.basename(contract.path) !== CONTRACT_BASENAME) {
+    failures.push(`migrationContract path must be ${expectedSuffix}`);
   } else {
     const digest = await liveDigest(contentRoot, contract.path, "migration contract");
     if (digest && digest.sha256 !== contract.sha256) {

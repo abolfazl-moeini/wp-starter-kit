@@ -1124,7 +1124,16 @@ class Base_List_Table extends \WP_List_Table {
 	 */
 	public function column_default($item, $column_name) {
 
-		$value = call_user_func(array($item, "get_{$column_name}"));
+		$getter = "get_{$column_name}";
+		if (is_object($item) && is_callable(array($item, $getter))) {
+			$value = call_user_func(array($item, $getter));
+		} elseif (is_object($item) && isset($item->$column_name)) {
+			$value = $item->$column_name;
+		} elseif (is_array($item) && isset($item[$column_name])) {
+			$value = $item[$column_name];
+		} else {
+			$value = '';
+		}
 
 		$datetime_columns = array_column($this->get_schema_columns(array(
 			'date_query' => true,
@@ -1784,6 +1793,75 @@ class Base_List_Table extends \WP_List_Table {
 		);
 
 	} // end get_views;
+
+	/**
+	 * Displays the list of available views for this table.
+	 *
+	 * Core WP_List_Table::views() expects an array of HTML link strings, but
+	 * WPDev declarative config returns view descriptor arrays. This method
+	 * converts descriptor arrays to well-formed link elements with .current state,
+	 * data-field and data-value attributes for AJAX handling.
+	 *
+	 * @since 2.12.4
+	 * @return void
+	 */
+	public function views() {
+
+		$views = $this->get_views();
+		if ( isset( $this->screen->id ) ) {
+			$views = apply_filters( "views_{$this->screen->id}", $views );
+		}
+
+		if ( empty( $views ) ) {
+			return;
+		}
+
+		$output_views = array();
+		foreach ( $views as $class => $view ) {
+			if ( is_array( $view ) ) {
+				$label = isset( $view['label'] ) ? (string) $view['label'] : (string) $class;
+				$url   = isset( $view['url'] ) ? (string) $view['url'] : '#';
+				$field = isset( $view['field'] ) ? (string) $view['field'] : 'type';
+				$val   = isset( $view['value'] ) ? (string) $view['value'] : (string) $class;
+				$count = isset( $view['count'] ) && $view['count'] !== null && $view['count'] !== '' ? (int) $view['count'] : null;
+
+				$active_val = function_exists( 'wpdev_request' ) ? (string) wpdev_request( $field, 'all' ) : ( isset( $_REQUEST[ $field ] ) ? sanitize_text_field( (string) $_REQUEST[ $field ] ) : 'all' );
+				$is_current = ( $active_val === $val || ( $val === 'all' && ( empty( $active_val ) || $active_val === 'all' ) ) );
+				$class_attr = $is_current ? ' class="current"' : '';
+
+				$count_html = ( $count !== null && $count >= 0 ) ? sprintf( ' <span class="count">(%s)</span>', number_format_i18n( $count ) ) : '';
+
+				if ( $url === '#' && function_exists( 'add_query_arg' ) ) {
+					$url = add_query_arg( array( $field => $val, 'paged' => 1 ) );
+				}
+
+				$output_views[ $class ] = sprintf(
+					'<a href="%s"%s data-field="%s" data-value="%s">%s%s</a>',
+					esc_url( $url ),
+					$class_attr,
+					esc_attr( $field ),
+					esc_attr( $val ),
+					esc_html( $label ),
+					$count_html
+				);
+			} else {
+				$output_views[ $class ] = (string) $view;
+			}
+		}
+
+		if ( isset( $this->screen ) && method_exists( $this->screen, 'render_screen_reader_content' ) ) {
+			$this->screen->render_screen_reader_content( 'heading_views' );
+		}
+
+		echo "<ul class='subsubsub'>\n";
+		$items = array();
+		foreach ( $output_views as $class => $view_html ) {
+			$items[] = "\t<li class='" . esc_attr( (string) $class ) . "'>" . $view_html . "</li>";
+		}
+		echo implode( " |\n", $items ) . "\n";
+		echo "</ul>";
+
+	} // end views;
 
 	/**
 	 * Declarative row-action slugs from Table_Config (K5-002 actions metadata).

@@ -58,7 +58,7 @@ namespace Caller;
 use function ExampleA\\calculateTotal as calc_a;
 use function ExampleB\\calculateTotal as calc_b;
 
-function tavangary_run() {
+function wpdev_f09_run() {
     $a1 = calc_a();
     $b1 = calc_b();
     $a2 = \\ExampleA\\calculateTotal();
@@ -113,7 +113,7 @@ require_once '${fileB}';
 require_once '${fileC}';
 require_once '${fileD}';
 
-$result = tavangary_run();
+$result = wpdev_f09_run();
 echo "RESULT:" . $result . "\\n";
 `,
     );

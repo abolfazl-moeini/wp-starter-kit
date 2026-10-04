@@ -57,7 +57,7 @@ test("Class Completeness Gate: fails when a source class is missing from staging
       await validateClassCompleteness({
         devDir,
         stagingPlugin,
-        consumer: "tavangary-core"
+        consumer: "sample-standalone-plugin"
       });
     } catch (err) {
       errorCaught = true;

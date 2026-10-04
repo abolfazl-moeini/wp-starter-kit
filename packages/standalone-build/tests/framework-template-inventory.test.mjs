@@ -17,14 +17,14 @@ test("rejects a source-tree symlink instead of silently omitting it from templat
   const root = await mkdtemp(path.join(os.tmpdir(), "wpdev-template-inventory-source-symlink-"));
   try {
     await mkdir(path.join(root, "plugins/wpdev/modules/core/src"), { recursive: true });
-    await mkdir(path.join(root, "plugins/tavangary-theme-panel"), { recursive: true });
-    await mkdir(path.join(root, "plugins/tavangary-core"), { recursive: true });
+    await mkdir(path.join(root, "plugins/sample-profile-s-plugin"), { recursive: true });
+    await mkdir(path.join(root, "plugins/sample-standalone-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/drm-connector"), { recursive: true });
     await mkdir(path.join(root, "themes/tavangary"), { recursive: true });
     await writeFile(
       path.join(root, "framework-closure-inventory.json"),
       JSON.stringify({
-        scope: { consumer: "tavangary-theme-panel" },
+        scope: { consumer: "sample-profile-s-plugin" },
         literalIncludeClosure: { files: ["modules/core/src/view.php"] },
       }),
     );
@@ -32,11 +32,11 @@ test("rejects a source-tree symlink instead of silently omitting it from templat
     await writeFile(path.join(root, "outside.php"), "<?php add_filter('wpdev_view_locate', 'listener');\n");
     await symlink(
       path.join(root, "outside.php"),
-      path.join(root, "plugins/tavangary-theme-panel/linked.php"),
+      path.join(root, "plugins/sample-profile-s-plugin/linked.php"),
     );
 
     await assert.rejects(
-      execFileAsync(process.execPath, [script, root, "tavangary-theme-panel", path.join(root, "template.json")]),
+      execFileAsync(process.execPath, [script, root, "sample-profile-s-plugin", path.join(root, "template.json")]),
       (error) => {
         assert.match(error.stderr, /source-tree symlink is not allowed: linked\.php/);
         return true;
@@ -51,14 +51,14 @@ test("records scoped external template listeners separately from framework filte
   const root = await mkdtemp(path.join(os.tmpdir(), "wpdev-template-inventory-"));
   try {
     await mkdir(path.join(root, "plugins/wpdev/modules/core/src"), { recursive: true });
-    await mkdir(path.join(root, "plugins/tavangary-theme-panel"), { recursive: true });
-    await mkdir(path.join(root, "plugins/tavangary-core"), { recursive: true });
+    await mkdir(path.join(root, "plugins/sample-profile-s-plugin"), { recursive: true });
+    await mkdir(path.join(root, "plugins/sample-standalone-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/drm-connector"), { recursive: true });
     await mkdir(path.join(root, "themes/tavangary"), { recursive: true });
     await writeFile(
       path.join(root, "framework-closure-inventory.json"),
       JSON.stringify({
-        scope: { consumer: "tavangary-theme-panel" },
+        scope: { consumer: "sample-profile-s-plugin" },
         literalIncludeClosure: { files: ["modules/core/src/view.php"] },
       }),
     );
@@ -68,11 +68,11 @@ test("records scoped external template listeners separately from framework filte
       "<?php\n$dir = $args['dir'] ?? '/tmp';\napply_filters( 'wpdev_view_locate', $path, $view );\nwpdev_get_template( $view );\n",
     );
     await writeFile(
-      path.join(root, "plugins/tavangary-theme-panel/listener.php"),
+      path.join(root, "plugins/sample-profile-s-plugin/listener.php"),
       "<?php add_filter( 'wpdev_view_locate', 'listener' );\n",
     );
     const output = path.join(root, "template.json");
-    await execFileAsync(process.execPath, [script, root, "tavangary-theme-panel", output]);
+    await execFileAsync(process.execPath, [script, root, "sample-profile-s-plugin", output]);
     const report = JSON.parse(await readFile(output, "utf8"));
 
     assert.deepEqual(report.policyDecision, {
@@ -85,8 +85,8 @@ test("records scoped external template listeners separately from framework filte
       status: "incomplete",
       scannedRoots: [
         "plugins/drm-connector",
-        "plugins/tavangary-core",
-        "plugins/tavangary-theme-panel",
+        "plugins/sample-profile-s-plugin",
+        "plugins/sample-standalone-plugin",
         "plugins/wpdev",
         "themes/tavangary",
       ],
@@ -107,7 +107,7 @@ test("records scoped external template listeners separately from framework filte
     ]);
     assert.deepEqual(
       report.externalListeners.wpdev_view_locate,
-      ["plugins/tavangary-theme-panel/listener.php"],
+      ["plugins/sample-profile-s-plugin/listener.php"],
     );
     assert.deepEqual(report.moduleViewRegistrations, []);
     assert.ok(report.blockers.externalOverrideListeners.wpdev_view_locate);
@@ -120,14 +120,14 @@ test("recognizes the approved bounded template-root contract without clearing un
   const root = await mkdtemp(path.join(os.tmpdir(), "wpdev-template-inventory-bounded-root-"));
   try {
     await mkdir(path.join(root, "plugins/wpdev/modules/core/src"), { recursive: true });
-    await mkdir(path.join(root, "plugins/tavangary-theme-panel"), { recursive: true });
-    await mkdir(path.join(root, "plugins/tavangary-core"), { recursive: true });
+    await mkdir(path.join(root, "plugins/sample-profile-s-plugin"), { recursive: true });
+    await mkdir(path.join(root, "plugins/sample-standalone-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/drm-connector"), { recursive: true });
     await mkdir(path.join(root, "themes/tavangary"), { recursive: true });
     await writeFile(
       path.join(root, "framework-closure-inventory.json"),
       JSON.stringify({
-        scope: { consumer: "tavangary-theme-panel" },
+        scope: { consumer: "sample-profile-s-plugin" },
         literalIncludeClosure: { files: ["modules/core/src/view.php"] },
       }),
     );
@@ -137,7 +137,7 @@ test("recognizes the approved bounded template-root contract without clearing un
     );
 
     const output = path.join(root, "template.json");
-    await execFileAsync(process.execPath, [script, root, "tavangary-theme-panel", output]);
+    await execFileAsync(process.execPath, [script, root, "sample-profile-s-plugin", output]);
     const report = JSON.parse(await readFile(output, "utf8"));
 
     assert.deepEqual(report.templateRootOverrides, [
@@ -167,14 +167,14 @@ test("keeps symlinked views outside the framework root unresolved", async () => 
   try {
     await mkdir(path.join(root, "plugins/wpdev/modules/core/src"), { recursive: true });
     await mkdir(path.join(root, "plugins/wpdev/views"), { recursive: true });
-    await mkdir(path.join(root, "plugins/tavangary-theme-panel"), { recursive: true });
-    await mkdir(path.join(root, "plugins/tavangary-core"), { recursive: true });
+    await mkdir(path.join(root, "plugins/sample-profile-s-plugin"), { recursive: true });
+    await mkdir(path.join(root, "plugins/sample-standalone-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/drm-connector"), { recursive: true });
     await mkdir(path.join(root, "themes/tavangary"), { recursive: true });
     await writeFile(
       path.join(root, "framework-closure-inventory.json"),
       JSON.stringify({
-        scope: { consumer: "tavangary-theme-panel" },
+        scope: { consumer: "sample-profile-s-plugin" },
         literalIncludeClosure: { files: ["modules/core/src/view.php"] },
       }),
     );
@@ -186,7 +186,7 @@ test("keeps symlinked views outside the framework root unresolved", async () => 
     await symlink("../../../outside.php", path.join(root, "plugins/wpdev/views/unsafe.php"));
 
     const output = path.join(root, "template.json");
-    await execFileAsync(process.execPath, [script, root, "tavangary-theme-panel", output]);
+    await execFileAsync(process.execPath, [script, root, "sample-profile-s-plugin", output]);
     const report = JSON.parse(await readFile(output, "utf8"));
 
     assert.deepEqual(report.resolvedLiteralFiles, {});
@@ -203,14 +203,14 @@ test("keeps traversal template identifiers unresolved even when they land inside
   try {
     await mkdir(path.join(root, "plugins/wpdev/modules/core/src"), { recursive: true });
     await mkdir(path.join(root, "plugins/wpdev/views"), { recursive: true });
-    await mkdir(path.join(root, "plugins/tavangary-theme-panel"), { recursive: true });
-    await mkdir(path.join(root, "plugins/tavangary-core"), { recursive: true });
+    await mkdir(path.join(root, "plugins/sample-profile-s-plugin"), { recursive: true });
+    await mkdir(path.join(root, "plugins/sample-standalone-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/drm-connector"), { recursive: true });
     await mkdir(path.join(root, "themes/tavangary"), { recursive: true });
     await writeFile(
       path.join(root, "framework-closure-inventory.json"),
       JSON.stringify({
-        scope: { consumer: "tavangary-theme-panel" },
+        scope: { consumer: "sample-profile-s-plugin" },
         literalIncludeClosure: { files: ["modules/core/src/view.php"] },
       }),
     );
@@ -221,7 +221,7 @@ test("keeps traversal template identifiers unresolved even when they land inside
     await writeFile(path.join(root, "plugins/wpdev/outside.php"), "<?php echo 'outside';\n");
 
     const output = path.join(root, "template.json");
-    await execFileAsync(process.execPath, [script, root, "tavangary-theme-panel", output]);
+    await execFileAsync(process.execPath, [script, root, "sample-profile-s-plugin", output]);
     const report = JSON.parse(await readFile(output, "utf8"));
 
     assert.deepEqual(
@@ -240,8 +240,8 @@ test("keeps traversal template identifiers unresolved even when they land inside
 async function writeListenerFixture(root, extra = () => {}) {
   await mkdir(path.join(root, "plugins/wpdev/modules/core/src"), { recursive: true });
   for (const directory of [
-    "plugins/tavangary-theme-panel",
-    "plugins/tavangary-core",
+    "plugins/sample-profile-s-plugin",
+    "plugins/sample-standalone-plugin",
     "plugins/drm-connector",
     "themes/tavangary",
   ]) {
@@ -250,7 +250,7 @@ async function writeListenerFixture(root, extra = () => {}) {
   await writeFile(
     path.join(root, "framework-closure-inventory.json"),
     JSON.stringify({
-      scope: { consumer: "tavangary-theme-panel" },
+      scope: { consumer: "sample-profile-s-plugin" },
       literalIncludeClosure: { files: ["modules/core/src/view.php"] },
     }),
   );
@@ -283,7 +283,7 @@ test("scans every installed plugin, theme and mu-plugin for frozen public listen
     });
 
     const output = path.join(root, "template.json");
-    await execFileAsync(process.execPath, [script, root, "tavangary-theme-panel", output]);
+    await execFileAsync(process.execPath, [script, root, "sample-profile-s-plugin", output]);
     const report = JSON.parse(await readFile(output, "utf8"));
 
     const scanned = report.externalListenerCoverage.scannedRoots;
@@ -347,7 +347,7 @@ test("keeps coverage incomplete when a discovered root cannot be scanned", async
 
     const output = path.join(root, "template.json");
     // Must not crash the whole scan the way a first-party symlink does.
-    await execFileAsync(process.execPath, [script, root, "tavangary-theme-panel", output]);
+    await execFileAsync(process.execPath, [script, root, "sample-profile-s-plugin", output]);
     const report = JSON.parse(await readFile(output, "utf8"));
 
     assert.equal(

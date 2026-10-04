@@ -17,7 +17,7 @@ function contract(overrides = {}) {
   return {
     schema: 1,
     purpose: "prefix-migration-coexistence-contract",
-    consumer: "tavangary-theme-panel",
+    consumer: "sample-profile-s-plugin",
     status: "review-required",
     buildInput: false,
     legacy: {
@@ -111,7 +111,7 @@ test("rejects an inventory reference with missing prefix fields", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "wpdev-prefix-contract-reference-"));
   try {
     const inventory = {
-      artifacts: [{ consumer: "tavangary-theme-panel", slug: "tavangary-theme-panel" }],
+      artifacts: [{ consumer: "sample-profile-s-plugin", slug: "sample-profile-s-plugin" }],
     };
     const contractPath = path.join(root, "contract.json");
     const inventoryPath = path.join(root, "inventory.json");

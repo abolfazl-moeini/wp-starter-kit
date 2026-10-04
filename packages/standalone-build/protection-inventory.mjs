@@ -8,15 +8,15 @@ const CONTENT_ROOT = process.argv[2]
   : path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 const OUTPUT = path.resolve(process.argv[3] || path.join(CONTENT_ROOT, "protection-inventory.json"));
 
-const CONSUMERS = [
-  "tavangary-theme-panel",
-  "wpdev-analytics",
-  "wpdev-crm",
-  "wpdev-tickets",
-  "tavangary-core",
-  "drm-connector",
-  "wpdev-woo-persian",
-];
+const ACTIVE_THEME_ARG = process.argv.find((a) => typeof a === "string" && a.startsWith("--active-theme="));
+const ACTIVE_THEME = (
+  (ACTIVE_THEME_ARG ? ACTIVE_THEME_ARG.slice("--active-theme=".length) : "") ||
+  process.env.WPDEV_ACTIVE_THEME ||
+  ""
+).trim() || null;
+if (ACTIVE_THEME !== null && !/^[A-Za-z0-9][A-Za-z0-9-_]*$/.test(ACTIVE_THEME)) {
+  throw new Error(`Invalid active theme name: ${ACTIVE_THEME}`);
+}
 const EXCLUDED_PARTS = new Set([
   ".git", ".cursor", ".github", ".husky", ".wp-env", "node_modules",
   "vendor", "vendor-prefixed", "dist", "coverage", "artifacts", "tests", "plugin-core-test",
@@ -140,6 +140,20 @@ async function inspect(name, root, kind = "plugin") {
 
 const pluginsRoot = path.join(CONTENT_ROOT, "plugins");
 const themesRoot = path.join(CONTENT_ROOT, "themes");
+// Auto-discovered scope (no static consumer allowlist): every plugin
+// directory except the shared framework source, which is inspected
+// separately as assembler input.
+const CONSUMERS = await fs.readdir(pluginsRoot, { withFileTypes: true })
+  .then((entries) =>
+    entries
+      .filter((entry) => entry.isDirectory() && !entry.isSymbolicLink() && entry.name !== "wpdev")
+      .map((entry) => entry.name)
+      .sort(),
+  )
+  .catch((error) => {
+    if (error.code === "ENOENT") return [];
+    throw error;
+  });
 const plugins = [];
 for (const name of CONSUMERS) {
   const root = path.join(pluginsRoot, name);
@@ -152,14 +166,17 @@ for (const name of CONSUMERS) {
   plugins.push(await inspect(name, root));
 }
 const framework = await inspect("wpdev", path.join(pluginsRoot, "wpdev"), "assembler-input");
-const theme = await inspect("tavangary", path.join(themesRoot, "tavangary"), "compatibility-oracle");
+const theme = ACTIVE_THEME
+  ? await inspect(ACTIVE_THEME, path.join(themesRoot, ACTIVE_THEME), "compatibility-oracle")
+  : null;
 const report = {
   schema: 1,
   generatedBy: "tools/protection-inventory.mjs",
   scope: {
     consumers: CONSUMERS,
     standaloneWpdev: "assembler-input-only",
-    theme: "themes/tavangary",
+    theme: ACTIVE_THEME ? `themes/${ACTIVE_THEME}` : null,
+    activeTheme: ACTIVE_THEME,
     excluded: "vendor, vendor-prefixed, node_modules, dist, coverage",
   },
   plugins,

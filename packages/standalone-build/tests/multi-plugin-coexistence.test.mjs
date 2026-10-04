@@ -17,6 +17,7 @@ test("Multi-Plugin Coexistence: scopeFrameworkCoreForConsumer isolates Core to c
   const stagingPlugin = path.join(tmpDir, "drm-connector");
   const coreDestDir = path.join(stagingPlugin, "src/FrameworkClosure/Core");
   await mkdir(path.join(coreDestDir, "Core"), { recursive: true });
+  await writeFile(path.join(stagingPlugin, "wpdev.json"), JSON.stringify({ globalName: "DRMConnector" }), "utf8");
 
   const dummyPluginPhp = `<?php
 declare(strict_types=1);

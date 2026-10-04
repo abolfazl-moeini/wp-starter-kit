@@ -10,7 +10,6 @@ import {
   assertFrameworkClosureMinifiedAssets,
   detectConsumerFrameworkUsage,
   inlineWpdevClosure,
-  KNOWN_CONSUMERS,
   minifyAssetsInTree,
   resolveConsumerNamespace,
 } from "../inline-wpdev-closure.mjs";
@@ -303,13 +302,17 @@ test("detectConsumerFrameworkUsage: detects consumer dynamically from embedded f
   }
 });
 
-test("detectConsumerFrameworkUsage: falls back to KNOWN_CONSUMERS for backward compatibility", () => {
-  for (const c of KNOWN_CONSUMERS) {
-    const result = detectConsumerFrameworkUsage({ consumer: c });
-    assert.equal(result.isFrameworkConsumer, true);
-    assert.equal(result.reason, "known_consumer_fallback");
-  }
+test("detectConsumerFrameworkUsage: generic fixture detection without hardcoded allowlist", () => {
+  // Generic fixture with an explicit framework signal is detected (collision-safe,
+  // no static consumer list).
+  const viaHeader = detectConsumerFrameworkUsage({
+    consumer: "sample-standalone-plugin",
+    mainPhpHeader: "/*\n * Plugin Name: Sample\n * Requires Plugins: wpdev\n */",
+  });
+  assert.equal(viaHeader.isFrameworkConsumer, true);
+  assert.equal(viaHeader.reason, "header_requires_wpdev");
 
+  // Unknown consumer without any framework evidence fails closed.
   const independent = detectConsumerFrameworkUsage({ consumer: "my-standalone-plugin" });
   assert.equal(independent.isFrameworkConsumer, false);
 });

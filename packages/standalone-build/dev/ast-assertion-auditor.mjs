@@ -28,15 +28,79 @@ try {
 const defaultTestsDir = path.join(toolsDir, "tests");
 const outputJsonPath = path.join(toolsDir, "dev", "ast-assertion-audit-report.json");
 
-// Dynamic resolver for Acorn
+// Dynamic resolver for Acorn.
+//
+// Resolution order (no hardcoded consumers):
+//   1. Explicit --acorn-path=<file> CLI args (repeatable, comma-separated ok).
+//   2. Generic workspace fallbacks under this package (toolsDir).
+//   3. Consumer-derived candidates from the active build.config.json
+//      (activeTheme + registry target source dirs) or --config=<path>.
+// Fails closed when Acorn cannot be located.
+function parseAcornCliArgs(argv = process.argv.slice(2)) {
+  const extraPaths = [];
+  let configPath = process.env.WPDEV_BUILD_CONFIG || null;
+  for (const arg of argv) {
+    if (arg === "--acorn-path") continue;
+    if (arg.startsWith("--acorn-path=")) {
+      extraPaths.push(...arg.slice("--acorn-path=".length).split(",").map((s) => s.trim()).filter(Boolean));
+    } else if (arg.startsWith("--config=")) {
+      configPath = arg.slice("--config=".length).trim() || configPath;
+    }
+  }
+  return { extraPaths, configPath };
+}
+
+function findBuildConfig(startDir, explicitPath = null) {
+  if (explicitPath) {
+    const abs = path.isAbsolute(explicitPath) ? explicitPath : path.resolve(process.cwd(), explicitPath);
+    return fs.existsSync(abs) ? abs : null;
+  }
+  let dir = path.resolve(startDir);
+  for (let depth = 0; depth < 4; depth++) {
+    const candidate = path.join(dir, "build.config.json");
+    if (fs.existsSync(candidate)) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+
+function readConsumerAcornHints(configPath) {
+  if (!configPath) return { themePaths: [], pluginPaths: [] };
+  let raw;
+  try {
+    raw = JSON.parse(fs.readFileSync(configPath, "utf8"));
+  } catch {
+    return { themePaths: [], pluginPaths: [] };
+  }
+  const themePaths = [];
+  const pluginPaths = [];
+  const activeTheme = typeof raw?.activeTheme === "string" && raw.activeTheme ? raw.activeTheme : null;
+  if (activeTheme && !activeTheme.includes("..") && !activeTheme.includes("/") && !activeTheme.includes("\\")) {
+    themePaths.push(path.join(contentRoot, `themes/${activeTheme}/node_modules/acorn/dist/acorn.mjs`));
+  }
+  const targets = raw?.targets && typeof raw.targets === "object" ? raw.targets : {};
+  for (const [slug, target] of Object.entries(targets)) {
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(slug)) continue;
+    const sourceDir =
+      (target && typeof target.sourceDir === "string" && target.sourceDir) || `${slug}-dev`;
+    if (sourceDir.includes("..") || sourceDir.includes("/") || sourceDir.includes("\\") || sourceDir.includes("\0")) continue;
+    pluginPaths.push(path.join(contentRoot, `plugins/${sourceDir}/node_modules/acorn/dist/acorn.mjs`));
+  }
+  return { themePaths, pluginPaths };
+}
+
 async function loadAcorn() {
+  const { extraPaths, configPath } = parseAcornCliArgs();
+  const configFile = findBuildConfig(contentRoot, configPath);
+  const { themePaths, pluginPaths } = readConsumerAcornHints(configFile);
   const candidates = [
+    ...extraPaths,
     path.join(toolsDir, "node_modules/acorn/dist/acorn.mjs"),
     path.join(toolsDir, "../../node_modules/acorn/dist/acorn.mjs"),
-    path.join(contentRoot, "themes/tavangary/node_modules/acorn/dist/acorn.mjs"),
-    path.join(contentRoot, "plugins/wpdev-crm-dev/node_modules/acorn/dist/acorn.mjs"),
-    path.join(contentRoot, "plugins/tavangary-core-dev/node_modules/acorn/dist/acorn.mjs"),
-    path.join(contentRoot, "plugins/tavangary-theme-panel-dev/node_modules/acorn/dist/acorn.mjs"),
+    ...themePaths,
+    ...pluginPaths,
   ];
 
   for (const p of candidates) {

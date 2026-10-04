@@ -38,7 +38,15 @@ function wpdev_resolve_public_function_path( $relative ) {
 		return wpdev_examples_file( substr( $relative, strlen( '/../wpdev-examples/' ) ) );
 	}
 
-	return wpdev_path( ltrim( $relative, '/' ) );
+	$path = wpdev_path( ltrim( $relative, '/' ) );
+	if ( ! is_readable( $path ) ) {
+		$fallback = wpdev_path( 'functions/' . basename( $relative ) );
+		if ( is_readable( $fallback ) ) {
+			return $fallback;
+		}
+	}
+
+	return $path;
 
 } // end wpdev_resolve_public_function_path;
 

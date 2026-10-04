@@ -376,7 +376,7 @@ final class Module extends AbstractModule
     {
         // Do not use Assets::read_project_config() — Plugin::config() is a
         // process-wide cache and may belong to a sibling kit plugin
-        // (e.g. nikamooz-deps.js instead of {{slug}}-deps.js).
+        // (e.g. sibling-plugin-deps.js instead of {{slug}}-deps.js).
         $local = $this->abs('wpdev.json');
         if (is_readable($local)) {
             $raw = json_decode((string) file_get_contents($local), true);

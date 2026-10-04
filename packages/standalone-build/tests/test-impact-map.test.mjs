@@ -42,7 +42,7 @@ test("Test Impact Map: single plugin change selects only target artifact tests",
   });
   assert.ok(result.selected.includes("wpdev-crm-artifact.test.mjs"));
   assert.ok(result.selected.includes("verify-profile-s-artifact.test.mjs"));
-  assert.ok(!result.selected.includes("tavangary-core-artifact.test.mjs"));
+  assert.ok(!result.selected.includes("sample-standalone-plugin-artifact.test.mjs"));
   assert.ok(!result.selected.includes("wpdev-tickets-artifact.test.mjs"));
 });
 
@@ -70,7 +70,7 @@ test("Test Impact Map: contract and artifact modes select their respective suite
     mode: "artifact",
   });
   assert.ok(artifactRes.selected.includes("wpdev-crm-artifact.test.mjs"));
-  assert.ok(artifactRes.selected.includes("tavangary-core-artifact.test.mjs"));
+  assert.ok(artifactRes.selected.includes("sample-standalone-plugin-artifact.test.mjs"));
 });
 
 test("Test Impact Map: rejects invalid mode with fail-closed exception", () => {
@@ -94,12 +94,12 @@ test("Test Impact Map: direct test file modification triggers itself", () => {
 
 test("Test Impact Map: theme key is impact-only and unknown files fall back to full suite", () => {
   const themeRes = resolveImpactedTests({
-    changedKeys: ["themes/tavangary"],
+    changedKeys: ["themes/sample-theme"],
     allTestFiles,
     mode: "affected",
   });
-  assert.ok(themeRes.selected.includes("tavangary-theme-panel-artifact.test.mjs"));
-  assert.ok(themeRes.reason.includes("themes/tavangary"));
+  assert.ok(themeRes.selected.includes("sample-profile-s-plugin-artifact.test.mjs"));
+  assert.ok(themeRes.reason.includes("themes/sample-theme"));
 
   const unknownRes = resolveImpactedTests({
     changedKeys: ["some-new-tool.mjs"],
@@ -113,7 +113,7 @@ test("Test Impact Map: theme key is impact-only and unknown files fall back to f
 test("Test Impact Map: mapped missing test file is fail-closed, not silently dropped", () => {
   assert.throws(() => {
     resolveImpactedTests({
-      changedKeys: ["tavangary-core"],
+      changedKeys: ["sample-standalone-plugin"],
       allTestFiles: ["wpdev-crm-artifact.test.mjs"],
       mode: "affected",
     });

@@ -110,7 +110,7 @@ test("F13: Failed web healthCheck triggers rollback and preserves backup without
   await fs.promises.mkdir(pluginsDir, { recursive: true });
   await fs.promises.mkdir(distDir, { recursive: true });
 
-  const pluginSlug = "tavangary-core";
+  const pluginSlug = "sample-standalone-plugin";
   const targetDir = path.join(pluginsDir, pluginSlug);
   await fs.promises.mkdir(targetDir, { recursive: true });
 

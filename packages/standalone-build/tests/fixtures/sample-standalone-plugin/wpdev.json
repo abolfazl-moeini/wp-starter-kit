@@ -1,0 +1,5 @@
+{
+  "slug": "sample-standalone-plugin",
+  "globalName": "SampleStandalone",
+  "textDomain": "sample-standalone-plugin"
+}

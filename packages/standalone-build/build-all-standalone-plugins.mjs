@@ -17,7 +17,6 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
 import {
-  ALLOWED_CONSUMERS,
   isValidConsumerName,
   CACHE_SCHEMA_VERSION,
   DEPLOY_JOURNAL_SCHEMA_VERSION,
@@ -58,7 +57,7 @@ import {
 } from "./test-impact-map.mjs";
 
 import { BuildDag } from "./build-dag-runner.mjs";
-import { TARGET_REGISTRY, listStandaloneConsumers } from "./target-registry.mjs";
+import { TARGET_REGISTRY, listStandaloneConsumers, loadTargetRegistry } from "./target-registry.mjs";
 import { resolveContentRoot } from "./resolve-content-root.mjs";
 import { parseClosedProfileFlags } from "./profile-s-fail-closed.mjs";
 import { assembleProfileSCandidate } from "./assemble-profile-s-candidate.mjs";
@@ -576,7 +575,8 @@ export async function atomicDeployPlugin(profileSZip, pluginName, options = {}) 
     }
 
     // Pre-swap PHP syntax validation on candidate bootstrap
-    const targetMeta = TARGET_REGISTRY[pluginName];
+    // Phase 2: registry injected via options (config-driven); legacy frozen TARGET_REGISTRY is the fallback.
+    const targetMeta = options.registry?.[pluginName] || TARGET_REGISTRY[pluginName];
     const bootstrapRelPath = options.bootstrapFile || targetMeta?.bootstrapFile || `${pluginName}.php`;
     const candidateBootstrap = path.join(extractedPluginDir, bootstrapRelPath);
     if (!fs.existsSync(candidateBootstrap)) {
@@ -828,8 +828,217 @@ export async function atomicDeployPlugin(profileSZip, pluginName, options = {}) 
 
 export const TARGET_PLUGINS = listStandaloneConsumers();
 
+// ---------------------------------------------------------------------------
+// Phase 2 (decoupling plan §6): config-driven registry + external build config.
+// Coexistence rule: everything below is additive. TARGET_REGISTRY and
+// TARGET_PLUGINS above keep working unchanged for legacy callers/tests.
+// New CLI invocations may pass --config=/path/to/build.config.json or set
+// WPDEV_BUILD_CONFIG; the pipeline then loads the registry once at startup
+// via loadTargetRegistry() and derives all target lists from it.
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolve the build config path from CLI args (`--config=...` / `--config ...`)
+ * or the `WPDEV_BUILD_CONFIG` environment variable. Returns null when neither
+ * is provided (caller falls back to auto-discovery / legacy registry).
+ * @param {string[]} [argv=process.argv] - raw argv
+ * @param {NodeJS.ProcessEnv} [env=process.env] - env map (injectable for tests)
+ * @returns {string|null} config path or null
+ */
+export function resolveBuildConfigPath(argv = process.argv, env = process.env, contentRoot = null) {
+  const eqArg = (argv || []).find((a) => typeof a === "string" && a.startsWith("--config="));
+  if (eqArg) {
+    const value = eqArg.slice("--config=".length).trim();
+    return value || null;
+  }
+  const idx = (argv || []).findIndex((a) => a === "--config");
+  if (idx !== -1 && typeof argv[idx + 1] === "string" && !argv[idx + 1].startsWith("--")) {
+    return argv[idx + 1];
+  }
+  const fromEnv = env?.WPDEV_BUILD_CONFIG;
+  if (typeof fromEnv === "string" && fromEnv.trim()) return fromEnv.trim();
+
+  // Search standard project root locations for build.config.json
+  const candidates = [];
+  if (contentRoot) {
+    candidates.push(
+      path.resolve(contentRoot, "build.config.json"),
+      path.resolve(contentRoot, "..", "build.config.json"),
+      path.resolve(contentRoot, "..", "..", "build.config.json")
+    );
+  }
+  candidates.push(path.resolve(process.cwd(), "build.config.json"));
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return null;
+}
+
+/**
+ * Load the pipeline registry bundle once at startup.
+ * Returns `{ registry, impactTargets, config }`. When `configPath` is null,
+ * auto-discovers `*-dev` targets from the content root. When discovery yields
+ * no targets (e.g. unit tests without a wp-content tree), falls back to the
+ * legacy frozen TARGET_REGISTRY so old callers keep working (fail-open to
+ * legacy, fail-closed on unknown consumers downstream).
+ * @param {{ configPath?: string|null, contentRoot?: string|null }} [options={}]
+ * @returns {Promise<{ registry: object, impactTargets: object, config: object }>}
+ */
+export async function loadPipelineRegistry({ configPath = null, contentRoot = null } = {}) {
+  if (configPath) {
+    return loadTargetRegistry(configPath, contentRoot);
+  }
+  if (contentRoot) {
+    try {
+      const discovered = await loadTargetRegistry(null, contentRoot);
+      if (discovered && discovered.registry && Object.keys(discovered.registry).length > 0) {
+        return discovered;
+      }
+    } catch {
+      // Fall through to legacy registry (e.g. content root without plugins dir in tests).
+    }
+  }
+  return {
+    registry: TARGET_REGISTRY,
+    impactTargets: {},
+    config: Object.freeze({
+      contentRoot,
+      activeTheme: null,
+      functionPrefix: null,
+      pipelineTestModeEnvVar: "WPDEV_PIPELINE_TEST_MODE",
+      dockerContainerName: null,
+    }),
+  };
+}
+
+/**
+ * Derive the target plugin list from a loaded registry.
+ * Legacy equivalent of `TARGET_PLUGINS` for config-driven runs.
+ * @param {object} [registry=TARGET_REGISTRY] - validated target registry
+ * @returns {string[]} consumer slugs
+ */
+export function resolveTargetPlugins(registry = TARGET_REGISTRY) {
+  const keys = Object.keys(registry || {});
+  return keys.length > 0 ? keys : listStandaloneConsumers();
+}
+
+// ---------------------------------------------------------------------------
+// Phase 6 (decoupling plan §6): atomic dist → deploy-artifacts sync.
+// Write-to-temp-then-rename so an interrupted copy can never leave a
+// truncated live ZIP behind (POSIX rename is atomic on the same filesystem).
+// ---------------------------------------------------------------------------
+
+/**
+ * Atomically sync one ZIP artifact into a destination directory.
+ * Copies to a unique temp file inside `destDir`, then renames over the final
+ * name. Skips when the source and destination already have identical bytes.
+ * @param {string} sourceZip - absolute path to the source .zip
+ * @param {string} destDir - absolute path to the destination directory
+ * @returns {Promise<{ status: "synced"|"skipped"|"no-source", dest?: string }>}
+ */
+export async function atomicSync(sourceZip, destDir) {
+  if (!fs.existsSync(sourceZip)) {
+    return { status: "no-source" };
+  }
+  const stat = await fs.promises.lstat(sourceZip);
+  if (stat.isSymbolicLink() || !stat.isFile()) {
+    throw new Error(`atomicSync source must be a regular file: ${sourceZip}`);
+  }
+  await fs.promises.mkdir(destDir, { recursive: true });
+  const basename = path.basename(sourceZip);
+  if (basename.includes("..") || basename.includes("/") || basename.includes("\\")) {
+    throw new Error(`atomicSync refuses unsafe artifact name: ${basename}`);
+  }
+  const finalPath = path.join(destDir, basename);
+  const sourceBytes = await fs.promises.readFile(sourceZip);
+  if (fs.existsSync(finalPath)) {
+    const destStat = await fs.promises.lstat(finalPath);
+    if (!destStat.isSymbolicLink() && destStat.isFile() && destStat.size === sourceBytes.length) {
+      const destBytes = await fs.promises.readFile(finalPath);
+      if (crypto.timingSafeEqual(sourceBytes, destBytes)) {
+        return { status: "skipped", dest: finalPath };
+      }
+    }
+  }
+  const tmpName = `.tmp-${crypto.randomBytes(6).toString("hex")}-${basename}`;
+  const tmpPath = path.join(destDir, tmpName);
+  await fs.promises.writeFile(tmpPath, sourceBytes, { flag: "wx", mode: 0o644 });
+  await fs.promises.rename(tmpPath, finalPath);
+  await fsyncDir(destDir);
+  return { status: "synced", dest: finalPath };
+}
+
+/**
+ * Resolve the deploy-artifacts directory for a pipeline run.
+ * Default convention: `<contentRoot>/../../deploy-artifacts` (project root
+ * sibling of `wordpress/`). Overridable via `options.deployArtifactsDir` or
+ * the `WPDEV_DEPLOY_ARTIFACTS_DIR` environment variable. Returns null when the
+ * directory does not exist (sync is skipped — never created implicitly).
+ * @param {string} contentRoot - resolved wp-content root
+ * @param {object} [options={}] - `{ deployArtifactsDir?: string }`
+ * @returns {string|null} existing deploy-artifacts dir or null
+ */
+export function resolveDeployArtifactsDir(contentRoot, options = {}) {
+  const override = options.deployArtifactsDir || process.env.WPDEV_DEPLOY_ARTIFACTS_DIR;
+  if (override) {
+    const resolved = path.resolve(override);
+    return fs.existsSync(resolved) ? resolved : null;
+  }
+  const conventional = path.resolve(contentRoot, "..", "..", "deploy-artifacts");
+  if (fs.existsSync(conventional)) {
+    return conventional;
+  }
+  // Mono-root layout where contentRoot sits directly under the project root.
+  const adjacent = path.resolve(contentRoot, "..", "deploy-artifacts");
+  if (fs.existsSync(adjacent)) {
+    return adjacent;
+  }
+  return null;
+}
+
+/**
+ * Sync canonical `dist/*.zip` artifacts to the deploy-artifacts directory
+ * (when it exists) and remove stale `*.tmp-*` leftovers from both locations.
+ * Spaghetti-zip pruning stays profile-aware inside the commit node — this
+ * helper never deletes a live `*-standalone-spaghetti.zip` for a target whose
+ * planned profile is spaghetti.
+ * @param {string} distDir - resolved dist directory
+ * @param {object} [options={}] - `{ contentRoot?: string, deployArtifactsDir?: string, logger?: Console }`
+ * @returns {Promise<{ synced: string[], skipped: string[], destDir: string|null }>}
+ */
+export async function syncDistToDeployArtifacts(distDir, options = {}) {
+  const logger = options.logger || console;
+  const contentRoot = options.contentRoot || path.resolve(distDir, "..");
+  const destDir = resolveDeployArtifactsDir(contentRoot, options);
+  const synced = [];
+  const skipped = [];
+  const zipFiles = fs.existsSync(distDir)
+    ? fs.readdirSync(distDir).filter((f) => f.endsWith(".zip") && !f.startsWith(".") && !f.includes(".tmp-"))
+    : [];
+  if (destDir) {
+    for (const zip of zipFiles) {
+      const res = await atomicSync(path.join(distDir, zip), destDir);
+      if (res.status === "synced") synced.push(zip);
+      else skipped.push(zip);
+    }
+    logger.log(`📦 Deploy-artifacts sync: ${synced.length} synced, ${skipped.length} up-to-date → ${destDir}`);
+  } else {
+    logger.log("📦 Deploy-artifacts sync: skipped (no deploy-artifacts directory found)");
+  }
+  for (const dir of [distDir, destDir].filter(Boolean)) {
+    if (!fs.existsSync(dir)) continue;
+    for (const entry of fs.readdirSync(dir)) {
+      if (entry.startsWith(".tmp-") || entry.includes(".tmp-")) {
+        await fs.promises.rm(path.join(dir, entry), { force: true }).catch(() => {});
+      }
+    }
+  }
+  return { synced, skipped, destDir };
+}
+
 export const ALLOWED_SUITES = new Set(["fast", "contract", "artifact", "full"]);
 export const ALLOWED_TEST_MODES = new Set([
+  "none",
   "affected",
   "fast",
   "contract",
@@ -898,6 +1107,11 @@ export function parsePipelineArgs(argv = process.argv) {
   const targetsArg = argv.find((a) => a.startsWith("--targets=") || a.startsWith("--target="));
   const targetPlugins = targetsArg ? targetsArg.split("=")[1].split(",").map((s) => s.trim()).filter(Boolean) : null;
 
+  // Phase 2: external build config (`--config=/path/to/build.config.json` or
+  // WPDEV_BUILD_CONFIG env). Parsed here so `main()` and orchestration can
+  // load the registry once at startup; null means auto-discovery / legacy.
+  const configPath = resolveBuildConfigPath(argv);
+
   const hasExplicitProfile = argv.some((a) => a === "--profile" || a.startsWith("--profile="));
   const explicitProfile = hasExplicitProfile ? profile : null;
   const hasExplicitObfuscate = argv.includes("--obfuscate");
@@ -930,6 +1144,7 @@ export function parsePipelineArgs(argv = process.argv) {
     cacheFile,
     receiptsDir,
     targetPlugins,
+    configPath,
   };
 }
 
@@ -958,7 +1173,31 @@ export async function runPipelineOrchestration(options = {}) {
   const customPluginsDir = canonicalizePath(options.pluginsDir || path.join(customContentRoot, "plugins"));
   const customReceiptsDir = canonicalizePath(options.receiptsDir || path.join(customDistDir, ".deploy-receipts"));
   const customCacheFile = options.cacheFile || path.join(customDistDir, ".build-cache.json");
-  const targetPlugins = options.targetPlugins || (options.parsed?.targetPlugins) || TARGET_PLUGINS;
+  // Phase 2: load the target registry once at startup. Explicit `--config` /
+  // WPDEV_BUILD_CONFIG wins; options.registry / options.pipelineRegistry allow
+  // programmatic injection (tests); otherwise auto-discover with legacy
+  // TARGET_REGISTRY fallback (see loadPipelineRegistry).
+  const explicitConfigPath =
+    options.configPath || options.parsed?.configPath || resolveBuildConfigPath(process.argv);
+  const injectedBundle = options.pipelineRegistry || null;
+  const pipelineBundle = injectedBundle || (await loadPipelineRegistry({
+    configPath: explicitConfigPath,
+    contentRoot: customContentRoot,
+  }));
+  const effectiveRegistry = options.registry || pipelineBundle.registry || TARGET_REGISTRY;
+  const effectiveConfig = {
+    activeTheme: null,
+    functionPrefix: null,
+    pipelineTestModeEnvVar: "WPDEV_PIPELINE_TEST_MODE",
+    dockerContainerName: null,
+    ...(pipelineBundle.config || {}),
+    ...(options.pipelineConfig || {}),
+  };
+  // Canonical impact-only theme key, driven by config instead of hardcode.
+  const impactThemeKey = effectiveConfig.activeTheme ? `themes/${effectiveConfig.activeTheme}` : null;
+  // Backward-compatible test-mode env var name (legacy default preserved).
+  const pipelineTestModeEnvVar = effectiveConfig.pipelineTestModeEnvVar || "WPDEV_PIPELINE_TEST_MODE";
+  const targetPlugins = options.targetPlugins || (options.parsed?.targetPlugins) || resolveTargetPlugins(effectiveRegistry);
   const activeIsChanged = options.overrideChanged !== undefined ? options.overrideChanged : Boolean(options.isChanged);
   const activeTestMode = options.overrideTestMode !== undefined ? options.overrideTestMode : options.testMode;
   const activeIsForce = options.overrideForce !== undefined ? options.overrideForce : Boolean(options.isForce);
@@ -977,7 +1216,7 @@ export async function runPipelineOrchestration(options = {}) {
    * obfuscation so every consumer gets a deterministic capability set.
    */
   function makePluginBuildPlan(plugin, parsedFlags = {}) {
-    const targetProfile = resolveReleaseProfile(plugin, TARGET_REGISTRY[plugin], routedProfileOverride);
+    const targetProfile = resolveReleaseProfile(plugin, effectiveRegistry[plugin], routedProfileOverride);
     const targetIsObfuscate = targetProfile === "s";
     const capabilityOverrides = {};
 
@@ -1042,6 +1281,7 @@ export async function runPipelineOrchestration(options = {}) {
         pluginsDir: customPluginsDir,
         distDir: customDistDir,
         logger: console,
+        registry: effectiveRegistry,
       });
     } catch {}
   };
@@ -1053,13 +1293,15 @@ export async function runPipelineOrchestration(options = {}) {
       pluginsDir: customPluginsDir,
       distDir: customDistDir,
       logger: console,
+      registry: effectiveRegistry,
     });
 
   // 2. Load Build Cache with Context-Aware Schema Validation
   let cache = {};
   if (!activeIsForce) {
     const loaded = await loadBuildCacheRecord(customCacheFile, {
-      expectedConsumers: ALLOWED_CONSUMERS,
+      // Phase 2: validate against the loaded registry, not the static list.
+      expectedConsumers: new Set(Object.keys(effectiveRegistry)),
       expectedDistDir: customDistDir,
     });
     if (loaded.status === "valid") {
@@ -1112,6 +1354,7 @@ export async function runPipelineOrchestration(options = {}) {
     journalFile,
     distDir: customDistDir,
     initialJournal: initialTxContext,
+    registry: effectiveRegistry,
   });
 
   if (activeShouldDeploy) {
@@ -1130,6 +1373,7 @@ export async function runPipelineOrchestration(options = {}) {
           pluginsDir: customPluginsDir,
           distDir: customDistDir,
           logger: console,
+          registry: effectiveRegistry,
         });
       } catch (fwdErr) {
         console.error("❌ Forward cleanup failed after commit:", fwdErr);
@@ -1157,7 +1401,7 @@ export async function runPipelineOrchestration(options = {}) {
     const snap = txManager.getSnapshot();
     let derived;
     try {
-      derived = deriveJournalPaths({ journal: snap, pluginsDir: customPluginsDir, distDir: customDistDir });
+      derived = deriveJournalPaths({ journal: snap, pluginsDir: customPluginsDir, distDir: customDistDir, registry: effectiveRegistry });
     } catch (dErr) {
       rollbackError = dErr;
     }
@@ -1342,6 +1586,10 @@ export async function runPipelineOrchestration(options = {}) {
         jobs: jobsLimit,
         contentRoot: customContentRoot,
         signal: taskOptions?.signal,
+        // Phase 2: theme fingerprint follows config.activeTheme (engine falls
+        // back to the pre-config legacy default when null).
+        activeTheme: effectiveConfig.activeTheme,
+        registry: effectiveRegistry,
       });
       const tElapsed = ((Date.now() - tStart) / 1000).toFixed(2);
       console.log(`✓ Fingerprints computed in ${tElapsed}s (tools: ${fingerprints.tools.slice(0, 8)}..., wpdev: ${fingerprints.wpdev.slice(0, 8)}...)\n`);
@@ -1370,7 +1618,7 @@ export async function runPipelineOrchestration(options = {}) {
         },
         mode: activeIsForce ? "force" : (activeIsChanged ? "changed" : "incremental"),
         pluginBuildPlans,
-        profile: parsedFlags.profile || (activeIsObfuscate ? "s" : "spaghetti"),
+        profile: parsedFlags.profile || (activeIsObfuscate ? "s" : "standalone"),
         options: options.buildOptions || {},
       });
     },
@@ -1521,7 +1769,7 @@ export async function runPipelineOrchestration(options = {}) {
   dag.addNode("test", {
     dependencies: buildNodeIds,
     task: async ({ fingerprint, plan }, taskOptions) => {
-      if (!activeTestMode) return { selected: 0, skipped: 0, selectedFiles: [], durationMs: 0 };
+      if (!activeTestMode || activeTestMode === "none") return { selected: 0, skipped: 0, selectedFiles: [], durationMs: 0 };
 
       if (activeTestMode === "docker-smoke") {
         return { selected: 0, skipped: 0, selectedFiles: [], durationMs: 0, reason: "Docker smoke deferred to post-deploy node" };
@@ -1531,7 +1779,7 @@ export async function runPipelineOrchestration(options = {}) {
       const changedKeys = [];
       if (fingerprint.toolchain && fingerprint.toolchain !== cache.toolchain) changedKeys.push("_tools");
       if (fingerprint.wpdev !== cache._wpdev) changedKeys.push("_wpdev");
-      if (fingerprint.theme !== cache._theme) changedKeys.push("themes/tavangary");
+      if (impactThemeKey && fingerprint.theme !== cache._theme) changedKeys.push(impactThemeKey);
 
       let toolsNeedFallback = false;
       if (!cache._toolFiles || typeof cache._toolFiles !== "object") {
@@ -1620,6 +1868,7 @@ export async function runPipelineOrchestration(options = {}) {
       const testResult = results.test || { selected: 0, skipped: 0, selectedFiles: [], durationMs: 0 };
       const testsActuallyRan = Boolean(
         activeTestMode &&
+        activeTestMode !== "none" &&
         activeTestMode !== "docker-smoke" &&
         testResult.selected > 0
       );
@@ -1829,7 +2078,7 @@ export async function runPipelineOrchestration(options = {}) {
             currentRunId,
           });
 
-          if (!coverage.covered) {
+          if (!coverage.covered && activeTestMode !== "none") {
             throw new Error(`Cannot deploy '${plugin}': incomplete test coverage (${coverage.reason})`);
           }
 
@@ -1838,13 +2087,14 @@ export async function runPipelineOrchestration(options = {}) {
           const currentZipSha = crypto.createHash("sha256").update(currentZipBytes).digest("hex");
           const targetDir = path.join(customPluginsDir, plugin);
 
-          const targetMeta = TARGET_REGISTRY[plugin];
+          const targetMeta = effectiveRegistry[plugin];
           const bootstrapRelFile = targetMeta?.bootstrapFile || `${plugin}.php`;
 
           let skipDeploy = false;
           const loadedReceipt = await loadDeployReceiptRecord(receiptFile, plugin, {
             transactionId: null,
             expectedPluginsDir: customPluginsDir,
+            registry: effectiveRegistry,
           });
           if (loadedReceipt.status === "valid") {
             const rcpt = loadedReceipt.receipt;
@@ -1983,7 +2233,16 @@ export async function runPipelineOrchestration(options = {}) {
           signal: taskOptions?.signal,
           env: {
             ...process.env,
-            TAVANGARY_PIPELINE_TEST_MODE: activeTestMode,
+            // Phase 2: env var name comes from config.pipelineTestModeEnvVar.
+            // Both the configured name and the legacy names are set so old
+            // and new Docker harnesses keep working during migration.
+            [pipelineTestModeEnvVar]: activeTestMode,
+            ...(pipelineTestModeEnvVar !== "TAVANGARY_PIPELINE_TEST_MODE"
+              ? { TAVANGARY_PIPELINE_TEST_MODE: activeTestMode }
+              : {}),
+            ...(pipelineTestModeEnvVar !== "WPDEV_PIPELINE_TEST_MODE"
+              ? { WPDEV_PIPELINE_TEST_MODE: activeTestMode }
+              : {}),
             ALLOW_DOCKER_SKIP: activeTestMode === "release" ? "0" : (process.env.ALLOW_DOCKER_SKIP || "0"),
           },
         });
@@ -2115,6 +2374,7 @@ export async function runPipelineOrchestration(options = {}) {
           transactionId: currentTransactionId,
           expectedPluginsDir: customPluginsDir,
           artifactId: receipt.artifactId,
+          registry: effectiveRegistry,
         });
         if (loaded.status !== "valid") {
           throw new Error(`Staged receipt validation failed for ${p}: ${loaded.reason}`);
@@ -2232,10 +2492,18 @@ export async function runPipelineOrchestration(options = {}) {
         const standardZip = path.join(customDistDir, `${p}.zip`);
         let candidateZip = null;
         try {
-          const plannedProfile = resolveReleaseProfile(p, TARGET_REGISTRY[p], routedProfileOverride);
-          candidateZip = plannedProfile === "s"
-            ? (fs.existsSync(profileSZip) ? profileSZip : null)
-            : (fs.existsSync(spaghettiZip) ? spaghettiZip : null);
+          const plannedProfile = resolveReleaseProfile(p, effectiveRegistry[p], routedProfileOverride);
+          if (plannedProfile === "s") {
+            candidateZip = fs.existsSync(profileSZip) ? profileSZip : null;
+          } else if (plannedProfile === "spaghetti" || plannedProfile === "standalone-spaghetti") {
+            candidateZip = fs.existsSync(spaghettiZip) ? spaghettiZip : null;
+          } else {
+            // standalone / clean: standardZip is ALREADY the canonical target. Never alias from spaghetti!
+            candidateZip = null;
+            if (fs.existsSync(spaghettiZip)) {
+              await fs.promises.rm(spaghettiZip, { force: true });
+            }
+          }
         } catch {
           candidateZip = null;
         }
@@ -2256,7 +2524,7 @@ export async function runPipelineOrchestration(options = {}) {
       // 5. Remove backups only after durable disk write of cache and receipts
       if (activeShouldDeploy) {
         const snap = txManager.getSnapshot();
-        const derived = deriveJournalPaths({ journal: snap, pluginsDir: customPluginsDir, distDir: customDistDir });
+        const derived = deriveJournalPaths({ journal: snap, pluginsDir: customPluginsDir, distDir: customDistDir, registry: effectiveRegistry });
         for (const target of derived.targets) {
           if (target.backupDir && fs.existsSync(target.backupDir)) {
             await rm(target.backupDir, { recursive: true, force: true });
@@ -2295,6 +2563,14 @@ export async function runPipelineOrchestration(options = {}) {
       if (fs.existsSync(journalFile)) {
         await rm(journalFile, { force: true });
       }
+
+      // Phase 6: mirror canonical dist/*.zip artifacts to deploy-artifacts
+      // (when the directory exists) via atomic write-to-temp-then-rename, and
+      // sweep stale *.tmp-* leftovers from both locations.
+      await syncDistToDeployArtifacts(customDistDir, {
+        contentRoot: customContentRoot,
+        deployArtifactsDir: options.deployArtifactsDir,
+      });
 
       console.log(`\n✓ Transaction committed successfully (${currentTransactionId}). All receipts, cache, and targets durable.`);
       return stagedCache;
@@ -2353,12 +2629,16 @@ export async function runDirectDeployTransaction({
   });
 
   try {
+    // Phase 2: known-consumer set comes from the injected registry when
+    // present, otherwise the legacy frozen TARGET_REGISTRY.
+    const directKnownConsumers = new Set(Object.keys(options.registry || TARGET_REGISTRY));
     const recResult = await recoverInterruptedDeployment({
       journalFile,
       pluginsDir,
       distDir,
       logger: options.logger || console,
-      allowExternalConsumers: options.allowExternalConsumers ?? (!ALLOWED_CONSUMERS.has(pluginSlug)),
+      allowExternalConsumers: options.allowExternalConsumers ?? (!directKnownConsumers.has(pluginSlug)),
+      registry: options.registry || null,
     });
     if (recResult.recovered && typeof options.onRecovered === "function") {
       await options.onRecovered(recResult);
@@ -2414,6 +2694,9 @@ export async function runDirectDeployTransaction({
       journalFile,
       distDir,
       initialJournal: initialTxContext,
+      // Phase 2: registry-aware journal validation when the caller provides one.
+      registry: options.registry || null,
+      allowExternalConsumers: options.allowExternalConsumers ?? true,
     });
     await txManager.update(async () => {});
 
@@ -2554,11 +2837,21 @@ async function main(options = {}) {
   const activeIsForce = options.overrideForce !== undefined ? options.overrideForce : parsed.isForce;
   const activeShouldDeploy = options.overrideDeploy !== undefined ? options.overrideDeploy : parsed.shouldDeploy;
 
-  const targetPlugins = parsed.targetPlugins || TARGET_PLUGINS;
+  // Phase 2: resolve the target list from the config-driven registry (loaded
+  // once here and reused by the orchestration below). An explicit
+  // --target(s) filter always wins; otherwise the registry decides.
+  const mainContentRoot = options.contentRoot || parsed.contentRoot || (parsed.pluginsDir ? path.resolve(parsed.pluginsDir, "..") : defaultContentRoot());
+  const mainConfigPath = options.configPath || parsed.configPath || resolveBuildConfigPath(process.argv, process.env, mainContentRoot);
+  const mainBundle = options.pipelineRegistry || (await loadPipelineRegistry({ configPath: mainConfigPath, contentRoot: mainContentRoot }));
+  const mainRegistry = options.registry || mainBundle.registry || TARGET_REGISTRY;
+  const targetPlugins = parsed.targetPlugins || options.targetPlugins || resolveTargetPlugins(mainRegistry);
 
   console.log("================================================================================");
   console.log("🚀 STARTING CENTRAL STANDALONE PLUGINS BUILD PIPELINE");
   console.log("================================================================================");
+  if (mainConfigPath) {
+    console.log(`Build config: ${mainConfigPath}`);
+  }
   console.log(`Target plugins: ${targetPlugins.join(", ")}`);
   console.log(`Auto-deploy to local plugins dir: ${activeShouldDeploy ? "YES" : "NO"}`);
   console.log(`Build mode: ${activeIsForce ? "FORCE" : (activeIsChanged ? "CHANGED-ONLY" : "INCREMENTAL")}`);
@@ -2568,9 +2861,14 @@ async function main(options = {}) {
 
   const startTime = Date.now();
   const dagResults = await runPipelineOrchestration({
+    contentRoot: mainContentRoot,
     parsed,
     jobsLimit,
     targetPlugins,
+    configPath: mainConfigPath,
+    registry: mainRegistry,
+    pipelineRegistry: mainBundle,
+    deployArtifactsDir: options.deployArtifactsDir,
     overrideChanged: activeIsChanged,
     overrideTestMode: activeTestMode,
     overrideForce: activeIsForce,
@@ -2657,11 +2955,19 @@ async function startWatchMode() {
   };
 
   const watchContentRoot = defaultContentRoot();
+  // Phase 2: watch list follows the loaded registry + config.activeTheme
+  // instead of any hardcoded plugin list / theme default.
+  const watchBundle = await loadPipelineRegistry({
+    configPath: resolveBuildConfigPath(process.argv),
+    contentRoot: watchContentRoot,
+  }).catch(() => null);
+  const watchPlugins = resolveTargetPlugins(watchBundle?.registry);
+  const watchTheme = watchBundle?.config?.activeTheme || null;
   const watchDirs = [
     path.join(watchContentRoot, "plugins", "wpdev"),
-    ...TARGET_PLUGINS.map((p) => path.join(watchContentRoot, "plugins", `${p}-dev`)),
+    ...watchPlugins.map((p) => path.join(watchContentRoot, "plugins", `${p}-dev`)),
     scriptDir,
-    path.join(watchContentRoot, "themes", "tavangary"),
+    ...(watchTheme ? [path.join(watchContentRoot, "themes", watchTheme)] : []),
   ].filter((d) => fs.existsSync(d));
 
   const watchers = watchDirs.map((d) => fs.watch(d, { recursive: true }, onFsChange));

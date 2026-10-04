@@ -129,7 +129,12 @@ export function parseAssembleCli(argv = process.argv) {
   const contentRoot = positional[0]
     ? path.resolve(positional[0])
     : resolveContentRoot({ scriptDir });
-  const consumer = positional[1] || "tavangary-theme-panel";
+  const consumer = positional[1];
+  if (!consumer) {
+    throw new Error(
+      "consumer argument is required. Usage: node assemble-profile-s-candidate.mjs <contentRoot> <consumer> [outputDir]",
+    );
+  }
   const outputDir = path.resolve(positional[2] || path.join(contentRoot, "dist"));
   const pluginsRaw = positional[3];
   const pluginsDirArg = pluginsRaw && pluginsRaw !== "null" && pluginsRaw !== "undefined"

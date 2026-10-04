@@ -11,9 +11,8 @@ import {
   parseArgs as parsePrepareReleaseArgs,
   resolveCanonicalAssembler,
   prepareRelease,
-  CANONICAL_CONSUMERS,
-  registerCanonicalConsumer,
 } from "../../create-wp-project/src/release/prepare-release.js";
+import { loadTargetRegistry, listStandaloneConsumers } from "../target-registry.mjs";
 import { readZipEntries } from "../canonical-artifact-manifest.mjs";
 import { parsePipelineArgs } from "../build-all-standalone-plugins.mjs";
 import {
@@ -223,19 +222,39 @@ echo "AUTOLOAD_OK";
   }
 });
 
-test("F12: Consumer release adapter routes registered consumers to canonical assembler", async () => {
-  const all7 = [
-    "tavangary-core",
-    "tavangary-theme-panel",
-    "wpdev-crm",
-    "wpdev-tickets",
-    "wpdev-analytics",
-    "wpdev-woo-persian",
-    "drm-connector",
-  ];
+test("F12: Consumer release adapter aligns with loadTargetRegistry (generic fixture)", async () => {
+  // 1. Legacy registry is intentionally empty/frozen (Gate #2 purge);
+  // the export name stays for backward compat only.
+  const legacyConsumers = listStandaloneConsumers();
+  assert.ok(Array.isArray(legacyConsumers), "legacy registry must still expose a consumer list");
+  assert.deepEqual(legacyConsumers, [], "legacy registry must be empty (targets come from build.config.json)");
 
-  for (const c of all7) {
-    assert.ok(CANONICAL_CONSUMERS.has(c), `${c} must be recognized as canonical consumer`);
+  // 2. Config-driven registry resolves a generic fixture without hardcoded slugs.
+  const tmpRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), "f12-registry-align-"));
+  try {
+    const configPath = path.join(tmpRoot, "build.config.json");
+    await fs.promises.writeFile(
+      configPath,
+      JSON.stringify({
+        targets: {
+          "sample-standalone-plugin": {
+            sourceDir: "sample-standalone-plugin-dev",
+            deployDir: "sample-standalone-plugin",
+            bootstrapFile: "sample-standalone-plugin.php",
+          },
+        },
+      }),
+      "utf8"
+    );
+    const { registry } = await loadTargetRegistry(configPath, null);
+    assert.ok(
+      registry["sample-standalone-plugin"],
+      "config-driven registry must resolve sample-standalone-plugin fixture"
+    );
+    assert.equal(registry["sample-standalone-plugin"].sourceDirectoryName, "sample-standalone-plugin-dev");
+    assert.equal(registry["sample-standalone-plugin"].deployDirectoryName, "sample-standalone-plugin");
+  } finally {
+    await fs.promises.rm(tmpRoot, { recursive: true, force: true }).catch(() => {});
   }
 });
 
@@ -352,13 +371,14 @@ test("F12: prepareRelease routes custom consumers to canonical assembler by defa
     assert.equal(res.zipPath, null, "skipZip must yield null zipPath");
     assert.ok(fs.existsSync(res.distRoot), "distRoot directory must exist");
 
-    // 2. Via registered consumer registry
-    const regSlug = "registered-custom-plugin";
+    // 2. Via generic framework-consumer signal (wpdev.json features.phpFramework),
+    // resolved through loadTargetRegistry conventions — no hardcoded registry.
+    const regSlug = "sample-standalone-plugin";
     const regDir = path.join(tmpRoot, "plugins", regSlug);
     await fs.promises.mkdir(regDir, { recursive: true });
     await fs.promises.writeFile(
       path.join(regDir, "wpdev.json"),
-      JSON.stringify({ slug: regSlug, phpMinVersion: "7.4" }),
+      JSON.stringify({ slug: regSlug, phpMinVersion: "7.4", features: { phpFramework: "wpdev" } }),
       "utf8"
     );
     await fs.promises.writeFile(
@@ -366,14 +386,13 @@ test("F12: prepareRelease routes custom consumers to canonical assembler by defa
       `<?php\n/**\n * Plugin Name: Registered Custom\n */\nif (!defined('ABSPATH')) exit;\n`,
       "utf8"
     );
-    registerCanonicalConsumer(regSlug);
     const regRes = await prepareRelease({
       root: regDir,
       skipTests: true,
       skipZip: true,
       inlineFramework: false,
     });
-    assert.ok(regRes.manifest, "Registered consumer must delegate to canonical assembler");
+    assert.ok(regRes.manifest, "Framework consumer fixture must delegate to canonical assembler");
 
     // 3. Via wpdev.json canonicalAssembler flag
     const confSlug = "configured-custom-plugin";

@@ -34,16 +34,20 @@ export function getDefaultZipPath(consumer) {
       cwd: process.cwd(),
       env: process.env,
     });
-  } catch {
-    const localDist = path.resolve(process.cwd(), `dist/${consumer}-profile-s.zip`);
-    const fallback = "/Users/moeini/Dev/tavangary.new/wordpress/wp-content";
-    if (!fs.existsSync(localDist) && fs.existsSync(fallback)) {
-      root = fallback;
-    } else {
-      root = process.cwd();
-    }
+  } catch (resolveError) {
+    throw new Error(
+      `Cannot resolve content root for '${consumer}': set WPDEV_CONTENT_ROOT. (${resolveError?.message || resolveError})`,
+    );
   }
-  return path.resolve(root, `dist/${consumer}-profile-s.zip`);
+  const profileSPath = path.resolve(root, `dist/${consumer}-profile-s.zip`);
+  const standardPath = path.resolve(root, `dist/${consumer}.zip`);
+  if (fs.existsSync(profileSPath)) {
+    return profileSPath;
+  }
+  if (fs.existsSync(standardPath)) {
+    return standardPath;
+  }
+  return profileSPath;
 }
 
 export async function prepareArtifactFixture({

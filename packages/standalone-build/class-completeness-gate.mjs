@@ -16,13 +16,22 @@ const execFileAsync = promisify(execFile);
  *    first-party declaration, mapped obfuscated symbol, or approved WordPress/PHP core symbol.
  * 4. Specifically checks TestRegistry and other first-party modules.
  */
-export async function validateClassCompleteness({ devDir, stagingPlugin, consumer, classMap = null }) {
+export async function validateClassCompleteness({ devDir, stagingPlugin, consumer, classMap = null, registry = null, requiredFqcns = null }) {
+  // Phase 2 (decoupling plan §6): no per-project special cases. Mandatory
+  // classes are declared by the consumer itself via
+  // `registry[consumer].requiredFqcns` (see build.config.json `targets.*.requiredFqcns`)
+  // or passed explicitly. Absent both, only the generic file-parity check runs.
+  const effectiveRequiredFqcns = Array.isArray(requiredFqcns)
+    ? requiredFqcns
+    : (registry?.[consumer]?.requiredFqcns || []);
   const phpScript = `
   $srcDir = $argv[1];
   $stagingDir = $argv[2];
   $consumer = $argv[3];
   $classMapJson = isset($argv[4]) ? $argv[4] : '{}';
   $classMap = json_decode($classMapJson, true) ?: [];
+  $requiredFqcnsJson = isset($argv[5]) ? $argv[5] : '[]';
+  $requiredFqcns = json_decode($requiredFqcnsJson, true) ?: [];
 
   function scan_php_declarations_and_refs($dir) {
       $declarations = [];
@@ -170,16 +179,20 @@ export async function validateClassCompleteness({ devDir, stagingPlugin, consume
       exit(1);
   }
 
-  // 2. Specific assertion for TestRegistry if tavangary-core
-  if ($consumer === 'tavangary-core') {
-      $testRegistryFqcn = 'TavangaryCore\\Modules\\OnlineTest\\Tests\\TestRegistry';
-      if (!isset($srcDecls[$testRegistryFqcn])) {
-          fwrite(STDERR, "GATE_FAILURE: TestRegistry not found in source declarations!\n");
+  // 2. Registry-declared mandatory classes (generic: no consumer-specific
+  // special cases). Each FQCN must be declared in
+  // both source and staging trees.
+  foreach ($requiredFqcns as $requiredFqcn) {
+      if (!is_string($requiredFqcn) || $requiredFqcn === '') {
+          fwrite(STDERR, "GATE_FAILURE: Invalid requiredFqcn entry for consumer '$consumer'!\n");
           exit(1);
       }
-      $testRegRel = 'src/Modules/OnlineTest/Tests/TestRegistry.php';
-      if (!file_exists($stagingDir . '/' . $testRegRel)) {
-          fwrite(STDERR, "GATE_FAILURE: TestRegistry.php missing from staging!\n");
+      if (!isset($srcDecls[$requiredFqcn])) {
+          fwrite(STDERR, "GATE_FAILURE: Required class $requiredFqcn not found in source declarations (consumer: $consumer)!\n");
+          exit(1);
+      }
+      if (!isset($stgDecls[$requiredFqcn])) {
+          fwrite(STDERR, "GATE_FAILURE: Required class $requiredFqcn missing from staging (consumer: $consumer)!\n");
           exit(1);
       }
   }
@@ -194,11 +207,12 @@ export async function validateClassCompleteness({ devDir, stagingPlugin, consume
   `;
 
   const classMapJson = JSON.stringify(classMap || {});
+  const requiredFqcnsJson = JSON.stringify(effectiveRequiredFqcns);
   let stdout = "";
   let stderr = "";
 
   try {
-    const res = await execFileAsync("php", ["-r", phpScript, "--", devDir, stagingPlugin, consumer, classMapJson]);
+    const res = await execFileAsync("php", ["-r", phpScript, "--", devDir, stagingPlugin, consumer, classMapJson, requiredFqcnsJson]);
     stdout = res.stdout || "";
     stderr = res.stderr || "";
   } catch (execErr) {

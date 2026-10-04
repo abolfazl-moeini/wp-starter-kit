@@ -19,8 +19,8 @@ function proposal(overrides = {}) {
     purpose: "private-runtime-artifact-proposals",
     artifacts: [
       {
-        proposedArtifactId: "tavangary-theme-panel-profile-a-001",
-        slug: "tavangary-theme-panel",
+        proposedArtifactId: "sample-profile-s-plugin-profile-a-001",
+        slug: "sample-profile-s-plugin",
         recordStatus: "review-only",
         buildInput: false,
         sourceDigest: null,

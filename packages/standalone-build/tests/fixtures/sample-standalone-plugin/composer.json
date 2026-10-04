@@ -1,0 +1,10 @@
+{
+  "name": "sample/standalone-plugin",
+  "description": "Generic hermetic fixture plugin for standalone-build tests.",
+  "type": "wordpress-plugin",
+  "autoload": {
+    "psr-4": {
+      "SampleStandalone\\": "src/"
+    }
+  }
+}

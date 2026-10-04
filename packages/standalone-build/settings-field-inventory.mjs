@@ -8,15 +8,11 @@ const contentRoot = path.resolve(process.argv[2] || path.join(scriptDirectory, "
 const output = path.resolve(
   process.argv[3] || path.join(contentRoot, "settings-field-inventory.json"),
 );
-const consumers = [
-  "tavangary-theme-panel",
-  "wpdev-analytics",
-  "wpdev-crm",
-  "wpdev-tickets",
-  "tavangary-core",
-  "drm-connector",
-  "wpdev-woo-persian",
-];
+const pluginsDir = path.join(contentRoot, "plugins");
+const consumers = (await fs.readdir(pluginsDir, { withFileTypes: true }))
+  .filter((entry) => (entry.isDirectory() || entry.isSymbolicLink()) && entry.name.endsWith("-dev"))
+  .map((entry) => entry.name)
+  .sort();
 
 async function filesUnder(root) {
   const files = [];

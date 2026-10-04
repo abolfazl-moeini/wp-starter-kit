@@ -695,7 +695,15 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 	 */
 	public function get_sections() {
 
-		return wpdev()->settings->get_sections();
+		if ( function_exists( 'wpdev' ) && ( $wpdev = wpdev() ) && isset( $wpdev->settings ) && is_object( $wpdev->settings ) ) {
+			return $wpdev->settings->get_sections();
+		}
+
+		if ( class_exists( '\\WPDevFramework\\Settings' ) ) {
+			return \WPDevFramework\Settings::get_instance()->get_sections();
+		}
+
+		return array();
 
 	} // end get_sections;
 
@@ -731,7 +739,13 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 		};
 		add_filter( 'wpdev_settings_current_page_capability', $page_cap_filter );
 
-		$saved = wpdev()->settings->save_settings($_POST);
+		if ( function_exists( 'wpdev' ) && ( $wpdev = wpdev() ) && isset( $wpdev->settings ) && is_object( $wpdev->settings ) ) {
+			$saved = $wpdev->settings->save_settings($_POST);
+		} elseif ( class_exists( '\\WPDevFramework\\Settings' ) ) {
+			$saved = \WPDevFramework\Settings::get_instance()->save_settings($_POST);
+		} else {
+			$saved = false;
+		}
 
 		remove_filter( 'wpdev_settings_current_page_capability', $page_cap_filter );
 
@@ -830,6 +844,20 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 		} );
 
 		uasort($fields, 'wpdev_sort_by_order');
+
+		$saved_all = Settings::get_instance()->get_all();
+		foreach ( $fields as $field_slug => &$field_atts ) {
+			if ( ! isset( $field_atts['value'] ) ) {
+				if ( is_array( $saved_all ) && array_key_exists( $field_slug, $saved_all ) && null !== $saved_all[ $field_slug ] ) {
+					$field_atts['value'] = $saved_all[ $field_slug ];
+				} elseif ( isset( $field_atts['default'] ) ) {
+					$field_atts['value'] = $field_atts['default'];
+				} elseif ( isset( $field_atts['default_value'] ) ) {
+					$field_atts['value'] = $field_atts['default_value'];
+				}
+			}
+		}
+		unset( $field_atts );
 
 		/*
 		 * Get Field to save

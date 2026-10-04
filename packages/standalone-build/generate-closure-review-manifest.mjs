@@ -5,15 +5,28 @@ import path from "node:path";
 
 const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
 const contentRoot = path.resolve(process.argv[2] || path.join(scriptDirectory, ".."));
-const consumer = process.argv[3] || "tavangary-theme-panel";
+const consumer = process.argv[3];
+if (!consumer || !/^[a-z0-9][a-z0-9-]*$/.test(consumer)) {
+  console.error("Error: a safe consumer slug argument is required.");
+  console.error("Usage: node generate-closure-review-manifest.mjs <contentRoot> <consumer> [output] [templateInventory]");
+  process.exit(1);
+}
 const output = path.resolve(
   process.argv[4] || path.join(contentRoot, "plugins", consumer, "dev", "closure-review-manifest.json"),
 );
+// Template inventory path (relative to contentRoot or absolute). Defaults to
+// the requesting consumer's own review file — no static consumer name.
+const templateInventoryArg = process.argv[5] && !String(process.argv[5]).startsWith("--")
+  ? String(process.argv[5])
+  : path.join("plugins", consumer, "dev", "template-dependency-review.json");
+const templateInventoryPath = path.isAbsolute(templateInventoryArg)
+  ? path.resolve(templateInventoryArg)
+  : path.join(contentRoot, templateInventoryArg);
 const inventory = JSON.parse(
   await fs.readFile(path.join(contentRoot, "framework-closure-inventory.json"), "utf8"),
 );
 const templateInventory = JSON.parse(
-  await fs.readFile(path.join(contentRoot, "plugins", consumer, "dev", "template-dependency-review.json"), "utf8")
+  await fs.readFile(templateInventoryPath, "utf8")
     .catch(() => "{}"),
 );
 
@@ -69,7 +82,7 @@ const manifest = {
   buildInput: false,
   consumer,
   sourceInventory: "framework-closure-inventory.json",
-  templateInventory: "plugins/tavangary-theme-panel/dev/template-dependency-review.json",
+  templateInventory: path.relative(contentRoot, templateInventoryPath).replaceAll(path.sep, "/"),
   candidatePaths: paths.sort((left, right) => left.path.localeCompare(right.path)),
   blockers: {
     unresolvedIncludes: closure.unresolved,

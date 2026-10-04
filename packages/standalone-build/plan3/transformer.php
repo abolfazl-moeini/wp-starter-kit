@@ -209,6 +209,34 @@ class Plan3_Transformer {
 		'CSV_ACTION',
 	);
 
+	/**
+	 * Project-reserved global function prefixes (e.g. `myplugin_`).
+	 *
+	 * Populated exclusively from the `--function-prefix=` CLI argument (sourced
+	 * from `build.config.json` → `functionPrefix`). No project prefix is
+	 * hardcoded here: the starter kit ships with an empty list.
+	 *
+	 * @var string[]
+	 */
+	protected static $extra_function_prefixes = array();
+
+	/**
+	 * Set project-reserved global function prefixes (fail-closed validation).
+	 *
+	 * @param string[] $prefixes Each must match ^[A-Za-z_][A-Za-z0-9_]*_$.
+	 */
+	public static function set_extra_function_prefixes( $prefixes ) {
+		$clean = array();
+		foreach ( (array) $prefixes as $prefix ) {
+			if ( ! is_string( $prefix ) || ! preg_match( '/^[A-Za-z_][A-Za-z0-9_]*_$/', $prefix ) ) {
+				fwrite( STDERR, "Error: Invalid --function-prefix value: {$prefix} (must match ^[A-Za-z_][A-Za-z0-9_]*_$, e.g. \"myplugin_\")\n" );
+				exit( 1 );
+			}
+			$clean[] = $prefix;
+		}
+		self::$extra_function_prefixes = array_values( array_unique( $clean ) );
+	}
+
 	protected static $magic_methods = array(
 		'__construct',
 		'__destruct',
@@ -1558,9 +1586,16 @@ class Plan3_Transformer {
 						if ( $next < $count && is_array( $tokens[ $next ] ) && $tokens[ $next ][0] === T_STRING ) {
 							$func_name   = $tokens[ $next ][1];
 							$func_line   = isset( $tokens[ $next ][2] ) ? $tokens[ $next ][2] : 1;
-							$fqfn        = ! empty( $current_namespace ) ? ( $current_namespace . '\\' . $func_name ) : $func_name;
-							$is_reserved = in_array( strtolower( $func_name ), array_map( 'strtolower', self::$reserved_funcs ), true )
-								|| strpos( $func_name, 'wpdev_' ) === 0 || strpos( $func_name, '_wpdev_' ) === 0 || strpos( $func_name, 'tavangary_' ) === 0;
+						$fqfn        = ! empty( $current_namespace ) ? ( $current_namespace . '\\' . $func_name ) : $func_name;
+						$is_extra_prefixed = false;
+						foreach ( self::$extra_function_prefixes as $extra_prefix ) {
+							if ( strpos( $func_name, $extra_prefix ) === 0 ) {
+								$is_extra_prefixed = true;
+								break;
+							}
+						}
+						$is_reserved = in_array( strtolower( $func_name ), array_map( 'strtolower', self::$reserved_funcs ), true )
+							|| strpos( $func_name, 'wpdev_' ) === 0 || strpos( $func_name, '_wpdev_' ) === 0 || $is_extra_prefixed;
 						$this->symbol_paths[ $fqfn ] = $file_path . ':' . $func_line;
 						$this->declarations[] = array(
 							'symbol'               => $fqfn,
@@ -2418,7 +2453,7 @@ class Plan3_Transformer {
 					continue;
 				}
 
-				// 4. Qualified Class / Function Name Mangling (e.g. TavangaryTheme\ThemeOptions\Sections\Register, Admin\UserPurchaseFilterPage)
+				// 4. Qualified Class / Function Name Mangling (e.g. ConsumerNs\ThemeOptions\Sections\Register, Admin\UserPurchaseFilterPage)
 				if ( defined( 'T_NAME_FULLY_QUALIFIED' ) && $id === T_NAME_FULLY_QUALIFIED ) {
 					$clean = ltrim( $text, '\\' );
 					if ( isset( $this->class_map[ $clean ] ) ) {
@@ -2887,19 +2922,22 @@ class Plan3_Transformer {
 			}
 		}
 
-		if ( ! empty( $declared_classes_in_file ) && $this->flatten_namespaces && ! $keep_namespace && $this->mangle_symbols ) {
+		if ( ! empty( $declared_classes_in_file ) && $this->flatten_namespaces && ! $keep_namespace ) {
 			$alias_code = '';
 			foreach ( $declared_classes_in_file as $fqcn => $info ) {
 				$mangled = is_array( $info ) ? $info['mangled'] : $info;
 				$type    = is_array( $info ) ? $info['type'] : T_CLASS;
+				if ( $mangled === $fqcn ) {
+					continue;
+				}
 				if ( $type === T_INTERFACE ) {
-					$alias_code .= "if (interface_exists('" . addslashes( $mangled ) . "', false) && !interface_exists('" . addslashes( $fqcn ) . "', false)) { class_alias('" . addslashes( $mangled ) . "', '" . addslashes( $fqcn ) . "'); }\n";
+					$alias_code .= "if (interface_exists('" . addslashes( $mangled ) . "', false) && !interface_exists('" . addslashes( $fqcn ) . "', false)) { class_alias('" . addslashes( $mangled ) . "', '" . addslashes( $fqcn ) . "', false); }\n";
 				} elseif ( $type === T_TRAIT ) {
-					$alias_code .= "if (trait_exists('" . addslashes( $mangled ) . "', false) && !trait_exists('" . addslashes( $fqcn ) . "', false)) { class_alias('" . addslashes( $mangled ) . "', '" . addslashes( $fqcn ) . "'); }\n";
+					$alias_code .= "if (trait_exists('" . addslashes( $mangled ) . "', false) && !trait_exists('" . addslashes( $fqcn ) . "', false)) { class_alias('" . addslashes( $mangled ) . "', '" . addslashes( $fqcn ) . "', false); }\n";
 				} elseif ( defined( 'T_ENUM' ) && $type === T_ENUM ) {
-					$alias_code .= "if (function_exists('enum_exists') && enum_exists('" . addslashes( $mangled ) . "', false) && !enum_exists('" . addslashes( $fqcn ) . "', false)) { class_alias('" . addslashes( $mangled ) . "', '" . addslashes( $fqcn ) . "'); }\n";
+					$alias_code .= "if (function_exists('enum_exists') && enum_exists('" . addslashes( $mangled ) . "', false) && !enum_exists('" . addslashes( $fqcn ) . "', false)) { class_alias('" . addslashes( $mangled ) . "', '" . addslashes( $fqcn ) . "', false); }\n";
 				} else {
-					$alias_code .= "if (class_exists('" . addslashes( $mangled ) . "', false) && !class_exists('" . addslashes( $fqcn ) . "', false)) { class_alias('" . addslashes( $mangled ) . "', '" . addslashes( $fqcn ) . "'); }\n";
+					$alias_code .= "if (class_exists('" . addslashes( $mangled ) . "', false) && !class_exists('" . addslashes( $fqcn ) . "', false)) { class_alias('" . addslashes( $mangled ) . "', '" . addslashes( $fqcn ) . "', false); }\n";
 				}
 			}
 			if ( $alias_code !== '' ) {
@@ -2922,6 +2960,27 @@ class Plan3_Transformer {
 			),
 		);
 	}
+}
+
+/**
+ * Collect `--function-prefix=` CLI values (may repeat). Each value must match
+ * ^[A-Za-z_][A-Za-z0-9_]*_$; validation itself happens in
+ * Plan3_Transformer::set_extra_function_prefixes() (fail-closed).
+ *
+ * @param string[] $argv Raw CLI arguments.
+ * @return string[]
+ */
+function plan3_cli_function_prefixes( $argv ) {
+	$prefixes = array();
+	foreach ( $argv as $arg ) {
+		if ( ! is_string( $arg ) ) {
+			continue;
+		}
+		if ( strpos( $arg, '--function-prefix=' ) === 0 ) {
+			$prefixes[] = substr( $arg, strlen( '--function-prefix=' ) );
+		}
+	}
+	return $prefixes;
 }
 
 function plan3_cli_bool_flags( $argv ) {
@@ -2956,6 +3015,7 @@ if ( isset( $argv[0] ) && basename( $argv[0] ) === 'transformer.php' ) {
 		$seed        = isset( $argv[4] ) ? $argv[4] : 'wpdev-plan3-release';
 		$main_file   = isset( $argv[5] ) ? $argv[5] : '';
 		list( $flatten_namespaces, $mangle_symbols, $strip_comments ) = plan3_cli_bool_flags( $argv );
+		Plan3_Transformer::set_extra_function_prefixes( plan3_cli_function_prefixes( $argv ) );
 
 		if ( empty( $staging_dir ) || ! is_dir( $staging_dir ) ) {
 			fwrite( STDERR, "Error: Staging directory not found: $staging_dir\n" );
@@ -3027,6 +3087,7 @@ if ( isset( $argv[0] ) && basename( $argv[0] ) === 'transformer.php' ) {
 		$map_out  = isset( $argv[3] ) ? $argv[3] : '';
 		$seed     = isset( $argv[4] ) ? $argv[4] : 'wpdev-plan3-release';
 		list( $flatten_namespaces, $mangle_symbols, $strip_comments ) = plan3_cli_bool_flags( $argv );
+		Plan3_Transformer::set_extra_function_prefixes( plan3_cli_function_prefixes( $argv ) );
 
 		if ( empty( $scan_dir ) || ! is_dir( $scan_dir ) ) {
 			fwrite( STDERR, "Error: Scan directory not found: $scan_dir\n" );
@@ -3087,11 +3148,12 @@ if ( isset( $argv[0] ) && basename( $argv[0] ) === 'transformer.php' ) {
 	}
 
 	if ( empty( $target_file ) || ! is_file( $target_file ) ) {
-		fwrite( STDERR, "Usage: php transformer.php <target-file.php> [--main|--not-main] [map-file.json] [seed]\n" );
+		fwrite( STDERR, "Usage: php transformer.php <target-file.php> [--main|--not-main] [map-file.json] [seed] [--function-prefix=<prefix>...]\n" );
 		exit( 1 );
 	}
 
 	$transformer = new Plan3_Transformer( $seed );
+	Plan3_Transformer::set_extra_function_prefixes( plan3_cli_function_prefixes( $argv ) );
 	if ( ! empty( $map_file ) ) {
 		if ( ! is_file( $map_file ) ) {
 			fwrite( STDERR, "Error: Map file not found: $map_file\n" );

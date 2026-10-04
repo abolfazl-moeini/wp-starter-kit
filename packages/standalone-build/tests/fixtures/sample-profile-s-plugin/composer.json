@@ -1,0 +1,10 @@
+{
+  "name": "sample/profile-s-plugin",
+  "description": "Generic hermetic fixture plugin for Profile S pipeline tests.",
+  "type": "wordpress-plugin",
+  "autoload": {
+    "psr-4": {
+      "SampleProfileS\\": "src/"
+    }
+  }
+}

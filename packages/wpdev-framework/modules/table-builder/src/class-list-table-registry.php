@@ -35,6 +35,9 @@ class List_Table_Registry extends Registry_Base {
 	 * @return void
 	 */
 	public static function register( $table_id, $class_name, $config = null, $replace = true ) {
+		if ( empty( $table_id ) || ! is_string( $table_id ) ) {
+			return false;
+		}
 
 		return self::store(
 			self::$tables,

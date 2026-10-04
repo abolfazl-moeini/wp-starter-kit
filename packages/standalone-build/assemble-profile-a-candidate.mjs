@@ -13,7 +13,12 @@ import { generateSignedReleaseManifest } from "./generate-signed-release-manifes
 const execFileAsync = promisify(execFile);
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const contentRoot = path.resolve(process.argv[2] || path.join(scriptDir, ".."));
-const consumer = process.argv[3] || "tavangary-theme-panel";
+const consumer = process.argv[3];
+if (!consumer) {
+  console.error("Error: consumer argument is required.");
+  console.error("Usage: node assemble-profile-a-candidate.mjs <contentRoot> <consumer> [outputDir]");
+  process.exit(1);
+}
 const outputDir = path.resolve(process.argv[4] || path.join(contentRoot, "dist"));
 
 const CRC_TABLE = (() => {

@@ -48,7 +48,7 @@ test("F03: Direct deploy executes transactionally, creates receipt and cleans jo
   try {
     const pluginsDir = path.join(tmpRoot, "plugins");
     const distDir = path.join(tmpRoot, "dist");
-    const pluginName = "tavangary-core";
+    const pluginName = "sample-standalone-plugin";
     const targetDir = path.join(pluginsDir, pluginName);
 
     // Initial version v1
@@ -92,7 +92,7 @@ test("F03: Interrupted direct deploy (SIGKILL after backup rename) is recovered 
   try {
     const pluginsDir = path.join(tmpRoot, "plugins");
     const distDir = path.join(tmpRoot, "dist");
-    const pluginName = "tavangary-core";
+    const pluginName = "sample-standalone-plugin";
     const targetDir = path.join(pluginsDir, pluginName);
 
     // Initial version v1

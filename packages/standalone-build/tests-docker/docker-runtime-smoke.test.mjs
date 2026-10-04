@@ -145,7 +145,7 @@ echo "DOCKER_SMOKE_ALL_PASS\\n";
       composeFile,
       "exec",
       "-T",
-      "tavangarywp",
+      process.env.WP_CONTAINER_NAME || "tavangarywp",
       "php",
       "-r",
       phpProbeScript,

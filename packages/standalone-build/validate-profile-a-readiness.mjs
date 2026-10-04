@@ -7,7 +7,12 @@ import { promisify } from "node:util";
 
 const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
 const contentRoot = path.resolve(process.argv[2] || path.join(scriptDirectory, ".."));
-const consumer = process.argv[3] || "tavangary-theme-panel";
+const consumer = process.argv[3];
+if (!consumer) {
+  console.error("Error: consumer argument is required.");
+  console.error("Usage: node validate-profile-a-readiness.mjs <contentRoot> <consumer>");
+  process.exit(1);
+}
 const registryInput = process.argv[4] || "";
 if (!/^[a-z0-9][a-z0-9-]*$/.test(consumer)) {
   process.stderr.write("Invalid consumer slug.\n");

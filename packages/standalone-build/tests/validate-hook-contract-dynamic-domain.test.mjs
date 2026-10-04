@@ -34,10 +34,10 @@ const domain = {
   residualRisk: "Any code may register a new field type at runtime, so the domain is bounded by observation, not by construction.",
 };
 
-const manifest = { schema: 1, purpose: "hook-contract-dynamic-domain", consumer: "tavangary-theme-panel", domains: [domain] };
+const manifest = { schema: 1, purpose: "hook-contract-dynamic-domain", consumer: "sample-profile-s-plugin", domains: [domain] };
 const inventory = {
   schema: 1,
-  scope: { consumer: "tavangary-theme-panel" },
+  scope: { consumer: "sample-profile-s-plugin" },
   contracts: {
     "wpdev_field_validate_image": { matchingFrameworkDynamicProducers: [{ template: domain.template, matcher: domain.matcher }] },
     "wpdev_field_validate_color-picker": { matchingFrameworkDynamicProducers: [{ template: domain.template, matcher: domain.matcher }] },
@@ -150,7 +150,7 @@ test("rejects an empty residual risk statement", async () => {
 test("accepts a template whose placeholder is followed by a literal suffix", async () => {
   const { dir, manifestPath, inventoryPath } = await fixture();
   const formProducer = "plugins/wpdev/modules/form-builder/src/form/class-form.php";
-  const formRegistry = "plugins/tavangary-theme-panel/includes/theme-options/src/sections/class-hero.php";
+  const formRegistry = "plugins/sample-profile-s-plugin/includes/theme-options/src/sections/class-hero.php";
   await mkdir(path.dirname(path.join(dir, formProducer)), { recursive: true });
   await mkdir(path.dirname(path.join(dir, formRegistry)), { recursive: true });
   await writeFile(path.join(dir, formProducer), ["<?php", "class Form {", '\t\t$fields = apply_filters("wpdev_{$id}_form_fields", $fields);', "}"].join("\n"));
@@ -165,7 +165,7 @@ test("accepts a template whose placeholder is followed by a literal suffix", asy
     observedIdentifiers: ["wpdev_hero_slides_form_fields"],
     residualRisk: "A Form may be constructed with any id at runtime.",
   };
-  await writeFile(inventoryPath, JSON.stringify({ schema: 1, scope: { consumer: "tavangary-theme-panel" }, contracts: { wpdev_hero_slides_form_fields: { matchingFrameworkDynamicProducers: [{ template: formDomain.template, matcher: formDomain.matcher }] } } }));
+  await writeFile(inventoryPath, JSON.stringify({ schema: 1, scope: { consumer: "sample-profile-s-plugin" }, contracts: { wpdev_hero_slides_form_fields: { matchingFrameworkDynamicProducers: [{ template: formDomain.template, matcher: formDomain.matcher }] } } }));
   await writeFile(manifestPath, JSON.stringify({ ...manifest, domains: [formDomain] }));
 
   const { stdout } = await exec(process.execPath, [script, manifestPath, dir, inventoryPath]);
@@ -177,7 +177,7 @@ test("accepts a template whose placeholder is followed by a literal suffix", asy
 test("rejects a suffixed template whose variable part is not enumerated", async () => {
   const { dir, manifestPath, inventoryPath } = await fixture();
   const formProducer = "plugins/wpdev/modules/form-builder/src/form/class-form.php";
-  const formRegistry = "plugins/tavangary-theme-panel/includes/theme-options/src/sections/class-hero.php";
+  const formRegistry = "plugins/sample-profile-s-plugin/includes/theme-options/src/sections/class-hero.php";
   await mkdir(path.dirname(path.join(dir, formProducer)), { recursive: true });
   await mkdir(path.dirname(path.join(dir, formRegistry)), { recursive: true });
   await writeFile(path.join(dir, formProducer), ["<?php", "class Form {", '\t\t$fields = apply_filters("wpdev_{$id}_form_fields", $fields);', "}"].join("\n"));

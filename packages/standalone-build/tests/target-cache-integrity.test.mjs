@@ -17,8 +17,8 @@ import { createBuildPlan } from "../build-plan.mjs";
 
 test("Target Cache: creates structured target cache record with schema and state", () => {
   const record = createTargetCacheRecord({
-    artifactId: "tavangary-core-profile-s",
-    consumer: "tavangary-core",
+    artifactId: "sample-standalone-plugin-profile-s",
+    consumer: "sample-standalone-plugin",
     sourceFingerprint: "src123",
     wpdevFingerprint: "wp456",
     toolsFingerprint: "tool789",
@@ -31,7 +31,7 @@ test("Target Cache: creates structured target cache record with schema and state
   });
 
   assert.equal(record.schemaVersion, CACHE_SCHEMA_VERSION);
-  assert.equal(record.artifactId, "tavangary-core-profile-s");
+  assert.equal(record.artifactId, "sample-standalone-plugin-profile-s");
   assert.equal(record.validationState, "tests-passed");
   assert.equal(record.zipSha256, "a".repeat(64));
 });

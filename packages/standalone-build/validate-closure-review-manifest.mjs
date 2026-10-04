@@ -4,7 +4,15 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 
 const contentRoot = path.resolve(process.argv[2] || "");
-const consumer = process.argv[3] || "tavangary-theme-panel";
+const consumer = process.argv[3] || null;
+if (!consumer || !/^[a-z0-9][a-z0-9-]*$/.test(consumer)) {
+  process.stdout.write(
+    `${JSON.stringify({ schema: 1, status: "blocked", promotionReady: false, consumer: null, manifestPath: null, failures: ["consumer slug is required as argv[3] (fail-closed, no default consumer)"] }, null, 2)}\n`
+  );
+  process.exitCode = 1;
+  // Fail before any filesystem access when the required consumer arg is missing.
+  throw new Error("consumer slug is required as argv[3] (fail-closed, no default consumer)");
+}
 const failures = [];
 const safe = (v) => typeof v === "string" && v !== "" && !v.includes("\\") && !v.includes("\0") && !path.posix.isAbsolute(v) && path.posix.normalize(v) === v && v !== "." && v !== ".." && !v.startsWith("../");
 

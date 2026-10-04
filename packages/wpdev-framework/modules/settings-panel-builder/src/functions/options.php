@@ -32,13 +32,16 @@ function wpdev_get_option($option_name = 'settings', $default = array()) {
 	// Default: network option (legacy). Site option only on playground parity production pages in site admin.
 	$slug = wpdev_slugify( $option_name );
 
-	if ( function_exists( 'wpdev_playground_uses_site_admin_context' ) && wpdev_playground_uses_site_admin_context() ) {
-		$option_value = get_option( $slug, $default );
+	$uses_site_context = ( function_exists( 'wpdev_uses_site_admin_context' ) && wpdev_uses_site_admin_context() )
+		|| ( function_exists( 'wpdev_playground_uses_site_admin_context' ) && wpdev_playground_uses_site_admin_context() );
+
+	if ( $uses_site_context || ! function_exists( 'get_network_option' ) ) {
+		$option_value = function_exists( 'get_option' ) ? get_option( $slug, $default ) : $default;
 	} else {
 		$option_value = get_network_option( null, $slug, $default );
 	}
 
-	return apply_filters('wpdev_get_option', $option_value, $option_name, $default);
+	return function_exists( 'apply_filters' ) ? apply_filters('wpdev_get_option', $option_value, $option_name, $default) : $option_value;
 
 } // end wpdev_get_option;
 
@@ -54,8 +57,11 @@ function wpdev_save_option($option_name = 'settings', $value = false) {
 
 	$slug = wpdev_slugify( $option_name );
 
-	if ( function_exists( 'wpdev_playground_uses_site_admin_context' ) && wpdev_playground_uses_site_admin_context() ) {
-		return update_option( $slug, $value, false );
+	$uses_site_context = ( function_exists( 'wpdev_uses_site_admin_context' ) && wpdev_uses_site_admin_context() )
+		|| ( function_exists( 'wpdev_playground_uses_site_admin_context' ) && wpdev_playground_uses_site_admin_context() );
+
+	if ( $uses_site_context || ! function_exists( 'update_network_option' ) ) {
+		return function_exists( 'update_option' ) ? update_option( $slug, $value, false ) : false;
 	}
 
 	return update_network_option( null, $slug, $value );
@@ -73,8 +79,11 @@ function wpdev_delete_option($option_name) {
 
 	$slug = wpdev_slugify( $option_name );
 
-	if ( function_exists( 'wpdev_playground_uses_site_admin_context' ) && wpdev_playground_uses_site_admin_context() ) {
-		return delete_option( $slug );
+	$uses_site_context = ( function_exists( 'wpdev_uses_site_admin_context' ) && wpdev_uses_site_admin_context() )
+		|| ( function_exists( 'wpdev_playground_uses_site_admin_context' ) && wpdev_playground_uses_site_admin_context() );
+
+	if ( $uses_site_context || ! function_exists( 'delete_network_option' ) ) {
+		return function_exists( 'delete_option' ) ? delete_option( $slug ) : false;
 	}
 
 	return delete_network_option( null, $slug );

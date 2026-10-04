@@ -7,6 +7,11 @@ import { fileURLToPath } from "node:url";
 
 const manifestPath = process.argv[2];
 const contentRoot = process.argv[3];
+// Optional pin: when provided, the manifest consumer must equal this slug.
+// Otherwise the manifest's own consumer slug is validated generically.
+const expectedConsumer = process.argv[4] && !String(process.argv[4]).startsWith("--")
+  ? String(process.argv[4])
+  : null;
 const failures = [];
 const object = (v) => v && typeof v === "object" && !Array.isArray(v);
 const hex = (v) => typeof v === "string" && /^[a-f0-9]{64}$/.test(v);
@@ -14,6 +19,7 @@ const tree = (v) => typeof v === "string" && (/^[a-f0-9]{40}$/.test(v) || /^[a-f
 const commit = (v) => typeof v === "string" && /^[a-f0-9]{40}$/.test(v);
 const prefix = (v) => typeof v === "string" && /^[A-Za-z][A-Za-z0-9_]*$/.test(v);
 const safe = (v) => typeof v === "string" && v !== "" && !v.includes("\\") && !v.includes("\0") && !path.posix.isAbsolute(v) && path.posix.normalize(v) === v && v !== "." && v !== ".." && !v.startsWith("../");
+const slug = (v) => typeof v === "string" && /^[a-z0-9][a-z0-9-]*$/.test(v);
 
 if (!contentRoot || !path.isAbsolute(contentRoot)) {
   failures.push("contentRoot path must be absolute");
@@ -35,15 +41,18 @@ const m = manifestEvidence?.value;
 if (!object(m)) failures.push("manifest must be an object");
 if (m?.schema !== 1) failures.push("schema must be 1");
 if (m?.purpose !== "profile-a-pre-registry-candidate") failures.push("purpose must be profile-a-pre-registry-candidate");
-if (m?.consumer !== "tavangary-theme-panel") failures.push("consumer must be tavangary-theme-panel");
+if (!slug(m?.consumer)) failures.push("consumer must be a safe slug");
+if (expectedConsumer && m?.consumer !== expectedConsumer) failures.push(`consumer must be ${expectedConsumer}`);
 if (m?.recordStatus !== "review-only") failures.push("recordStatus must be review-only");
 if (m?.buildInput !== false) failures.push("buildInput must be false");
-if (m?.source?.repositoryRoot !== "plugins/tavangary-theme-panel") failures.push("source.repositoryRoot must use canonical path");
+if (m?.source?.repositoryRoot !== `plugins/${m?.consumer}` && m?.source?.repositoryRoot !== `plugins/${m?.consumer}-dev`) failures.push("source.repositoryRoot must use canonical path");
 if (!commit(m?.source?.commit)) failures.push("source.commit must be a 40-character SHA-1");
 if (!tree(m?.source?.tree)) failures.push("source.tree must be a 40-character SHA-1 or 64-character SHA-256 tree digest");
 if (m?.source?.worktree !== "clean") failures.push("source.worktree must be clean");
 
-if (!object(m?.migrationContract) || !safe(m.migrationContract.path) || m.migrationContract.path !== "plugins/tavangary-theme-panel/dev/prefix-migration-coexistence-contract.json" || !hex(m.migrationContract.sha256)) {
+const consumerRoot = `plugins/${m?.consumer}`;
+const consumerDevRoot = `plugins/${m?.consumer}-dev`;
+if (!object(m?.migrationContract) || !safe(m.migrationContract.path) || path.posix.basename(m.migrationContract.path) !== "prefix-migration-coexistence-contract.json" || (!m.migrationContract.path.startsWith(`${consumerRoot}/`) && !m.migrationContract.path.startsWith(`${consumerDevRoot}/`)) || !hex(m.migrationContract.sha256)) {
   failures.push("migrationContract path and sha256 are required");
 } else if (contentRoot && path.isAbsolute(contentRoot)) {
   try {
@@ -51,10 +60,14 @@ if (!object(m?.migrationContract) || !safe(m.migrationContract.path) || m.migrat
     try {
       await lstat(contractPath);
     } catch {
-      const devPath = path.join(contentRoot, "plugins/tavangary-theme-panel-dev/dev/prefix-migration-coexistence-contract.json");
-      const statDev = await lstat(devPath);
-      if (statDev.isFile() && !statDev.isSymbolicLink()) {
-        contractPath = devPath;
+      const devPath = m.migrationContract.path.startsWith(`${consumerRoot}/`)
+        ? path.join(contentRoot, m.migrationContract.path.replace(`${consumerRoot}/`, `${consumerDevRoot}/`))
+        : null;
+      if (devPath) {
+        const statDev = await lstat(devPath);
+        if (statDev.isFile() && !statDev.isSymbolicLink()) {
+          contractPath = devPath;
+        }
       }
     }
     const stat = await lstat(contractPath);

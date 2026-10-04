@@ -11,17 +11,55 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-import { TARGET_REGISTRY } from "./target-registry.mjs";
+import { loadTargetRegistry } from "./target-registry.mjs";
 
 const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
-const contentRoot = path.resolve(process.argv[2] || path.join(scriptDirectory, ".."));
+const positionals = process.argv.slice(2).filter((a) => typeof a !== "string" || !a.startsWith("--config"));
+const contentRoot = path.resolve(positionals[0] || path.join(scriptDirectory, ".."));
 const output = path.resolve(
-  process.argv[3] || path.join(contentRoot, "protection-consumer-source-map.json"),
+  positionals[1] || path.join(contentRoot, "protection-consumer-source-map.json"),
 );
 
+function resolveBuildConfigPath(argv = process.argv, env = process.env) {
+  const eqArg = (argv || []).find((a) => typeof a === "string" && a.startsWith("--config="));
+  if (eqArg) {
+    const value = eqArg.slice("--config=".length).trim();
+    return value || null;
+  }
+  const idx = (argv || []).findIndex((a) => a === "--config");
+  if (idx !== -1 && typeof argv[idx + 1] === "string" && !argv[idx + 1].startsWith("--")) {
+    return argv[idx + 1];
+  }
+  const fromEnv = env?.WPDEV_BUILD_CONFIG;
+  return typeof fromEnv === "string" && fromEnv.trim() ? fromEnv.trim() : null;
+}
+
+// Consumers come from loadTargetRegistry() (explicit build.config.json or
+// convention auto-discovery of `plugins/*-dev`). No static registry import.
+let registry = {};
+try {
+  const bundle = await loadTargetRegistry(resolveBuildConfigPath(), contentRoot);
+  registry = bundle?.registry || {};
+} catch {
+  registry = {};
+}
+if (Object.keys(registry).length === 0) {
+  // Convention fallback: map every `*-dev` source directory to its slug.
+  try {
+    const entries = await fs.readdir(path.join(contentRoot, "plugins"), { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory() || entry.isSymbolicLink() || !entry.name.endsWith("-dev")) continue;
+      const slug = entry.name.slice(0, -"-dev".length);
+      if (slug) registry[slug] = { sourceDirectoryName: entry.name };
+    }
+  } catch {
+    // No plugins directory: handled by the empty-map guard below.
+  }
+}
+
 const consumers = {};
-for (const [consumer, entry] of Object.entries(TARGET_REGISTRY)) {
-  if (!entry.sourceDirectoryName) continue;
+for (const [consumer, entry] of Object.entries(registry)) {
+  if (!entry?.sourceDirectoryName) continue;
   consumers[consumer] = `plugins/${entry.sourceDirectoryName}`;
 }
 

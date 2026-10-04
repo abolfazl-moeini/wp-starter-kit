@@ -5,7 +5,12 @@ import path from "node:path";
 
 const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
 const contentRoot = path.resolve(process.argv[2] || path.join(scriptDirectory, ".."));
-const consumer = process.argv[3] || "tavangary-theme-panel";
+const consumer = process.argv[3];
+if (!consumer) {
+  console.error("Error: consumer argument is required.");
+  console.error("Usage: node generate-settings-ownership-review-manifest.mjs <contentRoot> <consumer>");
+  process.exit(1);
+}
 const output = path.resolve(
   process.argv[4] || path.join(contentRoot, "plugins", consumer, "dev", "settings-ownership-review-manifest.json"),
 );

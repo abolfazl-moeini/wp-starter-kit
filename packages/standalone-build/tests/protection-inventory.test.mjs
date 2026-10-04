@@ -16,7 +16,7 @@ const script = path.resolve(
 test("records callable WPDev symbols without treating variables and strings as functions", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "wpdev-protection-inventory-"));
   try {
-    const plugin = path.join(root, "plugins", "tavangary-theme-panel");
+    const plugin = path.join(root, "plugins", "sample-profile-s-plugin");
     await mkdir(plugin, { recursive: true });
     await writeFile(
       path.join(plugin, "fixture.php"),
@@ -34,7 +34,7 @@ add_filter( 'wpdev_hook_name', '__return_true' );
     const output = path.join(root, "inventory.json");
     await execFileAsync(process.execPath, [script, root, output]);
     const inventory = JSON.parse(await readFile(output, "utf8"));
-    const pluginInventory = inventory.plugins.find((item) => item.name === "tavangary-theme-panel");
+    const pluginInventory = inventory.plugins.find((item) => item.name === "sample-profile-s-plugin");
 
     assert.deepEqual(
       pluginInventory.references.wpdevSymbols,
@@ -60,7 +60,7 @@ add_filter( 'wpdev_hook_name', '__return_true' );
 test("rejects a source-tree symlink instead of silently omitting it from protection evidence", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "wpdev-protection-inventory-symlink-"));
   try {
-    const plugin = path.join(root, "plugins", "tavangary-theme-panel");
+    const plugin = path.join(root, "plugins", "sample-profile-s-plugin");
     const outside = path.join(root, "outside.php");
     await mkdir(plugin, { recursive: true });
     await writeFile(outside, "<?php wpdev_external();\n");
@@ -81,7 +81,7 @@ test("rejects a source-tree symlink instead of silently omitting it from protect
 test("ignores symlinks under explicitly excluded dependency directories", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "wpdev-protection-inventory-excluded-symlink-"));
   try {
-    const plugin = path.join(root, "plugins", "tavangary-theme-panel");
+    const plugin = path.join(root, "plugins", "sample-profile-s-plugin");
     const outside = path.join(root, "outside.php");
     await mkdir(path.join(plugin, "vendor"), { recursive: true });
     await writeFile(outside, "<?php wpdev_external();\n");
@@ -89,7 +89,7 @@ test("ignores symlinks under explicitly excluded dependency directories", async 
 
     await execFileAsync(process.execPath, [script, root, path.join(root, "inventory.json")]);
     const inventory = JSON.parse(await readFile(path.join(root, "inventory.json"), "utf8"));
-    const panel = inventory.plugins.find((item) => item.name === "tavangary-theme-panel");
+    const panel = inventory.plugins.find((item) => item.name === "sample-profile-s-plugin");
     assert.equal(panel.fileCount, 0);
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -99,7 +99,7 @@ test("ignores symlinks under explicitly excluded dependency directories", async 
 test("does not truncate high-volume references", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "wpdev-protection-inventory-volume-"));
   try {
-    const plugin = path.join(root, "plugins", "tavangary-theme-panel");
+    const plugin = path.join(root, "plugins", "sample-profile-s-plugin");
     await mkdir(plugin, { recursive: true });
     const calls = Array.from({ length: 250 }, (_, index) => `wpdev_volume_${index}();`).join("\n");
     await writeFile(path.join(plugin, "fixture.php"), `<?php\n${calls}\n`);
@@ -107,7 +107,7 @@ test("does not truncate high-volume references", async () => {
     const output = path.join(root, "inventory.json");
     await execFileAsync(process.execPath, [script, root, output]);
     const inventory = JSON.parse(await readFile(output, "utf8"));
-    const panel = inventory.plugins.find((item) => item.name === "tavangary-theme-panel");
+    const panel = inventory.plugins.find((item) => item.name === "sample-profile-s-plugin");
 
     assert.equal(panel.references.wpdevSymbols.length, 250);
   } finally {
@@ -117,7 +117,7 @@ test("does not truncate high-volume references", async () => {
 
 test("fails closed when a source file cannot be read", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "wpdev-protection-inventory-unreadable-"));
-  const unreadable = path.join(root, "plugins", "tavangary-theme-panel", "unreadable.php");
+  const unreadable = path.join(root, "plugins", "sample-profile-s-plugin", "unreadable.php");
   try {
     await mkdir(path.dirname(unreadable), { recursive: true });
     await writeFile(unreadable, "<?php wpdev_hidden_dependency();\n");

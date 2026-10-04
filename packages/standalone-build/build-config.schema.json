@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://wp-starter-kit.local/schemas/build-config.schema.json",
+  "title": "wp-starter-kit build.config.json",
+  "description": "Project-level build configuration: decouples wp-starter-kit build engine from downstream consumer projects. Validated at the start of loadTargetRegistry(). When absent, the engine falls back to convention-based auto-discovery.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional link to this schema file."
+    },
+    "contentRoot": {
+      "type": "string",
+      "description": "Path to the wp-content directory (absolute or relative to the config file)."
+    },
+    "activeTheme": {
+      "type": "string",
+      "description": "Active theme directory name under wp-content/themes (e.g. \"tavangary\"). Replaces hardcoded theme paths."
+    },
+    "functionPrefix": {
+      "type": "string",
+      "description": "Reserved function prefix for the AST transformer (e.g. \"tavangary_\").",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*_$"
+    },
+    "pipelineTestModeEnvVar": {
+      "type": "string",
+      "description": "Environment variable name that enables pipeline test mode. Defaults to WPDEV_PIPELINE_TEST_MODE.",
+      "pattern": "^[A-Z][A-Z0-9_]*$"
+    },
+    "dockerContainerName": {
+      "type": "string",
+      "description": "Docker container name used by docker smoke tests. Replaces hardcoded container names."
+    },
+    "targets": {
+      "type": "object",
+      "description": "Build targets keyed by consumer slug. A target may be minimal (e.g. {\"buildProfile\": \"s\"}) — missing fields are filled by convention.",
+      "additionalProperties": {
+        "$ref": "#/definitions/target"
+      }
+    },
+    "impactTargets": {
+      "type": "object",
+      "description": "Non-artifact impact-only targets (shared framework source, themes).",
+      "additionalProperties": {
+        "$ref": "#/definitions/impactTarget"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "target": {
+      "type": "object",
+      "properties": {
+        "buildProfile": {
+          "type": "string",
+          "enum": ["standalone", "s"],
+          "description": "Build profile. \"standalone\" keeps namespaces intact; \"s\" is Profile S obfuscation."
+        },
+        "sourceDir": {
+          "type": "string",
+          "description": "Source directory name under wp-content/plugins. Convention: {slug}-dev."
+        },
+        "deployDir": {
+          "type": "string",
+          "description": "Deploy directory name under wp-content/plugins. Convention: {slug}."
+        },
+        "bootstrapFile": {
+          "type": "string",
+          "description": "Plugin bootstrap file inside the source dir. Convention: {slug}.php.",
+          "pattern": "^[^/\\\\]+\\.php$"
+        },
+        "sharedFramework": {
+          "type": "string",
+          "description": "Shared framework id providing the inlined closure. Convention: detected from composer.json, default \"wpdev\"."
+        },
+        "themeRelationship": {
+          "type": "string",
+          "description": "Related theme path (e.g. \"themes/tavangary\") or \"none\". Convention: \"none\"."
+        },
+        "phpTarget": {
+          "type": "string",
+          "description": "PHP downgrade target. Convention: \"7.4\".",
+          "pattern": "^[0-9]+\\.[0-9]+$"
+        },
+        "requiredFqcns": {
+          "type": "array",
+          "description": "Fully-qualified class names the completeness gate must verify for this consumer.",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "impactTarget": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["shared-framework-source", "impact-only-target"],
+          "description": "Target kind."
+        },
+        "sourceDir": {
+          "type": "string",
+          "description": "Source directory name (plugin dir or theme dir)."
+        },
+        "sourceKind": {
+          "type": "string",
+          "enum": ["theme", "plugin", "framework"],
+          "description": "Only for impact-only targets pointing at a theme or plugin."
+        }
+      },
+      "required": ["kind"],
+      "additionalProperties": false
+    }
+  }
+}

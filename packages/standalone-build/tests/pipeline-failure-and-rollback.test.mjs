@@ -169,7 +169,7 @@ test("Failure Scenario 3: Deploy failure after tests restores backup and leaves 
   const pluginsDir = path.join(tmpDir, "plugins");
   await fs.promises.mkdir(pluginsDir, { recursive: true });
 
-  const consumer = "tavangary-theme-panel";
+  const consumer = "sample-profile-s-plugin";
   const targetDir = path.join(pluginsDir, consumer);
   await fs.promises.mkdir(targetDir, { recursive: true });
   await fs.promises.writeFile(path.join(targetDir, "original.php"), "<?php echo 'ORIGINAL_V1';");
@@ -337,7 +337,7 @@ test("Failure Scenario 7: Production orchestrator rollback on smoke failure leav
     await fs.promises.mkdir(receiptsDir, { recursive: true });
 
     // Setup dev sources and shared framework
-    const consumer = "tavangary-core";
+    const consumer = "sample-standalone-plugin";
     const devDir = path.join(pluginsDir, `${consumer}-dev`);
     const wpdevDir = path.join(pluginsDir, "wpdev");
     const themeDir = path.join(tmpDir, "themes", "tavangary");
@@ -520,14 +520,14 @@ test("Failure Scenario 8: Failure immediately after swap (during_swap) on non-ex
     await fs.promises.mkdir(distDir, { recursive: true });
     await fs.promises.mkdir(receiptsDir, { recursive: true });
 
-    const consumer = "tavangary-core";
-    const srcDir = path.join(pluginsDir, "tavangary-core-dev");
+    const consumer = "sample-standalone-plugin";
+    const srcDir = path.join(pluginsDir, "sample-standalone-plugin-dev");
     const wpdevDir = path.join(pluginsDir, "wpdev");
     const themeDir = path.join(tmpDir, "themes", "tavangary");
     await fs.promises.mkdir(srcDir, { recursive: true });
     await fs.promises.mkdir(wpdevDir, { recursive: true });
     await fs.promises.mkdir(themeDir, { recursive: true });
-    await fs.promises.writeFile(path.join(srcDir, "tavangary-core.php"), "<?php echo 'DEV_SOURCE';");
+    await fs.promises.writeFile(path.join(srcDir, "sample-standalone-plugin.php"), "<?php echo 'DEV_SOURCE';");
     await fs.promises.writeFile(path.join(wpdevDir, "wpdev.php"), "<?php echo 'WPDEV';");
     await fs.promises.writeFile(path.join(themeDir, "style.css"), "/* Theme */");
 
@@ -659,14 +659,14 @@ test("Failure Scenario 9: Multi-file commit failure (during_commit) leaves zero 
     await fs.promises.mkdir(distDir, { recursive: true });
     await fs.promises.mkdir(receiptsDir, { recursive: true });
 
-    const consumer = "tavangary-core";
-    const srcDir = path.join(pluginsDir, "tavangary-core-dev");
+    const consumer = "sample-standalone-plugin";
+    const srcDir = path.join(pluginsDir, "sample-standalone-plugin-dev");
     const wpdevDir = path.join(pluginsDir, "wpdev");
     const themeDir = path.join(tmpDir, "themes", "tavangary");
     await fs.promises.mkdir(srcDir, { recursive: true });
     await fs.promises.mkdir(wpdevDir, { recursive: true });
     await fs.promises.mkdir(themeDir, { recursive: true });
-    await fs.promises.writeFile(path.join(srcDir, "tavangary-core.php"), "<?php echo 'DEV_SOURCE';");
+    await fs.promises.writeFile(path.join(srcDir, "sample-standalone-plugin.php"), "<?php echo 'DEV_SOURCE';");
     await fs.promises.writeFile(path.join(wpdevDir, "wpdev.php"), "<?php echo 'WPDEV';");
     await fs.promises.writeFile(path.join(themeDir, "style.css"), "/* Theme */");
 
@@ -799,14 +799,14 @@ test("Failure Scenario 10: Startup journal recovery restores interrupted deploym
     await fs.promises.mkdir(pluginsDir, { recursive: true });
     await fs.promises.mkdir(distDir, { recursive: true });
 
-    const consumer = "tavangary-core";
+    const consumer = "sample-standalone-plugin";
     const txId = "tx-1725178000000-crashed1000";
     const targetDir = path.join(pluginsDir, consumer);
     const backupDir = path.join(pluginsDir, `.${consumer}.backup-${txId}`);
     await fs.promises.mkdir(targetDir, { recursive: true });
     await fs.promises.mkdir(backupDir, { recursive: true });
-    await fs.promises.writeFile(path.join(targetDir, "tavangary-core.php"), "<?php echo 'CORRUPTED_INCOMPLETE_SWAP';");
-    await fs.promises.writeFile(path.join(backupDir, "tavangary-core.php"), "<?php echo 'HEALTHY_ORIGINAL';");
+    await fs.promises.writeFile(path.join(targetDir, "sample-standalone-plugin.php"), "<?php echo 'CORRUPTED_INCOMPLETE_SWAP';");
+    await fs.promises.writeFile(path.join(backupDir, "sample-standalone-plugin.php"), "<?php echo 'HEALTHY_ORIGINAL';");
 
     // Mock a valid uncommitted v2 journal file left over by a hard crash
     const crashJournal = {
@@ -837,13 +837,13 @@ test("Failure Scenario 10: Startup journal recovery restores interrupted deploym
     await fs.promises.writeFile(journalFile, JSON.stringify(crashJournal, null, 2), "utf8");
 
     // Also create dev source
-    const devDir = path.join(pluginsDir, "tavangary-core-dev");
+    const devDir = path.join(pluginsDir, "sample-standalone-plugin-dev");
     const wpdevDir = path.join(pluginsDir, "wpdev");
     const themeDir = path.join(tmpDir, "themes", "tavangary");
     await fs.promises.mkdir(devDir, { recursive: true });
     await fs.promises.mkdir(wpdevDir, { recursive: true });
     await fs.promises.mkdir(themeDir, { recursive: true });
-    await fs.promises.writeFile(path.join(devDir, "tavangary-core.php"), "<?php echo 'DEV';");
+    await fs.promises.writeFile(path.join(devDir, "sample-standalone-plugin.php"), "<?php echo 'DEV';");
     await fs.promises.writeFile(path.join(wpdevDir, "wpdev.php"), "<?php echo 'WPDEV';");
     await fs.promises.writeFile(path.join(themeDir, "style.css"), "/* Theme */");
 
@@ -923,7 +923,7 @@ test("Failure Scenario 10: Startup journal recovery restores interrupted deploym
     });
 
     // Verify that target was restored from backup and journal was removed
-    const restoredPhp = await fs.promises.readFile(path.join(targetDir, "tavangary-core.php"), "utf8");
+    const restoredPhp = await fs.promises.readFile(path.join(targetDir, "sample-standalone-plugin.php"), "utf8");
     assert.equal(restoredPhp, "<?php echo 'HEALTHY_ORIGINAL';", "Startup recovery must restore target from backup");
     assert.equal(fs.existsSync(journalFile), false, "Stale crash journal must be removed after recovery");
   } finally {
@@ -940,7 +940,7 @@ test("Failure Scenario 11: Crash after backup_renamed but before candidate_swapp
     await fs.promises.mkdir(pluginsDir, { recursive: true });
     await fs.promises.mkdir(distDir, { recursive: true });
 
-    const consumer = "tavangary-core";
+    const consumer = "sample-standalone-plugin";
     const txId = "tx-1725178000000-crashed888";
     const targetDir = path.join(pluginsDir, consumer);
     const backupDir = path.join(pluginsDir, `.${consumer}.backup-${txId}`);
@@ -948,10 +948,10 @@ test("Failure Scenario 11: Crash after backup_renamed but before candidate_swapp
 
     // Target does not exist because it was renamed to backupDir just before crash
     await fs.promises.mkdir(backupDir, { recursive: true });
-    await fs.promises.writeFile(path.join(backupDir, "tavangary-core.php"), "<?php echo 'ORIGINAL_HEALTHY_CORE';");
+    await fs.promises.writeFile(path.join(backupDir, "sample-standalone-plugin.php"), "<?php echo 'ORIGINAL_HEALTHY_CORE';");
 
     await fs.promises.mkdir(stagingDir, { recursive: true });
-    await fs.promises.writeFile(path.join(stagingDir, "tavangary-core.php"), "<?php echo 'UNSWAPPED_CANDIDATE';");
+    await fs.promises.writeFile(path.join(stagingDir, "sample-standalone-plugin.php"), "<?php echo 'UNSWAPPED_CANDIDATE';");
 
     const crashJournal = {
       schemaVersion: 2,
@@ -981,13 +981,13 @@ test("Failure Scenario 11: Crash after backup_renamed but before candidate_swapp
     await fs.promises.writeFile(journalFile, JSON.stringify(crashJournal, null, 2), "utf8");
 
     // Initialize minimal cache and dev source
-    const devDir = path.join(pluginsDir, "tavangary-core-dev");
+    const devDir = path.join(pluginsDir, "sample-standalone-plugin-dev");
     const wpdevDir = path.join(pluginsDir, "wpdev");
     const themeDir = path.join(tmpDir, "themes", "tavangary");
     await fs.promises.mkdir(devDir, { recursive: true });
     await fs.promises.mkdir(wpdevDir, { recursive: true });
     await fs.promises.mkdir(themeDir, { recursive: true });
-    await fs.promises.writeFile(path.join(devDir, "tavangary-core.php"), "<?php echo 'DEV';");
+    await fs.promises.writeFile(path.join(devDir, "sample-standalone-plugin.php"), "<?php echo 'DEV';");
     await fs.promises.writeFile(path.join(wpdevDir, "wpdev.php"), "<?php echo 'WPDEV';");
     await fs.promises.writeFile(path.join(themeDir, "style.css"), "/* Theme */");
 
@@ -1073,7 +1073,7 @@ test("Failure Scenario 11: Crash after backup_renamed but before candidate_swapp
 
     // Target must be restored from backup and staging/backup cleaned up
     assert.equal(fs.existsSync(targetDir), true, "Target directory must be restored from backup");
-    const restoredPhp = await fs.promises.readFile(path.join(targetDir, "tavangary-core.php"), "utf8");
+    const restoredPhp = await fs.promises.readFile(path.join(targetDir, "sample-standalone-plugin.php"), "utf8");
     assert.equal(restoredPhp, "<?php echo 'ORIGINAL_HEALTHY_CORE';");
     assert.equal(fs.existsSync(backupDir), false, "Backup directory must be removed");
     assert.equal(fs.existsSync(stagingDir), false, "Staging directory must be removed");
@@ -1160,7 +1160,7 @@ test("Failure Scenario 13: Deploy-skip integrity check rejects tampered non-boot
     await fs.promises.mkdir(distDir, { recursive: true });
     await fs.promises.mkdir(receiptsDir, { recursive: true });
 
-    const consumer = "tavangary-core";
+    const consumer = "sample-standalone-plugin";
     const targetDir = path.join(pluginsDir, consumer);
     const { zipPath, zipSha256, manifestDigest } = await createHermeticZipFixture({ tmpDir, consumer });
 
@@ -1211,7 +1211,7 @@ test("Failure Scenario 14: Rollback of previously-absent files (cache/receipt no
     await fs.promises.mkdir(pluginsDir, { recursive: true });
     await fs.promises.mkdir(distDir, { recursive: true });
 
-    const consumer = "tavangary-core";
+    const consumer = "sample-standalone-plugin";
     const txId = "tx-1725178000000-absent999";
     const targetDir = path.join(pluginsDir, consumer);
     const backupDir = path.join(pluginsDir, `.${consumer}.backup-${txId}`);
@@ -1219,7 +1219,7 @@ test("Failure Scenario 14: Rollback of previously-absent files (cache/receipt no
 
     // Create target dir representing swapped candidate
     await fs.promises.mkdir(targetDir, { recursive: true });
-    await fs.promises.writeFile(path.join(targetDir, "tavangary-core.php"), "<?php echo 'CANDIDATE';");
+    await fs.promises.writeFile(path.join(targetDir, "sample-standalone-plugin.php"), "<?php echo 'CANDIDATE';");
 
     // Receipts and cache did NOT exist before transaction, but were published during partial commit
     await fs.promises.mkdir(receiptsDir, { recursive: true });
@@ -1310,18 +1310,18 @@ test("Failure Scenario 15: Crash in the middle of individual receipt publication
     const backupReceiptsDir = path.join(txBackupDir, ".deploy-receipts");
     await fs.promises.mkdir(backupReceiptsDir, { recursive: true });
 
-    // receipt for tavangary-core existed before (and was backed up)
-    const oldCoreReceipt = { schemaVersion: 2, consumer: "tavangary-core", old: true, artifactId: "tavangary-core-profile-s", plugin: "tavangary-core", targetPath: "/dummy", zipSha256: "0".repeat(64), manifestDigest: "1".repeat(64), sourceFingerprint: "2".repeat(64), wpdevFingerprint: "3".repeat(64), toolsFingerprint: "4".repeat(64), themeFingerprint: "5".repeat(64), toolchainFingerprint: "6".repeat(64), compositeFingerprint: "7".repeat(64), validationState: "deployed", deployedAt: new Date().toISOString() };
+    // receipt for sample-standalone-plugin existed before (and was backed up)
+    const oldCoreReceipt = { schemaVersion: 2, consumer: "sample-standalone-plugin", old: true, artifactId: "sample-standalone-plugin-profile-s", plugin: "sample-standalone-plugin", targetPath: "/dummy", zipSha256: "0".repeat(64), manifestDigest: "1".repeat(64), sourceFingerprint: "2".repeat(64), wpdevFingerprint: "3".repeat(64), toolsFingerprint: "4".repeat(64), themeFingerprint: "5".repeat(64), toolchainFingerprint: "6".repeat(64), compositeFingerprint: "7".repeat(64), validationState: "deployed", deployedAt: new Date().toISOString() };
     const oldCoreBytes = Buffer.from(JSON.stringify(oldCoreReceipt, null, 2));
     const oldCoreDigest = crypto.createHash("sha256").update(oldCoreBytes).digest("hex");
-    await fs.promises.writeFile(path.join(backupReceiptsDir, "tavangary-core.receipt.json"), oldCoreBytes);
+    await fs.promises.writeFile(path.join(backupReceiptsDir, "sample-standalone-plugin.receipt.json"), oldCoreBytes);
 
     // receipt for wpdev-crm did NOT exist before (existedBefore: false)
     const newCrmReceiptFile = path.join(receiptsDir, "wpdev-crm.receipt.json");
     await fs.promises.writeFile(newCrmReceiptFile, JSON.stringify({ consumer: "wpdev-crm", new: true }), "utf8");
 
     // Published new core receipt currently on disk (must be restored to oldCoreReceipt)
-    await fs.promises.writeFile(path.join(receiptsDir, "tavangary-core.receipt.json"), JSON.stringify({ consumer: "tavangary-core", mutated: true }), "utf8");
+    await fs.promises.writeFile(path.join(receiptsDir, "sample-standalone-plugin.receipt.json"), JSON.stringify({ consumer: "sample-standalone-plugin", mutated: true }), "utf8");
 
     const journal = {
       schemaVersion: 2,
@@ -1333,8 +1333,8 @@ test("Failure Scenario 15: Crash in the middle of individual receipt publication
       targets: [],
       publication: {
         receipts: {
-          "tavangary-core": {
-            consumer: "tavangary-core",
+          "sample-standalone-plugin": {
+            consumer: "sample-standalone-plugin",
             existedBefore: true,
             preDigest: oldCoreDigest,
             backupStatus: "backed_up",
@@ -1369,7 +1369,7 @@ test("Failure Scenario 15: Crash in the middle of individual receipt publication
     assert.equal(recRes.recovered, true);
 
     // Core receipt must be restored to old content
-    const restoredCore = JSON.parse(await fs.promises.readFile(path.join(receiptsDir, "tavangary-core.receipt.json"), "utf8"));
+    const restoredCore = JSON.parse(await fs.promises.readFile(path.join(receiptsDir, "sample-standalone-plugin.receipt.json"), "utf8"));
     assert.equal(restoredCore.old, true);
 
     // wpdev-crm receipt must be deleted
@@ -1398,13 +1398,13 @@ test("Failure Scenario 16: Startup recovery in committed phase verifies integrit
     await fs.promises.mkdir(txStagingDir, { recursive: true });
 
     // Staging and backup leftover directories
-    const targetBackup = path.join(pluginsDir, `.tavangary-core.backup-${txId}`);
-    const targetStaging = path.join(pluginsDir, `.tavangary-core.staging-${txId}`);
+    const targetBackup = path.join(pluginsDir, `.sample-standalone-plugin.backup-${txId}`);
+    const targetStaging = path.join(pluginsDir, `.sample-standalone-plugin.staging-${txId}`);
     await fs.promises.mkdir(targetBackup, { recursive: true });
     await fs.promises.mkdir(targetStaging, { recursive: true });
 
     // Target directory must be deployed and valid
-    const { zipPath, zipSha256, manifestDigest } = await createHermeticZipFixture({ tmpDir, consumer: "tavangary-core" });
+    const { zipPath, zipSha256, manifestDigest } = await createHermeticZipFixture({ tmpDir, consumer: "sample-standalone-plugin" });
     await execFileAsync("unzip", ["-q", zipPath, "-d", pluginsDir]);
 
     const journal = {
@@ -1416,19 +1416,19 @@ test("Failure Scenario 16: Startup recovery in committed phase verifies integrit
       phase: "committed",
       targets: [
         {
-          consumer: "tavangary-core",
+          consumer: "sample-standalone-plugin",
           preExisting: true,
           phase: "target_verified",
-          backupToken: `.tavangary-core.backup-${txId}`,
-          stagingToken: `.tavangary-core.staging-${txId}`,
+          backupToken: `.sample-standalone-plugin.backup-${txId}`,
+          stagingToken: `.sample-standalone-plugin.staging-${txId}`,
           candidateZipSha: zipSha256,
           candidateManifestDigest: manifestDigest,
         },
       ],
       publication: {
         receipts: {
-          "tavangary-core": {
-            consumer: "tavangary-core",
+          "sample-standalone-plugin": {
+            consumer: "sample-standalone-plugin",
             existedBefore: true,
             preDigest: "1".repeat(64),
             backupStatus: "backed_up",
@@ -1532,11 +1532,11 @@ test("Failure Scenario 18: validateJournalTransition strictly rejects invalid tr
     phase: "prepared",
     targets: [
       {
-        consumer: "tavangary-core",
+        consumer: "sample-standalone-plugin",
         preExisting: true,
         phase: "prepared",
-        backupToken: ".tavangary-core.backup-tx-1725178000000-trans111",
-        stagingToken: ".tavangary-core.staging-tx-1725178000000-trans111",
+        backupToken: ".sample-standalone-plugin.backup-tx-1725178000000-trans111",
+        stagingToken: ".sample-standalone-plugin.staging-tx-1725178000000-trans111",
         candidateZipSha: "a".repeat(64),
         candidateManifestDigest: "b".repeat(64),
       },
@@ -1563,8 +1563,8 @@ test("Failure Scenario 18: validateJournalTransition strictly rejects invalid tr
     targets: [
       {
         ...baseJournal.targets[0],
-        backupToken: ".tavangary-core.backup-tx-1725178000000-mutated222",
-        stagingToken: ".tavangary-core.staging-tx-1725178000000-mutated222",
+        backupToken: ".sample-standalone-plugin.backup-tx-1725178000000-mutated222",
+        stagingToken: ".sample-standalone-plugin.staging-tx-1725178000000-mutated222",
       },
     ],
   };
@@ -1610,8 +1610,8 @@ test("Failure Scenario 19: Release same-run test evidence replay from prior tran
     toolchainFingerprint: "c".repeat(64),
     artifactBindings: [
       {
-        consumer: "tavangary-core",
-        artifactId: "tavangary-core-profile-s",
+        consumer: "sample-standalone-plugin",
+        artifactId: "sample-standalone-plugin-profile-s",
         zipSha256: "d".repeat(64),
         compositeFingerprint: "e".repeat(64),
       },
@@ -1646,11 +1646,11 @@ test("Failure Scenario 20: Strict Intent-Before-Completion enforcement in valida
     phase: "prepared",
     targets: [
       {
-        consumer: "tavangary-core",
+        consumer: "sample-standalone-plugin",
         preExisting: true,
         phase: "prepared",
-        backupToken: ".tavangary-core.backup-tx-1725178000000-intent001",
-        stagingToken: ".tavangary-core.staging-tx-1725178000000-intent001",
+        backupToken: ".sample-standalone-plugin.backup-tx-1725178000000-intent001",
+        stagingToken: ".sample-standalone-plugin.staging-tx-1725178000000-intent001",
         candidateZipSha: "a".repeat(64),
         candidateManifestDigest: "b".repeat(64),
       },
@@ -1741,11 +1741,11 @@ test("Failure Scenario 22: Rejection of extra or unknown keys in deploy journal 
     phase: "prepared",
     targets: [
       {
-        consumer: "tavangary-core",
+        consumer: "sample-standalone-plugin",
         preExisting: false,
         phase: "prepared",
-        backupToken: ".tavangary-core.backup-tx-1725178000000-strict001",
-        stagingToken: ".tavangary-core.staging-tx-1725178000000-strict001",
+        backupToken: ".sample-standalone-plugin.backup-tx-1725178000000-strict001",
+        stagingToken: ".sample-standalone-plugin.staging-tx-1725178000000-strict001",
         candidateZipSha: "a".repeat(64),
         candidateManifestDigest: "b".repeat(64),
       },
@@ -1794,8 +1794,8 @@ test("Failure Scenario 23: Rollback fails safely when existedBefore backup is mi
       targets: [],
       publication: {
         receipts: {
-          "tavangary-core": {
-            consumer: "tavangary-core",
+          "sample-standalone-plugin": {
+            consumer: "sample-standalone-plugin",
             existedBefore: true,
             preDigest: "a".repeat(64),
             backupStatus: "backed_up",
@@ -1928,11 +1928,11 @@ test("Failure Scenario 25: TransactionJournalManager serializes mutations, incre
       phase: "prepared",
       targets: [
         {
-          consumer: "tavangary-core",
+          consumer: "sample-standalone-plugin",
           preExisting: true,
           phase: "prepared",
-          backupToken: `.tavangary-core.backup-${txId}`,
-          stagingToken: `.tavangary-core.staging-${txId}`,
+          backupToken: `.sample-standalone-plugin.backup-${txId}`,
+          stagingToken: `.sample-standalone-plugin.staging-${txId}`,
           candidateZipSha: "a".repeat(64),
           candidateManifestDigest: "b".repeat(64),
         },
@@ -2015,20 +2015,20 @@ test("Failure Scenario 26: TransactionJournalManager serializes concurrent async
       phase: "prepared",
       targets: [
         {
-          consumer: "tavangary-core",
+          consumer: "sample-standalone-plugin",
           preExisting: true,
           phase: "prepared",
-          backupToken: `.tavangary-core.backup-${txId}`,
-          stagingToken: `.tavangary-core.staging-${txId}`,
+          backupToken: `.sample-standalone-plugin.backup-${txId}`,
+          stagingToken: `.sample-standalone-plugin.staging-${txId}`,
           candidateZipSha: "a".repeat(64),
           candidateManifestDigest: "b".repeat(64),
         },
         {
-          consumer: "tavangary-theme-panel",
+          consumer: "sample-profile-s-plugin",
           preExisting: true,
           phase: "prepared",
-          backupToken: `.tavangary-theme-panel.backup-${txId}`,
-          stagingToken: `.tavangary-theme-panel.staging-${txId}`,
+          backupToken: `.sample-profile-s-plugin.backup-${txId}`,
+          stagingToken: `.sample-profile-s-plugin.staging-${txId}`,
           candidateZipSha: "c".repeat(64),
           candidateManifestDigest: "d".repeat(64),
         },
@@ -2088,20 +2088,20 @@ test("Failure Scenario 27: validateJournalTransition strictly rejects adding, re
     phase: "prepared",
     targets: [
       {
-        consumer: "tavangary-core",
+        consumer: "sample-standalone-plugin",
         preExisting: true,
         phase: "prepared",
-        backupToken: `.tavangary-core.backup-${txId}`,
-        stagingToken: `.tavangary-core.staging-${txId}`,
+        backupToken: `.sample-standalone-plugin.backup-${txId}`,
+        stagingToken: `.sample-standalone-plugin.staging-${txId}`,
         candidateZipSha: "0".repeat(64),
         candidateManifestDigest: null,
       },
       {
-        consumer: "tavangary-theme-panel",
+        consumer: "sample-profile-s-plugin",
         preExisting: true,
         phase: "prepared",
-        backupToken: `.tavangary-theme-panel.backup-${txId}`,
-        stagingToken: `.tavangary-theme-panel.staging-${txId}`,
+        backupToken: `.sample-profile-s-plugin.backup-${txId}`,
+        stagingToken: `.sample-profile-s-plugin.staging-${txId}`,
         candidateZipSha: "0".repeat(64),
         candidateManifestDigest: null,
       },
@@ -2156,19 +2156,19 @@ test("Failure Scenario 28: State machine enforces Commit Point Invariant: transi
     phase: "committed",
     targets: [
       {
-        consumer: "tavangary-core",
+        consumer: "sample-standalone-plugin",
         preExisting: true,
         phase: "target_verified",
-        backupToken: `.tavangary-core.backup-${txId}`,
-        stagingToken: `.tavangary-core.staging-${txId}`,
+        backupToken: `.sample-standalone-plugin.backup-${txId}`,
+        stagingToken: `.sample-standalone-plugin.staging-${txId}`,
         candidateZipSha: "a".repeat(64),
         candidateManifestDigest: "b".repeat(64),
       },
     ],
     publication: {
       receipts: {
-        "tavangary-core": {
-          consumer: "tavangary-core",
+        "sample-standalone-plugin": {
+          consumer: "sample-standalone-plugin",
           existedBefore: true,
           preDigest: "c".repeat(64),
           backupStatus: "backed_up",
@@ -2213,8 +2213,8 @@ test("Failure Scenario 29: State machine strictly rejects published status with 
     targets: [],
     publication: {
       receipts: {
-        "tavangary-core": {
-          consumer: "tavangary-core",
+        "sample-standalone-plugin": {
+          consumer: "sample-standalone-plugin",
           existedBefore: true,
           preDigest: "1".repeat(64),
           backupStatus: "backed_up",
@@ -2232,8 +2232,8 @@ test("Failure Scenario 29: State machine strictly rejects published status with 
   const tamperedPub = structuredClone(pubJournal);
   tamperedPub.revision = 6;
   tamperedPub.phase = "committed";
-  tamperedPub.publication.receipts["tavangary-core"].publishStatus = "published";
-  tamperedPub.publication.receipts["tavangary-core"].finalDigest = "9".repeat(64); // Mismatched!
+  tamperedPub.publication.receipts["sample-standalone-plugin"].publishStatus = "published";
+  tamperedPub.publication.receipts["sample-standalone-plugin"].finalDigest = "9".repeat(64); // Mismatched!
 
   const res = validateJournalTransition(pubJournal, tamperedPub);
   assert.equal(res.valid, false);
@@ -2307,25 +2307,25 @@ test("Failure Scenario 32: Multi-target deployment with candidate digest transit
     await mkdir(srcDir, { recursive: true });
 
     // Create lightweight source structures for fingerprinting
-    await mkdir(path.join(pluginsDir, "tavangary-core-dev"), { recursive: true });
-    await writeFile(path.join(pluginsDir, "tavangary-core-dev", "tavangary-core.php"), "<?php // core dev", "utf8");
+    await mkdir(path.join(pluginsDir, "sample-standalone-plugin-dev"), { recursive: true });
+    await writeFile(path.join(pluginsDir, "sample-standalone-plugin-dev", "sample-standalone-plugin.php"), "<?php // core dev", "utf8");
     await mkdir(path.join(pluginsDir, "wpdev-crm-dev"), { recursive: true });
     await writeFile(path.join(pluginsDir, "wpdev-crm-dev", "wpdev-crm.php"), "<?php // crm dev", "utf8");
     await mkdir(path.join(pluginsDir, "wpdev"), { recursive: true });
     await writeFile(path.join(pluginsDir, "wpdev", "wpdev.php"), "<?php // wpdev core", "utf8");
 
-    // Pre-create pre-existing target for tavangary-core
-    const coreTargetDir = path.join(pluginsDir, "tavangary-core");
+    // Pre-create pre-existing target for sample-standalone-plugin
+    const coreTargetDir = path.join(pluginsDir, "sample-standalone-plugin");
     await mkdir(coreTargetDir, { recursive: true });
-    await writeFile(path.join(coreTargetDir, "tavangary-core.php"), "<?php // pre-existing core", "utf8");
+    await writeFile(path.join(coreTargetDir, "sample-standalone-plugin.php"), "<?php // pre-existing core", "utf8");
 
     // wpdev-crm does NOT pre-exist
     const crmTargetDir = path.join(pluginsDir, "wpdev-crm");
 
     // Create valid hermetic Profile S ZIPs for both targets
-    const coreFix = await createHermeticZipFixture({ tmpDir: srcDir, consumer: "tavangary-core" });
+    const coreFix = await createHermeticZipFixture({ tmpDir: srcDir, consumer: "sample-standalone-plugin" });
     const crmFix = await createHermeticZipFixture({ tmpDir: srcDir, consumer: "wpdev-crm" });
-    await copyFile(coreFix.zipPath, path.join(distDir, "tavangary-core-profile-s.zip"));
+    await copyFile(coreFix.zipPath, path.join(distDir, "sample-standalone-plugin-profile-s.zip"));
     await copyFile(crmFix.zipPath, path.join(distDir, "wpdev-crm-profile-s.zip"));
     const coreZipSha = coreFix.zipSha256;
     const crmZipSha = crmFix.zipSha256;
@@ -2339,17 +2339,17 @@ test("Failure Scenario 32: Multi-target deployment with candidate digest transit
     const fp = await computeAllFingerprintsParallel({
       scriptDir: packageRoot,
       pluginsDir,
-      targetPlugins: ["tavangary-core", "wpdev-crm"],
+      targetPlugins: ["sample-standalone-plugin", "wpdev-crm"],
       contentRoot,
     });
 
-    const corePlan = createBuildPlan({ consumer: "tavangary-core", profile: "s", isObfuscate: true });
+    const corePlan = createBuildPlan({ consumer: "sample-standalone-plugin", profile: "s", isObfuscate: true });
     const crmPlan = createBuildPlan({ consumer: "wpdev-crm", profile: "s", isObfuscate: true });
 
     const coreComposite = computePluginCompositeFingerprint({
       toolsFingerprint: fp.tools,
       wpdevFingerprint: fp.wpdev,
-      pluginSourceFingerprint: fp.plugins["tavangary-core"],
+      pluginSourceFingerprint: fp.plugins["sample-standalone-plugin"],
       toolchainFingerprint: fp.toolchain,
       profile: "s",
       buildPlan: corePlan,
@@ -2376,11 +2376,11 @@ test("Failure Scenario 32: Multi-target deployment with candidate digest transit
       _testEvidence: {},
       toolchain: fp.toolchain,
       artifacts: {
-        "tavangary-core": {
+        "sample-standalone-plugin": {
           schemaVersion: CACHE_SCHEMA_VERSION,
-          artifactId: "tavangary-core-profile-s",
-          consumer: "tavangary-core",
-          sourceFingerprint: fp.plugins["tavangary-core"],
+          artifactId: "sample-standalone-plugin-profile-s",
+          consumer: "sample-standalone-plugin",
+          sourceFingerprint: fp.plugins["sample-standalone-plugin"],
           wpdevFingerprint: fp.wpdev,
           toolsFingerprint: fp.tools,
           themeFingerprint: themeHash,
@@ -2424,7 +2424,7 @@ test("Failure Scenario 32: Multi-target deployment with candidate digest transit
 
     // Execute full pipeline orchestration across 2 targets with fast mode (throws fail-closed)
     const res = await runPipelineOrchestration({
-      targetPlugins: ["tavangary-core", "wpdev-crm"],
+      targetPlugins: ["sample-standalone-plugin", "wpdev-crm"],
       pluginsDir,
       distDir,
       receiptsDir,
@@ -2441,7 +2441,7 @@ test("Failure Scenario 32: Multi-target deployment with candidate digest transit
 
     // Now run with valid affected testMode and mock executor
     const successRes = await runPipelineOrchestration({
-      targetPlugins: ["tavangary-core", "wpdev-crm"],
+      targetPlugins: ["sample-standalone-plugin", "wpdev-crm"],
       pluginsDir,
       distDir,
       receiptsDir,
@@ -2456,18 +2456,18 @@ test("Failure Scenario 32: Multi-target deployment with candidate digest transit
       executor: async () => ({ stdout: "ok 1 - pass\n", stderr: "" }),
     });
 
-    assert.ok(successRes["deploy:tavangary-core"]);
+    assert.ok(successRes["deploy:sample-standalone-plugin"]);
     assert.ok(successRes["deploy:wpdev-crm"]);
 
     // Both candidateZipSha must equal their genuine deployed ZIP SHA-256
-    const deployedCoreSha = successRes["deploy:tavangary-core"].receipt.zipSha256;
+    const deployedCoreSha = successRes["deploy:sample-standalone-plugin"].receipt.zipSha256;
     const deployedCrmSha = successRes["deploy:wpdev-crm"].receipt.zipSha256;
     assert.match(deployedCoreSha, /^[a-f0-9]{64}$/);
     assert.match(deployedCrmSha, /^[a-f0-9]{64}$/);
 
     // Receipts must exist and be valid
     const { loadDeployReceiptRecord } = await import("../build-cache-engine.mjs");
-    const coreRcpt = await loadDeployReceiptRecord(path.join(receiptsDir, "tavangary-core.receipt.json"), "tavangary-core");
+    const coreRcpt = await loadDeployReceiptRecord(path.join(receiptsDir, "sample-standalone-plugin.receipt.json"), "sample-standalone-plugin");
     const crmRcpt = await loadDeployReceiptRecord(path.join(receiptsDir, "wpdev-crm.receipt.json"), "wpdev-crm");
     assert.equal(coreRcpt.status, "valid");
     assert.equal(crmRcpt.status, "valid");
@@ -2495,11 +2495,11 @@ test("Failure Scenario 33: Target candidateZipSha mutability invariant strictly 
     phase: "prepared",
     targets: [
       {
-        consumer: "tavangary-core",
+        consumer: "sample-standalone-plugin",
         preExisting: false,
         phase: "prepared",
-        backupToken: `.tavangary-core.backup-${txId}`,
-        stagingToken: `.tavangary-core.staging-${txId}`,
+        backupToken: `.sample-standalone-plugin.backup-${txId}`,
+        stagingToken: `.sample-standalone-plugin.staging-${txId}`,
         candidateZipSha: "0".repeat(64),
         candidateManifestDigest: null,
       },
@@ -2545,7 +2545,7 @@ test("Failure Scenario 34: Missing or corrupted target backup directory during r
     await mkdir(distDir, { recursive: true });
 
     // Target was pre-existing, but backup was deleted/missing
-    const targetDir = path.join(pluginsDir, "tavangary-core");
+    const targetDir = path.join(pluginsDir, "sample-standalone-plugin");
     await mkdir(targetDir, { recursive: true });
 
     const journal = {
@@ -2557,11 +2557,11 @@ test("Failure Scenario 34: Missing or corrupted target backup directory during r
       phase: "prepared",
       targets: [
         {
-          consumer: "tavangary-core",
+          consumer: "sample-standalone-plugin",
           preExisting: true,
           phase: "candidate_swapped",
-          backupToken: `.tavangary-core.backup-${txId}`,
-          stagingToken: `.tavangary-core.staging-${txId}`,
+          backupToken: `.sample-standalone-plugin.backup-${txId}`,
+          stagingToken: `.sample-standalone-plugin.staging-${txId}`,
           candidateZipSha: "a".repeat(64),
           candidateManifestDigest: "b".repeat(64),
         },
@@ -2616,8 +2616,8 @@ test("Failure Scenario 35: Missing, symlink, or corrupt backup receipt/cache dur
       targets: [],
       publication: {
         receipts: {
-          "tavangary-core": {
-            consumer: "tavangary-core",
+          "sample-standalone-plugin": {
+            consumer: "sample-standalone-plugin",
             existedBefore: true,
             preDigest: "a".repeat(64),
             backupStatus: "backed_up",
@@ -2642,7 +2642,7 @@ test("Failure Scenario 35: Missing, symlink, or corrupt backup receipt/cache dur
           distDir,
         });
       },
-      /Rollback failed: Backup receipt missing for tavangary-core/i
+      /Rollback failed: Backup receipt missing for sample-standalone-plugin/i
     );
 
     const check = await loadDeployJournalRecord(journalFile);
@@ -2665,12 +2665,12 @@ test("Failure Scenario 36: Committed crash with failed post-commit cleanup leave
     await mkdir(distDir, { recursive: true });
 
     // Target deployed
-    const { zipPath, zipSha256, manifestDigest } = await createHermeticZipFixture({ tmpDir, consumer: "tavangary-core" });
+    const { zipPath, zipSha256, manifestDigest } = await createHermeticZipFixture({ tmpDir, consumer: "sample-standalone-plugin" });
     await execFileAsync("unzip", ["-q", zipPath, "-d", pluginsDir]);
 
     // Leftover backup and staging
-    const backupDir = path.join(pluginsDir, `.tavangary-core.backup-${txId}`);
-    const stagingDir = path.join(pluginsDir, `.tavangary-core.staging-${txId}`);
+    const backupDir = path.join(pluginsDir, `.sample-standalone-plugin.backup-${txId}`);
+    const stagingDir = path.join(pluginsDir, `.sample-standalone-plugin.staging-${txId}`);
     await mkdir(backupDir, { recursive: true });
     await mkdir(stagingDir, { recursive: true });
 
@@ -2688,19 +2688,19 @@ test("Failure Scenario 36: Committed crash with failed post-commit cleanup leave
       phase: "committed",
       targets: [
         {
-          consumer: "tavangary-core",
+          consumer: "sample-standalone-plugin",
           preExisting: true,
           phase: "target_verified",
-          backupToken: `.tavangary-core.backup-${txId}`,
-          stagingToken: `.tavangary-core.staging-${txId}`,
+          backupToken: `.sample-standalone-plugin.backup-${txId}`,
+          stagingToken: `.sample-standalone-plugin.staging-${txId}`,
           candidateZipSha: zipSha256,
           candidateManifestDigest: manifestDigest,
         },
       ],
       publication: {
         receipts: {
-          "tavangary-core": {
-            consumer: "tavangary-core",
+          "sample-standalone-plugin": {
+            consumer: "sample-standalone-plugin",
             existedBefore: true,
             preDigest: "c".repeat(64),
             backupStatus: "backed_up",
@@ -2730,12 +2730,12 @@ test("Failure Scenario 36: Committed crash with failed post-commit cleanup leave
     assert.equal(rec1.clean, true);
 
     // Leftovers must be gone, target must be intact
-    const targetDir = path.join(pluginsDir, "tavangary-core");
+    const targetDir = path.join(pluginsDir, "sample-standalone-plugin");
     assert.ok(!fs.existsSync(backupDir));
     assert.ok(!fs.existsSync(stagingDir));
     assert.ok(!fs.existsSync(txStagingDir));
     assert.ok(!fs.existsSync(txBackupDir));
-    assert.ok(fs.existsSync(path.join(targetDir, "tavangary-core.php")));
+    assert.ok(fs.existsSync(path.join(targetDir, "sample-standalone-plugin.php")));
     assert.ok(!fs.existsSync(journalFile));
 
     // 2nd recovery run (idempotent)
@@ -2768,11 +2768,11 @@ test("Failure Scenario 37: TransactionJournalManager rejects queued writes when 
       phase: "prepared",
       targets: [
         {
-          consumer: "tavangary-core",
+          consumer: "sample-standalone-plugin",
           preExisting: false,
           phase: "prepared",
-          backupToken: `.tavangary-core.backup-${txId}`,
-          stagingToken: `.tavangary-core.staging-${txId}`,
+          backupToken: `.sample-standalone-plugin.backup-${txId}`,
+          stagingToken: `.sample-standalone-plugin.staging-${txId}`,
           candidateZipSha: "0".repeat(64),
           candidateManifestDigest: null,
         },
@@ -2837,8 +2837,8 @@ test("Failure Scenario 38: Publication state machine enforces strict staged -> p
     targets: [],
     publication: {
       receipts: {
-        "tavangary-core": {
-          consumer: "tavangary-core",
+        "sample-standalone-plugin": {
+          consumer: "sample-standalone-plugin",
           existedBefore: false,
           preDigest: null,
           backupStatus: "absent",
@@ -2856,15 +2856,15 @@ test("Failure Scenario 38: Publication state machine enforces strict staged -> p
   // 1. Transitioning from staged to publishing is valid
   const pubIntent = structuredClone(base);
   pubIntent.revision = 3;
-  pubIntent.publication.receipts["tavangary-core"].publishStatus = "publishing";
+  pubIntent.publication.receipts["sample-standalone-plugin"].publishStatus = "publishing";
   const res1 = validateJournalTransition(base, pubIntent);
   assert.equal(res1.valid, true);
 
   // 2. Transitioning directly from staged to published (skipping publishing) is rejected
   const directPub = structuredClone(base);
   directPub.revision = 3;
-  directPub.publication.receipts["tavangary-core"].publishStatus = "published";
-  directPub.publication.receipts["tavangary-core"].finalDigest = "a".repeat(64);
+  directPub.publication.receipts["sample-standalone-plugin"].publishStatus = "published";
+  directPub.publication.receipts["sample-standalone-plugin"].finalDigest = "a".repeat(64);
   const res2 = validateJournalTransition(base, directPub);
   assert.equal(res2.valid, false);
   assert.match(res2.reason, /Invalid publication receipt phase transition/i);
@@ -2872,12 +2872,12 @@ test("Failure Scenario 38: Publication state machine enforces strict staged -> p
   // 3. Transitioning published back to publishing is rejected
   const publishedState = structuredClone(pubIntent);
   publishedState.revision = 4;
-  publishedState.publication.receipts["tavangary-core"].publishStatus = "published";
-  publishedState.publication.receipts["tavangary-core"].finalDigest = "a".repeat(64);
+  publishedState.publication.receipts["sample-standalone-plugin"].publishStatus = "published";
+  publishedState.publication.receipts["sample-standalone-plugin"].finalDigest = "a".repeat(64);
 
   const revertedPub = structuredClone(publishedState);
   revertedPub.revision = 5;
-  revertedPub.publication.receipts["tavangary-core"].publishStatus = "publishing";
+  revertedPub.publication.receipts["sample-standalone-plugin"].publishStatus = "publishing";
   const res3 = validateJournalTransition(publishedState, revertedPub);
   assert.equal(res3.valid, false);
   assert.match(res3.reason, /Invalid publication receipt phase transition/i);
@@ -2897,28 +2897,28 @@ test("Failure Scenario 39: Docker smoke node fails if any artifact binding is mi
     await mkdir(themeDir, { recursive: true });
     await writeFile(path.join(themeDir, "style.css"), "/* theme */", "utf8");
     const contentRoot = tmpDir;
-    await mkdir(path.join(pluginsDir, "tavangary-core-dev"), { recursive: true });
-    await writeFile(path.join(pluginsDir, "tavangary-core-dev", "tavangary-core.php"), "<?php // core dev", "utf8");
+    await mkdir(path.join(pluginsDir, "sample-standalone-plugin-dev"), { recursive: true });
+    await writeFile(path.join(pluginsDir, "sample-standalone-plugin-dev", "sample-standalone-plugin.php"), "<?php // core dev", "utf8");
     await mkdir(path.join(pluginsDir, "wpdev"), { recursive: true });
     await writeFile(path.join(pluginsDir, "wpdev", "wpdev.php"), "<?php // wpdev core", "utf8");
 
     const cacheFile = path.join(distDir, ".build-cache.json");
-    const { zipPath, zipSha256, manifestDigest } = await createHermeticZipFixture({ tmpDir, consumer: "tavangary-core" });
-    await copyFile(zipPath, path.join(distDir, "tavangary-core-profile-s.zip"));
+    const { zipPath, zipSha256, manifestDigest } = await createHermeticZipFixture({ tmpDir, consumer: "sample-standalone-plugin" });
+    await copyFile(zipPath, path.join(distDir, "sample-standalone-plugin-profile-s.zip"));
 
     const { computeAllFingerprintsParallel, computePluginCompositeFingerprint } = await import("../build-cache-engine.mjs");
     const fp = await computeAllFingerprintsParallel({
       scriptDir: packageRoot,
       pluginsDir,
-      targetPlugins: ["tavangary-core"],
+      targetPlugins: ["sample-standalone-plugin"],
       contentRoot,
     });
 
-    const corePlan = createBuildPlan({ consumer: "tavangary-core", profile: "s", isObfuscate: true });
+    const corePlan = createBuildPlan({ consumer: "sample-standalone-plugin", profile: "s", isObfuscate: true });
     const coreComposite = computePluginCompositeFingerprint({
       toolsFingerprint: fp.tools,
       wpdevFingerprint: fp.wpdev,
-      pluginSourceFingerprint: fp.plugins["tavangary-core"],
+      pluginSourceFingerprint: fp.plugins["sample-standalone-plugin"],
       toolchainFingerprint: fp.toolchain,
       profile: "s",
       buildPlan: corePlan,
@@ -2936,11 +2936,11 @@ test("Failure Scenario 39: Docker smoke node fails if any artifact binding is mi
       _testEvidence: {},
       toolchain: fp.toolchain,
       artifacts: {
-        "tavangary-core": {
+        "sample-standalone-plugin": {
           schemaVersion: CACHE_SCHEMA_VERSION,
-          artifactId: "tavangary-core-profile-s",
-          consumer: "tavangary-core",
-          sourceFingerprint: fp.plugins["tavangary-core"],
+          artifactId: "sample-standalone-plugin-profile-s",
+          consumer: "sample-standalone-plugin",
+          sourceFingerprint: fp.plugins["sample-standalone-plugin"],
           wpdevFingerprint: fp.wpdev,
           toolsFingerprint: fp.tools,
           themeFingerprint: themeHash,
@@ -2965,7 +2965,7 @@ test("Failure Scenario 39: Docker smoke node fails if any artifact binding is mi
     await assert.rejects(
       async () => {
         await runPipelineOrchestration({
-          targetPlugins: ["tavangary-core"],
+          targetPlugins: ["sample-standalone-plugin"],
           pluginsDir,
           distDir,
           cacheFile,
@@ -3001,19 +3001,19 @@ test("Failure Scenario 40: deepFreeze ensures nested mutations on snapshots cann
       phase: "prepared",
       targets: [
         {
-          consumer: "tavangary-core",
+          consumer: "sample-standalone-plugin",
           preExisting: false,
           phase: "prepared",
-          backupToken: `.tavangary-core.backup-${txId}`,
-          stagingToken: `.tavangary-core.staging-${txId}`,
+          backupToken: `.sample-standalone-plugin.backup-${txId}`,
+          stagingToken: `.sample-standalone-plugin.staging-${txId}`,
           candidateZipSha: "0".repeat(64),
           candidateManifestDigest: null,
         },
       ],
       publication: {
         receipts: {
-          "tavangary-core": {
-            consumer: "tavangary-core",
+          "sample-standalone-plugin": {
+            consumer: "sample-standalone-plugin",
             existedBefore: false,
             preDigest: null,
             backupStatus: "absent",
@@ -3049,7 +3049,7 @@ test("Failure Scenario 40: deepFreeze ensures nested mutations on snapshots cann
     assert.ok(Object.isFrozen(snapshot.targets[0]));
     assert.ok(Object.isFrozen(snapshot.publication));
     assert.ok(Object.isFrozen(snapshot.publication.receipts));
-    assert.ok(Object.isFrozen(snapshot.publication.receipts["tavangary-core"]));
+    assert.ok(Object.isFrozen(snapshot.publication.receipts["sample-standalone-plugin"]));
     assert.ok(Object.isFrozen(snapshot.publication.cache));
 
     // Attempting to mutate nested properties must throw TypeError in strict mode or have zero effect
@@ -3058,13 +3058,13 @@ test("Failure Scenario 40: deepFreeze ensures nested mutations on snapshots cann
     }, TypeError);
 
     assert.throws(() => {
-      snapshot.publication.receipts["tavangary-core"].publishStatus = "published";
+      snapshot.publication.receipts["sample-standalone-plugin"].publishStatus = "published";
     }, TypeError);
 
     // Verify manager state remains intact
     const freshSnapshot = manager.getSnapshot();
     assert.equal(freshSnapshot.targets[0].candidateZipSha, "0".repeat(64));
-    assert.equal(freshSnapshot.publication.receipts["tavangary-core"].publishStatus, "staged");
+    assert.equal(freshSnapshot.publication.receipts["sample-standalone-plugin"].publishStatus, "staged");
   } finally {
     await rm(tmpDir, { recursive: true, force: true });
   }
@@ -3086,11 +3086,11 @@ test("Failure Scenario 41: TransactionJournalManager handles in-flight mutation 
       phase: "prepared",
       targets: [
         {
-          consumer: "tavangary-core",
+          consumer: "sample-standalone-plugin",
           preExisting: false,
           phase: "prepared",
-          backupToken: `.tavangary-core.backup-${txId}`,
-          stagingToken: `.tavangary-core.staging-${txId}`,
+          backupToken: `.sample-standalone-plugin.backup-${txId}`,
+          stagingToken: `.sample-standalone-plugin.staging-${txId}`,
           candidateZipSha: "0".repeat(64),
           candidateManifestDigest: null,
         },
@@ -3157,18 +3157,18 @@ test("Failure Scenario 42: Publication state machine forbids restored/deleted ou
     updatedAt: new Date().toISOString(),
     phase: "publishing",
     targets: [{
-      consumer: "tavangary-core",
+      consumer: "sample-standalone-plugin",
       preExisting: false,
       phase: "candidate_swapped",
-      backupToken: `.tavangary-core.backup-${txId}`,
-      stagingToken: `.tavangary-core.staging-${txId}`,
+      backupToken: `.sample-standalone-plugin.backup-${txId}`,
+      stagingToken: `.sample-standalone-plugin.staging-${txId}`,
       candidateZipSha: "1".repeat(64),
       candidateManifestDigest: "2".repeat(64),
     }],
     publication: {
       receipts: {
-        "tavangary-core": {
-          consumer: "tavangary-core",
+        "sample-standalone-plugin": {
+          consumer: "sample-standalone-plugin",
           existedBefore: false,
           preDigest: null,
           backupStatus: "absent",
@@ -3193,7 +3193,7 @@ test("Failure Scenario 42: Publication state machine forbids restored/deleted ou
   // 1. Transitioning to restored or deleted while phase is 'publishing' must be rejected
   const illegalRestore = structuredClone(publishingState);
   illegalRestore.revision = 3;
-  illegalRestore.publication.receipts["tavangary-core"].publishStatus = "restored";
+  illegalRestore.publication.receipts["sample-standalone-plugin"].publishStatus = "restored";
   const res1 = validateJournalTransition(publishingState, illegalRestore);
   assert.equal(res1.valid, false);
   assert.match(res1.reason, /outside rollback phase/i);
@@ -3202,8 +3202,8 @@ test("Failure Scenario 42: Publication state machine forbids restored/deleted ou
   const publishedState = structuredClone(publishingState);
   publishedState.revision = 3;
   publishedState.phase = "committed";
-  publishedState.publication.receipts["tavangary-core"].publishStatus = "published";
-  publishedState.publication.receipts["tavangary-core"].finalDigest = "a".repeat(64);
+  publishedState.publication.receipts["sample-standalone-plugin"].publishStatus = "published";
+  publishedState.publication.receipts["sample-standalone-plugin"].finalDigest = "a".repeat(64);
   publishedState.publication.cache.publishStatus = "published";
   publishedState.publication.cache.finalDigest = "b".repeat(64);
   const res2 = validateJournalTransition(publishingState, publishedState);
@@ -3212,10 +3212,10 @@ test("Failure Scenario 42: Publication state machine forbids restored/deleted ou
   // 3. Mutating published digest in subsequent revision must be strictly rejected
   const mutatedDigestState = structuredClone(publishedState);
   mutatedDigestState.revision = 4;
-  mutatedDigestState.publication.receipts["tavangary-core"].finalDigest = "f".repeat(64);
+  mutatedDigestState.publication.receipts["sample-standalone-plugin"].finalDigest = "f".repeat(64);
   const res3 = validateJournalTransition(publishedState, mutatedDigestState);
   assert.equal(res3.valid, false);
-  assert.match(res3.reason, /Published receipt 'tavangary-core' digests cannot be mutated|must have finalDigest equal to stagedDigest/i);
+  assert.match(res3.reason, /Published receipt 'sample-standalone-plugin' digests cannot be mutated|must have finalDigest equal to stagedDigest/i);
 
   // 4. Transitioning published to restored or deleted is strictly permitted during rolling_back phase
   const rollbackIntent = structuredClone(publishedState);
@@ -3223,7 +3223,7 @@ test("Failure Scenario 42: Publication state machine forbids restored/deleted ou
   rollbackIntent.phase = "rolling_back";
   const rollingState = structuredClone(rollbackIntent);
   rollingState.revision = 5;
-  rollingState.publication.receipts["tavangary-core"].publishStatus = "restored";
+  rollingState.publication.receipts["sample-standalone-plugin"].publishStatus = "restored";
   rollingState.publication.cache.publishStatus = "restored";
   const resRollback = validateJournalTransition(rollbackIntent, rollingState);
   assert.equal(resRollback.valid, true, resRollback.reason);
@@ -3232,7 +3232,7 @@ test("Failure Scenario 42: Publication state machine forbids restored/deleted ou
   const illegalPublishedRestore = structuredClone(publishedState);
   illegalPublishedRestore.revision = 4;
   illegalPublishedRestore.phase = "committed";
-  illegalPublishedRestore.publication.receipts["tavangary-core"].publishStatus = "restored";
+  illegalPublishedRestore.publication.receipts["sample-standalone-plugin"].publishStatus = "restored";
   const resIllegal = validateJournalTransition(publishedState, illegalPublishedRestore);
   assert.equal(resIllegal.valid, false);
   assert.match(resIllegal.reason, /cannot transition away from 'published'|outside rollback phase/i);
@@ -3250,14 +3250,14 @@ test("Failure Scenario 43: Committed recovery verifies destination artifact inte
     await mkdir(pluginsDir, { recursive: true });
     await mkdir(distDir, { recursive: true });
 
-    const targetDir = path.join(pluginsDir, "tavangary-core");
-    const backupDir = path.join(pluginsDir, `.tavangary-core.backup-${txId}`);
+    const targetDir = path.join(pluginsDir, "sample-standalone-plugin");
+    const backupDir = path.join(pluginsDir, `.sample-standalone-plugin.backup-${txId}`);
     await mkdir(targetDir, { recursive: true });
     await mkdir(backupDir, { recursive: true });
 
     // Target is deployed but corrupted (missing artifact-manifest.json)
-    await fs.promises.writeFile(path.join(targetDir, "tavangary-core.php"), "<?php echo 'CORRUPT_DEPLOY';");
-    await fs.promises.writeFile(path.join(backupDir, "tavangary-core.php"), "<?php echo 'ORIGINAL_BACKUP';");
+    await fs.promises.writeFile(path.join(targetDir, "sample-standalone-plugin.php"), "<?php echo 'CORRUPT_DEPLOY';");
+    await fs.promises.writeFile(path.join(backupDir, "sample-standalone-plugin.php"), "<?php echo 'ORIGINAL_BACKUP';");
 
     const committedJournal = {
       schemaVersion: 2,
@@ -3268,19 +3268,19 @@ test("Failure Scenario 43: Committed recovery verifies destination artifact inte
       phase: "committed",
       targets: [
         {
-          consumer: "tavangary-core",
+          consumer: "sample-standalone-plugin",
           preExisting: true,
           phase: "target_verified",
-          backupToken: `.tavangary-core.backup-${txId}`,
-          stagingToken: `.tavangary-core.staging-${txId}`,
+          backupToken: `.sample-standalone-plugin.backup-${txId}`,
+          stagingToken: `.sample-standalone-plugin.staging-${txId}`,
           candidateZipSha: "a".repeat(64),
           candidateManifestDigest: "b".repeat(64),
         },
       ],
       publication: {
         receipts: {
-          "tavangary-core": {
-            consumer: "tavangary-core",
+          "sample-standalone-plugin": {
+            consumer: "sample-standalone-plugin",
             existedBefore: true,
             preDigest: "1".repeat(64),
             backupStatus: "backed_up",
@@ -3312,7 +3312,7 @@ test("Failure Scenario 43: Committed recovery verifies destination artifact inte
           distDir,
         });
       },
-      /Committed recovery failed: Destination artifact for 'tavangary-core' is invalid/i
+      /Committed recovery failed: Destination artifact for 'sample-standalone-plugin' is invalid/i
     );
 
     // Backups must NOT be purged when destination verification fails
@@ -3368,7 +3368,7 @@ test("Failure Scenario 44: Release mode rejects legacy test evidence schema v2 a
     transactionId: "tx-1725178000-oldtx",
   };
   const coverageRes = computeArtifactTestCoverage({
-    consumer: "tavangary-core",
+    consumer: "sample-standalone-plugin",
     testEvidenceMap: { "target-registry.test.mjs": previousRunEvidence },
     testMode: "release",
     currentRunId: "run-1725178000-newrun",

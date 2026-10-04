@@ -13,7 +13,12 @@ import { fileURLToPath } from "node:url";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const contentRoot = path.resolve(process.argv[2] || path.join(scriptDirectory, ".."));
-const consumer = process.argv[3] || "tavangary-theme-panel";
+const consumer = process.argv[3];
+if (!consumer) {
+  console.error("Error: consumer argument is required.");
+  console.error("Usage: node validate-settings-ownership-review.mjs <contentRoot> <consumer>");
+  process.exit(1);
+}
 const failures = [];
 const evidence = [];
 const blockers = [];

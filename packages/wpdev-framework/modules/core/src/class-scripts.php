@@ -45,6 +45,24 @@ class Scripts {
 	} // end init;
 
 	/**
+	 * Ensure default scripts and styles are registered and enqueued even when WPDev central plugin is inactive.
+	 *
+	 * @since 2.10.1
+	 * @return void
+	 */
+	public static function ensure_defaults_registered() {
+
+		$instance = self::get_instance();
+		$instance->register_default_scripts();
+		$instance->register_default_styles();
+
+		if ( is_admin() ) {
+			$instance->enqueue_default_admin_styles();
+		}
+
+	} // end ensure_defaults_registered;
+
+	/**
 	 * Wrapper for the register scripts function.
 	 *
 	 * @since 2.0.0

@@ -163,6 +163,12 @@ class Field implements \JsonSerializable {
 			'file'                => 'image',
 			// settings/fields has field-color.php; admin-pages chrome uses field-color-picker.php.
 			'color'               => 'color-picker',
+			'model'               => 'text',
+			'number'              => 'text',
+			'url'                 => 'text',
+			'email'               => 'text',
+			'password'            => 'text',
+			'tel'                 => 'text',
 		);
 
 		$deprecated = array(
@@ -245,6 +251,61 @@ class Field implements \JsonSerializable {
 			'html_attr',
 			'img',
 		);
+
+		if ( 'value' === $att ) {
+			if ( null !== $this->value ) {
+				return $this->value;
+			}
+			if ( isset( $this->atts['value'] ) ) {
+				$val = $this->atts['value'];
+				$allow_callable_prefix = is_string( $val ) && strncmp( $val, 'wpdev_get_', strlen( 'wpdev_get_' ) ) === 0 && is_callable( $val );
+				$allow_callable_method = is_array( $val ) && is_callable( $val );
+				if ( $allow_callable_prefix || $allow_callable_method || is_a( $val, \Closure::class ) ) {
+					return call_user_func( $val, $this );
+				}
+				return $val;
+			}
+			if ( function_exists( 'wpdev_get_setting' ) ) {
+				$sentinel = new \stdClass();
+				$saved    = wpdev_get_setting( $this->id, $sentinel );
+				if ( $saved !== $sentinel && null !== $saved ) {
+					return $saved;
+				}
+			}
+			if ( isset( $this->atts['default'] ) ) {
+				$def = $this->atts['default'];
+				if ( is_a( $def, \Closure::class ) || ( is_string( $def ) && strncmp( $def, 'wpdev_get_', strlen( 'wpdev_get_' ) ) === 0 && is_callable( $def ) ) ) {
+					return call_user_func( $def, $this );
+				}
+				return $def;
+			}
+			if ( isset( $this->atts['default_value'] ) ) {
+				$def = $this->atts['default_value'];
+				if ( is_a( $def, \Closure::class ) || ( is_string( $def ) && strncmp( $def, 'wpdev_get_', strlen( 'wpdev_get_' ) ) === 0 && is_callable( $def ) ) ) {
+					return call_user_func( $def, $this );
+				}
+				return $def;
+			}
+			return false;
+		}
+
+		if ( 'default' === $att ) {
+			if ( isset( $this->atts['default'] ) ) {
+				$def = $this->atts['default'];
+				if ( is_a( $def, \Closure::class ) || ( is_string( $def ) && strncmp( $def, 'wpdev_get_', strlen( 'wpdev_get_' ) ) === 0 && is_callable( $def ) ) ) {
+					return call_user_func( $def, $this );
+				}
+				return $def;
+			}
+			if ( isset( $this->atts['default_value'] ) ) {
+				$def = $this->atts['default_value'];
+				if ( is_a( $def, \Closure::class ) || ( is_string( $def ) && strncmp( $def, 'wpdev_get_', strlen( 'wpdev_get_' ) ) === 0 && is_callable( $def ) ) ) {
+					return call_user_func( $def, $this );
+				}
+				return $def;
+			}
+			return false;
+		}
 
 		$attr = isset($this->atts[$att]) ? $this->atts[$att] : false;
 
@@ -329,7 +390,11 @@ class Field implements \JsonSerializable {
 	 */
 	public function get_value() {
 
-		return $this->value;
+		if ( null !== $this->value ) {
+			return $this->value;
+		}
+
+		return $this->__get( 'value' );
 
 	} // end get_value;
 

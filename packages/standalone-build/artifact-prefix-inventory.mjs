@@ -3,14 +3,65 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-import { TARGET_REGISTRY } from "./target-registry.mjs";
+import { loadTargetRegistry } from "./target-registry.mjs";
 
 const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
 const contentRoot = path.resolve(process.argv[2] || path.join(scriptDirectory, ".."));
-const requestedConsumers = process.argv.slice(3);
+const requestedConsumers = process.argv.slice(3).filter((a) => !a.startsWith("--config"));
+
+function resolveBuildConfigPath(argv = process.argv, env = process.env) {
+  const eqArg = (argv || []).find((a) => typeof a === "string" && a.startsWith("--config="));
+  if (eqArg) {
+    const value = eqArg.slice("--config=".length).trim();
+    return value || null;
+  }
+  const idx = (argv || []).findIndex((a) => a === "--config");
+  if (idx !== -1 && typeof argv[idx + 1] === "string" && !argv[idx + 1].startsWith("--")) {
+    return argv[idx + 1];
+  }
+  const fromEnv = env?.WPDEV_BUILD_CONFIG;
+  return typeof fromEnv === "string" && fromEnv.trim() ? fromEnv.trim() : null;
+}
+
+function isKnownConsumer(name, registry) {
+  if (name === "wpdev") return false;
+  if (Object.prototype.hasOwnProperty.call(registry, name)) return true;
+  // Source-tree convention: `*-dev` directories map to their slug.
+  if (name.endsWith("-dev")) {
+    const slug = name.slice(0, -"-dev".length);
+    if (slug && Object.prototype.hasOwnProperty.call(registry, slug)) return true;
+  }
+  return false;
+}
+
+async function loadScopeRegistry() {
+  try {
+    const bundle = await loadTargetRegistry(resolveBuildConfigPath(), contentRoot);
+    if (bundle?.registry && Object.keys(bundle.registry).length > 0) return bundle.registry;
+  } catch {
+    // Fall through to convention scope below (fail-closed per-consumer downstream).
+  }
+  return null;
+}
+
+const scopeRegistry = await loadScopeRegistry();
+
+function lookupRegistryEntry(name) {
+  if (!scopeRegistry) return null;
+  if (Object.prototype.hasOwnProperty.call(scopeRegistry, name)) return scopeRegistry[name];
+  if (name.endsWith("-dev")) {
+    const slug = name.slice(0, -"-dev".length);
+    if (slug && Object.prototype.hasOwnProperty.call(scopeRegistry, slug)) return scopeRegistry[slug];
+  }
+  return null;
+}
 
 function isInScopeConsumer(name) {
-  return name !== "wpdev" && (/^(?:tavangary|wpdev|drm)-/.test(name) || /^tavangary/.test(name) || Object.prototype.hasOwnProperty.call(TARGET_REGISTRY, name));
+  if (name === "wpdev") return false;
+  if (scopeRegistry) return isKnownConsumer(name, scopeRegistry);
+  // Convention fallback (no static allowlist): any plugin directory is in
+  // scope; wpdev.json/composer.json presence is still gated in discoverConsumers().
+  return true;
 }
 
 async function regularMetadataFile(pluginRoot, name) {
@@ -105,7 +156,7 @@ async function readOptionalJson(file) {
 
 const artifacts = [];
 for (const consumer of consumers) {
-  const sourceName = TARGET_REGISTRY[consumer]?.sourceDirectoryName || consumer;
+  const sourceName = lookupRegistryEntry(consumer)?.sourceDirectoryName || consumer;
   const root = path.join(contentRoot, "plugins", sourceName);
   const [wpdev, composer] = await Promise.all([
     readJson(path.join(root, "wpdev.json")),

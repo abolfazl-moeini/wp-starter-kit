@@ -5,19 +5,25 @@ import path from "node:path";
 
 const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
 const contentRoot = path.resolve(process.argv[2] || path.join(scriptDirectory, ".."));
-const consumer = process.argv[3] || "tavangary-theme-panel";
+const consumer = process.argv[3];
+if (!consumer || !/^[a-z0-9][a-z0-9-]*$/.test(consumer)) {
+  console.error("Error: a safe consumer slug argument is required.");
+  console.error("Usage: node serialized-callback-inventory.mjs <contentRoot> <consumer> [output] [extraScanRoot...]");
+  process.exit(1);
+}
 const output = path.resolve(
   process.argv[4] || path.join(contentRoot, "serialized-callback-inventory.json"),
 );
+// Optional extra scan roots (relative to contentRoot or absolute). Defaults to
+// the shared framework source plus the requesting consumer — no static list.
+const extraRoots = process.argv.slice(5).filter((a) => typeof a === "string" && !a.startsWith("--"));
 const excludedDirectories = new Set([
   ".git", "dependencies", "dev", "dist", "node_modules", "packages", "tests", "vendor", "vendor-prefixed",
 ]);
 const scanRoots = [
   path.join(contentRoot, "plugins", "wpdev"),
   path.join(contentRoot, "plugins", consumer),
-  path.join(contentRoot, "plugins", "tavangary-core"),
-  path.join(contentRoot, "plugins", "drm-connector"),
-  path.join(contentRoot, "themes", "tavangary"),
+  ...extraRoots.map((r) => (path.isAbsolute(r) ? path.resolve(r) : path.join(contentRoot, r))),
 ];
 
 function lineAt(source, index) {

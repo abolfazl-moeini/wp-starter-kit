@@ -24,15 +24,28 @@ import { readZipEntries, verifyZipAgainstManifest } from "./canonical-artifact-m
 
 const execFileAsync = promisify(execFile);
 
+const CONSUMER_SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+
 export async function verifyProfileSArtifact({
   zipPath,
-  consumer = "tavangary-theme-panel",
+  consumer,
   profile = "s",
   stripComments,
   targetPhp = "7.4",
   phpBin,
   requireManifest = true,
 } = {}) {
+  if (!consumer || typeof consumer !== "string" || !CONSUMER_SLUG_PATTERN.test(consumer)) {
+    throw new Error(
+      "verifyProfileSArtifact: 'consumer' is required (fail-closed, no default consumer). " +
+        "Pass an explicit consumer slug, e.g. { consumer: 'my-plugin' }."
+    );
+  }
+  if (!zipPath || typeof zipPath !== "string" || zipPath.length === 0) {
+    throw new Error(
+      `verifyProfileSArtifact: 'zipPath' is required for consumer '${consumer}' (fail-closed, no default ZIP path).`
+    );
+  }
   const failures = [];
   const results = {
     zipPath,
@@ -518,9 +531,9 @@ if (isset($wp_actions['init'])) {
     }
 }
 
-update_option('wpdev_v2_settings', ['tavangary_hero_title' => 'Test Title']);
+update_option('wpdev_v2_settings', ['sample_hero_title' => 'Test Title']);
 $saved = get_option('wpdev_v2_settings');
-if (($saved['tavangary_hero_title'] ?? '') !== 'Test Title') {
+if (($saved['sample_hero_title'] ?? '') !== 'Test Title') {
     echo "ERROR: Settings persistence check failed\n";
     exit(2);
 }
@@ -606,10 +619,15 @@ echo "REGISTERED_FILTERS_COUNT: " . count($wp_filters) . "\n";
 }
 
 if (process.argv[1] && process.argv[1].endsWith("verify-profile-s-artifact.mjs")) {
-  const zipPath = path.resolve(process.argv[2] || "dist/tavangary-theme-panel-profile-s.zip");
-  const consumer = process.argv[3] || "tavangary-theme-panel";
+  const zipPath = process.argv[2] || null;
+  const consumer = process.argv[3] || null;
 
-  verifyProfileSArtifact({ zipPath, consumer }).then((res) => {
+  if (!zipPath || !consumer) {
+    console.error("Usage: node verify-profile-s-artifact.mjs <zip-path> <consumer-slug> (both required, fail-closed)");
+    process.exit(2);
+  }
+
+  verifyProfileSArtifact({ zipPath: path.resolve(zipPath), consumer }).then((res) => {
     console.log(JSON.stringify(res, null, 2));
     if (res.status !== "passed") process.exit(1);
   }).catch((err) => {

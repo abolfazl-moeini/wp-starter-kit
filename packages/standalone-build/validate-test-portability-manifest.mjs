@@ -6,7 +6,12 @@ import path from "node:path";
 import { promisify } from "node:util";
 
 const contentRoot = path.resolve(process.argv[2] || path.join(path.dirname(new URL(import.meta.url).pathname), ".."));
-const consumer = process.argv[3] || "tavangary-theme-panel";
+const consumer = process.argv[3];
+if (!consumer) {
+  console.error("Error: consumer argument is required.");
+  console.error("Usage: node validate-test-portability-manifest.mjs <contentRoot> <consumer>");
+  process.exit(1);
+}
 const failures = [];
 const evidence = [];
 const classifications = new Set(["source-internal", "portable-contract", "artifact-e2e", "harness-only", "live/external"]);

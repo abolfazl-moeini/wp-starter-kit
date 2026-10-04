@@ -42,7 +42,7 @@ function wpdev_path_is_within( $path, $root ) {
 	$path = wpdev_normalize_path( $path );
 	$root = wpdev_normalize_path( rtrim( (string) $root, '/\\' ) );
 
-	return $path === $root || str_starts_with( $path, $root . '/' );
+	return $path === $root || strncmp( $path, $root . '/', strlen( $root . '/' ) ) === 0;
 
 } // end wpdev_path_is_within;
 
@@ -67,6 +67,28 @@ function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
 	$modules = Module_Loader::all();
 
 	if ( empty( $modules[ $module_id ]['path'] ) ) {
+		if ( function_exists( 'wpdev_path' ) && function_exists( 'wpdev_url' ) ) {
+			$candidates = array(
+				"modules/{$module_id}/assets/{$assets_dir}/{$asset}",
+				"modules/{$module_id}/assets/{$assets_dir}/" . str_replace( '.min.', '.', $asset ),
+				"assets/{$assets_dir}/{$asset}",
+				"assets/{$assets_dir}/" . str_replace( '.min.', '.', $asset ),
+			);
+			foreach ( $candidates as $rel ) {
+				$candidate_file = wpdev_path( $rel );
+				if ( file_exists( $candidate_file ) ) {
+					$file_norm = wpdev_normalize_path( $candidate_file );
+					if ( function_exists( 'plugins_url' ) && defined( 'WP_PLUGIN_DIR' ) ) {
+						$norm_plugins = wpdev_normalize_path( WP_PLUGIN_DIR );
+						if ( strncmp( $file_norm, $norm_plugins, strlen( $norm_plugins ) ) === 0 ) {
+							return plugins_url( ltrim( substr( $file_norm, strlen( $norm_plugins ) ), '/' ) );
+						}
+					}
+					return wpdev_url( $rel );
+				}
+			}
+		}
+
 		return wpdev_get_asset( $raw_asset, $assets_dir );
 	}
 
@@ -74,11 +96,33 @@ function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
 	$base_dir    = $module_root . '/assets/' . $assets_dir . '/';
 	$file        = $base_dir . $asset;
 
-	if ( ! is_readable( $file ) && str_contains( $asset, '.min.' ) ) {
+	if ( ! is_readable( $file ) && false !== strpos( $asset, '.min.' ) ) {
 		$file = $base_dir . str_replace( '.min.', '.', $asset );
 	}
 
 	if ( ! is_readable( $file ) ) {
+		if ( function_exists( 'wpdev_path' ) && function_exists( 'wpdev_url' ) ) {
+			$candidates = array(
+				"modules/{$module_id}/assets/{$assets_dir}/{$asset}",
+				"modules/{$module_id}/assets/{$assets_dir}/" . str_replace( '.min.', '.', $asset ),
+				"assets/{$assets_dir}/{$asset}",
+				"assets/{$assets_dir}/" . str_replace( '.min.', '.', $asset ),
+			);
+			foreach ( $candidates as $rel ) {
+				$candidate_file = wpdev_path( $rel );
+				if ( file_exists( $candidate_file ) ) {
+					$file_norm = wpdev_normalize_path( $candidate_file );
+					if ( function_exists( 'plugins_url' ) && defined( 'WP_PLUGIN_DIR' ) ) {
+						$norm_plugins = wpdev_normalize_path( WP_PLUGIN_DIR );
+						if ( strncmp( $file_norm, $norm_plugins, strlen( $norm_plugins ) ) === 0 ) {
+							return plugins_url( ltrim( substr( $file_norm, strlen( $norm_plugins ) ), '/' ) );
+						}
+					}
+					return wpdev_url( $rel );
+				}
+			}
+		}
+
 		return wpdev_get_asset( $raw_asset, $assets_dir );
 	}
 
@@ -99,8 +143,24 @@ function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
 
 	if ( is_readable( $setup ) && function_exists( 'plugins_url' ) ) {
 		$url = plugins_url( $relative_from_module, $setup );
-	} elseif ( function_exists( 'plugins_url' ) ) {
+	} elseif ( is_readable( $module_root . '/module.php' ) && function_exists( 'plugins_url' ) ) {
 		$url = plugins_url( $relative_from_module, $module_root . '/module.php' );
+	}
+
+	if ( empty( $url ) && function_exists( 'plugins_url' ) && defined( 'WP_PLUGIN_DIR' ) ) {
+		$norm_plugins = wpdev_normalize_path( WP_PLUGIN_DIR );
+		if ( strncmp( $file_norm, $norm_plugins, strlen( $norm_plugins ) ) === 0 ) {
+			$rel = ltrim( substr( $file_norm, strlen( $norm_plugins ) ), '/' );
+			$url = plugins_url( $rel );
+		}
+	}
+
+	if ( empty( $url ) && function_exists( 'content_url' ) && defined( 'WP_CONTENT_DIR' ) ) {
+		$norm_content = wpdev_normalize_path( WP_CONTENT_DIR );
+		if ( strncmp( $file_norm, $norm_content, strlen( $norm_content ) ) === 0 ) {
+			$rel = ltrim( substr( $file_norm, strlen( $norm_content ) ), '/' );
+			$url = content_url( $rel );
+		}
 	}
 
 	/**

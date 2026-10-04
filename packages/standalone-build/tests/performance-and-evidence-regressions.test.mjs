@@ -175,8 +175,8 @@ test("Regression 3: multi-consumer test evidence allows all standalone artifacts
 
   const targets = [
     "drm-connector",
-    "tavangary-core",
-    "tavangary-theme-panel",
+    "sample-standalone-plugin",
+    "sample-profile-s-plugin",
     "wpdev-analytics",
     "wpdev-crm",
     "wpdev-tickets",
@@ -363,7 +363,7 @@ test("Regression 6: pipeline deploy requires verified test coverage and rejects 
           distDir,
           testMode: "fast",
           shouldDeploy: true,
-          targetPlugins: ["tavangary-core"],
+          targetPlugins: ["sample-standalone-plugin"],
         });
       },
       /fast test mode.*does not authorize deployment/i
@@ -378,7 +378,7 @@ test("Regression 6: pipeline deploy requires verified test coverage and rejects 
           distDir,
           testMode: null,
           shouldDeploy: true,
-          targetPlugins: ["tavangary-core"],
+          targetPlugins: ["sample-standalone-plugin"],
         });
       },
       /missing test mode.*does not authorize deployment/i
@@ -393,20 +393,20 @@ test("Regression 7: validateTestEvidenceRecord strictly rejects duplicate bindin
   const rawEvidence = {
     schemaVersion: 2,
     runId: "run-1788245426208-abc123",
-    testFile: "tavangary-core-artifact.test.mjs",
+    testFile: "sample-standalone-plugin-artifact.test.mjs",
     testFileSha256: "b".repeat(64),
     testDependencyFingerprint: "c".repeat(64),
     toolchainFingerprint: dummyToolchain,
     artifactBindings: [
-      { consumer: "tavangary-core", artifactId: "tavangary-core-profile-s", zipSha256: "d".repeat(64) },
-      { consumer: "tavangary-core", artifactId: "tavangary-core-profile-s", zipSha256: "d".repeat(64) },
+      { consumer: "sample-standalone-plugin", artifactId: "sample-standalone-plugin-profile-s", zipSha256: "d".repeat(64) },
+      { consumer: "sample-standalone-plugin", artifactId: "sample-standalone-plugin-profile-s", zipSha256: "d".repeat(64) },
     ],
     mode: "full",
     exitStatus: "passed",
     runDurationMs: 100,
     executedAt: new Date().toISOString(),
   };
-  const val = validateTestEvidenceRecord({ evidence: rawEvidence, expectedTestFile: "tavangary-core-artifact.test.mjs" });
+  const val = validateTestEvidenceRecord({ evidence: rawEvidence, expectedTestFile: "sample-standalone-plugin-artifact.test.mjs" });
   assert.equal(val.valid, false, "Must reject duplicate artifact bindings in raw evidence");
   assert.match(val.reason, /duplicate/i);
 });
@@ -422,9 +422,9 @@ test("Regression 8: validateBuildCacheSchema performs deep fail-closed validatio
     _testEvidence: {},
     toolchain: "not-a-hex",
     artifacts: {
-      "tavangary-core": {
+      "sample-standalone-plugin": {
         schemaVersion: 2,
-        artifactId: "tavangary-core-profile-s",
+        artifactId: "sample-standalone-plugin-profile-s",
         consumer: "mismatching-consumer",
         compositeFingerprint: "comp",
         zipSha256: "z".repeat(64),
@@ -444,7 +444,7 @@ test("Regression 9: loadDeployReceiptRecord strictly rejects symlinks, non-regul
   const tmpDir = await mkdtemp(path.join(os.tmpdir(), "receipt-loader-test-"));
   try {
     // 1. Missing receipt
-    const missing = await loadDeployReceiptRecord(path.join(tmpDir, "missing.json"), "tavangary-core");
+    const missing = await loadDeployReceiptRecord(path.join(tmpDir, "missing.json"), "sample-standalone-plugin");
     assert.equal(missing.status, "missing");
 
     // 2. Symlink receipt
@@ -452,7 +452,7 @@ test("Regression 9: loadDeployReceiptRecord strictly rejects symlinks, non-regul
     await writeFile(realFile, JSON.stringify({ schemaVersion: 2 }), "utf8");
     const linkFile = path.join(tmpDir, "link-receipt.json");
     await symlink(realFile, linkFile);
-    const symlinkRes = await loadDeployReceiptRecord(linkFile, "tavangary-core");
+    const symlinkRes = await loadDeployReceiptRecord(linkFile, "sample-standalone-plugin");
     assert.equal(symlinkRes.status, "invalid");
     assert.match(symlinkRes.reason, /symbolic link/i);
   } finally {
@@ -496,11 +496,11 @@ test("Regression 11: validateDeployJournalSchema and loadDeployJournalRecord str
       phase: "prepared",
       targets: [
         {
-          consumer: "tavangary-core",
+          consumer: "sample-standalone-plugin",
           preExisting: true,
           phase: "prepared",
-          backupToken: `.tavangary-core.backup-${txId}`,
-          stagingToken: `.tavangary-core.staging-${txId}`,
+          backupToken: `.sample-standalone-plugin.backup-${txId}`,
+          stagingToken: `.sample-standalone-plugin.staging-${txId}`,
           candidateZipSha: "a".repeat(64),
           candidateManifestDigest: "b".repeat(64),
         },
@@ -533,17 +533,30 @@ test("Regression 11: validateDeployJournalSchema and loadDeployJournalRecord str
 
     // 4. Foreign txId in backup token must be rejected
     const foreignTxJournal = structuredClone(validJournal);
-    foreignTxJournal.targets[0].backupToken = `.tavangary-core.backup-tx-999999-foreign`;
+    foreignTxJournal.targets[0].backupToken = `.sample-standalone-plugin.backup-tx-999999-foreign`;
     const v4 = validateDeployJournalSchema(foreignTxJournal);
     assert.equal(v4.valid, false);
     assert.match(v4.reason, /invalid backuptoken/i);
 
-    // 5. Unknown consumer must be rejected
+    // 5. Unknown consumer must be rejected when validated against a registry
+    // (Phase 2: the hardcoded allowlist is gone; membership is decided by the
+    // injected registry from loadTargetRegistry(), not by project names).
     const unknownConsumerJournal = structuredClone(validJournal);
     unknownConsumerJournal.targets[0].consumer = "malicious-unknown-plugin";
-    const v5 = validateDeployJournalSchema(unknownConsumerJournal);
+    const v5 = validateDeployJournalSchema(unknownConsumerJournal, {
+      allowedConsumers: new Set(["sample-standalone-plugin"]),
+    });
     assert.equal(v5.valid, false);
     assert.match(v5.reason, /disallowed target consumer/i);
+
+    // 5b. Without an injected registry, a structurally-valid slug passes the
+    // gate (fail-closed applies only to malformed names).
+    const unknownConsistentJournal = structuredClone(validJournal);
+    unknownConsistentJournal.targets[0].consumer = "malicious-unknown-plugin";
+    unknownConsistentJournal.targets[0].backupToken = `.malicious-unknown-plugin.backup-${txId}`;
+    unknownConsistentJournal.targets[0].stagingToken = `.malicious-unknown-plugin.staging-${txId}`;
+    const v5b = validateDeployJournalSchema(unknownConsistentJournal);
+    assert.equal(v5b.valid, true);
 
     // 6. Duplicate targets must be rejected
     const duplicateTargetsJournal = structuredClone(validJournal);
@@ -593,11 +606,11 @@ test("Regression 12: deriveJournalPaths strictly checks directory containment an
     phase: "prepared",
     targets: [
       {
-        consumer: "tavangary-core",
+        consumer: "sample-standalone-plugin",
         preExisting: true,
         phase: "prepared",
-        backupToken: `.tavangary-core.backup-${txId}`,
-        stagingToken: `.tavangary-core.staging-${txId}`,
+        backupToken: `.sample-standalone-plugin.backup-${txId}`,
+        stagingToken: `.sample-standalone-plugin.staging-${txId}`,
         candidateZipSha: "a".repeat(64),
         candidateManifestDigest: "b".repeat(64),
       },
@@ -606,9 +619,9 @@ test("Regression 12: deriveJournalPaths strictly checks directory containment an
 
   const derived = deriveJournalPaths({ journal, pluginsDir, distDir });
   assert.equal(derived.targets.length, 1);
-  assert.equal(derived.targets[0].targetDir, path.join(pluginsDir, "tavangary-core"));
-  assert.equal(derived.targets[0].backupDir, path.join(pluginsDir, `.tavangary-core.backup-${txId}`));
-  assert.equal(derived.targets[0].stagingDir, path.join(pluginsDir, `.tavangary-core.staging-${txId}`));
+  assert.equal(derived.targets[0].targetDir, path.join(pluginsDir, "sample-standalone-plugin"));
+  assert.equal(derived.targets[0].backupDir, path.join(pluginsDir, `.sample-standalone-plugin.backup-${txId}`));
+  assert.equal(derived.targets[0].stagingDir, path.join(pluginsDir, `.sample-standalone-plugin.staging-${txId}`));
   assert.equal(derived.txStagingDir, path.join(distDir, `.tx-staging-${txId}`));
   assert.equal(derived.txBackupDir, path.join(distDir, `.tx-backup-${txId}`));
 });
@@ -820,7 +833,7 @@ test("Regression 21: Benchmark harness validates zero workspace mutations via pr
     wpdev: "mock-wpdev-hash-0123456789abcdef",
     toolchain: "mock-toolchain-hash-0123456789abcdef",
     plugins: {
-      "tavangary-theme-panel": "mock-ttp-hash-0123456789abcdef",
+      "sample-profile-s-plugin": "mock-ttp-hash-0123456789abcdef",
     },
   };
 
@@ -834,6 +847,7 @@ test("Regression 21: Benchmark harness validates zero workspace mutations via pr
     jobs: [1, 2, 4],
     iterations: 1,
     mini: true,
+    targetPlugins: ["sample-profile-s-plugin"],
     writeReport: false,
     executor: fakeExecutor,
     fingerprinter: fakeFingerprinter,
@@ -856,7 +870,7 @@ test("Regression 21: Benchmark harness validates zero workspace mutations via pr
     if (callCount > 1) {
       return {
         ...fakeFingerprints,
-        plugins: { "tavangary-theme-panel": "mutated-hash-xyz" },
+        plugins: { "sample-profile-s-plugin": "mutated-hash-xyz" },
       };
     }
     return { ...fakeFingerprints, plugins: { ...fakeFingerprints.plugins } };
@@ -868,13 +882,14 @@ test("Regression 21: Benchmark harness validates zero workspace mutations via pr
         jobs: [4],
         iterations: 1,
         mini: true,
+        targetPlugins: ["sample-profile-s-plugin"],
         writeReport: false,
         executor: fakeExecutor,
         fingerprinter: mutatingFingerprinter,
         gitInfo: { head: "0123456789abcdef0123456789abcdef01234567", isDirty: false, porcelainSummary: "" },
       });
     },
-    /Benchmark run violated workspace isolation: 'tavangary-theme-panel' plugin fingerprint mutated!/
+    /Benchmark run violated workspace isolation: 'sample-profile-s-plugin' plugin fingerprint mutated!/
   );
 
   // 3. Failure path B: verifies that tools workspace mutation is strictly caught and rejected
@@ -893,6 +908,7 @@ test("Regression 21: Benchmark harness validates zero workspace mutations via pr
         jobs: [4],
         iterations: 1,
         mini: true,
+        targetPlugins: ["sample-profile-s-plugin"],
         writeReport: false,
         executor: fakeExecutor,
         fingerprinter: mutatingToolsFingerprinter,
@@ -909,6 +925,7 @@ test("Regression 21: Benchmark harness validates zero workspace mutations via pr
         jobs: [4],
         iterations: 1,
         mini: true,
+        targetPlugins: ["sample-profile-s-plugin"],
         writeReport: false,
         executor: fakeExecutor,
         fingerprinter: fakeFingerprinter,
@@ -928,6 +945,7 @@ test("Regression 21: Benchmark harness validates zero workspace mutations via pr
     jobs: [4],
     iterations: 1,
     mini: true,
+    targetPlugins: ["sample-profile-s-plugin"],
     writeReport: false,
     executor: failingExecutor,
     fingerprinter: fakeFingerprinter,
@@ -973,20 +991,20 @@ test("Regression 22: Incremental build planner invariant: exactly 1 rebuilt and 
     const { createBuildPlan } = await import("../build-plan.mjs");
 
     // Create lightweight source trees
-    for (const p of ["tavangary-core-dev", "tavangary-theme-panel-dev", "wpdev-crm-dev", "wpdev-tickets-dev", "wpdev"]) {
+    for (const p of ["sample-standalone-plugin-dev", "sample-profile-s-plugin-dev", "wpdev-crm-dev", "wpdev-tickets-dev", "wpdev"]) {
       await fs.promises.mkdir(path.join(pluginsDir, p), { recursive: true });
       const mainPhp = p === "wpdev" ? "wpdev.php" : `${p.replace(/-dev$/, "")}.php`;
       await fs.promises.writeFile(path.join(pluginsDir, p, mainPhp), `<?php // ${p} source\n`, "utf8");
     }
 
     const pluginBuildPlans = {};
-    for (const p of ["tavangary-core", "tavangary-theme-panel", "wpdev-crm", "wpdev-tickets"]) {
+    for (const p of ["sample-standalone-plugin", "sample-profile-s-plugin", "wpdev-crm", "wpdev-tickets"]) {
       pluginBuildPlans[p] = createBuildPlan({ consumer: p, profile: "s", isObfuscate: true });
     }
 
     // Create 4 valid hermetic ZIPs and schema cache entries
     const artifactsCache = {};
-    for (const consumer of ["tavangary-core", "tavangary-theme-panel", "wpdev-crm", "wpdev-tickets"]) {
+    for (const consumer of ["sample-standalone-plugin", "sample-profile-s-plugin", "wpdev-crm", "wpdev-tickets"]) {
       const fix = await createHermeticZipFixture({ tmpDir, consumer });
       await fs.promises.copyFile(fix.zipPath, path.join(distDir, `${consumer}-profile-s.zip`));
       await fs.promises.copyFile(fix.zipPath, path.join(distDir, `${consumer}.zip`));
@@ -1034,7 +1052,7 @@ test("Regression 22: Incremental build planner invariant: exactly 1 rebuilt and 
     const initialFp = await computeAllFingerprintsParallel({
       scriptDir: standaloneBuildDir,
       pluginsDir,
-      targetPlugins: ["tavangary-core", "tavangary-theme-panel", "wpdev-crm", "wpdev-tickets"],
+      targetPlugins: ["sample-standalone-plugin", "sample-profile-s-plugin", "wpdev-crm", "wpdev-tickets"],
       contentRoot,
     });
 
@@ -1055,25 +1073,25 @@ test("Regression 22: Incremental build planner invariant: exactly 1 rebuilt and 
     const untouchedPlan = planDependencyGraphBuild({
       currentFingerprints: initialFp,
       previousCache: initialCache,
-      targetPlugins: ["tavangary-core", "tavangary-theme-panel", "wpdev-crm", "wpdev-tickets"],
+      targetPlugins: ["sample-standalone-plugin", "sample-profile-s-plugin", "wpdev-crm", "wpdev-tickets"],
       mode: "incremental",
       profile: "s",
       pluginBuildPlans,
     });
-    for (const p of ["tavangary-core", "tavangary-theme-panel", "wpdev-crm", "wpdev-tickets"]) {
+    for (const p of ["sample-standalone-plugin", "sample-profile-s-plugin", "wpdev-crm", "wpdev-tickets"]) {
       assert.equal(untouchedPlan[p]?.shouldRebuild, false, `Untouched plugin ${p} must be cached`);
       assert.equal(untouchedPlan[p]?.reason, "Cached (inputs unchanged)");
     }
 
-    // 1. Touch 1 plugin source: tavangary-core-dev
-    const devBootstrap = path.join(pluginsDir, "tavangary-core-dev", "tavangary-core.php");
+    // 1. Touch 1 plugin source: sample-standalone-plugin-dev
+    const devBootstrap = path.join(pluginsDir, "sample-standalone-plugin-dev", "sample-standalone-plugin.php");
     await fs.promises.appendFile(devBootstrap, "\n// regression 22 deterministic touch\n", "utf8");
 
     // 2. Compute post-touch fingerprints
     const postTouchFp = await computeAllFingerprintsParallel({
       scriptDir: standaloneBuildDir,
       pluginsDir,
-      targetPlugins: ["tavangary-core", "tavangary-theme-panel", "wpdev-crm", "wpdev-tickets"],
+      targetPlugins: ["sample-standalone-plugin", "sample-profile-s-plugin", "wpdev-crm", "wpdev-tickets"],
       contentRoot,
     });
 
@@ -1081,15 +1099,15 @@ test("Regression 22: Incremental build planner invariant: exactly 1 rebuilt and 
     const plan = planDependencyGraphBuild({
       currentFingerprints: postTouchFp,
       previousCache: initialCache,
-      targetPlugins: ["tavangary-core", "tavangary-theme-panel", "wpdev-crm", "wpdev-tickets"],
+      targetPlugins: ["sample-standalone-plugin", "sample-profile-s-plugin", "wpdev-crm", "wpdev-tickets"],
       mode: "incremental",
       profile: "s",
       pluginBuildPlans,
     });
 
-    assert.equal(plan["tavangary-core"]?.shouldRebuild, true, "Changed plugin must be planned for rebuild");
-    assert.equal(plan["tavangary-core"]?.reason, "Source code changed");
-    assert.equal(plan["tavangary-theme-panel"]?.shouldRebuild, false, "Unchanged plugin must be cached");
+    assert.equal(plan["sample-standalone-plugin"]?.shouldRebuild, true, "Changed plugin must be planned for rebuild");
+    assert.equal(plan["sample-standalone-plugin"]?.reason, "Source code changed");
+    assert.equal(plan["sample-profile-s-plugin"]?.shouldRebuild, false, "Unchanged plugin must be cached");
     assert.equal(plan["wpdev-crm"]?.shouldRebuild, false, "Unchanged plugin must be cached");
     assert.equal(plan["wpdev-tickets"]?.shouldRebuild, false, "Unchanged plugin must be cached");
 
@@ -1097,12 +1115,12 @@ test("Regression 22: Incremental build planner invariant: exactly 1 rebuilt and 
     const emptyCachePlan = planDependencyGraphBuild({
       currentFingerprints: postTouchFp,
       previousCache: { schemaVersion: CACHE_SCHEMA_VERSION, artifacts: {} },
-      targetPlugins: ["tavangary-core"],
+      targetPlugins: ["sample-standalone-plugin"],
       mode: "incremental",
       profile: "s",
     });
-    assert.equal(emptyCachePlan["tavangary-core"]?.shouldRebuild, true);
-    assert.equal(emptyCachePlan["tavangary-core"]?.reason, "No previous build cache found");
+    assert.equal(emptyCachePlan["sample-standalone-plugin"]?.shouldRebuild, true);
+    assert.equal(emptyCachePlan["sample-standalone-plugin"]?.reason, "No previous build cache found");
 
     // 4. Run pipeline orchestration with hermetic build candidate generator
     const executedTasks = [];
@@ -1113,7 +1131,7 @@ test("Regression 22: Incremental build planner invariant: exactly 1 rebuilt and 
       pluginsDir,
       cacheFile,
       receiptsDir,
-      targetPlugins: ["tavangary-core", "tavangary-theme-panel", "wpdev-crm", "wpdev-tickets"],
+      targetPlugins: ["sample-standalone-plugin", "sample-profile-s-plugin", "wpdev-crm", "wpdev-tickets"],
       overrideChanged: true,
       overrideForce: false,
       overrideDeploy: false,
@@ -1130,8 +1148,8 @@ test("Regression 22: Incremental build planner invariant: exactly 1 rebuilt and 
       },
     });
 
-    assert.equal(dagResults["build:tavangary-core"]?.status, "rebuilt");
-    assert.equal(dagResults["build:tavangary-theme-panel"]?.status, "cached");
+    assert.equal(dagResults["build:sample-standalone-plugin"]?.status, "rebuilt");
+    assert.equal(dagResults["build:sample-profile-s-plugin"]?.status, "cached");
     assert.equal(dagResults["build:wpdev-crm"]?.status, "cached");
     assert.equal(dagResults["build:wpdev-tickets"]?.status, "cached");
   } finally {

@@ -9,7 +9,7 @@ import { getDefaultZipPath } from "../artifact-fixture-helper.mjs";
 import { verifyProfileSArtifact } from "../verify-profile-s-artifact.mjs";
 
 test("verifies that the assembled Profile S ZIP passes all black-box execution probes", async () => {
-  const consumers = ["tavangary-theme-panel", "drm-connector", "wpdev-analytics", "wpdev-woo-persian"];
+  const consumers = ["wpdev-crm", "drm-connector", "wpdev-analytics", "wpdev-woo-persian"];
   for (const consumer of consumers) {
     const zipPath = getDefaultZipPath(consumer);
     if (fs.existsSync(zipPath)) {
@@ -33,7 +33,7 @@ test("Profile S verifier refuses extraction when ZIP preflight fails", async () 
     await writeFile(zipPath, "this is not a zip archive");
     const report = await verifyProfileSArtifact({
       zipPath,
-      consumer: "tavangary-theme-panel",
+      consumer: "sample-profile-s-plugin",
     });
     assert.notEqual(report.status, "passed");
     const message = JSON.stringify(report);

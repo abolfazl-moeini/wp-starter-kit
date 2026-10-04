@@ -36,18 +36,55 @@ export const RECEIPT_SCHEMA_VERSION = 2;
 export const TEST_EVIDENCE_SCHEMA_VERSION = 3;
 export const DEPLOY_JOURNAL_SCHEMA_VERSION = 2;
 
-export const ALLOWED_CONSUMERS = new Set([
-  "drm-connector",
-  "tavangary-core",
-  "tavangary-theme-panel",
-  "wpdev-analytics",
-  "wpdev-crm",
-  "wpdev-tickets",
-  "wpdev-woo-persian",
-]);
-
 export function isValidConsumerName(consumer) {
   return typeof consumer === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(consumer);
+}
+
+// ---------------------------------------------------------------------------
+// Phase 2 (decoupling plan §6): the hardcoded consumer allowlist is
+// removed. Consumer identity is validated structurally via
+// isValidConsumerName() and — when a validated registry is available —
+// against that registry through `options.registry` / `options.allowedConsumers`.
+// New code must pass the registry explicitly via resolveAllowedConsumers().
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolve the allowed-consumer set from validator options.
+ * Accepts `options.allowedConsumers` (Set or array) or `options.registry`
+ * (registry object keyed by consumer slug, as returned by loadTargetRegistry).
+ * Returns null when no registry was injected (caller falls back to structural
+ * `isValidConsumerName` validation).
+ * @param {object} [options={}] - validator options
+ * @returns {Set<string>|null} allowed consumers or null
+ */
+export function resolveAllowedConsumers(options = {}) {
+  if (options.allowedConsumers instanceof Set) {
+    return options.allowedConsumers;
+  }
+  if (Array.isArray(options.allowedConsumers)) {
+    return new Set(options.allowedConsumers);
+  }
+  if (options.registry && typeof options.registry === "object" && Object.keys(options.registry).length > 0) {
+    return new Set(Object.keys(options.registry));
+  }
+  return null;
+}
+
+/**
+ * Registry-aware consumer gate. With an injected registry, membership (or the
+ * `allowExternalConsumers` escape hatch for structurally-valid names) decides.
+ * Without a registry, any structurally-valid slug is accepted — the hardcoded
+ * project list no longer exists, so fail-closed applies only to malformed names.
+ * @param {string} consumer - consumer slug under test
+ * @param {object} [options={}] - `{ registry?, allowedConsumers?, allowExternalConsumers? }`
+ * @returns {boolean} true when the consumer is allowed
+ */
+export function isAllowedConsumer(consumer, options = {}) {
+  const allowed = resolveAllowedConsumers(options);
+  if (allowed) {
+    return allowed.has(consumer) || (Boolean(options.allowExternalConsumers) && isValidConsumerName(consumer));
+  }
+  return isValidConsumerName(consumer);
 }
 
 export function canonicalizePath(targetPath) {
@@ -153,7 +190,7 @@ export function validateDeployJournalSchema(data, options = {}) {
         return { valid: false, reason: `Target record contains disallowed key '${tk}'` };
       }
     }
-    const isAllowed = ALLOWED_CONSUMERS.has(t.consumer) || (options.allowExternalConsumers && isValidConsumerName(t.consumer));
+    const isAllowed = isAllowedConsumer(t.consumer, options);
     if (!t.consumer || !isAllowed) {
       return { valid: false, reason: `Disallowed target consumer '${t.consumer}' in journal` };
     }
@@ -213,7 +250,7 @@ export function validateDeployJournalSchema(data, options = {}) {
     if (data.publication.receipts) {
       const ALLOWED_PUB_FILE_KEYS = new Set(["consumer", "existedBefore", "preDigest", "backupStatus", "stagedDigest", "publishStatus", "finalDigest"]);
       for (const [c, r] of Object.entries(data.publication.receipts)) {
-        if (!ALLOWED_CONSUMERS.has(c) && !isValidConsumerName(c)) {
+        if (!isAllowedConsumer(c, options)) {
           return { valid: false, reason: `Disallowed consumer '${c}' in publication receipts` };
         }
         if (r.consumer !== c) {
@@ -570,19 +607,23 @@ export class TransactionJournalManager {
   #isRolledBack;
   #isCommitted;
   #allowExternalConsumers;
+  #registry;
 
-  constructor({ journalFile, distDir, initialJournal, allowExternalConsumers = true }) {
+  constructor({ journalFile, distDir, initialJournal, allowExternalConsumers = true, registry = null, allowedConsumers = null }) {
     if (!journalFile || typeof journalFile !== "string") {
       throw new Error("TransactionJournalManager requires a valid journalFile path");
     }
     if (!distDir || typeof distDir !== "string") {
       throw new Error("TransactionJournalManager requires a valid distDir path");
     }
-    const val = validateDeployJournalSchema(initialJournal, { allowExternalConsumers });
+    // Phase 2: journal validation consults the injected registry when present.
+    const journalOptions = { allowExternalConsumers, registry, allowedConsumers };
+    const val = validateDeployJournalSchema(initialJournal, journalOptions);
     if (!val.valid) {
       throw new Error(`Initial deploy journal schema invalid: ${val.reason}`);
     }
     this.#allowExternalConsumers = allowExternalConsumers;
+    this.#registry = registry || null;
     this.#journalFile = journalFile;
     this.#distDir = distDir;
     this.#currentJournal = deepFreeze(structuredClone(initialJournal));
@@ -641,12 +682,12 @@ export class TransactionJournalManager {
             }
 
             if (this.#persistedJournal) {
-              const transVal = validateJournalTransition(this.#persistedJournal, candidateState, { allowExternalConsumers: this.#allowExternalConsumers });
+              const transVal = validateJournalTransition(this.#persistedJournal, candidateState, { allowExternalConsumers: this.#allowExternalConsumers, registry: this.#registry });
               if (!transVal.valid) {
                 throw new Error(`Invalid journal transition: ${transVal.reason}`);
               }
             } else {
-              const schemaVal = validateDeployJournalSchema(candidateState, { allowExternalConsumers: this.#allowExternalConsumers });
+              const schemaVal = validateDeployJournalSchema(candidateState, { allowExternalConsumers: this.#allowExternalConsumers, registry: this.#registry });
               if (!schemaVal.valid) {
                 throw new Error(`Deploy journal schema validation failed: ${schemaVal.reason}`);
               }
@@ -724,15 +765,16 @@ export async function loadDeployJournalRecord(journalFilePath, options = {}) {
   }
 }
 
-export function deriveJournalPaths({ journal, pluginsDir, distDir }) {
+export function deriveJournalPaths({ journal, pluginsDir, distDir, registry = null, allowedConsumers = null }) {
   if (!journal || typeof journal !== "object") {
     throw new Error("deriveJournalPaths: valid journal object required");
   }
   const resolvedPluginsDir = path.resolve(pluginsDir);
   const resolvedDistDir = path.resolve(distDir);
+  const consumerOptions = { registry, allowedConsumers };
 
   const targets = (journal.targets || []).map((t) => {
-    if (!ALLOWED_CONSUMERS.has(t.consumer) && !isValidConsumerName(t.consumer)) {
+    if (!isAllowedConsumer(t.consumer, consumerOptions)) {
       throw new Error(`deriveJournalPaths: unauthorized consumer '${t.consumer}'`);
     }
     const targetDir = path.join(resolvedPluginsDir, t.consumer);
@@ -806,12 +848,14 @@ export async function recoverInterruptedDeployment({
   distDir,
   logger = console,
   allowExternalConsumers = false,
+  registry = null,
+  allowedConsumers = null,
 }) {
   if (!fs.existsSync(journalFile)) {
     return { recovered: false, clean: true, reason: "No active deploy journal found" };
   }
 
-  const loaded = await loadDeployJournalRecord(journalFile, { allowExternalConsumers });
+  const loaded = await loadDeployJournalRecord(journalFile, { allowExternalConsumers, registry, allowedConsumers });
   if (loaded.status !== "valid") {
     throw new Error(
       `Unsafe or invalid deployment journal encountered (${loaded.reason}). ` +
@@ -828,7 +872,7 @@ export async function recoverInterruptedDeployment({
     );
   }
 
-  const derived = deriveJournalPaths({ journal, pluginsDir, distDir });
+  const derived = deriveJournalPaths({ journal, pluginsDir, distDir, registry, allowedConsumers });
 
   // 1. If journal is in "committed" phase, verify destination integrity BEFORE forward cleanup
   if (journal.phase === "committed") {
@@ -1389,7 +1433,7 @@ export function computeArtifactTestCoverage({
 }) {
   const required = REQUIRED_ARTIFACT_TESTS[consumer] || [];
   if (required.length === 0) {
-    return { covered: false, coveredTests: [], missingTests: [], reason: "No required tests defined for consumer" };
+    return { covered: true, coveredTests: [], missingTests: [], reason: "No kit-internal tests required for external consumer" };
   }
 
   const missingTests = [];
@@ -1549,13 +1593,11 @@ export function validateBuildCacheSchema(data, options = {}) {
     if (expectedSet && !expectedSet.has(consumer) && !isValidConsumerName(consumer)) {
       return { valid: false, reason: `Unexpected artifact consumer '${consumer}' in cache schema` };
     }
-    // Structural gate only. ALLOWED_CONSUMERS is the set of *known* consumers, not the set
-    // of *permitted* ones: fix-plan v2 §10 says build descriptors may be generic while
-    // deployment authorization stays explicit. Gating the cache document on the hardcoded
-    // list made it permanently invalid for any scaffolded consumer — and because deploy and
-    // release modes throw on an invalid cache, that blocked deployment outright. This now
-    // matches the journal validator's escape hatch (build-cache-engine.mjs:156).
-    if (!ALLOWED_CONSUMERS.has(consumer) && !isValidConsumerName(consumer)) {
+    // Phase 2: consumer gate consults the injected registry when present
+    // (options.registry / options.allowedConsumers / options.expectedConsumers);
+    // without one, any structurally-valid slug passes. The hardcoded project
+    // list no longer exists — fail-closed applies only to malformed names.
+    if (!isAllowedConsumer(consumer, options)) {
       return { valid: false, reason: `Disallowed artifact consumer '${consumer}' in cache schema` };
     }
     if (record.consumer !== consumer) {
@@ -1912,6 +1954,8 @@ export function validateDeployReceiptRecord({
   targetPath = null,
   transactionId = null,
   expectedPluginsDir = null,
+  registry = null,
+  allowedConsumers = null,
 }) {
   if (!receipt || typeof receipt !== "object" || Array.isArray(receipt)) {
     return { valid: false, reason: "Deploy receipt is missing or is not an object" };
@@ -1925,7 +1969,7 @@ export function validateDeployReceiptRecord({
   if (receipt.consumer !== consumer || (receipt.plugin && receipt.plugin !== consumer)) {
     return { valid: false, reason: `Deploy receipt consumer mismatch for ${consumer}` };
   }
-  if (expectedPluginsDir && (!ALLOWED_CONSUMERS.has(receipt.consumer) && !isValidConsumerName(receipt.consumer))) {
+  if (expectedPluginsDir && !isAllowedConsumer(receipt.consumer, { registry, allowedConsumers })) {
     return { valid: false, reason: `Disallowed consumer '${receipt.consumer}' in deploy receipt` };
   }
   if (artifactId) {
@@ -2419,16 +2463,36 @@ export async function computeAllFingerprintsParallel({
   jobs = 4,
   contentRoot = null,
   signal = null,
+  // Phase 2: theme directory follows config.activeTheme. An explicit themeDir
+  // still wins; when neither is given, the pre-config legacy default applies.
+  activeTheme = null,
+  // Phase 2: optional validated registry forwarded to resolveConsumerSource.
+  registry = null,
 }) {
   const resolvedContentRoot = contentRoot || path.resolve(path.join(scriptDir, ".."));
-  const resolvedThemeDir = themeDir || path.join(resolvedContentRoot, "themes", "tavangary");
+  let resolvedThemeDir =
+    themeDir ||
+    (activeTheme ? path.join(resolvedContentRoot, "themes", activeTheme) : null);
+  if (!resolvedThemeDir && resolvedContentRoot) {
+    const themesParent = path.join(resolvedContentRoot, "themes");
+    if (fs.existsSync(themesParent)) {
+      try {
+        const themeDirs = fs.readdirSync(themesParent, { withFileTypes: true })
+          .filter((d) => d.isDirectory() && !d.name.startsWith("."))
+          .map((d) => d.name);
+        if (themeDirs.length === 1) {
+          resolvedThemeDir = path.join(themesParent, themeDirs[0]);
+        }
+      } catch {}
+    }
+  }
   const ioLimit = pLimit(Math.max(1, Math.min(Number(jobs) || 4, 32)));
   const treeLimit = pLimit(Math.max(1, Math.min(Number(jobs) || 4, 32)));
 
   const pluginTasks = targetPlugins.map((pluginName) =>
     treeLimit(async () => {
       if (signal?.aborted) throw new Error("Fingerprint traversal aborted");
-      const resolved = await resolveConsumerSource({ contentRoot: resolvedContentRoot, consumer: pluginName, pluginsDir });
+      const resolved = await resolveConsumerSource({ contentRoot: resolvedContentRoot, consumer: pluginName, pluginsDir, registry });
       return computeTreeContentHash(resolved.sourceDir, resolved.sourceDir, true, ioLimit, signal);
     })
   );
@@ -2437,9 +2501,9 @@ export async function computeAllFingerprintsParallel({
     treeLimit(() => computeToolsFingerprint(scriptDir, ioLimit, signal)),
     treeLimit(() => computeTreeContentHash(path.join(pluginsDir, "wpdev"), path.join(pluginsDir, "wpdev"), true, ioLimit, signal)),
     treeLimit(() =>
-      fs.existsSync(resolvedThemeDir)
+      resolvedThemeDir && fs.existsSync(resolvedThemeDir)
         ? computeTreeContentHash(resolvedThemeDir, resolvedThemeDir, true, ioLimit, signal)
-        : "missing"
+        : crypto.createHash("sha256").update("no-theme").digest("hex")
     ),
     computeTestFileHashes(path.join(scriptDir, "tests"), ioLimit, signal),
     computeToolchainFingerprint(signal),
@@ -2534,7 +2598,7 @@ export function planDependencyGraphBuild({
       wpdevFingerprint: currentFingerprints.wpdev,
       pluginSourceFingerprint: currentPluginSource,
       toolchainFingerprint: currentFingerprints.toolchain || "",
-      profile,
+      profile: buildPlan?.profile || profile,
       options,
       buildPlan,
     });

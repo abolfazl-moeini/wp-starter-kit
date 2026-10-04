@@ -102,7 +102,10 @@ class Ajax {
 					// user_can_ajax_refresh() inside the per-table class. The
 					// nonce would need to be threaded through every list
 					// table's pagination/sort UI which is out of scope here.
-					'skip_nonce' => true,
+					'skip_nonce'          => true,
+					'capability_callback' => static function () {
+						return is_user_logged_in();
+					},
 				)
 			);
 		} else {

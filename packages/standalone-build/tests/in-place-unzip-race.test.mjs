@@ -15,7 +15,7 @@ const execFileAsync = promisify(execFile);
 
 test("In-Place Unzip Race: reproduces exact autoload_real.php Fatal error when tree is partially extracted", async () => {
   const tmpRoot = await mkdtemp(path.join(os.tmpdir(), "unzip-race-repro-"));
-  const pluginDir = path.join(tmpRoot, "tavangary-core");
+  const pluginDir = path.join(tmpRoot, "sample-standalone-plugin");
 
   try {
     // 1. Set up simulated partially-extracted tree where vendor/ is extracted but src/ is not yet on disk
@@ -116,8 +116,8 @@ class ComposerStaticInitMock {
 
 test("Canonical ZIP Ordering: functions-closure.php and all autoload.files precede vendor autoloaders", async () => {
   const tmpRoot = await mkdtemp(path.join(os.tmpdir(), "zip-order-test-"));
-  const stagingDir = path.join(tmpRoot, "tavangary-core");
-  const outputZip = path.join(tmpRoot, "tavangary-core-profile-s.zip");
+  const stagingDir = path.join(tmpRoot, "sample-standalone-plugin");
+  const outputZip = path.join(tmpRoot, "sample-standalone-plugin-profile-s.zip");
 
   try {
     await mkdir(path.join(stagingDir, "src/FrameworkClosure"), { recursive: true });
@@ -126,7 +126,7 @@ test("Canonical ZIP Ordering: functions-closure.php and all autoload.files prece
     await mkdir(path.join(stagingDir, "vendor/nyholm/psr7/src"), { recursive: true });
     await mkdir(path.join(stagingDir, "assets"), { recursive: true });
 
-    await writeFile(path.join(stagingDir, "tavangary-core.php"), "<?php // Main plugin bootstrap");
+    await writeFile(path.join(stagingDir, "sample-standalone-plugin.php"), "<?php // Main plugin bootstrap");
     await writeFile(path.join(stagingDir, "LICENSE"), "GPL-2.0");
     await writeFile(path.join(stagingDir, "readme.txt"), "Readme");
     await writeFile(path.join(stagingDir, "assets/app.js"), "console.log('app');");
@@ -165,13 +165,13 @@ class ComposerStaticInitMock {
     await writeFile(path.join(stagingDir, "vendor/autoload.php"), "<?php // Autoload entry");
 
     // Generate manifest
-    await generateArtifactManifest({ rootDir: stagingDir, consumer: "tavangary-core" });
+    await generateArtifactManifest({ rootDir: stagingDir, consumer: "sample-standalone-plugin" });
 
     // Create canonical ordered ZIP
     await createCanonicalZip({
       sourceRoot: stagingDir,
       outputZip,
-      rootName: "tavangary-core",
+      rootName: "sample-standalone-plugin",
     });
 
     // Inspect archive entries order
@@ -179,12 +179,12 @@ class ComposerStaticInitMock {
     const entries = readZipEntries(zipBytes);
     const entryNames = entries.map((e) => e.name);
 
-    const bootstrapIdx = entryNames.indexOf("tavangary-core/tavangary-core.php");
-    const closureIdx = entryNames.indexOf("tavangary-core/src/FrameworkClosure/functions-closure.php");
-    const adminRegIdx = entryNames.indexOf("tavangary-core/src/admin-panel-register.php");
-    const helpRegIdx = entryNames.indexOf("tavangary-core/src/help-register.php");
-    const autoloadRealIdx = entryNames.indexOf("tavangary-core/vendor/composer/autoload_real.php");
-    const vendorAutoloadIdx = entryNames.indexOf("tavangary-core/vendor/autoload.php");
+    const bootstrapIdx = entryNames.indexOf("sample-standalone-plugin/sample-standalone-plugin.php");
+    const closureIdx = entryNames.indexOf("sample-standalone-plugin/src/FrameworkClosure/functions-closure.php");
+    const adminRegIdx = entryNames.indexOf("sample-standalone-plugin/src/admin-panel-register.php");
+    const helpRegIdx = entryNames.indexOf("sample-standalone-plugin/src/help-register.php");
+    const autoloadRealIdx = entryNames.indexOf("sample-standalone-plugin/vendor/composer/autoload_real.php");
+    const vendorAutoloadIdx = entryNames.indexOf("sample-standalone-plugin/vendor/autoload.php");
 
     assert.ok(bootstrapIdx !== -1, "Bootstrap must exist in ZIP");
     assert.ok(closureIdx !== -1, "Closure must exist in ZIP");
@@ -372,25 +372,34 @@ test("Atomic deploy: fails closed if FrameworkClosure directory exists without f
 test("Atomic deploy: registered shared-framework consumer fails closed without functions-closure.php", async () => {
   const tmpRoot = await mkdtemp(path.join(os.tmpdir(), "deploy-registered-closure-"));
   const pluginsDir = path.join(tmpRoot, "plugins");
-  const targetPluginDir = path.join(pluginsDir, "tavangary-core");
+  const targetPluginDir = path.join(pluginsDir, "sample-standalone-plugin");
   const candidateZip = path.join(tmpRoot, "candidate.zip");
 
   try {
     await mkdir(targetPluginDir, { recursive: true });
-    await writeFile(path.join(targetPluginDir, "tavangary-core.php"), "<?php echo 'v1-active';");
+    await writeFile(path.join(targetPluginDir, "sample-standalone-plugin.php"), "<?php echo 'v1-active';");
 
-    const stagingDir = path.join(tmpRoot, "staging/tavangary-core");
+    const stagingDir = path.join(tmpRoot, "staging/sample-standalone-plugin");
     await mkdir(stagingDir, { recursive: true });
-    await writeFile(path.join(stagingDir, "tavangary-core.php"), "<?php echo 'v2';");
-    await generateArtifactManifest({ rootDir: stagingDir, consumer: "tavangary-core" });
-    await createCanonicalZip({ sourceRoot: stagingDir, outputZip: candidateZip, rootName: "tavangary-core" });
+    await writeFile(path.join(stagingDir, "sample-standalone-plugin.php"), "<?php echo 'v2';");
+    await generateArtifactManifest({ rootDir: stagingDir, consumer: "sample-standalone-plugin" });
+    await createCanonicalZip({ sourceRoot: stagingDir, outputZip: candidateZip, rootName: "sample-standalone-plugin" });
 
     await assert.rejects(
-      () => atomicDeployPlugin(candidateZip, "tavangary-core", { pluginsDir, contentRoot: tmpRoot }),
+      () => atomicDeployPlugin(candidateZip, "sample-standalone-plugin", {
+        pluginsDir,
+        contentRoot: tmpRoot,
+        registry: {
+          "sample-standalone-plugin": {
+            sharedFramework: "wpdev",
+            bootstrapFile: "sample-standalone-plugin.php",
+          },
+        },
+      }),
       /FrameworkClosure\/functions-closure\.php is missing/i
     );
 
-    const activeContent = await readFile(path.join(targetPluginDir, "tavangary-core.php"), "utf8");
+    const activeContent = await readFile(path.join(targetPluginDir, "sample-standalone-plugin.php"), "utf8");
     assert.equal(activeContent, "<?php echo 'v1-active';", "Original active plugin must remain untouched");
   } finally {
     await rm(tmpRoot, { recursive: true, force: true });

@@ -5,7 +5,12 @@ import path from "node:path";
 
 const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
 const contentRoot = path.resolve(process.argv[2] || path.join(scriptDirectory, ".."));
-const consumerName = process.argv[3] || "tavangary-theme-panel";
+const consumerName = process.argv[3];
+if (!consumerName) {
+  console.error("Error: consumer argument is required.");
+  console.error("Usage: node framework-closure-inventory.mjs <contentRoot> <consumer>");
+  process.exit(1);
+}
 const output = path.resolve(
   process.argv[4] || path.join(contentRoot, "framework-closure-inventory.json"),
 );

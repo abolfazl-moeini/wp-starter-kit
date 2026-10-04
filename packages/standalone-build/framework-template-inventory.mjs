@@ -5,7 +5,12 @@ import path from "node:path";
 
 const scriptDirectory = path.dirname(new URL(import.meta.url).pathname);
 const contentRoot = path.resolve(process.argv[2] || path.join(scriptDirectory, ".."));
-const consumer = process.argv[3] || "tavangary-theme-panel";
+const consumer = process.argv[3];
+if (!consumer || !/^[a-z0-9][a-z0-9-]*$/.test(consumer)) {
+  console.error("Error: a safe consumer slug argument is required.");
+  console.error("Usage: node framework-template-inventory.mjs <contentRoot> <consumer> [output] [--first-party=<root>...]");
+  process.exit(1);
+}
 const output = path.resolve(
   process.argv[4] || path.join(contentRoot, "template-dependency-inventory.json"),
 );
@@ -20,11 +25,16 @@ const frameworkRoot = path.join(contentRoot, "plugins", "wpdev");
 // First-party roots keep the strict rule: a symlink inside them is a hygiene
 // violation and stays fatal. Everything else discovered on the site is scanned
 // too, but an unscannable third-party root is reported instead of thrown.
+// Extra first-party labels come from `--first-party=<root>` CLI args —
+// no static consumer list.
+const extraFirstParty = process.argv
+  .slice(4)
+  .filter((a) => typeof a === "string" && a.startsWith("--first-party="))
+  .map((a) => a.slice("--first-party=".length).replace(/^\/+|\/+$/g, ""))
+  .filter((label) => label && !label.includes("\\") && !label.includes("\0") && !label.startsWith("../"));
 const firstPartyLabels = new Set([
   `plugins/${consumer}`,
-  "plugins/tavangary-core",
-  "plugins/drm-connector",
-  "themes/tavangary",
+  ...extraFirstParty,
 ]);
 const calls = [];
 const literalViews = new Set();

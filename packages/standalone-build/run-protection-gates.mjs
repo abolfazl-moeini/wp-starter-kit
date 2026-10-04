@@ -9,7 +9,12 @@ import { fileURLToPath } from "node:url";
 const execFileAsync = promisify(execFile);
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const contentRoot = path.resolve(process.argv[2] || path.join(scriptDirectory, ".."));
-const consumer = process.argv[3] || "tavangary-theme-panel";
+const consumer = process.argv[3];
+if (!consumer) {
+  console.error("Error: consumer argument is required.");
+  console.error("Usage: node run-protection-gates.mjs <contentRoot> <consumer>");
+  process.exit(1);
+}
 const registryInput = process.argv[4] || "";
 const migrationProposalInput = process.argv[5] || process.env.PROTECTION_MIGRATION_PROPOSALS || "";
 const failures = [];

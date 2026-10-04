@@ -68,7 +68,7 @@ test("Cache engine: writeAtomicCacheFile writes atomically and prevents corrupti
   const tmpDir = await mkdtemp(path.join(os.tmpdir(), "cache-atomic-"));
   const cacheFilePath = path.join(tmpDir, ".build-cache.json");
   try {
-    const data = { _tools: "tool-hash", "tavangary-core": "core-hash" };
+    const data = { _tools: "tool-hash", "sample-standalone-plugin": "core-hash" };
     await writeAtomicCacheFile(cacheFilePath, data);
 
     assert.ok(fs.existsSync(cacheFilePath));

@@ -119,7 +119,7 @@ test("V4: cache schema still rejects a structurally-invalid consumer slug", () =
 });
 
 test("V4: cache schema accepts an allowlisted consumer without consumer-related rejection", () => {
-  const doc = minimalCacheDoc("tavangary-core");
+  const doc = minimalCacheDoc("sample-standalone-plugin");
 
   const val = validateBuildCacheSchema(doc);
 

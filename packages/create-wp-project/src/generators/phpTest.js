@@ -14,7 +14,10 @@ function testNamespaceRoot(vendorNamespace) {
 }
 
 function phpunitXmlDist(tpl) {
-  const wpRoot = tpl.wpTestsRoot || "/Users/moeini/Dev/wordpress-develop";
+  const wpRoot =
+    tpl.wpTestsRoot ||
+    process.env.WPDEV_CONTENT_ROOT ||
+    "/tmp/wordpress-develop";
   const pluginRoot = `${wpRoot}/wp-content/plugins/${tpl.slug}`;
   return `<?xml version="1.0" encoding="UTF-8"?>
 <phpunit
