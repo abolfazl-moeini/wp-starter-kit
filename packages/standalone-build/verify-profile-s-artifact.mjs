@@ -31,6 +31,8 @@ export async function verifyProfileSArtifact({
   consumer,
   profile = "s",
   stripComments,
+  inlineFramework,
+  obfuscate,
   targetPhp = "7.4",
   phpBin,
   requireManifest = true,
@@ -122,6 +124,11 @@ export async function verifyProfileSArtifact({
       failures.push("Main plugin header is missing in entry file");
     }
 
+    const hasFrameworkClosure = fs.existsSync(path.join(extractedPlugin, "src", "FrameworkClosure"));
+    const expectInlineFramework = inlineFramework !== undefined
+      ? Boolean(inlineFramework)
+      : hasFrameworkClosure;
+    const expectObfuscate = Boolean(obfuscate);
     const expectStripComments = stripComments !== undefined
       ? Boolean(stripComments)
       : (profile === "s");
@@ -131,8 +138,9 @@ export async function verifyProfileSArtifact({
     $files = array_slice($argv, 2);
     $syntaxErrors = [];
     $commentErrors = [];
+    $fwCommentErrors = [];
 
-    function verifySingleFile($f, $main, &$syntaxErrors, &$commentErrors) {
+    function verifySingleFile($f, $main, &$syntaxErrors, &$commentErrors, &$fwCommentErrors) {
         $fileSize = filesize($f);
         if ($fileSize > 200000) {
             $escaped = escapeshellarg($f);
@@ -159,25 +167,32 @@ export async function verifyProfileSArtifact({
         if (basename($f) === $main || strpos($f, '/vendor/') !== false || strpos($f, '/vendor-prefixed/') !== false || strpos($f, '/dependencies/') !== false) {
             return;
         }
+        $is_framework_closure = (strpos(str_replace('\\\\', '/', $f), 'FrameworkClosure') !== false);
         foreach ($tokens as $t) {
             if (is_array($t) && ($t[0] === T_DOC_COMMENT || $t[0] === T_COMMENT)) {
                 if (stripos($t[1], 'Plugin Name:') !== false || stripos($t[1], 'SPDX-License') !== false || stripos($t[1], 'Copyright') !== false) {
                     continue;
                 }
-                $commentErrors[] = $f . ': ' . trim(function_exists('mb_substr') ? mb_substr($t[1], 0, 50, 'UTF-8') : substr($t[1], 0, 50));
+                $err = $f . ': ' . trim(function_exists('mb_substr') ? mb_substr($t[1], 0, 50, 'UTF-8') : substr($t[1], 0, 50));
+                if ($is_framework_closure) {
+                    $fwCommentErrors[] = $err;
+                } else {
+                    $commentErrors[] = $err;
+                }
                 break;
             }
         }
     }
 
     foreach ($files as $f) {
-        verifySingleFile($f, $main, $syntaxErrors, $commentErrors);
+        verifySingleFile($f, $main, $syntaxErrors, $commentErrors, $fwCommentErrors);
     }
 
     $flags = defined('JSON_INVALID_UTF8_SUBSTITUTE') ? JSON_INVALID_UTF8_SUBSTITUTE : 0;
     echo json_encode([
         'syntaxErrors' => $syntaxErrors,
-        'commentErrors' => $commentErrors
+        'commentErrors' => $commentErrors,
+        'fwCommentErrors' => $fwCommentErrors,
     ], $flags);
     `;
 
@@ -196,7 +211,13 @@ export async function verifyProfileSArtifact({
       if (expectStripComments && res.commentErrors && res.commentErrors.length > 0) {
         commentStrippingPassed = false;
         for (const cErr of res.commentErrors) {
-          failures.push(`DocBlock found in internal file: ${cErr}`);
+          failures.push(`DocBlock found in internal consumer file: ${cErr}`);
+        }
+      }
+      if (expectInlineFramework && res.fwCommentErrors && res.fwCommentErrors.length > 0) {
+        commentStrippingPassed = false;
+        for (const cErr of res.fwCommentErrors) {
+          failures.push(`DocBlock found in FrameworkClosure file: ${cErr}`);
         }
       }
     }
@@ -210,13 +231,13 @@ export async function verifyProfileSArtifact({
     }
 
 
-    if (!expectStripComments) {
+    if (!expectStripComments && !expectInlineFramework) {
       results.testsPassed++;
       results.details.push({
         test: "Comment Stripping & Header Preservation",
         status: "passed",
         skipped: true,
-        notes: "Comment stripping not demanded for clean/custom profile",
+        notes: "Comment stripping not demanded for clean/custom profile without inlined framework",
       });
     } else if (commentStrippingPassed) {
       results.testsPassed++;
@@ -224,6 +245,79 @@ export async function verifyProfileSArtifact({
     } else {
       results.testsFailed++;
       results.details.push({ test: "Comment Stripping & Header Preservation", status: "failed" });
+    }
+
+    // Probe 2b: Framework FQCN Obfuscation & Leakage Guard
+    let frameworkObfuscationPassed = true;
+    const frameworkLeakageErrors = [];
+
+    if (expectObfuscate) {
+      for (const f of phpFiles) {
+        const rel = path.relative(extractedPlugin, f).replace(/\\/g, "/");
+        if (rel.startsWith("vendor/") || rel.startsWith("vendor-prefixed/") || rel.startsWith("dependencies/")) {
+          continue;
+        }
+        const isClosureFile = rel.includes("FrameworkClosure") || rel === "functions-closure.php";
+        const code = await readFile(f, "utf8");
+
+        if (!isClosureFile) {
+          // Consumer file: assert ZERO readable WPDevFramework\... FQCNs in declarations, use, extends, or code
+          if (code.includes("WPDevFramework\\") || code.includes("WPDevFramework\\\\")) {
+            const lines = code.split("\n");
+            for (let lineNum = 1; lineNum <= lines.length; lineNum++) {
+              const line = lines[lineNum - 1];
+              if (line.includes("WPDevFramework\\") || line.includes("WPDevFramework\\\\")) {
+                frameworkLeakageErrors.push(
+                  `Consumer file ${rel}:${lineNum} leaked framework FQCN: ${line.trim()}`
+                );
+              }
+            }
+          }
+        } else {
+          // Closure file: WPDevFramework is ONLY permitted on class_alias / class_exists / interface_exists / trait_exists bridge lines
+          if (code.includes("WPDevFramework\\") || code.includes("WPDevFramework\\\\")) {
+            const lines = code.split("\n");
+            for (let lineNum = 1; lineNum <= lines.length; lineNum++) {
+              const line = lines[lineNum - 1];
+              if (line.includes("WPDevFramework\\") || line.includes("WPDevFramework\\\\")) {
+                const isBridge = /(?:class_alias|class_exists|interface_exists|trait_exists)\s*\(/i.test(line);
+                if (!isBridge) {
+                  frameworkLeakageErrors.push(
+                    `Closure file ${rel}:${lineNum} leaked raw framework FQCN outside bridge: ${line.trim()}`
+                  );
+                }
+              }
+            }
+          }
+        }
+      }
+
+      if (frameworkLeakageErrors.length > 0) {
+        frameworkObfuscationPassed = false;
+        for (const err of frameworkLeakageErrors) {
+          failures.push(err);
+        }
+        results.testsFailed++;
+        results.details.push({
+          test: "Framework FQCN Obfuscation & Leakage",
+          status: "failed",
+          errors: frameworkLeakageErrors,
+        });
+      } else {
+        results.testsPassed++;
+        results.details.push({
+          test: "Framework FQCN Obfuscation & Leakage",
+          status: "passed",
+        });
+      }
+    } else {
+      results.testsPassed++;
+      results.details.push({
+        test: "Framework FQCN Obfuscation & Leakage",
+        status: "passed",
+        skipped: true,
+        notes: "Obfuscation not demanded",
+      });
     }
 
     // Probe 3: No Non-Runtime Docs (.md) Leakage

@@ -363,6 +363,23 @@ export const CANONICAL_TEST_REGISTRY = {
     "releaseSameRun": false,
     "tier": "contract"
   },
+  "framework-closure-obfuscation.test.mjs": {
+    "tools": [
+      "tools/assemble-profile-s-candidate.mjs",
+      "tools/build-plan.mjs",
+      "tools/verify-profile-s-artifact.mjs"
+    ],
+    "artifacts": [],
+    "requiredBy": [],
+    "criticality": "normal",
+    "allowedModes": [
+      "affected",
+      "full",
+      "release"
+    ],
+    "releaseSameRun": false,
+    "tier": "contract"
+  },
   "generate-serialized-callback-review-manifest.test.mjs": {
     "tools": [
       "tools/generate-serialized-callback-review-manifest.mjs"

@@ -167,30 +167,34 @@ class Plan3_Transformer {
 	);
 
 	protected static $frozen_public_classes = array(
-		'Plugin',
-		'Module',
-		'ModuleInterface',
-		'ModuleLoader',
-		'AbstractModule',
-		'Base_Admin_Page',
-		'List_Admin_Page',
-		'Base_List_Table',
-		'Edit_Admin_Page',
-		'Wizard_Admin_Page',
-		'Settings_Admin_Page',
-		'Customizer_Admin_Page',
-		'Base_Customer_Facing_Admin_Page',
-		'Edit_Page_Widgets',
-		'Edit_Object_Page',
-		'Table',
-		'Base',
+		'WP_List_Table',
+		'WP_Widget',
+		'WP_REST_Controller',
+		'WC_Payment_Gateway',
 		'Plan3_Transformer',
-		'Singleton',
-		'Module_Autoloader',
-		'Module_Loader',
-		'Base_Manager',
-		'Base_Model',
 	);
+
+	/**
+	 * Verify if a class is frozen against $frozen_public_classes using FQCN or global check.
+	 *
+	 * Prevents short-name collision / blast radius on generic names like Table or Base.
+	 *
+	 * @param string $class_name
+	 * @param string $current_namespace
+	 * @return bool
+	 */
+	public static function is_frozen_class( $class_name, $current_namespace = '' ) {
+		$fqcn = ! empty( $current_namespace ) ? ( $current_namespace . '\\' . $class_name ) : $class_name;
+		foreach ( self::$frozen_public_classes as $frozen ) {
+			if ( $frozen === $fqcn ) {
+				return true;
+			}
+			if ( strpos( $frozen, '\\' ) === false && empty( $current_namespace ) && $frozen === $class_name ) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	protected static $frozen_public_constants = array(
 		'ACTIVE',
@@ -260,6 +264,9 @@ class Plan3_Transformer {
 	public $flatten_namespaces = true;
 	public $mangle_symbols = true;
 	public $strip_comments = true;
+	public $framework_flatten = true;
+	public $framework_mangle = true;
+	public $framework_strip = true;
 	public $retained_namespaces = array();
 	public $classes = array();
 	public $accesses_by_offset = array();
@@ -292,11 +299,14 @@ class Plan3_Transformer {
 		'auth_callback',
 	);
 
-	public function __construct( $seed = 'wpdev-plan3-spec', $flatten_namespaces = true, $mangle_symbols = true, $strip_comments = true ) {
+	public function __construct( $seed = 'wpdev-plan3-spec', $flatten_namespaces = true, $mangle_symbols = true, $strip_comments = true, $framework_flatten = null, $framework_mangle = null, $framework_strip = null ) {
 		$this->seed = $seed;
 		$this->flatten_namespaces = (bool) $flatten_namespaces;
 		$this->mangle_symbols = (bool) $mangle_symbols;
 		$this->strip_comments = (bool) $strip_comments;
+		$this->framework_flatten = $framework_flatten !== null ? (bool) $framework_flatten : true;
+		$this->framework_mangle = $framework_mangle !== null ? (bool) $framework_mangle : (bool) $mangle_symbols;
+		$this->framework_strip = $framework_strip !== null ? (bool) $framework_strip : true;
 		if ( function_exists( 'get_defined_functions' ) ) {
 			$defined = get_defined_functions();
 			if ( isset( $defined['internal'] ) && is_array( $defined['internal'] ) ) {
@@ -919,6 +929,15 @@ class Plan3_Transformer {
 		if ( isset( $loaded['__stripComments'] ) ) {
 			$this->strip_comments = (bool) $loaded['__stripComments'];
 		}
+		if ( isset( $loaded['__frameworkFlatten'] ) ) {
+			$this->framework_flatten = (bool) $loaded['__frameworkFlatten'];
+		}
+		if ( isset( $loaded['__frameworkMangle'] ) ) {
+			$this->framework_mangle = (bool) $loaded['__frameworkMangle'];
+		}
+		if ( isset( $loaded['__frameworkStrip'] ) ) {
+			$this->framework_strip = (bool) $loaded['__frameworkStrip'];
+		}
 		if ( isset( $loaded['retained_namespaces'] ) && is_array( $loaded['retained_namespaces'] ) ) {
 			$this->retained_namespaces = $loaded['retained_namespaces'];
 		}
@@ -1067,7 +1086,7 @@ class Plan3_Transformer {
 			if ( $id === T_NAMESPACE ) {
 				$spec = $this->read_namespace_spec( $tokens, $i, $count );
 				$current_ns = $spec['name'];
-				if ( strpos( $current_ns, 'WPDevFramework' ) === 0 || strpos( $current_ns, 'WPDev' ) === 0 || strpos( $current_ns, 'BerlinDB' ) === 0 || strpos( $current_ns, 'Action_Scheduler' ) === 0 || strpos( $current_ns, 'Mercator' ) === 0 ) {
+				if ( strpos( $current_ns, 'WPDev\\' ) === 0 || strpos( $current_ns, 'BerlinDB' ) === 0 || strpos( $current_ns, 'Action_Scheduler' ) === 0 || strpos( $current_ns, 'Mercator' ) === 0 ) {
 					$retained[ $current_ns ] = true;
 				}
 				if ( $spec['terminator'] === '{' ) {
@@ -1110,7 +1129,7 @@ class Plan3_Transformer {
 				while ( $next < $count && is_array( $tokens[ $next ] ) && ( $tokens[ $next ][0] === T_WHITESPACE || $tokens[ $next ][0] === T_STATIC || $tokens[ $next ][0] === T_ABSTRACT || $tokens[ $next ][0] === T_FINAL ) ) {
 					$next++;
 				}
-				if ( $next < $count && is_array( $tokens[ $next ] ) && in_array( $tokens[ $next ][1], self::$frozen_public_classes, true ) ) {
+				if ( $next < $count && is_array( $tokens[ $next ] ) && self::is_frozen_class( $tokens[ $next ][1], $current_ns ) ) {
 					$retained[ $current_ns ] = true;
 				}
 			}
@@ -1145,16 +1164,6 @@ class Plan3_Transformer {
 					$detected = $this->detect_retained_namespaces_in_tokens( $toks );
 					foreach ( $detected as $ns => $val ) {
 						$this->retained_namespaces[ $ns ] = true;
-					}
-					if ( strpos( $pathname, 'FrameworkClosure' ) !== false ) {
-						for ( $ti = 0; $ti < count( $toks ); $ti++ ) {
-							if ( is_array( $toks[ $ti ] ) && $toks[ $ti ][0] === T_NAMESPACE ) {
-								$spec = $this->read_namespace_spec( $toks, $ti, count( $toks ) );
-								if ( ! empty( $spec['name'] ) ) {
-									$this->retained_namespaces[ $spec['name'] ] = true;
-								}
-							}
-						}
 					}
 				}
 			}
@@ -1224,7 +1233,7 @@ class Plan3_Transformer {
 				}
 			} elseif ( $this->mangle_symbols && count( $unique_ns ) > 1 ) {
 				foreach ( $unique_ns as $ns ) {
-					if ( ! empty( $ns ) && ( strpos( $ns, 'WPDev' ) === 0 || strpos( $ns, 'FrameworkClosure' ) !== false || $short === 'component_registry' ) ) {
+					if ( ! empty( $ns ) && $short === 'component_registry' ) {
 						$this->retained_namespaces[ $ns ] = true;
 					}
 				}
@@ -1232,7 +1241,7 @@ class Plan3_Transformer {
 		}
 		$retained_roots = array();
 		foreach ( array_keys( $this->retained_namespaces ) as $r_ns ) {
-			if ( ! empty( $r_ns ) && ( strpos( $r_ns, 'WPDev' ) === 0 || strpos( $r_ns, 'FrameworkClosure' ) !== false ) ) {
+			if ( ! empty( $r_ns ) && strpos( $r_ns, '\\' ) !== false ) {
 				$parts = explode( '\\', $r_ns );
 				$retained_roots[ $parts[0] ] = true;
 			}
@@ -1473,9 +1482,7 @@ class Plan3_Transformer {
 						$class_line = isset( $tokens[ $next ][2] ) ? $tokens[ $next ][2] : 1;
 						$hash_key   = ! empty( $current_namespace ) ? ( $current_namespace . '\\' . $class_name ) : $class_name;
 						$this->class_kinds[ $hash_key ] = $kind;
-						$is_frozen = in_array( $class_name, self::$frozen_public_classes, true )
-							|| strpos( $file_path, 'FrameworkClosure' ) !== false
-							|| strpos( $current_namespace, 'WPDevFramework' ) === 0;
+						$is_frozen = self::is_frozen_class( $class_name, $current_namespace );
 						$this->symbol_paths[ $hash_key ] = $file_path . ':' . $class_line;
 						$this->declarations[] = array(
 							'symbol'               => $hash_key,
@@ -1522,8 +1529,12 @@ class Plan3_Transformer {
 							}
 							continue;
 						}
-						$is_flattened = $this->flatten_namespaces && ( empty( $current_namespace ) || ! isset( $this->retained_namespaces[ $current_namespace ] ) );
-						if ( ! $this->mangle_symbols ) {
+						$is_framework_file = ( strpos( str_replace( '\\', '/', $file_path ), 'FrameworkClosure' ) !== false || basename( $file_path ) === 'functions-closure.php' );
+						$file_flatten = $is_framework_file ? $this->framework_flatten : $this->flatten_namespaces;
+						$file_mangle  = $is_framework_file ? $this->framework_mangle  : $this->mangle_symbols;
+
+						$is_flattened = $file_flatten && ( empty( $current_namespace ) || ! isset( $this->retained_namespaces[ $current_namespace ] ) );
+						if ( ! $file_mangle ) {
 							if ( $is_flattened ) {
 								$this->record_short_class_name( $class_name, $class_name );
 								if ( ! empty( $current_namespace ) ) {
@@ -1540,7 +1551,8 @@ class Plan3_Transformer {
 							}
 							continue;
 						}
-						$mangled = '_c_' . substr( hash( 'sha256', $this->seed . ':class:' . $hash_key ), 0, 8 );
+						$prefix = ( $is_framework_file || strpos( $current_namespace, 'WPDevFramework' ) === 0 ) ? '_fc_' : '_c_';
+						$mangled = $prefix . substr( hash( 'sha256', $this->seed . ':class:' . $hash_key ), 0, 8 );
 
 						if ( $is_flattened ) {
 							$this->record_short_class_name( $class_name, $mangled );
@@ -1548,6 +1560,9 @@ class Plan3_Transformer {
 								$fqcn = $current_namespace . '\\' . $class_name;
 								$this->class_map[ $fqcn ] = $mangled;
 								$this->class_map[ '\\' . $fqcn ] = '\\' . $mangled;
+							} else {
+								$this->class_map[ $class_name ] = $mangled;
+								$this->class_map[ '\\' . $class_name ] = '\\' . $mangled;
 							}
 						} else {
 							if ( ! empty( $current_namespace ) ) {
@@ -1612,18 +1627,22 @@ class Plan3_Transformer {
 							if ( $is_reserved ) {
 								continue;
 							}
-							if ( ! $this->mangle_symbols ) {
+							$is_framework_file = ( strpos( str_replace( '\\', '/', $file_path ), 'FrameworkClosure' ) !== false || basename( $file_path ) === 'functions-closure.php' );
+							$file_flatten = $is_framework_file ? $this->framework_flatten : $this->flatten_namespaces;
+							$file_mangle  = $is_framework_file ? $this->framework_mangle  : $this->mangle_symbols;
+							if ( ! $file_mangle ) {
 								continue;
 							}
-						$this->function_declarations[] = array(
-							'fqfn'      => $fqfn,
-							'namespace' => $current_namespace,
-							'name'      => $func_name,
-							'file'      => $file_path,
-						);
-							$mangled = '_f_' . substr( hash( 'sha256', $this->seed . ':func:' . strtolower( $fqfn ) ), 0, 8 );
+							$this->function_declarations[] = array(
+								'fqfn'      => $fqfn,
+								'namespace' => $current_namespace,
+								'name'      => $func_name,
+								'file'      => $file_path,
+							);
+							$prefix = ( $is_framework_file || strpos( $current_namespace, 'WPDevFramework' ) === 0 ) ? '_ff_' : '_f_';
+							$mangled = $prefix . substr( hash( 'sha256', $this->seed . ':func:' . strtolower( $fqfn ) ), 0, 8 );
 
-							$is_flattened = $this->flatten_namespaces && ( empty( $current_namespace ) || ! isset( $this->retained_namespaces[ $current_namespace ] ) );
+							$is_flattened = $file_flatten && ( empty( $current_namespace ) || ! isset( $this->retained_namespaces[ $current_namespace ] ) );
 							if ( $is_flattened ) {
 								$this->record_short_function_name( $func_name, $mangled );
 								if ( ! empty( $current_namespace ) ) {
@@ -1686,6 +1705,16 @@ class Plan3_Transformer {
 
 	public function transform( $source, $is_main_plugin_file = false, $file_rel_path = '' ) {
 		$file_key = $file_rel_path ? $file_rel_path : 'main.php';
+		$norm_rel_path = str_replace( '\\', '/', (string) $file_rel_path );
+		$is_framework_track = ( strpos( $norm_rel_path, 'FrameworkClosure' ) !== false || basename( $norm_rel_path ) === 'functions-closure.php' );
+
+		$orig_flatten = $this->flatten_namespaces;
+		$orig_mangle  = $this->mangle_symbols;
+		$orig_strip   = $this->strip_comments;
+
+		$this->flatten_namespaces = $is_framework_track ? $this->framework_flatten : $orig_flatten;
+		$this->mangle_symbols     = $is_framework_track ? $this->framework_mangle  : $orig_mangle;
+		$this->strip_comments     = $is_framework_track ? $this->framework_strip   : $orig_strip;
 
 		$analyzer = new Plan3_Symbol_Analyzer( $this->seed );
 		if ( ! empty( $this->project_global_vars ) ) {
@@ -2386,8 +2415,10 @@ class Plan3_Transformer {
 								
 								if ( $has_as ) {
 									$rendered_clauses[] = $mangled_target . ' as ' . $as_alias;
-								} else {
+								} elseif ( $mangled_target !== $short_name ) {
 									$rendered_clauses[] = $mangled_target . ' as ' . $short_name;
+								} else {
+									$rendered_clauses[] = $mangled_target;
 								}
 							} else {
 								$rendered_clause = '';
@@ -2618,7 +2649,7 @@ class Plan3_Transformer {
 							}
 							continue;
 						}
-						if ( ! $is_declaration && ! empty( $current_namespace ) && in_array( $text, self::$frozen_public_classes, true ) ) {
+						if ( ! $is_declaration && ! empty( $current_namespace ) && self::is_frozen_class( $text, $current_namespace ) ) {
 							$output .= '\\' . $current_namespace . '\\' . $text;
 							continue;
 						}
@@ -2951,6 +2982,10 @@ class Plan3_Transformer {
 
 
 
+		$this->flatten_namespaces = $orig_flatten;
+		$this->mangle_symbols     = $orig_mangle;
+		$this->strip_comments     = $orig_strip;
+
 		return array(
 			'code'     => $output,
 			'manifest' => array(
@@ -2987,6 +3022,9 @@ function plan3_cli_bool_flags( $argv ) {
 	$flatten = true;
 	$mangle  = true;
 	$strip   = true;
+	$fw_flatten = null;
+	$fw_mangle  = null;
+	$fw_strip   = null;
 	foreach ( $argv as $arg ) {
 		if ( ! is_string( $arg ) ) {
 			continue;
@@ -3003,9 +3041,30 @@ function plan3_cli_bool_flags( $argv ) {
 			$strip = false;
 		} elseif ( $arg === '--strip-comments=1' ) {
 			$strip = true;
+		} elseif ( $arg === '--framework-flatten=0' || $arg === '--no-framework-flatten' ) {
+			$fw_flatten = false;
+		} elseif ( $arg === '--framework-flatten=1' ) {
+			$fw_flatten = true;
+		} elseif ( $arg === '--framework-mangle=0' || $arg === '--no-framework-mangle' ) {
+			$fw_mangle = false;
+		} elseif ( $arg === '--framework-mangle=1' ) {
+			$fw_mangle = true;
+		} elseif ( $arg === '--framework-strip=0' || $arg === '--no-framework-strip' ) {
+			$fw_strip = false;
+		} elseif ( $arg === '--framework-strip=1' ) {
+			$fw_strip = true;
 		}
 	}
-	return array( $flatten, $mangle, $strip );
+	if ( $fw_flatten === null ) {
+		$fw_flatten = true;
+	}
+	if ( $fw_mangle === null ) {
+		$fw_mangle = $mangle;
+	}
+	if ( $fw_strip === null ) {
+		$fw_strip = true;
+	}
+	return array( $flatten, $mangle, $strip, $fw_flatten, $fw_mangle, $fw_strip );
 }
 
 if ( isset( $argv[0] ) && basename( $argv[0] ) === 'transformer.php' ) {
@@ -3014,7 +3073,7 @@ if ( isset( $argv[0] ) && basename( $argv[0] ) === 'transformer.php' ) {
 		$map_file    = isset( $argv[3] ) ? $argv[3] : '';
 		$seed        = isset( $argv[4] ) ? $argv[4] : 'wpdev-plan3-release';
 		$main_file   = isset( $argv[5] ) ? $argv[5] : '';
-		list( $flatten_namespaces, $mangle_symbols, $strip_comments ) = plan3_cli_bool_flags( $argv );
+		list( $flatten_namespaces, $mangle_symbols, $strip_comments, $fw_flatten, $fw_mangle, $fw_strip ) = plan3_cli_bool_flags( $argv );
 		Plan3_Transformer::set_extra_function_prefixes( plan3_cli_function_prefixes( $argv ) );
 
 		if ( empty( $staging_dir ) || ! is_dir( $staging_dir ) ) {
@@ -3022,7 +3081,7 @@ if ( isset( $argv[0] ) && basename( $argv[0] ) === 'transformer.php' ) {
 			exit( 1 );
 		}
 
-		$transformer = new Plan3_Transformer( $seed, $flatten_namespaces, $mangle_symbols, $strip_comments );
+		$transformer = new Plan3_Transformer( $seed, $flatten_namespaces, $mangle_symbols, $strip_comments, $fw_flatten, $fw_mangle, $fw_strip );
 		if ( ! empty( $map_file ) ) {
 			if ( ! is_file( $map_file ) ) {
 				fwrite( STDERR, "Error: Map file not found: $map_file\n" );
@@ -3042,6 +3101,9 @@ if ( isset( $argv[0] ) && basename( $argv[0] ) === 'transformer.php' ) {
 			$transformer->flatten_namespaces = $flatten_namespaces;
 			$transformer->mangle_symbols     = $mangle_symbols;
 			$transformer->strip_comments     = $strip_comments;
+			$transformer->framework_flatten  = $fw_flatten;
+			$transformer->framework_mangle   = $fw_mangle;
+			$transformer->framework_strip    = $fw_strip;
 		}
 
 		$iterator = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $staging_dir, RecursiveDirectoryIterator::SKIP_DOTS ) );
@@ -3086,7 +3148,7 @@ if ( isset( $argv[0] ) && basename( $argv[0] ) === 'transformer.php' ) {
 		$scan_dir = isset( $argv[2] ) ? $argv[2] : '';
 		$map_out  = isset( $argv[3] ) ? $argv[3] : '';
 		$seed     = isset( $argv[4] ) ? $argv[4] : 'wpdev-plan3-release';
-		list( $flatten_namespaces, $mangle_symbols, $strip_comments ) = plan3_cli_bool_flags( $argv );
+		list( $flatten_namespaces, $mangle_symbols, $strip_comments, $fw_flatten, $fw_mangle, $fw_strip ) = plan3_cli_bool_flags( $argv );
 		Plan3_Transformer::set_extra_function_prefixes( plan3_cli_function_prefixes( $argv ) );
 
 		if ( empty( $scan_dir ) || ! is_dir( $scan_dir ) ) {
@@ -3094,7 +3156,7 @@ if ( isset( $argv[0] ) && basename( $argv[0] ) === 'transformer.php' ) {
 			exit( 1 );
 		}
 
-		$transformer = new Plan3_Transformer( $seed, $flatten_namespaces, $mangle_symbols, $strip_comments );
+		$transformer = new Plan3_Transformer( $seed, $flatten_namespaces, $mangle_symbols, $strip_comments, $fw_flatten, $fw_mangle, $fw_strip );
 		$transformer->scan_symbols_in_dir( $scan_dir );
 		$payload = array(
 			'classes'              => $transformer->class_map,
@@ -3112,6 +3174,9 @@ if ( isset( $argv[0] ) && basename( $argv[0] ) === 'transformer.php' ) {
 			'__flattenNamespaces'  => $transformer->flatten_namespaces,
 			'__mangleSymbols'      => $transformer->mangle_symbols,
 			'__stripComments'      => $transformer->strip_comments,
+			'__frameworkFlatten'   => $transformer->framework_flatten,
+			'__frameworkMangle'    => $transformer->framework_mangle,
+			'__frameworkStrip'     => $transformer->framework_strip,
 		);
 		$encoded = json_encode( $payload, JSON_PRETTY_PRINT );
 		if ( $encoded === false ) {
@@ -3152,7 +3217,8 @@ if ( isset( $argv[0] ) && basename( $argv[0] ) === 'transformer.php' ) {
 		exit( 1 );
 	}
 
-	$transformer = new Plan3_Transformer( $seed );
+	list( $flatten_namespaces, $mangle_symbols, $strip_comments, $fw_flatten, $fw_mangle, $fw_strip ) = plan3_cli_bool_flags( $argv );
+	$transformer = new Plan3_Transformer( $seed, $flatten_namespaces, $mangle_symbols, $strip_comments, $fw_flatten, $fw_mangle, $fw_strip );
 	Plan3_Transformer::set_extra_function_prefixes( plan3_cli_function_prefixes( $argv ) );
 	if ( ! empty( $map_file ) ) {
 		if ( ! is_file( $map_file ) ) {

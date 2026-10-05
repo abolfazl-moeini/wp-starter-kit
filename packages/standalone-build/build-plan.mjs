@@ -180,6 +180,9 @@ export function computePlanFingerprint(planData) {
       inlineFramework: Boolean(planData.capabilities?.inlineFramework),
       spaghetti: Boolean(planData.capabilities?.spaghetti),
       obfuscate: Boolean(planData.capabilities?.obfuscate),
+      frameworkFlatten: Boolean(planData.capabilities?.frameworkFlatten),
+      frameworkStrip: Boolean(planData.capabilities?.frameworkStrip),
+      frameworkMangle: Boolean(planData.capabilities?.frameworkMangle),
     },
     targetPhp: planData.targetPhp,
     skipZip: Boolean(planData.skipZip),
@@ -242,6 +245,9 @@ const ALLOWED_BUILD_PLAN_OPTIONS = new Set([
   "spaghetti",
   "obfuscate",
   "isObfuscate",
+  "frameworkFlatten",
+  "frameworkStrip",
+  "frameworkMangle",
   "sourceRoot",
   "contentRoot",
   "pluginsDir",
@@ -275,6 +281,9 @@ const BOOLEAN_OPTION_KEYS = new Set([
   "spaghetti",
   "obfuscate",
   "isObfuscate",
+  "frameworkFlatten",
+  "frameworkStrip",
+  "frameworkMangle",
   "minifyAssets",
   "mirrorUnminified",
   "preserveReadable",
@@ -398,10 +407,23 @@ export function createBuildPlan(rawOptions = {}) {
     obfuscate = false;
   }
 
+  const frameworkFlatten = rawOptions.frameworkFlatten !== undefined
+    ? Boolean(rawOptions.frameworkFlatten)
+    : Boolean(inlineFramework);
+  const frameworkStrip = rawOptions.frameworkStrip !== undefined
+    ? Boolean(rawOptions.frameworkStrip)
+    : Boolean(inlineFramework);
+  const frameworkMangle = rawOptions.frameworkMangle !== undefined
+    ? Boolean(rawOptions.frameworkMangle)
+    : Boolean(inlineFramework && obfuscate);
+
   const capabilities = Object.freeze({
     inlineFramework,
     spaghetti,
     obfuscate,
+    frameworkFlatten,
+    frameworkStrip,
+    frameworkMangle,
   });
 
   // Source / provider descriptors

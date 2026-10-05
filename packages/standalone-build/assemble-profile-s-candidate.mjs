@@ -362,7 +362,9 @@ export async function assembleProfileSCandidate(options = {}) {
     );
     let dynamicEdges = [];
 
-    const runTransformer = buildPlan.capabilities.obfuscate || buildPlan.capabilities.spaghetti;
+    const runTransformer = buildPlan.capabilities.obfuscate ||
+                           buildPlan.capabilities.spaghetti ||
+                           buildPlan.capabilities.inlineFramework;
     if (runTransformer) {
       console.log("==> 4. Running Plan 3 Eligibility & Safety Spike on extracted tree...");
       const eligibility = await runPlan3EligibilitySpike({ rootDir: stagingPlugin });
@@ -376,6 +378,9 @@ export async function assembleProfileSCandidate(options = {}) {
       const flattenFlag = buildPlan.capabilities.spaghetti ? "--flatten=1" : "--flatten=0";
       const mangleFlag = buildPlan.capabilities.obfuscate ? "--mangle=1" : "--mangle=0";
       const stripFlag = buildPlan.capabilities.obfuscate ? "--strip-comments=1" : "--strip-comments=0";
+      const fwFlattenFlag = buildPlan.capabilities.inlineFramework ? "--framework-flatten=1" : "--framework-flatten=0";
+      const fwStripFlag = buildPlan.capabilities.inlineFramework ? "--framework-strip=1" : "--framework-strip=0";
+      const fwMangleFlag = buildPlan.capabilities.obfuscate ? "--framework-mangle=1" : "--framework-mangle=0";
 
       await exec("php", [
         "-d",
@@ -388,6 +393,9 @@ export async function assembleProfileSCandidate(options = {}) {
         flattenFlag,
         mangleFlag,
         stripFlag,
+        fwFlattenFlag,
+        fwStripFlag,
+        fwMangleFlag,
       ], {
         maxBuffer: 50 * 1024 * 1024,
       });
@@ -413,13 +421,16 @@ export async function assembleProfileSCandidate(options = {}) {
         flattenFlag,
         mangleFlag,
         stripFlag,
+        fwFlattenFlag,
+        fwStripFlag,
+        fwMangleFlag,
       ], {
         maxBuffer: 50 * 1024 * 1024,
       });
       const manifestLog = parseTransformerBatchLog(batchOut, { expectedFiles: expectedPhpFiles });
       console.log(`==> Transformed ${manifestLog.length} files (flatten=${buildPlan.capabilities.spaghetti} mangle=${buildPlan.capabilities.obfuscate})`);
     } else {
-      console.log("==> 4. Skipping AST Transformer (spaghetti=false, obfuscate=false)");
+      console.log("==> 4. Skipping AST Transformer (spaghetti=false, obfuscate=false, inlineFramework=false)");
     }
 
     if (buildPlan.capabilities.spaghetti || buildPlan.capabilities.inlineFramework) {
@@ -693,6 +704,8 @@ export async function assembleProfileSCandidate(options = {}) {
       consumer,
       profile,
       stripComments: buildPlan.capabilities.stripComments,
+      inlineFramework: buildPlan.capabilities.inlineFramework,
+      obfuscate: buildPlan.capabilities.obfuscate,
       targetPhp: buildPlan.targetPhp,
       phpBin: targetInterpreter.bin,
       requireManifest: true,
