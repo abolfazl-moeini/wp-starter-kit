@@ -98,9 +98,9 @@
         {
           "iteration": 1,
           "jobs": 4,
-          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts",
+          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=4 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts",
           "args": [
-            "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+            "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
             "--jobs=4",
             "--force",
             "--build-only",
@@ -108,7 +108,7 @@
             "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
             "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts"
           ],
-          "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+          "cwd": "<wp-content-root>",
           "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist",
           "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
           "exitCode": 0,
@@ -126,9 +126,9 @@
         {
           "iteration": 2,
           "jobs": 4,
-          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts",
+          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=4 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts",
           "args": [
-            "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+            "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
             "--jobs=4",
             "--force",
             "--build-only",
@@ -136,7 +136,7 @@
             "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
             "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts"
           ],
-          "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+          "cwd": "<wp-content-root>",
           "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist",
           "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
           "exitCode": 0,
@@ -166,16 +166,16 @@
         {
           "iteration": 1,
           "jobs": 4,
-          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts",
+          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=4 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts",
           "args": [
-            "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+            "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
             "--jobs=4",
             "--build-only",
             "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist",
             "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
             "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts"
           ],
-          "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+          "cwd": "<wp-content-root>",
           "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist",
           "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
           "exitCode": 0,
@@ -193,16 +193,16 @@
         {
           "iteration": 2,
           "jobs": 4,
-          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts",
+          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=4 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts",
           "args": [
-            "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+            "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
             "--jobs=4",
             "--build-only",
             "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist",
             "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
             "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts"
           ],
-          "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+          "cwd": "<wp-content-root>",
           "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist",
           "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
           "exitCode": 0,
@@ -232,9 +232,9 @@
         {
           "iteration": 1,
           "jobs": 4,
-          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.deploy-receipts",
+          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=4 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.deploy-receipts",
           "args": [
-            "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+            "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
             "--jobs=4",
             "--changed",
             "--build-only",
@@ -243,7 +243,7 @@
             "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.build-cache.json",
             "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.deploy-receipts"
           ],
-          "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+          "cwd": "<wp-content-root>",
           "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist",
           "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.build-cache.json",
           "exitCode": 0,
@@ -261,9 +261,9 @@
         {
           "iteration": 2,
           "jobs": 4,
-          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.deploy-receipts",
+          "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=4 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.deploy-receipts",
           "args": [
-            "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+            "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
             "--jobs=4",
             "--changed",
             "--build-only",
@@ -272,7 +272,7 @@
             "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.build-cache.json",
             "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.deploy-receipts"
           ],
-          "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+          "cwd": "<wp-content-root>",
           "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist",
           "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.build-cache.json",
           "exitCode": 0,
@@ -305,9 +305,9 @@
           {
             "iteration": 1,
             "jobs": 1,
-            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=1 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.deploy-receipts",
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=1 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.deploy-receipts",
             "args": [
-              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
               "--jobs=1",
               "--force",
               "--build-only",
@@ -315,7 +315,7 @@
               "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.build-cache.json",
               "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.deploy-receipts"
             ],
-            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "cwd": "<wp-content-root>",
             "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist",
             "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.build-cache.json",
             "exitCode": 0,
@@ -345,16 +345,16 @@
           {
             "iteration": 1,
             "jobs": 1,
-            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=1 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.deploy-receipts",
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=1 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.deploy-receipts",
             "args": [
-              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
               "--jobs=1",
               "--build-only",
               "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist",
               "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.build-cache.json",
               "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.deploy-receipts"
             ],
-            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "cwd": "<wp-content-root>",
             "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist",
             "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j1-0-slRSql/dist/.build-cache.json",
             "exitCode": 0,
@@ -384,9 +384,9 @@
           {
             "iteration": 1,
             "jobs": 1,
-            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=1 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist/.deploy-receipts",
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=1 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist/.deploy-receipts",
             "args": [
-              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
               "--jobs=1",
               "--changed",
               "--build-only",
@@ -395,7 +395,7 @@
               "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist/.build-cache.json",
               "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist/.deploy-receipts"
             ],
-            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "cwd": "<wp-content-root>",
             "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist",
             "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j1-0-nE3oEk/dist/.build-cache.json",
             "exitCode": 0,
@@ -427,9 +427,9 @@
           {
             "iteration": 1,
             "jobs": 2,
-            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=2 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.deploy-receipts",
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=2 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.deploy-receipts",
             "args": [
-              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
               "--jobs=2",
               "--force",
               "--build-only",
@@ -437,7 +437,7 @@
               "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.build-cache.json",
               "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.deploy-receipts"
             ],
-            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "cwd": "<wp-content-root>",
             "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist",
             "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.build-cache.json",
             "exitCode": 0,
@@ -467,16 +467,16 @@
           {
             "iteration": 1,
             "jobs": 2,
-            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=2 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.deploy-receipts",
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=2 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.deploy-receipts",
             "args": [
-              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
               "--jobs=2",
               "--build-only",
               "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist",
               "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.build-cache.json",
               "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.deploy-receipts"
             ],
-            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "cwd": "<wp-content-root>",
             "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist",
             "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j2-0-PK7s46/dist/.build-cache.json",
             "exitCode": 0,
@@ -506,9 +506,9 @@
           {
             "iteration": 1,
             "jobs": 2,
-            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=2 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist/.deploy-receipts",
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=2 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist/.deploy-receipts",
             "args": [
-              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
               "--jobs=2",
               "--changed",
               "--build-only",
@@ -517,7 +517,7 @@
               "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist/.build-cache.json",
               "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist/.deploy-receipts"
             ],
-            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "cwd": "<wp-content-root>",
             "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist",
             "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j2-0-VkmbFn/dist/.build-cache.json",
             "exitCode": 0,
@@ -549,9 +549,9 @@
           {
             "iteration": 1,
             "jobs": 4,
-            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts",
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=4 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts",
             "args": [
-              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
               "--jobs=4",
               "--force",
               "--build-only",
@@ -559,7 +559,7 @@
               "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
               "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts"
             ],
-            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "cwd": "<wp-content-root>",
             "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist",
             "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
             "exitCode": 0,
@@ -577,9 +577,9 @@
           {
             "iteration": 2,
             "jobs": 4,
-            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts",
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=4 --force --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts",
             "args": [
-              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
               "--jobs=4",
               "--force",
               "--build-only",
@@ -587,7 +587,7 @@
               "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
               "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts"
             ],
-            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "cwd": "<wp-content-root>",
             "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist",
             "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
             "exitCode": 0,
@@ -617,16 +617,16 @@
           {
             "iteration": 1,
             "jobs": 4,
-            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts",
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=4 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts",
             "args": [
-              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
               "--jobs=4",
               "--build-only",
               "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist",
               "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
               "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.deploy-receipts"
             ],
-            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "cwd": "<wp-content-root>",
             "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist",
             "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-0-ekYkLV/dist/.build-cache.json",
             "exitCode": 0,
@@ -644,16 +644,16 @@
           {
             "iteration": 2,
             "jobs": 4,
-            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts",
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=4 --build-only --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts",
             "args": [
-              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
               "--jobs=4",
               "--build-only",
               "--dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist",
               "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
               "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.deploy-receipts"
             ],
-            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "cwd": "<wp-content-root>",
             "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist",
             "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-j4-1-vpkOJP/dist/.build-cache.json",
             "exitCode": 0,
@@ -683,9 +683,9 @@
           {
             "iteration": 1,
             "jobs": 4,
-            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.deploy-receipts",
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=4 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.deploy-receipts",
             "args": [
-              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
               "--jobs=4",
               "--changed",
               "--build-only",
@@ -694,7 +694,7 @@
               "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.build-cache.json",
               "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.deploy-receipts"
             ],
-            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "cwd": "<wp-content-root>",
             "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist",
             "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-0-oDSKms/dist/.build-cache.json",
             "exitCode": 0,
@@ -712,9 +712,9 @@
           {
             "iteration": 2,
             "jobs": 4,
-            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node /Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs --jobs=4 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.deploy-receipts",
+            "command": "/Users/moeini/.nvm/versions/node/v22.19.0/bin/node <wp-content-root>/tools/build-all-standalone-plugins.mjs --jobs=4 --changed --build-only --plugins-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/plugins --dist-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist --cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.build-cache.json --receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.deploy-receipts",
             "args": [
-              "/Users/moeini/Dev/tavangary.new/wordpress/wp-content/tools/build-all-standalone-plugins.mjs",
+              "<wp-content-root>/tools/build-all-standalone-plugins.mjs",
               "--jobs=4",
               "--changed",
               "--build-only",
@@ -723,7 +723,7 @@
               "--cache-file=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.build-cache.json",
               "--receipts-dir=/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.deploy-receipts"
             ],
-            "cwd": "/Users/moeini/Dev/tavangary.new/wordpress/wp-content",
+            "cwd": "<wp-content-root>",
             "distDir": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist",
             "cacheFile": "/var/folders/vq/5d6pdzk93b39mndcmkhzx6jw0000gn/T/bench-inc-j4-1-uLqR4a/dist/.build-cache.json",
             "exitCode": 0,

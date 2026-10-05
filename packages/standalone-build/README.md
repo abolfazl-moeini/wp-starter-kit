@@ -21,7 +21,7 @@ node packages/standalone-build/build-all-standalone-plugins.mjs --build-only
 node packages/standalone-build/build-all-standalone-plugins.mjs --obfuscate --deploy --jobs=4
 
 # Deploy an already-built ZIP (sibling staging; never unzip onto the live plugin dir)
-node packages/standalone-build/deploy-standalone-plugin.mjs dist/tavangary-core-profile-s.zip tavangary-core
+node packages/standalone-build/deploy-standalone-plugin.mjs dist/<slug>-profile-s.zip <slug>
 ```
 
 Per-plugin (from a `*-dev` plugin root):

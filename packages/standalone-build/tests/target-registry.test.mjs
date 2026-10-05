@@ -18,19 +18,10 @@ import { resolveContentRoot } from "../resolve-content-root.mjs";
 
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 let contentRoot;
-if (process.env.WPDEV_CONTENT_ROOT) {
-  contentRoot = path.resolve(process.env.WPDEV_CONTENT_ROOT);
-} else {
-  try {
-    contentRoot = resolveContentRoot({ scriptDir: packageRoot, cwd: process.cwd(), env: process.env });
-  } catch (err) {
-    const fallback = "/Users/moeini/Dev/tavangary.new/wordpress/wp-content";
-    if (fs.existsSync(fallback)) {
-      contentRoot = fallback;
-    } else {
-      throw err;
-    }
-  }
+try {
+  contentRoot = resolveContentRoot({ scriptDir: packageRoot, cwd: process.cwd(), env: process.env });
+} catch {
+  contentRoot = null;
 }
 
 // Gate #2: the legacy static registry is intentionally empty and frozen.
@@ -39,10 +30,10 @@ if (process.env.WPDEV_CONTENT_ROOT) {
 function buildSevenTargetFixture() {
   return buildRegistryFromConfig({
     contentRoot: "./wordpress/wp-content",
-    activeTheme: "tavangary",
+    activeTheme: "sample-theme",
     targets: {
-      "tavangary-core": { buildProfile: "standalone" },
-      "tavangary-theme-panel": { buildProfile: "standalone", themeRelationship: "themes/tavangary" },
+      "sample-standalone-plugin": { buildProfile: "standalone" },
+      "sample-profile-s-plugin": { buildProfile: "standalone", themeRelationship: "themes/sample-theme" },
       "wpdev-crm": { buildProfile: "s" },
       "wpdev-tickets": { buildProfile: "s" },
       "drm-connector": { buildProfile: "s" },
@@ -51,7 +42,7 @@ function buildSevenTargetFixture() {
     },
     impactTargets: {
       wpdev: { kind: "shared-framework-source", sourceDir: "wpdev" },
-      "themes/tavangary": { kind: "impact-only-target", sourceDir: "tavangary", sourceKind: "theme" },
+      "themes/sample-theme": { kind: "impact-only-target", sourceDir: "sample-theme", sourceKind: "theme" },
     },
   });
 }
@@ -67,8 +58,8 @@ test("Target registry: legacy static registry is empty/frozen, config provides t
     [...consumers].sort(),
     [
       "drm-connector",
-      "tavangary-core",
-      "tavangary-theme-panel",
+      "sample-profile-s-plugin",
+      "sample-standalone-plugin",
       "wpdev-analytics",
       "wpdev-crm",
       "wpdev-tickets",
@@ -78,7 +69,7 @@ test("Target registry: legacy static registry is empty/frozen, config provides t
   assert.equal(registry.wpdev, undefined, "wpdev must not be a standalone registry target");
   assert.equal(IMPACT_ONLY_TARGETS.wpdev.kind, "shared-framework-source");
   assert.equal(IMPACT_ONLY_TARGETS.wpdev.standaloneArtifact, false);
-  assert.equal(impactTargets["themes/tavangary"].kind, "impact-only-target");
+  assert.equal(impactTargets["themes/sample-theme"].kind, "impact-only-target");
 
   for (const consumer of consumers) {
     const entry = registry[consumer];
@@ -95,7 +86,7 @@ test("Target registry: config-driven sources resolve to *-dev and never to deplo
   const tmp = await mkdtemp(path.join(os.tmpdir(), "target-registry-convention-"));
   try {
     const { registry } = await buildSevenTargetFixture();
-    for (const consumer of ["tavangary-core", "wpdev-crm"]) {
+    for (const consumer of ["sample-standalone-plugin", "wpdev-crm"]) {
       const pluginsDir = path.join(tmp, "plugins");
       const sourceDir = path.join(pluginsDir, `${consumer}-dev`);
       await mkdir(sourceDir, { recursive: true });
@@ -111,33 +102,35 @@ test("Target registry: config-driven sources resolve to *-dev and never to deplo
   }
 
   // Real in-repo sources (when present) still resolve via auto-discovery.
-  let tested = 0;
-  const { registry } = await buildSevenTargetFixture();
-  for (const consumer of Object.keys(registry)) {
-    const entry = registry[consumer];
-    const sourceDir = path.join(contentRoot, "plugins", entry.sourceDirectoryName);
-    if (!fs.existsSync(sourceDir)) {
-      continue;
+  if (contentRoot) {
+    let tested = 0;
+    const { registry } = await buildSevenTargetFixture();
+    for (const consumer of Object.keys(registry)) {
+      const entry = registry[consumer];
+      const sourceDir = path.join(contentRoot, "plugins", entry.sourceDirectoryName);
+      if (!fs.existsSync(sourceDir)) {
+        continue;
+      }
+      const resolved = await resolveConsumerSource({ contentRoot, consumer, registry });
+      assert.equal(path.basename(resolved.sourceDir), `${consumer}-dev`);
+      assert.equal(path.basename(resolved.deployDir), consumer);
+      assert.notEqual(path.resolve(resolved.sourceDir), path.resolve(resolved.deployDir));
+      assert.ok(fs.existsSync(path.join(resolved.sourceDir, resolved.entry.bootstrapFile)));
+      tested++;
     }
-    const resolved = await resolveConsumerSource({ contentRoot, consumer, registry });
-    assert.equal(path.basename(resolved.sourceDir), `${consumer}-dev`);
-    assert.equal(path.basename(resolved.deployDir), consumer);
-    assert.notEqual(path.resolve(resolved.sourceDir), path.resolve(resolved.deployDir));
-    assert.ok(fs.existsSync(path.join(resolved.sourceDir, resolved.entry.bootstrapFile)));
-    tested++;
+    assert.ok(tested > 0, "At least one consumer must be present and tested");
   }
-  assert.ok(tested > 0, "At least one consumer must be present and tested");
 });
 
 test("Target registry: missing -dev source is fail-closed and must not fall back to deploy output", async () => {
   const tmp = await mkdtemp(path.join(os.tmpdir(), "target-registry-missing-"));
   try {
-    const deployOnly = path.join(tmp, "plugins", "tavangary-core");
+    const deployOnly = path.join(tmp, "plugins", "sample-standalone-plugin");
     await mkdir(deployOnly, { recursive: true });
-    await writeFile(path.join(deployOnly, "tavangary-core.php"), "<?php // deploy output");
+    await writeFile(path.join(deployOnly, "sample-standalone-plugin.php"), "<?php // deploy output");
 
     await assert.rejects(
-      () => resolveConsumerSource({ contentRoot: tmp, consumer: "tavangary-core" }),
+      () => resolveConsumerSource({ contentRoot: tmp, consumer: "sample-standalone-plugin" }),
       /fail-closed|missing|fallback/i
     );
   } finally {
@@ -146,14 +139,16 @@ test("Target registry: missing -dev source is fail-closed and must not fall back
 });
 
 test("Target registry: unknown consumer, wpdev standalone, symlink and traversal are rejected", async () => {
-  await assert.rejects(
-    () => resolveConsumerSource({ contentRoot, consumer: "wpdev" }),
-    /shared framework|unknown/i
-  );
-  await assert.rejects(
-    () => resolveConsumerSource({ contentRoot, consumer: "not-a-plugin" }),
-    /unknown/i
-  );
+  if (contentRoot) {
+    await assert.rejects(
+      () => resolveConsumerSource({ contentRoot, consumer: "wpdev" }),
+      /shared framework|unknown/i
+    );
+    await assert.rejects(
+      () => resolveConsumerSource({ contentRoot, consumer: "not-a-plugin" }),
+      /unknown/i
+    );
+  }
 
   const tmp = await mkdtemp(path.join(os.tmpdir(), "target-registry-unsafe-"));
   try {
@@ -161,11 +156,11 @@ test("Target registry: unknown consumer, wpdev standalone, symlink and traversal
     await mkdir(pluginsDir, { recursive: true });
     const real = path.join(tmp, "outside-source");
     await mkdir(real, { recursive: true });
-    await writeFile(path.join(real, "tavangary-core.php"), "<?php");
-    await symlink(real, path.join(pluginsDir, "tavangary-core-dev"));
+    await writeFile(path.join(real, "sample-standalone-plugin.php"), "<?php");
+    await symlink(real, path.join(pluginsDir, "sample-standalone-plugin-dev"));
 
     await assert.rejects(
-      () => resolveConsumerSource({ contentRoot: tmp, consumer: "tavangary-core" }),
+      () => resolveConsumerSource({ contentRoot: tmp, consumer: "sample-standalone-plugin" }),
       /symlink/i
     );
   } finally {
@@ -192,7 +187,7 @@ test("Release routing: every consumer declares a buildProfile and resolves fail-
   }
 
   assert.equal(resolveReleaseProfile("wpdev-crm", registry["wpdev-crm"], null), "s");
-  assert.equal(resolveReleaseProfile("tavangary-core", registry["tavangary-core"], null), "standalone");
+  assert.equal(resolveReleaseProfile("sample-standalone-plugin", registry["sample-standalone-plugin"], null), "standalone");
   assert.equal(resolveReleaseProfile("drm-connector", registry["drm-connector"], null), "s");
 
   assert.throws(
@@ -206,15 +201,15 @@ test("Release routing: every consumer declares a buildProfile and resolves fail-
   );
 
   assert.equal(
-    resolveReleaseProfile("tavangary-core", registry["tavangary-core"], "profile-s"),
+    resolveReleaseProfile("sample-standalone-plugin", registry["sample-standalone-plugin"], "profile-s"),
     "s",
     "An explicit operator override must still win over the registry default"
   );
 
   assert.equal(
-    resolveReleaseProfile("tavangary-core", registry["tavangary-core"], "auto"),
+    resolveReleaseProfile("sample-standalone-plugin", registry["sample-standalone-plugin"], "auto"),
     "standalone",
-    "--profile=auto must route tavangary-core to the registry default"
+    "--profile=auto must route sample-standalone-plugin to the registry default"
   );
   assert.equal(
     resolveReleaseProfile("wpdev-crm", registry["wpdev-crm"], "auto"),

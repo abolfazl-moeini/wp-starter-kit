@@ -16,10 +16,10 @@ const script = path.resolve(
 test("discovers all scoped metadata-bearing consumers but excludes standalone wpdev", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "wpdev-prefix-inventory-"));
   try {
-    for (const name of ["wpdev", "wpdev-alpha", "drm-beta", "tavangary-theme", "woocommerce"]) {
+    for (const name of ["wpdev", "wpdev-alpha", "drm-beta", "sample-theme", "woocommerce"]) {
       await mkdir(path.join(root, "plugins", name), { recursive: true });
     }
-    for (const name of ["wpdev-alpha", "drm-beta", "tavangary-theme"]) {
+    for (const name of ["wpdev-alpha", "drm-beta", "sample-theme"]) {
       await writeFile(path.join(root, "plugins", name, "wpdev.json"), JSON.stringify({ slug: name, vendorPrefix: "SharedVendor" }));
       await writeFile(path.join(root, "plugins", name, "composer.json"), JSON.stringify({ extra: { strauss: { namespace_prefix: "SharedVendor" } } }));
     }
@@ -30,10 +30,10 @@ test("discovers all scoped metadata-bearing consumers but excludes standalone wp
     const report = JSON.parse(await readFile(path.join(root, "artifact-prefix-inventory.json"), "utf8"));
     assert.deepEqual(report.artifacts.map((artifact) => artifact.consumer), [
       "drm-beta",
-      "tavangary-theme",
+      "sample-theme",
       "wpdev-alpha",
     ]);
-    assert.deepEqual(report.collisions.SharedVendor, ["drm-beta", "tavangary-theme", "wpdev-alpha"]);
+    assert.deepEqual(report.collisions.SharedVendor, ["drm-beta", "sample-theme", "wpdev-alpha"]);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

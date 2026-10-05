@@ -24,8 +24,8 @@ test("Regression: purge policy must preserve nested production namespaces like s
   await writeFile(path.join(fixtureDir, "dev/dev-script.js"), "// dev tool");
 
   await mkdir(path.join(fixtureDir, "src/Modules/OnlineTest/Tests/Scorers"), { recursive: true });
-  await writeFile(path.join(fixtureDir, "src/Modules/OnlineTest/Tests/TestRegistry.php"), "<?php namespace TavangaryCore\\Modules\\OnlineTest\\Tests; class TestRegistry {}");
-  await writeFile(path.join(fixtureDir, "src/Modules/OnlineTest/Tests/Scorers/HeroScorer.php"), "<?php namespace TavangaryCore\\Modules\\OnlineTest\\Tests\\Scorers; class HeroScorer {}");
+  await writeFile(path.join(fixtureDir, "src/Modules/OnlineTest/Tests/TestRegistry.php"), "<?php namespace SampleStandalone\\Modules\\OnlineTest\\Tests; class TestRegistry {}");
+  await writeFile(path.join(fixtureDir, "src/Modules/OnlineTest/Tests/Scorers/HeroScorer.php"), "<?php namespace SampleStandalone\\Modules\\OnlineTest\\Tests\\Scorers; class HeroScorer {}");
 
   try {
     await purgeDevelopmentTree(fixtureDir, "sample-plugin");

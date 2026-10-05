@@ -1,6 +1,6 @@
 # Existing environment (no wp-env webServer)
 
-Use when WordPress already runs in Docker or on a dev host (e.g. nikamooz stack) and you do **not** want Playwright to start `wp-env`.
+Use when WordPress already runs in Docker or on a dev host (e.g. custom Docker stack) and you do **not** want Playwright to start `wp-env`.
 
 ## Environment variables
 

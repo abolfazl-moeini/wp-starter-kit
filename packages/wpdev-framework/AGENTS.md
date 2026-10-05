@@ -23,6 +23,6 @@ Provide AI coding agents with the actionable context needed to work productively
 
 ## Agent Guidelines
 1. **Preserve Module Boundaries:** Keep changes localized to the relevant module unless a cross-cutting framework change is strictly necessary.
-2. **Backward Compatibility:** Many standalone plugins (e.g. `tavangary-core`, `wpdev-crm`) inline framework modules. Do not break method signatures or duck-typed registration contracts (`ModuleLoader::register(object)`).
+2. **Backward Compatibility:** Many standalone plugins (e.g. `sample-standalone-plugin`, `sample-profile-s-plugin`) inline framework modules. Do not break method signatures or duck-typed registration contracts (`ModuleLoader::register(object)`).
 3. **Security Standards:** Always enforce nonce verification, capability checks (`current_user_can`), and data escaping in all view templates (`views/`).
 4. **Testing:** After modifying framework code, run `composer test` and verify standalone inlining via `cd ../standalone-build && npm test`.

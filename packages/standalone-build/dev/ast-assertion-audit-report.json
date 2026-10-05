@@ -3689,7 +3689,7 @@
       ]
     },
     {
-      "file": "tavangary-core-artifact.test.mjs",
+      "file": "sample-standalone-plugin-artifact.test.mjs",
       "testCount": 5,
       "assertions": 20,
       "rejections": 0,
@@ -3722,7 +3722,7 @@
           "isOnly": false
         },
         {
-          "name": "Tavangary Core Artifact: ZIP exists and matches strict package hygiene",
+          "name": "sample-plugin Core Artifact: ZIP exists and matches strict package hygiene",
           "line": 22,
           "assertions": 8,
           "rejects": 0,
@@ -3733,7 +3733,7 @@
           "isOnly": false
         },
         {
-          "name": "Tavangary Core Artifact: verifies comment stripping and symbol mangling across modules",
+          "name": "sample-plugin Core Artifact: verifies comment stripping and symbol mangling across modules",
           "line": 47,
           "assertions": 2,
           "rejects": 0,
@@ -3744,7 +3744,7 @@
           "isOnly": false
         },
         {
-          "name": "Tavangary Core Artifact: strictly orders ZIP entries so autoload targets precede vendor/autoload.php",
+          "name": "sample-plugin Core Artifact: strictly orders ZIP entries so autoload targets precede vendor/autoload.php",
           "line": 53,
           "assertions": 10,
           "rejects": 0,
@@ -3757,7 +3757,7 @@
       ]
     },
     {
-      "file": "tavangary-theme-panel-artifact.test.mjs",
+      "file": "sample-profile-s-plugin-artifact.test.mjs",
       "testCount": 4,
       "assertions": 9,
       "rejections": 0,
@@ -3790,7 +3790,7 @@
           "isOnly": false
         },
         {
-          "name": "Tavangary Theme Panel Artifact: ZIP exists and matches strict package hygiene",
+          "name": "sample-plugin Theme Panel Artifact: ZIP exists and matches strict package hygiene",
           "line": 22,
           "assertions": 7,
           "rejects": 0,
@@ -3801,7 +3801,7 @@
           "isOnly": false
         },
         {
-          "name": "Tavangary Theme Panel Artifact: verifies comment stripping and symbol mangling across modules",
+          "name": "sample-plugin Theme Panel Artifact: verifies comment stripping and symbol mangling across modules",
           "line": 42,
           "assertions": 2,
           "rejects": 0,

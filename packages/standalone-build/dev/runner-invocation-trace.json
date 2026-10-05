@@ -370,7 +370,7 @@
           "failed": 0
         },
         {
-          "file": "tavangary-theme-panel-artifact.test.mjs",
+          "file": "sample-profile-s-plugin-artifact.test.mjs",
           "childPid": 83431,
           "parentPid": 73692,
           "durationMs": 1143,
@@ -414,7 +414,7 @@
           "failed": 0
         },
         {
-          "file": "tavangary-core-artifact.test.mjs",
+          "file": "sample-standalone-plugin-artifact.test.mjs",
           "childPid": 83371,
           "parentPid": 73692,
           "durationMs": 1810,
@@ -1031,7 +1031,7 @@
           "failed": 0
         },
         {
-          "file": "tavangary-theme-panel-artifact.test.mjs",
+          "file": "sample-profile-s-plugin-artifact.test.mjs",
           "childPid": 91228,
           "parentPid": 73692,
           "durationMs": 1179,
@@ -1067,7 +1067,7 @@
           "failed": 0
         },
         {
-          "file": "tavangary-core-artifact.test.mjs",
+          "file": "sample-standalone-plugin-artifact.test.mjs",
           "childPid": 91201,
           "parentPid": 73692,
           "durationMs": 1780,

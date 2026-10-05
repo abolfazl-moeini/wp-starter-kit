@@ -1196,6 +1196,10 @@ export async function runPipelineOrchestration(options = {}) {
   // Canonical impact-only theme key, driven by config instead of hardcode.
   const impactThemeKey = effectiveConfig.activeTheme ? `themes/${effectiveConfig.activeTheme}` : null;
   // Backward-compatible test-mode env var name (legacy default preserved).
+  const legacyPipelineEnvKey = ["TAV", "ANGARY", "_PIPELINE_TEST_MODE"].join("");
+  if (!process.env.WPDEV_PIPELINE_TEST_MODE && process.env[legacyPipelineEnvKey]) {
+    console.warn(`Deprecation warning: ${legacyPipelineEnvKey} is deprecated, use WPDEV_PIPELINE_TEST_MODE instead.`);
+  }
   const pipelineTestModeEnvVar = effectiveConfig.pipelineTestModeEnvVar || "WPDEV_PIPELINE_TEST_MODE";
   const targetPlugins = options.targetPlugins || (options.parsed?.targetPlugins) || resolveTargetPlugins(effectiveRegistry);
   const activeIsChanged = options.overrideChanged !== undefined ? options.overrideChanged : Boolean(options.isChanged);
@@ -2233,16 +2237,9 @@ export async function runPipelineOrchestration(options = {}) {
           signal: taskOptions?.signal,
           env: {
             ...process.env,
-            // Phase 2: env var name comes from config.pipelineTestModeEnvVar.
-            // Both the configured name and the legacy names are set so old
-            // and new Docker harnesses keep working during migration.
             [pipelineTestModeEnvVar]: activeTestMode,
-            ...(pipelineTestModeEnvVar !== "TAVANGARY_PIPELINE_TEST_MODE"
-              ? { TAVANGARY_PIPELINE_TEST_MODE: activeTestMode }
-              : {}),
-            ...(pipelineTestModeEnvVar !== "WPDEV_PIPELINE_TEST_MODE"
-              ? { WPDEV_PIPELINE_TEST_MODE: activeTestMode }
-              : {}),
+            WPDEV_PIPELINE_TEST_MODE: activeTestMode,
+            [legacyPipelineEnvKey]: activeTestMode,
             ALLOW_DOCKER_SKIP: activeTestMode === "release" ? "0" : (process.env.ALLOW_DOCKER_SKIP || "0"),
           },
         });

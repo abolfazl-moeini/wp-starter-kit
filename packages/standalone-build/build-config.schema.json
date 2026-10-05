@@ -15,11 +15,11 @@
     },
     "activeTheme": {
       "type": "string",
-      "description": "Active theme directory name under wp-content/themes (e.g. \"tavangary\"). Replaces hardcoded theme paths."
+      "description": "Active theme directory name under wp-content/themes (e.g. \"my-theme\"). Replaces hardcoded theme paths."
     },
     "functionPrefix": {
       "type": "string",
-      "description": "Reserved function prefix for the AST transformer (e.g. \"tavangary_\").",
+      "description": "Reserved function prefix for the AST transformer (e.g. \"myplugin_\").",
       "pattern": "^[A-Za-z_][A-Za-z0-9_]*_$"
     },
     "pipelineTestModeEnvVar": {
@@ -75,7 +75,7 @@
         },
         "themeRelationship": {
           "type": "string",
-          "description": "Related theme path (e.g. \"themes/tavangary\") or \"none\". Convention: \"none\"."
+          "description": "Related theme path (e.g. \"themes/sample-theme\") or \"none\". Convention: \"none\"."
         },
         "phpTarget": {
           "type": "string",

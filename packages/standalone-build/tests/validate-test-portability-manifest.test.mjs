@@ -17,7 +17,7 @@ async function writeJson(file, value) {
 
 async function fixture(overrides = {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), "test-portability-"));
-  const plugin = path.join(root, "plugins", "tavangary-demo");
+  const plugin = path.join(root, "plugins", "sample-demo-plugin");
   await mkdir(path.join(plugin, "tests", "unit-tests"), { recursive: true });
   await mkdir(path.join(plugin, "tests", "e2e", "specs"), { recursive: true });
   await writeFile(path.join(plugin, "tests", "unit-tests", "DemoTest.php"), "<?php\n");
@@ -31,7 +31,7 @@ async function fixture(overrides = {}) {
   const manifest = {
     schema: 1,
     status: "draft-blocked",
-    plugin: "tavangary-demo",
+    plugin: "sample-demo-plugin",
     sourceCommit,
     rules: {
       "source-internal": "source suite",
@@ -64,7 +64,7 @@ async function fixture(overrides = {}) {
 test("accepts complete draft portability evidence without treating it as promotion ready", async () => {
   const { root } = await fixture();
   try {
-    const result = spawnSync(process.execPath, [tool, root, "tavangary-demo"], { encoding: "utf8" });
+    const result = spawnSync(process.execPath, [tool, root, "sample-demo-plugin"], { encoding: "utf8" });
     assert.equal(result.status, 0, result.stderr);
     const report = JSON.parse(result.stdout);
     assert.equal(report.status, "valid-review-evidence");
@@ -85,9 +85,9 @@ test("reports classified harness paths separately from discovered test files", a
     },
   });
   try {
-    await mkdir(path.join(root, "plugins", "tavangary-demo", "tests", "support"), { recursive: true });
-    await writeFile(path.join(root, "plugins", "tavangary-demo", "tests", "support", "runner.php"), "<?php\n");
-    const result = spawnSync(process.execPath, [tool, root, "tavangary-demo"], { encoding: "utf8" });
+    await mkdir(path.join(root, "plugins", "sample-demo-plugin", "tests", "support"), { recursive: true });
+    await writeFile(path.join(root, "plugins", "sample-demo-plugin", "tests", "support", "runner.php"), "<?php\n");
+    const result = spawnSync(process.execPath, [tool, root, "sample-demo-plugin"], { encoding: "utf8" });
     assert.equal(result.status, 0, result.stderr);
     const report = JSON.parse(result.stdout);
     assert.equal(report.discoveredTests, 2);
@@ -100,7 +100,7 @@ test("reports classified harness paths separately from discovered test files", a
 test("rejects a portability manifest whose declared source commit is not resolvable", async () => {
   const { root } = await fixture({ sourceCommit: "0123456" });
   try {
-    const result = spawnSync(process.execPath, [tool, root, "tavangary-demo"], { encoding: "utf8" });
+    const result = spawnSync(process.execPath, [tool, root, "sample-demo-plugin"], { encoding: "utf8" });
     assert.equal(result.status, 1);
     assert.match(result.stdout, /sourceCommit does not resolve to a commit/);
   } finally {
@@ -118,7 +118,7 @@ test("rejects missing, duplicate, unsafe, and symlinked portability evidence", a
     },
   });
   try {
-    const result = spawnSync(process.execPath, [tool, root, "tavangary-demo"], { encoding: "utf8" });
+    const result = spawnSync(process.execPath, [tool, root, "sample-demo-plugin"], { encoding: "utf8" });
     assert.equal(result.status, 1);
     assert.match(result.stdout, /classified more than once/);
     assert.match(result.stdout, /unsafe test path/);
@@ -128,7 +128,7 @@ test("rejects missing, duplicate, unsafe, and symlinked portability evidence", a
     await writeFile(target, await readFile(manifestPath));
     await unlink(manifestPath);
     await symlink(target, manifestPath);
-    const symlinked = spawnSync(process.execPath, [tool, root, "tavangary-demo"], { encoding: "utf8" });
+    const symlinked = spawnSync(process.execPath, [tool, root, "sample-demo-plugin"], { encoding: "utf8" });
     assert.equal(symlinked.status, 1);
     assert.match(symlinked.stdout, /symlink evidence path is not allowed/);
   } finally {
@@ -148,10 +148,10 @@ test("accepts live/external classification without treating it as promotion read
   });
   try {
     await writeFile(
-      path.join(root, "plugins", "tavangary-demo", "tests", "e2e", "specs", "live-drm.spec.js"),
+      path.join(root, "plugins", "sample-demo-plugin", "tests", "e2e", "specs", "live-drm.spec.js"),
       "export {};\n",
     );
-    const result = spawnSync(process.execPath, [tool, root, "tavangary-demo"], { encoding: "utf8" });
+    const result = spawnSync(process.execPath, [tool, root, "sample-demo-plugin"], { encoding: "utf8" });
     assert.equal(result.status, 0, result.stderr);
     const report = JSON.parse(result.stdout);
     assert.equal(report.status, "valid-review-evidence");
@@ -174,7 +174,7 @@ test("rejects critical behavior mappings that are not classified in their requir
     },
   });
   try {
-    const result = spawnSync(process.execPath, [tool, root, "tavangary-demo"], { encoding: "utf8" });
+    const result = spawnSync(process.execPath, [tool, root, "sample-demo-plugin"], { encoding: "utf8" });
     assert.equal(result.status, 1);
     assert.match(result.stdout, /source mapping must reference a source-internal test/);
     assert.match(result.stdout, /artifact mapping must reference artifact-e2e or portable-contract test/);
@@ -200,9 +200,9 @@ test("accepts a portable contract as artifact evidence for a critical behavior",
     },
   });
   try {
-    await mkdir(path.join(root, "plugins", "tavangary-demo", "tests", "contracts"), { recursive: true });
-    await writeFile(path.join(root, "plugins", "tavangary-demo", "tests", "contracts", "PortableDemoTest.php"), "<?php\n");
-    const result = spawnSync(process.execPath, [tool, root, "tavangary-demo"], { encoding: "utf8" });
+    await mkdir(path.join(root, "plugins", "sample-demo-plugin", "tests", "contracts"), { recursive: true });
+    await writeFile(path.join(root, "plugins", "sample-demo-plugin", "tests", "contracts", "PortableDemoTest.php"), "<?php\n");
+    const result = spawnSync(process.execPath, [tool, root, "sample-demo-plugin"], { encoding: "utf8" });
     assert.equal(result.status, 0, result.stdout);
     const report = JSON.parse(result.stdout);
     assert.equal(report.status, "valid-review-evidence");

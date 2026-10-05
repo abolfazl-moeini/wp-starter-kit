@@ -26,10 +26,10 @@ function contract(overrides = {}) {
       classmap: "legacy-classmap",
     },
     target: {
-      vendorPrefix: "TavangaryThemePanelVendor",
-      runtimePrefix: "TavangaryThemePanelRt",
-      classmapPrefix: "TavangaryThemePanelVendor_",
-      constantPrefix: "TAVANGARYTHEMEPANELVENDOR_",
+      vendorPrefix: "SampleThemeVendor",
+      runtimePrefix: "SampleThemeRt",
+      classmapPrefix: "SampleThemeVendor_",
+      constantPrefix: "SAMPLETHEMEVENDOR_",
     },
     coexistence: {
       loadOrders: ["legacy-first", "target-first"],
@@ -102,7 +102,7 @@ test("rejects missing load-order coverage", async () => {
 
 test("rejects a target prefix that is not unique to the artifact", async () => {
   await assert.rejects(
-    run(contract({ target: { vendorPrefix: "WpdevVendor", runtimePrefix: "TavangaryThemePanelRt" } })),
+    run(contract({ target: { vendorPrefix: "WpdevVendor", runtimePrefix: "SampleThemeRt" } })),
     (error) => /target.vendorPrefix must differ from legacy.vendorPrefix/.test(error.stdout),
   );
 });

@@ -11,7 +11,7 @@ import { lstat, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const MANIFEST_NAME = "profile-a-pre-registry-candidate.json";
-const CONTRACT_SUFFIX = "plugins/tavangary-theme-panel/dev/prefix-migration-coexistence-contract.json";
+const CONTRACT_FILENAME = "prefix-migration-coexistence-contract.json";
 
 const failures = [];
 const contentRoot = process.argv[2];
@@ -118,10 +118,14 @@ if (manifest && !failures.length) {
   }
 
   const contract = manifest.migrationContract;
+  const consumer = process.argv[4] || manifest.consumer || null;
+  const contractSuffix = consumer
+    ? `plugins/${consumer}/dev/${CONTRACT_FILENAME}`
+    : CONTRACT_FILENAME;
   if (!object(contract) || !safe(contract.path) || !hex(contract.sha256)) {
     failures.push("migrationContract path and sha256 are required");
-  } else if (!contract.path.endsWith(CONTRACT_SUFFIX)) {
-    failures.push(`migrationContract path must be ${CONTRACT_SUFFIX}`);
+  } else if (!contract.path.endsWith(contractSuffix)) {
+    failures.push(`migrationContract path must be ${contractSuffix}`);
   } else {
     const digest = await liveDigest(contentRoot, contract.path, "migration contract");
     if (digest && digest.sha256 !== contract.sha256) {

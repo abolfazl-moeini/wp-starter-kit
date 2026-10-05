@@ -20,7 +20,7 @@ test("rejects a source-tree symlink instead of silently omitting it from templat
     await mkdir(path.join(root, "plugins/sample-profile-s-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/sample-standalone-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/drm-connector"), { recursive: true });
-    await mkdir(path.join(root, "themes/tavangary"), { recursive: true });
+    await mkdir(path.join(root, "themes/sample-theme"), { recursive: true });
     await writeFile(
       path.join(root, "framework-closure-inventory.json"),
       JSON.stringify({
@@ -54,7 +54,7 @@ test("records scoped external template listeners separately from framework filte
     await mkdir(path.join(root, "plugins/sample-profile-s-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/sample-standalone-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/drm-connector"), { recursive: true });
-    await mkdir(path.join(root, "themes/tavangary"), { recursive: true });
+    await mkdir(path.join(root, "themes/sample-theme"), { recursive: true });
     await writeFile(
       path.join(root, "framework-closure-inventory.json"),
       JSON.stringify({
@@ -88,7 +88,7 @@ test("records scoped external template listeners separately from framework filte
         "plugins/sample-profile-s-plugin",
         "plugins/sample-standalone-plugin",
         "plugins/wpdev",
-        "themes/tavangary",
+        "themes/sample-theme",
       ],
       unscannedRoots: [],
       notProven:
@@ -123,7 +123,7 @@ test("recognizes the approved bounded template-root contract without clearing un
     await mkdir(path.join(root, "plugins/sample-profile-s-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/sample-standalone-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/drm-connector"), { recursive: true });
-    await mkdir(path.join(root, "themes/tavangary"), { recursive: true });
+    await mkdir(path.join(root, "themes/sample-theme"), { recursive: true });
     await writeFile(
       path.join(root, "framework-closure-inventory.json"),
       JSON.stringify({
@@ -170,7 +170,7 @@ test("keeps symlinked views outside the framework root unresolved", async () => 
     await mkdir(path.join(root, "plugins/sample-profile-s-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/sample-standalone-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/drm-connector"), { recursive: true });
-    await mkdir(path.join(root, "themes/tavangary"), { recursive: true });
+    await mkdir(path.join(root, "themes/sample-theme"), { recursive: true });
     await writeFile(
       path.join(root, "framework-closure-inventory.json"),
       JSON.stringify({
@@ -206,7 +206,7 @@ test("keeps traversal template identifiers unresolved even when they land inside
     await mkdir(path.join(root, "plugins/sample-profile-s-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/sample-standalone-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/drm-connector"), { recursive: true });
-    await mkdir(path.join(root, "themes/tavangary"), { recursive: true });
+    await mkdir(path.join(root, "themes/sample-theme"), { recursive: true });
     await writeFile(
       path.join(root, "framework-closure-inventory.json"),
       JSON.stringify({
@@ -243,7 +243,7 @@ async function writeListenerFixture(root, extra = () => {}) {
     "plugins/sample-profile-s-plugin",
     "plugins/sample-standalone-plugin",
     "plugins/drm-connector",
-    "themes/tavangary",
+    "themes/sample-theme",
   ]) {
     await mkdir(path.join(root, directory), { recursive: true });
   }

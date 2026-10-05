@@ -6,8 +6,8 @@
   "recordRule": "Every record remains review-only until exact source/artifact bytes, tool inputs and migration contract are accepted and hashed into protection-artifact-registry.json.",
   "artifacts": [
     {
-      "proposedArtifactId": "drm-connector-profile-a-001",
-      "slug": "drm-connector",
+      "proposedArtifactId": "sample-addon-plugin-profile-a-001",
+      "slug": "sample-addon-plugin",
       "recordStatus": "review-only",
       "buildInput": false,
       "sourceDigest": null,
@@ -15,8 +15,8 @@
       "migrationContractDigest": null,
       "current": { "vendorPrefix": "WpdevVendor" },
       "target": {
-        "vendorPrefix": "DrmConnectorVendor",
-        "runtimePrefix": "DrmConnectorRt"
+        "vendorPrefix": "SampleAddonVendor",
+        "runtimePrefix": "SampleAddonRt"
       },
       "migration": {
         "legacyLoadability": true,
@@ -32,8 +32,8 @@
       ]
     },
     {
-      "proposedArtifactId": "tavangary-core-profile-a-001",
-      "slug": "tavangary-core",
+      "proposedArtifactId": "sample-standalone-plugin-profile-a-001",
+      "slug": "sample-standalone-plugin",
       "recordStatus": "review-only",
       "buildInput": false,
       "sourceDigest": null,
@@ -41,8 +41,8 @@
       "migrationContractDigest": null,
       "current": { "vendorPrefix": "WpdevVendor" },
       "target": {
-        "vendorPrefix": "TavangaryCoreVendor",
-        "runtimePrefix": "TavangaryCoreRt"
+        "vendorPrefix": "SampleStandaloneVendor",
+        "runtimePrefix": "SampleStandaloneRt"
       },
       "migration": {
         "legacyLoadability": true,
@@ -59,8 +59,8 @@
       ]
     },
     {
-      "proposedArtifactId": "tavangary-theme-panel-profile-a-001",
-      "slug": "tavangary-theme-panel",
+      "proposedArtifactId": "sample-profile-s-plugin-profile-a-001",
+      "slug": "sample-profile-s-plugin",
       "recordStatus": "review-only",
       "buildInput": false,
       "sourceDigest": null,
@@ -68,10 +68,10 @@
       "migrationContractDigest": null,
       "current": { "vendorPrefix": "WpdevVendor" },
       "target": {
-        "vendorPrefix": "TavangaryThemePanelVendor",
-        "classmapPrefix": "TavangaryThemePanelVendor_",
-        "constantPrefix": "TAVANGARYTHEMEPANELVENDOR_",
-        "runtimePrefix": "TavangaryThemePanelRt"
+        "vendorPrefix": "SampleProfileSVendor",
+        "classmapPrefix": "SampleProfileSVendor_",
+        "constantPrefix": "SAMPLEPROFILESVENDOR_",
+        "runtimePrefix": "SampleProfileSRt"
       },
       "migration": {
         "legacyLoadability": true,

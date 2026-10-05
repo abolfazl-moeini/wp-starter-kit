@@ -261,8 +261,8 @@ packages/standalone-build/tests/task3-private-members-and-constants.test.mjs	kit
 packages/standalone-build/tests/task4-scope-capture-and-template.test.mjs	kit-proprietary	test	oracle-source
 packages/standalone-build/tests/task5-protect-literals-and-comments.test.mjs	kit-proprietary	test	oracle-source
 packages/standalone-build/tests/task6-namespaces-and-public-boundaries.test.mjs	kit-proprietary	test	oracle-source
-packages/standalone-build/tests/tavangary-core-artifact.test.mjs	kit-proprietary	test	oracle-source
-packages/standalone-build/tests/tavangary-theme-panel-artifact.test.mjs	kit-proprietary	test	oracle-source
+packages/standalone-build/tests/sample-standalone-plugin-artifact.test.mjs	kit-proprietary	test	oracle-source
+packages/standalone-build/tests/sample-profile-s-plugin-artifact.test.mjs	kit-proprietary	test	oracle-source
 packages/standalone-build/tests/test-impact-map.test.mjs	kit-proprietary	test	oracle-source
 packages/standalone-build/tests/test-scheduler-and-tiers.test.mjs	kit-proprietary	test	oracle-source
 packages/standalone-build/tests/transformer-correctness-matrix.test.mjs	kit-proprietary	test	oracle-source

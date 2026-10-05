@@ -2,18 +2,18 @@
 
 > **Target Audience:** Autonomous AI Agents, Senior Systems Engineers, and DevSecOps Reviewers.  
 > **Canonical Package Path:** `/Users/moeini/Documents/ideas/extend-kit/wp-starter-kit/packages/standalone-build/`  
-> **Thin Monorepo Wrapper:** `/Users/moeini/Dev/tavangary.new/wordpress/wp-content/build-standalone.mjs`  
+> **Thin Monorepo Wrapper:** `<consumer-root>/wordpress/wp-content/build-standalone.mjs`  
 > **Dist Output Locations:**
 >
-> - `/Users/moeini/Dev/tavangary.new/wordpress/wp-content/dist/`
-> - `/Users/moeini/Dev/tavangary.new/dist/`  
+> - `<consumer-root>/wordpress/wp-content/dist/`
+> - `<consumer-root>/dist/`  
 >   **Last Updated:** 2026-09-05
 
 ---
 
 ## 1. Executive Summary & Core Mission
 
-In the Tavangary / WPDev ecosystem, development happens in **clean, uncompiled source repositories** (`*-dev` plugins such as `tavangary-core-dev`, `tavangary-theme-panel-dev`, etc.) that depend on the active development framework (`wpdev`).
+In a standalone WordPress ecosystem, development happens in **clean, uncompiled source repositories** (`*-dev` plugins such as `<consumer>-dev` or standalone plugins) that depend on the active development framework (`wpdev`).
 
 For **commercial client delivery, staging, and production release**, plugins must run completely **standalone without the `wpdev` parent plugin active**. The standalone build tooling provides:
 
@@ -128,27 +128,27 @@ Always invoke via Node with `--obfuscate` when building for release or live test
 
 ```bash
 # Recommended: Build, obfuscate with Profile S, test, and deploy to Docker plugins dir
-cd /Users/moeini/Dev/tavangary.new/wordpress/wp-content
+cd <consumer-root>/wordpress/wp-content
 node build-standalone.mjs --deploy --force --obfuscate
 ```
 
 Or directly via the engine:
 
 ```bash
-cd /Users/moeini/Dev/tavangary.new/wordpress/wp-content
-node /Users/moeini/Documents/ideas/extend-kit/wp-starter-kit/packages/standalone-build/build-all-standalone-plugins.mjs --deploy --force --obfuscate
+cd <consumer-root>/wordpress/wp-content
+node <path-to-engine>/packages/standalone-build/build-all-standalone-plugins.mjs --deploy --force --obfuscate
 ```
 
 ### Useful CLI Flags
 
-| Flag                          | Description                                                                                       |
-| :---------------------------- | :------------------------------------------------------------------------------------------------ |
-| `--deploy`                    | Automatically stages and swaps compiled plugins into `wp-content/plugins/{target}`.               |
-| `--force`                     | Bypasses content cache and forces a complete rebuild of all target plugins.                       |
-| `--obfuscate` / `--profile=s` | **Crucial:** Enables Rector downgrade and Plan 3 AST symbol mangling/comment stripping.           |
-| `--target=<name>`             | Builds only a single plugin (e.g. `--target=tavangary-core` or `--target=tavangary-theme-panel`). |
-| `--suite=<name>`              | Selects a specific test suite: `fast`, `contract`, `artifact`, or `full`.                         |
-| `--test-mode=<name>`          | Sets the test resolver mode: `affected`, `contract`, `release`, or `docker-smoke`.                |
+| Flag                          | Description                                                                                                   |
+| :---------------------------- | :------------------------------------------------------------------------------------------------------------ |
+| `--deploy`                    | Automatically stages and swaps compiled plugins into `wp-content/plugins/{target}`.                           |
+| `--force`                     | Bypasses content cache and forces a complete rebuild of all target plugins.                                   |
+| `--obfuscate` / `--profile=s` | **Crucial:** Enables Rector downgrade and Plan 3 AST symbol mangling/comment stripping.                       |
+| `--target=<name>`             | Builds only a single plugin (e.g. `--target=sample-standalone-plugin` or `--target=sample-profile-s-plugin`). |
+| `--suite=<name>`              | Selects a specific test suite: `fast`, `contract`, `artifact`, or `full`.                                     |
+| `--test-mode=<name>`          | Sets the test resolver mode: `affected`, `contract`, `release`, or `docker-smoke`.                            |
 
 ### Production ZIP swap (never unzip in place)
 
@@ -156,7 +156,7 @@ Do not extract a plugin ZIP onto the live `plugins/{slug}` directory. That race 
 
 ```bash
 # Already-built ZIP: sibling extract + two sequential renames (not one atomic syscall)
-node build-standalone.mjs --deploy-zip=/path/to/tavangary-core-profile-s.zip tavangary-core
+node build-standalone.mjs --deploy-zip=/path/to/<slug>-profile-s.zip <slug>
 ```
 
 ZIP entry order (bootstrap / `autoload.files` targets before `vendor/autoload.php`) is complementary only. Do not wrap Composer `require` in `file_exists`. Two `rename`s still have a brief “plugin missing” window; that is not zero-downtime and is not this Fatal.
@@ -176,7 +176,7 @@ npm test
 
 > [!IMPORTANT]
 > **Rule 1: NEVER edit built plugins directly.**  
-> Directories without `-dev` (e.g. `wp-content/plugins/tavangary-core/`) are compilation targets. All edits MUST be made in `wp-content/plugins/*-dev/` or in `wp-starter-kit/`. Any direct edits to compiled plugins will be lost on the next build.
+> Directories without `-dev` (e.g. `wp-content/plugins/<consumer-slug>/`) are compilation targets. All edits MUST be made in `wp-content/plugins/*-dev/` or in `wp-starter-kit/`. Any direct edits to compiled plugins will be lost on the next build.
 
 > [!IMPORTANT]
 > **Rule 2: ALWAYS pass `--obfuscate` when preparing artifacts or testing deployment.**  
@@ -188,4 +188,4 @@ npm test
 
 > [!TIP]
 > **Rule 4: Syncing Production Dist ZIPs.**  
-> When a new build completes, verify that the freshly compiled ZIP archives in `wordpress/wp-content/dist/` are mirrored to the root `/Users/moeini/Dev/tavangary.new/dist/` directory for production upload.
+> When a new build completes, verify that the freshly compiled ZIP archives in `wordpress/wp-content/dist/` are mirrored to the root `dist/` directory for production upload.

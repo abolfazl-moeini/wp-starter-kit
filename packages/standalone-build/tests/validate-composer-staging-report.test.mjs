@@ -15,23 +15,23 @@ const tool = path.join(
 async function fixtureReport(overrides = {}) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "staging-report-"));
   const straussBin = path.join(root, "vendor", "bin", "strauss");
-  await fs.mkdir(path.join(root, "plugins", "tavangary-demo"), { recursive: true });
+  await fs.mkdir(path.join(root, "plugins", "sample-demo-plugin"), { recursive: true });
   await fs.mkdir(path.dirname(straussBin), { recursive: true });
   const straussBytes = "#!/usr/bin/env php\n";
   await fs.writeFile(straussBin, straussBytes);
-  await fs.writeFile(path.join(root, "plugins", "tavangary-demo", "composer.json"), "{}");
+  await fs.writeFile(path.join(root, "plugins", "sample-demo-plugin", "composer.json"), "{}");
   const lockBytes = "{}";
-  await fs.writeFile(path.join(root, "plugins", "tavangary-demo", "composer.lock"), lockBytes);
+  await fs.writeFile(path.join(root, "plugins", "sample-demo-plugin", "composer.lock"), lockBytes);
   const report = {
     schema: 1,
     generatedBy: "tools/verify-composer-staging.mjs",
     straussBin,
     straussBinSha256: createHash("sha256").update(straussBytes).digest("hex"),
-    discoveredConsumers: ["tavangary-demo"],
+    discoveredConsumers: ["sample-demo-plugin"],
     requestedConsumers: [],
     scopeComplete: true,
     reports: [{
-      consumer: "tavangary-demo",
+      consumer: "sample-demo-plugin",
       composerLockSha256: createHash("sha256").update(lockBytes).digest("hex"),
       command: "composer install --no-dev --no-scripts --no-plugins",
       status: "passed",
@@ -67,7 +67,7 @@ test("accepts complete staging evidence for the discovered locked scope", async 
 
 test("rejects subset, failed consumer, and development files", async () => {
   const { root, reportPath } = await fixtureReport({
-    requestedConsumers: ["tavangary-demo"],
+    requestedConsumers: ["sample-demo-plugin"],
     scopeComplete: false,
   });
   try {
@@ -91,7 +91,7 @@ test("rejects reports that omit Composer or Strauss execution evidence", async (
   const { root, reportPath } = await fixtureReport({
     generatedBy: "unknown-tool",
     straussBin: null,
-    reports: [{ consumer: "tavangary-demo", status: "passed" }],
+    reports: [{ consumer: "sample-demo-plugin", status: "passed" }],
   });
   try {
     const result = spawnSync(process.execPath, [tool, root, reportPath], { encoding: "utf8" });
@@ -109,7 +109,7 @@ test("rejects reports that omit Composer or Strauss execution evidence", async (
 test("rejects stale evidence after composer.lock bytes change", async () => {
   const { root, reportPath } = await fixtureReport();
   try {
-    await fs.writeFile(path.join(root, "plugins", "tavangary-demo", "composer.lock"), "{\"changed\":true}");
+    await fs.writeFile(path.join(root, "plugins", "sample-demo-plugin", "composer.lock"), "{\"changed\":true}");
     const result = spawnSync(process.execPath, [tool, root, reportPath], { encoding: "utf8" });
     assert.equal(result.status, 1);
     assert.match(result.stdout, /composer\.lock SHA-256 does not match current bytes/);
@@ -133,7 +133,7 @@ test("rejects stale evidence after the pinned Strauss binary changes", async () 
 test("rejects Composer evidence when current metadata is symlinked", async () => {
   const { root, reportPath } = await fixtureReport();
   try {
-    const lockPath = path.join(root, "plugins", "tavangary-demo", "composer.lock");
+    const lockPath = path.join(root, "plugins", "sample-demo-plugin", "composer.lock");
     const outsideLock = path.join(root, "outside.lock");
     await fs.writeFile(outsideLock, "{}");
     await fs.unlink(lockPath);

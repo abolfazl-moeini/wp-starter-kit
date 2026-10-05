@@ -34,6 +34,7 @@
     "format:write": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml,css}\"",
     "prepare:assets": "node build/build-assets-cli.js",
     "release": "npm run build:dependencies && npm run build:components && npm run build:styles && npm run build:assets",
+    "pretest": "node dev/guard-no-project-names.mjs",
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "lint": "npm run lint --workspaces --if-present",

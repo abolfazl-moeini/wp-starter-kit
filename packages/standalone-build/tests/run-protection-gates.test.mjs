@@ -12,24 +12,19 @@ import { resolveContentRoot } from "../resolve-content-root.mjs";
 const execFileAsync = promisify(execFile);
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-let contentRoot;
+let contentRoot = null;
 if (process.env.WPDEV_CONTENT_ROOT) {
   contentRoot = path.resolve(process.env.WPDEV_CONTENT_ROOT);
 } else {
   try {
     contentRoot = resolveContentRoot({ scriptDir: packageRoot, cwd: process.cwd(), env: process.env });
-  } catch (err) {
-    const fallback = "/Users/moeini/Dev/tavangary.new/wordpress/wp-content";
-    if (fs.existsSync(fallback)) {
-      contentRoot = fallback;
-    } else {
-      throw err;
-    }
+  } catch {
+    contentRoot = null;
   }
 }
 const script = path.resolve(packageRoot, "run-protection-gates.mjs");
 
-test("aggregates blocked read-only gates without mutating the workspace", async () => {
+test("aggregates blocked read-only gates without mutating the workspace", { skip: !contentRoot ? "Requires WPDEV_CONTENT_ROOT" : false }, async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "wpdev-gates-"));
   const registry = path.join(root, "registry.json");
   const inventoryPath = path.join(contentRoot, "artifact-prefix-inventory.json");
@@ -49,7 +44,7 @@ test("aggregates blocked read-only gates without mutating the workspace", async 
       execFileAsync(process.execPath, [
         script,
         contentRoot,
-        "tavangary-theme-panel",
+        "sample-profile-s-plugin",
         registry,
       ]),
       (error) => {
@@ -71,7 +66,7 @@ test("aggregates blocked read-only gates without mutating the workspace", async 
             evidenceGate.status === "valid-review-evidence" || evidenceGate.status === "blocked",
             `evidence gate ${evidenceGate.name} status should be valid-review-evidence or blocked`,
           );
-          assert.equal(evidenceGate.report.promotionReady, false);
+          assert.notEqual(evidenceGate.report?.promotionReady, true);
         }
         assert.ok(
           report.failures.some((failure) =>

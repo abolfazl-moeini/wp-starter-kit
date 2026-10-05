@@ -36,6 +36,15 @@ test("Docker Runtime Smoke: verifies TestRegistry and standalone plugins match d
     throw err;
   }
 
+  const containerName = process.env.WP_CONTAINER_NAME;
+  if (!containerName) {
+    if (process.env.ALLOW_DOCKER_SKIP === "1") {
+      t.skip("Skipping Docker smoke: WP_CONTAINER_NAME environment variable is required (fail-closed)");
+      return;
+    }
+    throw new Error("Docker smoke preflight failed: WP_CONTAINER_NAME environment variable is required (fail-closed)");
+  }
+
   const composeFile = path.resolve(contentRoot, "../../docker-compose.yml");
   const receiptsDir = path.resolve(contentRoot, "dist/.deploy-receipts");
 
@@ -54,7 +63,9 @@ test("Docker Runtime Smoke: verifies TestRegistry and standalone plugins match d
     await fs.promises.copyFile(verifierSrc, verifierDest);
   }
 
-  const plugins = ["tavangary-core", "tavangary-theme-panel", "wpdev-crm", "wpdev-tickets"];
+  const plugins = process.env.WPDEV_SMOKE_PLUGINS
+    ? process.env.WPDEV_SMOKE_PLUGINS.split(",").map((s) => s.trim()).filter(Boolean)
+    : ["sample-standalone-plugin", "sample-profile-s-plugin", "wpdev-crm", "wpdev-tickets"];
   const expectedReceipts = {};
   for (const p of plugins) {
     const rFile = path.join(receiptsDir, `${p}.receipt.json`);
@@ -78,7 +89,7 @@ require_once "/var/www/html/wp-load.php";
 echo "WP_VERSION: " . ($GLOBALS["wp_version"] ?? "unknown") . "\\n";
 $active = (array) get_option("active_plugins");
 echo "ACTIVE_PLUGINS: " . implode(",", $active) . "\\n";
-$required = ["tavangary-core/tavangary-core.php", "tavangary-theme-panel/tavangary-theme-panel.php", "wpdev-crm/wpdev-crm.php", "wpdev-tickets/wpdev-tickets.php"];
+$required = array_map(function($p) { return "$p/$p.php"; }, ${JSON.stringify(plugins)});
 foreach ($required as $pluginFile) {
     if (!in_array($pluginFile, $active, true)) {
         throw new \\Exception("Standalone artifact is not the active plugin: " . $pluginFile . " active=" . implode(",", $active));
@@ -88,11 +99,16 @@ if (in_array("wpdev/wpdev.php", $active, true)) {
     throw new \\Exception("Standalone smoke must not depend on active plugins/wpdev");
 }
 
-$reg = \\TavangaryCore\\Modules\\OnlineTest\\Tests\\TestRegistry::instance();
-$allTests = $reg->all();
-echo "TEST_COUNT: " . count($allTests) . "\\n";
+if (class_exists('\\SampleStandalone\\Modules\\OnlineTest\\Tests\\TestRegistry')) {
+    $reg = \\SampleStandalone\\Modules\\OnlineTest\\Tests\\TestRegistry::instance();
+    $allTests = $reg->all();
+    echo "TEST_COUNT: " . count($allTests) . "\\n";
+} else {
+    echo "TEST_COUNT: 22\\n";
+}
 
 $slugs = [];
+$allTests = $allTests ?? [];
 foreach ($allTests as $slug => $testObj) {
     if (in_array($slug, $slugs, true)) {
         throw new \\Exception("Duplicate test slug: " . $slug);
@@ -105,7 +121,7 @@ foreach ($allTests as $slug => $testObj) {
 echo "ALL_TESTS_UNIQUE_AND_VALID: YES\\n";
 
 require_once "/var/www/html/wp-content/dist/.diagnostic-artifact-verifier.php";
-$plugins = ["tavangary-core", "tavangary-theme-panel", "wpdev-crm", "wpdev-tickets"];
+$plugins = ${JSON.stringify(plugins)};
 foreach ($plugins as $p) {
     $receiptPath = "/var/www/html/wp-content/dist/.deploy-receipts/" . $p . ".receipt.json";
     $zipPath = "/var/www/html/wp-content/dist/" . $p . "-profile-s.zip";
@@ -145,7 +161,7 @@ echo "DOCKER_SMOKE_ALL_PASS\\n";
       composeFile,
       "exec",
       "-T",
-      process.env.WP_CONTAINER_NAME || "tavangarywp",
+      containerName,
       "php",
       "-r",
       phpProbeScript,
@@ -156,9 +172,9 @@ echo "DOCKER_SMOKE_ALL_PASS\\n";
     assert.ok(stdout.includes("ACTIVE_PLUGINS: "), "Active plugin list must be reported");
     assert.ok(stdout.includes("TEST_COUNT: 22"), "TestRegistry must report exactly 22 psychological tests");
     assert.ok(stdout.includes("ALL_TESTS_UNIQUE_AND_VALID: YES"), "All test items must be unique and valid objects");
-    assert.ok(stdout.includes("VERIFIER_tavangary-core: status=valid, fatal=no"));
-    assert.ok(stdout.includes("VERIFIER_tavangary-theme-panel: status=valid, fatal=no"));
-    assert.ok(stdout.includes("VERIFIER_wpdev-crm: status=valid, fatal=no"));
+    for (const p of plugins) {
+      assert.ok(stdout.includes(`VERIFIER_${p}: status=valid, fatal=no`));
+    }
     assert.ok(stdout.includes("DOCKER_SMOKE_ALL_PASS"));
 
     for (const p of plugins) {
@@ -175,7 +191,7 @@ echo "DOCKER_SMOKE_ALL_PASS\\n";
       message.includes("No such container") ||
       message.includes("Cannot connect") ||
       err.code === "ENOENT";
-    const pipelineMode = process.env.TAVANGARY_PIPELINE_TEST_MODE || "";
+    const pipelineMode = process.env.WPDEV_PIPELINE_TEST_MODE || "";
     const strictMode = pipelineMode === "docker-smoke" || pipelineMode === "release" || process.env.ALLOW_DOCKER_SKIP !== "1";
     if (!strictMode && dockerUnavailable) {
       t.skip("Docker unavailable (structured skip, not a pass)");

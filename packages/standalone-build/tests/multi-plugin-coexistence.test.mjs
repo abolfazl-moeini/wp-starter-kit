@@ -102,7 +102,7 @@ namespace DRMConnector\\Core {
     }
 }
 
-namespace TavangaryThemePanel\\Core {
+namespace SampleProfileS\\Core {
     class ModuleLoader {
         private array $modules = [];
         public function register(object $m): void { $this->modules[] = $m; }
@@ -123,7 +123,7 @@ namespace DRMConnector\\Modules\\AdminPanel {
     }
 }
 
-namespace TavangaryThemePanel\\Modules\\Customizer {
+namespace SampleProfileS\\Modules\\Customizer {
     class Module {
         public function get_slug(): string { return 'theme-customizer'; }
     }
@@ -137,14 +137,14 @@ namespace {
     \\DRMConnector\\Core\\Plugin::loader()->register($drmMod);
 
     // 2. Theme panel registers Theme module into Theme panel loader
-    $themeMod = new \\TavangaryThemePanel\\Modules\\Customizer\\Module();
-    \\TavangaryThemePanel\\Core\\Plugin::loader()->register($themeMod);
+    $themeMod = new \\SampleProfileS\\Modules\\Customizer\\Module();
+    \\SampleProfileS\\Core\\Plugin::loader()->register($themeMod);
 
     // Assert each loader is 100% isolated
     if (\\DRMConnector\\Core\\Plugin::loader()->count() !== 1) {
         exit(1);
     }
-    if (\\TavangaryThemePanel\\Core\\Plugin::loader()->count() !== 1) {
+    if (\\SampleProfileS\\Core\\Plugin::loader()->count() !== 1) {
         exit(2);
     }
     echo "COEXISTENCE_OK\\n";

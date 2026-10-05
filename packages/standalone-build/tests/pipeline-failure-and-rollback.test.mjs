@@ -340,7 +340,7 @@ test("Failure Scenario 7: Production orchestrator rollback on smoke failure leav
     const consumer = "sample-standalone-plugin";
     const devDir = path.join(pluginsDir, `${consumer}-dev`);
     const wpdevDir = path.join(pluginsDir, "wpdev");
-    const themeDir = path.join(tmpDir, "themes", "tavangary");
+    const themeDir = path.join(tmpDir, "themes", "sample-theme");
     await fs.promises.mkdir(devDir, { recursive: true });
     await fs.promises.mkdir(wpdevDir, { recursive: true });
     await fs.promises.mkdir(themeDir, { recursive: true });
@@ -523,7 +523,7 @@ test("Failure Scenario 8: Failure immediately after swap (during_swap) on non-ex
     const consumer = "sample-standalone-plugin";
     const srcDir = path.join(pluginsDir, "sample-standalone-plugin-dev");
     const wpdevDir = path.join(pluginsDir, "wpdev");
-    const themeDir = path.join(tmpDir, "themes", "tavangary");
+    const themeDir = path.join(tmpDir, "themes", "sample-theme");
     await fs.promises.mkdir(srcDir, { recursive: true });
     await fs.promises.mkdir(wpdevDir, { recursive: true });
     await fs.promises.mkdir(themeDir, { recursive: true });
@@ -662,7 +662,7 @@ test("Failure Scenario 9: Multi-file commit failure (during_commit) leaves zero 
     const consumer = "sample-standalone-plugin";
     const srcDir = path.join(pluginsDir, "sample-standalone-plugin-dev");
     const wpdevDir = path.join(pluginsDir, "wpdev");
-    const themeDir = path.join(tmpDir, "themes", "tavangary");
+    const themeDir = path.join(tmpDir, "themes", "sample-theme");
     await fs.promises.mkdir(srcDir, { recursive: true });
     await fs.promises.mkdir(wpdevDir, { recursive: true });
     await fs.promises.mkdir(themeDir, { recursive: true });
@@ -839,7 +839,7 @@ test("Failure Scenario 10: Startup journal recovery restores interrupted deploym
     // Also create dev source
     const devDir = path.join(pluginsDir, "sample-standalone-plugin-dev");
     const wpdevDir = path.join(pluginsDir, "wpdev");
-    const themeDir = path.join(tmpDir, "themes", "tavangary");
+    const themeDir = path.join(tmpDir, "themes", "sample-theme");
     await fs.promises.mkdir(devDir, { recursive: true });
     await fs.promises.mkdir(wpdevDir, { recursive: true });
     await fs.promises.mkdir(themeDir, { recursive: true });
@@ -851,7 +851,7 @@ test("Failure Scenario 10: Startup journal recovery restores interrupted deploym
     await fs.promises.mkdir(testRegDir, { recursive: true });
     await fs.promises.writeFile(
       path.join(testRegDir, "TestRegistry.php"),
-      "<?php\nnamespace TavangaryCore\\Modules\\OnlineTest\\Tests;\nclass TestRegistry {}\n"
+      "<?php\nnamespace SampleStandalone\\Modules\\OnlineTest\\Tests;\nclass TestRegistry {}\n"
     );
 
     const { zipPath, zipSha256, manifestDigest } = await createHermeticZipFixture({ tmpDir, consumer });
@@ -983,7 +983,7 @@ test("Failure Scenario 11: Crash after backup_renamed but before candidate_swapp
     // Initialize minimal cache and dev source
     const devDir = path.join(pluginsDir, "sample-standalone-plugin-dev");
     const wpdevDir = path.join(pluginsDir, "wpdev");
-    const themeDir = path.join(tmpDir, "themes", "tavangary");
+    const themeDir = path.join(tmpDir, "themes", "sample-theme");
     await fs.promises.mkdir(devDir, { recursive: true });
     await fs.promises.mkdir(wpdevDir, { recursive: true });
     await fs.promises.mkdir(themeDir, { recursive: true });
@@ -995,7 +995,7 @@ test("Failure Scenario 11: Crash after backup_renamed but before candidate_swapp
     await fs.promises.mkdir(testRegDir, { recursive: true });
     await fs.promises.writeFile(
       path.join(testRegDir, "TestRegistry.php"),
-      "<?php\nnamespace TavangaryCore\\Modules\\OnlineTest\\Tests;\nclass TestRegistry {}\n"
+      "<?php\nnamespace SampleStandalone\\Modules\\OnlineTest\\Tests;\nclass TestRegistry {}\n"
     );
 
     const { zipPath, zipSha256, manifestDigest } = await createHermeticZipFixture({ tmpDir, consumer });
@@ -2330,7 +2330,7 @@ test("Failure Scenario 32: Multi-target deployment with candidate digest transit
     const coreZipSha = coreFix.zipSha256;
     const crmZipSha = crmFix.zipSha256;
 
-    const themeDir = path.join(tmpDir, "themes", "tavangary");
+    const themeDir = path.join(tmpDir, "themes", "sample-theme");
     await mkdir(themeDir, { recursive: true });
     await writeFile(path.join(themeDir, "style.css"), "/* theme */", "utf8");
     const contentRoot = tmpDir;
@@ -2893,7 +2893,7 @@ test("Failure Scenario 39: Docker smoke node fails if any artifact binding is mi
     await mkdir(pluginsDir, { recursive: true });
     await mkdir(distDir, { recursive: true });
 
-    const themeDir = path.join(tmpDir, "themes", "tavangary");
+    const themeDir = path.join(tmpDir, "themes", "sample-theme");
     await mkdir(themeDir, { recursive: true });
     await writeFile(path.join(themeDir, "style.css"), "/* theme */", "utf8");
     const contentRoot = tmpDir;

@@ -17,7 +17,7 @@ test("preserves gettext %1$s placeholders and sprintf strings with zero corrupti
 class NotificationService {
     private $apiKey = "secret";
     public function formatNotice($userName, $orderCount) {
-        $template = __("Hello %1$s, you have %2$d pending orders.", "tavangary");
+        $template = __("Hello %1$s, you have %2$d pending orders.", "sample-theme");
         return sprintf($template, $userName, $orderCount);
     }
 }

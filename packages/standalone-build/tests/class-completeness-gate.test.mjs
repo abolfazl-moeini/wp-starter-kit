@@ -45,7 +45,7 @@ test("Class Completeness Gate: fails when a source class is missing from staging
   await mkdir(path.join(devDir, "src/Modules/OnlineTest/Tests"), { recursive: true });
   await writeFile(
     path.join(devDir, "src/Modules/OnlineTest/Tests/TestRegistry.php"),
-    "<?php namespace TavangaryCore\\Modules\\OnlineTest\\Tests; class TestRegistry {}"
+    "<?php namespace SampleStandalone\\Modules\\OnlineTest\\Tests; class TestRegistry {}"
   );
 
   // Staging does NOT have TestRegistry

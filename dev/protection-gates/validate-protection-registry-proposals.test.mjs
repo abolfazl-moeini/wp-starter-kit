@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 const execFileAsync = promisify(execFile);
 const script = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  "../validate-protection-registry-proposals.mjs",
+  "validate-protection-registry-proposals.mjs",
 );
 
 function proposal(overrides = {}) {
@@ -19,8 +19,8 @@ function proposal(overrides = {}) {
     purpose: "private-runtime-artifact-proposals",
     artifacts: [
       {
-        proposedArtifactId: "tavangary-theme-panel-profile-a-001",
-        slug: "tavangary-theme-panel",
+        proposedArtifactId: "sample-profile-s-plugin-profile-a-001",
+        slug: "sample-profile-s-plugin",
         recordStatus: "review-only",
         buildInput: false,
         sourceDigest: null,
@@ -28,8 +28,8 @@ function proposal(overrides = {}) {
         migrationContractDigest: null,
         current: { vendorPrefix: "WpdevVendor" },
         target: {
-          vendorPrefix: "TavangaryThemePanelVendor",
-          runtimePrefix: "TavangaryThemePanelRt",
+          vendorPrefix: "SampleProfileSVendor",
+          runtimePrefix: "SampleProfileSRt",
         },
         migration: {
           legacyLoadability: true,

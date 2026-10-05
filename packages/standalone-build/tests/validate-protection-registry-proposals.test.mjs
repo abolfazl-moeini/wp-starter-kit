@@ -28,8 +28,8 @@ function proposal(overrides = {}) {
         migrationContractDigest: null,
         current: { vendorPrefix: "WpdevVendor" },
         target: {
-          vendorPrefix: "TavangaryThemePanelVendor",
-          runtimePrefix: "TavangaryThemePanelRt",
+          vendorPrefix: "SampleThemeVendor",
+          runtimePrefix: "SampleThemeRt",
         },
         migration: {
           legacyLoadability: true,

@@ -21,7 +21,7 @@ test("records first-party deserialization and magic callback surfaces while excl
     await mkdir(path.join(root, "plugins/sample-profile-s-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/sample-standalone-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/drm-connector"), { recursive: true });
-    await mkdir(path.join(root, "themes/tavangary"), { recursive: true });
+    await mkdir(path.join(root, "themes/sample-theme"), { recursive: true });
     await writeFile(
       path.join(root, "plugins/wpdev/modules/core/src/runtime.php"),
       "<?php\n$value = maybe_unserialize( $raw );\nclass Legacy { public function __wakeup() {} }\n",
@@ -67,7 +67,7 @@ test("rejects a source-tree symlink instead of silently omitting it from seriali
     await mkdir(path.join(root, "plugins/sample-profile-s-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/sample-standalone-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/drm-connector"), { recursive: true });
-    await mkdir(path.join(root, "themes/tavangary"), { recursive: true });
+    await mkdir(path.join(root, "themes/sample-theme"), { recursive: true });
     await writeFile(path.join(root, "outside.php"), "<?php unserialize($raw);\n");
     await symlink(path.join(root, "outside.php"), path.join(root, "plugins/wpdev/modules/core/src/linked.php"));
 
@@ -89,7 +89,7 @@ test("fails closed when a scanned source root is missing", async () => {
     await mkdir(path.join(root, "plugins/wpdev"), { recursive: true });
     await mkdir(path.join(root, "plugins/sample-profile-s-plugin"), { recursive: true });
     await mkdir(path.join(root, "plugins/sample-standalone-plugin"), { recursive: true });
-    await mkdir(path.join(root, "themes/tavangary"), { recursive: true });
+    await mkdir(path.join(root, "themes/sample-theme"), { recursive: true });
 
     await assert.rejects(
       execFileAsync(process.execPath, [script, root, "sample-profile-s-plugin", path.join(root, "serialized.json"), "plugins/sample-missing-plugin"]),
@@ -109,7 +109,7 @@ test("rejects a symlinked scanned source root", async () => {
     for (const relative of ["sample-profile-s-plugin", "sample-standalone-plugin", "drm-connector"]) {
       await mkdir(path.join(root, "plugins", relative), { recursive: true });
     }
-    await mkdir(path.join(root, "themes/tavangary"), { recursive: true });
+    await mkdir(path.join(root, "themes/sample-theme"), { recursive: true });
 
     await assert.rejects(
       execFileAsync(process.execPath, [script, root, "sample-profile-s-plugin", path.join(root, "serialized.json")]),

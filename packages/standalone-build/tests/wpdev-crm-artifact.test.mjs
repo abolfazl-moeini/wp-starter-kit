@@ -2,18 +2,28 @@ import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
+import fs from "node:fs";
 import test, { before, after } from "node:test";
 import { promisify } from "node:util";
 import { getDefaultZipPath, prepareArtifactFixture } from "../artifact-fixture-helper.mjs";
 
 const execFileAsync = promisify(execFile);
 const CONSUMER = "wpdev-crm";
-const ZIP_PATH = getDefaultZipPath(CONSUMER);
+let ZIP_PATH = null;
+try {
+  ZIP_PATH = getDefaultZipPath(CONSUMER);
+} catch {
+  ZIP_PATH = null;
+}
+
+const canRun = Boolean(ZIP_PATH && fs.existsSync(ZIP_PATH));
 
 let fixture;
 
 before(async () => {
-  fixture = await prepareArtifactFixture({ consumer: CONSUMER, zipPath: ZIP_PATH });
+  if (canRun) {
+    fixture = await prepareArtifactFixture({ consumer: CONSUMER, zipPath: ZIP_PATH });
+  }
 });
 
 after(async () => {
@@ -22,7 +32,7 @@ after(async () => {
   }
 });
 
-test("WPDev CRM Artifact: ZIP exists and matches strict package hygiene", async () => {
+test("WPDev CRM Artifact: ZIP exists and matches strict package hygiene", { skip: !canRun ? "Requires pre-built wpdev-crm artifact (set WPDEV_CONTENT_ROOT)" : false }, async () => {
   const entries = fixture.entries;
 
   assert.ok(entries.includes(`${CONSUMER}/${CONSUMER}.php`), "Main plugin bootstrap file must exist at zip root");
@@ -42,7 +52,7 @@ test("WPDev CRM Artifact: ZIP exists and matches strict package hygiene", async 
   assert.ok(!mainPhp.includes("Requires Plugins: wpdev"), "Requires Plugins: wpdev header must be stripped for standalone operation");
 });
 
-test("WPDev CRM Artifact: verifies comment stripping and symbol mangling across modules", async () => {
+test("WPDev CRM Artifact: verifies comment stripping and symbol mangling across modules", { skip: !canRun ? "Requires pre-built wpdev-crm artifact (set WPDEV_CONTENT_ROOT)" : false }, async () => {
   // Check ContactStatus.php
   const statusPhp = await readFile(path.join(fixture.pluginDir, "src/Modules/CrmModule/Database/Contacts/ContactStatus.php"), "utf8");
   assert.ok(/class\s+_c_[a-z0-9]+/i.test(statusPhp), "ContactStatus must be mangled to global _c_... class");
@@ -55,7 +65,7 @@ test("WPDev CRM Artifact: verifies comment stripping and symbol mangling across 
   assert.ok(modulePhp.includes("'crm'"), "Slug literal must be preserved");
 });
 
-test("WPDev CRM Artifact: verifies inlined Database Engine (BerlinDB) and Enum functionality without wpdev", async () => {
+test("WPDev CRM Artifact: verifies inlined Database Engine (BerlinDB) and Enum functionality without wpdev", { skip: !canRun ? "Requires pre-built wpdev-crm artifact (set WPDEV_CONTENT_ROOT)" : false }, async () => {
   const stagingRoot = fixture.stagingRoot;
   const pluginDir = fixture.pluginDir;
     const upgradeDir = path.join(stagingRoot, "wp-admin/includes");

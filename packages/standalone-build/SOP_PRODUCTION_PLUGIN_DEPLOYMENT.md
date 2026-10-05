@@ -14,11 +14,11 @@
 
 ```text
 Fatal error: require(): Failed opening required
-'/home/sitetavangary/tavangary/public/new/wp-content/plugins/tavangary-core/vendor/composer/../../src/FrameworkClosure/functions-closure.php'
+'/home/example/public/wp-content/plugins/<consumer-slug>/vendor/composer/../../src/FrameworkClosure/functions-closure.php'
 in .../vendor/composer/autoload_real.php on line 41
 ```
 
-اگر ZIP مستقیماً روی `wp-content/plugins/tavangary-core` باز شود:
+اگر ZIP مستقیماً روی `wp-content/plugins/<consumer-slug>` باز شود:
 
 1. اتولودر کامپوزر (`vendor/autoload.php` و `vendor/composer/autoload_real.php`) زودتر از `src/FrameworkClosure/functions-closure.php` روی دیسک می‌نشیند.
 2. یک درخواست وب، کرون، یا صفحهٔ فعال‌سازی `vendor/autoload.php` را لود می‌کند.
@@ -37,12 +37,12 @@ in .../vendor/composer/autoload_real.php on line 41
 
 ### مرحله ۱: آپلود آرتیفکت
 
-فایل ZIP (مانند `tavangary-core-profile-s.zip`) را در `wp-content/plugins/` آپلود کنید؛ نه داخل `tavangary-core`.
+فایل ZIP (مانند `<consumer-slug>-profile-s.zip`) را در `wp-content/plugins/` آپلود کنید؛ نه داخل `<consumer-slug>`.
 
 ### مرحله ۲: استخراج در پوشهٔ موقت هم‌جوار
 
 1. در `wp-content/plugins/` پوشهٔ موقت بسازید، مثلاً `.deploy-staging`.
-2. ZIP را داخل `.deploy-staging` اکسترکت کنید تا درخت کامل `tavangary-core/` شکل بگیرد.
+2. ZIP را داخل `.deploy-staging` اکسترکت کنید تا درخت کامل `<consumer-slug>/` شکل بگیرد.
 
 وردپرس «Upload Plugin» هم اتمیک نیست (unzip در `upgrade/`، حذف پوشهٔ قدیم، کپی). همان روش sibling را ترجیح بدهید.
 
@@ -50,7 +50,7 @@ in .../vendor/composer/autoload_real.php on line 41
 
 روی درخت staging، وجود و غیرخالی بودن این فایل‌ها را بررسی کنید:
 
-- [ ] `{slug}.php` (بوت‌استرپ؛ برای این پلاگین `tavangary-core.php`)
+- [ ] `{slug}.php` (بوت‌استرپ؛ برای این پلاگین `<consumer-slug>.php`)
 - [ ] `src/FrameworkClosure/functions-closure.php`
 - [ ] `vendor/autoload.php`
 - [ ] `vendor/composer/autoload_real.php`
@@ -60,8 +60,8 @@ in .../vendor/composer/autoload_real.php on line 41
 
 ### مرحله ۴: دو rename پیاپی (هر کدام اتمیک؛ جفتشان یک syscall نیست)
 
-1. `tavangary-core` ➔ `tavangary-core-old`
-2. `.deploy-staging/tavangary-core` ➔ `tavangary-core`
+1. `<consumer-slug>` ➔ `<consumer-slug>-old`
+2. `.deploy-staging/<consumer-slug>` ➔ `<consumer-slug>`
 
 بین این دو rename یک شکاف کوتاه هست که وردپرس پلاگین را «غیرموجود» می‌بیند. این با Fatal درخت ناقص فرق دارد و نباید «عملیات اتمیک صفر میلی‌ثانیه» نامیده شود.
 
@@ -72,30 +72,30 @@ in .../vendor/composer/autoload_real.php on line 41
 
 ### مرحله ۶: پاک‌سازی
 
-پس از تأیید: `tavangary-core-old` و ZIP آپلودشده را حذف کنید.
+پس از تأیید: `<consumer-slug>-old` و ZIP آپلودشده را حذف کنید.
 
 ---
 
 ## ۳. استقرار با SSH / CLI
 
-اسکریپت جدید در مسیر منسوخ `tavangary.new/tools/deploy-atomic.sh` ننویسید. همان `atomicDeployPlugin()` در `@wpdev/standalone-build` منبع حقیقت است. `deploy-standalone-plugin.mjs` فقط wrapper نازک همان تابع است.
+اسکریپت جدید در مسیرهای منسوخ ننویسید. همان `atomicDeployPlugin()` در `@wpdev/standalone-build` منبع حقیقت است. `deploy-standalone-plugin.mjs` فقط wrapper نازک همان تابع است.
 
 از مسیر `wp-content`:
 
 ```bash
-# Wrapper تانگاری: ZIP از قبل ساخته‌شده را sibling-staging می‌کند
-node build-standalone.mjs --deploy-zip=/path/to/tavangary-core-profile-s.zip tavangary-core
+# Wrapper: ZIP از قبل ساخته‌شده را sibling-staging می‌کند
+node build-standalone.mjs --deploy-zip=/path/to/<consumer-slug>-profile-s.zip <consumer-slug>
 
 # فراخوانی مستقیم موتور
-node /Users/moeini/Documents/ideas/extend-kit/wp-starter-kit/packages/standalone-build/deploy-standalone-plugin.mjs \
-  /path/to/tavangary-core-profile-s.zip tavangary-core \
+node <path-to-engine>/packages/standalone-build/deploy-standalone-plugin.mjs \
+  /path/to/<consumer-slug>-profile-s.zip <consumer-slug> \
   --plugins-dir=/path/to/wp-content/plugins
 ```
 
 بیلد+دیپلوی از منبع (`--deploy --force --obfuscate`) مسیر جدا است و ZIP ازپیش‌ساخته را جایگزین نمی‌کند:
 
 ```bash
-node build-standalone.mjs --targets=tavangary-core --obfuscate --force --deploy
+node build-standalone.mjs --targets=<consumer-slug> --obfuscate --force --deploy
 ```
 
 ### کارهایی که CLI انجام می‌دهد
@@ -170,14 +170,14 @@ node build-standalone.mjs --targets=tavangary-core --obfuscate --force --deploy
 
 ### در File Manager
 
-1. پوشهٔ جاری را به `tavangary-core-broken` تغییر نام دهید.
-2. `tavangary-core-old` (یا نام توکن backup) را به `tavangary-core` برگردانید.
+1. پوشهٔ جاری را به `<consumer-slug>-broken` تغییر نام دهید.
+2. `<consumer-slug>-old` (یا نام توکن backup) را به `<consumer-slug>` برگردانید.
 
 ### در SSH / CLI
 
 ```bash
-mv wp-content/plugins/tavangary-core wp-content/plugins/tavangary-core-broken && \
-mv wp-content/plugins/tavangary-core-old wp-content/plugins/tavangary-core
+mv wp-content/plugins/<consumer-slug> wp-content/plugins/<consumer-slug>-broken && \
+mv wp-content/plugins/<consumer-slug>-old wp-content/plugins/<consumer-slug>
 ```
 
 ---

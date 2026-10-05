@@ -4,7 +4,11 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 
 const contentRoot = path.resolve(process.argv[2] || "");
-const consumer = process.argv[3] || "tavangary-theme-panel";
+const consumer = process.argv[3];
+if (!consumer) {
+  console.error("Error: consumer slug is required as argv[3]");
+  process.exit(1);
+}
 const failures = [];
 const safe = (v) => typeof v === "string" && v !== "" && !v.includes("\\") && !v.includes("\0") && !path.posix.isAbsolute(v) && path.posix.normalize(v) === v && v !== "." && v !== ".." && !v.startsWith("../");
 

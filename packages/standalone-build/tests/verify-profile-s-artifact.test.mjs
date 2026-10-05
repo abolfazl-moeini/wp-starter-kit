@@ -7,12 +7,16 @@ import test from "node:test";
 
 import { getDefaultZipPath } from "../artifact-fixture-helper.mjs";
 import { verifyProfileSArtifact } from "../verify-profile-s-artifact.mjs";
-
 test("verifies that the assembled Profile S ZIP passes all black-box execution probes", async () => {
   const consumers = ["wpdev-crm", "drm-connector", "wpdev-analytics", "wpdev-woo-persian"];
   for (const consumer of consumers) {
-    const zipPath = getDefaultZipPath(consumer);
-    if (fs.existsSync(zipPath)) {
+    let zipPath = null;
+    try {
+      zipPath = getDefaultZipPath(consumer);
+    } catch {
+      continue;
+    }
+    if (zipPath && fs.existsSync(zipPath)) {
       const report = await verifyProfileSArtifact({
         zipPath,
         consumer,

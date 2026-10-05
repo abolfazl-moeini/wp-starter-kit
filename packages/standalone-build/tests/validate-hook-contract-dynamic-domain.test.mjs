@@ -154,7 +154,7 @@ test("accepts a template whose placeholder is followed by a literal suffix", asy
   await mkdir(path.dirname(path.join(dir, formProducer)), { recursive: true });
   await mkdir(path.dirname(path.join(dir, formRegistry)), { recursive: true });
   await writeFile(path.join(dir, formProducer), ["<?php", "class Form {", '\t\t$fields = apply_filters("wpdev_{$id}_form_fields", $fields);', "}"].join("\n"));
-  await writeFile(path.join(dir, formRegistry), ["<?php", "wpdev_register_settings_field(", "\t\t\t'tavangary_hero',", "\t\t\t'hero_slides',"].join("\n"));
+  await writeFile(path.join(dir, formRegistry), ["<?php", "wpdev_register_settings_field(", "\t\t\t'sample_hero',", "\t\t\t'hero_slides',"].join("\n"));
 
   const formDomain = {
     template: "wpdev_{$id}_form_fields",

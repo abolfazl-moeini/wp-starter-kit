@@ -46,7 +46,7 @@ async function fixture({ toolBytes = "tool-v1\n", pinnedDigest = "a".repeat(64) 
           path: "plugins/sample-profile-s-plugin/dev/prefix-migration-coexistence-contract.json",
           sha256: sha("{}\n"),
         },
-        target: { vendorPrefix: "TavangaryThemePanelVendor" },
+        target: { vendorPrefix: "SampleProfileSVendor" },
         digests: { source: null, artifact: null, toolBundle: null },
         blockers: ["pending"],
       },

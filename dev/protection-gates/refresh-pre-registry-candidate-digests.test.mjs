@@ -23,13 +23,13 @@ async function fixture({ toolBytes = "tool-v1\n", pinnedDigest = "a".repeat(64) 
   await writeFile(toolPath, toolBytes);
   const contractPath = path.join(
     root,
-    "plugins/tavangary-theme-panel/dev/prefix-migration-coexistence-contract.json",
+    "plugins/sample-profile-s-plugin/dev/prefix-migration-coexistence-contract.json",
   );
   await mkdir(path.dirname(contractPath), { recursive: true });
   await writeFile(contractPath, "{}\n");
   const manifestPath = path.join(
     root,
-    "plugins/tavangary-theme-panel/dev",
+    "plugins/sample-profile-s-plugin/dev",
     MANIFEST_NAME,
   );
   await writeFile(
@@ -38,16 +38,16 @@ async function fixture({ toolBytes = "tool-v1\n", pinnedDigest = "a".repeat(64) 
       {
         schema: 1,
         purpose: "profile-a-pre-registry-candidate",
-        consumer: "tavangary-theme-panel",
+        consumer: "sample-profile-s-plugin",
         recordStatus: "review-only",
         buildInput: false,
         source: { worktree: "dirty-unrelated-user-changes-present" },
         toolInputs: [{ path: "tools/run-gate.mjs", sha256: pinnedDigest }],
         migrationContract: {
-          path: "plugins/tavangary-theme-panel/dev/prefix-migration-coexistence-contract.json",
+          path: "plugins/sample-profile-s-plugin/dev/prefix-migration-coexistence-contract.json",
           sha256: sha("{}\n"),
         },
-        target: { vendorPrefix: "TavangaryThemePanelVendor" },
+        target: { vendorPrefix: "SampleProfileSVendor" },
         digests: { source: null, artifact: null, toolBundle: null },
         blockers: ["pending"],
       },

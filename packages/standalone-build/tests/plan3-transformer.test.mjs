@@ -15,9 +15,9 @@ const TRANSFORMER_PHP = path.resolve(packageRoot, "plan3/transformer.php");
 test("Plan 3: strips comments while preserving main plugin header and license notices", async () => {
   const source = `<?php
 /**
- * Plugin Name: Tavangary Test Plugin
+ * Plugin Name: Sample Test Plugin
  * Version: 1.0.0
- * Author: Tavangary
+ * Author: Sample Author
  */
 
 // This is an internal developer comment that MUST be stripped
@@ -40,7 +40,7 @@ class InternalService {
     const transformed = await readFile(tempFile, "utf8");
 
     // Plugin Header must be preserved
-    assert.ok(transformed.includes("Plugin Name: Tavangary Test Plugin"), "Main plugin header must be preserved");
+    assert.ok(transformed.includes("Plugin Name: Sample Test Plugin"), "Main plugin header must be preserved");
 
     // Internal developer comments must be 100% stripped
     assert.ok(!transformed.includes("Internal developer comment"), "Inline comments must be stripped");
@@ -61,7 +61,7 @@ class BannerService {
     public $publicTitle = "Banner Title";
 
     public function renderBanner($userName, $itemCount) {
-        $msg = sprintf(__('Welcome %1$s! You have %2$d items.', 'tavangary'), $userName, $itemCount);
+        $msg = sprintf(__('Welcome %1$s! You have %2$d items.', 'sample-theme'), $userName, $itemCount);
         return $this->formatSecret($msg);
     }
 

@@ -68,7 +68,7 @@ test("ArtifactFixtureHelper: customStagingRoot is strictly preserved and only ow
 test("ArtifactFixtureHelper: pre-extraction abort signal prevents extraction and cleans temp", async () => {
   const tmpDir = await mkdtemp(path.join(os.tmpdir(), "abort-fixture-"));
   try {
-    const realZip = path.resolve("dist/tavangary-core-profile-s.zip");
+    const realZip = path.resolve("dist/sample-standalone-plugin-profile-s.zip");
     if (!fs.existsSync(realZip)) return; // Skip if dist not present
 
     const controller = new AbortController();
@@ -77,7 +77,7 @@ test("ArtifactFixtureHelper: pre-extraction abort signal prevents extraction and
     await assert.rejects(
       async () => {
         await prepareArtifactFixture({
-          consumer: "tavangary-core",
+          consumer: "sample-standalone-plugin",
           zipPath: realZip,
           customStagingRoot: tmpDir,
           signal: controller.signal,
