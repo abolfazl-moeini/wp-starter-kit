@@ -119,7 +119,9 @@ class User_Switching {
 
 		} else {
 
-			$link = \user_switching::switch_to_url($user);
+			$link = is_callable( array( 'user_switching', 'switch_to_url' ) )
+				? call_user_func( array( 'user_switching', 'switch_to_url' ), $user )
+				: '';
 
 			return $link;
 

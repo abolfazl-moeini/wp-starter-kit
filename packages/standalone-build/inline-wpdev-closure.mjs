@@ -1125,10 +1125,6 @@ foreach ($wpdev_closure_core_map as $wpdev_c_cls => $wpdev_c_f) {
     }
 }
 
-if (trait_exists('WPDevFramework\\\\Traits\\\\Singleton', false) && !trait_exists('Singleton', false)) {
-    class_alias('WPDevFramework\\\\Traits\\\\Singleton', 'Singleton');
-}
-
 foreach (array('ModuleInterface', 'AbstractModule', 'ModuleLoader', 'Plugin') as $wpdev_ci) {
     if (class_exists("WPDev\\\\Core\\\\{$wpdev_ci}", false) && !class_exists("${consumerNs}\\\\Core\\\\{$wpdev_ci}", false)) {
         class_alias("WPDev\\\\Core\\\\{$wpdev_ci}", "${consumerNs}\\\\Core\\\\{$wpdev_ci}");
@@ -1152,13 +1148,6 @@ foreach (array('Base_Admin_Page', 'List_Admin_Page') as $wpdev_ap) {
     if (class_exists("WPDevFramework\\\\Admin_Pages\\\\{$wpdev_ap}", false) && !class_exists("WPDev\\\\Admin_Pages\\\\{$wpdev_ap}", false)) {
         class_alias("WPDevFramework\\\\Admin_Pages\\\\{$wpdev_ap}", "WPDev\\\\Admin_Pages\\\\{$wpdev_ap}");
     }
-}
-
-if (trait_exists('WPDevFramework\\\\Admin_Pages\\\\Edit_Object_Page', false) && !trait_exists('Edit_Object_Page', false)) {
-    class_alias('WPDevFramework\\\\Admin_Pages\\\\Edit_Object_Page', 'Edit_Object_Page');
-}
-if (trait_exists('WPDevFramework\\\\Admin_Pages\\\\Edit_Page_Widgets', false) && !trait_exists('Edit_Page_Widgets', false)) {
-    class_alias('WPDevFramework\\\\Admin_Pages\\\\Edit_Page_Widgets', 'Edit_Page_Widgets');
 }
 
 $wpdev_closure_functions_dir = __DIR__ . '/functions';
@@ -1302,7 +1291,7 @@ spl_autoload_register(function ($class) {
     }
 
     // Settings Panel Builder
-    if (0 === strpos($class, 'WPDevFramework\\\\Settings_Panel_Builder\\\\') || 0 === strpos($class, 'WPDev\\\\Settings_Panel_Builder\\\\')) {
+    if (0 === strpos($class, 'WPDevFramework\\\\Settings_Panel_Builder\\\\') || 0 === strpos($class, 'WPDev\\\\Settings_Panel_Builder\\\\') || 0 === strpos($class, 'WPDevFramework\\\\Modules\\\\SettingsPanelBuilder\\\\') || 0 === strpos($class, 'WPDev\\\\Modules\\\\SettingsPanelBuilder\\\\')) {
         $basename = basename(str_replace('\\\\', '/', $class));
         $f = __DIR__ . '/modules/settings-panel-builder/src/class-' . strtolower(str_replace('_', '-', $basename)) . '.php';
         if (file_exists($f)) {
@@ -1433,24 +1422,32 @@ if (!defined('WPDEV_BOOTSTRAP_FILE')) {
     }
 }
 
-// Preload foundational framework traits and core registries
-$core_preload = [
-    __DIR__ . '/trait-singleton.php',
-    __DIR__ . '/trait-delegates-component-registry.php',
-    __DIR__ . '/trait-wpdev-settings-deprecated.php',
-    __DIR__ . '/trait-wpdev-deprecated.php',
-    __DIR__ . '/class-registry-base.php',
-    __DIR__ . '/class-settings-storage.php',
-    __DIR__ . '/class-settings-section-registry.php',
-    __DIR__ . '/class-settings.php',
-    __DIR__ . '/class-table-registry.php',
-    __DIR__ . '/class-service-registry.php',
-    __DIR__ . '/class-bounded-view-root-registry.php',
-    __DIR__ . '/class-module-view-registry.php',
-];
-foreach ($core_preload as $file) {
-    if (file_exists($file)) {
-        require_once $file;
+// Preload foundational framework traits and core registries with existence guards
+$core_preload_map = array(
+    'WPDevFramework\\\\Traits\\\\Singleton'                          => array(__DIR__ . '/modules/core/src/traits/trait-singleton.php', __DIR__ . '/trait-singleton.php'),
+    'WPDevFramework\\\\Core\\\\Traits\\\\Delegates_Component_Registry' => array(__DIR__ . '/modules/core/src/traits/trait-delegates-component-registry.php', __DIR__ . '/trait-delegates-component-registry.php'),
+    'WPDevFramework\\\\Traits\\\\WPDev_Settings_Deprecated'          => array(__DIR__ . '/modules/core/src/traits/trait-wpdev-settings-deprecated.php', __DIR__ . '/trait-wpdev-settings-deprecated.php'),
+    'WPDevFramework\\\\Traits\\\\WPDev_Deprecated'                  => array(__DIR__ . '/modules/core/src/traits/trait-wpdev-deprecated.php', __DIR__ . '/trait-wpdev-deprecated.php'),
+    'WPDevFramework\\\\Core\\\\Registry_Base'                       => array(__DIR__ . '/modules/core/src/class-registry-base.php', __DIR__ . '/class-registry-base.php'),
+    'WPDevFramework\\\\Modules\\\\SettingsPanelBuilder\\\\Settings_Write_Lock' => array(__DIR__ . '/modules/settings-panel-builder/src/class-settings-write-lock.php', __DIR__ . '/class-settings-write-lock.php'),
+    'WPDevFramework\\\\Modules\\\\SettingsPanelBuilder\\\\Settings_Storage'    => array(__DIR__ . '/modules/settings-panel-builder/src/class-settings-storage.php', __DIR__ . '/class-settings-storage.php'),
+    'WPDevFramework\\\\Modules\\\\SettingsPanelBuilder\\\\Settings_Section_Registry' => array(__DIR__ . '/modules/settings-panel-builder/src/class-settings-section-registry.php', __DIR__ . '/class-settings-section-registry.php'),
+    'WPDevFramework\\\\Modules\\\\SettingsPanelBuilder\\\\Settings_Save'       => array(__DIR__ . '/modules/settings-panel-builder/src/class-settings-save.php', __DIR__ . '/class-settings-save.php'),
+    'WPDevFramework\\\\Settings'                                    => array(__DIR__ . '/modules/settings-panel-builder/src/class-settings.php', __DIR__ . '/class-settings.php'),
+    'WPDevFramework\\\\Core\\\\Table_Registry'                      => array(__DIR__ . '/modules/core/src/class-table-registry.php', __DIR__ . '/class-table-registry.php'),
+    'WPDevFramework\\\\Core\\\\Service_Registry'                    => array(__DIR__ . '/modules/core/src/class-service-registry.php', __DIR__ . '/class-service-registry.php'),
+    'WPDevFramework\\\\Core\\\\Bounded_View_Root_Registry'          => array(__DIR__ . '/modules/core/src/view/class-bounded-view-root-registry.php', __DIR__ . '/class-bounded-view-root-registry.php'),
+    'WPDevFramework\\\\Core\\\\Module_View_Registry'                => array(__DIR__ . '/modules/core/src/view/class-module-view-registry.php', __DIR__ . '/class-module-view-registry.php'),
+);
+foreach ($core_preload_map as $wpdev_c_cls => $wpdev_files) {
+    if (class_exists($wpdev_c_cls, false) || trait_exists($wpdev_c_cls, false) || interface_exists($wpdev_c_cls, false)) {
+        continue;
+    }
+    foreach ($wpdev_files as $file) {
+        if (file_exists($file)) {
+            require_once $file;
+            break;
+        }
     }
 }
 

@@ -378,7 +378,7 @@ export async function assembleProfileSCandidate(options = {}) {
       const flattenFlag = buildPlan.capabilities.spaghetti ? "--flatten=1" : "--flatten=0";
       const mangleFlag = buildPlan.capabilities.obfuscate ? "--mangle=1" : "--mangle=0";
       const stripFlag = buildPlan.capabilities.obfuscate ? "--strip-comments=1" : "--strip-comments=0";
-      const fwFlattenFlag = buildPlan.capabilities.inlineFramework ? "--framework-flatten=1" : "--framework-flatten=0";
+      const fwFlattenFlag = (buildPlan.capabilities.inlineFramework && buildPlan.capabilities.obfuscate) ? "--framework-flatten=1" : "--framework-flatten=0";
       const fwStripFlag = buildPlan.capabilities.inlineFramework ? "--framework-strip=1" : "--framework-strip=0";
       const fwMangleFlag = buildPlan.capabilities.obfuscate ? "--framework-mangle=1" : "--framework-mangle=0";
 

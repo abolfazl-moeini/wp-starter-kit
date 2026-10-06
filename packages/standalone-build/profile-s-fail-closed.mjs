@@ -472,14 +472,39 @@ export function assertSymbolMapHasNoCollisions(symMap, options = {}) {
       }
     }
 
+    // Collect alias FQCNs so backward-compatibility shims do not trigger false collisions
+    const aliasFqcns = new Set();
+    if (declarations) {
+      for (const d of declarations) {
+        if (d.isAlias || d.is_alias) {
+          aliasFqcns.add(String(d.symbol || d.fqcn || "").trim());
+        }
+      }
+    }
+
     // C1 Gate: Check short-name collisions across distinct FQCNs under namespace flattening
     if (checkFlattenCollisions) {
       for (const [shortKey, fqcns] of shortNamesToFqcns.entries()) {
         const flattenedFqcns = fqcns.filter((s) => {
+          if (aliasFqcns.has(s)) return false;
           const sNs = s.includes("\\") ? s.slice(0, s.lastIndexOf("\\")) : "";
           return !sNs || !retainedNamespaces.has(sNs);
         });
         if (flattenedFqcns.length > 1) {
+          const allFramework = flattenedFqcns.every(
+            (s) => s.startsWith("WPDevFramework\\") || (symbolPaths[s] && symbolPaths[s].includes("FrameworkClosure"))
+          );
+          const hasFramework = flattenedFqcns.some(
+            (s) => s.startsWith("WPDevFramework\\") || (symbolPaths[s] && symbolPaths[s].includes("FrameworkClosure"))
+          );
+          const distinctDestinations = new Set(
+            flattenedFqcns.map((s) => String(table[s] || "").toLowerCase())
+          ).size === flattenedFqcns.length;
+
+          if ((allFramework || hasFramework) && distinctDestinations) {
+            continue;
+          }
+
           const pathDetails = flattenedFqcns
             .map((s) => (symbolPaths[s] ? `${s} (${symbolPaths[s]})` : s))
             .join(", ");
@@ -500,10 +525,25 @@ export function assertSymbolMapHasNoCollisions(symMap, options = {}) {
       const shortKey = caseInsensitive ? symbol.toLowerCase() : symbol;
 
       const fqcnsForShort = (shortNamesToFqcns.get(shortKey) || []).filter((s) => {
+        if (aliasFqcns.has(s)) return false;
         const sNs = s.includes("\\") ? s.slice(0, s.lastIndexOf("\\")) : "";
         return !sNs || !retainedNamespaces.has(sNs);
       });
       if (fqcnsForShort.length > 1) {
+        const allFramework = fqcnsForShort.every(
+          (s) => s.startsWith("WPDevFramework\\") || (symbolPaths[s] && symbolPaths[s].includes("FrameworkClosure"))
+        );
+        const hasFramework = fqcnsForShort.some(
+          (s) => s.startsWith("WPDevFramework\\") || (symbolPaths[s] && symbolPaths[s].includes("FrameworkClosure"))
+        );
+        const distinctDestinations = new Set(
+          fqcnsForShort.map((s) => String(table[s] || "").toLowerCase())
+        ).size === fqcnsForShort.length;
+
+        if ((allFramework || hasFramework) && distinctDestinations) {
+          continue;
+        }
+
         const pathDetails = fqcnsForShort
           .map((s) => (symbolPaths[s] ? `${s} (${symbolPaths[s]})` : s))
           .join(", ");

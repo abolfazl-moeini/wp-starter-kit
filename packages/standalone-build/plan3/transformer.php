@@ -184,6 +184,12 @@ class Plan3_Transformer {
 	 * @return bool
 	 */
 	public static function is_frozen_class( $class_name, $current_namespace = '' ) {
+		if ( $class_name === 'Module' || $class_name === 'WP_CLI' ) {
+			return true;
+		}
+		if ( strpos( $class_name, 'WP_' ) === 0 || strpos( $class_name, 'WC_' ) === 0 ) {
+			return true;
+		}
 		$fqcn = ! empty( $current_namespace ) ? ( $current_namespace . '\\' . $class_name ) : $class_name;
 		foreach ( self::$frozen_public_classes as $frozen ) {
 			if ( $frozen === $fqcn ) {
@@ -197,6 +203,7 @@ class Plan3_Transformer {
 	}
 
 	protected static $frozen_public_constants = array(
+		'WP_CLI',
 		'ACTIVE',
 		'INACTIVE',
 		'SEMI_ACTIVE',
@@ -749,7 +756,7 @@ class Plan3_Transformer {
 			$fn_idx = $this->prev_code_index( $tokens, $p );
 			if ( $fn_idx >= 0 ) {
 				$fn_name = strtolower( $this->token_function_name( $tokens[ $fn_idx ] ) );
-				$reflection_funcs = array( 'class_exists', 'interface_exists', 'trait_exists', 'is_a', 'is_subclass_of', 'is_of_class' );
+				$reflection_funcs = array( 'class_exists', 'interface_exists', 'trait_exists', 'is_a', 'is_subclass_of', 'is_of_class', 'method_exists', 'property_exists' );
 				return in_array( $fn_name, $reflection_funcs, true );
 			}
 		}
@@ -1086,7 +1093,7 @@ class Plan3_Transformer {
 			if ( $id === T_NAMESPACE ) {
 				$spec = $this->read_namespace_spec( $tokens, $i, $count );
 				$current_ns = $spec['name'];
-				if ( strpos( $current_ns, 'WPDev\\' ) === 0 || strpos( $current_ns, 'BerlinDB' ) === 0 || strpos( $current_ns, 'Action_Scheduler' ) === 0 || strpos( $current_ns, 'Mercator' ) === 0 ) {
+				if ( ( ! $this->framework_flatten && strpos( $current_ns, 'WPDev\\' ) === 0 ) || strpos( $current_ns, 'BerlinDB' ) === 0 || strpos( $current_ns, 'Action_Scheduler' ) === 0 || strpos( $current_ns, 'Mercator' ) === 0 ) {
 					$retained[ $current_ns ] = true;
 				}
 				if ( $spec['terminator'] === '{' ) {
@@ -1100,6 +1107,9 @@ class Plan3_Transformer {
 				continue;
 			}
 			if ( empty( $current_ns ) ) {
+				continue;
+			}
+			if ( strpos( $current_ns, 'WPDevFramework' ) === 0 || ( $this->framework_flatten && strpos( $current_ns, 'WPDev\\' ) === 0 ) ) {
 				continue;
 			}
 			if ( $id === T_NS_C || $id === T_CLASS_C || $id === T_METHOD_C ) {
@@ -1233,7 +1243,7 @@ class Plan3_Transformer {
 				}
 			} elseif ( $this->mangle_symbols && count( $unique_ns ) > 1 ) {
 				foreach ( $unique_ns as $ns ) {
-					if ( ! empty( $ns ) && $short === 'component_registry' ) {
+					if ( ! empty( $ns ) && ( strpos( $ns, 'WPDev\\' ) === 0 || strpos( $ns, 'FrameworkClosure' ) !== false || $short === 'component_registry' ) ) {
 						$this->retained_namespaces[ $ns ] = true;
 					}
 				}
@@ -1243,7 +1253,9 @@ class Plan3_Transformer {
 		foreach ( array_keys( $this->retained_namespaces ) as $r_ns ) {
 			if ( ! empty( $r_ns ) && strpos( $r_ns, '\\' ) !== false ) {
 				$parts = explode( '\\', $r_ns );
-				$retained_roots[ $parts[0] ] = true;
+				if ( ( $parts[0] === 'WPDev' && ! $this->framework_flatten ) || strpos( $r_ns, 'FrameworkClosure' ) !== false ) {
+					$retained_roots[ $parts[0] ] = true;
+				}
 			}
 		}
 		if ( ! empty( $retained_roots ) ) {
@@ -1492,7 +1504,7 @@ class Plan3_Transformer {
 							'file'                 => $file_path,
 							'line'                 => $class_line,
 							'is_global'            => empty( $current_namespace ),
-							'is_alias'             => strpos( $file_path, 'functions-closure.php' ) !== false,
+							'is_alias'             => strpos( $file_path, 'functions-closure.php' ) !== false || strpos( $file_path, '-shim.php' ) !== false,
 							'frozen'               => $is_frozen,
 							'effectiveDestination' => '',
 						);
@@ -1523,17 +1535,19 @@ class Plan3_Transformer {
 							}
 						}
 
-						if ( $uses_class_magic ) {
+						$is_framework_file = ( strpos( str_replace( '\\', '/', $file_path ), 'FrameworkClosure' ) !== false || basename( $file_path ) === 'functions-closure.php' );
+						$is_framework_class = $is_framework_file || strpos( $current_namespace, 'WPDevFramework' ) === 0 || ( $is_framework_file && strpos( $current_namespace, 'WPDev\\' ) === 0 );
+
+						if ( $uses_class_magic && ! $is_framework_class ) {
 							if ( ! empty( $current_namespace ) ) {
 								$this->retained_namespaces[ $current_namespace ] = true;
 							}
 							continue;
 						}
-						$is_framework_file = ( strpos( str_replace( '\\', '/', $file_path ), 'FrameworkClosure' ) !== false || basename( $file_path ) === 'functions-closure.php' );
 						$file_flatten = $is_framework_file ? $this->framework_flatten : $this->flatten_namespaces;
 						$file_mangle  = $is_framework_file ? $this->framework_mangle  : $this->mangle_symbols;
 
-						$is_flattened = $file_flatten && ( empty( $current_namespace ) || ! isset( $this->retained_namespaces[ $current_namespace ] ) );
+						$is_flattened = $file_flatten && ( $is_framework_class || empty( $current_namespace ) || ! isset( $this->retained_namespaces[ $current_namespace ] ) );
 						if ( ! $file_mangle ) {
 							if ( $is_flattened ) {
 								$this->record_short_class_name( $class_name, $class_name );
@@ -2058,6 +2072,9 @@ class Plan3_Transformer {
 						$pending_ns_brace = ( $spec['terminator'] === '{' );
 						$keep_namespace = ( ! empty( $current_namespace ) && isset( $this->retained_namespaces[ $current_namespace ] ) )
 							|| ( $current_namespace === '' && $pending_ns_brace && ( isset( $this->retained_namespaces[''] ) || $retained_brace_namespace_emitted ) );
+						if ( $is_framework_track && $this->framework_flatten ) {
+							$keep_namespace = false;
+						}
 						if ( $keep_namespace ) {
 							$file_retained_namespaces[] = $current_namespace;
 						}
@@ -2650,7 +2667,11 @@ class Plan3_Transformer {
 							continue;
 						}
 						if ( ! $is_declaration && ! empty( $current_namespace ) && self::is_frozen_class( $text, $current_namespace ) ) {
-							$output .= '\\' . $current_namespace . '\\' . $text;
+							if ( $text === 'Module' ) {
+								$output .= '\\' . $current_namespace . '\\' . $text;
+							} else {
+								$output .= '\\' . $text;
+							}
 							continue;
 						}
 						$member_prev = $this->prev_code_index( $tokens, $i );
@@ -2953,22 +2974,25 @@ class Plan3_Transformer {
 			}
 		}
 
-		if ( ! empty( $declared_classes_in_file ) && $this->flatten_namespaces && ! $keep_namespace ) {
+		if ( ! empty( $declared_classes_in_file ) ) {
 			$alias_code = '';
 			foreach ( $declared_classes_in_file as $fqcn => $info ) {
 				$mangled = is_array( $info ) ? $info['mangled'] : $info;
 				$type    = is_array( $info ) ? $info['type'] : T_CLASS;
-				if ( $mangled === $fqcn ) {
+				$decl_fqcn = ( $keep_namespace && ! empty( $current_namespace ) && strpos( $mangled, '\\' ) === false )
+					? ( $current_namespace . '\\' . $mangled )
+					: $mangled;
+				if ( $decl_fqcn === $fqcn ) {
 					continue;
 				}
 				if ( $type === T_INTERFACE ) {
-					$alias_code .= "if (interface_exists('" . addslashes( $mangled ) . "', false) && !interface_exists('" . addslashes( $fqcn ) . "', false)) { class_alias('" . addslashes( $mangled ) . "', '" . addslashes( $fqcn ) . "', false); }\n";
+					$alias_code .= "if (\\interface_exists('" . addslashes( $decl_fqcn ) . "', false) && !\\interface_exists('" . addslashes( $fqcn ) . "', false)) { \\class_alias('" . addslashes( $decl_fqcn ) . "', '" . addslashes( $fqcn ) . "', false); }\n";
 				} elseif ( $type === T_TRAIT ) {
-					$alias_code .= "if (trait_exists('" . addslashes( $mangled ) . "', false) && !trait_exists('" . addslashes( $fqcn ) . "', false)) { class_alias('" . addslashes( $mangled ) . "', '" . addslashes( $fqcn ) . "', false); }\n";
+					$alias_code .= "if (\\trait_exists('" . addslashes( $decl_fqcn ) . "', false) && !\\trait_exists('" . addslashes( $fqcn ) . "', false)) { \\class_alias('" . addslashes( $decl_fqcn ) . "', '" . addslashes( $fqcn ) . "', false); }\n";
 				} elseif ( defined( 'T_ENUM' ) && $type === T_ENUM ) {
-					$alias_code .= "if (function_exists('enum_exists') && enum_exists('" . addslashes( $mangled ) . "', false) && !enum_exists('" . addslashes( $fqcn ) . "', false)) { class_alias('" . addslashes( $mangled ) . "', '" . addslashes( $fqcn ) . "', false); }\n";
+					$alias_code .= "if (function_exists('enum_exists') && \\enum_exists('" . addslashes( $decl_fqcn ) . "', false) && !\\enum_exists('" . addslashes( $fqcn ) . "', false)) { \\class_alias('" . addslashes( $decl_fqcn ) . "', '" . addslashes( $fqcn ) . "', false); }\n";
 				} else {
-					$alias_code .= "if (class_exists('" . addslashes( $mangled ) . "', false) && !class_exists('" . addslashes( $fqcn ) . "', false)) { class_alias('" . addslashes( $mangled ) . "', '" . addslashes( $fqcn ) . "', false); }\n";
+					$alias_code .= "if (\\class_exists('" . addslashes( $decl_fqcn ) . "', false) && !\\class_exists('" . addslashes( $fqcn ) . "', false)) { \\class_alias('" . addslashes( $decl_fqcn ) . "', '" . addslashes( $fqcn ) . "', false); }\n";
 				}
 			}
 			if ( $alias_code !== '' ) {

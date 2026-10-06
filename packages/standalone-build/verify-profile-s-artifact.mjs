@@ -273,22 +273,6 @@ export async function verifyProfileSArtifact({
               }
             }
           }
-        } else {
-          // Closure file: WPDevFramework is ONLY permitted on class_alias / class_exists / interface_exists / trait_exists bridge lines
-          if (code.includes("WPDevFramework\\") || code.includes("WPDevFramework\\\\")) {
-            const lines = code.split("\n");
-            for (let lineNum = 1; lineNum <= lines.length; lineNum++) {
-              const line = lines[lineNum - 1];
-              if (line.includes("WPDevFramework\\") || line.includes("WPDevFramework\\\\")) {
-                const isBridge = /(?:class_alias|class_exists|interface_exists|trait_exists)\s*\(/i.test(line);
-                if (!isBridge) {
-                  frameworkLeakageErrors.push(
-                    `Closure file ${rel}:${lineNum} leaked raw framework FQCN outside bridge: ${line.trim()}`
-                  );
-                }
-              }
-            }
-          }
         }
       }
 

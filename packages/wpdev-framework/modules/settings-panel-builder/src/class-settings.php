@@ -18,6 +18,10 @@ use WPDevFramework\Modules\SettingsPanelBuilder\Settings_Section_Registry;
 // Exit if accessed directly
 defined('ABSPATH') || exit;
 
+require_once __DIR__ . '/class-settings-storage.php';
+require_once __DIR__ . '/class-settings-save.php';
+require_once __DIR__ . '/class-settings-section-registry.php';
+
 /**
  * WPDev settings helper class.
  *
