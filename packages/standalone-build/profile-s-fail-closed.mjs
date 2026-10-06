@@ -526,20 +526,6 @@ export function assertSymbolMapHasNoCollisions(symMap, options = {}) {
         return !sNs || !retainedNamespaces.has(sNs);
       });
       if (fqcnsForShort.length > 1) {
-        const allFramework = fqcnsForShort.every(
-          (s) => s.startsWith("WPDevFramework\\") || (symbolPaths[s] && symbolPaths[s].includes("FrameworkClosure"))
-        );
-        const hasFramework = fqcnsForShort.some(
-          (s) => s.startsWith("WPDevFramework\\") || (symbolPaths[s] && symbolPaths[s].includes("FrameworkClosure"))
-        );
-        const distinctDestinations = new Set(
-          fqcnsForShort.map((s) => String(table[s] || "").toLowerCase())
-        ).size === fqcnsForShort.length;
-
-        if ((allFramework || hasFramework) && distinctDestinations) {
-          continue;
-        }
-
         const pathDetails = fqcnsForShort
           .map((s) => (symbolPaths[s] ? `${s} (${symbolPaths[s]})` : s))
           .join(", ");
