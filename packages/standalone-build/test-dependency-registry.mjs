@@ -121,6 +121,21 @@ export const CANONICAL_TEST_REGISTRY = {
     "releaseSameRun": true,
     "tier": "unit"
   },
+  "closure-classmap.test.mjs": {
+    "tools": [
+      "tools/inline-wpdev-closure.mjs"
+    ],
+    "artifacts": [],
+    "requiredBy": [],
+    "criticality": "normal",
+    "allowedModes": [
+      "affected",
+      "full",
+      "release"
+    ],
+    "releaseSameRun": false,
+    "tier": "unit"
+  },
   "dag-cancellation-subprocess.test.mjs": {
     "tools": [
       "tools/build-dag-runner.mjs"
@@ -765,6 +780,21 @@ export const CANONICAL_TEST_REGISTRY = {
     ],
     "releaseSameRun": true,
     "tier": "contract"
+  },
+  "settings-panel-autoload.test.mjs": {
+    "tools": [
+      "tools/inline-wpdev-closure.mjs"
+    ],
+    "artifacts": [],
+    "requiredBy": [],
+    "criticality": "normal",
+    "allowedModes": [
+      "affected",
+      "full",
+      "release"
+    ],
+    "releaseSameRun": false,
+    "tier": "unit"
   },
   "target-cache-integrity.test.mjs": {
     "tools": [

@@ -189,6 +189,228 @@ const REQUIRED_WPDEV_ASSET_DIRS = [
 ];
 
 /**
+ * Strip PHP comments, string literals, and heredocs/nowdocs, preserving line
+ * breaks. Used so declaration scanning never matches words inside strings,
+ * comments, or template blobs. Returns code with inert regions blanked.
+ */
+function blankPhpNoise(src) {
+  let out = "";
+  let i = 0;
+  const n = src.length;
+  const blankTo = (endIdx) => {
+    for (; i < endIdx && i < n; i++) out += src[i] === "\n" ? "\n" : " ";
+  };
+  while (i < n) {
+    const c = src[i];
+    if (c === "'" || c === '"') {
+      const q = c;
+      out += " ";
+      i++;
+      while (i < n) {
+        if (src[i] === "\\") { out += "  "; i += 2; continue; }
+        if (src[i] === "\n") { out += "\n"; i++; continue; }
+        if (src[i] === q) { out += " "; i++; break; }
+        out += " "; i++;
+      }
+      continue;
+    }
+    if (c === "/" && src[i + 1] === "/") {
+      let j = i;
+      while (j < n && src[j] !== "\n") j++;
+      blankTo(j);
+      continue;
+    }
+    if (c === "#") {
+      let j = i;
+      while (j < n && src[j] !== "\n") j++;
+      blankTo(j);
+      continue;
+    }
+    if (c === "/" && src[i + 1] === "*") {
+      const end = src.indexOf("*/", i + 2);
+      blankTo(end === -1 ? n : end + 2);
+      continue;
+    }
+    const heredoc = src.slice(i).match(/^<<<(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1\r?\n/);
+    if (heredoc) {
+      blankTo(i + heredoc[0].length);
+      const tag = heredoc[2];
+      const re = new RegExp(`^${tag};?\\r?$`, "m");
+      const rest = src.slice(i);
+      const m = re.exec(rest);
+      if (m) blankTo(i + m.index + m[0].length);
+      else i = n;
+      continue;
+    }
+    out += c;
+    i++;
+  }
+  return out;
+}
+
+/**
+ * Parse declared class-like symbols of one PHP file.
+ * Returns { namespace, declarations: [{kind, name, fqcn}] }.
+ * Braced multi-namespace files are reported via warnings and skipped (the
+ * inlined framework tree uses unbracketed single-namespace files).
+ */
+function parsePhpDeclarations(cleanSrc) {
+  const nsMatch = cleanSrc.match(/(?:^|[;{}]|\?>|<\?php)\s*namespace\s+\\?([A-Za-z0-9_\\]+)\s*;/m);
+  const namespace = nsMatch ? nsMatch[1].replace(/^\\+|\\+$/g, "") : "";
+  if (/(?:^|[;{}]|\?>|<\?php)\s*namespace\s*[{;]/m.test(cleanSrc) && !nsMatch) {
+    return { namespace: "", declarations: [], braced: true };
+  }
+  const declarations = [];
+  const re = /(?:^|[;{}]|\?>|<\?php)\s*(?:abstract\s+|final\s+|readonly\s+)*(class|interface|trait|enum)\s+([A-Za-z_\x80-\xff][A-Za-z0-9_\x80-\xff]*)/gm;
+  let m;
+  while ((m = re.exec(cleanSrc)) !== null) {
+    const kind = m[1];
+    const name = m[2];
+    declarations.push({ kind, name, fqcn: namespace !== "" ? `${namespace}\\${name}` : name });
+  }
+  return { namespace, declarations, braced: false };
+}
+
+/**
+ * True when a PHP file has no top-level executable side effects, i.e. every
+ * depth-0 statement is a declaration, import, namespace/declare directive, a
+ * harmless `defined(...) || exit`-style guard, a conditional shim guard, a
+ * constant definition, or a function definition. Such files are safe to preload
+ * eagerly with require_once.
+ */
+function isDeclarationPureFile(cleanSrc) {
+  const s = String(cleanSrc).replace(/<\?php|\?>/g, " ");
+  const heads = [];
+  let buf = "";
+  let cb = 0, pb = 0, sb = 0;
+  let i = 0;
+  const n = s.length;
+  const pushHead = () => {
+    if (buf.trim() !== "") heads.push(buf);
+    buf = "";
+  };
+  while (i < n) {
+    const ch = s[i];
+    if (ch === "{" && pb === 0 && sb === 0) {
+      if (cb === 0) pushHead();
+      cb++;
+      let d = 1;
+      i++;
+      while (i < n && d > 0) {
+        if (s[i] === "{") d++;
+        else if (s[i] === "}") d--;
+        i++;
+      }
+      cb--;
+      continue;
+    }
+    if (ch === "(") pb++;
+    else if (ch === ")") { if (pb > 0) pb--; }
+    else if (ch === "[") sb++;
+    else if (ch === "]") { if (sb > 0) sb--; }
+    else if (ch === "}") {
+      if (cb > 0) { cb--; i++; continue; }
+      return false;
+    }
+    buf += ch;
+    if (ch === ";" && cb === 0 && pb === 0 && sb === 0) pushHead();
+    i++;
+  }
+  pushHead();
+  const allowed = [
+    /^\s*$/,
+    /^\s*namespace\b/,
+    /^\s*use\b/,
+    /^\s*declare\b/,
+    /^\s*defined\s*\(/,
+    /^\s*if\s*\(/,
+    /^\s*const\b/,
+    /^\s*define\s*\(/,
+    /^\s*function\b/,
+    /^\s*(?:abstract\s+|final\s+|readonly\s+)?(?:class|interface|trait|enum)\b/,
+  ];
+  return heads.every((h) => allowed.some((re) => re.test(h)));
+}
+
+/**
+ * Dynamically discover every class/interface/trait/enum declared in an inlined
+ * FrameworkClosure tree and emit a static O(1) classmap. Zero hardcoded symbol
+ * names: the map is derived 100% from physical files on disk.
+ *
+ * @param {string} targetDir Absolute path of src/FrameworkClosure.
+ * @returns {Promise<{ map: Record<string,string>, traits: string[], warnings: string[] }>}
+ *   map: ORIGINAL FQCN => closure-relative path (posix, leading slash).
+ *   traits: ORIGINAL FQCNs of pure-declaration trait files, safe for eager
+ *     require_once preloading (paths resolve through `map`).
+ *   warnings: non-fatal discovery notes (braced namespaces, impure trait files).
+ */
+export async function generateClosureClassmap(targetDir) {
+  const map = {};
+  const traits = [];
+  const warnings = [];
+  async function visit(curDir) {
+    const entries = await readdir(curDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.name.startsWith(".")) continue;
+      const full = path.join(curDir, entry.name);
+      if (entry.isDirectory()) {
+        const lower = entry.name.toLowerCase();
+        if (["views", "assets", "node_modules", ".git", "vendor", "dependencies"].includes(lower)) continue;
+        await visit(full);
+        continue;
+      }
+      if (!entry.isFile() || !entry.name.endsWith(".php")) continue;
+      if (entry.name === "functions-closure.php" || entry.name === "closure-classmap.php") continue;
+      const rel = "/" + path.relative(targetDir, full).replace(/\\/g, "/");
+      const src = await readFile(full, "utf8");
+      const clean = blankPhpNoise(src);
+      const { declarations, braced } = parsePhpDeclarations(clean);
+      if (braced) {
+        warnings.push(`braced multi-namespace file skipped for classmap: ${rel}`);
+        continue;
+      }
+      for (const decl of declarations) {
+        if (map[decl.fqcn] !== undefined && map[decl.fqcn] !== rel) {
+          warnings.push(`duplicate declaration ${decl.fqcn}: ${map[decl.fqcn]} vs ${rel} (first wins)`);
+          continue;
+        }
+        map[decl.fqcn] = rel;
+      }
+      const base = entry.name.toLowerCase();
+      const inTraitsDir = full.toLowerCase().split(path.sep).includes("traits");
+      const traitDecls = declarations.filter((d) => d.kind === "trait");
+      if (traitDecls.length > 0 && (inTraitsDir || base.startsWith("trait-"))) {
+        const onlyTraits = traitDecls.length === declarations.length;
+        if (onlyTraits && isDeclarationPureFile(clean)) {
+          for (const traitDecl of traitDecls) traits.push(traitDecl.fqcn);
+        } else {
+          warnings.push(`trait file excluded from eager preload (impure or mixed): ${rel}`);
+        }
+      }
+    }
+  }
+  await visit(targetDir);
+  const sortedMap = {};
+  for (const key of Object.keys(map).sort()) sortedMap[key] = map[key];
+  traits.sort();
+  return { map: sortedMap, traits, warnings };
+}
+
+function phpStringLiteral(value) {
+  return "'" + String(value).replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'";
+}
+
+function phpStringMap(obj) {
+  const entries = Object.entries(obj).map(([k, v]) => `    ${phpStringLiteral(k)} => ${phpStringLiteral(v)},`);
+  return `array(\n${entries.join("\n")}\n  )`;
+}
+
+function phpStringList(arr) {
+  const entries = arr.map((v) => `    ${phpStringLiteral(v)},`);
+  return `array(\n${entries.join("\n")}\n  )`;
+}
+
+/**
  * Dynamically detects whether a consumer plugin depends on or uses the WPDev framework.
  *
  * Inspects multiple sources in priority order:
@@ -1098,57 +1320,122 @@ if (!defined('WPDEV_PLUGIN_URL') && function_exists('plugins_url')) {
     define('WPDEV_PLUGIN_URL', rtrim(plugins_url('', __FILE__), '/\\\\') . '/');
 }
 
-// Preload and alias Core Primitives with existence guards across plugins
-$wpdev_closure_core_map = array(
-    'WPDev\\\\Core\\\\ModuleInterface'                 => __DIR__ . '/Core/Core/ModuleInterface.php',
-    'WPDev\\\\Core\\\\AbstractModule'                  => __DIR__ . '/Core/Core/AbstractModule.php',
-    'WPDev\\\\Core\\\\ModuleLoader'                    => __DIR__ . '/Core/Core/ModuleLoader.php',
-    'WPDev\\\\Core\\\\Plugin'                          => __DIR__ . '/Core/Core/Plugin.php',
-    'WPDev\\\\Dependencies\\\\BerlinDB\\\\Database\\\\Base'  => __DIR__ . '/modules/core/dependencies/berlindb/core/src/Database/Base.php',
-    'WPDev\\\\Dependencies\\\\BerlinDB\\\\Database\\\\Table' => __DIR__ . '/modules/core/dependencies/berlindb/core/src/Database/Table.php',
-    'WPDevFramework\\\\Database\\\\Engine\\\\Base'           => __DIR__ . '/modules/core/src/Database/engine/class-base.php',
-    'WPDevFramework\\\\Database\\\\Engine\\\\Table'          => __DIR__ . '/modules/core/src/Database/engine/class-table.php',
-    'WPDevFramework\\\\Admin_Pages\\\\Edit_Object_Page'     => __DIR__ . '/modules/admin-page-builder/src/admin/trait-edit-object-page.php',
-    'WPDevFramework\\\\Admin_Pages\\\\Edit_Page_Widgets'    => __DIR__ . '/modules/metabox-builder/src/admin/trait-edit-page-widgets.php',
-    'WPDevFramework\\\\Admin_Pages\\\\Base_Admin_Page'       => __DIR__ . '/modules/admin-page-builder/src/admin/class-base-admin-page.php',
-    'WPDevFramework\\\\Admin_Pages\\\\List_Admin_Page'       => __DIR__ . '/modules/admin-page-builder/src/admin/class-list-admin-page.php',
-    'WPDevFramework\\\\Admin_Pages\\\\Wizard_Admin_Page'     => __DIR__ . '/modules/admin-page-builder/src/admin/class-wizard-admin-page.php',
-    'WPDevFramework\\\\Admin_Pages\\\\Settings_Admin_Page'   => __DIR__ . '/modules/admin-setting-page/src/class-settings-admin-page.php',
-    'WPDevFramework\\\\Traits\\\\Singleton'                  => __DIR__ . '/modules/core/src/traits/trait-singleton.php',
-    'WPDevFramework\\\\Managers\\\\Base_Manager'            => __DIR__ . '/modules/core/src/managers/class-base-manager.php',
-    'WPDevFramework\\\\Models\\\\Base_Model'                => __DIR__ . '/modules/core/src/Model/class-base-model.php',
-    'WPDevFramework\\\\Core\\\\Module_Loader'               => __DIR__ . '/modules/core/src/class-module-loader.php',
-);
-foreach ($wpdev_closure_core_map as $wpdev_c_cls => $wpdev_c_f) {
-    if (!class_exists($wpdev_c_cls, false) && !interface_exists($wpdev_c_cls, false) && !trait_exists($wpdev_c_cls, false) && file_exists($wpdev_c_f)) {
-        require_once $wpdev_c_f;
+// Dynamic closure classmap (generated by generateClosureClassmap()): ORIGINAL FQCN
+// => closure-relative path, plus eager trait preload list. Zero hardcoded symbol
+// names; derived 100% from inlined files on disk.
+$wpdev_closure_classmap_file = __DIR__ . '/closure-classmap.php';
+$wpdev_closure_classmap = array('map' => array(), 'traits' => array());
+if (is_file($wpdev_closure_classmap_file)) {
+    $wpdev_closure_loaded = require $wpdev_closure_classmap_file;
+    if (is_array($wpdev_closure_loaded)) {
+        if (isset($wpdev_closure_loaded['map']) && is_array($wpdev_closure_loaded['map'])) {
+            $wpdev_closure_classmap['map'] = $wpdev_closure_loaded['map'];
+        }
+        if (isset($wpdev_closure_loaded['traits']) && is_array($wpdev_closure_loaded['traits'])) {
+            $wpdev_closure_classmap['traits'] = $wpdev_closure_loaded['traits'];
+        }
     }
+    unset($wpdev_closure_loaded);
 }
 
-foreach (array('ModuleInterface', 'AbstractModule', 'ModuleLoader', 'Plugin') as $wpdev_ci) {
-    if (class_exists("WPDev\\\\Core\\\\{$wpdev_ci}", false) && !class_exists("${consumerNs}\\\\Core\\\\{$wpdev_ci}", false)) {
-        class_alias("WPDev\\\\Core\\\\{$wpdev_ci}", "${consumerNs}\\\\Core\\\\{$wpdev_ci}");
-    } elseif (class_exists("${consumerNs}\\\\Core\\\\{$wpdev_ci}", false) && !class_exists("WPDev\\\\Core\\\\{$wpdev_ci}", false)) {
-        class_alias("${consumerNs}\\\\Core\\\\{$wpdev_ci}", "WPDev\\\\Core\\\\{$wpdev_ci}");
+// Eagerly preload pure-declaration trait files (timing-critical for trait
+// composition), skipping anything another active plugin already defined.
+foreach ($wpdev_closure_classmap['traits'] as $wpdev_trait_fqcn) {
+    if (!is_string($wpdev_trait_fqcn) || $wpdev_trait_fqcn === '') {
+        continue;
     }
-    if (interface_exists("WPDev\\\\Core\\\\{$wpdev_ci}", false) && !interface_exists("${consumerNs}\\\\Core\\\\{$wpdev_ci}", false)) {
-        class_alias("WPDev\\\\Core\\\\{$wpdev_ci}", "${consumerNs}\\\\Core\\\\{$wpdev_ci}");
-    } elseif (interface_exists("${consumerNs}\\\\Core\\\\{$wpdev_ci}", false) && !interface_exists("WPDev\\\\Core\\\\{$wpdev_ci}", false)) {
-        class_alias("${consumerNs}\\\\Core\\\\{$wpdev_ci}", "WPDev\\\\Core\\\\{$wpdev_ci}");
+    if (trait_exists($wpdev_trait_fqcn, false) || class_exists($wpdev_trait_fqcn, false) || interface_exists($wpdev_trait_fqcn, false)) {
+        continue;
+    }
+    if (!isset($wpdev_closure_classmap['map'][$wpdev_trait_fqcn])) {
+        continue;
+    }
+    $wpdev_trait_rel = $wpdev_closure_classmap['map'][$wpdev_trait_fqcn];
+    if (!is_string($wpdev_trait_rel) || $wpdev_trait_rel === '' || strpos($wpdev_trait_rel, '..') !== false) {
+        continue;
+    }
+    $wpdev_trait_file = __DIR__ . $wpdev_trait_rel;
+    if (is_file($wpdev_trait_file)) {
+        require_once $wpdev_trait_file;
     }
 }
+unset($wpdev_trait_fqcn, $wpdev_trait_rel, $wpdev_trait_file);
 
-foreach (array('Base', 'Table') as $wpdev_b) {
-    if (class_exists("WPDev\\\\Dependencies\\\\BerlinDB\\\\Database\\\\{$wpdev_b}", false) && !class_exists("BerlinDB\\\\Database\\\\{$wpdev_b}", false)) {
-        class_alias("WPDev\\\\Dependencies\\\\BerlinDB\\\\Database\\\\{$wpdev_b}", "BerlinDB\\\\Database\\\\{$wpdev_b}");
+// Dynamic O(1) closure autoloader: exact classmap hit first, generic legacy-root
+// swaps second (framework identity only — WPDev<->WPDevFramework, BerlinDB vendored
+// path, *-Core cross-roots — never project names). Replaces all per-module
+// hardcoded path branches and static preload maps.
+spl_autoload_register(function ($class) use ($wpdev_closure_classmap) {
+    static $wpdev_closure_loading = array();
+    if (isset($wpdev_closure_loading[$class])) {
+        return;
     }
-}
-
-foreach (array('Base_Admin_Page', 'List_Admin_Page') as $wpdev_ap) {
-    if (class_exists("WPDevFramework\\\\Admin_Pages\\\\{$wpdev_ap}", false) && !class_exists("WPDev\\\\Admin_Pages\\\\{$wpdev_ap}", false)) {
-        class_alias("WPDevFramework\\\\Admin_Pages\\\\{$wpdev_ap}", "WPDev\\\\Admin_Pages\\\\{$wpdev_ap}");
+    $wpdev_closure_map = isset($wpdev_closure_classmap['map']) && is_array($wpdev_closure_classmap['map']) ? $wpdev_closure_classmap['map'] : array();
+    $wpdev_closure_want = null;
+    if (isset($wpdev_closure_map[$class])) {
+        $wpdev_closure_want = $class;
+    } else {
+        $wpdev_closure_candidates = array();
+        if (0 === strpos($class, 'WPDev\\\\')) {
+            $wpdev_closure_candidates[] = 'WPDevFramework\\\\' . substr($class, 6);
+        } elseif (0 === strpos($class, 'BerlinDB\\\\')) {
+            $wpdev_closure_candidates[] = 'WPDev\\\\Dependencies\\\\BerlinDB\\\\' . substr($class, 9);
+        } else {
+            $wpdev_closure_core_sep = strpos($class, '\\\\Core\\\\');
+            if ($wpdev_closure_core_sep !== false && $wpdev_closure_core_sep > 0) {
+                $wpdev_closure_core_root = substr($class, 0, $wpdev_closure_core_sep);
+                $wpdev_closure_core_rest = substr($class, $wpdev_closure_core_sep + 6);
+                if (strpos($wpdev_closure_core_root, '\\\\') === false && $wpdev_closure_core_rest !== '') {
+                    foreach (array('WPDevFramework', 'WPDev', '${consumerNs}') as $wpdev_closure_candidate_root) {
+                        if ($wpdev_closure_candidate_root !== '' && $wpdev_closure_candidate_root !== $wpdev_closure_core_root) {
+                            $wpdev_closure_candidates[] = $wpdev_closure_candidate_root . '\\\\Core\\\\' . $wpdev_closure_core_rest;
+                        }
+                    }
+                }
+            }
+        }
+        foreach ($wpdev_closure_candidates as $wpdev_closure_candidate) {
+            if (isset($wpdev_closure_map[$wpdev_closure_candidate])) {
+                $wpdev_closure_want = $wpdev_closure_candidate;
+                break;
+            }
+        }
+        unset($wpdev_closure_candidate);
     }
-}
+    if ($wpdev_closure_want === null) {
+        return;
+    }
+    $wpdev_closure_rel = $wpdev_closure_map[$wpdev_closure_want];
+    if (!is_string($wpdev_closure_rel) || $wpdev_closure_rel === '' || strpos($wpdev_closure_rel, '..') !== false) {
+        return;
+    }
+    $wpdev_closure_file = __DIR__ . $wpdev_closure_rel;
+    if (!is_file($wpdev_closure_file)) {
+        return;
+    }
+    // WordPress core table bootstrap (environment setup, not symbol resolution).
+    if (!class_exists('WP_List_Table', false) && defined('ABSPATH')
+        && (false !== strpos($wpdev_closure_file, '/table-builder/') || false !== strpos($wpdev_closure_file, 'list-table'))
+    ) {
+        if (file_exists(ABSPATH . 'wp-admin/includes/template.php')) {
+            require_once ABSPATH . 'wp-admin/includes/template.php';
+        }
+        if (file_exists(ABSPATH . 'wp-admin/includes/screen.php')) {
+            require_once ABSPATH . 'wp-admin/includes/screen.php';
+        }
+        if (file_exists(ABSPATH . 'wp-admin/includes/class-wp-list-table.php')) {
+            require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
+        }
+    }
+    $wpdev_closure_loading[$class] = true;
+    require_once $wpdev_closure_file;
+    unset($wpdev_closure_loading[$class]);
+    if ($wpdev_closure_want !== $class && !class_exists($class, false) && !interface_exists($class, false) && !trait_exists($class, false)) {
+        if (class_exists($wpdev_closure_want, false) || interface_exists($wpdev_closure_want, false) || trait_exists($wpdev_closure_want, false)) {
+            class_alias($wpdev_closure_want, $class);
+        }
+    }
+}, true, true);
 
 $wpdev_closure_functions_dir = __DIR__ . '/functions';
 if (is_dir($wpdev_closure_functions_dir)) {
@@ -1177,149 +1464,13 @@ if (class_exists('\\WPDevFramework\\Core\\Module_Loader')) {
     }
 }
 
-if (class_exists('WPDevFramework\\\\List_Tables\\\\Base_List_Table', false) && !class_exists('WPDev\\\\List_Tables\\\\Base_List_Table', false)) {
-    class_alias('WPDevFramework\\\\List_Tables\\\\Base_List_Table', 'WPDev\\\\List_Tables\\\\Base_List_Table');
-}
-
-if (!class_exists('WPDevFramework\\\\Core\\\\Module_Autoloader', false) && file_exists(__DIR__ . '/modules/core/src/class-module-autoloader.php')) {
-    require_once __DIR__ . '/modules/core/src/class-module-autoloader.php';
-}
 if (class_exists('WPDevFramework\\\\Core\\\\Module_Autoloader')) {
     \\WPDevFramework\\Core\\Module_Autoloader::init();
-}
-if (!class_exists('WPDevFramework\\\\Core\\\\Legacy_Shim_Autoloader', false) && file_exists(__DIR__ . '/modules/core/src/class-legacy-shim-autoloader.php')) {
-    require_once __DIR__ . '/modules/core/src/class-legacy-shim-autoloader.php';
 }
 if (class_exists('WPDevFramework\\\\Core\\\\Legacy_Shim_Autoloader')) {
     \\WPDevFramework\\Core\\Legacy_Shim_Autoloader::init();
 }
 
-spl_autoload_register(function ($class) {
-    // Framework Core Classes fallback
-    if (0 === strpos($class, 'WPDev\\\\Core\\\\') || 0 === strpos($class, '${consumerNs}\\\\Core\\\\')) {
-        $basename = basename(str_replace('\\\\', '/', $class));
-        $core_file = __DIR__ . '/Core/Core/' . $basename . '.php';
-        if (file_exists($core_file)) {
-            require_once $core_file;
-            return;
-        }
-    }
-
-    // Admin Pages
-    if (0 === strpos($class, 'WPDevFramework\\\\Admin_Pages\\\\') || 0 === strpos($class, 'WPDev\\\\Admin_Pages\\\\')) {
-        $trait_w = __DIR__ . '/modules/metabox-builder/src/admin/trait-edit-page-widgets.php';
-        if (file_exists($trait_w) && !trait_exists('WPDevFramework\\\\Admin_Pages\\\\Edit_Page_Widgets', false)) {
-            require_once $trait_w;
-        }
-        $trait_e = __DIR__ . '/modules/admin-page-builder/src/admin/trait-edit-object-page.php';
-        if (file_exists($trait_e) && !trait_exists('WPDevFramework\\\\Admin_Pages\\\\Edit_Object_Page', false)) {
-            require_once $trait_e;
-        }
-        $base_p = __DIR__ . '/modules/admin-page-builder/src/admin/class-base-admin-page.php';
-        if (file_exists($base_p) && !class_exists('WPDevFramework\\\\Admin_Pages\\\\Base_Admin_Page', false)) {
-            require_once $base_p;
-        }
-        $basename = basename(str_replace('\\\\', '/', $class));
-        $f = __DIR__ . '/modules/admin-page-builder/src/admin/class-' . strtolower(str_replace('_', '-', $basename)) . '.php';
-        if (file_exists($f)) {
-            require_once $f;
-            if (!class_exists($class, false) && !interface_exists($class, false)) {
-                $alt = 0 === strpos($class, 'WPDev\\\\') ? 'WPDevFramework\\\\' . substr($class, 6) : 'WPDev\\\\' . substr($class, 15);
-                if (class_exists($alt, false)) {
-                    class_alias($alt, $class);
-                }
-            }
-            return;
-        }
-        $f_setting = __DIR__ . '/modules/admin-setting-page/src/class-' . strtolower(str_replace('_', '-', $basename)) . '.php';
-        if (file_exists($f_setting)) {
-            require_once $f_setting;
-            return;
-        }
-    }
-
-    // List Tables
-    if (0 === strpos($class, 'WPDevFramework\\\\List_Tables\\\\') || 0 === strpos($class, 'WPDev\\\\List_Tables\\\\') || 0 === strpos($class, 'WPDevFramework\\\\Table_Builder\\\\')) {
-        if (!class_exists('WP_List_Table', false) && defined('ABSPATH')) {
-            if (file_exists(ABSPATH . 'wp-admin/includes/template.php')) {
-                require_once ABSPATH . 'wp-admin/includes/template.php';
-            }
-            if (file_exists(ABSPATH . 'wp-admin/includes/screen.php')) {
-                require_once ABSPATH . 'wp-admin/includes/screen.php';
-            }
-            if (file_exists(ABSPATH . 'wp-admin/includes/class-wp-list-table.php')) {
-                require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
-            }
-        }
-        $basename = basename(str_replace('\\\\', '/', $class));
-        $f = __DIR__ . '/modules/table-builder/src/table/class-' . strtolower(str_replace('_', '-', $basename)) . '.php';
-        if (file_exists($f)) {
-            require_once $f;
-            if (!class_exists($class, false) && !interface_exists($class, false)) {
-                $alt = 0 === strpos($class, 'WPDev\\\\') ? 'WPDevFramework\\\\' . substr($class, 6) : 'WPDev\\\\' . substr($class, 15);
-                if (class_exists($alt, false)) {
-                    class_alias($alt, $class);
-                }
-            }
-            return;
-        }
-    }
-
-    // Database Engine
-    if (0 === strpos($class, 'WPDevFramework\\\\Database\\\\Engine\\\\')) {
-        $basename = basename(str_replace('\\\\', '/', $class));
-        $engine_file = __DIR__ . '/modules/core/src/Database/engine/class-' . strtolower(str_replace('_', '-', $basename)) . '.php';
-        if (file_exists($engine_file)) {
-            require_once $engine_file;
-            return;
-        }
-    }
-
-    // BerlinDB
-    if (0 === strpos($class, 'WPDev\\\\Dependencies\\\\BerlinDB\\\\Database\\\\') || 0 === strpos($class, 'BerlinDB\\\\Database\\\\')) {
-        $basename = basename(str_replace('\\\\', '/', $class));
-        $berlin_file = __DIR__ . '/modules/core/dependencies/berlindb/core/src/Database/' . $basename . '.php';
-        if (file_exists($berlin_file)) {
-            require_once $berlin_file;
-            return;
-        }
-        $query_file = __DIR__ . '/modules/core/dependencies/berlindb/core/src/Database/Queries/' . $basename . '.php';
-        if (file_exists($query_file)) {
-            require_once $query_file;
-            return;
-        }
-    }
-
-    // Settings Panel Builder
-    if (0 === strpos($class, 'WPDevFramework\\\\Settings_Panel_Builder\\\\') || 0 === strpos($class, 'WPDev\\\\Settings_Panel_Builder\\\\') || 0 === strpos($class, 'WPDevFramework\\\\Modules\\\\SettingsPanelBuilder\\\\') || 0 === strpos($class, 'WPDev\\\\Modules\\\\SettingsPanelBuilder\\\\')) {
-        $basename = basename(str_replace('\\\\', '/', $class));
-        $f = __DIR__ . '/modules/settings-panel-builder/src/class-' . strtolower(str_replace('_', '-', $basename)) . '.php';
-        if (file_exists($f)) {
-            require_once $f;
-            return;
-        }
-    }
-
-    // Field Builder
-    if (0 === strpos($class, 'WPDevFramework\\\\Field_Builder\\\\') || 0 === strpos($class, 'WPDev\\\\Field_Builder\\\\')) {
-        $basename = basename(str_replace('\\\\', '/', $class));
-        $f = __DIR__ . '/modules/field-builder/src/field/class-' . strtolower(str_replace('_', '-', $basename)) . '.php';
-        if (file_exists($f)) {
-            require_once $f;
-            return;
-        }
-    }
-
-    // Form Builder
-    if (0 === strpos($class, 'WPDevFramework\\\\Form_Builder\\\\') || 0 === strpos($class, 'WPDev\\\\Form_Builder\\\\')) {
-        $basename = basename(str_replace('\\\\', '/', $class));
-        $f = __DIR__ . '/modules/form-builder/src/form/class-' . strtolower(str_replace('_', '-', $basename)) . '.php';
-        if (file_exists($f)) {
-            require_once $f;
-            return;
-        }
-    }
-}, true, true);
 
 if (!defined('WPDEV_BOOTSTRAP_FILE')) {
     if (!function_exists('wpdev_path')) {
@@ -1422,34 +1573,6 @@ if (!defined('WPDEV_BOOTSTRAP_FILE')) {
     }
 }
 
-// Preload foundational framework traits and core registries with existence guards
-$core_preload_map = array(
-    'WPDevFramework\\\\Traits\\\\Singleton'                          => array(__DIR__ . '/modules/core/src/traits/trait-singleton.php', __DIR__ . '/trait-singleton.php'),
-    'WPDevFramework\\\\Core\\\\Traits\\\\Delegates_Component_Registry' => array(__DIR__ . '/modules/core/src/traits/trait-delegates-component-registry.php', __DIR__ . '/trait-delegates-component-registry.php'),
-    'WPDevFramework\\\\Traits\\\\WPDev_Settings_Deprecated'          => array(__DIR__ . '/modules/core/src/traits/trait-wpdev-settings-deprecated.php', __DIR__ . '/trait-wpdev-settings-deprecated.php'),
-    'WPDevFramework\\\\Traits\\\\WPDev_Deprecated'                  => array(__DIR__ . '/modules/core/src/traits/trait-wpdev-deprecated.php', __DIR__ . '/trait-wpdev-deprecated.php'),
-    'WPDevFramework\\\\Core\\\\Registry_Base'                       => array(__DIR__ . '/modules/core/src/class-registry-base.php', __DIR__ . '/class-registry-base.php'),
-    'WPDevFramework\\\\Modules\\\\SettingsPanelBuilder\\\\Settings_Write_Lock' => array(__DIR__ . '/modules/settings-panel-builder/src/class-settings-write-lock.php', __DIR__ . '/class-settings-write-lock.php'),
-    'WPDevFramework\\\\Modules\\\\SettingsPanelBuilder\\\\Settings_Storage'    => array(__DIR__ . '/modules/settings-panel-builder/src/class-settings-storage.php', __DIR__ . '/class-settings-storage.php'),
-    'WPDevFramework\\\\Modules\\\\SettingsPanelBuilder\\\\Settings_Section_Registry' => array(__DIR__ . '/modules/settings-panel-builder/src/class-settings-section-registry.php', __DIR__ . '/class-settings-section-registry.php'),
-    'WPDevFramework\\\\Modules\\\\SettingsPanelBuilder\\\\Settings_Save'       => array(__DIR__ . '/modules/settings-panel-builder/src/class-settings-save.php', __DIR__ . '/class-settings-save.php'),
-    'WPDevFramework\\\\Settings'                                    => array(__DIR__ . '/modules/settings-panel-builder/src/class-settings.php', __DIR__ . '/class-settings.php'),
-    'WPDevFramework\\\\Core\\\\Table_Registry'                      => array(__DIR__ . '/modules/core/src/class-table-registry.php', __DIR__ . '/class-table-registry.php'),
-    'WPDevFramework\\\\Core\\\\Service_Registry'                    => array(__DIR__ . '/modules/core/src/class-service-registry.php', __DIR__ . '/class-service-registry.php'),
-    'WPDevFramework\\\\Core\\\\Bounded_View_Root_Registry'          => array(__DIR__ . '/modules/core/src/view/class-bounded-view-root-registry.php', __DIR__ . '/class-bounded-view-root-registry.php'),
-    'WPDevFramework\\\\Core\\\\Module_View_Registry'                => array(__DIR__ . '/modules/core/src/view/class-module-view-registry.php', __DIR__ . '/class-module-view-registry.php'),
-);
-foreach ($core_preload_map as $wpdev_c_cls => $wpdev_files) {
-    if (class_exists($wpdev_c_cls, false) || trait_exists($wpdev_c_cls, false) || interface_exists($wpdev_c_cls, false)) {
-        continue;
-    }
-    foreach ($wpdev_files as $file) {
-        if (file_exists($file)) {
-            require_once $file;
-            break;
-        }
-    }
-}
 
 if (class_exists('\\WPDevFramework\\Core\\Bounded_View_Root_Registry')) {
     \\WPDevFramework\\Core\\Bounded_View_Root_Registry::register('closure-views', __DIR__ . '/views', 'internal-private');
@@ -1660,7 +1783,22 @@ if (!defined('WPDEV_BOOTSTRAP_FILE')) {
     await rm(stagingPackagesFw, { recursive: true, force: true });
   }
 
-  return { inlinedFiles: inlinedCount, manifestDigest: manifestData.manifestDigest };
+  // Dynamic closure classmap: derived 100% from the final inlined tree (zero
+  // hardcoded symbol names). The runtime autoloader in functions-closure.php
+  // consults it first; see generateClosureClassmap().
+  const closureClassmap = await generateClosureClassmap(targetDir);
+  const classmapPhp = `<?php
+// AUTO-GENERATED by generateClosureClassmap() — do not edit by hand.
+// Shape: array('map' => FQCN => closure-relative path, 'traits' => preload FQCNs).
+// Data-only file: no executable logic (Probe 2b carve-out relies on this shape).
+return array(
+  'map' => ${phpStringMap(closureClassmap.map)},
+  'traits' => ${phpStringList(closureClassmap.traits)},
+);
+`;
+  await writeFile(path.join(targetDir, "closure-classmap.php"), classmapPhp, "utf8");
+
+  return { inlinedFiles: inlinedCount, manifestDigest: manifestData.manifestDigest, closureClassmapWarnings: closureClassmap.warnings };
 }
 
 export async function scopeFrameworkCoreForConsumer(coreDestDir, stagingPlugin, consumer, consumerNs = null) {

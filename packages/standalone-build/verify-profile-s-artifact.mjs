@@ -176,7 +176,7 @@ export async function verifyProfileSArtifact({
                 $err = $f . ': ' . trim(function_exists('mb_substr') ? mb_substr($t[1], 0, 50, 'UTF-8') : substr($t[1], 0, 50));
                 if ($is_framework_closure) {
                     $fwCommentErrors[] = $err;
-                } else {
+        } else {
                     $commentErrors[] = $err;
                 }
                 break;
@@ -269,6 +269,36 @@ export async function verifyProfileSArtifact({
               if (line.includes("WPDevFramework\\") || line.includes("WPDevFramework\\\\")) {
                 frameworkLeakageErrors.push(
                   `Consumer file ${rel}:${lineNum} leaked framework FQCN: ${line.trim()}`
+                );
+              }
+            }
+          }
+        } else if (rel.endsWith("/closure-classmap.php") || rel === "closure-classmap.php") {
+          // Generated data-only classmap (see generateClosureClassmap): structural
+          // assertion instead of the leakage scan. Fails closed on any drift.
+          const destrung = code.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"/g, '""');
+          if (
+            !/return\s+array\s*\(/.test(destrung) ||
+            /\b(class|function|trait|interface|echo|print|require|include|eval|exit|die)\b/.test(destrung)
+          ) {
+            frameworkLeakageErrors.push(
+              `Closure file ${rel} violates data-only classmap shape`
+            );
+          }
+        } else {
+          // Closure file: framework FQCNs may appear ONLY on backward-compatibility
+          // bridge lines; any readable reference in executable code fails closed.
+          const bridgePattern = /(?:class_alias|class_exists|interface_exists|trait_exists)\s*\(/i;
+          if (code.includes("WPDevFramework\\") || code.includes("WPDevFramework\\\\")) {
+            const lines = code.split("\n");
+            for (let lineNum = 1; lineNum <= lines.length; lineNum++) {
+              const line = lines[lineNum - 1];
+              if (
+                (line.includes("WPDevFramework\\") || line.includes("WPDevFramework\\\\")) &&
+                !bridgePattern.test(line)
+              ) {
+                frameworkLeakageErrors.push(
+                  `Closure file ${rel}:${lineNum} leaked framework FQCN: ${line.trim()}`
                 );
               }
             }

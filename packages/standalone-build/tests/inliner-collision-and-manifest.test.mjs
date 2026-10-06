@@ -14,18 +14,22 @@ import {
   resolveConsumerNamespace,
 } from "../inline-wpdev-closure.mjs";
 
-test("Inliner: preloads Settings_Admin_Page so host SettingsPage class files can declare", async () => {
+test("Inliner: admin page parents resolve through the dynamic closure classmap (no static preload lists)", async () => {
   const inlinerSrc = await readFile(
     fileURLToPath(new URL("../inline-wpdev-closure.mjs", import.meta.url)),
     "utf8",
   );
   assert.ok(
-    inlinerSrc.includes("Settings_Admin_Page"),
-    "functions-closure must eager-load Settings_Admin_Page before autoloading host SettingsPage.php",
+    !inlinerSrc.includes("$core_preload_map"),
+    "static $core_preload_map must be gone (replaced by generateClosureClassmap)",
   );
   assert.ok(
-    inlinerSrc.includes("Wizard_Admin_Page"),
-    "Settings_Admin_Page extends Wizard_Admin_Page; both must be preloaded",
+    !inlinerSrc.includes("$wpdev_closure_core_map"),
+    "static $wpdev_closure_core_map must be gone (replaced by classmap-first autoloader)",
+  );
+  assert.ok(
+    inlinerSrc.includes("generateClosureClassmap"),
+    "inliner must build the closure classmap dynamically",
   );
 });
 
