@@ -491,17 +491,13 @@ export function assertSymbolMapHasNoCollisions(symMap, options = {}) {
           return !sNs || !retainedNamespaces.has(sNs);
         });
         if (flattenedFqcns.length > 1) {
-          const allFramework = flattenedFqcns.every(
-            (s) => s.startsWith("WPDevFramework\\") || (symbolPaths[s] && symbolPaths[s].includes("FrameworkClosure"))
-          );
-          const hasFramework = flattenedFqcns.some(
-            (s) => s.startsWith("WPDevFramework\\") || (symbolPaths[s] && symbolPaths[s].includes("FrameworkClosure"))
-          );
-          const distinctDestinations = new Set(
-            flattenedFqcns.map((s) => String(table[s] || "").toLowerCase())
-          ).size === flattenedFqcns.length;
-
-          if ((allFramework || hasFramework) && distinctDestinations) {
+          // Pure destination contract: distinct mangled destinations cannot collide
+          // at runtime (references are rewritten to exact destinations by the
+          // declared-universe resolver), so only a SHARED destination fails closed.
+          // No namespace-prefix bypass: framework and consumer symbols obey the
+          // same math.
+          const destinations = flattenedFqcns.map((s) => String(table[s] || "").toLowerCase());
+          if (new Set(destinations).size === flattenedFqcns.length) {
             continue;
           }
 

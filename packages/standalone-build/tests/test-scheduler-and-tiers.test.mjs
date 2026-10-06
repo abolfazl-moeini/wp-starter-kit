@@ -49,10 +49,10 @@ test("Test Tiers: validateCanonicalTestRegistry validates disjoint tier partitio
   const val = validateCanonicalTestRegistry(testsDir, contentRoot);
   assert.equal(val.valid, true, `Registry must be valid: ${val.reason}`);
   assert.equal(val.tiers.meta, 1);
-  assert.equal(val.tiers.unit, 30);
+  assert.equal(val.tiers.unit, 31);
   assert.equal(val.tiers.contract, 50);
   assert.equal(val.tiers.integration, 2);
-  assert.equal(val.totalTests, 83);
+  assert.equal(val.totalTests, 84);
 });
 
 test("canonical npm test inventory matches package.json and files on disk", () => {

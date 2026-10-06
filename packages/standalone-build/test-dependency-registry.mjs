@@ -10,6 +10,21 @@ import { fileURLToPath } from "node:url";
 const DEFAULT_TESTS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "tests");
 
 export const CANONICAL_TEST_REGISTRY = {
+  "ast-symbol-resolution.test.mjs": {
+    "tools": [
+      "tools/plan3/transformer.php"
+    ],
+    "artifacts": [],
+    "requiredBy": [],
+    "criticality": "normal",
+    "allowedModes": [
+      "affected",
+      "full",
+      "release"
+    ],
+    "releaseSameRun": false,
+    "tier": "unit"
+  },
   "artifact-fixture-helper.test.mjs": {
     "tools": [
       "tools/artifact-fixture-helper.mjs"

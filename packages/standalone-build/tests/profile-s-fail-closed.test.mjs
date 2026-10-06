@@ -324,6 +324,50 @@ test("assertSymbolMapHasNoCollisions enforces PHP case-insensitivity for classes
   );
 });
 
+test("assertSymbolMapHasNoCollisions applies the pure destination contract with no framework-prefix bypass", () => {
+  // Same destination shared by two framework FQCNs MUST fail closed.
+  assert.throws(
+    () =>
+      assertSymbolMapHasNoCollisions(
+        {
+          classes: {
+            "WPDevFramework\\Core\\Settings_Storage": "_fc_dead",
+            "WPDevFramework\\Modules\\SettingsPanelBuilder\\Settings_Storage": "_fc_dead",
+          },
+        },
+        { checkFlattenCollisions: true },
+      ),
+    /symbol map collision in classes/,
+  );
+  // Distinct destinations pass on math alone — no prefix logic involved.
+  assert.equal(
+    assertSymbolMapHasNoCollisions(
+      {
+        classes: {
+          "WPDevFramework\\Core\\Settings_Storage": "_fc_1111",
+          "WPDevFramework\\Modules\\SettingsPanelBuilder\\Settings_Storage": "_fc_2222",
+        },
+      },
+      { checkFlattenCollisions: true },
+    ),
+    2,
+  );
+  // Same rule for consumer namespaces: distinct destinations pass.
+  assert.equal(
+    assertSymbolMapHasNoCollisions(
+      {
+        classes: {
+          "App\\A\\Box": "_c_1111",
+          "App\\B\\Crate": "_c_2222",
+          "App\\B\\Box": "_c_3333",
+        },
+      },
+      { checkFlattenCollisions: true },
+    ),
+    3,
+  );
+});
+
 test("assertSymbolMapHasNoCollisions rejects ambiguous short names mapped to a single symbol", () => {
   assert.throws(
     () =>
@@ -464,8 +508,8 @@ test("UNRESOLVED_CHOICES locks C1-C4 policies per fix plan v2", () => {
   assert.equal(UNRESOLVED_CHOICES.C4_EXTENDED_SPAGHETTI.status, "MINIMUM_MODE_CONFIRMED");
 });
 
-test("assertSymbolMapHasNoCollisions enforces C1 fail-closed on namespace flatten short-name collisions", () => {
-  const collidingMap = {
+test("assertSymbolMapHasNoCollisions enforces the destination contract on namespace flatten short-name collisions", () => {
+  const distinctMap = {
     classes: {
       "Acme\\User": "_c_1111",
       "Beta\\User": "_c_2222",
@@ -473,19 +517,35 @@ test("assertSymbolMapHasNoCollisions enforces C1 fail-closed on namespace flatte
   };
 
   // When checkFlattenCollisions is false (obfuscate-only without flattening), two different mangled names pass
-  assert.equal(assertSymbolMapHasNoCollisions(collidingMap, { checkFlattenCollisions: false }), 2);
+  assert.equal(assertSymbolMapHasNoCollisions(distinctMap, { checkFlattenCollisions: false }), 2);
 
-  // When checkFlattenCollisions is true (C1 gate for spaghetti/flattening), it must fail closed
+  // Distinct destinations cannot collide at runtime: every static reference is
+  // rewritten to its exact destination by the declared-universe resolver, so the
+  // gate passes (no prefix bypass involved).
+  assert.equal(
+    assertSymbolMapHasNoCollisions(distinctMap, {
+      checkFlattenCollisions: true,
+      symbolPaths: {
+        "Acme\\User": "src/Acme/User.php",
+        "Beta\\User": "src/Beta/User.php",
+      },
+    }),
+    2,
+  );
+
+  // A SHARED destination still fails closed: one emitted name, two runtime classes.
   assert.throws(
     () =>
-      assertSymbolMapHasNoCollisions(collidingMap, {
-        checkFlattenCollisions: true,
-        symbolPaths: {
-          "Acme\\User": "src/Acme/User.php",
-          "Beta\\User": "src/Beta/User.php",
+      assertSymbolMapHasNoCollisions(
+        {
+          classes: {
+            "Acme\\User": "_c_dead",
+            "Beta\\User": "_c_dead",
+          },
         },
-      }),
-    /short-name collision under namespace flattening: 'user' is shared by multiple FQCNs: \[Acme\\User \(src\/Acme\/User\.php\), Beta\\User \(src\/Beta\/User\.php\)\]/,
+        { checkFlattenCollisions: true },
+      ),
+    /symbol map collision in classes/,
   );
 });
 

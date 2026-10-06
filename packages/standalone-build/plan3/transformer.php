@@ -41,6 +41,9 @@ class Plan3_Transformer {
 	public $symbols_analyzed   = false;
 	public $declarations       = array();
 	public $symbol_paths       = array();
+	public $declared_classes        = array();
+	public $declarations_by_symbol  = array();
+	public $short_class_counts  = array();
 
 	public $private_members = array(
 		'methods'    => array(),
@@ -166,42 +169,6 @@ class Plan3_Transformer {
 		'wp_die',
 	);
 
-	protected static $frozen_public_classes = array(
-		'WP_List_Table',
-		'WP_Widget',
-		'WP_REST_Controller',
-		'WC_Payment_Gateway',
-		'Plan3_Transformer',
-	);
-
-	/**
-	 * Verify if a class is frozen against $frozen_public_classes using FQCN or global check.
-	 *
-	 * Prevents short-name collision / blast radius on generic names like Table or Base.
-	 *
-	 * @param string $class_name
-	 * @param string $current_namespace
-	 * @return bool
-	 */
-	public static function is_frozen_class( $class_name, $current_namespace = '' ) {
-		if ( $class_name === 'Module' || $class_name === 'WP_CLI' ) {
-			return true;
-		}
-		if ( strpos( $class_name, 'WP_' ) === 0 || strpos( $class_name, 'WC_' ) === 0 ) {
-			return true;
-		}
-		$fqcn = ! empty( $current_namespace ) ? ( $current_namespace . '\\' . $class_name ) : $class_name;
-		foreach ( self::$frozen_public_classes as $frozen ) {
-			if ( $frozen === $fqcn ) {
-				return true;
-			}
-			if ( strpos( $frozen, '\\' ) === false && empty( $current_namespace ) && $frozen === $class_name ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	protected static $frozen_public_constants = array(
 		'WP_CLI',
 		'ACTIVE',
@@ -278,7 +245,6 @@ class Plan3_Transformer {
 	public $classes = array();
 	public $accesses_by_offset = array();
 	protected $ambiguous_short_names = array();
-	protected $class_map_ci = array();
 
 	protected static $hook_api_functions = array(
 		'add_action',
@@ -394,12 +360,38 @@ class Plan3_Transformer {
 		);
 	}
 
-	protected function record_short_class_name( $class_name, $mangled ) {
+	protected function record_short_class_name( $class_name, $mangled, $is_global = true ) {
+		// Strict ownership: a global short alias may exist ONLY when exactly one
+		// declaration claims the short name and it lives in the root namespace.
+		// Any coexistence (global + namespaced, or several namespaced) evicts the
+		// alias; routing is then owned by the declared-universe resolver, so
+		// external root classes sharing the short name can never be hijacked.
+		$key = strtolower( $class_name );
+		if ( ! isset( $this->short_class_counts[ $key ] ) ) {
+			$this->short_class_counts[ $key ] = 0;
+		}
+		$this->short_class_counts[ $key ]++;
 		if ( in_array( $class_name, $this->ambiguous_short_names, true ) ) {
 			return;
 		}
+		if ( $this->short_class_counts[ $key ] > 1 ) {
+			foreach ( array_keys( $this->class_map ) as $mapped ) {
+				if ( strtolower( ltrim( $mapped, '\\' ) ) === $key && strpos( ltrim( $mapped, '\\' ), '\\' ) === false ) {
+					unset( $this->class_map[ $mapped ] );
+				}
+			}
+			$this->ambiguous_short_names[] = $class_name;
+			return;
+		}
+		if ( ! $is_global ) {
+			return;
+		}
 		if ( isset( $this->class_map[ $class_name ] ) && $this->class_map[ $class_name ] !== $mangled ) {
-			unset( $this->class_map[ $class_name ], $this->class_map[ '\\' . $class_name ] );
+			foreach ( array_keys( $this->class_map ) as $mapped ) {
+				if ( strtolower( ltrim( $mapped, '\\' ) ) === $key && strpos( ltrim( $mapped, '\\' ), '\\' ) === false ) {
+					unset( $this->class_map[ $mapped ] );
+				}
+			}
 			$this->ambiguous_short_names[] = $class_name;
 			return;
 		}
@@ -407,28 +399,119 @@ class Plan3_Transformer {
 		$this->class_map[ '\\' . $class_name ] = '\\' . $mangled;
 	}
 
-	protected function build_class_map_ci() {
-		$index = array();
-		foreach ( $this->class_map as $symbol => $mangled ) {
-			$index[ strtolower( $symbol ) ] = $mangled;
+	/**
+	 * Resolve a class/interface/trait/enum reference to its canonical declared FQCN.
+	 *
+	 * Strict symbol ownership: only symbols present in the Pass 1 declared universe
+	 * ($this->declared_classes) resolve. Anything else is external and inviolable.
+	 * Implements PHP name resolution order: fully-qualified > use-import >
+	 * current-namespace-relative > root-global declaration. No hardcoded names.
+	 *
+	 * @param string $text Raw reference text (may carry a leading backslash).
+	 * @param string $current_namespace Enclosing namespace ('' for global scope).
+	 * @param array  $file_use_map Alias (lowercased) => imported name for this file/block.
+	 * @return string|null Canonical FQCN (exact stored case) or null if external.
+	 */
+	protected function resolve_class_fqcn( $text, $current_namespace = '', $file_use_map = array() ) {
+		$has_leading_slash = ( substr( $text, 0, 1 ) === '\\' );
+		$clean = ltrim( $text, '\\' );
+		if ( $clean === '' ) {
+			return null;
 		}
-		return $index;
+		// T_NAME_RELATIVE (`namespace\Foo`): explicitly current-namespace
+		// relative. Imports never apply; with an empty namespace it is global.
+		if ( strncasecmp( $clean, 'namespace\\', 10 ) === 0 ) {
+			$relative = substr( $clean, 10 );
+			if ( $relative === '' || $relative === false ) {
+				return null;
+			}
+			$candidate = ( $current_namespace !== '' ? $current_namespace . '\\' : '' ) . $relative;
+			$candidate_ci = strtolower( $candidate );
+			return isset( $this->declared_classes[ $candidate_ci ] ) ? $this->declared_classes[ $candidate_ci ] : null;
+		}
+		$clean_ci = strtolower( $clean );
+
+		// 1. Fully Qualified Name: exact declared FQCN or external.
+		if ( $has_leading_slash ) {
+			return isset( $this->declared_classes[ $clean_ci ] ) ? $this->declared_classes[ $clean_ci ] : null;
+		}
+
+		// 2. Qualified Name (contains backslash, no leading slash).
+		if ( strpos( $clean, '\\' ) !== false ) {
+			$parts = explode( '\\', $clean, 2 );
+			$first_part = strtolower( $parts[0] );
+			if ( isset( $file_use_map[ $first_part ] ) ) {
+				$imported = $file_use_map[ $first_part ] . '\\' . $parts[1];
+				$imported_ci = strtolower( $imported );
+				if ( isset( $this->declared_classes[ $imported_ci ] ) ) {
+					return $this->declared_classes[ $imported_ci ];
+				}
+				return null;
+			}
+			$ns_candidate = ( $current_namespace !== '' ? $current_namespace . '\\' : '' ) . $clean;
+			$ns_candidate_ci = strtolower( $ns_candidate );
+			if ( isset( $this->declared_classes[ $ns_candidate_ci ] ) ) {
+				return $this->declared_classes[ $ns_candidate_ci ];
+			}
+			return null;
+		}
+
+		// 3. Unqualified Name.
+		if ( isset( $file_use_map[ $clean_ci ] ) ) {
+			$imported = $file_use_map[ $clean_ci ];
+			$imported_ci = strtolower( $imported );
+			if ( isset( $this->declared_classes[ $imported_ci ] ) ) {
+				return $this->declared_classes[ $imported_ci ];
+			}
+			// Imported value may itself be relative (legacy maps): try namespace-relative.
+			if ( strpos( $imported, '\\' ) === false && $current_namespace !== '' ) {
+				$ns_candidate_ci = strtolower( $current_namespace . '\\' . $imported );
+				if ( isset( $this->declared_classes[ $ns_candidate_ci ] ) ) {
+					return $this->declared_classes[ $ns_candidate_ci ];
+				}
+			}
+			return null;
+		}
+		if ( $current_namespace !== '' ) {
+			$ns_candidate_ci = strtolower( $current_namespace . '\\' . $clean );
+			if ( isset( $this->declared_classes[ $ns_candidate_ci ] ) ) {
+				return $this->declared_classes[ $ns_candidate_ci ];
+			}
+		}
+		if ( isset( $this->declarations_by_symbol[ $clean_ci ] ) ) {
+			foreach ( $this->declarations_by_symbol[ $clean_ci ] as $decl ) {
+				if ( empty( $decl['namespace'] ) ) {
+					return $decl['fqcn'];
+				}
+			}
+		}
+		return null;
 	}
 
-	protected function lookup_class_map( $name ) {
-		if ( isset( $this->class_map[ $name ] ) ) {
-			return $this->class_map[ $name ];
+	/**
+	 * Resolve a class reference to its mangled emission symbol, or null if external.
+	 *
+	 * Drop-in decision authority for every class-reference emission site. The returned
+	 * string preserves the stored map form matching the input slash-ness so existing
+	 * emission formatting stays byte-identical for declared symbols.
+	 *
+	 * @param string $text Raw reference text.
+	 * @param string $current_namespace Enclosing namespace.
+	 * @param array  $file_use_map Alias (lowercased) => imported name.
+	 * @return string|null Mangled symbol or null if external/unknown.
+	 */
+	protected function resolve_class_reference( $text, $current_namespace = '', $file_use_map = array() ) {
+		$fqcn = $this->resolve_class_fqcn( $text, $current_namespace, $file_use_map );
+		if ( $fqcn === null ) {
+			return null;
 		}
-		$ci = strtolower( $name );
-		if ( isset( $this->class_map_ci[ $ci ] ) ) {
-			return $this->class_map_ci[ $ci ];
+		$has_leading_slash = ( substr( $text, 0, 1 ) === '\\' );
+		if ( $has_leading_slash && isset( $this->class_map[ '\\' . $fqcn ] ) ) {
+			return $this->class_map[ '\\' . $fqcn ];
 		}
-		$prefixed = '\\' . ltrim( $name, '\\' );
-		if ( isset( $this->class_map[ $prefixed ] ) ) {
-			return $this->class_map[ $prefixed ];
-		}
-		if ( isset( $this->class_map_ci[ strtolower( $prefixed ) ] ) ) {
-			return $this->class_map_ci[ strtolower( $prefixed ) ];
+		if ( isset( $this->class_map[ $fqcn ] ) ) {
+			$mangled = $this->class_map[ $fqcn ];
+			return ( $has_leading_slash && substr( $mangled, 0, 1 ) !== '\\' ) ? ( '\\' . $mangled ) : $mangled;
 		}
 		return null;
 	}
@@ -832,19 +915,27 @@ class Plan3_Transformer {
 		return false;
 	}
 
-	protected function record_short_function_name( $func_name, $mangled ) {
+	protected function record_short_function_name( $func_name, $mangled, $is_global = true ) {
+		// Same ownership rule as classes: the global short alias exists ONLY when
+		// exactly one declaration claims the short name and it is global.
 		$key = strtolower( $func_name );
 		if ( ! isset( $this->short_func_counts[ $key ] ) ) {
 			$this->short_func_counts[ $key ] = 0;
 		}
 		$this->short_func_counts[ $key ]++;
-		if ( $this->short_func_counts[ $key ] === 1 ) {
-			$this->function_map[ $func_name ] = $mangled;
-			$this->function_map[ '\\' . $func_name ] = '\\' . $mangled;
-		} else {
-			unset( $this->function_map[ $func_name ] );
-			unset( $this->function_map[ '\\' . $func_name ] );
+		if ( $this->short_func_counts[ $key ] > 1 ) {
+			foreach ( array_keys( $this->function_map ) as $mapped ) {
+				if ( strtolower( ltrim( $mapped, '\\' ) ) === $key && strpos( ltrim( $mapped, '\\' ), '\\' ) === false ) {
+					unset( $this->function_map[ $mapped ] );
+				}
+			}
+			return;
 		}
+		if ( ! $is_global ) {
+			return;
+		}
+		$this->function_map[ $func_name ] = $mangled;
+		$this->function_map[ '\\' . $func_name ] = '\\' . $mangled;
 	}
 
 	public function resolve_function_name( $name, $current_namespace = '', $file_use_func_map = array() ) {
@@ -923,7 +1014,12 @@ class Plan3_Transformer {
 			$this->project_global_vars = $loaded['project_global_vars'];
 		}
 		$this->symbols_analyzed = true;
-		$this->class_map_ci = $this->build_class_map_ci();
+		if ( isset( $loaded['declared_classes'] ) && is_array( $loaded['declared_classes'] ) ) {
+			$this->declared_classes = $loaded['declared_classes'];
+		}
+		if ( isset( $loaded['declarations_by_symbol'] ) && is_array( $loaded['declarations_by_symbol'] ) ) {
+			$this->declarations_by_symbol = $loaded['declarations_by_symbol'];
+		}
 		if ( isset( $loaded['classes_meta'] ) && is_array( $loaded['classes_meta'] ) ) {
 			$this->classes = $loaded['classes_meta'];
 		}
@@ -1139,9 +1235,6 @@ class Plan3_Transformer {
 				while ( $next < $count && is_array( $tokens[ $next ] ) && ( $tokens[ $next ][0] === T_WHITESPACE || $tokens[ $next ][0] === T_STATIC || $tokens[ $next ][0] === T_ABSTRACT || $tokens[ $next ][0] === T_FINAL ) ) {
 					$next++;
 				}
-				if ( $next < $count && is_array( $tokens[ $next ] ) && self::is_frozen_class( $tokens[ $next ][1], $current_ns ) ) {
-					$retained[ $current_ns ] = true;
-				}
 			}
 		}
 		// When a file declares more than one namespace block, flattening some and retaining
@@ -1157,8 +1250,11 @@ class Plan3_Transformer {
 
 	public function scan_symbols_in_dir( $dir ) {
 		$this->ambiguous_short_names = array();
+		$this->short_class_counts    = array();
 		$this->short_func_counts     = array();
 		$this->function_declarations = array();
+		$this->declared_classes        = array();
+		$this->declarations_by_symbol  = array();
 		$php_files = array();
 		$it = new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $dir, RecursiveDirectoryIterator::SKIP_DOTS ) );
 		foreach ( $it as $file ) {
@@ -1283,7 +1379,6 @@ class Plan3_Transformer {
 		$this->project_global_vars = $analyzer->project_global_vars;
 		$this->classes             = $analyzer->classes;
 		$this->index_accesses( $analyzer->accesses );
-		$this->class_map_ci        = $this->build_class_map_ci();
 		if ( ! $this->mangle_symbols ) {
 			$this->private_members = array(
 				'methods'    => array(),
@@ -1321,8 +1416,7 @@ class Plan3_Transformer {
 					}
 				}
 			}
-			$this->class_map_ci = $this->build_class_map_ci();
-		}
+			}
 		$this->symbols_analyzed    = true;
 	}
 
@@ -1388,6 +1482,128 @@ class Plan3_Transformer {
 			$expanded[] = ( $kind !== '' ? $kind . ' ' : '' ) . $fq . ( $alias !== '' ? ' as ' . $alias : '' );
 		}
 		return $expanded;
+	}
+
+	/**
+	 * Build per-namespace-block import maps for one file.
+	 *
+	 * Returns a list keyed by block sequence: -1 = prelude (tokens before the
+	 * first namespace declaration; always import-free in valid code, and holds
+	 * every import of a namespace-less file), 0..n = namespace blocks in file
+	 * order. Each entry: array( 'map' => alias=>FQCN, 'func' => alias=>FQFN )
+	 * with LOWERCASED alias keys (PHP import aliases are case-insensitive).
+	 *
+	 * Hardening vs a naive whole-file scan:
+	 * - `use` inside a class/interface/trait/enum body (trait insertion, incl.
+	 *   adaptations) is NEVER an import and is skipped via brace-depth tracking.
+	 * - `use const ...` never enters the class map (explicit skip).
+	 * - Closure `use (...)` keeps its existing exclusion.
+	 *
+	 * @param array $tokens token_get_all() output.
+	 * @param int   $count  Token count.
+	 * @return array Block-sequence => array('map'=>array,'func'=>array).
+	 */
+	protected function build_file_use_maps( $tokens, $count ) {
+		$maps = array( -1 => array( 'map' => array(), 'func' => array() ) );
+		$block_seq = -1;
+		$class_depth = 0;
+		$pending_class = false;
+		for ( $i = 0; $i < $count; $i++ ) {
+			$token = $tokens[ $i ];
+			if ( is_array( $token ) ) {
+				$id = $token[0];
+				if ( $id === T_NAMESPACE && $this->is_namespace_declaration( $tokens, $i, $count ) ) {
+					$block_seq++;
+					if ( ! isset( $maps[ $block_seq ] ) ) {
+						$maps[ $block_seq ] = array( 'map' => array(), 'func' => array() );
+					}
+					$pending_class = false;
+					continue;
+				}
+				if ( $id === T_CLASS || $id === T_INTERFACE || $id === T_TRAIT || ( defined( 'T_ENUM' ) && $id === T_ENUM ) ) {
+					$prev = $this->prev_code_index( $tokens, $i );
+					if ( $prev < 0 || ! is_array( $tokens[ $prev ] ) || $tokens[ $prev ][0] !== T_DOUBLE_COLON ) {
+						$pending_class = true;
+					}
+					continue;
+				}
+				if ( $id === T_USE ) {
+					$prev = $this->prev_code_index( $tokens, $i );
+					$is_closure_use = ( $prev >= 0 && ! is_array( $tokens[ $prev ] ) && $tokens[ $prev ] === ')' );
+					if ( ! $is_closure_use && $class_depth === 0 ) {
+						$j = $i + 1;
+						$use_str = '';
+						while ( $j < $count && ( ! is_string( $tokens[ $j ] ) || $tokens[ $j ] !== ';' ) ) {
+							if ( is_array( $tokens[ $j ] ) ) {
+								$use_str .= $tokens[ $j ][1];
+							} else {
+								$use_str .= $tokens[ $j ];
+							}
+							$j++;
+						}
+						foreach ( $this->expand_use_statement_clauses( $use_str ) as $clause ) {
+							$clause = trim( $clause );
+							if ( preg_match( '/^const\s+/i', $clause ) ) {
+								continue;
+							}
+							if ( preg_match( '/^function\s+\\\\?([a-zA-Z0-9_\\\\]+)(?:\\s+as\\s+([a-zA-Z0-9_]+))?$/i', $clause, $m ) ) {
+								$fqfn = ltrim( $m[1], '\\' );
+								$short_alias = isset( $m[2] ) && ! empty( $m[2] ) ? $m[2] : substr( strrchr( '\\' . $fqfn, '\\' ), 1 );
+								$maps[ $block_seq ]['func'][ strtolower( $short_alias ) ] = $fqfn;
+							} elseif ( preg_match( '/^\\\\?([a-zA-Z0-9_\\\\]+)(?:\\s+as\\s+([a-zA-Z0-9_]+))?$/i', $clause, $m ) ) {
+								$fqcn = ltrim( $m[1], '\\' );
+								$short_alias = isset( $m[2] ) && ! empty( $m[2] ) ? $m[2] : substr( strrchr( '\\' . $fqcn, '\\' ), 1 );
+								$maps[ $block_seq ]['map'][ strtolower( $short_alias ) ] = $fqcn;
+							}
+						}
+					}
+					continue;
+				}
+			} else {
+				if ( $token === '{' ) {
+					if ( $pending_class ) {
+						$class_depth++;
+						$pending_class = false;
+					} elseif ( $class_depth > 0 ) {
+						$class_depth++;
+					}
+				} elseif ( $token === '}' ) {
+					if ( $class_depth > 0 ) {
+						$class_depth--;
+					}
+				} elseif ( $token === ';' ) {
+					$pending_class = false;
+				}
+			}
+		}
+		return $maps;
+	}
+
+	/**
+	 * True when the T_NAMESPACE token at $i opens a namespace declaration
+	 * (as opposed to the `namespace` keyword in a `namespace\Foo` expression).
+	 *
+	 * @param array $tokens token_get_all() output.
+	 * @param int   $i      Token index of T_NAMESPACE.
+	 * @param int   $count  Token count.
+	 * @return bool
+	 */
+	protected function is_namespace_declaration( $tokens, $i, $count ) {
+		$prev = $this->prev_code_index( $tokens, $i );
+		if ( $prev >= 0 && is_array( $tokens[ $prev ] ) && $tokens[ $prev ][0] === T_DOUBLE_COLON ) {
+			return false;
+		}
+		$n = $i + 1;
+		while ( $n < $count && is_array( $tokens[ $n ] ) && $tokens[ $n ][0] === T_WHITESPACE ) {
+			$n++;
+		}
+		if ( $n >= $count ) {
+			return false;
+		}
+		if ( is_string( $tokens[ $n ] ) ) {
+			return ( $tokens[ $n ] === '{' || $tokens[ $n ] === ';' );
+		}
+		return ( $tokens[ $n ][0] === T_STRING );
 	}
 
 	/**
@@ -1494,7 +1710,11 @@ class Plan3_Transformer {
 						$class_line = isset( $tokens[ $next ][2] ) ? $tokens[ $next ][2] : 1;
 						$hash_key   = ! empty( $current_namespace ) ? ( $current_namespace . '\\' . $class_name ) : $class_name;
 						$this->class_kinds[ $hash_key ] = $kind;
-						$is_frozen = self::is_frozen_class( $class_name, $current_namespace );
+						$this->declared_classes[ strtolower( $hash_key ) ] = $hash_key;
+						$this->declarations_by_symbol[ strtolower( $class_name ) ][] = array(
+							'fqcn'      => $hash_key,
+							'namespace' => $current_namespace,
+						);
 						$this->symbol_paths[ $hash_key ] = $file_path . ':' . $class_line;
 						$this->declarations[] = array(
 							'symbol'               => $hash_key,
@@ -1505,12 +1725,9 @@ class Plan3_Transformer {
 							'line'                 => $class_line,
 							'is_global'            => empty( $current_namespace ),
 							'is_alias'             => strpos( $file_path, 'functions-closure.php' ) !== false || strpos( $file_path, '-shim.php' ) !== false,
-							'frozen'               => $is_frozen,
+							'frozen'               => false,
 							'effectiveDestination' => '',
 						);
-						if ( $is_frozen ) {
-							continue;
-						}
 
 						// Pre-scan class body for T_CLASS_C / T_METHOD_C
 						$uses_class_magic = false;
@@ -1550,7 +1767,7 @@ class Plan3_Transformer {
 						$is_flattened = $file_flatten && ( $is_framework_class || empty( $current_namespace ) || ! isset( $this->retained_namespaces[ $current_namespace ] ) );
 						if ( ! $file_mangle ) {
 							if ( $is_flattened ) {
-								$this->record_short_class_name( $class_name, $class_name );
+								$this->record_short_class_name( $class_name, $class_name, empty( $current_namespace ) );
 								if ( ! empty( $current_namespace ) ) {
 									$fqcn = $current_namespace . '\\' . $class_name;
 									$this->class_map[ $fqcn ] = $class_name;
@@ -1569,7 +1786,7 @@ class Plan3_Transformer {
 						$mangled = $prefix . substr( hash( 'sha256', $this->seed . ':class:' . $hash_key ), 0, 8 );
 
 						if ( $is_flattened ) {
-							$this->record_short_class_name( $class_name, $mangled );
+							$this->record_short_class_name( $class_name, $mangled, empty( $current_namespace ) );
 							if ( ! empty( $current_namespace ) ) {
 								$fqcn = $current_namespace . '\\' . $class_name;
 								$this->class_map[ $fqcn ] = $mangled;
@@ -1658,7 +1875,7 @@ class Plan3_Transformer {
 
 							$is_flattened = $file_flatten && ( empty( $current_namespace ) || ! isset( $this->retained_namespaces[ $current_namespace ] ) );
 							if ( $is_flattened ) {
-								$this->record_short_function_name( $func_name, $mangled );
+								$this->record_short_function_name( $func_name, $mangled, empty( $current_namespace ) );
 								if ( ! empty( $current_namespace ) ) {
 									$this->function_map[ $fqfn ] = $mangled;
 									$this->function_map[ '\\' . $fqfn ] = '\\' . $mangled;
@@ -1754,7 +1971,6 @@ class Plan3_Transformer {
 		}
 		$this->project_global_vars = array_merge( $this->project_global_vars, $analyzer->project_global_vars );
 		$this->index_accesses( $analyzer->accesses );
-		$this->class_map_ci     = $this->build_class_map_ci();
 		$this->symbols_analyzed = true;
 
 		$var_decisions     = isset( $analyzer->file_var_decisions[ $file_key ] ) ? $analyzer->file_var_decisions[ $file_key ] : array();
@@ -1890,43 +2106,10 @@ class Plan3_Transformer {
 			}
 		}
 
-		$file_use_map = array();
-		$file_use_func_map = array();
-		for ( $i = 0; $i < $count; $i++ ) {
-			$token = $tokens[ $i ];
-			if ( is_array( $token ) && $token[0] === T_USE ) {
-				$prev = $i - 1;
-				while ( $prev >= 0 && is_array( $tokens[ $prev ] ) && $tokens[ $prev ][0] === T_WHITESPACE ) {
-					$prev--;
-				}
-				$is_closure_use = ( $prev >= 0 && is_string( $tokens[ $prev ] ) && $tokens[ $prev ] === ')' );
-				if ( ! $is_closure_use ) {
-					$j = $i + 1;
-					$use_str = '';
-					while ( $j < $count && ( ! is_string( $tokens[ $j ] ) || $tokens[ $j ] !== ';' ) ) {
-						if ( is_array( $tokens[ $j ] ) ) {
-							$use_str .= $tokens[ $j ][1];
-						} else {
-							$use_str .= $tokens[ $j ];
-						}
-						$j++;
-					}
-					$clauses = $this->expand_use_statement_clauses( $use_str );
-					foreach ( $clauses as $clause ) {
-						$clause = trim( $clause );
-						if ( preg_match( '/^function\s+\\\\?([a-zA-Z0-9_\\\\]+)(?:\\s+as\\s+([a-zA-Z0-9_]+))?$/i', $clause, $m ) ) {
-							$fqfn = ltrim( $m[1], '\\' );
-							$short_alias = isset( $m[2] ) && ! empty( $m[2] ) ? $m[2] : substr( strrchr( '\\' . $fqfn, '\\' ), 1 );
-							$file_use_func_map[ strtolower( $short_alias ) ] = $fqfn;
-						} elseif ( preg_match( '/^\\\\?([a-zA-Z0-9_\\\\]+)(?:\\s+as\\s+([a-zA-Z0-9_]+))?$/i', $clause, $m ) ) {
-							$fqcn = ltrim( $m[1], '\\' );
-							$short_alias = isset( $m[2] ) && ! empty( $m[2] ) ? $m[2] : substr( strrchr( '\\' . $fqcn, '\\' ), 1 );
-							$file_use_map[ $short_alias ] = $fqcn;
-						}
-					}
-				}
-			}
-		}
+		$file_use_maps = $this->build_file_use_maps( $tokens, $count );
+		$file_use_map = isset( $file_use_maps[-1] ) ? $file_use_maps[-1]['map'] : array();
+		$file_use_func_map = isset( $file_use_maps[-1] ) ? $file_use_maps[-1]['func'] : array();
+		$ns_block_seq = -1;
 
 		$detected_retained = $this->detect_retained_namespaces_in_tokens( $tokens );
 		foreach ( $detected_retained as $ns => $val ) {
@@ -2069,6 +2252,13 @@ class Plan3_Transformer {
 					if ( ! $is_double_colon ) {
 						$spec = $this->read_namespace_spec( $tokens, $i, $count );
 						$current_namespace = $spec['name'];
+						if ( $this->is_namespace_declaration( $tokens, $i, $count ) ) {
+							$ns_block_seq++;
+							if ( isset( $file_use_maps[ $ns_block_seq ] ) ) {
+								$file_use_map = $file_use_maps[ $ns_block_seq ]['map'];
+								$file_use_func_map = $file_use_maps[ $ns_block_seq ]['func'];
+							}
+						}
 						$pending_ns_brace = ( $spec['terminator'] === '{' );
 						$keep_namespace = ( ! empty( $current_namespace ) && isset( $this->retained_namespaces[ $current_namespace ] ) )
 							|| ( $current_namespace === '' && $pending_ns_brace && ( isset( $this->retained_namespaces[''] ) || $retained_brace_namespace_emitted ) );
@@ -2145,41 +2335,26 @@ class Plan3_Transformer {
 										$b_text = strtolower( $tokens[ $before_dc ][1] );
 										if ( $b_text === 'self' || $b_text === 'static' ) {
 											$target_class = $current_class_fqcn;
-										} elseif ( isset( $this->class_map[ $tokens[ $before_dc ][1] ] ) || isset( $this->class_map[ $current_namespace . '\\' . $tokens[ $before_dc ][1] ] ) ) {
-											$target_class = ! empty( $current_namespace ) && isset( $this->class_map[ $current_namespace . '\\' . $tokens[ $before_dc ][1] ] )
-												? ( $current_namespace . '\\' . $tokens[ $before_dc ][1] )
-												: $tokens[ $before_dc ][1];
 										} else {
-											$target_class = $tokens[ $before_dc ][1];
+											$resolved_receiver = $this->resolve_class_fqcn( $tokens[ $before_dc ][1], $current_namespace, $file_use_map );
+											$target_class = ( $resolved_receiver !== null ) ? $resolved_receiver : ltrim( $tokens[ $before_dc ][1], '\\' );
 										}
 									}
 									if ( ! empty( $target_class ) && isset( $this->private_members['constants'][ $target_class ][ $t[1] ] ) ) {
 										$output .= $this->private_members['constants'][ $target_class ][ $t[1] ];
 										$handled_const_ref = true;
+									} else {
+										// Token after `::` is a constant/method name,
+										// never a class reference. Emit verbatim.
+										$output .= $t[1];
+										$handled_const_ref = true;
 									}
 								}
 
 								if ( ! $handled_const_ref ) {
-									if ( isset( $file_use_map[ $t[1] ] ) && isset( $this->class_map[ $file_use_map[ $t[1] ] ] ) ) {
-										$target = $this->class_map[ $file_use_map[ $t[1] ] ];
-										if ( $this->flatten_namespaces && ! empty( $current_namespace ) && ! $keep_namespace ) {
-											$output .= '\\' . $target;
-										} elseif ( strpos( $target, '\\' ) !== false ) {
-											$output .= '\\' . ltrim( $target, '\\' );
-										} else {
-											$output .= $target;
-										}
-									} elseif ( ! empty( $current_namespace ) && isset( $this->class_map[ $current_namespace . '\\' . $t[1] ] ) ) {
-										$target = $this->class_map[ $current_namespace . '\\' . $t[1] ];
-										if ( $this->flatten_namespaces && ! empty( $current_namespace ) && ! $keep_namespace ) {
-											$output .= '\\' . $target;
-										} elseif ( strpos( $target, '\\' ) !== false ) {
-											$output .= '\\' . ltrim( $target, '\\' );
-										} else {
-											$output .= $target;
-										}
-									} elseif ( isset( $this->class_map[ $t[1] ] ) ) {
-										$target = $this->class_map[ $t[1] ];
+									$const_ref_target = ( ! $is_after_dc ) ? $this->resolve_class_reference( $t[1], $current_namespace, $file_use_map ) : null;
+									if ( $const_ref_target !== null ) {
+										$target = $const_ref_target;
 										if ( $this->flatten_namespaces && ! empty( $current_namespace ) && ! $keep_namespace ) {
 											$output .= '\\' . $target;
 										} elseif ( strpos( $target, '\\' ) !== false ) {
@@ -2217,39 +2392,81 @@ class Plan3_Transformer {
 						$is_trait_use = ( $in_class && $class_brace_depth >= 1 );
 
 						if ( $is_trait_use ) {
-							// Trait use statement inside class body: preserve and mangle trait name
+							// Trait use statement inside class body: trait names route
+							// through the declared-universe resolver (use-map aware,
+							// so aliased imports resolve); adaptation method names
+							// after `::` / `as` / `insteadof` are never class names.
+							// The terminating `;` is only recognized at brace depth
+							// 0 so adaptation blocks `{ ...; }` do not corrupt the
+							// class brace tracking of the enclosing file.
 							$output .= 'use ';
 							$j = $i + 1;
-							while ( $j < $count && ( ! is_string( $tokens[ $j ] ) || $tokens[ $j ] !== ';' ) ) {
+							$trait_brace_depth = 0;
+							$trait_saw_block = false;
+							$trait_ended_on_brace = false;
+							$trait_as_alias = false;
+							while ( $j < $count ) {
 								$t = $tokens[ $j ];
+								if ( is_string( $t ) ) {
+									if ( $t === '{' ) {
+										$trait_brace_depth++;
+										$trait_saw_block = true;
+										$trait_as_alias = false;
+									} elseif ( $t === '}' ) {
+										$trait_brace_depth = max( 0, $trait_brace_depth - 1 );
+										$trait_as_alias = false;
+									} elseif ( $t === ';' && $trait_brace_depth === 0 ) {
+										break;
+									} elseif ( $t === ',' ) {
+										$trait_as_alias = false;
+									}
+									$output .= $t;
+									$j++;
+									// An adaptation block (`use A, B { ... }`) ends
+									// at its closing brace with NO trailing `;`.
+									if ( $t === '}' && $trait_saw_block && $trait_brace_depth === 0 ) {
+										$trait_ended_on_brace = true;
+										break;
+									}
+									continue;
+								}
 								if ( is_array( $t ) ) {
-									if ( $t[0] === T_STRING || ( defined( 'T_NAME_QUALIFIED' ) && $t[0] === T_NAME_QUALIFIED ) || ( defined( 'T_NAME_FULLY_QUALIFIED' ) && $t[0] === T_NAME_FULLY_QUALIFIED ) ) {
-										$had_leading_slash = ( $t[1] !== '' && $t[1][0] === '\\' );
-										$raw_t = ltrim( $t[1], '\\' );
-										$mapped_trait = null;
-										if ( isset( $this->class_map[ $raw_t ] ) ) {
-											$mapped_trait = $this->class_map[ $raw_t ];
-										} elseif ( ! empty( $current_namespace ) && isset( $this->class_map[ $current_namespace . '\\' . $raw_t ] ) ) {
-											$mapped_trait = $this->class_map[ $current_namespace . '\\' . $raw_t ];
+									if ( $t[0] === T_AS ) {
+										$trait_as_alias = true;
+										$output .= $t[1];
+									} elseif ( $t[0] === T_STRING || ( defined( 'T_NAME_QUALIFIED' ) && $t[0] === T_NAME_QUALIFIED ) || ( defined( 'T_NAME_FULLY_QUALIFIED' ) && $t[0] === T_NAME_FULLY_QUALIFIED ) || ( defined( 'T_NAME_RELATIVE' ) && $t[0] === T_NAME_RELATIVE ) ) {
+										$prev_trait = $j - 1;
+										while ( $prev_trait > $i && is_array( $tokens[ $prev_trait ] ) && $tokens[ $prev_trait ][0] === T_WHITESPACE ) {
+											$prev_trait--;
 										}
-										if ( $mapped_trait !== null ) {
-											if ( $had_leading_slash || strpos( $mapped_trait, '\\' ) !== false || ! empty( $current_namespace ) ) {
+										// Method names after `::`, and the new
+										// alias (+visibility) after `as`, are not
+										// class references. `insteadof` operands
+										// ARE trait references and must resolve.
+										$skip_trait_name = $trait_as_alias;
+										if ( ! $skip_trait_name && $prev_trait > $i && is_array( $tokens[ $prev_trait ] ) ) {
+											$prev_trait_id = $tokens[ $prev_trait ][0];
+											if ( $prev_trait_id === T_DOUBLE_COLON ) {
+												$skip_trait_name = true;
+											}
+										}
+										if ( $skip_trait_name ) {
+											$output .= $t[1];
+										} else {
+											$mapped_trait = $this->resolve_class_reference( $t[1], $current_namespace, $file_use_map );
+											if ( $mapped_trait !== null ) {
 												$output .= '\\' . ltrim( $mapped_trait, '\\' );
 											} else {
-												$output .= $mapped_trait;
+												$output .= $t[1];
 											}
-										} else {
-											$output .= $t[1];
 										}
 									} else {
 										$output .= ( $t[0] === T_WHITESPACE ) ? ' ' : $t[1];
 									}
-								} else {
-									$output .= $t;
 								}
 								$j++;
 							}
-							if ( $j < $count && is_string( $tokens[ $j ] ) && $tokens[ $j ] === ';' ) {
+							if ( ! $trait_ended_on_brace && $j < $count && is_string( $tokens[ $j ] ) && $tokens[ $j ] === ';' ) {
 								$output .= ";\n";
 								$j++;
 							}
@@ -2504,8 +2721,9 @@ class Plan3_Transformer {
 				// 4. Qualified Class / Function Name Mangling (e.g. ConsumerNs\ThemeOptions\Sections\Register, Admin\UserPurchaseFilterPage)
 				if ( defined( 'T_NAME_FULLY_QUALIFIED' ) && $id === T_NAME_FULLY_QUALIFIED ) {
 					$clean = ltrim( $text, '\\' );
-					if ( isset( $this->class_map[ $clean ] ) ) {
-						$output .= '\\' . $this->class_map[ $clean ];
+					$fqn_resolved_target = $this->resolve_class_reference( $text, $current_namespace, $file_use_map );
+					if ( $fqn_resolved_target !== null ) {
+						$output .= '\\' . ltrim( $fqn_resolved_target, '\\' );
 						continue;
 					}
 					$func_target = $this->resolve_function_name( $clean, '', $file_use_func_map );
@@ -2514,20 +2732,19 @@ class Plan3_Transformer {
 						continue;
 					}
 				}
+				if ( defined( 'T_NAME_RELATIVE' ) && $id === T_NAME_RELATIVE ) {
+					$relative_resolved_target = $this->resolve_class_reference( $text, $current_namespace, $file_use_map );
+					if ( $relative_resolved_target !== null ) {
+						$output .= '\\' . ltrim( $relative_resolved_target, '\\' );
+						continue;
+					}
+					$output .= $text;
+					continue;
+				}
 				if ( defined( 'T_NAME_QUALIFIED' ) && $id === T_NAME_QUALIFIED ) {
-					$parts = explode( '\\', $text );
-					$first_part = $parts[0];
-					$resolved_fqcn = null;
-					if ( isset( $file_use_map[ $first_part ] ) ) {
-						$resolved_fqcn = $file_use_map[ $first_part ] . '\\' . implode( '\\', array_slice( $parts, 1 ) );
-					} elseif ( ! empty( $current_namespace ) ) {
-						$resolved_fqcn = $current_namespace . '\\' . $text;
-					} else {
-						$resolved_fqcn = $text;
-					}
-
-					if ( isset( $this->class_map[ $resolved_fqcn ] ) ) {
-						$target = $this->class_map[ $resolved_fqcn ];
+					$qualified_resolved_target = $this->resolve_class_reference( $text, $current_namespace, $file_use_map );
+					if ( $qualified_resolved_target !== null ) {
+						$target = $qualified_resolved_target;
 						if ( $this->flatten_namespaces && ! empty( $current_namespace ) && ! $keep_namespace ) {
 							$output .= '\\' . $target;
 						} elseif ( ! empty( $current_namespace ) && strpos( $target, '\\' ) !== false ) {
@@ -2538,34 +2755,6 @@ class Plan3_Transformer {
 							}
 						} else {
 							$output .= ( ! empty( $current_namespace ) && $keep_namespace && strpos( $target, '\\' ) === false ) ? ( '\\' . $target ) : $target;
-						}
-						continue;
-					}
-					if ( isset( $this->class_map[ $text ] ) ) {
-						$target = $this->class_map[ $text ];
-						if ( $this->flatten_namespaces && ! empty( $current_namespace ) && ! $keep_namespace ) {
-							$output .= '\\' . $target;
-						} elseif ( ! empty( $current_namespace ) && strpos( $target, '\\' ) !== false ) {
-							if ( strncmp( $target, $current_namespace . '\\', strlen( $current_namespace ) + 1 ) === 0 ) {
-								$output .= substr( $target, strlen( $current_namespace ) + 1 );
-							} else {
-								$output .= '\\' . ltrim( $target, '\\' );
-							}
-						} else {
-							$output .= ( ! empty( $current_namespace ) && $keep_namespace && strpos( $target, '\\' ) === false ) ? ( '\\' . $target ) : $target;
-						}
-						continue;
-					}
-					if ( ! empty( $current_namespace ) && isset( $this->class_map[ $current_namespace . '\\' . $text ] ) ) {
-						$target = $this->class_map[ $current_namespace . '\\' . $text ];
-						if ( $this->flatten_namespaces ) {
-							$output .= '\\' . $target;
-						} else {
-							if ( strncmp( $target, $current_namespace . '\\', strlen( $current_namespace ) + 1 ) === 0 ) {
-								$output .= substr( $target, strlen( $current_namespace ) + 1 );
-							} else {
-								$output .= '\\' . $target;
-							}
 						}
 						continue;
 					}
@@ -2630,9 +2819,10 @@ class Plan3_Transformer {
 								continue;
 							}
 						}
-						if ( ! $is_declaration && isset( $file_use_map[ $text ] ) ) {
-							if ( isset( $this->class_map[ $file_use_map[ $text ] ] ) ) {
-								$target = $this->class_map[ $file_use_map[ $text ] ];
+						if ( ! $is_declaration && isset( $file_use_map[ strtolower( $text ) ] ) ) {
+							$use_resolved_target = $this->resolve_class_reference( $text, $current_namespace, $file_use_map );
+							if ( $use_resolved_target !== null ) {
+								$target = $use_resolved_target;
 								if ( $this->flatten_namespaces && ! empty( $current_namespace ) && ! $keep_namespace ) {
 									$output .= '\\' . $target;
 								} elseif ( strpos( $target, '\\' ) !== false ) {
@@ -2642,7 +2832,7 @@ class Plan3_Transformer {
 								}
 								continue;
 							} else {
-								$output .= '\\' . $file_use_map[ $text ];
+								$output .= '\\' . $file_use_map[ strtolower( $text ) ];
 								continue;
 							}
 						}
@@ -2663,14 +2853,6 @@ class Plan3_Transformer {
 								} else {
 									$output .= ( ! empty( $current_namespace ) && ! $is_declaration && strpos( $target, '\\' ) === false ) ? ( '\\' . $target ) : $target;
 								}
-							}
-							continue;
-						}
-						if ( ! $is_declaration && ! empty( $current_namespace ) && self::is_frozen_class( $text, $current_namespace ) ) {
-							if ( $text === 'Module' ) {
-								$output .= '\\' . $current_namespace . '\\' . $text;
-							} else {
-								$output .= '\\' . $text;
 							}
 							continue;
 						}
@@ -2696,7 +2878,7 @@ class Plan3_Transformer {
 								continue;
 							}
 						}
-						$mapped_class = $this->lookup_class_map( $text );
+						$mapped_class = $this->resolve_class_reference( $text, $current_namespace, $file_use_map );
 						if ( $mapped_class !== null && ! $is_fn_call && ! $is_member_name && ! $is_declaration ) {
 							$target = $mapped_class;
 							if ( ! empty( $current_namespace ) && $keep_namespace && strpos( $target, '\\' ) === false ) {
@@ -2740,9 +2922,32 @@ class Plan3_Transformer {
 					// array('Class', 'method'): the first element names the class and must be
 					// remapped, otherwise the registered callback points at a class that no longer
 					// exists (WordPress hook registrations use this form constantly).
-					if ( isset( $this->class_map[ $norm_str ] ) && ( $is_reflection || $is_callable_method_string || $this->is_array_callable_class_string( $tokens, $i ) ) ) {
+					// Decision authority is the declared-universe resolver: only strings that
+					// resolve to a declared FQCN are rewritten; external names stay byte-identical.
+					$str_resolved_target = null;
+					if ( $is_reflection || $is_callable_method_string || $this->is_array_callable_class_string( $tokens, $i ) ) {
+						$str_class_part = $norm_str;
+						$str_method_suffix = '';
+						$dc_pos = strpos( $norm_str, '::' );
+						if ( $dc_pos !== false ) {
+							$maybe_method = substr( $norm_str, $dc_pos + 2 );
+							if ( $maybe_method !== '' && strpos( $maybe_method, '\\' ) === false ) {
+								$str_class_part = substr( $norm_str, 0, $dc_pos );
+								$str_method_suffix = substr( $norm_str, $dc_pos );
+							}
+						}
+						$str_leading = ( substr( $raw_str, 0, 1 ) === '\\' ) ? '\\' : '';
+						// Runtime string resolution always starts from the global scope:
+						// a qualified string WITHOUT a leading slash ('Acme\Handler') still
+						// addresses the absolute FQCN, never a namespace-relative one.
+						if ( $str_leading === '' && strpos( $str_class_part, '\\' ) !== false ) {
+							$str_leading = '\\';
+						}
+						$str_resolved_target = $this->resolve_class_reference( $str_leading . $str_class_part, $current_namespace, $file_use_map );
+					}
+					if ( $str_resolved_target !== null ) {
 						$quote = $text[0];
-						$target = $this->class_map[ $norm_str ];
+						$target = $str_resolved_target . $str_method_suffix;
 						if ( ! $this->flatten_namespaces && substr( $raw_str, 0, 1 ) === '\\' ) {
 							$target = '\\' . $target;
 						}
@@ -2895,14 +3100,8 @@ class Plan3_Transformer {
 						} elseif ( $prev_text === 'parent' ) {
 							$target_class = isset( $this->class_hierarchy[ $current_class_fqcn ]['parent'] ) ? $this->class_hierarchy[ $current_class_fqcn ]['parent'] : '';
 						} else {
-							$raw_c = ltrim( $tokens[ $prev ][1], '\\' );
-							if ( isset( $file_use_map[ $raw_c ] ) ) {
-								$target_class = $file_use_map[ $raw_c ];
-							} elseif ( ! empty( $current_namespace ) && ( isset( $this->class_map[ $current_namespace . '\\' . $raw_c ] ) || isset( $this->private_members['constants'][ $current_namespace . '\\' . $raw_c ] ) || isset( $this->private_members['methods'][ $current_namespace . '\\' . $raw_c ] ) ) ) {
-								$target_class = $current_namespace . '\\' . $raw_c;
-							} else {
-								$target_class = $raw_c;
-							}
+							$resolved_receiver_fqcn = $this->resolve_class_fqcn( $tokens[ $prev ][1], $current_namespace, $file_use_map );
+							$target_class = ( $resolved_receiver_fqcn !== null ) ? $resolved_receiver_fqcn : '';
 						}
 					}
 
@@ -3193,6 +3392,8 @@ if ( isset( $argv[0] ) && basename( $argv[0] ) === 'transformer.php' ) {
 			'project_global_vars'  => $transformer->project_global_vars,
 			'classes_meta'         => $transformer->classes,
 			'declarations'         => $transformer->declarations,
+			'declared_classes'       => $transformer->declared_classes,
+			'declarations_by_symbol' => $transformer->declarations_by_symbol,
 			'symbolPaths'          => $transformer->symbol_paths,
 			'retained_namespaces'  => $transformer->retained_namespaces,
 			'__flattenNamespaces'  => $transformer->flatten_namespaces,
