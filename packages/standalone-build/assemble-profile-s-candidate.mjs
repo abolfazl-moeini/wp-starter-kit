@@ -24,6 +24,7 @@ import { fileURLToPath } from "node:url";
 import { runPlan3EligibilitySpike } from "./run-plan3-eligibility-spike.mjs";
 import {
   assertFrameworkClosureMinifiedAssets,
+  enrichClosureClassmapFile,
   inlineWpdevClosure,
   minifyAssetsInTree,
 } from "./inline-wpdev-closure.mjs";
@@ -429,6 +430,16 @@ export async function assembleProfileSCandidate(options = {}) {
       });
       const manifestLog = parseTransformerBatchLog(batchOut, { expectedFiles: expectedPhpFiles });
       console.log(`==> Transformed ${manifestLog.length} files (flatten=${buildPlan.capabilities.spaghetti} mangle=${buildPlan.capabilities.obfuscate})`);
+      if (buildPlan.capabilities.spaghetti || buildPlan.capabilities.inlineFramework) {
+        const enrichment = await enrichClosureClassmapFile(
+          path.join(stagingPlugin, "src", "FrameworkClosure"),
+          dumpedMap.classes || {},
+        );
+        for (const warning of enrichment.warnings) {
+          console.log(`==> closure-classmap enrichment warning: ${warning}`);
+        }
+        console.log(`==> Enriched closure-classmap.php with ${enrichment.enriched} emitted-symbol entries`);
+      }
     } else {
       console.log("==> 4. Skipping AST Transformer (spaghetti=false, obfuscate=false, inlineFramework=false)");
     }

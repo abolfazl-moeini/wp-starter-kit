@@ -829,21 +829,55 @@ class Plan3_Transformer {
 		return ( $next < $count && is_array( $tokens[ $next ] ) && $tokens[ $next ][0] === T_DOUBLE_ARROW );
 	}
 
+	protected static $reflection_class_arg_positions = array(
+		'class_exists'     => array( 0 ),
+		'interface_exists' => array( 0 ),
+		'trait_exists'     => array( 0 ),
+		'enum_exists'      => array( 0 ),
+		'is_a'             => array( 0, 1 ),
+		'is_subclass_of'   => array( 0, 1 ),
+		'is_of_class'      => array( 0, 1 ),
+		'method_exists'    => array( 0 ),
+		'property_exists'  => array( 0 ),
+	);
+
 	protected function is_reflection_or_instantiation_string( $tokens, $i ) {
 		$p = $this->prev_code_index( $tokens, $i );
 		if ( $p < 0 ) return false;
 		if ( is_array( $tokens[ $p ] ) && $tokens[ $p ][0] === T_NEW ) {
 			return true;
 		}
-		if ( is_string( $tokens[ $p ] ) && $tokens[ $p ] === '(' ) {
-			$fn_idx = $this->prev_code_index( $tokens, $p );
-			if ( $fn_idx >= 0 ) {
-				$fn_name = strtolower( $this->token_function_name( $tokens[ $fn_idx ] ) );
-				$reflection_funcs = array( 'class_exists', 'interface_exists', 'trait_exists', 'is_a', 'is_subclass_of', 'is_of_class', 'method_exists', 'property_exists' );
-				return in_array( $fn_name, $reflection_funcs, true );
+		// Walk back to the enclosing `(` tracking depth so the 0-based
+		// argument index is exact: only positions that carry a class name
+		// (e.g. is_a() arg 1, never method_exists() arg 1) may rewrite.
+		$depth = 0;
+		$k = $p;
+		$arg_index = 0;
+		while ( $k >= 0 ) {
+			$t = $tokens[ $k ];
+			if ( is_string( $t ) ) {
+				if ( $t === ')' || $t === ']' ) {
+					$depth++;
+				} elseif ( $t === '(' || $t === '[' ) {
+					if ( $depth === 0 ) {
+						break;
+					}
+					$depth--;
+				} elseif ( $t === ',' && $depth === 0 ) {
+					$arg_index++;
+				}
 			}
+			$k = $this->prev_code_index( $tokens, $k );
 		}
-		return false;
+		if ( $k < 0 || ! is_string( $tokens[ $k ] ) || $tokens[ $k ] !== '(' ) {
+			return false;
+		}
+		$fn_idx = $this->prev_code_index( $tokens, $k );
+		if ( $fn_idx < 0 ) {
+			return false;
+		}
+		$fn_name = strtolower( $this->token_function_name( $tokens[ $fn_idx ] ) );
+		return $fn_name !== '' && isset( self::$reflection_class_arg_positions[ $fn_name ] ) && in_array( $arg_index, self::$reflection_class_arg_positions[ $fn_name ], true );
 	}
 
 	protected function is_callback_argument_string( $tokens, $i ) {
@@ -2819,7 +2853,17 @@ class Plan3_Transformer {
 								continue;
 							}
 						}
-						if ( ! $is_declaration && isset( $file_use_map[ strtolower( $text ) ] ) ) {
+						// Member names after `->`, `?->`, `::` are never class
+						// references, even when they collide (case-insensitively)
+						// with an imported class alias (e.g. property
+						// `$this->billing_address` vs `use ...\Billing_Address`).
+						$member_prev = $this->prev_code_index( $tokens, $i );
+						$is_member_name = $member_prev >= 0 && is_array( $tokens[ $member_prev ] ) && in_array(
+							$tokens[ $member_prev ][0],
+							array( T_OBJECT_OPERATOR, defined( 'T_NULLSAFE_OBJECT_OPERATOR' ) ? T_NULLSAFE_OBJECT_OPERATOR : -1, T_DOUBLE_COLON ),
+							true
+						);
+						if ( ! $is_declaration && ! $is_member_name && isset( $file_use_map[ strtolower( $text ) ] ) ) {
 							$use_resolved_target = $this->resolve_class_reference( $text, $current_namespace, $file_use_map );
 							if ( $use_resolved_target !== null ) {
 								$target = $use_resolved_target;
@@ -2837,7 +2881,7 @@ class Plan3_Transformer {
 							}
 						}
 						$current_fqcn = ! empty( $current_namespace ) ? ( $current_namespace . '\\' . $text ) : $text;
-						if ( ( $is_declaration && isset( $this->class_map[ $current_fqcn ] ) ) || ( ! empty( $current_namespace ) && isset( $this->class_map[ $current_namespace . '\\' . $text ] ) ) ) {
+						if ( ( $is_declaration && isset( $this->class_map[ $current_fqcn ] ) ) || ( ! $is_declaration && ! $is_member_name && ! empty( $current_namespace ) && isset( $this->class_map[ $current_namespace . '\\' . $text ] ) ) ) {
 							$target = isset( $this->class_map[ $current_fqcn ] ) ? $this->class_map[ $current_fqcn ] : $this->class_map[ $current_namespace . '\\' . $text ];
 							if ( $decl_type === T_CLASS || $decl_type === T_INTERFACE || $decl_type === T_TRAIT || ( defined( 'T_ENUM' ) && $decl_type === T_ENUM ) ) {
 								$declared_classes_in_file[ $current_fqcn ] = array(
@@ -2856,12 +2900,6 @@ class Plan3_Transformer {
 							}
 							continue;
 						}
-						$member_prev = $this->prev_code_index( $tokens, $i );
-						$is_member_name = $member_prev >= 0 && is_array( $tokens[ $member_prev ] ) && in_array(
-							$tokens[ $member_prev ][0],
-							array( T_OBJECT_OPERATOR, defined( 'T_NULLSAFE_OBJECT_OPERATOR' ) ? T_NULLSAFE_OBJECT_OPERATOR : -1, T_DOUBLE_COLON ),
-							true
-						);
 						$is_fn_call = ! $is_declaration && ! $is_member_name && $this->occurrence_is_function_call( $tokens, $i, $count );
 						if ( $is_fn_call ) {
 							$func_target = $this->resolve_function_name( $text, $current_namespace, $file_use_func_map );
