@@ -515,7 +515,7 @@ export async function enrichClosureClassmapFile(closureDir, symbolClasses) {
   while ((m = pairRe.exec(src)) !== null) {
     map[unescapePhpString(m[1])] = unescapePhpString(m[2]);
   }
-  const traitsMatch = src.match(/'traits'\s*=>\s*array\s*\(([\s\S]*?)\)\s*,?\s*\)/);
+  const traitsMatch = src.match(/'traits'\s*=>\s*array\s*\(([\s\S]*?)\n\s*\)/);
   const traits = [];
   if (traitsMatch) {
     const itemRe = /'((?:[^'\\]|\\.)*)'\s*,?/g;
@@ -524,7 +524,7 @@ export async function enrichClosureClassmapFile(closureDir, symbolClasses) {
       traits.push(unescapePhpString(tm[1]));
     }
   }
-  const preloadsMatch = src.match(/'preloads'\s*=>\s*array\s*\(([\s\S]*?)\)\s*,?\s*\)/);
+  const preloadsMatch = src.match(/'preloads'\s*=>\s*array\s*\(([\s\S]*?)\n\s*\)/);
   const preloads = [];
   if (preloadsMatch) {
     const itemRe = /'((?:[^'\\]|\\.)*)'\s*,?/g;
@@ -573,10 +573,10 @@ export async function enrichClosureClassmapFile(closureDir, symbolClasses) {
   for (const key of Object.keys(additions).sort()) {
     merged[key] = additions[key];
   }
-  const preloadsOut = preloadsMatch ? `\n  'preloads' => ${phpStringList(preloads)},` : "";
+  const preloadsOut = preloadsMatch ? `\n  'preloads' => ${phpStringList(enrichedPreloads)},` : "";
   const out =
     `<?php\n` +
-    `return array(\n  'map' => ${phpStringMap(merged)},\n  'traits' => ${phpStringList(traits)},${preloadsOut}\n);\n`;
+    `return array(\n  'map' => ${phpStringMap(merged)},\n  'traits' => ${phpStringList(enrichedTraits)},${preloadsOut}\n);\n`;
   await writeFile(classmapPath, out, "utf8");
   return { enriched: Object.keys(additions).length, warnings };
 }

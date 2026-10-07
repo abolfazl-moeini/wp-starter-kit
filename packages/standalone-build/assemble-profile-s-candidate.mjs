@@ -567,10 +567,7 @@ export async function assembleProfileSCandidate(options = {}) {
         autoload: {
           ...(compData.autoload || {}),
           "classmap": mergedClassmap,
-          "psr-4": {
-            ...(compData.autoload?.["psr-4"] || {}),
-            "WPDev\\": "src/FrameworkClosure/Core/",
-          },
+          "psr-4": compData.autoload?.["psr-4"] || {},
           "files": finalAutoloadFiles
         }
       };
@@ -588,64 +585,6 @@ export async function assembleProfileSCandidate(options = {}) {
         }
       };
       await writeFile(path.join(stagingPlugin, "composer.json"), JSON.stringify(restoredCompData, null, 2), "utf8");
-
-      const classmapFile = path.join(stagingPlugin, "vendor/composer/autoload_classmap.php");
-      const mapFile = path.join(stagingRoot, "symbol-map.json");
-      if (fs.existsSync(classmapFile)) {
-        let cmap = await readFile(classmapFile, "utf8");
-        const coreEntries = [
-          { cls: "WPDev\\\\Core\\\\AbstractModule", rel: "/src/FrameworkClosure/Core/Core/AbstractModule.php" },
-          { cls: "WPDev\\\\Core\\\\ModuleInterface", rel: "/src/FrameworkClosure/Core/Core/ModuleInterface.php" },
-          { cls: "WPDev\\\\Core\\\\ModuleLoader", rel: "/src/FrameworkClosure/Core/Core/ModuleLoader.php" },
-          { cls: "WPDev\\\\Core\\\\Plugin", rel: "/src/FrameworkClosure/Core/Core/Plugin.php" },
-        ];
-
-        if (fs.existsSync(mapFile)) {
-          const symMap = JSON.parse(await readFile(mapFile, "utf8"));
-          if (symMap.classes) {
-            for (const [fqcn, mangled] of Object.entries(symMap.classes)) {
-              if (fqcn.startsWith("\\") || fqcn.includes("\\_c_")) continue;
-              const escMangled = `'${mangled}' => \\$baseDir \\. '([^']+)'`;
-              const m = cmap.match(new RegExp(escMangled));
-              if (m && m[1]) {
-                const escapedFqcn = fqcn.replace(/\\/g, "\\\\");
-                coreEntries.push({ cls: escapedFqcn, rel: m[1] });
-              }
-            }
-          }
-        }
-
-        let additions = [];
-        for (const entry of coreEntries) {
-          if (fs.existsSync(path.join(stagingPlugin, entry.rel.slice(1))) && !cmap.includes(`'${entry.cls}'`)) {
-            additions.push(`    '${entry.cls}' => $baseDir . '${entry.rel}',`);
-          }
-        }
-        if (additions.length > 0) {
-          cmap = cmap.replace("return array(", `return array(\n${additions.join("\n")}`);
-          await writeFile(classmapFile, cmap, "utf8");
-        }
-
-        const staticFile = path.join(stagingPlugin, "vendor/composer/autoload_static.php");
-        if (fs.existsSync(staticFile)) {
-          let sContent = await readFile(staticFile, "utf8");
-          if (sContent.includes("public static $classMap = array(")) {
-            let staticAdditions = [];
-            for (const entry of coreEntries) {
-              if (fs.existsSync(path.join(stagingPlugin, entry.rel.slice(1))) && !sContent.includes(`'${entry.cls}'`)) {
-                staticAdditions.push(`        '${entry.cls}' => __DIR__ . '/../..' . '${entry.rel}',`);
-              }
-            }
-            if (staticAdditions.length > 0) {
-              sContent = sContent.replace(
-                "public static $classMap = array(",
-                `public static $classMap = array(\n${staticAdditions.join("\n")}`
-              );
-              await writeFile(staticFile, sContent, "utf8");
-            }
-          }
-        }
-      }
     }
 
 

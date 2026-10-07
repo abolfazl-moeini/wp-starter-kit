@@ -103,10 +103,11 @@ test("V4: enrichClosureClassmapFile adds emitted-symbol entries for the runtime 
     assert.ok(classmapSrc.includes("'_fc_1111' => '/Core/Core/Plugin.php'"));
     assert.ok(classmapSrc.includes("'_fc_2222' => '/modules/demo/src/class-thing.php'"));
     assert.ok(classmapSrc.includes("'_fc_3333' => '/modules/demo/src/class-second.php'"));
+    const mapSection = classmapSrc.slice(0, classmapSrc.indexOf("'traits'"));
     assert.equal(
-      classmapSrc.split("'_fc_4444'").length - 1,
+      mapSection.split("'_fc_4444'").length - 1,
       1,
-      "shared destination is emitted once (first wins), never duplicated",
+      "shared destination is emitted once (first wins), never duplicated in map",
     );
   } finally {
     await rm(tmpDir, { recursive: true, force: true }).catch(() => {});
