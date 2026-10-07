@@ -1857,11 +1857,6 @@ class Plan3_Transformer {
 								$this->class_map[ '\\' . $class_name ] = '\\' . $mangled;
 							}
 						}
-						if ( in_array( $class_name, array( 'Plugin', 'AbstractModule', 'ModuleInterface', 'ModuleLoader' ), true ) ) {
-							$target_core_mapping = $is_flattened ? $mangled : ( ! empty( $current_namespace ) ? ( $current_namespace . '\\' . $mangled ) : $mangled );
-							$this->class_map[ 'WPDev\\Core\\' . $class_name ] = $target_core_mapping;
-							$this->class_map[ '\\WPDev\\Core\\' . $class_name ] = '\\' . $target_core_mapping;
-						}
 					}
 				} elseif ( $id === T_FUNCTION && $class_depth === 0 && $in_class === 0 ) {
 					$prev = $i - 1;
