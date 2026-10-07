@@ -253,6 +253,7 @@ export async function verifyProfileSArtifact({
 
     if (expectObfuscate) {
       let declaredFqcns = null;
+      const preservedFqcns = new Set();
       const classmapFile = phpFiles.find((f) => {
         const rel = path.relative(extractedPlugin, f).replace(/\\/g, "/");
         return rel.endsWith("/closure-classmap.php") || rel === "closure-classmap.php";
@@ -264,10 +265,25 @@ export async function verifyProfileSArtifact({
           const unescapePhpString = (s) => s.replace(/\\([\\'])/g, "$1");
           const pairRe = /'((?:[^'\\]|\\.)*)'\s*=>\s*'((?:[^'\\]|\\.)*)'/g;
           let m;
+          const closureDir = path.dirname(classmapFile);
           while ((m = pairRe.exec(classmapCode)) !== null) {
             const key = unescapePhpString(m[1]);
+            const relTarget = unescapePhpString(m[2]);
             if (key.includes("WPDevFramework\\")) {
-              declaredFqcns.add(key.toLowerCase());
+              const lowerKey = key.toLowerCase();
+              declaredFqcns.add(lowerKey);
+
+              const targetFile = path.join(closureDir, relTarget.replace(/^\//, ""));
+              if (fs.existsSync(targetFile)) {
+                try {
+                  const targetCode = fs.readFileSync(targetFile, "utf8");
+                  if (/(?:__serialize|__unserialize|__sleep|__wakeup)\s*\(/i.test(targetCode)) {
+                    preservedFqcns.add(lowerKey);
+                  }
+                } catch {
+                  // ignore read error
+                }
+              }
             }
           }
         } catch {
@@ -345,7 +361,12 @@ export async function verifyProfileSArtifact({
               } else if (declaredFqcns && declaredFqcns.size > 0) {
                 const normalizedLine = lineWithoutStrings.toLowerCase().replace(/\\\\/g, "\\");
                 for (const fqcn of declaredFqcns) {
-                  if (normalizedLine.includes(fqcn)) {
+                  if (preservedFqcns.has(fqcn)) {
+                    continue;
+                  }
+                  const pattern = `(?<![a-z0-9_])\\\\?${fqcn.replace(/\\/g, "\\\\")}(?![a-z0-9_])`;
+                  const re = new RegExp(pattern, "i");
+                  if (re.test(normalizedLine)) {
                     isLeak = true;
                     break;
                   }
