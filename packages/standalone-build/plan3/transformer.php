@@ -2905,6 +2905,13 @@ class Plan3_Transformer {
 							$use_resolved_target = $this->resolve_class_reference( $text, $current_namespace, $file_use_map );
 							if ( $use_resolved_target !== null ) {
 								$target = $use_resolved_target;
+								if ( $this->mangle_symbols && $target !== $text && $target !== ( '\\' . $text ) ) {
+									if ( $in_function_header && ! empty( $current_class_fqcn ) ) {
+										$classes_with_mangled_types[ $current_class_fqcn ] = true;
+									} elseif ( $pending_class_fqcn !== null ) {
+										$classes_with_mangled_types[ $pending_class_fqcn ] = true;
+									}
+								}
 								if ( $this->flatten_namespaces && ! empty( $current_namespace ) && ! $keep_namespace ) {
 									$output .= '\\' . $target;
 								} elseif ( strpos( $target, '\\' ) !== false ) {
@@ -2926,6 +2933,13 @@ class Plan3_Transformer {
 									'mangled' => $target,
 									'type'    => $decl_type,
 								);
+							}
+							if ( ! $is_declaration && $this->mangle_symbols && $target !== $text && $target !== ( '\\' . $text ) ) {
+								if ( $in_function_header && ! empty( $current_class_fqcn ) ) {
+									$classes_with_mangled_types[ $current_class_fqcn ] = true;
+								} elseif ( $pending_class_fqcn !== null ) {
+									$classes_with_mangled_types[ $pending_class_fqcn ] = true;
+								}
 							}
 							if ( $this->flatten_namespaces && ! $keep_namespace ) {
 								$output .= ( $is_declaration || empty( $current_namespace ) ) ? $target : ( '\\' . $target );
