@@ -585,6 +585,61 @@ export async function assembleProfileSCandidate(options = {}) {
         }
       };
       await writeFile(path.join(stagingPlugin, "composer.json"), JSON.stringify(restoredCompData, null, 2), "utf8");
+
+      const classmapFile = path.join(stagingPlugin, "vendor/composer/autoload_classmap.php");
+      const mapFile = path.join(stagingRoot, "symbol-map.json");
+      if (fs.existsSync(classmapFile) && fs.existsSync(mapFile)) {
+        let cmap = await readFile(classmapFile, "utf8");
+        const symMap = JSON.parse(await readFile(mapFile, "utf8"));
+        const consumerEntries = [];
+
+        if (symMap.classes) {
+          for (const [fqcn, mangled] of Object.entries(symMap.classes)) {
+            if (fqcn.startsWith("\\") || fqcn.includes("\\_c_") || fqcn.includes("\\_fc_")) continue;
+            const escMangled = `'${mangled}' => \\$baseDir \\. '([^']+)'`;
+            const m = cmap.match(new RegExp(escMangled));
+            if (m && m[1]) {
+              const rel = m[1];
+              if (rel.includes("FrameworkClosure") || rel.includes("functions-closure")) {
+                continue;
+              }
+              const escapedFqcn = fqcn.replace(/\\/g, "\\\\");
+              consumerEntries.push({ cls: escapedFqcn, rel });
+            }
+          }
+        }
+
+        let additions = [];
+        for (const entry of consumerEntries) {
+          if (fs.existsSync(path.join(stagingPlugin, entry.rel.slice(1))) && !cmap.includes(`'${entry.cls}'`)) {
+            additions.push(`    '${entry.cls}' => $baseDir . '${entry.rel}',`);
+          }
+        }
+        if (additions.length > 0) {
+          cmap = cmap.replace("return array(", `return array(\n${additions.join("\n")}`);
+          await writeFile(classmapFile, cmap, "utf8");
+        }
+
+        const staticFile = path.join(stagingPlugin, "vendor/composer/autoload_static.php");
+        if (fs.existsSync(staticFile)) {
+          let sContent = await readFile(staticFile, "utf8");
+          if (sContent.includes("public static $classMap = array(")) {
+            let staticAdditions = [];
+            for (const entry of consumerEntries) {
+              if (fs.existsSync(path.join(stagingPlugin, entry.rel.slice(1))) && !sContent.includes(`'${entry.cls}'`)) {
+                staticAdditions.push(`        '${entry.cls}' => __DIR__ . '/../..' . '${entry.rel}',`);
+              }
+            }
+            if (staticAdditions.length > 0) {
+              sContent = sContent.replace(
+                "public static $classMap = array(",
+                `public static $classMap = array(\n${staticAdditions.join("\n")}`
+              );
+              await writeFile(staticFile, sContent, "utf8");
+            }
+          }
+        }
+      }
     }
 
 
