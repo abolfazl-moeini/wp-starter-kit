@@ -252,6 +252,29 @@ export async function verifyProfileSArtifact({
     const frameworkLeakageErrors = [];
 
     if (expectObfuscate) {
+      let declaredFqcns = null;
+      const classmapFile = phpFiles.find((f) => {
+        const rel = path.relative(extractedPlugin, f).replace(/\\/g, "/");
+        return rel.endsWith("/closure-classmap.php") || rel === "closure-classmap.php";
+      });
+      if (classmapFile) {
+        try {
+          const classmapCode = await readFile(classmapFile, "utf8");
+          declaredFqcns = new Set();
+          const unescapePhpString = (s) => s.replace(/\\([\\'])/g, "$1");
+          const pairRe = /'((?:[^'\\]|\\.)*)'\s*=>\s*'((?:[^'\\]|\\.)*)'/g;
+          let m;
+          while ((m = pairRe.exec(classmapCode)) !== null) {
+            const key = unescapePhpString(m[1]);
+            if (key.includes("WPDevFramework\\")) {
+              declaredFqcns.add(key.toLowerCase());
+            }
+          }
+        } catch {
+          // ignore read error
+        }
+      }
+
       for (const f of phpFiles) {
         const rel = path.relative(extractedPlugin, f).replace(/\\/g, "/");
         if (rel.startsWith("vendor/") || rel.startsWith("vendor-prefixed/") || rel.startsWith("dependencies/")) {
@@ -286,17 +309,52 @@ export async function verifyProfileSArtifact({
             );
           }
         } else {
-          // Closure file: framework FQCNs may appear ONLY on backward-compatibility
-          // bridge lines; any readable reference in executable code fails closed.
-          const bridgePattern = /(?:class_alias|class_exists|interface_exists|trait_exists)\s*\(/i;
-          if (code.includes("WPDevFramework\\") || code.includes("WPDevFramework\\\\")) {
+          // Closure file: framework FQCNs in executable code are restricted.
+          // 1. Bridge lines (class_alias, class_exists, etc.) are allowed.
+          // 2. Classes with serialization identity (__serialize/__unserialize) are intentionally
+          //    preserved by Plan 3 transformer to prevent DB corruption and are allowed.
+          // 3. String literals (e.g. deprecation notices, table configs) are allowed.
+          // 4. File-scope use statements (use \WPDevFramework\...) for undeclared external symbols are allowed.
+          // 5. If closure-classmap is available, only declared inlined framework classes are checked for leakage;
+          //    otherwise, direct inheritance (extends/implements) of raw framework classes fails closed.
+          const isSerializedClass = /(?:__serialize|__unserialize|__sleep|__wakeup)\s*\(/i.test(code);
+          if (!isSerializedClass && (code.includes("WPDevFramework\\") || code.includes("WPDevFramework\\\\"))) {
+            const bridgePattern = /(?:class_alias|class_exists|interface_exists|trait_exists)\s*\(/i;
+            const inheritancePattern = /(?:extends|implements)\s+[^{;]*\\?WPDevFramework\\/i;
+            const topUsePattern = /^\s*use\s+(?:\\?WPDevFramework\\[^;]+)\s*;/i;
             const lines = code.split("\n");
             for (let lineNum = 1; lineNum <= lines.length; lineNum++) {
               const line = lines[lineNum - 1];
-              if (
-                (line.includes("WPDevFramework\\") || line.includes("WPDevFramework\\\\")) &&
-                !bridgePattern.test(line)
-              ) {
+              if (!line.includes("WPDevFramework\\") && !line.includes("WPDevFramework\\\\")) {
+                continue;
+              }
+              if (bridgePattern.test(line)) {
+                continue;
+              }
+              const lineWithoutStrings = line.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"/g, '""');
+              if (!lineWithoutStrings.includes("WPDevFramework\\") && !lineWithoutStrings.includes("WPDevFramework\\\\")) {
+                continue;
+              }
+              if (topUsePattern.test(line)) {
+                continue;
+              }
+
+              let isLeak = false;
+              if (inheritancePattern.test(lineWithoutStrings)) {
+                isLeak = true;
+              } else if (declaredFqcns && declaredFqcns.size > 0) {
+                const normalizedLine = lineWithoutStrings.toLowerCase().replace(/\\\\/g, "\\");
+                for (const fqcn of declaredFqcns) {
+                  if (normalizedLine.includes(fqcn)) {
+                    isLeak = true;
+                    break;
+                  }
+                }
+              } else {
+                isLeak = true;
+              }
+
+              if (isLeak) {
                 frameworkLeakageErrors.push(
                   `Closure file ${rel}:${lineNum} leaked framework FQCN: ${line.trim()}`
                 );

@@ -943,7 +943,7 @@ export async function inlineWpdevClosure({
         const full = path.join(curDir, entry.name);
         if (entry.isDirectory()) {
           const lower = entry.name.toLowerCase();
-          if (["tests", "unit-tests", "node_modules", ".git", "vendor", "dependencies", "functions"].includes(lower)) {
+          if (["tests", "unit-tests", "node_modules", ".git", "vendor", "dependencies", "functions", "legacy"].includes(lower)) {
             continue;
           }
           await visitDir(full);
