@@ -3234,6 +3234,9 @@ class Plan3_Transformer {
 				if ( $decl_fqcn === $fqcn ) {
 					continue;
 				}
+				if ( $this->mangle_symbols && ( strpos( $fqcn, 'WPDev\\' ) === 0 || strpos( $fqcn, 'WPDevFramework\\' ) === 0 ) ) {
+					continue;
+				}
 				if ( $type === T_INTERFACE ) {
 					$alias_code .= "if (\\interface_exists('" . addslashes( $decl_fqcn ) . "', false) && !\\interface_exists('" . addslashes( $fqcn ) . "', false)) { \\class_alias('" . addslashes( $decl_fqcn ) . "', '" . addslashes( $fqcn ) . "', false); }\n";
 				} elseif ( $type === T_TRAIT ) {
