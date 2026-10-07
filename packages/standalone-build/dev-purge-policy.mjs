@@ -162,9 +162,6 @@ export function shouldPurgeFile(relPath, fileName) {
   }
 
   if (lowerName.endsWith(".md")) {
-    if (lowerName.includes("license") || lowerName.includes("notice")) {
-      return { purge: false, action: "keep" };
-    }
     return { purge: true, action: "delete" };
   }
 

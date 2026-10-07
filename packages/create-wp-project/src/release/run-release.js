@@ -21,7 +21,7 @@ export function parseArgs(argv) {
     skipZip: false,
     skipTests: false,
     candidate: false,
-    obfuscate: false,
+    obfuscate: undefined,
     withDocs: false,
     profile: null,
     root: process.cwd(),

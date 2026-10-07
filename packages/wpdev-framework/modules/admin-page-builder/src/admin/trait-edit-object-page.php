@@ -37,6 +37,18 @@ trait Edit_Object_Page {
 	protected $errors;
 
 	/**
+	 * Returns the model instance being edited.
+	 *
+	 * @since 2.8.4
+	 * @return object|null
+	 */
+	public function get_object() {
+
+		return isset( $this->object ) ? $this->object : null;
+
+	} // end get_object;
+
+	/**
 	 * Returns the errors bag for this page.
 	 *
 	 * @return \WP_Error

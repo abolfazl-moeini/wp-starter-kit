@@ -27,7 +27,7 @@ trait Edit_Page_Widgets {
 	 */
 	protected function register_metabox_in_registry( $id, $type, array $atts, $callback = null ) {
 
-		if ( ! class_exists( 'WPDev\\Modules\\MetaboxBuilder\\Metabox_Registry' ) ) {
+		if ( ! class_exists( \WPDevFramework\Modules\MetaboxBuilder\Metabox_Registry::class ) ) {
 			return;
 		}
 
@@ -70,7 +70,7 @@ trait Edit_Page_Widgets {
 
 		return static function () use ( $page_id, $metabox_id ) {
 
-			if ( ! class_exists( 'WPDev\\Modules\\MetaboxBuilder\\Metabox_Registry' ) || '' === $page_id ) {
+			if ( ! class_exists( \WPDevFramework\Modules\MetaboxBuilder\Metabox_Registry::class ) || '' === $page_id ) {
 				return;
 			}
 
@@ -107,11 +107,17 @@ trait Edit_Page_Widgets {
 
 		$created_key = 'date_created';
 
-		if ( method_exists( $this->get_object(), 'get_date_registered' ) ) {
+		$object = $this->get_object();
+
+		if ( ! is_object( $object ) ) {
+			return;
+		}
+
+		if ( method_exists( $object, 'get_date_registered' ) ) {
 			$created_key = 'date_registered';
 		}
 
-		$created_value = call_user_func( array( $this->get_object(), "get_$created_key" ) );
+		$created_value = call_user_func( array( $object, "get_$created_key" ) );
 
 		$atts['fields'][ $created_key ] = array(
 			'title'         => __( 'Created at', 'wpdev' ),
@@ -134,8 +140,8 @@ trait Edit_Page_Widgets {
 				'title'         => __( 'Last Modified at', 'wpdev' ),
 				'type'          => 'text-display',
 				'date'          => true,
-				'display_value' => $this->edit ? $this->get_object()->get_date_modified() : __( 'No date', 'wpdev' ),
-				'value'         => $this->get_object()->get_date_modified(),
+				'display_value' => $this->edit ? $object->get_date_modified() : __( 'No date', 'wpdev' ),
+				'value'         => $object->get_date_modified(),
 				'placeholder'   => '2020-04-04 12:00:00',
 				'html_attr'     => array(
 					'wpdev-datepicker' => 'true',
@@ -233,7 +239,7 @@ trait Edit_Page_Widgets {
 				'fields'                => array(),
 				'html_attr'             => array(),
 				'classes'               => '',
-				'field_wrapper_classes' => 'wpdev-w-full wpdev-box-border wpdev-items-center wpdev-flex wpdev-justify-between wpdev-p-4 wpdev-m-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
+				'field_wrapper_classes' => 'wpdev-full wpdev-box-border wpdev-items-center wpdev-row wpdev-justify-between wpdev-pad-4 wpdev-mar-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
 			)
 		);
 
@@ -241,7 +247,7 @@ trait Edit_Page_Widgets {
 			if ( wpdev_get_isset( $atts['html_attr'], 'data-wpdev-app' ) ) {
 				$atts['fields']['loading'] = array(
 					'type'              => 'note',
-					'desc'              => sprintf( '<div class="wpdev-block wpdev-text-center wpdev-blinking-animation wpdev-text-gray-600 wpdev-my-1 wpdev-text-2xs wpdev-uppercase wpdev-font-semibold">%s</div>', __( 'Loading...', 'wpdev' ) ),
+					'desc'              => sprintf( '<div class="wpdev-block wpdev-type-center wpdev-blinking-animation wpdev-type-gray-600 wpdev-mar-y-1 wpdev-type-2xs wpdev-uppercase wpdev-font-semibold">%s</div>', __( 'Loading...', 'wpdev' ) ),
 					'wrapper_html_attr' => array(
 						'v-if' => 0,
 					),
@@ -253,7 +259,7 @@ trait Edit_Page_Widgets {
 				$atts['fields'],
 				array(
 					'views'                 => 'admin-pages/fields',
-					'classes'               => 'wpdev-widget-list wpdev-striped wpdev-m-0 wpdev--mt-2 wpdev--mb-3 wpdev--mx-3 ' . $atts['classes'],
+					'classes'               => 'wpdev-widget-list wpdev-striped wpdev-mar-0 wpdev--mt-2 wpdev--mb-3 wpdev--mx-3 ' . $atts['classes'],
 					'field_wrapper_classes' => $atts['field_wrapper_classes'],
 					'html_attr'             => $atts['html_attr'],
 					'before'                => $atts['before'],
@@ -325,7 +331,7 @@ trait Edit_Page_Widgets {
 							'fields'                => array(),
 							'html_attr'             => array(),
 							'state'                 => array(),
-							'field_wrapper_classes' => 'wpdev-w-full wpdev-box-border wpdev-items-center wpdev-flex wpdev-justify-between wpdev-p-4 wpdev-m-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
+							'field_wrapper_classes' => 'wpdev-full wpdev-box-border wpdev-items-center wpdev-row wpdev-justify-between wpdev-pad-4 wpdev-mar-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
 						)
 					);
 
@@ -355,7 +361,7 @@ trait Edit_Page_Widgets {
 						$section['fields'],
 						array(
 							'views'                 => 'admin-pages/fields',
-							'classes'               => 'wpdev-widget-list wpdev-striped wpdev-m-0 wpdev-border-solid wpdev-border-gray-300 wpdev-border-0 wpdev-border-b',
+							'classes'               => 'wpdev-widget-list wpdev-striped wpdev-mar-0 wpdev-border-solid wpdev-border-gray-300 wpdev-border-0 wpdev-border-b',
 							'field_wrapper_classes' => $section['field_wrapper_classes'],
 							'html_attr'             => $section['html_attr'],
 							'before'                => $section['before'],
@@ -437,7 +443,7 @@ trait Edit_Page_Widgets {
 			'title'             => $labels['save_button_label'],
 			'placeholder'       => $labels['save_button_label'],
 			'value'             => 'save',
-			'classes'           => 'button button-primary wpdev-w-full',
+			'classes'           => 'button button-primary wpdev-full',
 			'html_attr'         => array(),
 			'wrapper_html_attr' => array(),
 		);
@@ -486,8 +492,8 @@ trait Edit_Page_Widgets {
 			'display_value'   => $labels['delete_button_label'] ?? '',
 			'placeholder'     => $labels['delete_button_label'] ?? '',
 			'value'           => 'delete',
-			'classes'         => 'button wubox wpdev-w-full wpdev-text-center',
-			'wrapper_classes' => 'wpdev-bg-gray-100',
+			'classes'         => 'button wubox wpdev-full wpdev-type-center',
+			'wrapper_classes' => 'wpdev-surface-gray-100',
 			'html_attr'       => array(
 				'title' => $labels['delete_button_label'],
 				'href'  => wpdev_get_form_url(

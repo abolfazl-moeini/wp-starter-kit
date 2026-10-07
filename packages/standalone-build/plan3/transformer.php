@@ -2401,7 +2401,19 @@ class Plan3_Transformer {
 									}
 								}
 							} else {
-								$output .= ( $t[0] === T_WHITESPACE ) ? ' ' : $t[1];
+								if ( $t[0] === T_COMMENT || $t[0] === T_DOC_COMMENT ) {
+									if ( $this->strip_comments ) {
+										continue;
+									}
+									$output .= $t[1];
+									if ( ( strpos( $t[1], '//' ) === 0 || strpos( $t[1], '#' ) === 0 ) && substr( $t[1], -1 ) !== "\n" ) {
+										$output .= "\n";
+									}
+								} elseif ( $t[0] === T_WHITESPACE ) {
+									$output .= ( strpos( $t[1], "\n" ) !== false ? "\n" : ' ' );
+								} else {
+									$output .= $t[1];
+								}
 							}
 						}
 						$j++;

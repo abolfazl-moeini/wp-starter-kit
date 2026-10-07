@@ -167,7 +167,7 @@ export function parseArgs(argv) {
     skipRector: false,
     skipZip: false,
     skipTests: false,
-    obfuscate: false,
+    obfuscate: undefined,
     withDocs: false,
     profile: null,
     root: process.cwd(),
@@ -770,18 +770,18 @@ export async function prepareRelease(options = {}) {
       sourceRoot: root,
       consumer: slug,
       outputDir: outAbs,
-      isObfuscate:
-        options.isObfuscate ?? (options.obfuscate || profile === "s"),
-      obfuscate: options.obfuscate ?? profile === "s",
+      isObfuscate: isObfuscate,
+      obfuscate: isObfuscate,
       profile: profile,
       inlineFramework:
         options.inlineFramework !== undefined
           ? options.inlineFramework
-          : profile === "s" || profile === "standalone",
+          : (raw?.inlineFramework ??
+            (profile === "s" || profile === "standalone")),
       spaghetti:
         options.spaghetti !== undefined
           ? options.spaghetti
-          : profile === "s" || profile === "spaghetti",
+          : (raw?.spaghetti ?? (profile === "s" || profile === "spaghetti")),
       minifyAssets:
         options.minifyAssets ?? (profile === "s" ? true : undefined),
       skipZip,
