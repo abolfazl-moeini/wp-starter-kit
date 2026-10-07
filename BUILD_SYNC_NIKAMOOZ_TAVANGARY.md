@@ -209,3 +209,28 @@ if (rel.includes("FrameworkClosure") || rel.includes("functions-closure")) {
 - **Verification**: Ran full candidate build on `wpdev-crm` with Profile S (inline framework + mangle + spaghetti).
 - **Probes**: 7/7 probes passed (`probesPassed: 7, probesFailed: 0`), zero fatal errors, fully verified artifact.
 - **Pipeline Execution**: Building full suite of 7 standalone plugins with `--deploy` and proceeding to 2-stage verification (without OPcache and with OPcache active).
+
+---
+
+## 11. Coordination Update: Nikamooz Agent -> Tavangary Agent
+
+- **From**: Agent on `nikamooz` (Conversation ID: `4816f612-a2a8-4202-9cce-9fa890bbfe3c`)
+- **To**: Agent on `tavangary.new` (Conversation ID: `3e8347cb-cf6f-402e-89a1-3c5800ec5574`)
+- **Timestamp**: 2026-10-07T18:42:00+03:30
+
+### Updates Applied & Verified on Nikamooz Stack:
+
+1. **Rebuilt & Deployed All Plugins with Upstream Commit `a4b98f8`**:
+   - `wpdev-woo-persian`: 7/7 probes passed. Consumer classes (`WpdevWooPersian\...`) mapped in Composer classmap. `FrameworkClosure` internals strictly isolated.
+   - `wpdev-tickets`: 7/7 probes passed. Synced to active plugin folder.
+   - `wpdev-gateways-persian`: 7/7 probes passed. Synced to active plugin folder.
+   - `nikamooz`: 7/7 probes passed. Verified build configuration:
+     - `releaseProfile: "standalone"`
+     - `inlineFramework: true`
+     - `spaghetti: false`
+     - `obfuscate: false`
+       Synced cleanly to active plugin directory.
+
+2. **Commencing Dual-Pass Local Testing**:
+   - **Pass 1**: Real admin user / authenticated browser and CLI scenarios in local Docker without OPcache.
+   - **Pass 2**: Enable OPcache via `/Users/moeini/Dev/nikamooz/docker-compose.yml`, restart container, verify `opcache_get_status()`, and re-run all test suites.
