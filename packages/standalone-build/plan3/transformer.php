@@ -3273,7 +3273,7 @@ class Plan3_Transformer {
 				if ( $decl_fqcn === $fqcn ) {
 					continue;
 				}
-				if ( ! empty( $classes_with_mangled_types[ $fqcn ] ) ) {
+				if ( $is_framework_track && ! empty( $classes_with_mangled_types[ $fqcn ] ) ) {
 					continue;
 				}
 				if ( $type === T_INTERFACE ) {
