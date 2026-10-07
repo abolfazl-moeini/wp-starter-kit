@@ -55,7 +55,8 @@ test("WPDev Tickets Artifact: ZIP exists and matches strict package hygiene", { 
 test("WPDev Tickets Artifact: verifies comment stripping and symbol mangling across modules", { skip: !canRun ? "Requires pre-built wpdev-tickets artifact (set WPDEV_CONTENT_ROOT)" : false }, async () => {
   // Check Module.php
   const modulePhp = await readFile(path.join(fixture.pluginDir, "src/Modules/Tickets/Module.php"), "utf8");
-  assert.ok(modulePhp.includes("class Module"), "Module class entrypoint must remain class Module");
+  assert.ok(/class\s+_c_[a-z0-9]+/i.test(modulePhp), "Module class entrypoint must be mangled to global _c_... class");
+  assert.ok(modulePhp.includes("class_alias"), "Module class entrypoint must have class_alias");
   assert.ok(!modulePhp.includes("/**"), "DocBlocks must be stripped from Module.php");
 
   // Check an internal class

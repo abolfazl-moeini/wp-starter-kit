@@ -60,7 +60,8 @@ test("WPDev CRM Artifact: verifies comment stripping and symbol mangling across 
 
   // Check Module.php
   const modulePhp = await readFile(path.join(fixture.pluginDir, "src/Modules/CrmModule/Module.php"), "utf8");
-  assert.ok(modulePhp.includes("class Module"), "Module class entrypoint must remain class Module");
+  assert.ok(/class\s+_c_[a-z0-9]+/i.test(modulePhp), "Module class entrypoint must be mangled to global _c_... class");
+  assert.ok(modulePhp.includes("class_alias"), "Module class entrypoint must have class_alias");
   assert.ok(!modulePhp.includes("/**"), "DocBlocks must be stripped from Module.php");
   assert.ok(modulePhp.includes("'crm'"), "Slug literal must be preserved");
 });

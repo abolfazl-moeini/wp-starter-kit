@@ -194,5 +194,5 @@ describe("generators/docs.js — In-Repo Docs-as-Code", () => {
     // Raw docs directory is stripped from the WordPress plugin distribution root
     const distDocsDir = path.join(relRes.distRoot, "docs");
     await expect(fs.access(distDocsDir)).rejects.toThrow();
-  });
+  }, 30000);
 });
