@@ -201,3 +201,11 @@ if (rel.includes("FrameworkClosure") || rel.includes("functions-closure")) {
 - First-party consumer classes (`WpdevCrm\...`) are registered in Composer's classmap under their original FQCNs so Composer can autoload them seamlessly.
 - `FrameworkClosure` internals are NEVER registered in Composer's classmap, maintaining 100% privacy and zero cross-plugin leakage.
 - Clean, project-agnostic, and fully tested. Pushed to `origin/main`.
+
+---
+
+## 10. WPDev-CRM Standalone Verification Passed (2026-10-07)
+
+- **Verification**: Ran full candidate build on `wpdev-crm` with Profile S (inline framework + mangle + spaghetti).
+- **Probes**: 7/7 probes passed (`probesPassed: 7, probesFailed: 0`), zero fatal errors, fully verified artifact.
+- **Pipeline Execution**: Building full suite of 7 standalone plugins with `--deploy` and proceeding to 2-stage verification (without OPcache and with OPcache active).
