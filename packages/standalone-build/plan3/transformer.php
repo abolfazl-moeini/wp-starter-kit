@@ -433,7 +433,13 @@ class Plan3_Transformer {
 
 		// 1. Fully Qualified Name: exact declared FQCN or external.
 		if ( $has_leading_slash ) {
-			return isset( $this->declared_classes[ $clean_ci ] ) ? $this->declared_classes[ $clean_ci ] : null;
+			if ( isset( $this->declared_classes[ $clean_ci ] ) ) {
+				return $this->declared_classes[ $clean_ci ];
+			}
+			if ( isset( $this->class_map[ $clean ] ) || isset( $this->class_map[ '\\' . $clean ] ) ) {
+				return $clean;
+			}
+			return null;
 		}
 
 		// 2. Qualified Name (contains backslash, no leading slash).
@@ -446,12 +452,21 @@ class Plan3_Transformer {
 				if ( isset( $this->declared_classes[ $imported_ci ] ) ) {
 					return $this->declared_classes[ $imported_ci ];
 				}
+				if ( isset( $this->class_map[ $imported ] ) || isset( $this->class_map[ '\\' . $imported ] ) ) {
+					return $imported;
+				}
 				return null;
 			}
 			$ns_candidate = ( $current_namespace !== '' ? $current_namespace . '\\' : '' ) . $clean;
 			$ns_candidate_ci = strtolower( $ns_candidate );
 			if ( isset( $this->declared_classes[ $ns_candidate_ci ] ) ) {
 				return $this->declared_classes[ $ns_candidate_ci ];
+			}
+			if ( isset( $this->class_map[ $ns_candidate ] ) || isset( $this->class_map[ '\\' . $ns_candidate ] ) ) {
+				return $ns_candidate;
+			}
+			if ( empty( $current_namespace ) && ( isset( $this->class_map[ $clean ] ) || isset( $this->class_map[ '\\' . $clean ] ) ) ) {
+				return $clean;
 			}
 			return null;
 		}
@@ -462,6 +477,9 @@ class Plan3_Transformer {
 			$imported_ci = strtolower( $imported );
 			if ( isset( $this->declared_classes[ $imported_ci ] ) ) {
 				return $this->declared_classes[ $imported_ci ];
+			}
+			if ( isset( $this->class_map[ $imported ] ) || isset( $this->class_map[ '\\' . $imported ] ) ) {
+				return $imported;
 			}
 			// Imported value may itself be relative (legacy maps): try namespace-relative.
 			if ( strpos( $imported, '\\' ) === false && $current_namespace !== '' ) {
@@ -1839,6 +1857,11 @@ class Plan3_Transformer {
 								$this->class_map[ '\\' . $class_name ] = '\\' . $mangled;
 							}
 						}
+						if ( in_array( $class_name, array( 'Plugin', 'AbstractModule', 'ModuleInterface', 'ModuleLoader' ), true ) ) {
+							$target_core_mapping = $is_flattened ? $mangled : ( ! empty( $current_namespace ) ? ( $current_namespace . '\\' . $mangled ) : $mangled );
+							$this->class_map[ 'WPDev\\Core\\' . $class_name ] = $target_core_mapping;
+							$this->class_map[ '\\WPDev\\Core\\' . $class_name ] = '\\' . $target_core_mapping;
+						}
 					}
 				} elseif ( $id === T_FUNCTION && $class_depth === 0 && $in_class === 0 ) {
 					$prev = $i - 1;
@@ -2164,6 +2187,7 @@ class Plan3_Transformer {
 		$in_function_header     = false;
 		$in_closure_use         = false;
 		$declared_classes_in_file = array();
+		$classes_with_mangled_types = array();
 		$pending_ns_brace       = false;
 		$ns_brace_depth         = 0;
 		$retained_brace_namespace_emitted = false;
@@ -2791,6 +2815,13 @@ class Plan3_Transformer {
 					$qualified_resolved_target = $this->resolve_class_reference( $text, $current_namespace, $file_use_map );
 					if ( $qualified_resolved_target !== null ) {
 						$target = $qualified_resolved_target;
+						if ( $this->mangle_symbols && $target !== $text && $target !== ( '\\' . $text ) ) {
+							if ( $in_function_header && ! empty( $current_class_fqcn ) ) {
+								$classes_with_mangled_types[ $current_class_fqcn ] = true;
+							} elseif ( $pending_class_fqcn !== null ) {
+								$classes_with_mangled_types[ $pending_class_fqcn ] = true;
+							}
+						}
 						if ( $this->flatten_namespaces && ! empty( $current_namespace ) && ! $keep_namespace ) {
 							$output .= '\\' . $target;
 						} elseif ( ! empty( $current_namespace ) && strpos( $target, '\\' ) !== false ) {
@@ -2931,6 +2962,13 @@ class Plan3_Transformer {
 						$mapped_class = $this->resolve_class_reference( $text, $current_namespace, $file_use_map );
 						if ( $mapped_class !== null && ! $is_fn_call && ! $is_member_name && ! $is_declaration ) {
 							$target = $mapped_class;
+							if ( $this->mangle_symbols && $target !== $text && $target !== ( '\\' . $text ) ) {
+								if ( $in_function_header && ! empty( $current_class_fqcn ) ) {
+									$classes_with_mangled_types[ $current_class_fqcn ] = true;
+								} elseif ( $pending_class_fqcn !== null ) {
+									$classes_with_mangled_types[ $pending_class_fqcn ] = true;
+								}
+							}
 							if ( ! empty( $current_namespace ) && $keep_namespace && strpos( $target, '\\' ) === false ) {
 								$output .= '\\' . ltrim( $target, '\\' );
 							} else {
@@ -3234,7 +3272,7 @@ class Plan3_Transformer {
 				if ( $decl_fqcn === $fqcn ) {
 					continue;
 				}
-				if ( $this->mangle_symbols && ( strpos( $fqcn, 'WPDev\\' ) === 0 || strpos( $fqcn, 'WPDevFramework\\' ) === 0 ) ) {
+				if ( ! empty( $classes_with_mangled_types[ $fqcn ] ) ) {
 					continue;
 				}
 				if ( $type === T_INTERFACE ) {

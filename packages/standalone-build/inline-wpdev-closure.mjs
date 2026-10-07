@@ -347,7 +347,28 @@ function isDeclarationPureFile(cleanSrc) {
 export async function generateClosureClassmap(targetDir) {
   const map = {};
   const traits = [];
+  const preloads = [];
   const warnings = [];
+  const CORE_PRELOAD_ORDER = [
+    "QualifierBase",
+    "UserAccess",
+    "BluePrint",
+    "CapabilityPolicy",
+    "ModuleInterface",
+    "AbstractModule",
+    "Plugin",
+    "ModuleLoader",
+    "RestHandler",
+    "RestSetup",
+    "Shortcode",
+    "ShortcodesSetup",
+    "Command",
+    "CliSetup",
+    "DeferredCall",
+    "Template",
+    "Assets",
+  ];
+
   async function visit(curDir) {
     const entries = await readdir(curDir, { withFileTypes: true });
     for (const entry of entries) {
@@ -387,13 +408,36 @@ export async function generateClosureClassmap(targetDir) {
           warnings.push(`trait file excluded from eager preload (impure or mixed): ${rel}`);
         }
       }
+
+      // Collect pure-declaration core contracts and base classes for eager preload
+      const inCoreDir = rel.startsWith("/Core/") || rel.startsWith("/core/");
+      if (inCoreDir && isDeclarationPureFile(clean)) {
+        for (const decl of declarations) {
+          const shortName = decl.fqcn.split("\\").pop();
+          if ((decl.kind === "class" || decl.kind === "interface") && CORE_PRELOAD_ORDER.includes(shortName)) {
+            preloads.push(decl.fqcn);
+          }
+        }
+      }
     }
   }
   await visit(targetDir);
   const sortedMap = {};
   for (const key of Object.keys(map).sort()) sortedMap[key] = map[key];
   traits.sort();
-  return { map: sortedMap, traits, warnings };
+
+  preloads.sort((a, b) => {
+    const aShort = a.split("\\").pop();
+    const bShort = b.split("\\").pop();
+    const aIdx = CORE_PRELOAD_ORDER.indexOf(aShort);
+    const bIdx = CORE_PRELOAD_ORDER.indexOf(bShort);
+    if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
+    if (aIdx !== -1) return -1;
+    if (bIdx !== -1) return 1;
+    return a.localeCompare(b);
+  });
+
+  return { map: sortedMap, traits, preloads, warnings };
 }
 
 function phpStringLiteral(value) {
@@ -480,6 +524,15 @@ export async function enrichClosureClassmapFile(closureDir, symbolClasses) {
       traits.push(unescapePhpString(tm[1]));
     }
   }
+  const preloadsMatch = src.match(/'preloads'\s*=>\s*array\s*\(([\s\S]*?)\)\s*,?\s*\)/);
+  const preloads = [];
+  if (preloadsMatch) {
+    const itemRe = /'((?:[^'\\]|\\.)*)'\s*,?/g;
+    let pm;
+    while ((pm = itemRe.exec(preloadsMatch[1])) !== null) {
+      preloads.push(unescapePhpString(pm[1]));
+    }
+  }
   const warnings = [];
   const additions = {};
   for (const fqcn of Object.keys(map)) {
@@ -499,6 +552,20 @@ export async function enrichClosureClassmapFile(closureDir, symbolClasses) {
       additions[mangled] = map[fqcn];
     }
   }
+  const enrichedTraits = [...traits];
+  for (const fqcn of traits) {
+    const mangled = resolveMangledClassName(symbolClasses, fqcn);
+    if (mangled && mangled !== fqcn && !enrichedTraits.includes(mangled)) {
+      enrichedTraits.push(mangled);
+    }
+  }
+  const enrichedPreloads = [...preloads];
+  for (const fqcn of preloads) {
+    const mangled = resolveMangledClassName(symbolClasses, fqcn);
+    if (mangled && mangled !== fqcn && !enrichedPreloads.includes(mangled)) {
+      enrichedPreloads.push(mangled);
+    }
+  }
   if (Object.keys(additions).length === 0) {
     return { enriched: 0, warnings };
   }
@@ -506,9 +573,10 @@ export async function enrichClosureClassmapFile(closureDir, symbolClasses) {
   for (const key of Object.keys(additions).sort()) {
     merged[key] = additions[key];
   }
+  const preloadsOut = preloadsMatch ? `\n  'preloads' => ${phpStringList(preloads)},` : "";
   const out =
     `<?php\n` +
-    `return array(\n  'map' => ${phpStringMap(merged)},\n  'traits' => ${phpStringList(traits)},\n);\n`;
+    `return array(\n  'map' => ${phpStringMap(merged)},\n  'traits' => ${phpStringList(traits)},${preloadsOut}\n);\n`;
   await writeFile(classmapPath, out, "utf8");
   return { enriched: Object.keys(additions).length, warnings };
 }
@@ -1427,7 +1495,7 @@ if (!defined('WPDEV_PLUGIN_URL') && function_exists('plugins_url')) {
 // => closure-relative path, plus eager trait preload list. Zero hardcoded symbol
 // names; derived 100% from inlined files on disk.
 $wpdev_closure_classmap_file = __DIR__ . '/closure-classmap.php';
-$wpdev_closure_classmap = array('map' => array(), 'traits' => array());
+$wpdev_closure_classmap = array('map' => array(), 'traits' => array(), 'preloads' => array());
 if (is_file($wpdev_closure_classmap_file)) {
     $wpdev_closure_loaded = require $wpdev_closure_classmap_file;
     if (is_array($wpdev_closure_loaded)) {
@@ -1437,32 +1505,38 @@ if (is_file($wpdev_closure_classmap_file)) {
         if (isset($wpdev_closure_loaded['traits']) && is_array($wpdev_closure_loaded['traits'])) {
             $wpdev_closure_classmap['traits'] = $wpdev_closure_loaded['traits'];
         }
+        if (isset($wpdev_closure_loaded['preloads']) && is_array($wpdev_closure_loaded['preloads'])) {
+            $wpdev_closure_classmap['preloads'] = $wpdev_closure_loaded['preloads'];
+        }
     }
     unset($wpdev_closure_loaded);
 }
 
-// Eagerly preload pure-declaration trait files (timing-critical for trait
-// composition), skipping anything another active plugin already defined.
-foreach ($wpdev_closure_classmap['traits'] as $wpdev_trait_fqcn) {
-    if (!is_string($wpdev_trait_fqcn) || $wpdev_trait_fqcn === '') {
+// Eagerly preload pure-declaration trait files and core base contracts
+$wpdev_preloads = isset($wpdev_closure_classmap['preloads']) && is_array($wpdev_closure_classmap['preloads'])
+    ? $wpdev_closure_classmap['preloads']
+    : array();
+$wpdev_eager_load = array_merge($wpdev_closure_classmap['traits'], $wpdev_preloads);
+foreach ($wpdev_eager_load as $wpdev_eager_fqcn) {
+    if (!is_string($wpdev_eager_fqcn) || $wpdev_eager_fqcn === '') {
         continue;
     }
-    if (trait_exists($wpdev_trait_fqcn, false) || class_exists($wpdev_trait_fqcn, false) || interface_exists($wpdev_trait_fqcn, false)) {
+    if (trait_exists($wpdev_eager_fqcn, false) || class_exists($wpdev_eager_fqcn, false) || interface_exists($wpdev_eager_fqcn, false)) {
         continue;
     }
-    if (!isset($wpdev_closure_classmap['map'][$wpdev_trait_fqcn])) {
+    if (!isset($wpdev_closure_classmap['map'][$wpdev_eager_fqcn])) {
         continue;
     }
-    $wpdev_trait_rel = $wpdev_closure_classmap['map'][$wpdev_trait_fqcn];
-    if (!is_string($wpdev_trait_rel) || $wpdev_trait_rel === '' || strpos($wpdev_trait_rel, '..') !== false) {
+    $wpdev_eager_rel = $wpdev_closure_classmap['map'][$wpdev_eager_fqcn];
+    if (!is_string($wpdev_eager_rel) || $wpdev_eager_rel === '' || strpos($wpdev_eager_rel, '..') !== false) {
         continue;
     }
-    $wpdev_trait_file = __DIR__ . $wpdev_trait_rel;
-    if (is_file($wpdev_trait_file)) {
-        require_once $wpdev_trait_file;
+    $wpdev_eager_file = __DIR__ . $wpdev_eager_rel;
+    if (is_file($wpdev_eager_file)) {
+        require_once $wpdev_eager_file;
     }
 }
-unset($wpdev_trait_fqcn, $wpdev_trait_rel, $wpdev_trait_file);
+unset($wpdev_preloads, $wpdev_eager_load, $wpdev_eager_fqcn, $wpdev_eager_rel, $wpdev_eager_file);
 
 // Dynamic O(1) closure autoloader: exact classmap hit first, generic legacy-root
 // swaps second (framework identity only — WPDev<->WPDevFramework, BerlinDB vendored
@@ -1894,6 +1968,7 @@ if (!defined('WPDEV_BOOTSTRAP_FILE')) {
 return array(
   'map' => ${phpStringMap(closureClassmap.map)},
   'traits' => ${phpStringList(closureClassmap.traits)},
+  'preloads' => ${phpStringList(closureClassmap.preloads || [])},
 );
 `;
   await writeFile(path.join(targetDir, "closure-classmap.php"), classmapPhp, "utf8");
@@ -1958,25 +2033,30 @@ export async function scopeFrameworkCoreForConsumer(coreDestDir, stagingPlugin, 
     await writeFile(modInterfacePhp, content, "utf8");
   }
 
-  // 5. Rewrite bare WPDev\Core\Plugin in staging files outside FrameworkClosure/Core
-  async function rewriteBarePluginRefs(dir) {
+  // 5. Rewrite bare WPDev\Core references in staging files outside FrameworkClosure/Core
+  async function rewriteBareCoreRefs(dir) {
     const entries = await readdir(dir, { withFileTypes: true });
     for (const entry of entries) {
       const full = path.join(dir, entry.name);
       if (entry.isDirectory()) {
         if (entry.name === "vendor" || entry.name === "vendor-prefixed") continue;
         if (full === coreDestDir) continue;
-        await rewriteBarePluginRefs(full);
+        await rewriteBareCoreRefs(full);
       } else if (entry.isFile() && entry.name.endsWith(".php")) {
         let code = await readFile(full, "utf8");
         let modified = false;
-        if (/use\s+WPDev\\Core\\Plugin(\s*;|\s+as)/.test(code)) {
-          code = code.replace(/use\s+WPDev\\Core\\Plugin(\s*;|\s+as)/g, `use ${effectiveNs}\\Core\\Plugin$1`);
-          modified = true;
-        }
-        if (code.includes("\\WPDev\\Core\\Plugin::") && !code.includes(`\\${effectiveNs}\\Core\\Plugin::`)) {
-          code = code.replace(/\\WPDev\\Core\\Plugin::/g, `\\${effectiveNs}\\Core\\Plugin::`);
-          modified = true;
+        const coreClasses = ["Plugin", "AbstractModule", "ModuleInterface", "ModuleLoader"];
+        for (const cls of coreClasses) {
+          const useRegex = new RegExp(`use\\s+WPDev\\\\Core\\\\${cls}(\\s*;|\\s+as)`, "g");
+          if (useRegex.test(code)) {
+            code = code.replace(useRegex, `use ${effectiveNs}\\Core\\${cls}$1`);
+            modified = true;
+          }
+          const fqcnRegex = new RegExp(`\\\\WPDev\\\\Core\\\\${cls}`, "g");
+          if (fqcnRegex.test(code)) {
+            code = code.replace(fqcnRegex, `\\${effectiveNs}\\Core\\${cls}`);
+            modified = true;
+          }
         }
         if (modified) {
           await writeFile(full, code, "utf8");
@@ -1984,7 +2064,7 @@ export async function scopeFrameworkCoreForConsumer(coreDestDir, stagingPlugin, 
       }
     }
   }
-  await rewriteBarePluginRefs(stagingPlugin);
+  await rewriteBareCoreRefs(stagingPlugin);
 
   return { consumerNs: effectiveNs };
 }

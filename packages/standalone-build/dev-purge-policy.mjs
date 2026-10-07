@@ -161,6 +161,17 @@ export function shouldPurgeFile(relPath, fileName) {
     return { purge: true, action: "delete" };
   }
 
+  if (
+    lowerName === "license.md" ||
+    lowerName === "license" ||
+    lowerName === "license.txt" ||
+    lowerName === "notice.md" ||
+    lowerName === "notice" ||
+    lowerName === "notice.txt"
+  ) {
+    return { purge: false, action: "keep" };
+  }
+
   if (lowerName.endsWith(".md")) {
     return { purge: true, action: "delete" };
   }
