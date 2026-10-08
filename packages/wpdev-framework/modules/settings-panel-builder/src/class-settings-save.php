@@ -100,7 +100,7 @@ class Settings_Save {
 				 */
 				$current_tab    = wpdev_request( 'tab', 'general' );
 				$is_current_tab = ( $section_slug === $current_tab )
-					|| ( 'general' === $current_tab && in_array( $section_slug, array( 'general', 'tavangary_general' ), true ) );
+					|| ( 'general' === $current_tab && ( 'general' === $section_slug || substr( (string) $section_slug, -8 ) === '_general' || ( isset( $section['tab'] ) && 'general' === $section['tab'] ) ) );
 
 				if ( $is_current_tab && $field->type === 'toggle' && ! isset( $settings_to_save[ $field_slug ] ) ) {
 
