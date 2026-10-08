@@ -78,11 +78,9 @@ function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
 				$candidate_file = wpdev_path( $rel );
 				if ( file_exists( $candidate_file ) ) {
 					$file_norm = wpdev_normalize_path( $candidate_file );
-					if ( function_exists( 'plugins_url' ) && defined( 'WP_PLUGIN_DIR' ) ) {
-						$norm_plugins = wpdev_normalize_path( WP_PLUGIN_DIR );
-						if ( strncmp( $file_norm, $norm_plugins, strlen( $norm_plugins ) ) === 0 ) {
-							return plugins_url( ltrim( substr( $file_norm, strlen( $norm_plugins ) ), '/' ) );
-						}
+					if ( function_exists( 'plugins_url' ) && defined( 'WP_PLUGIN_DIR' ) && wpdev_path_is_within( $file_norm, WP_PLUGIN_DIR ) ) {
+						$norm_plugins = wpdev_normalize_path( rtrim( WP_PLUGIN_DIR, '/\\' ) );
+						return plugins_url( ltrim( substr( $file_norm, strlen( $norm_plugins ) ), '/' ) );
 					}
 					return wpdev_url( $rel );
 				}
@@ -112,11 +110,9 @@ function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
 				$candidate_file = wpdev_path( $rel );
 				if ( file_exists( $candidate_file ) ) {
 					$file_norm = wpdev_normalize_path( $candidate_file );
-					if ( function_exists( 'plugins_url' ) && defined( 'WP_PLUGIN_DIR' ) ) {
-						$norm_plugins = wpdev_normalize_path( WP_PLUGIN_DIR );
-						if ( strncmp( $file_norm, $norm_plugins, strlen( $norm_plugins ) ) === 0 ) {
-							return plugins_url( ltrim( substr( $file_norm, strlen( $norm_plugins ) ), '/' ) );
-						}
+					if ( function_exists( 'plugins_url' ) && defined( 'WP_PLUGIN_DIR' ) && wpdev_path_is_within( $file_norm, WP_PLUGIN_DIR ) ) {
+						$norm_plugins = wpdev_normalize_path( rtrim( WP_PLUGIN_DIR, '/\\' ) );
+						return plugins_url( ltrim( substr( $file_norm, strlen( $norm_plugins ) ), '/' ) );
 					}
 					return wpdev_url( $rel );
 				}
@@ -147,20 +143,15 @@ function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
 		$url = plugins_url( $relative_from_module, $module_root . '/module.php' );
 	}
 
-	if ( empty( $url ) && function_exists( 'plugins_url' ) && defined( 'WP_PLUGIN_DIR' ) ) {
-		$norm_plugins = wpdev_normalize_path( WP_PLUGIN_DIR );
-		if ( strncmp( $file_norm, $norm_plugins, strlen( $norm_plugins ) ) === 0 ) {
-			$rel = ltrim( substr( $file_norm, strlen( $norm_plugins ) ), '/' );
-			$url = plugins_url( $rel );
-		}
+	if ( empty( $url ) && function_exists( 'plugins_url' ) && defined( 'WP_PLUGIN_DIR' ) && wpdev_path_is_within( $module_root, WP_PLUGIN_DIR ) ) {
+		$url = plugins_url( $relative_from_module, $module_root . '/module.php' );
 	}
 
-	if ( empty( $url ) && function_exists( 'content_url' ) && defined( 'WP_CONTENT_DIR' ) ) {
-		$norm_content = wpdev_normalize_path( WP_CONTENT_DIR );
-		if ( strncmp( $file_norm, $norm_content, strlen( $norm_content ) ) === 0 ) {
-			$rel = ltrim( substr( $file_norm, strlen( $norm_content ) ), '/' );
-			$url = content_url( $rel );
-		}
+	$under_plugins = defined( 'WP_PLUGIN_DIR' ) && wpdev_path_is_within( $file_norm, WP_PLUGIN_DIR );
+	if ( empty( $url ) && function_exists( 'content_url' ) && defined( 'WP_CONTENT_DIR' ) && wpdev_path_is_within( $file_norm, WP_CONTENT_DIR ) && ! $under_plugins ) {
+		$norm_content = wpdev_normalize_path( rtrim( WP_CONTENT_DIR, '/\\' ) );
+		$rel          = ltrim( substr( $file_norm, strlen( $norm_content ) ), '/' );
+		$url          = content_url( $rel );
 	}
 
 	/**

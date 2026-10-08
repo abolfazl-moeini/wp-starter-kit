@@ -18,6 +18,10 @@ use WPDevFramework\Modules\SettingsPanelBuilder\Settings_Section_Registry;
 // Exit if accessed directly
 defined('ABSPATH') || exit;
 
+require_once __DIR__ . '/class-settings-storage.php';
+require_once __DIR__ . '/class-settings-save.php';
+require_once __DIR__ . '/class-settings-section-registry.php';
+
 /**
  * WPDev settings helper class.
  *
@@ -85,7 +89,9 @@ class Settings {
 
 		$this->get_all();
 
-		add_action('wpdev_load', array($this, 'default_sections'), 1);
+		// After module managers boot (default wpdev_load:5) so extension hooks
+		// like wpdev_settings_emails have listeners before sections fire them.
+		add_action('wpdev_load', array($this, 'default_sections'), 10);
 
 		add_action('init', array($this, 'handle_legacy_filters'), 2);
 
@@ -255,6 +261,10 @@ class Settings {
 
 		$saved_settings = !$reset ? $this->storage()->all() : array();
 
+		if ( is_array( $settings_to_save ) ) {
+			$settings_to_save = Settings_Save::with_repeater_columns( $sections, $settings_to_save );
+		}
+
 		do_action('wpdev_before_save_settings', $settings_to_save);
 
 		// K3-01/K3-03: per-field resolution lives in the Settings_Save collaborator.
@@ -271,16 +281,7 @@ class Settings {
 		 */
 		$settings = apply_filters('wpdev_pre_save_settings', $settings, $settings_to_save, $saved_settings);
 
-		// The storage collaborator re-reads the shared option immediately before
-		// writing so concurrent sibling saves cannot be based on this request's
-		// earlier cache. It updates only fields resolved by this runtime.
-		$settings = $this->storage()->replace_registered( $settings );
-
-		if ( false === $settings ) {
-			do_action( 'wpdev_settings_write_conflict', $settings_to_save, $reset );
-
-			return false;
-		}
+		$this->storage()->replace($settings);
 
 		$this->settings = $settings;
 
@@ -423,7 +424,7 @@ class Settings {
 		/*
 		 * Adds the field to the desired fields array.
 		 */
-		add_filter("wpdev_settings_section_{$section_slug}_fields", function($fields) use ($field_slug, $atts) {
+		add_filter("wpdev_settings_section_{$section_slug}_fields", function($fields) use ($section_slug, $field_slug, $atts) {
 			/*
 			 * We no longer support settings with hyphens.
 			 */
@@ -474,13 +475,18 @@ class Settings {
 			));
 
 			/**
-			 * Adds v-model
+			 * Adds v-model.
+			 *
+			 * Do not set true-value/false-value to '1'/'0'. Toggle fields are
+			 * sanitized to real booleans (rest_sanitize_boolean), and Vue state
+			 * is seeded from get_all() JSON — so model values are true/false.
+			 * Vue's default checkbox binding uses boolean true/false and matches
+			 * that state; string '1'/'0' does not (looseEqual(true, '1') === false),
+			 * which made toggles always render off after save.
 			 */
 			if (wpdev_get_isset($atts, 'type') !== 'submit') {
 
-				$atts['html_attr']['v-model']     = wpdev_replace_dashes($field_slug);
-				$atts['html_attr']['true-value']  = '1';
-				$atts['html_attr']['false-value'] = '0';
+				$atts['html_attr']['v-model'] = wpdev_replace_dashes($field_slug);
 
 			} // end if;
 
@@ -493,7 +499,7 @@ class Settings {
 
 			if ($model_name) {
 
-				if (function_exists("wpdev_get_{$model_name}") || $model_name === 'page') {
+				if (function_exists("wpdev_get_{$model_name}") || $model_name === 'page' || post_type_exists((string) $model_name)) {
 
 					$original_html_attr = $atts['html_attr'];
 
@@ -501,7 +507,7 @@ class Settings {
 
 						$value = wpdev_get_setting($field_slug);
 
-						if ($model_name === 'page') {
+						if ($model_name === 'page' || post_type_exists((string) $model_name)) {
 
 							$new_attrs['data-selected'] = get_post($value);
 
@@ -587,16 +593,18 @@ class Settings {
 	} // end default_sections;
 
 	/**
-	 * Tries to determine the location of the company based on the admin IP.
+	 * Tries to determine the location of the company from server GEO headers only.
+	 *
+	 * Does not call external geolocation APIs (no phone-home in slim / library builds).
 	 *
 	 * @since 2.0.0
 	 * @return string
 	 */
 	public function get_default_company_country() {
 
-		$geolocation = \WPDevFramework\Geolocation::geolocate_ip('', true);
+		$geolocation = \WPDevFramework\Geolocation::geolocate_ip( '', false, false );
 
-		return $geolocation['country'];
+		return isset( $geolocation['country'] ) ? (string) $geolocation['country'] : '';
 
 	} // end get_default_company_country;
 

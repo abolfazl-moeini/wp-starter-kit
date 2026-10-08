@@ -148,8 +148,9 @@ class Ajax {
 
 			$table = new $full_class_name();
 
-			if ( method_exists( $table, 'user_can_ajax_refresh' ) && ! $table->user_can_ajax_refresh() ) {
+			if ( ! method_exists( $table, 'user_can_ajax_refresh' ) || ! $table->user_can_ajax_refresh() ) {
 				\WPDevFramework\Core\Ajax\Ajax_Response::forbidden();
+				return;
 			}
 
 			$table->ajax_response();
