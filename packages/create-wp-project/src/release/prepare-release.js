@@ -615,6 +615,45 @@ async function createReleaseZip(outAbs, slug) {
 }
 
 /**
+ * True when child is parent or a directory inside it. A shared string prefix
+ * such as `/var/wp-content-old` under `/var/wp-content` does not match.
+ *
+ * @param {string} child
+ * @param {string} parent
+ * @returns {boolean}
+ */
+export function pathIsWithin(child, parent) {
+  if (!child || !parent) {
+    return false;
+  }
+  const relative = path.relative(path.resolve(parent), path.resolve(child));
+  return (
+    relative === "" ||
+    (!relative.startsWith("..") && !path.isAbsolute(relative))
+  );
+}
+
+/**
+ * WPDEV_CONTENT_ROOT is the wp-content directory. Use it only when the
+ * plugin itself lives inside that directory.
+ *
+ * @param {string} pluginRoot
+ * @param {string} [contentRootEnv]
+ * @returns {{ contentRoot: string, pluginsDir: string }}
+ */
+export function resolveReleaseContentRoot(
+  pluginRoot,
+  contentRootEnv = process.env.WPDEV_CONTENT_ROOT,
+) {
+  if (contentRootEnv && pathIsWithin(pluginRoot, contentRootEnv)) {
+    const contentRoot = path.resolve(contentRootEnv);
+    return { contentRoot, pluginsDir: path.join(contentRoot, "plugins") };
+  }
+  const pluginsDir = path.dirname(path.resolve(pluginRoot));
+  return { contentRoot: path.dirname(pluginsDir), pluginsDir };
+}
+
+/**
  * Programmatic entry (for tests and CLI).
  *
  * @param {{ root?: string, out?: string, skipComposer?: boolean, skipRector?: boolean, skipZip?: boolean, skipTests?: boolean }} options
@@ -749,24 +788,11 @@ export async function prepareRelease(options = {}) {
         ? canonicalAssemblerPath
         : pathToFileURL(canonicalAssemblerPath).href;
     const { assembleProfileSCandidate } = await import(importUrl);
-    let contentRoot = null;
-    let pluginsDir = null;
-    if (
-      process.env.WPDEV_CONTENT_ROOT &&
-      path
-        .resolve(root)
-        .startsWith(path.resolve(process.env.WPDEV_CONTENT_ROOT))
-    ) {
-      contentRoot = path.resolve(process.env.WPDEV_CONTENT_ROOT);
-      pluginsDir = path.join(contentRoot, "plugins");
-    } else {
-      pluginsDir = path.dirname(root);
-      contentRoot = path.dirname(pluginsDir);
-    }
+    const located = resolveReleaseContentRoot(root);
 
     const result = await assembleProfileSCandidate({
-      contentRoot,
-      pluginsDir,
+      contentRoot: located.contentRoot,
+      pluginsDir: located.pluginsDir,
       sourceRoot: root,
       consumer: slug,
       outputDir: outAbs,

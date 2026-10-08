@@ -118,19 +118,22 @@ if (manifest && !failures.length) {
   }
 
   const contract = manifest.migrationContract;
-  const consumer = process.argv[4] || manifest.consumer || null;
-  const contractSuffix = consumer
-    ? `plugins/${consumer}/dev/${CONTRACT_FILENAME}`
-    : CONTRACT_FILENAME;
-  if (!object(contract) || !safe(contract.path) || !hex(contract.sha256)) {
-    failures.push("migrationContract path and sha256 are required");
-  } else if (!contract.path.endsWith(contractSuffix)) {
-    failures.push(`migrationContract path must be ${contractSuffix}`);
+  const consumer = process.argv[4] || manifest.consumer || "";
+  const consumerOk = /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(String(consumer));
+  if (!consumerOk) {
+    failures.push("migrationContract consumer slug is required");
   } else {
-    const digest = await liveDigest(contentRoot, contract.path, "migration contract");
-    if (digest && digest.sha256 !== contract.sha256) {
-      updated.push(contract.path);
-      next.migrationContract = { path: contract.path, sha256: digest.sha256 };
+    const contractSuffix = `plugins/${consumer}/dev/${CONTRACT_FILENAME}`;
+    if (!object(contract) || !safe(contract.path) || !hex(contract.sha256)) {
+      failures.push("migrationContract path and sha256 are required");
+    } else if (!contract.path.endsWith(contractSuffix)) {
+      failures.push(`migrationContract path must be ${contractSuffix}`);
+    } else {
+      const digest = await liveDigest(contentRoot, contract.path, "migration contract");
+      if (digest && digest.sha256 !== contract.sha256) {
+        updated.push(contract.path);
+        next.migrationContract = { path: contract.path, sha256: digest.sha256 };
+      }
     }
   }
 }

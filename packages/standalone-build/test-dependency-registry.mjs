@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const DEFAULT_TESTS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "tests");
 
-export const CANONICAL_TEST_REGISTRY = {
+const STATIC_CANONICAL_TEST_REGISTRY = {
   "ast-symbol-resolution.test.mjs": {
     "tools": [
       "tools/plan3/transformer.php"
@@ -477,22 +477,12 @@ export const CANONICAL_TEST_REGISTRY = {
       "tools/module-loader-coexistence-gate.mjs"
     ],
     "artifacts": [
-      "drm-connector",
       "sample-standalone-plugin",
-      "sample-profile-s-plugin",
-      "wpdev-analytics",
-      "wpdev-crm",
-      "wpdev-tickets",
-      "wpdev-woo-persian"
+      "sample-profile-s-plugin"
     ],
     "requiredBy": [
-      "drm-connector",
       "sample-standalone-plugin",
-      "sample-profile-s-plugin",
-      "wpdev-analytics",
-      "wpdev-crm",
-      "wpdev-tickets",
-      "wpdev-woo-persian"
+      "sample-profile-s-plugin"
     ],
     "criticality": "critical",
     "allowedModes": [
@@ -1335,64 +1325,12 @@ export const CANONICAL_TEST_REGISTRY = {
       "tools/canonical-artifact-manifest.mjs"
     ],
     "artifacts": [
-      "drm-connector",
       "sample-standalone-plugin",
-      "sample-profile-s-plugin",
-      "wpdev-analytics",
-      "wpdev-crm",
-      "wpdev-tickets",
-      "wpdev-woo-persian"
+      "sample-profile-s-plugin"
     ],
     "requiredBy": [
-      "drm-connector",
       "sample-standalone-plugin",
-      "sample-profile-s-plugin",
-      "wpdev-analytics",
-      "wpdev-crm",
-      "wpdev-tickets",
-      "wpdev-woo-persian"
-    ],
-    "criticality": "critical",
-    "allowedModes": [
-      "affected",
-      "full",
-      "release"
-    ],
-    "releaseSameRun": true,
-    "tier": "contract"
-  },
-  "wpdev-crm-artifact.test.mjs": {
-    "tools": [
-      "tools/assemble-profile-s-candidate.mjs",
-      "tools/artifact-fixture-helper.mjs",
-      "tools/canonical-artifact-manifest.mjs"
-    ],
-    "artifacts": [
-      "wpdev-crm"
-    ],
-    "requiredBy": [
-      "wpdev-crm"
-    ],
-    "criticality": "critical",
-    "allowedModes": [
-      "affected",
-      "full",
-      "release"
-    ],
-    "releaseSameRun": true,
-    "tier": "contract"
-  },
-  "wpdev-tickets-artifact.test.mjs": {
-    "tools": [
-      "tools/assemble-profile-s-candidate.mjs",
-      "tools/artifact-fixture-helper.mjs",
-      "tools/canonical-artifact-manifest.mjs"
-    ],
-    "artifacts": [
-      "wpdev-tickets"
-    ],
-    "requiredBy": [
-      "wpdev-tickets"
+      "sample-profile-s-plugin"
     ],
     "criticality": "critical",
     "allowedModes": [
@@ -1437,6 +1375,79 @@ export const CANONICAL_TEST_REGISTRY = {
   }
 };
 
+/** Slug shape accepted for any consumer. The kit does not keep a product allowlist. */
+export const CONSUMER_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+const ARTIFACT_TEST_FILENAME = /^([a-z0-9]+(?:-[a-z0-9]+)*)-artifact\.test\.mjs$/;
+
+const EXTERNAL_ARTIFACT_TEST_TOOLS = [
+  "tools/assemble-profile-s-candidate.mjs",
+  "tools/artifact-fixture-helper.mjs",
+  "tools/canonical-artifact-manifest.mjs",
+];
+
+/**
+ * Bind `*-artifact.test.mjs` files that are not part of the kit fixture registry.
+ * The consumer slug is the filename prefix, so a new project does not require a kit edit.
+ * @param {string} testsDir
+ * @param {Record<string, object>} staticRegistry
+ */
+export function discoverExternalArtifactTests(testsDir, staticRegistry = STATIC_CANONICAL_TEST_REGISTRY) {
+  const found = {};
+  if (!testsDir || !fs.existsSync(testsDir)) {
+    return found;
+  }
+  let names = [];
+  try {
+    names = fs.readdirSync(testsDir);
+  } catch {
+    return found;
+  }
+  for (const file of names) {
+    if (staticRegistry[file]) {
+      continue;
+    }
+    const match = ARTIFACT_TEST_FILENAME.exec(file);
+    if (!match) {
+      continue;
+    }
+    const consumer = match[1];
+    if (!CONSUMER_SLUG_PATTERN.test(consumer)) {
+      continue;
+    }
+    found[file] = {
+      tools: [...EXTERNAL_ARTIFACT_TEST_TOOLS],
+      artifacts: [consumer],
+      requiredBy: [consumer],
+      criticality: "critical",
+      allowedModes: ["affected", "full", "release"],
+      releaseSameRun: true,
+      tier: "contract",
+    };
+  }
+  return found;
+}
+
+export function deriveRequiredArtifactTests(registry) {
+  const required = {};
+  for (const [testFile, entry] of Object.entries(registry)) {
+    for (const consumer of entry.requiredBy || []) {
+      if (!required[consumer]) {
+        required[consumer] = [];
+      }
+      if (!required[consumer].includes(testFile)) {
+        required[consumer].push(testFile);
+      }
+    }
+  }
+  return required;
+}
+
+export const CANONICAL_TEST_REGISTRY = {
+  ...STATIC_CANONICAL_TEST_REGISTRY,
+  ...discoverExternalArtifactTests(DEFAULT_TESTS_DIR, STATIC_CANONICAL_TEST_REGISTRY),
+};
+
 export const TEST_TIERS = {
   unit: Object.entries(CANONICAL_TEST_REGISTRY).filter(([, v]) => v.tier === "unit").map(([k]) => k).sort(),
   contract: Object.entries(CANONICAL_TEST_REGISTRY).filter(([, v]) => v.tier === "contract").map(([k]) => k).sort(),
@@ -1464,30 +1475,9 @@ export const TEST_SPEC_MAP = Object.fromEntries(
 
 /**
  * Derived: REQUIRED_ARTIFACT_TESTS
+ * Keyed by whatever consumers the registry and discovered artifact tests declare.
  */
-export const REQUIRED_ARTIFACT_TESTS = {
-  "drm-connector": Object.entries(CANONICAL_TEST_REGISTRY)
-    .filter(([, v]) => (v.requiredBy || []).includes("drm-connector"))
-    .map(([k]) => k),
-  "sample-standalone-plugin": Object.entries(CANONICAL_TEST_REGISTRY)
-    .filter(([, v]) => (v.requiredBy || []).includes("sample-standalone-plugin"))
-    .map(([k]) => k),
-  "sample-profile-s-plugin": Object.entries(CANONICAL_TEST_REGISTRY)
-    .filter(([, v]) => (v.requiredBy || []).includes("sample-profile-s-plugin"))
-    .map(([k]) => k),
-  "wpdev-analytics": Object.entries(CANONICAL_TEST_REGISTRY)
-    .filter(([, v]) => (v.requiredBy || []).includes("wpdev-analytics"))
-    .map(([k]) => k),
-  "wpdev-crm": Object.entries(CANONICAL_TEST_REGISTRY)
-    .filter(([, v]) => (v.requiredBy || []).includes("wpdev-crm"))
-    .map(([k]) => k),
-  "wpdev-tickets": Object.entries(CANONICAL_TEST_REGISTRY)
-    .filter(([, v]) => (v.requiredBy || []).includes("wpdev-tickets"))
-    .map(([k]) => k),
-  "wpdev-woo-persian": Object.entries(CANONICAL_TEST_REGISTRY)
-    .filter(([, v]) => (v.requiredBy || []).includes("wpdev-woo-persian"))
-    .map(([k]) => k),
-};
+export const REQUIRED_ARTIFACT_TESTS = deriveRequiredArtifactTests(CANONICAL_TEST_REGISTRY);
 
 /**
  * Derived: TEST_DEPENDENCY_GRAPH
@@ -1528,15 +1518,9 @@ function buildDependencyGraph() {
 
 export const TEST_DEPENDENCY_GRAPH = buildDependencyGraph();
 
-const ALLOWED_CONSUMER_NAMES = new Set([
-  "drm-connector",
-  "sample-standalone-plugin",
-  "sample-profile-s-plugin",
-  "wpdev-analytics",
-  "wpdev-crm",
-  "wpdev-tickets",
-  "wpdev-woo-persian",
-]);
+function isAllowedConsumerName(name) {
+  return typeof name === "string" && CONSUMER_SLUG_PATTERN.test(name);
+}
 
 const ALLOWED_MODES = new Set([
   "affected",
@@ -1608,8 +1592,8 @@ export function validateCanonicalTestRegistry(testsDir = DEFAULT_TESTS_DIR, cust
       return { valid: false, reason: `Test '${testName}' missing artifacts array` };
     }
     for (const art of entry.artifacts) {
-      if (!ALLOWED_CONSUMER_NAMES.has(art)) {
-        return { valid: false, reason: `Test '${testName}' references unknown artifact consumer '${art}'` };
+      if (!isAllowedConsumerName(art)) {
+        return { valid: false, reason: `Test '${testName}' references invalid artifact consumer slug '${art}'` };
       }
     }
 
@@ -1617,8 +1601,8 @@ export function validateCanonicalTestRegistry(testsDir = DEFAULT_TESTS_DIR, cust
       return { valid: false, reason: `Test '${testName}' missing requiredBy array` };
     }
     for (const req of entry.requiredBy) {
-      if (!ALLOWED_CONSUMER_NAMES.has(req)) {
-        return { valid: false, reason: `Test '${testName}' requiredBy contains unknown consumer '${req}'` };
+      if (!isAllowedConsumerName(req)) {
+        return { valid: false, reason: `Test '${testName}' requiredBy contains invalid consumer slug '${req}'` };
       }
       if (!entry.artifacts.includes(req)) {
         return { valid: false, reason: `Test '${testName}' requiredBy consumer '${req}' is not declared in artifacts array` };

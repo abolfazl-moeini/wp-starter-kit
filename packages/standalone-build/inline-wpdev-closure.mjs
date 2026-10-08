@@ -704,6 +704,26 @@ function slugToPascalCase(slug) {
     .join("");
 }
 
+/**
+ * Point the inlined core at the closure tree without replacing a PSR-4
+ * prefix the consumer already owns. Composer matches the longest prefix,
+ * so `Ns\Core\` can target the closure while `Ns\` stays on `src/`.
+ *
+ * @param {Record<string, string>|null|undefined} psr4
+ * @param {string} consumerNs
+ * @returns {Record<string, string>}
+ */
+export function assignInlinedFrameworkAutoload(psr4, consumerNs) {
+  const next = { ...(psr4 || {}) };
+  if (consumerNs) {
+    next[`${consumerNs}\\Core\\`] = "src/FrameworkClosure/Core/Core/";
+  }
+  if (!Object.prototype.hasOwnProperty.call(next, "WPDev\\")) {
+    next["WPDev\\"] = "src/FrameworkClosure/Core/";
+  }
+  return next;
+}
+
 export function resolveConsumerNamespace({
   consumer,
   sourceComposerModel = null,
@@ -1933,10 +1953,10 @@ if (!defined('WPDEV_BOOTSTRAP_FILE')) {
     if (!composerData.autoload.files.includes("src/FrameworkClosure/functions-closure.php")) {
       composerData.autoload.files.unshift("src/FrameworkClosure/functions-closure.php");
     }
-    composerData.autoload["psr-4"] = composerData.autoload["psr-4"] || {};
-    const normalizedCoreKey = `${consumerNs}\\Core\\`;
-    composerData.autoload["psr-4"][normalizedCoreKey] = "src/FrameworkClosure/Core/Core/";
-    composerData.autoload["psr-4"]["WPDev\\"] = "src/FrameworkClosure/Core/";
+    composerData.autoload["psr-4"] = assignInlinedFrameworkAutoload(
+      composerData.autoload["psr-4"],
+      consumerNs,
+    );
     await writeFile(composerJsonPath, JSON.stringify(composerData, null, 2), "utf8");
   }
 

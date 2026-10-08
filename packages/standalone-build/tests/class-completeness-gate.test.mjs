@@ -5,6 +5,9 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+
 import { validateClassCompleteness } from "../class-completeness-gate.mjs";
 
 test("Class Completeness Gate: passes when all source classes exist in staging", async () => {
@@ -67,4 +70,42 @@ test("Class Completeness Gate: fails when a source class is missing from staging
   } finally {
     await rm(tmpDir, { recursive: true, force: true });
   }
+});
+
+test("Class Completeness Gate: registry requiredFqcns fails when the file remains but the class does not", async () => {
+  const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "class-gate-required-"));
+  const devDir = path.join(tmpDir, "dev-plugin");
+  const stagingPlugin = path.join(tmpDir, "staging-plugin");
+  const source = "<?php namespace Sample\\Gate; class Required {}";
+  await mkdir(path.join(devDir, "src/Gate"), { recursive: true });
+  await mkdir(path.join(stagingPlugin, "src/Gate"), { recursive: true });
+  await writeFile(path.join(devDir, "src/Gate/Required.php"), source);
+  await writeFile(path.join(stagingPlugin, "src/Gate/Required.php"), "<?php namespace Sample\\Gate; class Renamed {}");
+  try {
+    const withoutRegistry = await validateClassCompleteness({
+      devDir,
+      stagingPlugin,
+      consumer: "sample-plugin",
+    });
+    assert.equal(withoutRegistry.status, "OK");
+    await assert.rejects(
+      validateClassCompleteness({
+        devDir,
+        stagingPlugin,
+        consumer: "sample-plugin",
+        registry: { "sample-plugin": { requiredFqcns: ["Sample\\Gate\\Required"] } },
+      }),
+      /Required class Sample\\Gate\\Required missing from staging/,
+    );
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("assemble passes the loaded registry, not the empty legacy registry, into the class completeness gate", async () => {
+  const source = await readFile(fileURLToPath(new URL("../assemble-profile-s-candidate.mjs", import.meta.url)), "utf8");
+  const pipeline = await readFile(fileURLToPath(new URL("../build-all-standalone-plugins.mjs", import.meta.url)), "utf8");
+  assert.match(source, /const completenessRegistry = options\.registry \|\| TARGET_REGISTRY/);
+  assert.match(source, /validateClassCompleteness\(\{\s*devDir,\s*stagingPlugin,\s*consumer,\s*registry:\s*completenessRegistry\s*\}\)/);
+  assert.match(pipeline, /assembleProfileSCandidate\(\{[\s\S]*?registry:\s*effectiveRegistry/);
 });

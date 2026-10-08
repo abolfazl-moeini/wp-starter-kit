@@ -41,9 +41,18 @@ test("Test Impact Map: single plugin change selects only target artifact tests",
     mode: "affected",
   });
   assert.ok(result.selected.includes("wpdev-crm-artifact.test.mjs"));
-  assert.ok(result.selected.includes("verify-profile-s-artifact.test.mjs"));
+  assert.ok(!result.selected.includes("verify-profile-s-artifact.test.mjs"));
   assert.ok(!result.selected.includes("sample-standalone-plugin-artifact.test.mjs"));
   assert.ok(!result.selected.includes("wpdev-tickets-artifact.test.mjs"));
+
+  const sample = resolveImpactedTests({
+    changedKeys: ["sample-standalone-plugin"],
+    allTestFiles,
+    mode: "affected",
+  });
+  assert.ok(sample.selected.includes("sample-standalone-plugin-artifact.test.mjs"));
+  assert.ok(sample.selected.includes("verify-profile-s-artifact.test.mjs"));
+  assert.ok(!sample.selected.includes("wpdev-crm-artifact.test.mjs"));
 });
 
 test("Test Impact Map: unknown key falls back safely to full suite", () => {

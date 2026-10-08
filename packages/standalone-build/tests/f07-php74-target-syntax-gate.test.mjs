@@ -165,3 +165,21 @@ ${rows.join("\n")}
   }
 });
 
+test("F07: validatePhpSyntaxTree scans first-party fixture directories and skips third-party ones", async () => {
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "f07-fixture-dirs-"));
+  const broken = "<?php\nclass Broken {\n    public function __construct(private string $secret) {}\n}\n";
+  try {
+    await mkdir(path.join(tmpDir, "src", "examples"), { recursive: true });
+    await writeFile(path.join(tmpDir, "src", "examples", "Broken.php"), broken);
+    await assert.rejects(validatePhpSyntaxTree(tmpDir), /constructor property promotion detected/i);
+
+    await rm(path.join(tmpDir, "src"), { recursive: true, force: true });
+    await mkdir(path.join(tmpDir, "vendor", "pkg", "examples"), { recursive: true });
+    await writeFile(path.join(tmpDir, "vendor", "pkg", "examples", "Broken.php"), broken);
+    await writeFile(path.join(tmpDir, "main.php"), "<?php echo 'ok';\n");
+    await assert.doesNotReject(validatePhpSyntaxTree(tmpDir));
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+  }
+});
+

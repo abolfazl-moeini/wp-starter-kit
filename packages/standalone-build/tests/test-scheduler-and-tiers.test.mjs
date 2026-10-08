@@ -8,7 +8,14 @@ import { fileURLToPath } from "node:url";
 
 import { runTestScheduler, resolveTierFiles } from "../dev/run-tests.mjs";
 import { runFullSuiteProfiling, profileSingleTestFile } from "../dev/profile-tests.mjs";
-import { CANONICAL_TEST_REGISTRY, TEST_TIERS, validateCanonicalTestRegistry } from "../test-dependency-registry.mjs";
+import {
+  CANONICAL_TEST_REGISTRY,
+  CONSUMER_SLUG_PATTERN,
+  TEST_TIERS,
+  deriveRequiredArtifactTests,
+  discoverExternalArtifactTests,
+  validateCanonicalTestRegistry,
+} from "../test-dependency-registry.mjs";
 import { computeTreeContentHash } from "../build-cache-engine.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -53,6 +60,41 @@ test("Test Tiers: validateCanonicalTestRegistry validates disjoint tier partitio
   assert.equal(val.tiers.contract, 50);
   assert.equal(val.tiers.integration, 2);
   assert.equal(val.totalTests, 86);
+});
+
+test("external artifact tests bind from the filename and build source stays product-agnostic", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "artifact-discover-"));
+  try {
+    const file = "acme-billing-artifact.test.mjs";
+    await writeFile(path.join(tmp, file), "test('skip', () => {});\n");
+    await writeFile(path.join(tmp, "notes.test.mjs"), "");
+    const found = discoverExternalArtifactTests(tmp, {});
+    assert.deepEqual(Object.keys(found), [file]);
+    assert.deepEqual(found[file].artifacts, ["acme-billing"]);
+    assert.deepEqual(found[file].requiredBy, ["acme-billing"]);
+    assert.equal(found[file].criticality, "critical");
+    assert.equal(found[file].releaseSameRun, true);
+    assert.deepEqual(deriveRequiredArtifactTests(found)["acme-billing"], [file]);
+    assert.equal(CONSUMER_SLUG_PATTERN.test("Not A Slug"), false);
+    assert.equal(discoverExternalArtifactTests(tmp, { [file]: { artifacts: [] } })[file], undefined);
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
+
+  const registrySource = fs.readFileSync(path.join(toolsDir, "test-dependency-registry.mjs"), "utf8");
+  const impactSource = fs.readFileSync(path.join(toolsDir, "test-impact-map.mjs"), "utf8");
+  const proposals = fs.readFileSync(path.resolve(toolsDir, "../../config/protection-artifact-registry-proposals.json"), "utf8");
+  for (const slug of ["wpdev-crm", "wpdev-tickets", "drm-connector", "wpdev-analytics", "wpdev-woo-persian"]) {
+    assert.equal(registrySource.includes(slug), false, `registry source still names ${slug}`);
+    assert.equal(impactSource.includes(slug), false, `impact map still names ${slug}`);
+    assert.equal(proposals.includes(slug), false, `proposals config still names ${slug}`);
+  }
+
+  const crmTest = "wpdev-crm-artifact.test.mjs";
+  const ticketsTest = "wpdev-tickets-artifact.test.mjs";
+  assert.deepEqual(CANONICAL_TEST_REGISTRY[crmTest].artifacts, ["wpdev-crm"]);
+  assert.deepEqual(CANONICAL_TEST_REGISTRY[ticketsTest].requiredBy, ["wpdev-tickets"]);
+  assert.ok(CANONICAL_TEST_REGISTRY[crmTest].releaseSameRun);
 });
 
 test("canonical npm test inventory matches package.json and files on disk", () => {

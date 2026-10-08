@@ -484,3 +484,61 @@ if (class_exists('_fc_87654321', false)) {
     await rm(tempDir, { recursive: true, force: true });
   }
 });
+
+test("verifyProfileSArtifact Probe 2b: a serialized class does not hide other framework references", async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "verify-probe2b-serial-"));
+  const pluginDir = path.join(tempDir, "sample-profile-s-plugin");
+  const zipPath = path.join(tempDir, "sample-profile-s-plugin.zip");
+  const closure = path.join(pluginDir, "src/FrameworkClosure");
+  try {
+    await mkdir(path.join(closure, "Keep"), { recursive: true });
+    await mkdir(path.join(closure, "Other"), { recursive: true });
+    await writeFile(path.join(pluginDir, "sample-profile-s-plugin.php"), "<?php\n/**\n * Plugin Name: Sample Profile S Plugin\n */\n");
+    await writeFile(
+      path.join(closure, "closure-classmap.php"),
+      `<?php
+return array(
+  'map' => array(
+    'WPDevFramework\\\\Keep\\\\Box' => 'Keep/Box.php',
+    'WPDevFramework\\\\Other\\\\Leaked' => 'Other/Leaked.php',
+  ),
+  'traits' => array(),
+  'preloads' => array(),
+);
+`,
+    );
+    await writeFile(
+      path.join(closure, "Keep/Box.php"),
+      `<?php
+class _fc_box {
+    public function __sleep() { return array(); }
+    public function bad() { return new \\WPDevFramework\\Other\\Leaked(); }
+}
+`,
+    );
+    await writeFile(path.join(closure, "Other/Leaked.php"), "<?php\nclass _fc_leaked {}\n");
+    await writeFile(
+      path.join(closure, "User.php"),
+      "<?php\nuse WPDevFramework\\Other\\Leaked;\nclass _fc_user {}\n",
+    );
+    await writeFile(
+      path.join(closure, "External.php"),
+      "<?php\nuse WPDevFramework\\External\\NotInMap;\nclass _fc_ok {}\n",
+    );
+    await createCanonicalZip({ sourceRoot: pluginDir, outputZip: zipPath, rootName: "sample-profile-s-plugin" });
+    const report = await verifyProfileSArtifact({
+      zipPath,
+      consumer: "sample-profile-s-plugin",
+      obfuscate: true,
+      requireManifest: false,
+    });
+    const probe2b = report.details.find((d) => d.test.includes("Framework FQCN Obfuscation & Leakage"));
+    assert.equal(probe2b.status, "failed");
+    const errors = probe2b.errors.join("\n");
+    assert.match(errors, /Leaked/);
+    assert.doesNotMatch(errors, /NotInMap/);
+    assert.doesNotMatch(errors, /Keep\\\\Box/);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});

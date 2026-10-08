@@ -37,7 +37,10 @@ import { run as vendorScopingRun } from "../../packages/create-wp-project/src/ge
 import { run as exampleFeatureRun } from "../../packages/create-wp-project/src/generators/exampleFeature.js";
 import { run as restBatchRun } from "../../packages/create-wp-project/src/generators/restBatch.js";
 import { run as i18nRun } from "../../packages/create-wp-project/src/generators/i18n.js";
-import { run as phpTestRun } from "../../packages/create-wp-project/src/generators/phpTest.js";
+import {
+  phpunitXmlDist,
+  run as phpTestRun,
+} from "../../packages/create-wp-project/src/generators/phpTest.js";
 import { run as licenseRun } from "../../packages/create-wp-project/src/generators/license.js";
 import { run as cssRun } from "../../packages/create-wp-project/src/generators/css.js";
 
@@ -276,6 +279,30 @@ describe("phpTest generator (Phase 21.7/21.8)", () => {
     ).toBe("tests/phpunit/");
   });
 
+  test("treats WPDEV_CONTENT_ROOT as wp-content, not the WordPress develop root", () => {
+    const xml = phpunitXmlDist(
+      { slug: "sample-plugin" },
+      { WPDEV_CONTENT_ROOT: "/var/wp-content" },
+    );
+    expect(xml).toMatch(
+      /PLUGIN_ROOT" value="\/var\/wp-content\/plugins\/sample-plugin"/,
+    );
+    expect(xml).toMatch(
+      /WP_TESTS_DIR" value="\/tmp\/wordpress-develop\/tests\/phpunit"/,
+    );
+    expect(xml).not.toMatch(/\/var\/wp-content\/wp-content\/plugins/);
+    const rooted = phpunitXmlDist(
+      { slug: "sample-plugin", wpTestsRoot: "/opt/wordpress-develop" },
+      {},
+    );
+    expect(rooted).toMatch(
+      /WP_TESTS_DIR" value="\/opt\/wordpress-develop\/tests\/phpunit"/,
+    );
+    expect(rooted).toMatch(
+      /PLUGIN_ROOT" value="\/opt\/wordpress-develop\/wp-content\/plugins\/sample-plugin"/,
+    );
+  });
+
   test("emits nothing when phpTest=none", () => {
     const out = phpTestRun(makeCtx({}, {}, { phpTest: "none" }));
     expect(Object.keys(out.files)).toEqual([]);
@@ -311,7 +338,6 @@ describe("license generator (Phase 21.7/21.8)", () => {
     expect(Object.keys(out.files)).toEqual([]);
   });
 });
-
 
 describe("css generator (Phase 21.7/21.8)", () => {
   test("emits .sassrc when css=sass + js=typescript", () => {

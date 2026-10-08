@@ -153,13 +153,16 @@ if (manifest && !failures.length) {
   }
 
   const contract = manifest.migrationContract;
+  const consumer = typeof manifest.consumer === "string" ? manifest.consumer : "";
   const expectedSuffix = contractSuffixArg
-    || (typeof manifest.consumer === "string" && /^[a-z0-9][a-z0-9-]*$/.test(manifest.consumer)
-      ? `plugins/${manifest.consumer}/dev/${CONTRACT_BASENAME}`
-      : null);
+    || (/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(consumer)
+      ? `plugins/${consumer}/dev/${CONTRACT_BASENAME}`
+      : "");
   if (!object(contract) || !safe(contract.path) || !hex(contract.sha256)) {
     failures.push("migrationContract path and sha256 are required");
-  } else if (expectedSuffix && !contract.path.endsWith(expectedSuffix) && path.posix.basename(contract.path) !== CONTRACT_BASENAME) {
+  } else if (!expectedSuffix) {
+    failures.push("migrationContract consumer slug is required");
+  } else if (!contract.path.endsWith(expectedSuffix)) {
     failures.push(`migrationContract path must be ${expectedSuffix}`);
   } else {
     const digest = await liveDigest(contentRoot, contract.path, "migration contract");

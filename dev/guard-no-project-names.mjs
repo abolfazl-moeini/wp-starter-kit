@@ -3,8 +3,12 @@
 /**
  * CI / Test Guard: Zero Project Name Leakage in Boilerplate
  *
- * Scans packages/, config/, dev/, core/, src/, skills/, and migration/inventory.tsv
- * to ensure absolute zero occurrences of project-specific / client names.
+ * Scans packages/, config/, dev/, core/, src/, skills/, and migration/inventory.tsv.
+ *
+ * Two layers:
+ * - Retired client codenames are forbidden everywhere except markdown archives.
+ * - Live product slugs are forbidden in build-system source. Test files may
+ *   still name a consumer, and a line that only points at a test file may too.
  *
  * Excludes historical .md archive documents and build artifacts/cache.
  */
@@ -17,10 +21,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const repoRoot = resolve(__dirname, "..");
 
-// Define forbidden tokens via base64 to avoid self-matching
-const FORBIDDEN_TOKENS = [
+// Tokens are base64 so this file does not contain the plaintext it forbids.
+const RETIRED_CODENAME_TOKENS = [
   Buffer.from("dGF2YW5nYXJ5", "base64").toString("utf8"),
   Buffer.from("bmlrYW1vb3o=", "base64").toString("utf8"),
+];
+
+// Product slugs must not be compiled into the build system. Tests may use them.
+const BUILD_SOURCE_PRODUCT_TOKENS = [
+  Buffer.from("d3BkZXYtY3Jt", "base64").toString("utf8"),
+  Buffer.from("d3BkZXYtdGlja2V0cw==", "base64").toString("utf8"),
+  Buffer.from("ZHJtLWNvbm5lY3Rvcg==", "base64").toString("utf8"),
+  Buffer.from("d3BkZXYtYW5hbHl0aWNz", "base64").toString("utf8"),
+  Buffer.from("d3BkZXYtd29vLXBlcnNpYW4=", "base64").toString("utf8"),
 ];
 
 const SCAN_TARGETS = [
@@ -48,6 +61,27 @@ function shouldIgnore(pathStr) {
   return IGNORE_PATTERNS.some((p) => p.test(pathStr));
 }
 
+function isTestFile(relPath) {
+  return (
+    /(?:^|\/)tests(?:\/|$)/.test(relPath) ||
+    /(?:^|\/)tests-docker(?:\/|$)/.test(relPath) ||
+    /\.test\.(?:mjs|js|php)$/.test(relPath)
+  );
+}
+
+function linePointsAtTest(line) {
+  return /(?:^|[\\/])tests(?:[\\/]|$)/.test(line) || /(?:^|[\\/])tests-docker(?:[\\/]|$)/.test(line) || /\.test\.(?:mjs|js|php)\b/.test(line);
+}
+
+function pushHit(violations, filePath, lineNumber, token, line) {
+  violations.push({
+    file: relative(repoRoot, filePath),
+    line: lineNumber,
+    matchedTerm: token,
+    content: line.trim(),
+  });
+}
+
 function scanFile(filePath, violations) {
   if (shouldIgnore(filePath)) {
     return;
@@ -59,18 +93,23 @@ function scanFile(filePath, violations) {
     return; // binary or unreadable
   }
 
+  const relPath = relative(repoRoot, filePath);
+  const testFile = isTestFile(relPath);
   const lines = content.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const lower = line.toLowerCase();
-    for (const token of FORBIDDEN_TOKENS) {
+    for (const token of RETIRED_CODENAME_TOKENS) {
       if (lower.includes(token)) {
-        violations.push({
-          file: relative(repoRoot, filePath),
-          line: i + 1,
-          matchedTerm: token,
-          content: line.trim(),
-        });
+        pushHit(violations, filePath, i + 1, token, line);
+      }
+    }
+    if (testFile || linePointsAtTest(line)) {
+      continue;
+    }
+    for (const token of BUILD_SOURCE_PRODUCT_TOKENS) {
+      if (lower.includes(token)) {
+        pushHit(violations, filePath, i + 1, token, line);
       }
     }
   }

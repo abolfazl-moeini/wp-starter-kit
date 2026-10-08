@@ -404,8 +404,10 @@ class Plan3_Transformer {
 	 *
 	 * Strict symbol ownership: only symbols present in the Pass 1 declared universe
 	 * ($this->declared_classes) resolve. Anything else is external and inviolable.
-	 * Implements PHP name resolution order: fully-qualified > use-import >
-	 * current-namespace-relative > root-global declaration. No hardcoded names.
+	 * Implements PHP class resolution: fully-qualified > use-import >
+	 * current-namespace-relative. An unqualified name in the global namespace
+	 * may match a root declaration. Inside a namespace it does not fall back
+	 * to a root class. No hardcoded names.
 	 *
 	 * @param string $text Raw reference text (may carry a leading backslash).
 	 * @param string $current_namespace Enclosing namespace ('' for global scope).
@@ -496,7 +498,7 @@ class Plan3_Transformer {
 				return $this->declared_classes[ $ns_candidate_ci ];
 			}
 		}
-		if ( isset( $this->declarations_by_symbol[ $clean_ci ] ) ) {
+		if ( $current_namespace === '' && isset( $this->declarations_by_symbol[ $clean_ci ] ) ) {
 			foreach ( $this->declarations_by_symbol[ $clean_ci ] as $decl ) {
 				if ( empty( $decl['namespace'] ) ) {
 					return $decl['fqcn'];
@@ -532,6 +534,223 @@ class Plan3_Transformer {
 			return ( $has_leading_slash && substr( $mangled, 0, 1 ) !== '\\' ) ? ( '\\' . $mangled ) : $mangled;
 		}
 		return null;
+	}
+
+	/**
+	 * Record that the enclosing class exposes a mangled type in its own
+	 * method signature or typed property. Nested closures and
+	 * extends/implements do not count: those must keep class_alias.
+	 *
+	 * @param array  $classes_with_mangled_types
+	 * @param string $current_class_fqcn
+	 * @param array  $tokens
+	 * @param int    $index
+	 * @param int    $count
+	 * @param bool   $in_method_signature
+	 * @param bool   $in_class
+	 * @param int    $class_brace_depth
+	 */
+	protected function note_mangled_signature_type( &$classes_with_mangled_types, $current_class_fqcn, $tokens, $index, $count, $in_method_signature, $in_class, $class_brace_depth ) {
+		if ( $current_class_fqcn === '' || $current_class_fqcn === null ) {
+			return;
+		}
+		// Nested class/closure bodies share the method-signature flag but sit
+		// deeper than the header. Only depth 1 exposes the enclosing class.
+		if ( $in_method_signature && (int) $class_brace_depth === 1 ) {
+			$classes_with_mangled_types[ $current_class_fqcn ] = true;
+			return;
+		}
+		if ( $this->token_is_typed_property( $tokens, $index, $count, $in_class, $class_brace_depth ) ) {
+			$classes_with_mangled_types[ $current_class_fqcn ] = true;
+		}
+	}
+
+	/**
+	 * True when the type at $index is a closure or arrow-function parameter.
+	 * Those must not be treated as typed properties of the enclosing class.
+	 *
+	 * @param array $tokens
+	 * @param int   $index
+	 * @return bool
+	 */
+	protected function type_token_belongs_to_closure( $tokens, $index ) {
+		$depth = 0;
+		for ( $k = $index - 1; $k >= 0; $k-- ) {
+			$tok = $tokens[ $k ];
+			if ( is_string( $tok ) ) {
+				if ( $tok === ')' ) {
+					$depth++;
+					continue;
+				}
+				if ( $tok === '(' ) {
+					if ( $depth === 0 ) {
+						return $this->paren_opens_closure( $tokens, $k );
+					}
+					$depth--;
+					continue;
+				}
+				if ( $depth > 0 || $tok === ',' || $tok === '|' || $tok === '?' || $tok === '&' ) {
+					continue;
+				}
+				return false;
+			}
+			$id = $tok[0];
+			if ( $id === T_WHITESPACE || $id === T_COMMENT || $id === T_DOC_COMMENT ) {
+				continue;
+			}
+			if ( $depth > 0 ) {
+				continue;
+			}
+			if ( $id === T_STRING || $id === T_STATIC || $id === T_ARRAY || $id === T_CALLABLE ) {
+				continue;
+			}
+			if ( defined( 'T_NAME_QUALIFIED' ) && $id === T_NAME_QUALIFIED ) {
+				continue;
+			}
+			if ( defined( 'T_NAME_FULLY_QUALIFIED' ) && $id === T_NAME_FULLY_QUALIFIED ) {
+				continue;
+			}
+			if ( defined( 'T_NAME_RELATIVE' ) && $id === T_NAME_RELATIVE ) {
+				continue;
+			}
+			if ( defined( 'T_NS_SEPARATOR' ) && $id === T_NS_SEPARATOR ) {
+				continue;
+			}
+			if ( defined( 'T_ELLIPSIS' ) && $id === T_ELLIPSIS ) {
+				continue;
+			}
+			if ( $id === T_FUNCTION || ( defined( 'T_FN' ) && $id === T_FN ) ) {
+				return true;
+			}
+			return false;
+		}
+		return false;
+	}
+
+	/**
+	 * True when the `(` at $paren_index opens a closure or arrow function.
+	 *
+	 * @param array $tokens
+	 * @param int   $paren_index
+	 * @return bool
+	 */
+	protected function paren_opens_closure( $tokens, $paren_index ) {
+		$p = $paren_index - 1;
+		$skip = array( T_WHITESPACE, T_COMMENT, T_DOC_COMMENT );
+		while ( $p >= 0 && is_array( $tokens[ $p ] ) && in_array( $tokens[ $p ][0], $skip, true ) ) {
+			$p--;
+		}
+		if ( $p >= 0 && ( $tokens[ $p ] === '&' || ( is_array( $tokens[ $p ] ) && $tokens[ $p ][1] === '&' ) ) ) {
+			$p--;
+			while ( $p >= 0 && is_array( $tokens[ $p ] ) && in_array( $tokens[ $p ][0], $skip, true ) ) {
+				$p--;
+			}
+		}
+		if ( $p >= 0 && is_array( $tokens[ $p ] ) && $tokens[ $p ][0] === T_STATIC ) {
+			$p--;
+			while ( $p >= 0 && is_array( $tokens[ $p ] ) && in_array( $tokens[ $p ][0], $skip, true ) ) {
+				$p--;
+			}
+		}
+		return $p >= 0 && is_array( $tokens[ $p ] ) && ( $tokens[ $p ][0] === T_FUNCTION || ( defined( 'T_FN' ) && $tokens[ $p ][0] === T_FN ) );
+	}
+
+	/**
+	 * True when $index is a type name in a class-body property declaration.
+	 *
+	 * @param array $tokens
+	 * @param int   $index
+	 * @param int   $count
+	 * @param bool  $in_class
+	 * @param int   $class_brace_depth
+	 * @return bool
+	 */
+	protected function token_is_typed_property( $tokens, $index, $count, $in_class, $class_brace_depth ) {
+		if ( ! $in_class || (int) $class_brace_depth !== 1 ) {
+			return false;
+		}
+		if ( $this->type_token_belongs_to_closure( $tokens, $index ) ) {
+			return false;
+		}
+		$depth = 0;
+		for ( $k = $index + 1; $k < $count; $k++ ) {
+			$tok = $tokens[ $k ];
+			if ( is_string( $tok ) ) {
+				if ( $tok === '(' ) {
+					$depth++;
+					continue;
+				}
+				if ( $tok === ')' ) {
+					if ( $depth === 0 ) {
+						return false;
+					}
+					$depth--;
+					continue;
+				}
+				if ( $depth > 0 ) {
+					continue;
+				}
+				if ( $tok === '?' || $tok === '|' || $tok === '&' ) {
+					continue;
+				}
+				return false;
+			}
+			$id = $tok[0];
+			if ( $id === T_WHITESPACE || $id === T_COMMENT || $id === T_DOC_COMMENT ) {
+				continue;
+			}
+			if ( $depth > 0 ) {
+				continue;
+			}
+			if ( $id === T_VARIABLE ) {
+				return true;
+			}
+			$name_tokens = array( T_STRING );
+			if ( defined( 'T_NAME_QUALIFIED' ) ) {
+				$name_tokens[] = T_NAME_QUALIFIED;
+			}
+			if ( defined( 'T_NAME_FULLY_QUALIFIED' ) ) {
+				$name_tokens[] = T_NAME_FULLY_QUALIFIED;
+			}
+			if ( defined( 'T_NAME_RELATIVE' ) ) {
+				$name_tokens[] = T_NAME_RELATIVE;
+			}
+			if ( defined( 'T_NS_SEPARATOR' ) ) {
+				$name_tokens[] = T_NS_SEPARATOR;
+			}
+			if ( in_array( $id, $name_tokens, true ) ) {
+				continue;
+			}
+			if ( defined( 'T_ELLIPSIS' ) && $id === T_ELLIPSIS ) {
+				continue;
+			}
+			return false;
+		}
+		return false;
+	}
+
+	/**
+	 * Named `function foo` at class depth is a method. `function (` and `fn`
+	 * are closures, including a closure stored in a property default.
+	 *
+	 * @param array $tokens
+	 * @param int   $index
+	 * @param int   $count
+	 * @return bool
+	 */
+	protected function function_token_is_named_method( $tokens, $index, $count ) {
+		$n = $index + 1;
+		$skip = array( T_WHITESPACE, T_COMMENT, T_DOC_COMMENT );
+		while ( $n < $count && is_array( $tokens[ $n ] ) && in_array( $tokens[ $n ][0], $skip, true ) ) {
+			$n++;
+		}
+		if ( $n < $count && ( $tokens[ $n ] === '&' || ( is_array( $tokens[ $n ] ) && $tokens[ $n ][1] === '&' ) ) ) {
+			$n++;
+			while ( $n < $count && is_array( $tokens[ $n ] ) && in_array( $tokens[ $n ][0], $skip, true ) ) {
+				$n++;
+			}
+		}
+		return $n < $count && is_array( $tokens[ $n ] ) && $tokens[ $n ][0] === T_STRING;
 	}
 
 	protected function index_accesses( $accesses ) {
@@ -1659,6 +1878,43 @@ class Plan3_Transformer {
 	}
 
 	/**
+	 * Short names of classes, interfaces, traits, and enums declared in one file.
+	 *
+	 * Keys are lowercased. Anonymous classes are omitted. A flattened file that
+	 * still imports one of these names (`use Ns\Limitations; class Limitations`)
+	 * is a compile error, so the import has to be dropped.
+	 *
+	 * @param array $tokens token_get_all() output.
+	 * @return array<string, true>
+	 */
+	protected function declared_type_short_names( $tokens ) {
+		$names = array();
+		$count = count( $tokens );
+		for ( $i = 0; $i < $count; $i++ ) {
+			$token = $tokens[ $i ];
+			if ( ! is_array( $token ) ) {
+				continue;
+			}
+			$id = $token[0];
+			if ( $id !== T_CLASS && $id !== T_INTERFACE && $id !== T_TRAIT && ! ( defined( 'T_ENUM' ) && $id === T_ENUM ) ) {
+				continue;
+			}
+			$prev = $this->prev_code_index( $tokens, $i );
+			if ( $prev >= 0 && is_array( $tokens[ $prev ] ) && $tokens[ $prev ][0] === T_DOUBLE_COLON ) {
+				continue;
+			}
+			$n = $i + 1;
+			while ( $n < $count && is_array( $tokens[ $n ] ) && $tokens[ $n ][0] === T_WHITESPACE ) {
+				$n++;
+			}
+			if ( $n < $count && is_array( $tokens[ $n ] ) && $tokens[ $n ][0] === T_STRING ) {
+				$names[ strtolower( $tokens[ $n ][1] ) ] = true;
+			}
+		}
+		return $names;
+	}
+
+	/**
 	 * Brace-aware split of a full use-statement body plus group expansion.
 	 */
 	protected function expand_use_statement_clauses( $inner ) {
@@ -2180,6 +2436,8 @@ class Plan3_Transformer {
 		$class_stack            = array();
 		$pending_class_fqcn     = null;
 		$in_function_header     = false;
+		$in_method_signature    = false;
+		$method_paren_depth     = 0;
 		$in_closure_use         = false;
 		$declared_classes_in_file = array();
 		$classes_with_mangled_types = array();
@@ -2188,6 +2446,7 @@ class Plan3_Transformer {
 		$retained_brace_namespace_emitted = false;
 		$current_class_fqcn     = '';
 		$pass2_interp_depth     = 0;
+		$declared_type_shorts   = $this->declared_type_short_names( $tokens );
 
 		for ( $i = 0; $i < $count; $i++ ) {
 			$token = $tokens[ $i ];
@@ -2205,6 +2464,12 @@ class Plan3_Transformer {
 				if ( $token === '{' ) {
 					$in_function_header = false;
 					$in_closure_use     = false;
+					// A `{` inside the parameter list is a closure or anonymous
+					// class in a default, not the method body.
+					if ( ! $in_method_signature || $method_paren_depth === 0 ) {
+						$in_method_signature = false;
+						$method_paren_depth  = 0;
+					}
 					if ( $pending_ns_brace ) {
 						$pending_ns_brace = false;
 						$ns_brace_depth   = 1;
@@ -2230,6 +2495,10 @@ class Plan3_Transformer {
 				} elseif ( $token === '}' ) {
 					$in_function_header = false;
 					$in_closure_use     = false;
+					if ( ! $in_method_signature || $method_paren_depth === 0 ) {
+						$in_method_signature = false;
+						$method_paren_depth  = 0;
+					}
 					$closing_ns = false;
 					$closing_keep_ns = false;
 					if ( $ns_brace_depth > 0 ) {
@@ -2257,8 +2526,19 @@ class Plan3_Transformer {
 				} elseif ( $token === ';' ) {
 					$in_function_header = false;
 					$in_closure_use     = false;
+					if ( ! $in_method_signature || $method_paren_depth === 0 ) {
+						$in_method_signature = false;
+						$method_paren_depth  = 0;
+					}
+				} elseif ( $token === '(' ) {
+					if ( $in_method_signature ) {
+						$method_paren_depth++;
+					}
 				} elseif ( $token === ')' ) {
-					$in_closure_use     = false;
+					$in_closure_use = false;
+					if ( $in_method_signature && $method_paren_depth > 0 ) {
+						$method_paren_depth--;
+					}
 				}
 			}
 
@@ -2288,8 +2568,20 @@ class Plan3_Transformer {
 
 				if ( $id === T_FUNCTION || ( defined( 'T_FN' ) && $id === T_FN ) ) {
 					$in_function_header = true;
+					// A closure or arrow function nested in a signature must not
+					// clear the enclosing method. Only the outer named method counts.
+					if ( ! $in_method_signature ) {
+						$in_method_signature = ( $id === T_FUNCTION && $in_class && $class_brace_depth === 1 && $this->function_token_is_named_method( $tokens, $i, $count ) );
+						if ( $in_method_signature ) {
+							$method_paren_depth = 0;
+						}
+					}
 				} elseif ( $id === T_DOUBLE_ARROW ) {
-					$in_function_header = false;
+					// `=>` inside a method default (`$opts = ['a' => 1]`) is not
+					// the end of the signature. Arrow functions are.
+					if ( ! $in_method_signature ) {
+						$in_function_header = false;
+					}
 				} elseif ( ( defined( 'T_CURLY_OPEN' ) && $id === T_CURLY_OPEN ) || ( defined( 'T_DOLLAR_OPEN_CURLY_BRACES' ) && $id === T_DOLLAR_OPEN_CURLY_BRACES ) ) {
 					$pass2_interp_depth++;
 				}
@@ -2369,7 +2661,7 @@ class Plan3_Transformer {
 						} elseif ( is_array( $t ) ) {
 							if ( ! $in_value && $bracket_depth === 0 && $t[0] === T_STRING && ! empty( $current_class_fqcn ) && isset( $this->private_members['constants'][ $current_class_fqcn ][ $t[1] ] ) ) {
 								$output .= $this->private_members['constants'][ $current_class_fqcn ][ $t[1] ];
-							} elseif ( $in_value && ( $t[0] === T_STRING || ( defined( 'T_NAME_QUALIFIED' ) && $t[0] === T_NAME_QUALIFIED ) ) ) {
+							} elseif ( $in_value && ( $t[0] === T_STRING || ( defined( 'T_NAME_QUALIFIED' ) && $t[0] === T_NAME_QUALIFIED ) || ( defined( 'T_NAME_FULLY_QUALIFIED' ) && $t[0] === T_NAME_FULLY_QUALIFIED ) || ( defined( 'T_NAME_RELATIVE' ) && $t[0] === T_NAME_RELATIVE ) ) ) {
 								// Check if preceded by :: (e.g. self::SECRET or Vault::SECRET)
 								$prev_tok_idx = $j - 1;
 								while ( $prev_tok_idx >= $i && is_array( $tokens[ $prev_tok_idx ] ) && $tokens[ $prev_tok_idx ][0] === T_WHITESPACE ) {
@@ -2407,11 +2699,9 @@ class Plan3_Transformer {
 								if ( ! $handled_const_ref ) {
 									$const_ref_target = ( ! $is_after_dc ) ? $this->resolve_class_reference( $t[1], $current_namespace, $file_use_map ) : null;
 									if ( $const_ref_target !== null ) {
-										$target = $const_ref_target;
-										if ( $this->flatten_namespaces && ! empty( $current_namespace ) && ! $keep_namespace ) {
+										$target = ltrim( $const_ref_target, '\\' );
+										if ( ( $this->flatten_namespaces && ! empty( $current_namespace ) && ! $keep_namespace ) || strpos( $target, '\\' ) !== false ) {
 											$output .= '\\' . $target;
-										} elseif ( strpos( $target, '\\' ) !== false ) {
-											$output .= '\\' . ltrim( $target, '\\' );
 										} else {
 											$output .= $target;
 										}
@@ -2421,12 +2711,11 @@ class Plan3_Transformer {
 								}
 							} else {
 								if ( $t[0] === T_COMMENT || $t[0] === T_DOC_COMMENT ) {
-									if ( $this->strip_comments ) {
-										continue;
-									}
-									$output .= $t[1];
-									if ( ( strpos( $t[1], '//' ) === 0 || strpos( $t[1], '#' ) === 0 ) && substr( $t[1], -1 ) !== "\n" ) {
-										$output .= "\n";
+									if ( ! $this->strip_comments ) {
+										$output .= $t[1];
+										if ( ( strpos( $t[1], '//' ) === 0 || strpos( $t[1], '#' ) === 0 ) && substr( $t[1], -1 ) !== "\n" ) {
+											$output .= "\n";
+										}
 									}
 								} elseif ( $t[0] === T_WHITESPACE ) {
 									$output .= ( strpos( $t[1], "\n" ) !== false ? "\n" : ' ' );
@@ -2581,6 +2870,11 @@ class Plan3_Transformer {
 								}
 								if ( preg_match( '/^\\\\?([a-zA-Z0-9_\\\\]+)(?:\s+as\s+([a-zA-Z0-9_]+))?$/i', $expanded, $gm ) ) {
 									$group_target = ltrim( $gm[1], '\\' );
+									$group_parts  = explode( '\\', $group_target );
+									$group_alias  = isset( $gm[2] ) && $gm[2] !== '' ? $gm[2] : (string) end( $group_parts );
+									if ( isset( $declared_type_shorts[ strtolower( $group_alias ) ] ) ) {
+										continue;
+									}
 									$group_mapped = isset( $this->class_map[ $group_target ] ) ? $this->class_map[ $group_target ] : ( isset( $this->class_map[ '\\' . $group_target ] ) ? $this->class_map[ '\\' . $group_target ] : '' );
 									$is_group_namespaced = ( $group_mapped !== '' && strpos( $group_mapped, '\\' ) !== false );
 									if ( ( ! isset( $this->class_map[ $group_target ] ) && ! isset( $this->class_map[ '\\' . $group_target ] ) && strpos( $group_target, '\\' ) !== false ) || $is_group_namespaced ) {
@@ -2659,6 +2953,27 @@ class Plan3_Transformer {
 									}
 								}
 								$target_class = trim( $target_class, "\\ " );
+								$alias = '';
+								$seen_as = false;
+								foreach ( $clause as $ct ) {
+									if ( is_array( $ct ) && $ct[0] === T_AS ) {
+										$seen_as = true;
+										continue;
+									}
+									if ( $seen_as && is_array( $ct ) && $ct[0] === T_STRING ) {
+										$alias = $ct[1];
+										break;
+									}
+								}
+								if ( $alias === '' ) {
+									$alias_parts = explode( '\\', $target_class );
+									$alias       = (string) end( $alias_parts );
+								}
+								// Flattening moves this file's types to the global short name.
+								// Importing that same short name collides with the declaration.
+								if ( isset( $declared_type_shorts[ strtolower( $alias ) ] ) ) {
+									continue;
+								}
 								$target_mapped = isset( $this->class_map[ $target_class ] ) ? $this->class_map[ $target_class ] : ( isset( $this->class_map[ '\\' . $target_class ] ) ? $this->class_map[ '\\' . $target_class ] : '' );
 								$is_namespaced_target = ( $target_mapped !== '' && strpos( $target_mapped, '\\' ) !== false );
 								// Keep compound external or retained namespaced use statements
@@ -2788,6 +3103,9 @@ class Plan3_Transformer {
 					$clean = ltrim( $text, '\\' );
 					$fqn_resolved_target = $this->resolve_class_reference( $text, $current_namespace, $file_use_map );
 					if ( $fqn_resolved_target !== null ) {
+						if ( $this->mangle_symbols && $fqn_resolved_target !== $text && $fqn_resolved_target !== ( '\\' . $text ) ) {
+							$this->note_mangled_signature_type( $classes_with_mangled_types, $current_class_fqcn, $tokens, $i, $count, $in_method_signature, $in_class, $class_brace_depth );
+						}
 						$output .= '\\' . ltrim( $fqn_resolved_target, '\\' );
 						continue;
 					}
@@ -2800,6 +3118,9 @@ class Plan3_Transformer {
 				if ( defined( 'T_NAME_RELATIVE' ) && $id === T_NAME_RELATIVE ) {
 					$relative_resolved_target = $this->resolve_class_reference( $text, $current_namespace, $file_use_map );
 					if ( $relative_resolved_target !== null ) {
+						if ( $this->mangle_symbols && $relative_resolved_target !== $text && $relative_resolved_target !== ( '\\' . $text ) ) {
+							$this->note_mangled_signature_type( $classes_with_mangled_types, $current_class_fqcn, $tokens, $i, $count, $in_method_signature, $in_class, $class_brace_depth );
+						}
 						$output .= '\\' . ltrim( $relative_resolved_target, '\\' );
 						continue;
 					}
@@ -2811,9 +3132,7 @@ class Plan3_Transformer {
 					if ( $qualified_resolved_target !== null ) {
 						$target = $qualified_resolved_target;
 						if ( $this->mangle_symbols && $target !== $text && $target !== ( '\\' . $text ) ) {
-							if ( $in_function_header && ! empty( $current_class_fqcn ) ) {
-								$classes_with_mangled_types[ $current_class_fqcn ] = true;
-							}
+							$this->note_mangled_signature_type( $classes_with_mangled_types, $current_class_fqcn, $tokens, $i, $count, $in_method_signature, $in_class, $class_brace_depth );
 						}
 						if ( $this->flatten_namespaces && ! empty( $current_namespace ) && ! $keep_namespace ) {
 							$output .= '\\' . $target;
@@ -2904,9 +3223,7 @@ class Plan3_Transformer {
 							if ( $use_resolved_target !== null ) {
 								$target = $use_resolved_target;
 								if ( $this->mangle_symbols && $target !== $text && $target !== ( '\\' . $text ) ) {
-									if ( $in_function_header && ! empty( $current_class_fqcn ) ) {
-										$classes_with_mangled_types[ $current_class_fqcn ] = true;
-									}
+									$this->note_mangled_signature_type( $classes_with_mangled_types, $current_class_fqcn, $tokens, $i, $count, $in_method_signature, $in_class, $class_brace_depth );
 								}
 								if ( $this->flatten_namespaces && ! empty( $current_namespace ) && ! $keep_namespace ) {
 									$output .= '\\' . $target;
@@ -2931,9 +3248,7 @@ class Plan3_Transformer {
 								);
 							}
 							if ( ! $is_declaration && $this->mangle_symbols && $target !== $text && $target !== ( '\\' . $text ) ) {
-								if ( $in_function_header && ! empty( $current_class_fqcn ) ) {
-									$classes_with_mangled_types[ $current_class_fqcn ] = true;
-								}
+								$this->note_mangled_signature_type( $classes_with_mangled_types, $current_class_fqcn, $tokens, $i, $count, $in_method_signature, $in_class, $class_brace_depth );
 							}
 							if ( $this->flatten_namespaces && ! $keep_namespace ) {
 								$output .= ( $is_declaration || empty( $current_namespace ) ) ? $target : ( '\\' . $target );
@@ -2966,9 +3281,7 @@ class Plan3_Transformer {
 						if ( $mapped_class !== null && ! $is_fn_call && ! $is_member_name && ! $is_declaration ) {
 							$target = $mapped_class;
 							if ( $this->mangle_symbols && $target !== $text && $target !== ( '\\' . $text ) ) {
-								if ( $in_function_header && ! empty( $current_class_fqcn ) ) {
-									$classes_with_mangled_types[ $current_class_fqcn ] = true;
-								}
+								$this->note_mangled_signature_type( $classes_with_mangled_types, $current_class_fqcn, $tokens, $i, $count, $in_method_signature, $in_class, $class_brace_depth );
 							}
 							if ( ! empty( $current_namespace ) && $keep_namespace && strpos( $target, '\\' ) === false ) {
 								$output .= '\\' . ltrim( $target, '\\' );

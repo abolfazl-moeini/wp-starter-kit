@@ -44,8 +44,6 @@ export const ARTIFACT_TESTS = [
     ...Object.values(REQUIRED_ARTIFACT_TESTS).flat(),
     "sample-standalone-plugin-artifact.test.mjs",
     "sample-profile-s-plugin-artifact.test.mjs",
-    "wpdev-crm-artifact.test.mjs",
-    "wpdev-tickets-artifact.test.mjs",
     "verify-profile-s-artifact.test.mjs",
     "artifact-manifest-tamper-resistance.test.mjs",
     "zip-tamper-resistance-extended.test.mjs",

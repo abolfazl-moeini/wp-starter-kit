@@ -13,12 +13,17 @@ function testNamespaceRoot(vendorNamespace) {
   return `${vendorNamespace}Test\\`;
 }
 
-function phpunitXmlDist(tpl) {
-  const wpRoot =
-    tpl.wpTestsRoot ||
-    process.env.WPDEV_CONTENT_ROOT ||
-    "/tmp/wordpress-develop";
-  const pluginRoot = `${wpRoot}/wp-content/plugins/${tpl.slug}`;
+export function phpunitXmlDist(tpl, env = process.env) {
+  const wpDevelopRoot = tpl.wpTestsRoot || "";
+  const contentRoot = String(env.WPDEV_CONTENT_ROOT || "").replace(/\/+$/, "");
+  const pluginRoot = wpDevelopRoot
+    ? `${wpDevelopRoot}/wp-content/plugins/${tpl.slug}`
+    : contentRoot
+      ? `${contentRoot}/plugins/${tpl.slug}`
+      : `/tmp/wordpress-develop/wp-content/plugins/${tpl.slug}`;
+  const wpTestsDir = wpDevelopRoot
+    ? `${wpDevelopRoot}/tests/phpunit`
+    : "/tmp/wordpress-develop/tests/phpunit";
   return `<?xml version="1.0" encoding="UTF-8"?>
 <phpunit
     bootstrap="tests/phpunit/bootstrap.php"
@@ -36,7 +41,7 @@ function phpunitXmlDist(tpl) {
     </testsuites>
 
     <php>
-        <env name="WP_TESTS_DIR" value="${wpRoot}/tests/phpunit"/>
+        <env name="WP_TESTS_DIR" value="${wpTestsDir}"/>
         <env name="BOOTSTRAP_FILE" value="${pluginRoot}/${tpl.slug}.php"/>
         <env name="PLUGIN_ROOT" value="${pluginRoot}"/>
     </php>

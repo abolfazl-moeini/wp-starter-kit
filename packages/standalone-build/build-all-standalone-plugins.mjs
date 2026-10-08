@@ -1700,6 +1700,7 @@ export async function runPipelineOrchestration(options = {}) {
             outputDir: customDistDir,
             pluginsDir: customPluginsDir,
             buildPlan: pluginBuildPlan,
+            registry: effectiveRegistry,
             isObfuscate: pluginBuildPlan.capabilities.obfuscate,
             profile: activeProfile,
             inlineFramework: pluginBuildPlan.capabilities.inlineFramework,

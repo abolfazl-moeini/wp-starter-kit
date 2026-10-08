@@ -833,7 +833,12 @@ export async function validatePhpSyntaxTree(
           continue;
         }
         const lowerDir = entry.name.toLowerCase();
-        if (["examples", "example", "tests", "test", "docs", "doc", "demo", "demos", "sample", "samples"].includes(lowerDir)) {
+        const ancestors = path.relative(dir, fullPath).split(path.sep).filter(Boolean);
+        const inThirdParty = ancestors.some((part) =>
+          part === "vendor" || part === "vendor-prefixed" || part === "node_modules" || part === "dependencies",
+        );
+        const fixtureDir = ["examples", "example", "tests", "test", "docs", "doc", "demo", "demos", "sample", "samples"].includes(lowerDir);
+        if (inThirdParty && fixtureDir) {
           continue;
         }
         await walk(fullPath);

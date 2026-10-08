@@ -58,6 +58,22 @@ async function fixture({ toolBytes = "tool-v1\n", pinnedDigest = "a".repeat(64) 
   return { root, toolPath, manifestPath };
 }
 
+test("fails closed when the manifest has no consumer slug", async () => {
+  const fx = await fixture();
+  const manifest = JSON.parse(await readFile(fx.manifestPath, "utf8"));
+  delete manifest.consumer;
+  manifest.migrationContract.path = "prefix-migration-coexistence-contract.json";
+  await writeFile(path.join(fx.root, "prefix-migration-coexistence-contract.json"), "{}\n");
+  await writeFile(fx.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  const before = await readFile(fx.manifestPath, "utf8");
+  await assert.rejects(
+    exec(process.execPath, [script, fx.root, fx.manifestPath]),
+    (error) => error.stdout.includes("consumer slug is required"),
+  );
+  assert.equal(await readFile(fx.manifestPath, "utf8"), before);
+  await rm(fx.root, { recursive: true, force: true });
+});
+
 test("recomputes stale pinned digests from live tool bytes", async () => {
   const fx = await fixture();
   const before = await readFile(fx.manifestPath, "utf8");

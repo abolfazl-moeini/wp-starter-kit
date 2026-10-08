@@ -13,7 +13,9 @@
       "sourceDigest": null,
       "toolDigest": null,
       "migrationContractDigest": null,
-      "current": { "vendorPrefix": "WpdevVendor" },
+      "current": {
+        "vendorPrefix": "WpdevVendor"
+      },
       "target": {
         "vendorPrefix": "SampleAddonVendor",
         "runtimePrefix": "SampleAddonRt"
@@ -39,7 +41,9 @@
       "sourceDigest": null,
       "toolDigest": null,
       "migrationContractDigest": null,
-      "current": { "vendorPrefix": "WpdevVendor" },
+      "current": {
+        "vendorPrefix": "WpdevVendor"
+      },
       "target": {
         "vendorPrefix": "SampleStandaloneVendor",
         "runtimePrefix": "SampleStandaloneRt"
@@ -66,7 +70,9 @@
       "sourceDigest": null,
       "toolDigest": null,
       "migrationContractDigest": null,
-      "current": { "vendorPrefix": "WpdevVendor" },
+      "current": {
+        "vendorPrefix": "WpdevVendor"
+      },
       "target": {
         "vendorPrefix": "SampleProfileSVendor",
         "classmapPrefix": "SampleProfileSVendor_",
@@ -87,110 +93,6 @@
         "accepted source/artifact and tool digests are pending",
         "external template-listener coverage is incomplete",
         "serialized compatibility fixtures are not accepted",
-        "shared WpdevVendor migration is unapproved"
-      ]
-    },
-    {
-      "proposedArtifactId": "wpdev-analytics-profile-a-001",
-      "slug": "wpdev-analytics",
-      "recordStatus": "review-only",
-      "buildInput": false,
-      "sourceDigest": null,
-      "toolDigest": null,
-      "migrationContractDigest": null,
-      "current": { "vendorPrefix": "WpdevVendor" },
-      "target": {
-        "vendorPrefix": "WpdevAnalyticsVendor",
-        "runtimePrefix": "WpdevAnalyticsRt"
-      },
-      "migration": {
-        "legacyLoadability": true,
-        "coexistence": "legacy-and-target-classmaps",
-        "serialization": "frozen-fixtures-required",
-        "publicHooks": "frozen-public",
-        "activationOrdering": "legacy-readable-barrier-before-private-runtime",
-        "rollback": "previous-zip-with-declared-schema-window"
-      },
-      "blockers": [
-        "accepted source/artifact and tool digests are pending",
-        "shared WpdevVendor migration is unapproved"
-      ]
-    },
-    {
-      "proposedArtifactId": "wpdev-crm-profile-a-001",
-      "slug": "wpdev-crm",
-      "recordStatus": "review-only",
-      "buildInput": false,
-      "sourceDigest": null,
-      "toolDigest": null,
-      "migrationContractDigest": null,
-      "current": { "vendorPrefix": "WpdevVendor" },
-      "target": {
-        "vendorPrefix": "WpdevCrmVendor",
-        "runtimePrefix": "WpdevCrmRt"
-      },
-      "migration": {
-        "legacyLoadability": true,
-        "coexistence": "legacy-and-target-classmaps",
-        "serialization": "frozen-fixtures-required",
-        "publicHooks": "frozen-public",
-        "activationOrdering": "legacy-readable-barrier-before-private-runtime",
-        "rollback": "previous-zip-with-declared-schema-window"
-      },
-      "blockers": [
-        "accepted source/artifact and tool digests are pending",
-        "shared WpdevVendor migration is unapproved"
-      ]
-    },
-    {
-      "proposedArtifactId": "wpdev-tickets-profile-a-001",
-      "slug": "wpdev-tickets",
-      "recordStatus": "review-only",
-      "buildInput": false,
-      "sourceDigest": null,
-      "toolDigest": null,
-      "migrationContractDigest": null,
-      "current": { "vendorPrefix": "WpdevVendor" },
-      "target": {
-        "vendorPrefix": "WpdevTicketsVendor",
-        "runtimePrefix": "WpdevTicketsRt"
-      },
-      "migration": {
-        "legacyLoadability": true,
-        "coexistence": "legacy-and-target-classmaps",
-        "serialization": "frozen-fixtures-required",
-        "publicHooks": "frozen-public",
-        "activationOrdering": "legacy-readable-barrier-before-private-runtime",
-        "rollback": "previous-zip-with-declared-schema-window"
-      },
-      "blockers": [
-        "accepted source/artifact and tool digests are pending",
-        "shared WpdevVendor migration is unapproved"
-      ]
-    },
-    {
-      "proposedArtifactId": "wpdev-woo-persian-profile-a-001",
-      "slug": "wpdev-woo-persian",
-      "recordStatus": "review-only",
-      "buildInput": false,
-      "sourceDigest": null,
-      "toolDigest": null,
-      "migrationContractDigest": null,
-      "current": { "vendorPrefix": "WpdevVendor" },
-      "target": {
-        "vendorPrefix": "WpdevWooPersianVendor",
-        "runtimePrefix": "WpdevWooPersianRt"
-      },
-      "migration": {
-        "legacyLoadability": true,
-        "coexistence": "legacy-and-target-classmaps",
-        "serialization": "frozen-fixtures-required",
-        "publicHooks": "frozen-public",
-        "activationOrdering": "legacy-readable-barrier-before-private-runtime",
-        "rollback": "previous-zip-with-declared-schema-window"
-      },
-      "blockers": [
-        "accepted source/artifact and tool digests are pending",
         "shared WpdevVendor migration is unapproved"
       ]
     }

@@ -327,14 +327,13 @@ export async function verifyProfileSArtifact({
         } else {
           // Closure file: framework FQCNs in executable code are restricted.
           // 1. Bridge lines (class_alias, class_exists, etc.) are allowed.
-          // 2. Classes with serialization identity (__serialize/__unserialize) are intentionally
-          //    preserved by Plan 3 transformer to prevent DB corruption and are allowed.
+          // 2. A class whose own file keeps serialization identity is allowed via preservedFqcns.
+          //    One serialized class does not exempt every other reference in the file.
           // 3. String literals (e.g. deprecation notices, table configs) are allowed.
-          // 4. File-scope use statements (use \WPDevFramework\...) for undeclared external symbols are allowed.
+          // 4. File-scope use statements are allowed only for FQCNs that are not in the closure classmap.
           // 5. If closure-classmap is available, only declared inlined framework classes are checked for leakage;
           //    otherwise, direct inheritance (extends/implements) of raw framework classes fails closed.
-          const isSerializedClass = /(?:__serialize|__unserialize|__sleep|__wakeup)\s*\(/i.test(code);
-          if (!isSerializedClass && (code.includes("WPDevFramework\\") || code.includes("WPDevFramework\\\\"))) {
+          if (code.includes("WPDevFramework\\") || code.includes("WPDevFramework\\\\")) {
             const bridgePattern = /(?:class_alias|class_exists|interface_exists|trait_exists)\s*\(/i;
             const inheritancePattern = /(?:extends|implements)\s+[^{;]*\\?WPDevFramework\\/i;
             const topUsePattern = /^\s*use\s+(?:\\?WPDevFramework\\[^;]+)\s*;/i;
@@ -351,8 +350,21 @@ export async function verifyProfileSArtifact({
               if (!lineWithoutStrings.includes("WPDevFramework\\") && !lineWithoutStrings.includes("WPDevFramework\\\\")) {
                 continue;
               }
-              if (topUsePattern.test(line)) {
-                continue;
+              if (topUsePattern.test(lineWithoutStrings)) {
+                const normalizedUse = lineWithoutStrings.toLowerCase().replace(/\\\\/g, "\\");
+                let useIsDeclared = false;
+                if (declaredFqcns && declaredFqcns.size > 0) {
+                  for (const fqcn of declaredFqcns) {
+                    const pattern = `(?<![a-z0-9_])\\\\?${fqcn.replace(/\\/g, "\\\\")}(?![a-z0-9_])`;
+                    if (new RegExp(pattern, "i").test(normalizedUse)) {
+                      useIsDeclared = true;
+                      break;
+                    }
+                  }
+                }
+                if (!useIsDeclared) {
+                  continue;
+                }
               }
 
               let isLeak = false;
@@ -422,6 +434,10 @@ export async function verifyProfileSArtifact({
         if (entry.isDirectory()) {
           await checkNoDocs(full);
         } else if (entry.isFile() && entry.name.endsWith(".md")) {
+          const lower = entry.name.toLowerCase();
+          if (lower === "license.md" || lower === "notice.md") {
+            continue;
+          }
           noDocsLeakage = false;
           failures.push(`Unwanted markdown doc found in release archive: ${path.relative(stagingRoot, full)}`);
         }

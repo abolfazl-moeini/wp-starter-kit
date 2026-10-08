@@ -180,6 +180,41 @@ class ContactsTable extends Table {
   }
 });
 
+test("Plan 3: flattened framework file drops a use that collides with its own class", async () => {
+  const source = `<?php
+namespace WPDevFramework\\Objects;
+
+use WPDevFramework\\Objects\\Limitations;
+use External\\Vendor\\Clock;
+
+defined('ABSPATH') || exit;
+
+class Limitations {
+    public function label() {
+        return Clock::now();
+    }
+}
+`;
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "plan3-self-use-"));
+  const filePath = path.join(
+    tempDir,
+    "src/FrameworkClosure/modules/core/src/objects/class-limitations.php",
+  );
+  try {
+    await mkdir(path.dirname(filePath), { recursive: true });
+    await writeFile(filePath, source, "utf8");
+    await execFileAsync("php", [TRANSFORMER_PHP, filePath, "--not-main", "seed-self-use"]);
+    const transformed = await readFile(filePath, "utf8");
+    assert.ok(!transformed.includes("use WPDevFramework\\Objects\\Limitations"));
+    assert.ok(transformed.includes("class Limitations"));
+    assert.ok(transformed.includes("use External\\Vendor\\Clock"));
+    const { stdout } = await execFileAsync("php", ["-l", filePath]);
+    assert.ok(stdout.includes("No syntax errors detected"));
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
 test("Plan 3: disambiguates classes sharing identical short names in different namespaces", async () => {
   const fileA = `<?php
 namespace App\\ModuleA;
@@ -572,6 +607,228 @@ class Registry { public function getId() { return 'B'; } }
       !Object.prototype.hasOwnProperty.call(mapData.classes, "Registry"),
       "ambiguous short name Registry must not map to a single mangled class",
     );
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+async function transformTree(files, seed) {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "plan3-tree-"));
+  const mapFile = path.join(tempDir, "map.json");
+  for (const [relPath, content] of Object.entries(files)) {
+    const target = path.join(tempDir, relPath);
+    await mkdir(path.dirname(target), { recursive: true });
+    await writeFile(target, content, "utf8");
+  }
+  await execFileAsync("php", [TRANSFORMER_PHP, "--dump-map", tempDir, mapFile, seed], { timeout: 15000 });
+  await execFileAsync(
+    "php",
+    [TRANSFORMER_PHP, "--batch", tempDir, mapFile, seed, ""],
+    { timeout: 15000 },
+  );
+  return { tempDir, mapFile };
+}
+
+function declaresAlias(source, className) {
+  return source.includes("class_alias") && source.includes(className);
+}
+
+test("Plan 3: commented class constants finish under strip-comments", async () => {
+  const source = `<?php
+class Holder {
+    const BAR = 1 /* keep */;
+    const /* name */ BAZ = 2;
+}
+`;
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "plan3-const-comment-"));
+  const tempFile = path.join(tempDir, "holder.php");
+  try {
+    await writeFile(tempFile, source, "utf8");
+    await execFileAsync("php", [TRANSFORMER_PHP, tempFile, "--not-main", "seed-const-comment"], {
+      timeout: 4000,
+    });
+    const transformed = await readFile(tempFile, "utf8");
+    assert.ok(transformed.includes("const BAR"), "public constant name must survive");
+    assert.ok(transformed.includes("const BAZ") || transformed.includes("BAZ ="), "commented constant name must survive");
+    assert.ok(!transformed.includes("/* keep */"), "value comment must be stripped");
+    assert.ok(!transformed.includes("/* name */"), "name comment must be stripped");
+    const { stdout } = await execFileAsync("php", ["-l", tempFile]);
+    assert.ok(stdout.includes("No syntax errors detected"));
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("Plan 3: const initializers rewrite fully-qualified and namespace-relative receivers", async () => {
+  const { tempDir, mapFile } = await transformTree(
+    {
+      "Vault.php": `<?php
+namespace Sample\\Support;
+class Vault {
+    const V = 'secret-value';
+}
+`,
+      "Reader.php": `<?php
+namespace Sample\\Support;
+class Reader {
+    const A = \\Sample\\Support\\Vault::V;
+    const B = namespace\\Vault::V;
+}
+`,
+    },
+    "seed-const-fqcn",
+  );
+  try {
+    const mapData = JSON.parse(await readFile(mapFile, "utf8"));
+    const mangled = String(mapData.classes["Sample\\Support\\Vault"] || "").replace(/^\\/, "");
+    assert.match(mangled, /^_c_[0-9a-f]{8}$/);
+    const reader = await readFile(path.join(tempDir, "Reader.php"), "utf8");
+    assert.ok(!reader.includes("Sample\\Support\\Vault"), "fully-qualified const receiver must be mangled");
+    assert.ok(!reader.includes("namespace\\Vault"), "namespace-relative const receiver must be mangled");
+    assert.ok(reader.includes(mangled), "const receiver must use the declared mangled class");
+    assert.ok(reader.includes("::V"), "public constant name after :: must stay verbatim");
+    const { stdout } = await execFileAsync("php", ["-l", path.join(tempDir, "Reader.php")]);
+    assert.ok(stdout.includes("No syntax errors detected"));
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("Plan 3: framework alias follows method and property types, not nested closures", async () => {
+  const header = "<?php\nnamespace WPDev\\Support;\n";
+  const { tempDir } = await transformTree(
+    {
+      "src/FrameworkClosure/UserAccess.php": `${header}class UserAccess {\n    public function id() { return 'ua'; }\n}\n`,
+      "src/FrameworkClosure/FqcnGate.php": `${header}class FqcnGate {\n    public static function access(\\WPDev\\Support\\UserAccess $qualifier) {\n        return $qualifier;\n    }\n}\n`,
+      "src/FrameworkClosure/RelativeGate.php": `${header}class RelativeGate {\n    public function load(): namespace\\UserAccess {\n        return new namespace\\UserAccess();\n    }\n}\n`,
+      "src/FrameworkClosure/DefaultGate.php": `${header}class DefaultGate {\n    public function access($opts = ['a' => 1], UserAccess $qualifier) {\n        return $qualifier;\n    }\n}\n`,
+      "src/FrameworkClosure/PropertyGate.php": `${header}class PropertyGate {\n    public UserAccess $child;\n}\n`,
+      "src/FrameworkClosure/ClosureGate.php": `${header}class ClosureGate {\n    public function run() {\n        $fn = function (UserAccess $u) { return $u; };\n        return $fn;\n    }\n}\n`,
+      "src/FrameworkClosure/ExtendsGate.php": `${header}class ExtendsGate extends UserAccess {\n    public function label() { return 'child'; }\n}\n`,
+      "src/FrameworkClosure/PlainGate.php": `${header}class PlainGate {\n    public function run() { return 1; }\n}\n`,
+    },
+    "seed-framework-alias",
+  );
+  try {
+    const read = (name) => readFile(path.join(tempDir, "src/FrameworkClosure", name), "utf8");
+    const fqcn = await read("FqcnGate.php");
+    const relative = await read("RelativeGate.php");
+    const defaults = await read("DefaultGate.php");
+    const property = await read("PropertyGate.php");
+    const closure = await read("ClosureGate.php");
+    const extended = await read("ExtendsGate.php");
+    const plain = await read("PlainGate.php");
+    const access = await read("UserAccess.php");
+
+    assert.ok(!declaresAlias(fqcn, "FqcnGate"), "FQCN parameter type must suppress the framework alias");
+    assert.ok(!declaresAlias(relative, "RelativeGate"), "namespace-relative return type must suppress the framework alias");
+    assert.ok(!declaresAlias(defaults, "DefaultGate"), "a later parameter after a default array must suppress the framework alias");
+    assert.ok(defaults.includes("'a'"), "default array keys must stay verbatim");
+    assert.ok(!declaresAlias(property, "PropertyGate"), "typed property must suppress the framework alias");
+    assert.ok(property.includes("$child"), "public typed property name must stay");
+    assert.ok(declaresAlias(closure, "ClosureGate"), "a nested closure parameter must not suppress the enclosing class alias");
+    assert.ok(declaresAlias(extended, "ExtendsGate"), "extends must not suppress the framework alias");
+    assert.ok(declaresAlias(plain, "PlainGate"), "a class with no mangled signature type must keep its alias");
+    assert.ok(declaresAlias(access, "UserAccess"), "a class that is only used as a type must keep its own alias");
+    for (const name of ["FqcnGate.php", "RelativeGate.php", "DefaultGate.php", "PropertyGate.php", "ClosureGate.php"]) {
+      const { stdout } = await execFileAsync("php", ["-l", path.join(tempDir, "src/FrameworkClosure", name)]);
+      assert.ok(stdout.includes("No syntax errors detected"), name);
+    }
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("Plan 3: unqualified class names inside a namespace do not bind the global class", async () => {
+  const { tempDir, mapFile } = await transformTree(
+    {
+      "Logger.php": `<?php
+class Logger {
+    public function name() { return 'GLOBAL'; }
+}
+`,
+      "app/Probe.php": `<?php
+namespace App;
+class Probe {
+    public function make() { return new Logger(); }
+}
+`,
+      "GlobalProbe.php": `<?php
+class GlobalProbe {
+    public function make() { return new Logger(); }
+}
+`,
+    },
+    "seed-ns-class",
+  );
+  try {
+    const mapData = JSON.parse(await readFile(mapFile, "utf8"));
+    const mangled = String(mapData.classes.Logger || "").replace(/^\\/, "");
+    assert.match(mangled, /^_c_[0-9a-f]{8}$/);
+    const probe = await readFile(path.join(tempDir, "app/Probe.php"), "utf8");
+    const globalProbe = await readFile(path.join(tempDir, "GlobalProbe.php"), "utf8");
+    assert.ok(!probe.includes(mangled), "App\\Logger must not be rewritten to the global Logger");
+    assert.ok(probe.includes("Logger"), "unresolved namespace class reference must stay Logger");
+    assert.ok(globalProbe.includes(mangled), "a global unqualified reference must still use the global class");
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("Plan 3: closure defaults do not steal the framework alias from the real signature", async () => {
+  const header = "<?php\nnamespace WPDev\\Support;\n";
+  const { tempDir } = await transformTree(
+    {
+      "src/FrameworkClosure/UserAccess.php": `${header}class UserAccess {\n    public function id() { return 'ua'; }\n}\n`,
+      "src/FrameworkClosure/ClosureProp.php": `${header}class ClosureProp {\n    public $fn = static function (UserAccess $u) { return $u; };\n}\n`,
+      "src/FrameworkClosure/ReturnAfterClosure.php": `${header}class ReturnAfterClosure {\n    public function load($cb = static function ($x) { return $x; }): UserAccess {\n        return new UserAccess();\n    }\n}\n`,
+    },
+    "seed-closure-alias",
+  );
+  try {
+    const read = (name) => readFile(path.join(tempDir, "src/FrameworkClosure", name), "utf8");
+    const prop = await read("ClosureProp.php");
+    const afterClosure = await read("ReturnAfterClosure.php");
+    assert.ok(declaresAlias(prop, "ClosureProp"), "a property-default closure must not suppress the class alias");
+    assert.ok(!declaresAlias(afterClosure, "ReturnAfterClosure"), "a return type after a closure default must suppress the alias");
+    for (const name of ["ClosureProp.php", "ReturnAfterClosure.php"]) {
+      const { stdout } = await execFileAsync("php", ["-l", path.join(tempDir, "src/FrameworkClosure", name)]);
+      assert.ok(stdout.includes("No syntax errors detected"), name);
+    }
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("Plan 3: group-use drops only the colliding type and keeps function imports", async () => {
+  const source = `<?php
+namespace Sample\\Objects;
+
+use External\\Vendor\\{Clock, Box};
+use function External\\Vendor\\box;
+
+class Box {
+    public function tick() {
+        $anon = new class extends \\stdClass {
+            public function id() { return self::class; }
+        };
+        return Clock::class . $anon->id();
+    }
+}
+`;
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "plan3-group-use-"));
+  const filePath = path.join(tempDir, "box.php");
+  try {
+    await writeFile(filePath, source, "utf8");
+    await execFileAsync("php", [TRANSFORMER_PHP, filePath, "--not-main", "seed-group-use"]);
+    const transformed = await readFile(filePath, "utf8");
+    assert.ok(!/use\s+(?:function\s+|const\s+)?(?:\\+)?External\\Vendor\\Box\b/.test(transformed), "colliding group member must be dropped");
+    assert.ok(transformed.includes("Clock"), "non-colliding group member must stay");
+    assert.ok(/use\s+function\s+/.test(transformed), "function import must stay even when its alias matches a class");
+    assert.ok(transformed.includes("class Box"));
+    assert.ok(!transformed.includes("class Clock"), "anonymous class and ::class must not invent a declaration");
+    const { stdout } = await execFileAsync("php", ["-l", filePath]);
+    assert.ok(stdout.includes("No syntax errors detected"));
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }

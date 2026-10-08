@@ -10,7 +10,9 @@ import { promisify } from "node:util";
 import { collectComposerAutoloadFileTargets } from "../canonical-artifact-manifest.mjs";
 import { parseDeployArgs } from "../deploy-standalone-plugin.mjs";
 import { atomicDeployPlugin } from "../build-all-standalone-plugins.mjs";
+import { spliceComposerArrayHeader } from "../assemble-profile-s-candidate.mjs";
 import {
+  assignInlinedFrameworkAutoload,
   injectFunctionsClosureLoader,
   inlineWpdevClosure,
   removeWpdevPluginRequirement,
@@ -19,6 +21,30 @@ import {
 } from "../inline-wpdev-closure.mjs";
 
 const execFileAsync = promisify(execFile);
+
+test("F08: Composer static classmap accepts the spaced array header", () => {
+  const source = "<?php\nclass Loader {\n    public static $classMap = array (\n        'Old' => __DIR__ . '/Old.php',\n    );\n}\n";
+  const patched = spliceComposerArrayHeader(source, "public static $classMap = array(", [
+    "        'Sample\\\\Gate' => __DIR__ . '/../..' . '/src/Gate.php',",
+  ]);
+  assert.match(patched, /public static \$classMap = array \(\n        'Sample\\\\Gate'/);
+  assert.equal(spliceComposerArrayHeader("<?php class X {}", "public static $classMap = array(", ["        'A' => 1,"]), "<?php class X {}");
+});
+
+test("F08: inlined autoload keeps an existing framework PSR-4 prefix", () => {
+  const kept = assignInlinedFrameworkAutoload(
+    { "WPDev\\": "src/", "WPDev\\Modules\\": "src/Modules/" },
+    "WPDev",
+  );
+  assert.equal(kept["WPDev\\"], "src/");
+  assert.equal(kept["WPDev\\Modules\\"], "src/Modules/");
+  assert.equal(kept["WPDev\\Core\\"], "src/FrameworkClosure/Core/Core/");
+
+  const added = assignInlinedFrameworkAutoload({ "Acme\\": "src/" }, "Acme");
+  assert.equal(added["Acme\\"], "src/");
+  assert.equal(added["Acme\\Core\\"], "src/FrameworkClosure/Core/Core/");
+  assert.equal(added["WPDev\\"], "src/FrameworkClosure/Core/");
+});
 
 test("F08: collectComposerAutoloadFileTargets rejects traversal and escaping targets", async () => {
   const tmpDir = await mkdtemp(path.join(os.tmpdir(), "f08-autoload-"));

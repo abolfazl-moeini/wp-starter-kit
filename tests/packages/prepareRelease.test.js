@@ -4,6 +4,10 @@
 import { describe, test, expect } from "@jest/globals";
 
 import {
+  pathIsWithin,
+  resolveReleaseContentRoot,
+} from "../../packages/create-wp-project/src/release/prepare-release.js";
+import {
   prepareComposerForRelease,
   releaseCopyExcludeNames,
   releaseStripDirNames,
@@ -12,6 +16,25 @@ import {
   shouldStripRelativePath,
   matchSimpleGlob,
 } from "../../packages/create-wp-project/src/release/prepareComposer.js";
+
+describe("resolveReleaseContentRoot", () => {
+  test("requires a directory boundary under WPDEV_CONTENT_ROOT", () => {
+    const inside = resolveReleaseContentRoot(
+      "/var/wp-content/plugins/sample-plugin",
+      "/var/wp-content",
+    );
+    expect(inside.contentRoot).toBe("/var/wp-content");
+    expect(inside.pluginsDir).toBe("/var/wp-content/plugins");
+
+    const sibling = resolveReleaseContentRoot(
+      "/var/wp-content-old/plugins/sample-plugin",
+      "/var/wp-content",
+    );
+    expect(sibling.contentRoot).toBe("/var/wp-content-old");
+    expect(pathIsWithin("/data/wp-content", "/data/wp")).toBe(false);
+    expect(pathIsWithin("/data/wp/plugins/sample", "/data/wp")).toBe(true);
+  });
+});
 
 describe("prepareComposerForRelease", () => {
   test("sets require.php to >={phpMinVersion}", () => {

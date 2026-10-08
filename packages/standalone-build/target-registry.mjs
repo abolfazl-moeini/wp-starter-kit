@@ -317,7 +317,7 @@ export async function buildRegistryFromConfig(rawConfig, contentRoot = null, con
  * registry lookup. Returns null when the convention does not match the
  * filesystem (caller turns that into a fail-closed error).
  * @param {string} contentRoot - path to wp-content
- * @param {string} consumer - consumer slug (e.g. "wpdev-crm")
+ * @param {string} consumer - consumer slug (e.g. "sample-standalone-plugin")
  * @param {string|null} pluginsDir - explicit plugins dir override
  * @returns {Promise<{ entry, sourceDir, deployDir, bootstrapFile }|null>}
  */

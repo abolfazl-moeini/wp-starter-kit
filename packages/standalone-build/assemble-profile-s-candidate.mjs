@@ -69,6 +69,30 @@ const CRC_TABLE = (() => {
   return table;
 })();
 
+/**
+ * Insert classmap lines after Composer's `array (` or `array(` header.
+ * Composer 2 writes a space before the parenthesis in autoload_static.php.
+ * The runtime loader reads that static map, not autoload_classmap.php.
+ *
+ * @param {string} source
+ * @param {string} headerLiteral Header without a required space, e.g. `return array(`.
+ * @param {string[]} additions
+ * @returns {string}
+ */
+export function spliceComposerArrayHeader(source, headerLiteral, additions) {
+  if (typeof source !== "string" || !Array.isArray(additions) || additions.length === 0) {
+    return source;
+  }
+  const escaped = headerLiteral
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    .replace("array\\(", "array\\s*\\(");
+  const header = new RegExp(escaped);
+  if (!header.test(source)) {
+    return source;
+  }
+  return source.replace(header, (match) => `${match}\n${additions.join("\n")}`);
+}
+
 function crc32(data) {
   let value = 0xffffffff;
   for (const byte of data)
@@ -297,8 +321,11 @@ export async function assembleProfileSCandidate(options = {}) {
     console.log("==> 3. Purging development documents (.md, dev configs) while preserving LICENSE/NOTICE...");
     await purgeDevelopmentTree(stagingPlugin, consumer);
 
-    // Gate: Verify all production classes from devDir/src exist in stagingPlugin/src
-    await validateClassCompleteness({ devDir, stagingPlugin, consumer });
+    // Gate: Verify all production classes from devDir/src exist in stagingPlugin/src.
+    // Legacy TARGET_REGISTRY is empty. requiredFqcns live on the registry loaded
+    // from the consumer build config and passed in by the pipeline.
+    const completenessRegistry = options.registry || TARGET_REGISTRY;
+    await validateClassCompleteness({ devDir, stagingPlugin, consumer, registry: completenessRegistry });
 
     let inlined = { inlinedFiles: 0 };
     if (buildPlan.capabilities.inlineFramework) {
@@ -616,27 +643,26 @@ export async function assembleProfileSCandidate(options = {}) {
           }
         }
         if (additions.length > 0) {
-          cmap = cmap.replace("return array(", `return array(\n${additions.join("\n")}`);
+          cmap = spliceComposerArrayHeader(cmap, "return array(", additions);
           await writeFile(classmapFile, cmap, "utf8");
         }
 
         const staticFile = path.join(stagingPlugin, "vendor/composer/autoload_static.php");
         if (fs.existsSync(staticFile)) {
           let sContent = await readFile(staticFile, "utf8");
-          if (sContent.includes("public static $classMap = array(")) {
-            let staticAdditions = [];
-            for (const entry of consumerEntries) {
-              if (fs.existsSync(path.join(stagingPlugin, entry.rel.slice(1))) && !sContent.includes(`'${entry.cls}'`)) {
-                staticAdditions.push(`        '${entry.cls}' => __DIR__ . '/../..' . '${entry.rel}',`);
-              }
+          const staticAdditions = [];
+          for (const entry of consumerEntries) {
+            if (fs.existsSync(path.join(stagingPlugin, entry.rel.slice(1))) && !sContent.includes(`'${entry.cls}'`)) {
+              staticAdditions.push(`        '${entry.cls}' => __DIR__ . '/../..' . '${entry.rel}',`);
             }
-            if (staticAdditions.length > 0) {
-              sContent = sContent.replace(
-                "public static $classMap = array(",
-                `public static $classMap = array(\n${staticAdditions.join("\n")}`
-              );
-              await writeFile(staticFile, sContent, "utf8");
-            }
+          }
+          const patchedStatic = spliceComposerArrayHeader(
+            sContent,
+            "public static $classMap = array(",
+            staticAdditions,
+          );
+          if (patchedStatic !== sContent) {
+            await writeFile(staticFile, patchedStatic, "utf8");
           }
         }
       }
