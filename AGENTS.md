@@ -302,7 +302,6 @@ npm run release:dist -- --with-docs
 
 - **Protection & Obfuscation Master Guide:** [`packages/standalone-build/OBFUSCATION_AND_SPAGHETTIFICATION_CONTEXT.md`](packages/standalone-build/OBFUSCATION_AND_SPAGHETTIFICATION_CONTEXT.md)
 - **Deployment SOP:** [`packages/standalone-build/SOP_PRODUCTION_PLUGIN_DEPLOYMENT.md`](packages/standalone-build/SOP_PRODUCTION_PLUGIN_DEPLOYMENT.md)
-- **Full Obfuscator Audit & Remediation Log:** [`packages/standalone-build/FULL_BUILD_OBFUSCATOR_AUDIT_AND_REMEDIATION.md`](packages/standalone-build/FULL_BUILD_OBFUSCATOR_AUDIT_AND_REMEDIATION.md)
 - **General Architecture:** [`docs/architecture.md`](docs/architecture.md)
 - **Build System Reference:** [`docs/build-system.md`](docs/build-system.md)
 - **Module Authoring Guide:** [`docs/module-guide.md`](docs/module-guide.md)
