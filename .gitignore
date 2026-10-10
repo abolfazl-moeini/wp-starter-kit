@@ -42,3 +42,6 @@ tmp-wpsk-smoke-*/
 
 # Strauss runtime output (regenerated on demand)
 strauss/
+
+# Doc locks
+*.publish.lock

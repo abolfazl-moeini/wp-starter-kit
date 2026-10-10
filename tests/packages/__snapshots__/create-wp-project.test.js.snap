@@ -164,6 +164,7 @@ exports[`@wpdev/create-wp-project preset scaffold snapshots (TASK-20) standard p
     "docs:build",
     "docs:docx",
     "docs:pdf",
+    "docs:scan",
     "format:check",
     "lint:js",
     "prepare",

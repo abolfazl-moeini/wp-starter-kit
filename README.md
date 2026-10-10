@@ -55,9 +55,7 @@ For the full flag table, presets, and every command, see
   [docs/php-test-tools.md](docs/php-test-tools.md).
 - **Vendor scoping** — Strauss pipeline for shipping Composer deps
   with your plugin. See [docs/vendor-scoping.md](docs/vendor-scoping.md).
-- **In-repo Docs-as-Code** — Automated PDF and Docx client manuals compiled directly
-  from `docs/user-guide/` via `tools/build-docs.mjs` (`npm run docs:build`) with
-  fail-closed image validation and `--with-docs` release packaging.
+- **In-repo Docs-as-Code & Admin Scanner** — Static panel/settings scanner (`tools/scan-admin-panels.mjs` / `npm run docs:scan`) and automated publication-grade PDF & DOCX client manuals compiled directly from `docs/user-guide/` via `tools/build-docs.mjs` (`npm run docs:build`) powered by `md-to-docx`.
 
 ## Architecture at a glance
 

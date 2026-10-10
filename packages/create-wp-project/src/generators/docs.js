@@ -48,6 +48,9 @@ export function run(ctx) {
     ),
     "docs/assets/.gitkeep": "# docs/assets placeholder\n",
     "tools/build-docs.mjs": loadDocsTemplate("tools/build-docs.mjs"),
+    "tools/scan-admin-panels.mjs": loadDocsTemplate(
+      "tools/scan-admin-panels.mjs",
+    ),
   };
 
   const dirs = [
@@ -77,6 +80,7 @@ export const descriptor = {
     "docs/assets/.gitkeep",
     "docs/templates/feature-manual.md",
     "tools/build-docs.mjs",
+    "tools/scan-admin-panels.mjs",
   ],
   run,
 };

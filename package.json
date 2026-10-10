@@ -47,6 +47,7 @@
     "add-feature": "node packages/create-wp-project/src/add-feature-cli.js",
     "update": "node packages/create-wp-project/src/update-cli.js",
     "doctor": "node packages/create-wp-project/src/doctor-cli.js",
+    "docs:scan": "node tools/scan-admin-panels.mjs",
     "docs:build": "node tools/build-docs.mjs",
     "docs:pdf": "node tools/build-docs.mjs --format=pdf",
     "docs:docx": "node tools/build-docs.mjs --format=docx"

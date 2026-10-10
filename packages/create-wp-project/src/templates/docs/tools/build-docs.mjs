@@ -28,6 +28,7 @@ export function parseArgs(argv = process.argv.slice(2)) {
     format: "all",
     root: process.cwd(),
     config: null,
+    allowMissingAssets: false,
     help: false,
   };
   for (const arg of argv) {
@@ -39,6 +40,8 @@ export function parseArgs(argv = process.argv.slice(2)) {
       opts.root = path.resolve(arg.split("=")[1].trim());
     } else if (arg.startsWith("--config=")) {
       opts.config = path.resolve(arg.split("=")[1].trim());
+    } else if (arg === "--warn-assets" || arg === "--allow-missing-assets") {
+      opts.allowMissingAssets = true;
     }
   }
   return opts;
@@ -131,7 +134,7 @@ export function validateAssets(root, guideDirAbs, mdFiles) {
   return missing;
 }
 
-export function assembleStitchedDocument(guideDirAbs, mdFiles, config) {
+export function assembleStitchedDocument(guideDirAbs, mdFiles, config, missingAssets = []) {
   let combined = "";
 
   // Title & Metadata header
@@ -163,11 +166,24 @@ export function assembleStitchedDocument(guideDirAbs, mdFiles, config) {
     combined += `<div style="page-break-after: always;"></div>\n\n\\newpage\n\n`;
   }
 
+  const missingSet = new Set(missingAssets.map((m) => m.rawReference));
+
   // Concatenate each chapter with page breaks
   for (let i = 0; i < mdFiles.length; i++) {
     const file = mdFiles[i];
     const fullPath = path.join(guideDirAbs, file);
-    const content = readFileSync(fullPath, "utf8");
+    let content = readFileSync(fullPath, "utf8");
+
+    if (missingSet.size > 0) {
+      content = content.replace(/!\[(.*?)\]\((.*?)\)/g, (match, alt, url) => {
+        const clean = url.trim().split(/\s+/)[0].replace(/^<|>$/g, "").split(/[?#]/)[0].trim();
+        if (missingSet.has(url) || missingSet.has(clean)) {
+          return `\n> 📷 **[تصویر راهنما: ${alt || clean}]**\n`;
+        }
+        return match;
+      });
+    }
+
     combined += content.trim() + "\n\n";
     if (i < mdFiles.length - 1) {
       combined += `<div style="page-break-after: always;"></div>\n\n\\newpage\n\n`;
@@ -194,6 +210,9 @@ export function findMd2Docx(root) {
     path.resolve(root, "../md-to-docx/.venv/bin/md2docx"),
     path.resolve(root, "../../md-to-docx/.venv/bin/md2docx"),
     path.resolve(root, "../../../md-to-docx/.venv/bin/md2docx"),
+    path.join(os.homedir(), "Documents", "ideas", "md-to-docx", ".venv", "bin", "md2docx"),
+    path.join(os.homedir(), "Dev", "md-to-docx", ".venv", "bin", "md2docx"),
+    path.join(os.homedir(), "Downloads", "md-to-docx", ".venv", "bin", "md2docx"),
   ];
   for (const v of venvs) {
     if (existsSync(v)) return v;
@@ -257,25 +276,41 @@ export async function buildDocs(options = {}) {
     throw new Error(`No markdown files found in ${guideDirAbs}`);
   }
 
-  // Pre-flight Asset Validation (Fail-closed)
+  // Pre-flight Asset Validation (Fail-closed by default, warning mode if allowed)
   const missingAssets = validateAssets(root, guideDirAbs, mdFiles);
   if (missingAssets.length > 0) {
-    process.stderr.write("\n[FATAL] Documentation asset verification failed:\n");
-    for (const item of missingAssets) {
+    if (options.allowMissingAssets) {
       process.stderr.write(
-        `  - In '${item.sourceFile}': asset '${item.rawReference}' not found (resolved: '${item.resolvedPath}')\n`,
+        `\n[WARN] ${missingAssets.length} documentation asset(s) not found (substituting text placeholders):\n`,
       );
+      for (const item of missingAssets) {
+        process.stderr.write(`  - In '${item.sourceFile}': asset '${item.rawReference}'\n`);
+      }
+    } else {
+      process.stderr.write("\n[FATAL] Documentation asset verification failed:\n");
+      for (const item of missingAssets) {
+        process.stderr.write(
+          `  - In '${item.sourceFile}': asset '${item.rawReference}' not found (resolved: '${item.resolvedPath}')\n`,
+        );
+      }
+      process.stderr.write(
+        "\nAborting docs build with exit code 1 (use --warn-assets to compile with placeholders during drafts).\n",
+      );
+      const err = new Error(`Asset verification failed: ${missingAssets.length} missing asset(s)`);
+      err.missingAssets = missingAssets;
+      throw err;
     }
-    process.stderr.write("\nAborting docs build with exit code 1.\n");
-    const err = new Error(`Asset verification failed: ${missingAssets.length} missing asset(s)`);
-    err.missingAssets = missingAssets;
-    throw err;
   }
 
   const outDirAbs = path.resolve(root, config.output_dir);
   mkdirSync(outDirAbs, { recursive: true });
 
-  const stitchedContent = assembleStitchedDocument(guideDirAbs, mdFiles, config);
+  const stitchedContent = assembleStitchedDocument(
+    guideDirAbs,
+    mdFiles,
+    config,
+    options.allowMissingAssets ? missingAssets : [],
+  );
   const tempStitched = path.join(outDirAbs, ".stitched-manual.md");
   writeFileSync(tempStitched, stitchedContent, "utf8");
 
