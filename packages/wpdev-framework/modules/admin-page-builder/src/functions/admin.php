@@ -14,11 +14,14 @@ defined('ABSPATH') || exit;
  *
  * @since 2.0.0
  */
+if (!function_exists('wpdev_wrap_use_container')) {
 function wpdev_wrap_use_container() {
 
 	echo get_user_setting('wpdev_use_container', false) ? 'admin-lg:wpdev-container admin-lg:wpdev-mx-auto' : '';
 
-} // end wpdev_wrap_use_container;
+}
+}
+ // end wpdev_wrap_use_container;
 
 /**
  * Normalize a settings / wizard section icon class for left-nav rendering.
@@ -31,6 +34,7 @@ function wpdev_wrap_use_container() {
  * @param string $icon Icon class from section config.
  * @return string Space-separated class list safe for esc_attr().
  */
+if (!function_exists('wpdev_admin_section_icon_class')) {
 function wpdev_admin_section_icon_class( $icon ) {
 
 	$icon = trim( (string) $icon );
@@ -51,7 +55,9 @@ function wpdev_admin_section_icon_class( $icon ) {
 
 	return $icon;
 
-} // end wpdev_admin_section_icon_class;
+}
+}
+ // end wpdev_admin_section_icon_class;
 
 /**
  * Renders the responsive table single-line.
@@ -63,6 +69,7 @@ function wpdev_admin_section_icon_class( $icon ) {
  * @param array $second_row The second row, on the right.
  * @return string
  */
+if (!function_exists('wpdev_responsive_table_row')) {
 function wpdev_responsive_table_row($args = array(), $first_row = array(), $second_row = array()) {
 
 	$args = wp_parse_args($args, array(
@@ -75,4 +82,6 @@ function wpdev_responsive_table_row($args = array(), $first_row = array(), $seco
 
 	return wpdev_get_template_contents('base/responsive-table-row', compact('args', 'first_row', 'second_row'));
 
-} // end wpdev_responsive_table_row;
+}
+}
+ // end wpdev_responsive_table_row;

@@ -15,10 +15,13 @@ defined('ABSPATH') || exit;
  * @since 2.0.0
  * @return string
  */
+if (!function_exists('wpdev_get_ip')) {
 function wpdev_get_ip() {
 
 	$geolocation = \WPDevFramework\Geolocation::geolocate_ip('', true);
 
 	return apply_filters('wpdev_get_ip', $geolocation['ip']);
 
-} // end wpdev_get_ip;
+}
+}
+ // end wpdev_get_ip;

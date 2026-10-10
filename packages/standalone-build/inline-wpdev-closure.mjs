@@ -1114,6 +1114,30 @@ function wrap_php_functions($code) {
                     break;
                 }
                 if ($fn_name !== "") {
+                    $is_already_guarded = false;
+                    $count = 0;
+                    for ($b = $i - 1; $b >= 0 && $count < 30; $b--) {
+                        $tb = $tokens[$b];
+                        if (is_array($tb) && ($tb[0] === T_WHITESPACE || $tb[0] === T_COMMENT || $tb[0] === T_DOC_COMMENT)) continue;
+                        $count++;
+                        if (is_array($tb) && in_array($tb[0], [T_FUNCTION, T_CLASS, T_TRAIT, T_INTERFACE, T_RETURN], true)) break;
+                        if ($tb === ";") break;
+                        if (is_array($tb) && $tb[0] === T_STRING && strtolower($tb[1]) === "function_exists") {
+                            for ($j = $b + 1; $j < $i; $j++) {
+                                $tj = $tokens[$j];
+                                if (is_array($tj) && ($tj[0] === T_WHITESPACE || $tj[0] === T_COMMENT || $tj[0] === T_DOC_COMMENT)) continue;
+                                if ($tj === "(") continue;
+                                if (is_array($tj) && $tj[0] === T_CONSTANT_ENCAPSED_STRING && substr(trim($tj[1]), 1, -1) === $fn_name) {
+                                    $is_already_guarded = true;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    if ($is_already_guarded) {
+                        $output .= $t[1];
+                        continue;
+                    }
                     $output .= "if (!function_exists(\x27" . $fn_name . "\x27)) {\n";
                     $func_tokens = [$t];
                     $i++;
@@ -1781,7 +1805,7 @@ if (class_exists('\\WPDevFramework\\Core\\Module_View_Registry')) {
 if (!defined('WPDEV_BOOTSTRAP_FILE')) {
     if (!function_exists('wpdev_get_version')) {
         function wpdev_get_version() {
-            return defined('WPDEV_VERSION') ? WPDEV_VERSION : '2.10.0';
+            return defined('WPDEV_VERSION') ? WPDEV_VERSION : (class_exists('\\WPDev') ? \\WPDev::VERSION : '2.13.11');
         }
     }
 

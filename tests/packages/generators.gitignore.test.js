@@ -61,5 +61,9 @@ describe("generators.gitignore (Phase 26.3)", () => {
     // Root-only so packages/build (the @wpdev/build workspace) stays tracked.
     expect(gi).toMatch(/\/build\//);
     expect(gi).not.toMatch(/(^|\n)build\//);
+    expect(gi).toMatch(/\*\.pdf/);
+    expect(gi).toMatch(/\*\.docx/);
+    expect(gi).toMatch(/\*\.doc/);
+    expect(gi).toMatch(/dist\/docs\//);
   });
 });

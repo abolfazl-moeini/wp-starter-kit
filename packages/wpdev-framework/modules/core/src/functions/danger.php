@@ -16,6 +16,7 @@ defined('ABSPATH') || exit;
  * @return void
  * @throws \Exception In case of failures, an exception is thrown.
  */
+if (!function_exists('wpdev_drop_tables')) {
 function wpdev_drop_tables() {
 
 	$tables = apply_filters('wpdev_drop_tables', \WPDevFramework\Loaders\Table_Loader::get_instance()->get_tables());
@@ -37,4 +38,6 @@ function wpdev_drop_tables() {
 
 	} // end foreach;
 
-} // end wpdev_drop_tables;
+}
+}
+ // end wpdev_drop_tables;

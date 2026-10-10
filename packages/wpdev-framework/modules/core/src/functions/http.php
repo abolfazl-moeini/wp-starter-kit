@@ -17,13 +17,16 @@ defined('ABSPATH') || exit;
  * @param boolean $raw Wether to return the raw string or a decoded value.
  * @return object
  */
+if (!function_exists('wpdev_get_input')) {
 function wpdev_get_input($raw = false) {
 
 	$body = @file_get_contents('php://input'); // phpcs:ignore
 
 	return $raw ? $body : json_decode($body);
 
-} // end wpdev_get_input;
+}
+}
+ // end wpdev_get_input;
 
 /**
  * Prevents the current page from being cached.
@@ -31,6 +34,7 @@ function wpdev_get_input($raw = false) {
  * @since 2.0.0
  * @return void
  */
+if (!function_exists('wpdev_no_cache')) {
 function wpdev_no_cache() {
 
 	if (!headers_sent()) {
@@ -49,7 +53,9 @@ function wpdev_no_cache() {
 
 	do_action('wpdev_no_cache');
 
-} // end wpdev_no_cache;
+}
+}
+ // end wpdev_no_cache;
 
 /**
  * Maybe sends a WPDev X Header.
@@ -63,6 +69,7 @@ function wpdev_no_cache() {
  * @param string $header The header to send. Example: X-wpdev-Caching: prevent-caching.
  * @return void
  */
+if (!function_exists('wpdev_x_header')) {
 function wpdev_x_header($header) {
 
 	if (apply_filters('wpdev_should_send_x_headers', defined('WP_DEBUG') && WP_DEBUG)) {
@@ -71,4 +78,6 @@ function wpdev_x_header($header) {
 
 	} // end if;
 
-} // end wpdev_x_header;
+}
+}
+ // end wpdev_x_header;

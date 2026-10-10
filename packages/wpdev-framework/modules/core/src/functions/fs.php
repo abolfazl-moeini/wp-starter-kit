@@ -15,6 +15,7 @@ defined('ABSPATH') || exit;
  * @since 2.0.11
  * @return array
  */
+if (!function_exists('wpdev_get_main_site_upload_dir')) {
 function wpdev_get_main_site_upload_dir() {
 
 	global $current_site;
@@ -33,7 +34,9 @@ function wpdev_get_main_site_upload_dir() {
 
 	return $uploads;
 
-} // end wpdev_get_main_site_upload_dir;
+}
+}
+ // end wpdev_get_main_site_upload_dir;
 
 /**
  * Creates a WPDev folder inside the uploads folder - if needed - and return its path.
@@ -44,6 +47,7 @@ function wpdev_get_main_site_upload_dir() {
  * @param string ...$path Additional path segments to be attached to the folder path.
  * @return string The path to the folder
  */
+if (!function_exists('wpdev_maybe_create_folder')) {
 function wpdev_maybe_create_folder($folder, ...$path) {
 
 	$uploads = wpdev_get_main_site_upload_dir();
@@ -88,7 +92,9 @@ function wpdev_maybe_create_folder($folder, ...$path) {
 
 	return $folder_path . implode('/', $path);
 
-} // end wpdev_maybe_create_folder;
+}
+}
+ // end wpdev_maybe_create_folder;
 
 /**
  * Gets the URL for the folders created with maybe_create_folder().
@@ -99,6 +105,7 @@ function wpdev_maybe_create_folder($folder, ...$path) {
  * @param string $folder The name of the folder.
  * @return string
  */
+if (!function_exists('wpdev_get_folder_url')) {
 function wpdev_get_folder_url($folder) {
 
 	$uploads = wpdev_get_main_site_upload_dir();
@@ -107,4 +114,6 @@ function wpdev_get_folder_url($folder) {
 
 	return set_url_scheme($folder_url);
 
-} // end wpdev_get_folder_url;
+}
+}
+ // end wpdev_get_folder_url;

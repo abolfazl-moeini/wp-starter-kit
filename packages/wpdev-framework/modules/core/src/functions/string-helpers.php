@@ -17,11 +17,14 @@ defined('ABSPATH') || exit;
  * @param string $string The string to convert.
  * @return bool
  */
+if (!function_exists('wpdev_string_to_bool')) {
 function wpdev_string_to_bool($string) {
 
 	return is_bool($string) ? $string : ('on' === strtolower($string) || 'yes' === strtolower($string) || 1 === $string || 'true' === strtolower($string) || '1' === $string);
 
-} // end wpdev_string_to_bool;
+}
+}
+ // end wpdev_string_to_bool;
 
 /**
  * Converts a slug to a name.
@@ -33,13 +36,16 @@ function wpdev_string_to_bool($string) {
  * @param string $slug The slug to convert.
  * @return string
  */
+if (!function_exists('wpdev_slug_to_name')) {
 function wpdev_slug_to_name($slug) {
 
 	$slug = str_replace(array('-', '_'), ' ', $slug);
 
 	return ucwords($slug);
 
-} // end wpdev_slug_to_name;
+}
+}
+ // end wpdev_slug_to_name;
 
 /**
  * Replaces dashes with underscores on strings.
@@ -49,11 +55,14 @@ function wpdev_slug_to_name($slug) {
  * @param string $str String to replace dashes in.
  * @return string
  */
+if (!function_exists('wpdev_replace_dashes')) {
 function wpdev_replace_dashes($str) {
 
 	return str_replace('-', '_', $str);
 
-} // end wpdev_replace_dashes;
+}
+}
+ // end wpdev_replace_dashes;
 
 /**
  * Get the initials for a string.
@@ -66,6 +75,7 @@ function wpdev_replace_dashes($str) {
  * @param integer $max_size Number of initials to return.
  * @return string
  */
+if (!function_exists('wpdev_get_initials')) {
 function wpdev_get_initials($string, $max_size = 2) {
 
 	$words = explode(' ', $string);
@@ -86,4 +96,6 @@ function wpdev_get_initials($string, $max_size = 2) {
 
 	return strtoupper($initials);
 
-} // end wpdev_get_initials;
+}
+}
+ // end wpdev_get_initials;

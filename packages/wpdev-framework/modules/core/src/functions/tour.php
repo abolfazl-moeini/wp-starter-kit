@@ -18,6 +18,7 @@ use WPDevFramework\Core\Tour\Tours;
  *
  * @return Tour_Service|Tours
  */
+if (!function_exists('wpdev_tour_api')) {
 function wpdev_tour_api() {
 
 	if ( function_exists( 'wpdev_services' ) ) {
@@ -30,7 +31,9 @@ function wpdev_tour_api() {
 
 	return Tours::get_instance();
 
-} // end wpdev_tour_api;
+}
+}
+ // end wpdev_tour_api;
 
 /**
  * Register a Shepherd.js tour.
@@ -42,6 +45,7 @@ function wpdev_tour_api() {
  * @param bool                 $once  Show once per user.
  * @return void
  */
+if (!function_exists('wpdev_create_tour')) {
 function wpdev_create_tour( $id, $steps = array(), $once = true ) {
 
 	$api = wpdev_tour_api();
@@ -53,4 +57,6 @@ function wpdev_create_tour( $id, $steps = array(), $once = true ) {
 
 	$api->create_tour( $id, $steps, $once );
 
-} // end wpdev_create_tour;
+}
+}
+ // end wpdev_create_tour;

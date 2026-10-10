@@ -17,6 +17,7 @@ defined('ABSPATH') || exit;
  * @param string $url URL to attach the license key to.
  * @return string
  */
+if (!function_exists('wpdev_with_license_key')) {
 function wpdev_with_license_key($url) {
 
 	$license_key = '';
@@ -27,4 +28,6 @@ function wpdev_with_license_key($url) {
 
 	return add_query_arg('license_key', rawurlencode((string) $license_key), $url);
 
-} // end wpdev_with_license_key;
+}
+}
+ // end wpdev_with_license_key;

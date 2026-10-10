@@ -20,6 +20,7 @@ defined( 'ABSPATH' ) || exit;
  * @param array    $args     Optional args passed to Modal_Service::register_ajax_modal_action().
  * @return void
  */
+if (!function_exists('wpdev_register_ajax_modal')) {
 function wpdev_register_ajax_modal( $id, $callback, $args = array() ) {
 
 	if ( ! is_callable( $callback ) ) {
@@ -35,7 +36,9 @@ function wpdev_register_ajax_modal( $id, $callback, $args = array() ) {
 		( new \WPDevFramework\Core\Services\Modal_Service() )->register_ajax_modal_action( $id, $callback, $args );
 	}
 
-} // end wpdev_register_ajax_modal;
+}
+}
+ // end wpdev_register_ajax_modal;
 
 /**
  * Build a wubox AJAX content URL for a registered modal.
@@ -46,6 +49,7 @@ function wpdev_register_ajax_modal( $id, $callback, $args = array() ) {
  * @param array  $args Query args.
  * @return string
  */
+if (!function_exists('wpdev_ajax_modal_url')) {
 function wpdev_ajax_modal_url( $id, $args = array() ) {
 
 	if ( function_exists( 'wpdev_services' ) && wpdev_services( 'modal' ) ) {
@@ -60,7 +64,9 @@ function wpdev_ajax_modal_url( $id, $args = array() ) {
 		)
 	);
 
-} // end wpdev_ajax_modal_url;
+}
+}
+ // end wpdev_ajax_modal_url;
 
 /**
  * Render a reusable entity card-list modal body.
@@ -77,6 +83,7 @@ function wpdev_ajax_modal_url( $id, $args = array() ) {
  * }
  * @return void
  */
+if (!function_exists('wpdev_render_entity_list_modal')) {
 function wpdev_render_entity_list_modal( array $entities, array $args = array() ) {
 
 	$args = wp_parse_args(
@@ -118,4 +125,6 @@ function wpdev_render_entity_list_modal( array $entities, array $args = array() 
 
 	echo '</ul></div>';
 
-} // end wpdev_render_entity_list_modal;
+}
+}
+ // end wpdev_render_entity_list_modal;

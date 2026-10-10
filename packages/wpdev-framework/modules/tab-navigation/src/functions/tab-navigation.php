@@ -19,6 +19,7 @@ use WPDevFramework\Modules\TabNavigation\Tab_Navigation;
  * @param array<string, mixed>             $options Wrapper options.
  * @return void
  */
+if (!function_exists('wpdev_render_tab_navigation')) {
 function wpdev_render_tab_navigation( array $tabs, array $options = array() ) {
 
 	if ( ! class_exists( Tab_Navigation::class ) ) {
@@ -33,7 +34,9 @@ function wpdev_render_tab_navigation( array $tabs, array $options = array() ) {
 		Tab_Navigation::render( $tabs, $options );
 	}
 
-} // end wpdev_render_tab_navigation;
+}
+}
+ // end wpdev_render_tab_navigation;
 
 if ( ! function_exists( 'wpdev_list_table_views_as_tabs' ) ) {
 	/**

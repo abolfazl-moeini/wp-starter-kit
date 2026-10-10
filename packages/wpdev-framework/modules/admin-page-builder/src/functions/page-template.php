@@ -18,11 +18,14 @@ defined( 'ABSPATH' ) || exit;
  * @param bool   $replace     Replace existing layout. Default true.
  * @return bool
  */
+if (!function_exists('wpdev_register_page_template')) {
 function wpdev_register_page_template( $layout_type, $view_path, $replace = true ) {
 
 	return Page_Template_Registry::register( $layout_type, $view_path, $replace );
 
-} // end wpdev_register_page_template;
+}
+}
+ // end wpdev_register_page_template;
 
 /**
  * Resolve layout to view path.
@@ -31,11 +34,14 @@ function wpdev_register_page_template( $layout_type, $view_path, $replace = true
  * @param string $default     Fallback path.
  * @return string
  */
+if (!function_exists('wpdev_resolve_page_template')) {
 function wpdev_resolve_page_template( $layout_type, $default = '' ) {
 
 	return Page_Template_Registry::resolve( $layout_type, $default );
 
-} // end wpdev_resolve_page_template;
+}
+}
+ // end wpdev_resolve_page_template;
 
 /**
  * Whether a page template is registered.
@@ -43,22 +49,28 @@ function wpdev_resolve_page_template( $layout_type, $default = '' ) {
  * @param string $layout_type Layout slug.
  * @return bool
  */
+if (!function_exists('wpdev_has_page_template')) {
 function wpdev_has_page_template( $layout_type ) {
 
 	return Page_Template_Registry::has( $layout_type );
 
-} // end wpdev_has_page_template;
+}
+}
+ // end wpdev_has_page_template;
 
 /**
  * List registered page templates.
  *
  * @return array<string, string>
  */
+if (!function_exists('wpdev_list_page_templates')) {
 function wpdev_list_page_templates() {
 
 	return Page_Template_Registry::all();
 
-} // end wpdev_list_page_templates;
+}
+}
+ // end wpdev_list_page_templates;
 
 /**
  * Unregister a page template.
@@ -66,8 +78,11 @@ function wpdev_list_page_templates() {
  * @param string $layout_type Layout slug.
  * @return void
  */
+if (!function_exists('wpdev_unregister_page_template')) {
 function wpdev_unregister_page_template( $layout_type ) {
 
 	Page_Template_Registry::unregister( $layout_type );
 
-} // end wpdev_unregister_page_template;
+}
+}
+ // end wpdev_unregister_page_template;

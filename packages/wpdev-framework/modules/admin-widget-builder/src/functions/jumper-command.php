@@ -21,11 +21,14 @@ defined( 'ABSPATH' ) || exit;
  * @param bool                 $replace Replace existing id.
  * @return bool
  */
+if (!function_exists('wpdev_register_jumper_command')) {
 function wpdev_register_jumper_command( $id, array $config = array(), $replace = true ) {
 
 	return Jumper_Command_Registry::register( $id, $config, $replace );
 
-} // end wpdev_register_jumper_command;
+}
+}
+ // end wpdev_register_jumper_command;
 
 /**
  * Get a registered Jumper command.
@@ -35,11 +38,14 @@ function wpdev_register_jumper_command( $id, array $config = array(), $replace =
  * @param string $id Command id.
  * @return array<string, mixed>|null
  */
+if (!function_exists('wpdev_get_jumper_command')) {
 function wpdev_get_jumper_command( $id ) {
 
 	return Jumper_Command_Registry::get( $id );
 
-} // end wpdev_get_jumper_command;
+}
+}
+ // end wpdev_get_jumper_command;
 
 /**
  * Whether a Jumper command is registered.
@@ -49,11 +55,14 @@ function wpdev_get_jumper_command( $id ) {
  * @param string $id Command id.
  * @return bool
  */
+if (!function_exists('wpdev_has_jumper_command')) {
 function wpdev_has_jumper_command( $id ) {
 
 	return Jumper_Command_Registry::has( $id );
 
-} // end wpdev_has_jumper_command;
+}
+}
+ // end wpdev_has_jumper_command;
 
 /**
  * List all registered Jumper commands.
@@ -62,11 +71,14 @@ function wpdev_has_jumper_command( $id ) {
  *
  * @return array<string, array<string, mixed>>
  */
+if (!function_exists('wpdev_list_jumper_commands')) {
 function wpdev_list_jumper_commands() {
 
 	return Jumper_Command_Registry::all_commands();
 
-} // end wpdev_list_jumper_commands;
+}
+}
+ // end wpdev_list_jumper_commands;
 
 /**
  * Unregister a Jumper command.
@@ -76,11 +88,14 @@ function wpdev_list_jumper_commands() {
  * @param string $id Command id.
  * @return void
  */
+if (!function_exists('wpdev_unregister_jumper_command')) {
 function wpdev_unregister_jumper_command( $id ) {
 
 	Jumper_Command_Registry::unregister( $id );
 
-} // end wpdev_unregister_jumper_command;
+}
+}
+ // end wpdev_unregister_jumper_command;
 
 /**
  * Register a Jumper namespace.
@@ -92,11 +107,14 @@ function wpdev_unregister_jumper_command( $id ) {
  * @param bool                 $replace Replace existing id.
  * @return bool
  */
+if (!function_exists('wpdev_register_jumper_namespace')) {
 function wpdev_register_jumper_namespace( $id, array $config = array(), $replace = true ) {
 
 	return Jumper_Namespace_Registry::register( $id, $config, $replace );
 
-} // end wpdev_register_jumper_namespace;
+}
+}
+ // end wpdev_register_jumper_namespace;
 
 /**
  * Get a registered Jumper namespace.
@@ -106,11 +124,14 @@ function wpdev_register_jumper_namespace( $id, array $config = array(), $replace
  * @param string $id Namespace id.
  * @return array<string, mixed>|null
  */
+if (!function_exists('wpdev_get_jumper_namespace')) {
 function wpdev_get_jumper_namespace( $id ) {
 
 	return Jumper_Namespace_Registry::get( $id );
 
-} // end wpdev_get_jumper_namespace;
+}
+}
+ // end wpdev_get_jumper_namespace;
 
 /**
  * List all registered Jumper namespaces.
@@ -119,8 +140,11 @@ function wpdev_get_jumper_namespace( $id ) {
  *
  * @return array<string, array<string, mixed>>
  */
+if (!function_exists('wpdev_list_jumper_namespaces')) {
 function wpdev_list_jumper_namespaces() {
 
 	return Jumper_Namespace_Registry::all_namespaces();
 
-} // end wpdev_list_jumper_namespaces;
+}
+}
+ // end wpdev_list_jumper_namespaces;

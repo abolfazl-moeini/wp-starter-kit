@@ -16,11 +16,14 @@ defined( 'ABSPATH' ) || exit;
  * @param string $module_id Module slug used to resolve fixtures (e.g. table-builder, wpdev-products).
  * @return void
  */
+if (!function_exists('wpdev_render_table_builder_fixture_list_table')) {
 function wpdev_render_table_builder_fixture_list_table( $module_id ) {
 
 	wpdev_render_playground_list_table( $module_id );
 
-} // end wpdev_render_table_builder_fixture_list_table;
+}
+}
+ // end wpdev_render_table_builder_fixture_list_table;
 
 /**
  * Render a list table preview with static fixture rows.
@@ -30,6 +33,7 @@ function wpdev_render_table_builder_fixture_list_table( $module_id ) {
  * @param string $module_id Module slug used to resolve fixtures (e.g. table-builder, wpdev-products).
  * @return void
  */
+if (!function_exists('wpdev_render_playground_list_table')) {
 function wpdev_render_playground_list_table( $module_id ) {
 
 	$config = null;
@@ -84,4 +88,6 @@ function wpdev_render_playground_list_table( $module_id ) {
 	echo '</form>';
 	echo '</div></div>';
 
-} // end wpdev_render_playground_list_table;
+}
+}
+ // end wpdev_render_playground_list_table;

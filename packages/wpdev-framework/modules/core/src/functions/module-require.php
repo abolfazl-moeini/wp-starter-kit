@@ -19,6 +19,7 @@ defined( 'ABSPATH' ) || exit;
  * @param string $relative Path from wpdev_public_function_map().
  * @return string Absolute path, or empty when unavailable.
  */
+if (!function_exists('wpdev_resolve_public_function_path')) {
 function wpdev_resolve_public_function_path( $relative ) {
 
 	$relative = (string) $relative;
@@ -48,13 +49,16 @@ function wpdev_resolve_public_function_path( $relative ) {
 
 	return $path;
 
-} // end wpdev_resolve_public_function_path;
+}
+}
+ // end wpdev_resolve_public_function_path;
 
 /**
  * Map of legacy inc/functions basenames to canonical module paths (relative to plugin root).
  *
  * @return array<string, string>
  */
+if (!function_exists('wpdev_public_function_map')) {
 function wpdev_public_function_map() {
 
 	static $map = null;
@@ -130,7 +134,9 @@ function wpdev_public_function_map() {
 
 	return $map;
 
-} // end wpdev_public_function_map;
+}
+}
+ // end wpdev_public_function_map;
 
 /**
  * Require a public function file from its canonical module path.
@@ -140,6 +146,7 @@ function wpdev_public_function_map() {
  * @param string $basename Basename under inc/functions (e.g. customer or customer.php).
  * @return void
  */
+if (!function_exists('wpdev_require_public_function')) {
 function wpdev_require_public_function( $basename ) {
 
 	static $loaded = array();
@@ -181,7 +188,9 @@ function wpdev_require_public_function( $basename ) {
 	require_once $path;
 	$loaded[ $file ] = true;
 
-} // end wpdev_require_public_function;
+}
+}
+ // end wpdev_require_public_function;
 
 /**
  * Ensure example-owned classes can autoload before requiring example public functions.
@@ -196,6 +205,7 @@ function wpdev_require_public_function( $basename ) {
  * @param string $path Absolute path about to be required.
  * @return void
  */
+if (!function_exists('wpdev_maybe_boot_examples_autoloader_for_path')) {
 function wpdev_maybe_boot_examples_autoloader_for_path( $path ) {
 
 	$path = (string) $path;
@@ -226,7 +236,9 @@ function wpdev_maybe_boot_examples_autoloader_for_path( $path ) {
 		$synced_dir = $examples_dir;
 	}
 
-} // end wpdev_maybe_boot_examples_autoloader_for_path;
+}
+}
+ // end wpdev_maybe_boot_examples_autoloader_for_path;
 
 /**
  * Call a function only if it is defined, with an explicit fallback.
@@ -244,6 +256,7 @@ function wpdev_maybe_boot_examples_autoloader_for_path( $path ) {
  * @param mixed          ...$args  Arguments forwarded to the function.
  * @return mixed
  */
+if (!function_exists('wpdev_call_if_function_exists')) {
 function wpdev_call_if_function_exists( $function, $fallback = null, ...$args ) {
 
 	if ( function_exists( $function ) ) {
@@ -252,7 +265,9 @@ function wpdev_call_if_function_exists( $function, $fallback = null, ...$args ) 
 
 	return is_callable( $fallback ) ? $fallback( ...$args ) : null;
 
-} // end wpdev_call_if_function_exists;
+}
+}
+ // end wpdev_call_if_function_exists;
 
 /**
  * Call a static method only if the class (and method) exists, with fallback.
@@ -265,6 +280,7 @@ function wpdev_call_if_function_exists( $function, $fallback = null, ...$args ) 
  * @param mixed          ...$args  Arguments forwarded to the method.
  * @return mixed
  */
+if (!function_exists('wpdev_call_if_static_method_exists')) {
 function wpdev_call_if_static_method_exists( $class, $method, $fallback = null, ...$args ) {
 
 	if ( class_exists( $class ) && method_exists( $class, $method ) ) {
@@ -273,4 +289,6 @@ function wpdev_call_if_static_method_exists( $class, $method, $fallback = null, 
 
 	return is_callable( $fallback ) ? $fallback( ...$args ) : null;
 
-} // end wpdev_call_if_static_method_exists;
+}
+}
+ // end wpdev_call_if_static_method_exists;

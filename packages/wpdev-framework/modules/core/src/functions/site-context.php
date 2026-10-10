@@ -18,6 +18,7 @@ defined('ABSPATH') || exit;
  * @param int|false $site_id Site to switch to. Defaults to main site.
  * @return mixed
  */
+if (!function_exists('wpdev_switch_blog_and_run')) {
 function wpdev_switch_blog_and_run($callback, $site_id = false) {
 
 	if (!$site_id) {
@@ -34,4 +35,6 @@ function wpdev_switch_blog_and_run($callback, $site_id = false) {
 
 	return $result;
 
-} // end wpdev_switch_blog_and_run;
+}
+}
+ // end wpdev_switch_blog_and_run;

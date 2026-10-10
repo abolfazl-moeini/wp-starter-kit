@@ -18,11 +18,14 @@ defined( 'ABSPATH' ) || exit;
  * @param bool                 $replace   Replace existing slug. Default true.
  * @return bool
  */
+if (!function_exists('wpdev_register_menu_page')) {
 function wpdev_register_menu_page( $page_slug, array $config = array(), $replace = true ) {
 
 	return Menu_Registry::register( $page_slug, $config, $replace );
 
-} // end wpdev_register_menu_page;
+}
+}
+ // end wpdev_register_menu_page;
 
 /**
  * Register a top-level admin menu (hooks WordPress admin_menu).
@@ -31,11 +34,14 @@ function wpdev_register_menu_page( $page_slug, array $config = array(), $replace
  * @param array<string, mixed> $args Page args (`context`: admin|network|both, or legacy `network` bool).
  * @return void
  */
+if (!function_exists('wpdev_register_menu_top')) {
 function wpdev_register_menu_top( $slug, array $args ) {
 
 	Menu_Registry::register_top( $slug, $args );
 
-} // end wpdev_register_menu_top;
+}
+}
+ // end wpdev_register_menu_top;
 
 /**
  * Register a submenu admin page.
@@ -45,11 +51,14 @@ function wpdev_register_menu_top( $slug, array $args ) {
  * @param array<string, mixed> $args        Page args.
  * @return void
  */
+if (!function_exists('wpdev_register_menu_child')) {
 function wpdev_register_menu_child( $parent_slug, $slug, array $args ) {
 
 	Menu_Registry::register_child( $parent_slug, $slug, $args );
 
-} // end wpdev_register_menu_child;
+}
+}
+ // end wpdev_register_menu_child;
 
 /**
  * Get registered menu page config.
@@ -57,11 +66,14 @@ function wpdev_register_menu_child( $parent_slug, $slug, array $args ) {
  * @param string $page_slug Page slug.
  * @return array<string, mixed>|null
  */
+if (!function_exists('wpdev_get_menu_page')) {
 function wpdev_get_menu_page( $page_slug ) {
 
 	return Menu_Registry::get( $page_slug );
 
-} // end wpdev_get_menu_page;
+}
+}
+ // end wpdev_get_menu_page;
 
 /**
  * Whether a menu page is registered.
@@ -69,22 +81,28 @@ function wpdev_get_menu_page( $page_slug ) {
  * @param string $page_slug Page slug.
  * @return bool
  */
+if (!function_exists('wpdev_has_menu_page')) {
 function wpdev_has_menu_page( $page_slug ) {
 
 	return Menu_Registry::has( $page_slug );
 
-} // end wpdev_has_menu_page;
+}
+}
+ // end wpdev_has_menu_page;
 
 /**
  * List all registered menu pages.
  *
  * @return array<string, array<string, mixed>>
  */
+if (!function_exists('wpdev_list_menu_pages')) {
 function wpdev_list_menu_pages() {
 
 	return Menu_Registry::all();
 
-} // end wpdev_list_menu_pages;
+}
+}
+ // end wpdev_list_menu_pages;
 
 /**
  * Unregister a menu page definition.
@@ -92,8 +110,11 @@ function wpdev_list_menu_pages() {
  * @param string $page_slug Page slug.
  * @return void
  */
+if (!function_exists('wpdev_unregister_menu_page')) {
 function wpdev_unregister_menu_page( $page_slug ) {
 
 	Menu_Registry::unregister( $page_slug );
 
-} // end wpdev_unregister_menu_page;
+}
+}
+ // end wpdev_unregister_menu_page;

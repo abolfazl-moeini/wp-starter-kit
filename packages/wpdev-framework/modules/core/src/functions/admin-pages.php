@@ -17,6 +17,7 @@ defined( 'ABSPATH' ) || exit;
  * @param string $capability Required capability for each panel hook.
  * @return array<string, string>
  */
+if (!function_exists('wpdev_admin_page_context_to_supported_panels')) {
 function wpdev_admin_page_context_to_supported_panels( $context, $capability ) {
 
 	$context    = sanitize_key( (string) $context );
@@ -43,7 +44,9 @@ function wpdev_admin_page_context_to_supported_panels( $context, $capability ) {
 		'admin_menu' => $capability,
 	);
 
-} // end wpdev_admin_page_context_to_supported_panels;
+}
+}
+ // end wpdev_admin_page_context_to_supported_panels;
 
 /**
  * Build registration overrides for an admin page class.
@@ -60,6 +63,7 @@ function wpdev_admin_page_context_to_supported_panels( $context, $capability ) {
  * }
  * @return array<string, mixed>
  */
+if (!function_exists('wpdev_admin_page_build_overrides')) {
 function wpdev_admin_page_build_overrides( array $args ) {
 
 	$overrides = array();
@@ -99,7 +103,9 @@ function wpdev_admin_page_build_overrides( array $args ) {
 
 	return $overrides;
 
-} // end wpdev_admin_page_build_overrides;
+}
+}
+ // end wpdev_admin_page_build_overrides;
 
 /**
  * Register a production admin page class with optional menu/context overrides.
@@ -116,6 +122,7 @@ function wpdev_admin_page_build_overrides( array $args ) {
  * @param int                  $priority   wpdev_admin_pages hook priority.
  * @return void
  */
+if (!function_exists('wpdev_register_admin_page')) {
 function wpdev_register_admin_page( $class_name, array $args = array(), $priority = 100 ) {
 
 	$class_name = (string) $class_name;
@@ -152,4 +159,6 @@ function wpdev_register_admin_page( $class_name, array $args = array(), $priorit
 
 	add_action( 'wpdev_admin_pages', $register, (int) $priority );
 
-} // end wpdev_register_admin_page;
+}
+}
+ // end wpdev_register_admin_page;

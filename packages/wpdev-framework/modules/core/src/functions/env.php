@@ -30,10 +30,13 @@ defined('ABSPATH') || exit;
  * @param bool  $is_admin You can manually pass the is_admin result, if need be.
  * @return mixed
  */
+if (!function_exists('wpdev_env_picker')) {
 function wpdev_env_picker($frontend_content, $backend_content, $is_admin = null) {
 
 	$is_admin = is_null($is_admin) ? is_admin() : $is_admin;
 
 	return $is_admin ? $backend_content : $frontend_content;
 
-} // end wpdev_env_picker;
+}
+}
+ // end wpdev_env_picker;

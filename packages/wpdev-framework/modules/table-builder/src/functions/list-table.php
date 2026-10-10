@@ -20,11 +20,14 @@ defined( 'ABSPATH' ) || exit;
  * @param bool              $replace    Replace existing id. Default true.
  * @return bool
  */
+if (!function_exists('wpdev_register_list_table')) {
 function wpdev_register_list_table( $table_id, $class_name, $config = null, $replace = true ) {
 
 	return List_Table_Registry::register( $table_id, $class_name, $config, $replace );
 
-} // end wpdev_register_list_table;
+}
+}
+ // end wpdev_register_list_table;
 
 /**
  * Get list table registration entry.
@@ -32,11 +35,14 @@ function wpdev_register_list_table( $table_id, $class_name, $config = null, $rep
  * @param string $table_id Table id slug.
  * @return array<string, mixed>|null
  */
+if (!function_exists('wpdev_get_list_table')) {
 function wpdev_get_list_table( $table_id ) {
 
 	return List_Table_Registry::get( $table_id );
 
-} // end wpdev_get_list_table;
+}
+}
+ // end wpdev_get_list_table;
 
 /**
  * Whether a list table is registered.
@@ -44,22 +50,28 @@ function wpdev_get_list_table( $table_id ) {
  * @param string $table_id Table id slug.
  * @return bool
  */
+if (!function_exists('wpdev_has_list_table')) {
 function wpdev_has_list_table( $table_id ) {
 
 	return List_Table_Registry::has( $table_id );
 
-} // end wpdev_has_list_table;
+}
+}
+ // end wpdev_has_list_table;
 
 /**
  * List all registered list tables.
  *
  * @return array<string, array<string, mixed>>
  */
+if (!function_exists('wpdev_list_list_tables')) {
 function wpdev_list_list_tables() {
 
 	return List_Table_Registry::all();
 
-} // end wpdev_list_list_tables;
+}
+}
+ // end wpdev_list_list_tables;
 
 /**
  * Unregister a list table.
@@ -67,8 +79,11 @@ function wpdev_list_list_tables() {
  * @param string $table_id Table id slug.
  * @return void
  */
+if (!function_exists('wpdev_unregister_list_table')) {
 function wpdev_unregister_list_table( $table_id ) {
 
 	List_Table_Registry::unregister( $table_id );
 
-} // end wpdev_unregister_list_table;
+}
+}
+ // end wpdev_unregister_list_table;

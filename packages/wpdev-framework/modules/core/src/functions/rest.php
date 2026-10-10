@@ -19,6 +19,7 @@ defined('ABSPATH') || exit;
  * @param string $class_name The class name. The class needs to exist.
  * @return string
  */
+if (!function_exists('wpdev_rest_get_endpoint_from_class_name')) {
 function wpdev_rest_get_endpoint_from_class_name($class_name) {
 
 	$endpoint = $class_name;
@@ -33,7 +34,9 @@ function wpdev_rest_get_endpoint_from_class_name($class_name) {
 
 	return $endpoint;
 
-} // end wpdev_rest_get_endpoint_from_class_name;
+}
+}
+ // end wpdev_rest_get_endpoint_from_class_name;
 
 /**
  * Searches the hard-coded schemas for a arguments list.
@@ -45,6 +48,7 @@ function wpdev_rest_get_endpoint_from_class_name($class_name) {
  * @param boolean $force_generate If we should try to generate the args when nothing is found.
  * @return array
  */
+if (!function_exists('wpdev_rest_get_endpoint_schema')) {
 function wpdev_rest_get_endpoint_schema($class_name, $context = 'create', $force_generate = false) {
 
 	$from_cache = false;
@@ -71,7 +75,9 @@ function wpdev_rest_get_endpoint_schema($class_name, $context = 'create', $force
 
 	return $schema;
 
-}  // end wpdev_rest_get_endpoint_schema;
+}
+}
+  // end wpdev_rest_get_endpoint_schema;
 
 /**
  * Generates the rest schema for a class name.
@@ -82,6 +88,7 @@ function wpdev_rest_get_endpoint_schema($class_name, $context = 'create', $force
  * @param string $context The context. Can be create or update.
  * @return array
  */
+if (!function_exists('wpdev_rest_generate_schema')) {
 function wpdev_rest_generate_schema($class_name, $context = 'create') {
 
 	$required_fields = wpdev_model_get_required_fields($class_name);
@@ -100,7 +107,9 @@ function wpdev_rest_generate_schema($class_name, $context = 'create') {
 
 	return $schema;
 
-} // end wpdev_rest_generate_schema;
+}
+}
+ // end wpdev_rest_generate_schema;
 
 /**
  * Treat argument types to perform additional validations.
@@ -110,6 +119,7 @@ function wpdev_rest_generate_schema($class_name, $context = 'create') {
  * @param string $type The type detected.
  * @return string
  */
+if (!function_exists('wpdev_rest_treat_argument_type')) {
 function wpdev_rest_treat_argument_type($type) {
 
 	$type = (string) $type;
@@ -130,4 +140,6 @@ function wpdev_rest_treat_argument_type($type) {
 
 	return $type;
 
-} // end wpdev_rest_treat_argument_type;
+}
+}
+ // end wpdev_rest_treat_argument_type;

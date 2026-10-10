@@ -27,6 +27,7 @@ if ( ! function_exists( 'wpdev_with_option_lock' ) ) {
  * @param mixed  $default The default value.
  * @return mixed
  */
+if (!function_exists('wpdev_get_option')) {
 function wpdev_get_option($option_name = 'settings', $default = array()) {
 
 	// Default: network option (legacy). Site option only on playground parity production pages in site admin.
@@ -43,7 +44,9 @@ function wpdev_get_option($option_name = 'settings', $default = array()) {
 
 	return function_exists( 'apply_filters' ) ? apply_filters('wpdev_get_option', $option_value, $option_name, $default) : $option_value;
 
-} // end wpdev_get_option;
+}
+}
+ // end wpdev_get_option;
 
 /**
  * Save slugfied network option
@@ -53,6 +56,7 @@ function wpdev_get_option($option_name = 'settings', $default = array()) {
  * @param mixed  $value       The new value of the option.
  * @return boolean
  */
+if (!function_exists('wpdev_save_option')) {
 function wpdev_save_option($option_name = 'settings', $value = false) {
 
 	$slug = wpdev_slugify( $option_name );
@@ -66,7 +70,9 @@ function wpdev_save_option($option_name = 'settings', $value = false) {
 
 	return update_network_option( null, $slug, $value );
 
-} // end wpdev_save_option;
+}
+}
+ // end wpdev_save_option;
 
 /**
  * Delete slugfied network option
@@ -75,6 +81,7 @@ function wpdev_save_option($option_name = 'settings', $value = false) {
  * @param string $option_name The option name to delete.
  * @return boolean
  */
+if (!function_exists('wpdev_delete_option')) {
 function wpdev_delete_option($option_name) {
 
 	$slug = wpdev_slugify( $option_name );
@@ -88,4 +95,6 @@ function wpdev_delete_option($option_name) {
 
 	return delete_network_option( null, $slug );
 
-} // end wpdev_delete_option;
+}
+}
+ // end wpdev_delete_option;

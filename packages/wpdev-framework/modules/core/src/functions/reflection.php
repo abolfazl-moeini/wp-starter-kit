@@ -19,6 +19,7 @@ use \WPDevFramework\Dependencies\phpDocumentor\Reflection\DocBlockFactory;
  * @param string $class_name The model/object class name.
  * @return array
  */
+if (!function_exists('wpdev_reflection_parse_object_arguments')) {
 function wpdev_reflection_parse_object_arguments($class_name) {
 
 	$base_schema = wpdev_reflection_parse_arguments_from_setters($class_name, true);
@@ -111,7 +112,9 @@ function wpdev_reflection_parse_object_arguments($class_name) {
 
 	return $arguments;
 
-} // end wpdev_reflection_parse_object_arguments;
+}
+}
+ // end wpdev_reflection_parse_object_arguments;
 
 /**
  * Use php reflection to generate the documentation for the REST API.
@@ -122,6 +125,7 @@ function wpdev_reflection_parse_object_arguments($class_name) {
  * @param boolean $return_schema If we should return the schame or just a key => value.
  * @return array
  */
+if (!function_exists('wpdev_reflection_parse_arguments_from_setters')) {
 function wpdev_reflection_parse_arguments_from_setters($class_name, $return_schema = true) {
 
 	$arguments = array();
@@ -151,4 +155,6 @@ function wpdev_reflection_parse_arguments_from_setters($class_name, $return_sche
 
 	return $arguments;
 
-} // end wpdev_reflection_parse_arguments_from_setters;
+}
+}
+ // end wpdev_reflection_parse_arguments_from_setters;

@@ -14,11 +14,14 @@ defined('ABSPATH') || exit;
 /**
  * Return the instance of the function
  */
+if (!function_exists('wpdev_Signup')) {
 function wpdev_Signup() {
 
 	return \WPDevFramework\Checkout\Legacy_Checkout::get_instance();
 
-} // end wpdev_Signup;
+}
+}
+ // end wpdev_Signup;
 
 /**
  *
@@ -54,6 +57,7 @@ if (!function_exists('validate_user_form')) {
  * @param array $attributes
  * @return void
  */
+if (!function_exists('wpdev_create_html_attributes_from_array')) {
 function wpdev_create_html_attributes_from_array($attributes = array()) {
 
 	$output = '';
@@ -70,7 +74,9 @@ function wpdev_create_html_attributes_from_array($attributes = array()) {
 
 	return $output;
 
-} // end wpdev_create_html_attributes_from_array;
+}
+}
+ // end wpdev_create_html_attributes_from_array;
 
 /**
  * Display one single option
@@ -80,12 +86,15 @@ function wpdev_create_html_attributes_from_array($attributes = array()) {
  * @param string $option_label
  * @return void
  */
+if (!function_exists('wpdev_print_signup_field_option')) {
 function wpdev_print_signup_field_option($option_value, $option_label, $field = array()) { ?>
 
   <option <?php selected(isset($field['default']) && $field['default'] == $option_value); ?> value="<?php echo $option_value; ?>"><?php echo $option_label; ?></option>
 
 	<?php
-} // end wpdev_print_signup_field_option;
+}
+}
+ // end wpdev_print_signup_field_option;
 
 /**
  * Displays the option tags of an select field
@@ -94,6 +103,7 @@ function wpdev_print_signup_field_option($option_value, $option_label, $field = 
  * @param array $options
  * @return void
  */
+if (!function_exists('wpdev_print_signup_field_options')) {
 function wpdev_print_signup_field_options($options, $field = array()) {
 
 	foreach ($options as $option_value => $option_label) {
@@ -118,7 +128,9 @@ function wpdev_print_signup_field_options($options, $field = array()) {
 
 	} // end foreach;
 
-} // end wpdev_print_signup_field_options;
+}
+}
+ // end wpdev_print_signup_field_options;
 
 /**
  * Print sing-up fields
@@ -128,6 +140,7 @@ function wpdev_print_signup_field_options($options, $field = array()) {
  * @param array  $results
  * @return void
  */
+if (!function_exists('wpdev_print_signup_field')) {
 function wpdev_print_signup_field($field_slug, $field, $results) {
 
 	$display = true;
@@ -411,7 +424,9 @@ function wpdev_print_signup_field($field_slug, $field, $results) {
 
 	} // end switch;
 
-}  // end wpdev_print_signup_field;
+}
+}
+  // end wpdev_print_signup_field;
 /**
  * Alias function to allow creation of users for WPDev.
  *
@@ -424,11 +439,14 @@ function wpdev_print_signup_field($field_slug, $field, $results) {
  * @param array $user_meta
  * @return int|bool
  */
+if (!function_exists('wpdev_create_user')) {
 function wpdev_create_user(array $user_data, array $plan_data, array $user_meta = array()) {
 
 	return wpdev_Signup()->create_user($user_data, $plan_data, $user_meta);
 
-} // end wpdev_create_user;
+}
+}
+ // end wpdev_create_user;
 
 /**
  * Alias function to allow creation of sites for WPDev.
@@ -442,11 +460,14 @@ function wpdev_create_user(array $user_data, array $plan_data, array $user_meta 
  * @param array   $site_meta
  * @return void
  */
+if (!function_exists('wpdev_create_site_legacy')) {
 function wpdev_create_site_legacy($user_id, array $site_data, $template_id = false, $site_meta = array()) {
 
 	return wpdev_Signup()->create_site($user_id, $site_data, $template_id, $site_meta);
 
-} // end wpdev_create_site_legacy;
+}
+}
+ // end wpdev_create_site_legacy;
 /**
  * Alias function that adds a new Step to the sign-up flow
  *
@@ -455,11 +476,14 @@ function wpdev_create_site_legacy($user_id, array $site_data, $template_id = fal
  * @param integer $order
  * @return void
  */
+if (!function_exists('wpdev_add_signup_step')) {
 function wpdev_add_signup_step($id, $order, array $step) {
 
 	return wpdev_Signup()->add_signup_step($id, $order, $step);
 
-} // end wpdev_add_signup_step;
+}
+}
+ // end wpdev_add_signup_step;
 
 /**
  * Alias function that adds a new field to a step the sign-up flow
@@ -471,8 +495,11 @@ function wpdev_add_signup_step($id, $order, array $step) {
  * @param array   $step
  * @return void
  */
+if (!function_exists('wpdev_add_signup_field')) {
 function wpdev_add_signup_field($step, $id, $order, $field) {
 
 	return wpdev_Signup()->add_signup_field($step, $id, $order, $field);
 
-} // end wpdev_add_signup_field;
+}
+}
+ // end wpdev_add_signup_field;

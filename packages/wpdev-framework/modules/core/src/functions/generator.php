@@ -16,6 +16,7 @@ defined('ABSPATH') || exit;
  * @param  array  $data Content.
  * @return void
  */
+if (!function_exists('wpdev_generate_csv')) {
 function wpdev_generate_csv($file_name, $data = array()) {
 
 	$fp = fopen('php://output', 'w');
@@ -46,4 +47,6 @@ function wpdev_generate_csv($file_name, $data = array()) {
 
 	} // end if;
 
-} // end wpdev_generate_csv;
+}
+}
+ // end wpdev_generate_csv;

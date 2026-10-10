@@ -19,6 +19,7 @@ defined( 'ABSPATH' ) || exit;
  * @param array<string, mixed> $payload Event payload.
  * @return void
  */
+if (!function_exists('wpdev_dispatch_event')) {
 function wpdev_dispatch_event( $slug, array $payload = array() ) {
 
 	$slug = sanitize_key( (string) $slug );
@@ -46,7 +47,9 @@ function wpdev_dispatch_event( $slug, array $payload = array() ) {
 	 */
 	do_action( "wpdev_event_{$slug}", $payload );
 
-} // end wpdev_dispatch_event;
+}
+}
+ // end wpdev_dispatch_event;
 
 /**
  * Register a listener for a specific event slug.
@@ -59,6 +62,7 @@ function wpdev_dispatch_event( $slug, array $payload = array() ) {
  * @param int      $accepted_args Accepted arguments.
  * @return bool
  */
+if (!function_exists('wpdev_register_event_listener')) {
 function wpdev_register_event_listener( $slug, $callback, $priority = 10, $accepted_args = 1 ) {
 
 	$slug = sanitize_key( (string) $slug );
@@ -69,7 +73,9 @@ function wpdev_register_event_listener( $slug, $callback, $priority = 10, $accep
 
 	return add_action( "wpdev_event_{$slug}", $callback, (int) $priority, (int) $accepted_args );
 
-} // end wpdev_register_event_listener;
+}
+}
+ // end wpdev_register_event_listener;
 
 /**
  * Register a listener for all WPDev events.
@@ -81,6 +87,7 @@ function wpdev_register_event_listener( $slug, $callback, $priority = 10, $accep
  * @param int      $accepted_args Accepted arguments.
  * @return bool
  */
+if (!function_exists('wpdev_register_global_event_listener')) {
 function wpdev_register_global_event_listener( $callback, $priority = 10, $accepted_args = 2 ) {
 
 	if ( ! is_callable( $callback ) ) {
@@ -89,4 +96,6 @@ function wpdev_register_global_event_listener( $callback, $priority = 10, $accep
 
 	return add_action( 'wpdev_event', $callback, (int) $priority, (int) $accepted_args );
 
-} // end wpdev_register_global_event_listener;
+}
+}
+ // end wpdev_register_global_event_listener;

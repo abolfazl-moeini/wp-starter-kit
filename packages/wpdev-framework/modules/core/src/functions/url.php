@@ -15,6 +15,7 @@ defined('ABSPATH') || exit;
  * @since 2.0.0
  * @return string
  */
+if (!function_exists('wpdev_get_current_url')) {
 function wpdev_get_current_url() {
 	/*
 	 * When doing ajax requests, we don't want the admin-ajax URL, but
@@ -28,7 +29,9 @@ function wpdev_get_current_url() {
 
 	return (is_ssl() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
-} // end wpdev_get_current_url;
+}
+}
+ // end wpdev_get_current_url;
 
 /**
  * Replaces or removes the scheme from a URL.
@@ -39,11 +42,14 @@ function wpdev_get_current_url() {
  * @param string $new_scheme An empty string, https, or http.
  * @return string
  */
+if (!function_exists('wpdev_replace_scheme')) {
 function wpdev_replace_scheme($url, $new_scheme = '') {
 
 	return preg_replace('(^https?://)', $new_scheme, $url);
 
-} // end wpdev_replace_scheme;
+}
+}
+ // end wpdev_replace_scheme;
 
 /**
  * Wrapper to the network_admin_url function for WPDev admin urls.
@@ -54,6 +60,7 @@ function wpdev_replace_scheme($url, $new_scheme = '') {
  * @param array  $query URL query parameters.
  * @return string
  */
+if (!function_exists('wpdev_network_admin_url')) {
 function wpdev_network_admin_url($path, $query = array()) {
 
 	$path = sprintf('admin.php?page=%s', $path);
@@ -70,7 +77,9 @@ function wpdev_network_admin_url($path, $query = array()) {
 
 	return add_query_arg( $query, $url );
 
-} // end wpdev_network_admin_url;
+}
+}
+ // end wpdev_network_admin_url;
 
 /**
  * Get the light ajax implementation URL.
@@ -83,6 +92,7 @@ function wpdev_network_admin_url($path, $query = array()) {
  * @param null|string $scheme URL scheme. Follows the same rules as the scheme param of get_home_url.
  * @return string
  */
+if (!function_exists('wpdev_ajax_url')) {
 function wpdev_ajax_url($when = null, $query_args = array(), $site_id = false, $scheme = null) {
 
 	if (empty($site_id)) {
@@ -112,4 +122,6 @@ function wpdev_ajax_url($when = null, $query_args = array(), $site_id = false, $
 
 	return apply_filters('wpdev_ajax_url', $url, $query_args, $when, $site_id);
 
-} // end wpdev_ajax_url;
+}
+}
+ // end wpdev_ajax_url;

@@ -17,6 +17,7 @@ defined('ABSPATH') || exit;
  * @param \WPDevFramework\Models\Base_Model $model The model to cast to array.
  * @return array
  */
+if (!function_exists('wpdev_cast_model_to_array')) {
 function wpdev_cast_model_to_array($model) {
 
 	if (is_a($model, '\\WPDev\\Models\\Base_Model')) {
@@ -27,7 +28,9 @@ function wpdev_cast_model_to_array($model) {
 
 	return $model;
 
-} // end wpdev_cast_model_to_array;
+}
+}
+ // end wpdev_cast_model_to_array;
 
 /**
  * Converts a list of Model objects to a list of ID => $label_field
@@ -38,6 +41,7 @@ function wpdev_cast_model_to_array($model) {
  * @param string $label_field The name of the field to use.
  * @return array
  */
+if (!function_exists('wpdev_models_to_options')) {
 function wpdev_models_to_options($models, $label_field = 'name') {
 
 	$options_list = array();
@@ -50,7 +54,9 @@ function wpdev_models_to_options($models, $label_field = 'name') {
 
 	return $options_list;
 
-} // end wpdev_models_to_options;
+}
+}
+ // end wpdev_models_to_options;
 
 /**
  * Get the schema of a particular model.
@@ -60,6 +66,7 @@ function wpdev_models_to_options($models, $label_field = 'name') {
  * @param string $class_name The fully qualified model name.
  * @return array
  */
+if (!function_exists('wpdev_model_get_schema')) {
 function wpdev_model_get_schema($class_name) {
 
 	$schema = array();
@@ -72,7 +79,9 @@ function wpdev_model_get_schema($class_name) {
 
 	return $schema;
 
-} // end wpdev_model_get_schema;
+}
+}
+ // end wpdev_model_get_schema;
 
 /**
  * Returns a list of required fields form a model schema.
@@ -82,6 +91,7 @@ function wpdev_model_get_schema($class_name) {
  * @param string $class_name The fully qualified model name.
  * @return array
  */
+if (!function_exists('wpdev_model_get_required_fields')) {
 function wpdev_model_get_required_fields($class_name) {
 
 	$required_fields = array();
@@ -104,7 +114,9 @@ function wpdev_model_get_required_fields($class_name) {
 
 	return $required_fields;
 
-} // end wpdev_model_get_required_fields;
+}
+}
+ // end wpdev_model_get_required_fields;
 
 /**
  * Returns the physical table name for a registered wu_* custom table.
@@ -114,6 +126,7 @@ function wpdev_model_get_required_fields($class_name) {
  * @param string $name Table slug (e.g. products, productmeta).
  * @return string
  */
+if (!function_exists('wpdev_get_db_table')) {
 function wpdev_get_db_table( $name ) {
 
 	global $wpdb;
@@ -127,4 +140,6 @@ function wpdev_get_db_table( $name ) {
 
 	return $wpdb->base_prefix . $key;
 
-} // end wpdev_get_db_table;
+}
+}
+ // end wpdev_get_db_table;

@@ -18,11 +18,14 @@ use \WPDevFramework\Dependencies\Psr\Log\LogLevel;
  * @since 2.0.0
  * @return string
  */
+if (!function_exists('wpdev_get_version')) {
 function wpdev_get_version() {
 
 	return class_exists(\WPDev::class) ? \WPDev::VERSION : '';
 
-} // end wpdev_get_version;
+}
+}
+ // end wpdev_get_version;
 
 /**
  * Check the debug status.
@@ -30,11 +33,14 @@ function wpdev_get_version() {
  * @since 2.0.11
  * @return bool
  */
+if (!function_exists('wpdev_is_debug')) {
 function wpdev_is_debug() {
 
 	return defined('WPDEV_DEBUG') && WPDEV_DEBUG;
 
-} // end wpdev_is_debug;
+}
+}
+ // end wpdev_is_debug;
 
 /**
  * Checks if WPDev is being loaded as a must-use plugin.
@@ -42,11 +48,46 @@ function wpdev_is_debug() {
  * @since 2.0.0
  * @return bool
  */
+if (!function_exists('wpdev_is_must_use')) {
 function wpdev_is_must_use() {
 
-	return defined('WPDEV_IS_MUST_USE') && WPDev_IS_MUST_USE;
+	return defined( 'WPDEV_IS_MUST_USE' ) && WPDEV_IS_MUST_USE;
 
-} // end wpdev_is_must_use;
+}
+}
+ // end wpdev_is_must_use;
+
+/**
+ * Whether the framework is embedded as a library inside a host plugin.
+ *
+ * @since 2.10.0
+ * @return bool
+ */
+if (!function_exists('wpdev_is_library_mode')) {
+function wpdev_is_library_mode() {
+
+	return defined( 'WPDEV_LIBRARY_MODE' ) && WPDEV_LIBRARY_MODE;
+
+}
+}
+ // end wpdev_is_library_mode;
+
+/**
+ * Host plugin basename for WordPress plugin APIs (active checks, settings links).
+ *
+ * @since 2.10.0
+ * @return string
+ */
+if (!function_exists('wpdev_host_plugin_basename')) {
+function wpdev_host_plugin_basename() {
+
+	$file = defined( 'WPDEV_HOST_PLUGIN_FILE' ) ? WPDEV_HOST_PLUGIN_FILE : WPDEV_PLUGIN_FILE;
+
+	return plugin_basename( $file );
+
+}
+}
+ // end wpdev_host_plugin_basename;
 
 /**
  * Checks if an array key value is set and returns it.
@@ -66,6 +107,7 @@ function wpdev_is_must_use() {
  * @param mixed        $default Default value, if the key is not set.
  * @return mixed
  */
+if (!function_exists('wpdev_get_isset')) {
 function wpdev_get_isset($array, $key, $default = false) {
 
 	if (!is_array($array)) {
@@ -76,7 +118,9 @@ function wpdev_get_isset($array, $key, $default = false) {
 
 	return isset($array[$key]) ? $array[$key] : $default;
 
-} // end wpdev_get_isset;
+}
+}
+ // end wpdev_get_isset;
 
 /**
  * Returns the main site id for the network.
@@ -84,6 +128,7 @@ function wpdev_get_isset($array, $key, $default = false) {
  * @since 2.0.0
  * @return int
  */
+if (!function_exists('wpdev_get_main_site_id')) {
 function wpdev_get_main_site_id() {
 
 	if( ! is_multisite() ) {
@@ -96,7 +141,9 @@ function wpdev_get_main_site_id() {
 
 	return $current_site->blog_id;
 
-} // end wpdev_get_main_site_id;
+}
+}
+ // end wpdev_get_main_site_id;
 
 /**
  * This function return 'slugfied' options terms to be used as options ids.
@@ -105,22 +152,28 @@ function wpdev_get_main_site_id() {
  * @param string $term Returns a string based on the term and this plugin slug.
  * @return string
  */
+if (!function_exists('wpdev_slugify')) {
 function wpdev_slugify($term) {
 
 	return "wpdev_$term";
 
-} // end wpdev_slugify;
+}
+}
+ // end wpdev_slugify;
 /**
  * Returns the full path to the plugin folder.
  *
  * @since 2.0.11
  * @param string $dir Path relative to the plugin root you want to access.
  */
+if (!function_exists('wpdev_path')) {
 function wpdev_path($dir): string {
 
 	return WPDEV_PLUGIN_DIR . $dir; // @phpstan-ignore-line
 
-} // end wpdev_path;
+}
+}
+ // end wpdev_path;
 
 /**
  * Returns the URL to the plugin folder.
@@ -129,11 +182,14 @@ function wpdev_path($dir): string {
  * @param string $dir Path relative to the plugin root you want to access.
  * @return string
  */
+if (!function_exists('wpdev_url')) {
 function wpdev_url($dir) {
 
 	return apply_filters('wpdev_url', WPDEV_PLUGIN_URL . $dir); // @phpstan-ignore-line
 
-} // end wpdev_url;
+}
+}
+ // end wpdev_url;
 
 /**
  * Shorthand to retrieving variables from $_GET, $_POST and $_REQUEST;
@@ -144,13 +200,16 @@ function wpdev_url($dir) {
  * @param mixed  $default Default value, when the variable is not available.
  * @return mixed
  */
+if (!function_exists('wpdev_request')) {
 function wpdev_request($key, $default = false) {
 
 	$value = isset($_REQUEST[$key]) ? stripslashes_deep($_REQUEST[$key]) : $default;
 
 	return apply_filters('wpdev_request', $value, $key, $default);
 
-} // end wpdev_request;
+}
+}
+ // end wpdev_request;
 
 /**
  * Throws an exception if a given hook was not yet run.
@@ -161,6 +220,7 @@ function wpdev_request($key, $default = false) {
  * @throws Runtime_Exception When the hook has not yet run.
  * @return void
  */
+if (!function_exists('_wpdev_require_hook')) {
 function _wpdev_require_hook($hook = 'ms_loaded') { // phpcs:ignore
 
 	if (!did_action($hook)) {
@@ -171,7 +231,9 @@ function _wpdev_require_hook($hook = 'ms_loaded') { // phpcs:ignore
 
 	} // end if;
 
-} // end _wpdev_require_hook;
+}
+}
+ // end _wpdev_require_hook;
 
 /**
  * Checks if reflection is available.
@@ -182,6 +244,7 @@ function _wpdev_require_hook($hook = 'ms_loaded') { // phpcs:ignore
  * @since 2.0.11
  * @return boolean
  */
+if (!function_exists('wpdev_are_code_comments_available')) {
 function wpdev_are_code_comments_available() {
 
 	static $res;
@@ -194,7 +257,9 @@ function wpdev_are_code_comments_available() {
 
 	return $res;
 
-} // end wpdev_are_code_comments_available;
+}
+}
+ // end wpdev_are_code_comments_available;
 
 /**
  * Join string into a single path string.
@@ -203,6 +268,7 @@ function wpdev_are_code_comments_available() {
  * @param string ...$parts The parts of the path to join.
  * @return string The URL string.
  */
+if (!function_exists('wpdev_path_join')) {
 function wpdev_path_join(...$parts): string {
 
 	if (sizeof($parts) === 0) {
@@ -217,7 +283,9 @@ function wpdev_path_join(...$parts): string {
 
 	return $prefix . implode(DIRECTORY_SEPARATOR, $processed);
 
-} // end wpdev_path_join;
+}
+}
+ // end wpdev_path_join;
 
 
 /**
@@ -230,11 +298,14 @@ function wpdev_path_join(...$parts): string {
  * @param string           $log_level Log level to write.
  * @return void
  */
+if (!function_exists('wpdev_log_add')) {
 function wpdev_log_add($handle, $message, $log_level = LogLevel::INFO) {
 
 	\WPDevFramework\Logger::add($handle, $message, $log_level);
 
-} // end wpdev_log_add;
+}
+}
+ // end wpdev_log_add;
 
 /**
  * Clear entries from chosen file.
@@ -244,11 +315,14 @@ function wpdev_log_add($handle, $message, $log_level = LogLevel::INFO) {
  * @param mixed $handle Name of the log file to clear.
  * @return void
  */
+if (!function_exists('wpdev_log_clear')) {
 function wpdev_log_clear($handle) {
 
 	\WPDevFramework\Logger::clear($handle);
 
-} // end wpdev_log_clear;
+}
+}
+ // end wpdev_log_clear;
 
 /**
  * Maybe log errors to the file.
@@ -258,6 +332,7 @@ function wpdev_log_clear($handle) {
  * @param \Throwable $e The exception object.
  * @return void
  */
+if (!function_exists('wpdev_maybe_log_error')) {
 function wpdev_maybe_log_error($e) {
 
 	if (defined('WP_DEBUG') && WP_DEBUG) {
@@ -266,7 +341,9 @@ function wpdev_maybe_log_error($e) {
 
 	} // end if;
 
-} // end wpdev_maybe_log_error;
+}
+}
+ // end wpdev_maybe_log_error;
 
 /**
  * Get the function caller.
@@ -276,6 +353,7 @@ function wpdev_maybe_log_error($e) {
  * @param integer $depth The depth of the backtrace.
  * @return string|null
  */
+if (!function_exists('wpdev_get_function_caller')) {
 function wpdev_get_function_caller($depth = 1) {
 
 	$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $depth + 1);
@@ -284,7 +362,9 @@ function wpdev_get_function_caller($depth = 1) {
 
 	return $caller;
 
-} // end wpdev_get_function_caller;
+}
+}
+ // end wpdev_get_function_caller;
 /**
  * Checks if a particular plugin is skipped in a CLI context.
  *
@@ -292,6 +372,7 @@ function wpdev_get_function_caller($depth = 1) {
  *
  * @param mixed $plugin The plugin slug. E.g. wpdev.
  */
+if (!function_exists('wpdev_cli_is_plugin_skipped')) {
 function wpdev_cli_is_plugin_skipped($plugin = null): bool {
 
 	if (!class_exists(\WP_CLI::class)) {
@@ -312,7 +393,9 @@ function wpdev_cli_is_plugin_skipped($plugin = null): bool {
 
 	return in_array($plugin, $skipped_plugins, true);
 
-} // end wpdev_cli_is_plugin_skipped;
+}
+}
+ // end wpdev_cli_is_plugin_skipped;
 
 /**
  * Capture errors and exceptions thrown inside the callback to prevent breakage.
@@ -325,6 +408,7 @@ function wpdev_cli_is_plugin_skipped($plugin = null): bool {
  *
  * @return void
  */
+if (!function_exists('wpdev_ignore_errors')) {
 function wpdev_ignore_errors($fn, $log = false) {
 
 	try {
@@ -337,6 +421,8 @@ function wpdev_ignore_errors($fn, $log = false) {
 
 	} // end try;
 
-} // end wpdev_ignore_errors;
+}
+}
+ // end wpdev_ignore_errors;
 
 require_once __DIR__ . '/module-require.php';

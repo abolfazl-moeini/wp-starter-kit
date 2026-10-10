@@ -11,6 +11,7 @@
  */
 
 import {
+  cpSync,
   existsSync,
   mkdirSync,
   readdirSync,
@@ -304,6 +305,18 @@ export async function buildDocs(options = {}) {
 
   const outDirAbs = path.resolve(root, config.output_dir);
   mkdirSync(outDirAbs, { recursive: true });
+
+  // Self-healing .gitignore inside docs output directory to guarantee binary artifacts are never committed
+  const outGitignore = path.join(outDirAbs, ".gitignore");
+  if (!existsSync(outGitignore)) {
+    writeFileSync(outGitignore, "*\n!.gitignore\n", "utf8");
+  }
+
+  const sourceAssetsDir = path.join(guideDirAbs, "assets");
+  const targetAssetsDir = path.join(outDirAbs, "assets");
+  if (existsSync(sourceAssetsDir)) {
+    cpSync(sourceAssetsDir, targetAssetsDir, { recursive: true });
+  }
 
   const stitchedContent = assembleStitchedDocument(
     guideDirAbs,

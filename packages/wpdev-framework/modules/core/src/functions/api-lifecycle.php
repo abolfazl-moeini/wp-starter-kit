@@ -19,6 +19,7 @@ defined( 'ABSPATH' ) || exit;
  * @param int      $priority Hook priority. Default 10.
  * @return void
  */
+if (!function_exists('wpdev_on_load')) {
 function wpdev_on_load( $callback, $priority = 10 ) {
 
 	if ( ! is_callable( $callback ) ) {
@@ -27,7 +28,9 @@ function wpdev_on_load( $callback, $priority = 10 ) {
 
 	add_action( 'wpdev_load', $callback, (int) $priority );
 
-} // end wpdev_on_load;
+}
+}
+ // end wpdev_on_load;
 
 /**
  * Run a callback when admin page classes should be instantiated.
@@ -38,6 +41,7 @@ function wpdev_on_load( $callback, $priority = 10 ) {
  * @param int      $priority Hook priority. Default 10.
  * @return void
  */
+if (!function_exists('wpdev_on_admin_pages')) {
 function wpdev_on_admin_pages( $callback, $priority = 10 ) {
 
 	if ( ! is_callable( $callback ) ) {
@@ -46,7 +50,9 @@ function wpdev_on_admin_pages( $callback, $priority = 10 ) {
 
 	add_action( 'wpdev_admin_pages', $callback, (int) $priority );
 
-} // end wpdev_on_admin_pages;
+}
+}
+ // end wpdev_on_admin_pages;
 
 /**
  * Whether a module has been bootstrapped by Module_Loader.
@@ -56,6 +62,7 @@ function wpdev_on_admin_pages( $callback, $priority = 10 ) {
  * @param string $module_id Module slug.
  * @return bool
  */
+if (!function_exists('wpdev_module_is_loaded')) {
 function wpdev_module_is_loaded( $module_id ) {
 
 	if ( ! class_exists( '\WPDevFramework\Core\Module_Loader' ) ) {
@@ -64,7 +71,9 @@ function wpdev_module_is_loaded( $module_id ) {
 
 	return \WPDevFramework\Core\Module_Loader::is_loaded( $module_id );
 
-} // end wpdev_module_is_loaded;
+}
+}
+ // end wpdev_module_is_loaded;
 
 /**
  * Load a single module (and its declared dependencies) standalone.
@@ -77,6 +86,7 @@ function wpdev_module_is_loaded( $module_id ) {
  * @param string $modules_dir Optional absolute path to modules/. Defaults to plugin modules dir.
  * @return bool True when the module was loaded.
  */
+if (!function_exists('wpdev_load_module')) {
 function wpdev_load_module( $module_id, $modules_dir = '' ) {
 
 	if ( ! class_exists( '\WPDevFramework\Core\Module_Loader' ) ) {
@@ -89,4 +99,6 @@ function wpdev_load_module( $module_id, $modules_dir = '' ) {
 
 	return \WPDevFramework\Core\Module_Loader::load_standalone( $module_id, $modules_dir );
 
-} // end wpdev_load_module;
+}
+}
+ // end wpdev_load_module;

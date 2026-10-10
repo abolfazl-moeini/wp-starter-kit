@@ -47,7 +47,8 @@ if ( ! function_exists( 'wpdev_bootstrap_dependency_manager' ) ) {
 	 * @param string $plugin_root Absolute plugin root path.
 	 * @return void
 	 */
-	function wpdev_ensure_namespace_autoloader( $plugin_root ) {
+	if (!function_exists('wpdev_ensure_namespace_autoloader')) {
+function wpdev_ensure_namespace_autoloader( $plugin_root ) {
 
 		$class = 'WPDev\\Dependencies\\Pablo_Pacheco\\WP_Namespace_Autoloader\\WP_Namespace_Autoloader';
 
@@ -69,6 +70,8 @@ if ( ! function_exists( 'wpdev_bootstrap_dependency_manager' ) ) {
 			require_once $file;
 		}
 
-	} // end wpdev_ensure_namespace_autoloader;
+	}
+}
+ // end wpdev_ensure_namespace_autoloader;
 
 }

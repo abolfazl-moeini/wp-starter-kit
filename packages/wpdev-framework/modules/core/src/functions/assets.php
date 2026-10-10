@@ -19,6 +19,7 @@ defined('ABSPATH') || exit;
  * @param string $base_dir   Base dir. Defaults to 'assets'.
  * @return string
  */
+if (!function_exists('wpdev_get_asset')) {
 function wpdev_get_asset($asset, $assets_dir = 'img', $base_dir = 'assets') {
 
 	$original = $asset;
@@ -41,4 +42,6 @@ function wpdev_get_asset($asset, $assets_dir = 'img', $base_dir = 'assets') {
 
 	return wpdev_url($relative);
 
-} // end wpdev_get_asset;
+}
+}
+ // end wpdev_get_asset;

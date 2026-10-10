@@ -15,6 +15,7 @@ defined( 'ABSPATH' ) || exit;
  * @param callable|string $factory  Callable or FQCN. Skipped when class missing.
  * @return void
  */
+if (!function_exists('wpdev_register_table')) {
 function wpdev_register_table( $property, $factory ) {
 
 	if ( ! class_exists( 'WPDev\\Core\\Table_Registry' ) ) {
@@ -23,4 +24,6 @@ function wpdev_register_table( $property, $factory ) {
 
 	\WPDevFramework\Core\Table_Registry::register( $property, $factory );
 
-} // end wpdev_register_table;
+}
+}
+ // end wpdev_register_table;

@@ -19,6 +19,7 @@ use \WPDevFramework\Managers\Form_Manager;
  *
  * @return Form_Service|Form_Manager
  */
+if (!function_exists('wpdev_form_api')) {
 function wpdev_form_api() {
 
 	if ( function_exists( 'wpdev_services' ) && function_exists( 'add_query_arg' ) ) {
@@ -31,7 +32,9 @@ function wpdev_form_api() {
 
 	return Form_Manager::get_instance();
 
-} // end wpdev_form_api;
+}
+}
+ // end wpdev_form_api;
 
 /**
  * Registers a new Ajax Form.
@@ -47,6 +50,7 @@ function wpdev_form_api() {
  * @param array  $atts Form attributes, check wp_parse_atts call below.
  * @return mixed
  */
+if (!function_exists('wpdev_register_form')) {
 function wpdev_register_form($form_id, $atts = array()) {
 
 	$api = wpdev_form_api();
@@ -57,7 +61,9 @@ function wpdev_register_form($form_id, $atts = array()) {
 
 	return $api->register_form( $form_id, $atts );
 
-} // end wpdev_register_form;
+}
+}
+ // end wpdev_register_form;
 
 /**
  * Returns the ajax URL for a given form.
@@ -70,6 +76,7 @@ function wpdev_register_form($form_id, $atts = array()) {
  * @param boolean $inline If this form is has content.
  * @return string
  */
+if (!function_exists('wpdev_get_form_url')) {
 function wpdev_get_form_url($form_id, $atts = array(), $inline = false) {
 
 	if ($inline) {
@@ -93,7 +100,9 @@ function wpdev_get_form_url($form_id, $atts = array(), $inline = false) {
 
 	return $api->get_form_url($form_id, $atts, $inline);
 
-} // end wpdev_get_form_url;
+}
+}
+ // end wpdev_get_form_url;
 
 /**
  * Open a modal form URL via Modal_Service (wubox).
@@ -104,6 +113,7 @@ function wpdev_get_form_url($form_id, $atts = array(), $inline = false) {
  * @param array<string, mixed> $args    Query args for the form URL.
  * @return string
  */
+if (!function_exists('wpdev_modal_open')) {
 function wpdev_modal_open( $form_id, $args = array() ) {
 
 	if ( function_exists( 'wpdev_services' ) ) {
@@ -116,7 +126,9 @@ function wpdev_modal_open( $form_id, $args = array() ) {
 
 	return wpdev_get_form_url( $form_id, $args );
 
-} // end wpdev_modal_open;
+}
+}
+ // end wpdev_modal_open;
 
 /**
  * Enqueues the wubox modal script (thickbox fork).
@@ -124,8 +136,11 @@ function wpdev_modal_open( $form_id, $args = array() ) {
  * @since 2.0.0
  * @return void
  */
+if (!function_exists('add_wubox')) {
 function add_wubox() { // phpcs:ignore
 
 	wp_enqueue_script( 'wubox' );
 
-} // end add_wubox;
+}
+}
+ // end add_wubox;

@@ -32,7 +32,8 @@ if ( ! function_exists( 'wpdev_is_network_context' ) ) {
 	 * @param string $panel Admin panel hook (admin_menu, network_admin_menu, user_admin_menu).
 	 * @return string
 	 */
-	function wpdev_admin_panel_for_context( $panel ) {
+	if (!function_exists('wpdev_admin_panel_for_context')) {
+function wpdev_admin_panel_for_context( $panel ) {
 
 		$panel = (string) $panel;
 
@@ -42,7 +43,9 @@ if ( ! function_exists( 'wpdev_is_network_context' ) ) {
 
 		return $panel;
 
-	} // end wpdev_admin_panel_for_context;
+	}
+}
+ // end wpdev_admin_panel_for_context;
 
 	/**
 	 * Map a capability for the current install type.
@@ -52,7 +55,8 @@ if ( ! function_exists( 'wpdev_is_network_context' ) ) {
 	 * @param string $capability Capability slug.
 	 * @return string
 	 */
-	function wpdev_admin_capability_for( $capability ) {
+	if (!function_exists('wpdev_admin_capability_for')) {
+function wpdev_admin_capability_for( $capability ) {
 
 		$capability = (string) $capability;
 
@@ -68,7 +72,9 @@ if ( ! function_exists( 'wpdev_is_network_context' ) ) {
 
 		return $capability;
 
-	} // end wpdev_admin_capability_for;
+	}
+}
+ // end wpdev_admin_capability_for;
 
 	/**
 	 * Translate supported_panels map for single-site (network panel -> site admin).
@@ -78,7 +84,8 @@ if ( ! function_exists( 'wpdev_is_network_context' ) ) {
 	 * @param array<string, string> $panels Panel hook => capability map.
 	 * @return array<string, string>
 	 */
-	function wpdev_translate_supported_panels( array $panels ) {
+	if (!function_exists('wpdev_translate_supported_panels')) {
+function wpdev_translate_supported_panels( array $panels ) {
 
 		if ( wpdev_is_network_context() || empty( $panels ) ) {
 			return $panels;
@@ -94,7 +101,9 @@ if ( ! function_exists( 'wpdev_is_network_context' ) ) {
 
 		return $translated;
 
-	} // end wpdev_translate_supported_panels;
+	}
+}
+ // end wpdev_translate_supported_panels;
 
 	/**
 	 * Whether the current user has a WPDev admin capability in the current context.
@@ -104,7 +113,8 @@ if ( ! function_exists( 'wpdev_is_network_context' ) ) {
 	 * @param string $capability Capability slug (typically manage_network).
 	 * @return bool
 	 */
-	function wpdev_current_user_can_admin( $capability = 'manage_network' ) {
+	if (!function_exists('wpdev_current_user_can_admin')) {
+function wpdev_current_user_can_admin( $capability = 'manage_network' ) {
 
 		if ( ! is_user_logged_in() ) {
 			return false;
@@ -112,6 +122,8 @@ if ( ! function_exists( 'wpdev_is_network_context' ) ) {
 
 		return current_user_can( wpdev_admin_capability_for( $capability ) );
 
-	} // end wpdev_current_user_can_admin;
+	}
+}
+ // end wpdev_current_user_can_admin;
 
 }

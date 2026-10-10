@@ -17,6 +17,7 @@ defined( 'ABSPATH' ) || exit;
  * @param array<string, mixed> $args     Registration args.
  * @return callable
  */
+if (!function_exists('wpdev_wrap_ajax_handler_callback')) {
 function wpdev_wrap_ajax_handler_callback( $callback, $args = array() ) {
 
 	$args = array_merge(
@@ -71,7 +72,9 @@ function wpdev_wrap_ajax_handler_callback( $callback, $args = array() ) {
 		return call_user_func_array( $callback, func_get_args() );
 	};
 
-} // end wpdev_wrap_ajax_handler_callback;
+}
+}
+ // end wpdev_wrap_ajax_handler_callback;
 
 /**
  * Register an admin-ajax / light-ajax handler via Ajax_Service (J-01).
@@ -86,6 +89,7 @@ function wpdev_wrap_ajax_handler_callback( $callback, $args = array() ) {
  * @param array<string, mixed> $args     Optional. transport, nopriv, priority.
  * @return void
  */
+if (!function_exists('wpdev_register_ajax_handler')) {
 function wpdev_register_ajax_handler( $action, $callback, $args = array() ) {
 
 	if ( function_exists( 'wpdev_services' ) && wpdev_services( 'ajax' ) ) {
@@ -120,7 +124,9 @@ function wpdev_register_ajax_handler( $action, $callback, $args = array() ) {
 		}
 	}
 
-} // end wpdev_register_ajax_handler;
+}
+}
+ // end wpdev_register_ajax_handler;
 
 /**
  * Register an AJAX-loaded admin tab group (J-06).
@@ -131,6 +137,7 @@ function wpdev_register_ajax_handler( $action, $callback, $args = array() ) {
  * @param callable $callback Receives tab slug; echoes or returns HTML.
  * @return void
  */
+if (!function_exists('wpdev_register_ajax_tabs')) {
 function wpdev_register_ajax_tabs( $group, $callback ) {
 
 	if ( function_exists( 'wpdev_services' ) && wpdev_services( 'ajax' ) ) {
@@ -142,7 +149,9 @@ function wpdev_register_ajax_tabs( $group, $callback ) {
 		\WPDevFramework\Core\Ajax\Ajax_Tab_Loader::register( $group, $callback );
 	}
 
-} // end wpdev_register_ajax_tabs;
+}
+}
+ // end wpdev_register_ajax_tabs;
 
 /**
  * Build the URL that loads a registered AJAX tab.
@@ -153,6 +162,7 @@ function wpdev_register_ajax_tabs( $group, $callback ) {
  * @param string $tab   Tab slug.
  * @return string
  */
+if (!function_exists('wpdev_ajax_tab_url')) {
 function wpdev_ajax_tab_url( $group, $tab = '' ) {
 
 	if ( function_exists( 'wpdev_services' ) && wpdev_services( 'ajax' ) ) {
@@ -165,7 +175,9 @@ function wpdev_ajax_tab_url( $group, $tab = '' ) {
 
 	return '';
 
-} // end wpdev_ajax_tab_url;
+}
+}
+ // end wpdev_ajax_tab_url;
 
 if ( ! function_exists( 'wpdev_ajax_success' ) ) {
 	/**

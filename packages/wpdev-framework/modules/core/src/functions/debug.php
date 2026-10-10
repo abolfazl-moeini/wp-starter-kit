@@ -15,6 +15,7 @@ defined('ABSPATH') || exit;
  * @since 2.0.11
  * @return void
  */
+if (!function_exists('wpdev_try_unlimited_server_limits')) {
 function wpdev_try_unlimited_server_limits() {
 
   // Disable memory_limit by setting it to minus 1.
@@ -23,7 +24,9 @@ function wpdev_try_unlimited_server_limits() {
   // Disable the time limit by setting it to 0.
   @set_time_limit(0); // phpcs:ignore
 
-} // end wpdev_try_unlimited_server_limits;
+}
+}
+ // end wpdev_try_unlimited_server_limits;
 
 /**
  * Custom error handler for memory leaks
@@ -33,6 +36,7 @@ function wpdev_try_unlimited_server_limits() {
  *                            'json', to return json; 'plain' to simply echo the message.
  * @return void
  */
+if (!function_exists('wpdev_setup_memory_limit_trap')) {
 function wpdev_setup_memory_limit_trap($return_type = 'plain') {
 
 	$trap = \WPDevFramework\Internal\Memory_Trap::get_instance();
@@ -41,4 +45,6 @@ function wpdev_setup_memory_limit_trap($return_type = 'plain') {
 
 	$trap->setup();
 
-} // end wpdev_setup_memory_limit_trap;
+}
+}
+ // end wpdev_setup_memory_limit_trap;

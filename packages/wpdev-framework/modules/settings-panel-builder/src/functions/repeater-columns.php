@@ -22,6 +22,7 @@ defined( 'ABSPATH' ) || exit;
  * @param array|null $sections         Settings sections. Discovered when omitted.
  * @return array
  */
+if (!function_exists('wpdev_settings_with_repeater_columns')) {
 function wpdev_settings_with_repeater_columns( array $settings_to_save, $sections = null ) {
 
 	if ( ! is_array( $sections ) ) {
@@ -40,3 +41,5 @@ function wpdev_settings_with_repeater_columns( array $settings_to_save, $section
 
 	return $settings_to_save;
 }
+}
+

@@ -20,6 +20,7 @@ use \WPDevFramework\Helpers\Arr;
  * @param boolean $indexes If we need to add the indexes as well.
  * @return array
  */
+if (!function_exists('wpdev_array_flatten')) {
 function wpdev_array_flatten($array, $indexes = false) {
 
 	$return = array();
@@ -38,7 +39,9 @@ function wpdev_array_flatten($array, $indexes = false) {
 
 	return $return;
 
-} // end wpdev_array_flatten;
+}
+}
+ // end wpdev_array_flatten;
 
 /**
  * Copy from http://www.php.net/manual/en/function.array-merge-recursive.php#92195
@@ -69,6 +72,7 @@ function wpdev_array_flatten($array, $indexes = false) {
  * @param bool  $should_sum If we should add up numeric values instead of replacing the original.
  * @return array
  */
+if (!function_exists('wpdev_array_merge_recursive_distinct')) {
 function wpdev_array_merge_recursive_distinct(array &$array1, array &$array2, $should_sum = true) {
 
 	$merged = $array1;
@@ -97,7 +101,9 @@ function wpdev_array_merge_recursive_distinct(array &$array1, array &$array2, $s
 
 	return $merged;
 
-} // end wpdev_array_merge_recursive_distinct;
+}
+}
+ // end wpdev_array_merge_recursive_distinct;
 
 /**
  * Compares two arrays and returns the diff, recursively.
@@ -113,6 +119,7 @@ function wpdev_array_merge_recursive_distinct(array &$array1, array &$array2, $s
  * @param array $to_keep List of keys to keep regardless of diff status.
  * @return array
  */
+if (!function_exists('wpdev_array_recursive_diff')) {
 function wpdev_array_recursive_diff($array1, $array2, $to_keep = array()) {
 
 	$arr_return = array();
@@ -154,7 +161,9 @@ function wpdev_array_recursive_diff($array1, $array2, $to_keep = array()) {
 
 	return $arr_return;
 
-} // end wpdev_array_recursive_diff;
+}
+}
+ // end wpdev_array_recursive_diff;
 /**
  * Array map implementation to deal with keys.
  *
@@ -163,6 +172,7 @@ function wpdev_array_recursive_diff($array1, $array2, $to_keep = array()) {
  * @param callable $callable The callback to run.
  * @param array    $array The array to map the keys.
  */
+if (!function_exists('wpdev_array_map_keys')) {
 function wpdev_array_map_keys($callable, $array): array {
 
 	$keys = array_keys($array);
@@ -171,7 +181,9 @@ function wpdev_array_map_keys($callable, $array): array {
 
 	return array_combine($keys, $array);
 
-} // end wpdev_array_map_keys;
+}
+}
+ // end wpdev_array_map_keys;
 
 /**
  * Converts a key => value array into an array of objects with key and value entries.
@@ -203,6 +215,7 @@ function wpdev_array_map_keys($callable, $array): array {
  * @param string $value_name The name to use for the value entry.
  * @return array
  */
+if (!function_exists('wpdev_key_map_to_array')) {
 function wpdev_key_map_to_array($assoc_array, $key_name = 'id', $value_name = 'value') {
 
 	$results = array();
@@ -218,7 +231,9 @@ function wpdev_key_map_to_array($assoc_array, $key_name = 'id', $value_name = 'v
 
 	return $results;
 
-} // end wpdev_key_map_to_array;
+}
+}
+ // end wpdev_key_map_to_array;
 
 /**
  * Find a value inside an array by a particular key or property.
@@ -233,11 +248,14 @@ function wpdev_key_map_to_array($assoc_array, $key_name = 'id', $value_name = 'v
  * @param integer $flag How to return the results. Can be Arr::RESULTS_ALL, Arr::RESULTS_FIRST, and Arr::RESULTS_LAST.
  * @return mixed
  */
+if (!function_exists('wpdev_array_find_by')) {
 function wpdev_array_find_by($array, $property, $expected, $flag = 0) {
 
 	return Arr::filter_by_property($array, $property, $expected, $flag);
 
-} // end wpdev_array_find_by;
+}
+}
+ // end wpdev_array_find_by;
 
 /**
  * Finds all the values inside an array by a particular key or property.
@@ -251,11 +269,14 @@ function wpdev_array_find_by($array, $property, $expected, $flag = 0) {
  * @param mixed  $expected The expected property value.
  * @return mixed
  */
+if (!function_exists('wpdev_array_find_all_by')) {
 function wpdev_array_find_all_by($array, $property, $expected) {
 
 	return wpdev_array_find_by($array, $property, $expected, Arr::RESULTS_ALL);
 
-} // end wpdev_array_find_all_by;
+}
+}
+ // end wpdev_array_find_all_by;
 
 /**
  * Finds the first value inside an array by a particular key or property.
@@ -269,11 +290,14 @@ function wpdev_array_find_all_by($array, $property, $expected) {
  * @param mixed  $expected The expected property value.
  * @return mixed
  */
+if (!function_exists('wpdev_array_find_first_by')) {
 function wpdev_array_find_first_by($array, $property, $expected) {
 
 	return wpdev_array_find_by($array, $property, $expected, Arr::RESULTS_FIRST);
 
-} // end wpdev_array_find_first_by;
+}
+}
+ // end wpdev_array_find_first_by;
 
 /**
  * Finds the last value inside an array by a particular key or property.
@@ -287,8 +311,11 @@ function wpdev_array_find_first_by($array, $property, $expected) {
  * @param mixed  $expected The expected property value.
  * @return mixed
  */
+if (!function_exists('wpdev_array_find_last_by')) {
 function wpdev_array_find_last_by($array, $property, $expected) {
 
 	return wpdev_array_find_by($array, $property, $expected, Arr::RESULTS_LAST);
 
-} // end wpdev_array_find_last_by;
+}
+}
+ // end wpdev_array_find_last_by;

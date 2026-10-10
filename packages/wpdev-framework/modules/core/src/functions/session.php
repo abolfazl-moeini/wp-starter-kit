@@ -17,6 +17,7 @@ defined('ABSPATH') || exit;
  * @param string $session_key The session key.
  * @return \WPDevFramework\Contracts\Session
  */
+if (!function_exists('wpdev_get_session')) {
 function wpdev_get_session($session_key) {
 
 	global $wpdev_session;
@@ -35,4 +36,6 @@ function wpdev_get_session($session_key) {
 
 	return $wpdev_session[$session_key];
 
-} // end wpdev_get_session;
+}
+}
+ // end wpdev_get_session;

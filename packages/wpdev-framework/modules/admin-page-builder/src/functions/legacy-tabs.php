@@ -16,6 +16,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * @return void
  */
+if (!function_exists('wpdev_enqueue_legacy_admin_tabs')) {
 function wpdev_enqueue_legacy_admin_tabs() {
 
 	_deprecated_function( __FUNCTION__, '2.6.0', 'wpdev_render_tab_navigation()' );
@@ -31,4 +32,6 @@ function wpdev_enqueue_legacy_admin_tabs() {
 		wpdev_get_version()
 	);
 
-} // end wpdev_enqueue_legacy_admin_tabs;
+}
+}
+ // end wpdev_enqueue_legacy_admin_tabs;

@@ -20,11 +20,14 @@ wpdev_require_public_function( 'options' );
  * @return array
  * @since 2.0.0
  */
+if (!function_exists('wpdev_get_all_settings')) {
 function wpdev_get_all_settings() {
 
 	return wpdev()->settings?->get_all();
 
-} // end wpdev_get_all_settings;
+}
+}
+ // end wpdev_get_all_settings;
 
 /**
  * Get a specific settings from the plugin.
@@ -36,11 +39,14 @@ function wpdev_get_all_settings() {
  * @since 2.0.0
  *
  */
+if (!function_exists('wpdev_get_setting')) {
 function wpdev_get_setting( $setting, $default = false ) {
 
 	return wpdev()->settings?->get_setting($setting, $default);
 
-} // end wpdev_get_setting;
+}
+}
+ // end wpdev_get_setting;
 
 /**
  * Saves a specific setting into the database.
@@ -52,11 +58,14 @@ function wpdev_get_setting( $setting, $default = false ) {
  * @since 2.0.0
  *
  */
+if (!function_exists('wpdev_save_setting')) {
 function wpdev_save_setting( $setting, $value ) {
 
 	return wpdev()->settings?->save_setting($setting, $value);
 
-} // end wpdev_save_setting;
+}
+}
+ // end wpdev_save_setting;
 
 /**
  * Adds a new settings section.
@@ -72,6 +81,7 @@ function wpdev_save_setting( $setting, $value ) {
  * @since 2.0.0
  *
  */
+if (!function_exists('wpdev_register_settings_section')) {
 function wpdev_register_settings_section( $section_slug, $atts, $replace = true ) {
 
 	if ( class_exists( 'WPDev\\Modules\\SettingsPanelBuilder\\Settings_Section_Registry' ) ) {
@@ -80,7 +90,9 @@ function wpdev_register_settings_section( $section_slug, $atts, $replace = true 
 
 	wpdev()->settings?->add_section( $section_slug, $atts );
 
-} // end wpdev_register_settings_section;
+}
+}
+ // end wpdev_register_settings_section;
 
 /**
  * Get a registered settings section config.
@@ -90,6 +102,7 @@ function wpdev_register_settings_section( $section_slug, $atts, $replace = true 
  * @param string $section_slug Section slug.
  * @return array<string, mixed>|null
  */
+if (!function_exists('wpdev_get_settings_section')) {
 function wpdev_get_settings_section( $section_slug ) {
 
 	if ( ! class_exists( 'WPDev\\Modules\\SettingsPanelBuilder\\Settings_Section_Registry' ) ) {
@@ -98,7 +111,9 @@ function wpdev_get_settings_section( $section_slug ) {
 
 	return \WPDevFramework\Modules\SettingsPanelBuilder\Settings_Section_Registry::get( $section_slug );
 
-} // end wpdev_get_settings_section;
+}
+}
+ // end wpdev_get_settings_section;
 
 /**
  * Whether a settings section is registered.
@@ -108,6 +123,7 @@ function wpdev_get_settings_section( $section_slug ) {
  * @param string $section_slug Section slug.
  * @return bool
  */
+if (!function_exists('wpdev_has_settings_section')) {
 function wpdev_has_settings_section( $section_slug ) {
 
 	if ( ! class_exists( 'WPDev\\Modules\\SettingsPanelBuilder\\Settings_Section_Registry' ) ) {
@@ -116,7 +132,9 @@ function wpdev_has_settings_section( $section_slug ) {
 
 	return \WPDevFramework\Modules\SettingsPanelBuilder\Settings_Section_Registry::has( $section_slug );
 
-} // end wpdev_has_settings_section;
+}
+}
+ // end wpdev_has_settings_section;
 
 /**
  * List all registered settings sections.
@@ -125,6 +143,7 @@ function wpdev_has_settings_section( $section_slug ) {
  *
  * @return array<string, array<string, mixed>>
  */
+if (!function_exists('wpdev_list_settings_sections')) {
 function wpdev_list_settings_sections() {
 
 	if ( ! class_exists( 'WPDev\\Modules\\SettingsPanelBuilder\\Settings_Section_Registry' ) ) {
@@ -133,7 +152,9 @@ function wpdev_list_settings_sections() {
 
 	return \WPDevFramework\Modules\SettingsPanelBuilder\Settings_Section_Registry::all();
 
-} // end wpdev_list_settings_sections;
+}
+}
+ // end wpdev_list_settings_sections;
 
 /**
  * Unregister a settings section.
@@ -143,13 +164,16 @@ function wpdev_list_settings_sections() {
  * @param string $section_slug Section slug.
  * @return void
  */
+if (!function_exists('wpdev_unregister_settings_section')) {
 function wpdev_unregister_settings_section( $section_slug ) {
 
 	if ( class_exists( 'WPDev\\Modules\\SettingsPanelBuilder\\Settings_Section_Registry' ) ) {
 		\WPDevFramework\Modules\SettingsPanelBuilder\Settings_Section_Registry::unregister( $section_slug );
 	}
 
-} // end wpdev_unregister_settings_section;
+}
+}
+ // end wpdev_unregister_settings_section;
 
 /**
  * Adds a new field to a settings section.
@@ -165,11 +189,14 @@ function wpdev_unregister_settings_section( $section_slug ) {
  * @since 2.0.0
  *
  */
+if (!function_exists('wpdev_register_settings_field')) {
 function wpdev_register_settings_field( $section_slug, $field_slug, $atts ) {
 
 	wpdev()->settings?->add_field($section_slug, $field_slug, $atts);
 
-} // end wpdev_register_settings_field;
+}
+}
+ // end wpdev_register_settings_field;
 
 /**
  * Adds a help side-panel to the settings page.
@@ -181,6 +208,7 @@ function wpdev_register_settings_field( $section_slug, $field_slug, $atts ) {
  * @since 2.0.0
  *
  */
+if (!function_exists('wpdev_register_settings_side_panel')) {
 function wpdev_register_settings_side_panel( $section_slug, $atts ) {
 
 	if ( wpdev_request( 'tab', 'general' ) !== $section_slug && $section_slug !== 'all' ) {
@@ -213,7 +241,9 @@ function wpdev_register_settings_side_panel( $section_slug, $atts ) {
 
 	}, 'wpdev_settings_admin_page', 'side', 'low' );
 
-} // end wpdev_register_settings_side_panel;
+}
+}
+ // end wpdev_register_settings_side_panel;
 
 /**
  * Retrieve the network custom logo.
@@ -222,6 +252,7 @@ function wpdev_register_settings_side_panel( $section_slug, $atts ) {
  *
  * @return string With the logo's url.
  */
+if (!function_exists('wpdev_get_network_logo')) {
 function wpdev_get_network_logo( $size = 'full' ) {
 
 	$settings_logo = wp_get_attachment_image_src( wpdev_get_setting( 'company_logo' ), $size ); // phpcs:ignore
@@ -244,7 +275,9 @@ function wpdev_get_network_logo( $size = 'full' ) {
 
 	return apply_filters( 'wpdev_get_logo', $logo );
 
-} // end wpdev_get_network_logo;
+}
+}
+ // end wpdev_get_network_logo;
 
 /**
  * Retrieve the network custom icon.
@@ -253,13 +286,16 @@ function wpdev_get_network_logo( $size = 'full' ) {
  *
  * @return string With the logo's url.
  */
+if (!function_exists('wpdev_get_network_favicon')) {
 function wpdev_get_network_favicon( $size = '48' ) {
 
 	$custom_icon = get_site_icon_url( $size, wpdev_get_asset( 'badge.png', 'img' ), wpdev_get_main_site_id() );
 
 	return $custom_icon;
 
-} // end wpdev_get_network_favicon;
+}
+}
+ // end wpdev_get_network_favicon;
 
 /**
  * Whether the current user may save playground settings (pg_* sandbox only).
@@ -267,11 +303,14 @@ function wpdev_get_network_favicon( $size = '48' ) {
  * @since 2.7.0
  * @return bool
  */
+if (!function_exists('wpdev_playground_settings_can_save')) {
 function wpdev_playground_settings_can_save() {
 
 	return current_user_can( 'wpdev_edit_settings' ) || current_user_can( 'manage_options' );
 
-} // end wpdev_playground_settings_can_save;
+}
+}
+ // end wpdev_playground_settings_can_save;
 
 /**
  * Save field definition matching production Settings_Admin_Page::default_view().
@@ -279,6 +318,7 @@ function wpdev_playground_settings_can_save() {
  * @since 2.7.0
  * @return array<string, mixed>
  */
+if (!function_exists('wpdev_playground_settings_save_field_definition')) {
 function wpdev_playground_settings_save_field_definition() {
 
 	$save = array(
@@ -297,7 +337,9 @@ function wpdev_playground_settings_save_field_definition() {
 
 	return $save;
 
-} // end wpdev_playground_settings_save_field_definition;
+}
+}
+ // end wpdev_playground_settings_save_field_definition;
 
 /**
  * Process POST save for a pg_* settings section (sandbox keys only).
@@ -308,6 +350,7 @@ function wpdev_playground_settings_save_field_definition() {
  * @param string $prefix       Allowed setting key prefix. Default pg_.
  * @return bool True when settings were saved.
  */
+if (!function_exists('wpdev_playground_settings_process_post_save')) {
 function wpdev_playground_settings_process_post_save( $section_slug, $prefix = 'pg_' ) {
 
 	if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
@@ -370,7 +413,9 @@ function wpdev_playground_settings_process_post_save( $section_slug, $prefix = '
 
 	return $saved;
 
-} // end wpdev_playground_settings_process_post_save;
+}
+}
+ // end wpdev_playground_settings_process_post_save;
 
 /**
  * Reset pg_* fields in one playground settings section to registered defaults.
@@ -381,6 +426,7 @@ function wpdev_playground_settings_process_post_save( $section_slug, $prefix = '
  * @param string $prefix       Setting key prefix. Default pg_.
  * @return bool True when fields were reset.
  */
+if (!function_exists('wpdev_playground_settings_reset_section')) {
 function wpdev_playground_settings_reset_section( $section_slug, $prefix = 'pg_' ) {
 
 	$section_slug = sanitize_key( (string) $section_slug );
@@ -414,7 +460,9 @@ function wpdev_playground_settings_reset_section( $section_slug, $prefix = 'pg_'
 
 	return $reset;
 
-} // end wpdev_playground_settings_reset_section;
+}
+}
+ // end wpdev_playground_settings_reset_section;
 
 /**
  * Render a live settings section preview (fields UI) for playground or docs.
@@ -430,6 +478,7 @@ function wpdev_playground_settings_reset_section( $section_slug, $prefix = 'pg_'
  * }
  * @return void
  */
+if (!function_exists('wpdev_render_settings_panel_section')) {
 function wpdev_render_settings_panel_section( $section_slug, array $args = array() ) {
 
 	$args = wp_parse_args(
@@ -545,7 +594,9 @@ function wpdev_render_settings_panel_section( $section_slug, array $args = array
 		}
 	}
 
-} // end wpdev_render_settings_panel_section;
+}
+}
+ // end wpdev_render_settings_panel_section;
 
 /**
  * Register default playground settings sections (pg_* sandbox).
@@ -553,6 +604,7 @@ function wpdev_render_settings_panel_section( $section_slug, array $args = array
  * @since 2.7.0
  * @return void
  */
+if (!function_exists('wpdev_playground_register_settings_demo_sections')) {
 function wpdev_playground_register_settings_demo_sections() {
 
 	if ( ! function_exists( 'wpdev_playground_bootstrap_settings' ) || ! wpdev_playground_bootstrap_settings() ) {
@@ -688,7 +740,9 @@ function wpdev_playground_register_settings_demo_sections() {
 		)
 	);
 
-} // end wpdev_playground_register_settings_demo_sections;
+}
+}
+ // end wpdev_playground_register_settings_demo_sections;
 
 /**
  * Render multi-tab settings shell for playground (self-contained wpdev-settings-style UI).
@@ -701,6 +755,7 @@ function wpdev_playground_register_settings_demo_sections() {
  * }
  * @return void
  */
+if (!function_exists('wpdev_render_settings_panel_playground')) {
 function wpdev_render_settings_panel_playground( array $args = array() ) {
 
 	if ( ! function_exists( 'wpdev_playground_bootstrap_settings' ) || ! wpdev_playground_bootstrap_settings() ) {
@@ -854,7 +909,9 @@ function wpdev_render_settings_panel_playground( array $args = array() ) {
 	echo 'function remove_block_ui() { if (typeof settings_loader !== "undefined" && settings_loader && typeof settings_loader.unblock === "function") { settings_loader.unblock(); } }';
 	echo '</script>';
 
-} // end wpdev_render_settings_panel_playground;
+}
+}
+ // end wpdev_render_settings_panel_playground;
 
 /**
  * Admin Setting Page playground: same shell as settings-panel-builder with module-specific context.
@@ -864,6 +921,7 @@ function wpdev_render_settings_panel_playground( array $args = array() ) {
  * @param array<string, mixed> $args Optional args passed to wpdev_render_settings_panel_playground().
  * @return void
  */
+if (!function_exists('wpdev_render_admin_setting_page_playground')) {
 function wpdev_render_admin_setting_page_playground( array $args = array() ) {
 
 	$defaults = array(
@@ -890,4 +948,6 @@ function wpdev_render_admin_setting_page_playground( array $args = array() ) {
 		wpdev_render_settings_panel_playground( $args );
 	}
 
-} // end wpdev_render_admin_setting_page_playground;
+}
+}
+ // end wpdev_render_admin_setting_page_playground;

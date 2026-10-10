@@ -1739,6 +1739,12 @@ vendor-prefixed/
 # Docker PHPUnit generated local files
 tests/docker-phpunit/.env
 tests/docker-phpunit/wp-tests-config.php
+
+# Documentation binaries (PDF / Word)
+*.pdf
+*.docx
+*.doc
+dist/docs/
 `;
 
 export const TEMPLATE_PRETTIERIGNORE = `assets/bundles/

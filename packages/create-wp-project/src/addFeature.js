@@ -508,6 +508,28 @@ export async function addFeature(dir, id, variant, _opts = {}) {
     }
   }
 
+  // Update package.json scripts when docs feature is added or removed
+  if (existsSync(path.join(dir, "package.json")) && id === "docs") {
+    await updateJsonFile(path.join(dir, "package.json"), (pkg) => {
+      pkg.scripts = pkg.scripts || {};
+      if (newFeatures.docs !== "off") {
+        pkg.scripts["docs:scan"] = "node tools/scan-admin-panels.mjs";
+        pkg.scripts["docs:build"] = "node tools/build-docs.mjs";
+        pkg.scripts["docs:pdf"] = "node tools/build-docs.mjs --format=pdf";
+        pkg.scripts["docs:docx"] = "node tools/build-docs.mjs --format=docx";
+      } else {
+        delete pkg.scripts["docs:scan"];
+        delete pkg.scripts["docs:build"];
+        delete pkg.scripts["docs:pdf"];
+        delete pkg.scripts["docs:docx"];
+      }
+      return pkg;
+    });
+    if (!written.includes("package.json")) {
+      written.push("package.json");
+    }
+  }
+
   const glueWritten = await refreshGlue(dir, newFeatures);
   for (const p of glueWritten) {
     if (!written.includes(p) && !p.startsWith("-")) {

@@ -15,6 +15,7 @@ defined('ABSPATH') || exit;
  * @since 2.0.0
  * @return array
  */
+if (!function_exists('wpdev_get_countries')) {
 function wpdev_get_countries() {
 
 	return apply_filters('wpdev_get_countries', array(
@@ -269,7 +270,9 @@ function wpdev_get_countries() {
 		'ZW' => __('Zimbabwe', 'wpdev-locations'),
 	));
 
-} // end wpdev_get_countries;
+}
+}
+ // end wpdev_get_countries;
 
 /**
  * Returns the list of countries with an additional empty state option.
@@ -277,13 +280,16 @@ function wpdev_get_countries() {
  * @since 2.0.0
  * @return array
  */
+if (!function_exists('wpdev_get_countries_as_options')) {
 function wpdev_get_countries_as_options() {
 
 	return array_merge(array(
 		'' => __('Select Country', 'wpdev'),
 	), wpdev_get_countries());
 
-} // end wpdev_get_countries_as_options;
+}
+}
+ // end wpdev_get_countries_as_options;
 
 /**
  * Returns the country object.
@@ -295,6 +301,7 @@ function wpdev_get_countries_as_options() {
  * @param array       $fallback_attributes Fallback attributes if the country class is not present.
  * @return \WPDevFramework\Country\Country
  */
+if (!function_exists('wpdev_get_country')) {
 function wpdev_get_country($country_code, $name = null, $fallback_attributes = array()) {
 
 	$country_code = strtoupper($country_code);
@@ -309,7 +316,9 @@ function wpdev_get_country($country_code, $name = null, $fallback_attributes = a
 
 	return \WPDevFramework\Country\Country_Default::build($country_code, $name, $fallback_attributes);
 
-} // end wpdev_get_country;
+}
+}
+ // end wpdev_get_country;
 
 /**
  * Get the state list for a country.
@@ -321,6 +330,7 @@ function wpdev_get_country($country_code, $name = null, $fallback_attributes = a
  * @param string $value_name The name to use for the value entry.
  * @return array
  */
+if (!function_exists('wpdev_get_country_states')) {
 function wpdev_get_country_states($country_code, $key_name = 'id', $value_name = 'value') {
 
 	static $state_options = array();
@@ -351,7 +361,9 @@ function wpdev_get_country_states($country_code, $key_name = 'id', $value_name =
 
 	return wpdev_key_map_to_array($options, $key_name, $value_name);
 
-} // end wpdev_get_country_states;
+}
+}
+ // end wpdev_get_country_states;
 
 /**
  * Get cities for a collection of states of a country.
@@ -364,6 +376,7 @@ function wpdev_get_country_states($country_code, $key_name = 'id', $value_name =
  * @param string $value_name The name to use for the value entry.
  * @return array
  */
+if (!function_exists('wpdev_get_country_cities')) {
 function wpdev_get_country_cities($country_code, $states, $key_name = 'id', $value_name = 'value') {
 
 	static $city_options = array();
@@ -400,7 +413,9 @@ function wpdev_get_country_cities($country_code, $states, $key_name = 'id', $val
 
 	return wpdev_key_map_to_array($options, $key_name, $value_name);
 
-} // end wpdev_get_country_cities;
+}
+}
+ // end wpdev_get_country_cities;
 
 /**
  * Returns the country name for a given country code.
@@ -410,13 +425,16 @@ function wpdev_get_country_cities($country_code, $states, $key_name = 'id', $val
  * @param string $country_code Country code.
  * @return string
  */
+if (!function_exists('wpdev_get_country_name')) {
 function wpdev_get_country_name($country_code) {
 
 	$country_name = wpdev_get_isset(wpdev_get_countries(), $country_code, __('Not found', 'wpdev'));
 
 	return apply_filters('wpdev_get_country_name', $country_name, $country_code);
 
-} // end wpdev_get_country_name;
+}
+}
+ // end wpdev_get_country_name;
 
 /**
  * Get the list of countries and counts based on customers.
@@ -427,6 +445,7 @@ function wpdev_get_country_name($country_code) {
  * @param boolean|string $end_date The end date.
  * @return array
  */
+if (!function_exists('wpdev_get_countries_of_customers')) {
 function wpdev_get_countries_of_customers($count = 10, $start_date = false, $end_date = false) {
 
 	global $wpdb;
@@ -469,7 +488,9 @@ function wpdev_get_countries_of_customers($count = 10, $start_date = false, $end
 
 	return $countries;
 
-} // end wpdev_get_countries_of_customers;
+}
+}
+ // end wpdev_get_countries_of_customers;
 
 /**
  * Get the list of countries and counts based on customers.
@@ -481,6 +502,7 @@ function wpdev_get_countries_of_customers($count = 10, $start_date = false, $end
  * @param boolean|string $end_date The end date.
  * @return array
  */
+if (!function_exists('wpdev_get_states_of_customers')) {
 function wpdev_get_states_of_customers($country_code, $count = 100, $start_date = false, $end_date = false) {
 
 	global $wpdb;
@@ -543,4 +565,6 @@ function wpdev_get_states_of_customers($country_code, $count = 100, $start_date 
 
 	return $_states;
 
-} // end wpdev_get_states_of_customers;
+}
+}
+ // end wpdev_get_states_of_customers;

@@ -19,6 +19,7 @@ defined( 'ABSPATH' ) || exit;
  * @since 2.0.0
  *
  */
+if (!function_exists('wpdev_validate_date')) {
 function wpdev_validate_date( $date, $format = 'Y-m-d H:i:s' ) {
 
 	if ( is_null( $date ) ) {
@@ -43,7 +44,9 @@ function wpdev_validate_date( $date, $format = 'Y-m-d H:i:s' ) {
 
 	return $d && $d->format( $format ) === $date;
 
-} // end wpdev_validate_date;
+}
+}
+ // end wpdev_validate_date;
 
 /**
  * Returns a Carbon object to deal with dates in a more compelling way.
@@ -59,6 +62,7 @@ function wpdev_validate_date( $date, $format = 'Y-m-d H:i:s' ) {
  * @see https://carbon.nesbot.com/docs/
  *
  */
+if (!function_exists('wpdev_date')) {
 function wpdev_date( $date = false ) {
 
 	if ( ! wpdev_validate_date( $date ) ) {
@@ -69,7 +73,9 @@ function wpdev_date( $date = false ) {
 
 	return \WPDevFramework\Dependencies\Carbon\Carbon::parse( $date );
 
-} // end wpdev_date;
+}
+}
+ // end wpdev_date;
 
 /**
  * Returns how many days ago the first date was in relation to the second date.
@@ -83,6 +89,7 @@ function wpdev_date( $date = false ) {
  * @since 1.7.0
  *
  */
+if (!function_exists('wpdev_get_days_ago')) {
 function wpdev_get_days_ago( $date_1, $date_2 = false ) {
 
 	$datetime_1 = wpdev_date( $date_1 );
@@ -91,7 +98,9 @@ function wpdev_get_days_ago( $date_1, $date_2 = false ) {
 
 	return - $datetime_1->diffInDays( $datetime_2, false );
 
-} // end wpdev_get_days_ago;
+}
+}
+ // end wpdev_get_days_ago;
 
 /**
  * Returns the current time from the network
@@ -101,11 +110,14 @@ function wpdev_get_days_ago( $date_1, $date_2 = false ) {
  *
  * @return string
  */
+if (!function_exists('wpdev_get_current_time')) {
 function wpdev_get_current_time( $type = 'mysql', $gmt = false ) {
 
 	return current_time( $type, $gmt ); // phpcs:ignore
 
-} // end wpdev_get_current_time;
+}
+}
+ // end wpdev_get_current_time;
 
 /**
  * Returns a more user friendly version of the duration unit string.
@@ -117,6 +129,7 @@ function wpdev_get_current_time( $type = 'mysql', $gmt = false ) {
  * @since 2.0.0
  *
  */
+if (!function_exists('wpdev_filter_duration_unit')) {
 function wpdev_filter_duration_unit( $unit, $length ) {
 
 	$new_unit = '';
@@ -138,7 +151,9 @@ function wpdev_filter_duration_unit( $unit, $length ) {
 
 	return $new_unit;
 
-} // end wpdev_filter_duration_unit;
+}
+}
+ // end wpdev_filter_duration_unit;
 /**
  * Get the human time diff.
  *
@@ -149,6 +164,7 @@ function wpdev_filter_duration_unit( $unit, $length ) {
  * @since 2.0.0
  *
  */
+if (!function_exists('wpdev_human_time_diff')) {
 function wpdev_human_time_diff( $from, $limit = '-5 days', $to = false ): string {
 
 	$timestamp_from = is_numeric( $from ) ? $from : strtotime( get_date_from_gmt( $from ) );
@@ -173,7 +189,9 @@ function wpdev_human_time_diff( $from, $limit = '-5 days', $to = false ): string
 
 	return sprintf( $placeholder, human_time_diff( $timestamp_from, $to ) );
 
-} // end wpdev_human_time_diff;
+}
+}
+ // end wpdev_human_time_diff;
 
 /**
  * Converts php DateTime format to Javascript Moment format.
@@ -184,6 +202,7 @@ function wpdev_human_time_diff( $from, $limit = '-5 days', $to = false ): string
  * @since 2.0.10
  *
  */
+if (!function_exists('wpdev_convert_php_date_format_to_moment_js_format')) {
 function wpdev_convert_php_date_format_to_moment_js_format( $php_date_format ): string {
 
 	$replacements = array(
@@ -236,4 +255,6 @@ function wpdev_convert_php_date_format_to_moment_js_format( $php_date_format ): 
 
 	return strtr( $php_date_format, $replacements );
 
-} // end wpdev_convert_php_date_format_to_moment_js_format;
+}
+}
+ // end wpdev_convert_php_date_format_to_moment_js_format;

@@ -6,10 +6,12 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { promisify } from "node:util";
+import { fileURLToPath } from "node:url";
 
 import { scopeFrameworkCoreForConsumer } from "../inline-wpdev-closure.mjs";
 import { protectCrossPluginModuleRegistrations } from "../assemble-profile-s-candidate.mjs";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const execFileAsync = promisify(execFile);
 
 test("Multi-Plugin Coexistence: scopeFrameworkCoreForConsumer isolates Core to consumer namespace", async () => {
@@ -153,10 +155,57 @@ namespace {
   const phpFile = path.join(tmpDir, "test.php");
   await writeFile(phpFile, phpScript, "utf8");
 
-  try {
+    try {
     const { stdout } = await execFileAsync("php", [phpFile]);
     assert.equal(stdout.trim(), "COEXISTENCE_OK");
   } finally {
     await rm(tmpDir, { recursive: true, force: true });
   }
 });
+
+test("Multi-Plugin Coexistence: inlined helper functions coexist with framework helper in both load orders without redeclaration errors", async () => {
+  const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "coexistence-helper-test-"));
+  const frameworkHelper = path.resolve(__dirname, "../../wpdev-framework/modules/core/src/functions/helper.php");
+
+  // Load Order A: Inlined Closure first, then Framework helper second
+  const scriptA = `<?php
+define('ABSPATH', '${tmpDir}/');
+if (!function_exists('wpdev_get_version')) {
+    function wpdev_get_version() { return 'inlined-closure'; }
+}
+if (!function_exists('wpdev_is_debug')) {
+    function wpdev_is_debug() { return true; }
+}
+require_once '${frameworkHelper}';
+assert(function_exists('wpdev_get_version'));
+assert(wpdev_get_version() === 'inlined-closure');
+echo "ORDER_A_OK\\n";
+`;
+
+  // Load Order B: Framework helper first, then Inlined Closure second
+  const scriptB = `<?php
+define('ABSPATH', '${tmpDir}/');
+require_once '${frameworkHelper}';
+if (!function_exists('wpdev_get_version')) {
+    function wpdev_get_version() { return 'inlined-closure'; }
+}
+assert(function_exists('wpdev_get_version'));
+echo "ORDER_B_OK\\n";
+`;
+
+  const fileA = path.join(tmpDir, "order-a.php");
+  const fileB = path.join(tmpDir, "order-b.php");
+  await writeFile(fileA, scriptA, "utf8");
+  await writeFile(fileB, scriptB, "utf8");
+
+  try {
+    const resA = await execFileAsync("php", [fileA]);
+    assert.equal(resA.stdout.trim(), "ORDER_A_OK");
+
+    const resB = await execFileAsync("php", [fileB]);
+    assert.equal(resB.stdout.trim(), "ORDER_B_OK");
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
+

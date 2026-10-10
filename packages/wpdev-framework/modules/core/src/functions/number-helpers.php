@@ -17,6 +17,7 @@ defined('ABSPATH') || exit;
  * @param string $str The string to process.
  * @return int
  */
+if (!function_exists('wpdev_extract_number')) {
 function wpdev_extract_number($str) {
 
 	$matches = array();
@@ -25,7 +26,9 @@ function wpdev_extract_number($str) {
 
 	return isset($matches[0][0]) ? (int) $matches[0][0] : 0;
 
-} // end wpdev_extract_number;
+}
+}
+ // end wpdev_extract_number;
 
 /**
  * Converts formatted values back into floats.
@@ -36,6 +39,7 @@ function wpdev_extract_number($str) {
  * @param bool  $decimal_separator The decimal separator.
  * @return float
  */
+if (!function_exists('wpdev_to_float')) {
 function wpdev_to_float($num, $decimal_separator = false) {
 
 	if (is_float($num) || is_numeric($num)) {
@@ -64,4 +68,6 @@ function wpdev_to_float($num, $decimal_separator = false) {
 
 	return floatval($val);
 
-} // end wpdev_to_float;
+}
+}
+ // end wpdev_to_float;

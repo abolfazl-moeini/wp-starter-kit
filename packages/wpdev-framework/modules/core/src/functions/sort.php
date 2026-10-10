@@ -19,6 +19,7 @@ defined('ABSPATH') || exit;
  * @param string $column The column to compare.
  * @return int
  */
+if (!function_exists('wpdev_sort_by_column')) {
 function wpdev_sort_by_column($a, $b, $column = 'order') {
 
 	$a[$column] = isset($a[$column]) ? (int) $a[$column] : 50;
@@ -27,7 +28,9 @@ function wpdev_sort_by_column($a, $b, $column = 'order') {
 
 	return $a[$column] - $b[$column];
 
-} // end wpdev_sort_by_column;
+}
+}
+ // end wpdev_sort_by_column;
 
 /**
  * Sorts the fields.
@@ -36,11 +39,14 @@ function wpdev_sort_by_column($a, $b, $column = 'order') {
  * @param array $b The second array containing a order key.
  * @return int
  */
+if (!function_exists('wpdev_sort_by_order')) {
 function wpdev_sort_by_order($a, $b) {
 
 	return wpdev_sort_by_column($a, $b, 'order');
 
-} // end wpdev_sort_by_order;
+}
+}
+ // end wpdev_sort_by_order;
 
 /**
  * Loops through the list items and adds a order key if none is set, based on the index.
@@ -51,6 +57,7 @@ function wpdev_sort_by_order($a, $b) {
  * @param string $order_key The order key.
  * @return array
  */
+if (!function_exists('wpdev_set_order_from_index')) {
 function wpdev_set_order_from_index($list, $order_key = 'order') {
 
 	$index = 1;
@@ -71,4 +78,6 @@ function wpdev_set_order_from_index($list, $order_key = 'order') {
 
 	return $list;
 
-} // end wpdev_set_order_from_index;
+}
+}
+ // end wpdev_set_order_from_index;

@@ -15,8 +15,11 @@ defined('ABSPATH') || exit;
  * @since 2.0.5
  * @return void
  */
+if (!function_exists('wpdev_element_setup_preview')) {
 function wpdev_element_setup_preview() {
 
 	!did_action('wpdev_element_preview') && do_action('wpdev_element_preview');
 
-} // end wpdev_element_setup_preview;
+}
+}
+ // end wpdev_element_setup_preview;

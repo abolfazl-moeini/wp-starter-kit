@@ -18,6 +18,7 @@ defined('ABSPATH') || exit;
  * @param string $function Action Scheduler public function name.
  * @return bool
  */
+if (!function_exists('wpdev_action_scheduler_available')) {
 function wpdev_action_scheduler_available( $function = '' ) {
 
 	if ( '' === $function ) {
@@ -26,7 +27,9 @@ function wpdev_action_scheduler_available( $function = '' ) {
 
 	return function_exists( $function );
 
-} // end wpdev_action_scheduler_available;
+}
+}
+ // end wpdev_action_scheduler_available;
 
 /**
  * Returns how much time it takes until the next queue. In seconds.
@@ -34,6 +37,7 @@ function wpdev_action_scheduler_available( $function = '' ) {
  * @since 2.0.0
  * @return int
  */
+if (!function_exists('wpdev_get_next_queue_run')) {
 function wpdev_get_next_queue_run() {
 
 	if (class_exists('ActionScheduler')) {
@@ -44,7 +48,9 @@ function wpdev_get_next_queue_run() {
 
 	return 0;
 
-} // end wpdev_get_next_queue_run;
+}
+}
+ // end wpdev_get_next_queue_run;
 
 /**
  * Enqueue an action to run one time, as soon as possible.
@@ -56,6 +62,7 @@ function wpdev_get_next_queue_run() {
  * @param string $group The group to assign this job to.
  * @return int The action ID.
  */
+if (!function_exists('wpdev_enqueue_async_action')) {
 function wpdev_enqueue_async_action($hook, $args = array(), $group = '') {
 
 	if ( ! wpdev_action_scheduler_available( 'as_enqueue_async_action' ) ) {
@@ -64,7 +71,9 @@ function wpdev_enqueue_async_action($hook, $args = array(), $group = '') {
 
 	return wpdev_switch_blog_and_run(fn() => as_enqueue_async_action($hook, $args, $group));
 
-} // end wpdev_enqueue_async_action;
+}
+}
+ // end wpdev_enqueue_async_action;
 
 /**
  * Schedule an action to run one time.
@@ -78,6 +87,7 @@ function wpdev_enqueue_async_action($hook, $args = array(), $group = '') {
  *
  * @return int The action ID.
  */
+if (!function_exists('wpdev_schedule_single_action')) {
 function wpdev_schedule_single_action($timestamp, $hook, $args = array(), $group = '') {
 
 	if ( ! wpdev_action_scheduler_available( 'as_schedule_single_action' ) ) {
@@ -86,7 +96,9 @@ function wpdev_schedule_single_action($timestamp, $hook, $args = array(), $group
 
 	return wpdev_switch_blog_and_run(fn() => as_schedule_single_action($timestamp, $hook, $args, $group));
 
-} // end wpdev_schedule_single_action;
+}
+}
+ // end wpdev_schedule_single_action;
 
 /**
  * Schedule a recurring action.
@@ -101,6 +113,7 @@ function wpdev_schedule_single_action($timestamp, $hook, $args = array(), $group
  *
  * @return int The action ID.
  */
+if (!function_exists('wpdev_schedule_recurring_action')) {
 function wpdev_schedule_recurring_action($timestamp, $interval_in_seconds, $hook, $args = array(), $group = '') {
 
 	if ( ! wpdev_action_scheduler_available( 'as_schedule_recurring_action' ) ) {
@@ -109,7 +122,9 @@ function wpdev_schedule_recurring_action($timestamp, $interval_in_seconds, $hook
 
 	return wpdev_switch_blog_and_run(fn() => as_schedule_recurring_action($timestamp, $interval_in_seconds, $hook, $args, $group));
 
-} // end wpdev_schedule_recurring_action;
+}
+}
+ // end wpdev_schedule_recurring_action;
 
 /**
  * Schedule an action that recurs on a cron-like schedule.
@@ -136,6 +151,7 @@ function wpdev_schedule_recurring_action($timestamp, $interval_in_seconds, $hook
  *
  * @return int The action ID.
  */
+if (!function_exists('wpdev_schedule_cron_action')) {
 function wpdev_schedule_cron_action($timestamp, $schedule, $hook, $args = array(), $group = '') {
 
 	if ( ! wpdev_action_scheduler_available( 'as_schedule_cron_action' ) ) {
@@ -144,7 +160,9 @@ function wpdev_schedule_cron_action($timestamp, $schedule, $hook, $args = array(
 
 	return wpdev_switch_blog_and_run(fn() => as_schedule_cron_action($timestamp, $schedule, $hook, $args, $group));
 
-} // end wpdev_schedule_cron_action;
+}
+}
+ // end wpdev_schedule_cron_action;
 
 /**
  * Cancel the next occurrence of a scheduled action.
@@ -157,6 +175,7 @@ function wpdev_schedule_cron_action($timestamp, $schedule, $hook, $args = array(
  *
  * @return string|null The scheduled action ID if a scheduled action was found, or null if no matching action found.
  */
+if (!function_exists('wpdev_unschedule_action')) {
 function wpdev_unschedule_action($hook, $args = array(), $group = '') {
 
 	if ( ! wpdev_action_scheduler_available( 'as_unschedule_action' ) ) {
@@ -165,7 +184,9 @@ function wpdev_unschedule_action($hook, $args = array(), $group = '') {
 
 	return wpdev_switch_blog_and_run(fn() => as_unschedule_action($hook, $args, $group));
 
-} // end wpdev_unschedule_action;
+}
+}
+ // end wpdev_unschedule_action;
 
 /**
  * Cancel all occurrences of a scheduled action.
@@ -176,6 +197,7 @@ function wpdev_unschedule_action($hook, $args = array(), $group = '') {
  * @param array  $args Args that would have been passed to the job.
  * @param string $group The group the job is assigned to.
  */
+if (!function_exists('wpdev_unschedule_all_actions')) {
 function wpdev_unschedule_all_actions($hook, $args = array(), $group = '' ) {
 
 	if ( ! wpdev_action_scheduler_available( 'as_unschedule_all_actions' ) ) {
@@ -184,7 +206,9 @@ function wpdev_unschedule_all_actions($hook, $args = array(), $group = '' ) {
 
 	return wpdev_switch_blog_and_run(fn() => as_unschedule_all_actions($hook, $args, $group));
 
-} // end wpdev_unschedule_all_actions;
+}
+}
+ // end wpdev_unschedule_all_actions;
 
 /**
  * Check if there is an existing action in the queue with a given hook, args and group combination.
@@ -203,6 +227,7 @@ function wpdev_unschedule_all_actions($hook, $args = array(), $group = '' ) {
  *
  * @return int|bool The timestamp for the next occurrence of a pending scheduled action, true for an async or in-progress action or false if there is no matching action.
  */
+if (!function_exists('wpdev_next_scheduled_action')) {
 function wpdev_next_scheduled_action($hook, $args = null, $group = '') {
 
 	if ( ! wpdev_action_scheduler_available( 'as_next_scheduled_action' ) ) {
@@ -211,7 +236,9 @@ function wpdev_next_scheduled_action($hook, $args = null, $group = '') {
 
 	return wpdev_switch_blog_and_run(fn() => as_next_scheduled_action($hook, $args, $group));
 
-} // end wpdev_next_scheduled_action;
+}
+}
+ // end wpdev_next_scheduled_action;
 
 /**
  * Find scheduled actions.
@@ -223,6 +250,7 @@ function wpdev_next_scheduled_action($hook, $args = null, $group = '') {
  *
  * @return array
  */
+if (!function_exists('wpdev_get_scheduled_actions')) {
 function wpdev_get_scheduled_actions($args = array(), $return_format = OBJECT) {
 
 	if ( ! wpdev_action_scheduler_available( 'as_get_scheduled_actions' ) ) {
@@ -231,4 +259,6 @@ function wpdev_get_scheduled_actions($args = array(), $return_format = OBJECT) {
 
 	return wpdev_switch_blog_and_run(fn() => as_get_scheduled_actions($args, $return_format));
 
-} // end wpdev_get_scheduled_actions;
+}
+}
+ // end wpdev_get_scheduled_actions;

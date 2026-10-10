@@ -45,3 +45,9 @@ strauss/
 
 # Doc locks
 *.publish.lock
+
+# Documentation binaries (PDF / Word)
+*.pdf
+*.docx
+*.doc
+dist/docs/

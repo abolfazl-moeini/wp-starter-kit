@@ -18,8 +18,11 @@ defined('ABSPATH') || exit;
  * @param  bool   $return_default If we should return a default value.
  * @return string
  */
+if (!function_exists('wpdev_get_documentation_url')) {
 function wpdev_get_documentation_url($slug, $return_default = true) {
 
 	return \WPDevFramework\Documentation::get_instance()->get_link($slug, $return_default);
 
-} // end wpdev_get_documentation_url;
+}
+}
+ // end wpdev_get_documentation_url;

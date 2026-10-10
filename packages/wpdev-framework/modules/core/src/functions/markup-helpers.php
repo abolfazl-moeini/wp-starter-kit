@@ -17,13 +17,16 @@ defined('ABSPATH') || exit;
  * @param array $state_array The array to convert.
  * @return string
  */
+if (!function_exists('wpdev_convert_to_state')) {
 function wpdev_convert_to_state($state_array = array()) {
 
 	$object = (object) $state_array; // Force object to prevent issues with Vue.
 
 	return json_encode($object);
 
-} // end wpdev_convert_to_state;
+}
+}
+ // end wpdev_convert_to_state;
 
 /**
  * Clean up p tags around block elements.
@@ -33,6 +36,7 @@ function wpdev_convert_to_state($state_array = array()) {
  * @param string $content The content.
  * @return string
  */
+if (!function_exists('wpdev_remove_empty_p')) {
 function wpdev_remove_empty_p($content): ?string {
 
 	$content = preg_replace(array(
@@ -51,7 +55,9 @@ function wpdev_remove_empty_p($content): ?string {
 
 	return preg_replace('#<p>(\s|&nbsp;)*+(<br\s*/*>)*(\s|&nbsp;)*</p>#i', '', $content);
 
-} // end wpdev_remove_empty_p;
+}
+}
+ // end wpdev_remove_empty_p;
 /**
  * Generates a string containing html attributes to be used inside html tags.
  *
@@ -71,13 +77,16 @@ function wpdev_remove_empty_p($content): ?string {
  *
  * @param array $attributes The list of attributes.
  */
+if (!function_exists('wpdev_array_to_html_attrs')) {
 function wpdev_array_to_html_attrs($attributes = array()): string {
 
 	$attributes = array_map(fn($key, $value) => $key . '="' . htmlspecialchars((string) $value) . '"', array_keys($attributes), $attributes);
 
 	return implode(' ', $attributes);
 
-} // end wpdev_array_to_html_attrs;
+}
+}
+ // end wpdev_array_to_html_attrs;
 
 /**
  * Adds a tooltip icon.
@@ -88,6 +97,7 @@ function wpdev_array_to_html_attrs($attributes = array()): string {
  * @param string $icon Dashicon to display as the icon.
  * @return string
  */
+if (!function_exists('wpdev_tooltip')) {
 function wpdev_tooltip($tooltip, $icon = 'dashicons-editor-help') {
 
 	if (empty($tooltip)) {
@@ -112,7 +122,9 @@ function wpdev_tooltip($tooltip, $icon = 'dashicons-editor-help') {
 
 	return $markup;
 
-} // end wpdev_tooltip;
+}
+}
+ // end wpdev_tooltip;
 /**
  * Adds a tooltip to a HTML element. Needs to be echo'ed.
  *
@@ -120,11 +132,14 @@ function wpdev_tooltip($tooltip, $icon = 'dashicons-editor-help') {
  *
  * @param string $tooltip Message to display.
  */
+if (!function_exists('wpdev_tooltip_text')) {
 function wpdev_tooltip_text($tooltip): string {
 
 	return sprintf('role="tooltip" aria-label="%s"', esc_attr($tooltip));
 
-} // end wpdev_tooltip_text;
+}
+}
+ // end wpdev_tooltip_text;
 /**
  * Adds a preview tag that displays the image passed on hover.
  *
@@ -133,6 +148,7 @@ function wpdev_tooltip_text($tooltip): string {
  * @param string  $image_url The image URL.
  * @param boolean $label The label for the preview tag. Defaults to Preview.
  */
+if (!function_exists('wpdev_preview_image')) {
 function wpdev_preview_image($image_url, $label = false): string {
 
 	if (empty($label)) {
@@ -143,7 +159,9 @@ function wpdev_preview_image($image_url, $label = false): string {
 
 	return sprintf(' <span class="wpdev-image-preview wpdev-text-gray-600 wpdev-bg-gray-200 wpdev-p-1 wpdev-px-2 wpdev-ml-1 wpdev-inline-block wpdev-text-2xs wpdev-uppercase wpdev-font-bold wpdev-rounded wpdev-cursor-pointer wpdev-border-gray-300 wpdev-border wpdev-border-solid" data-image="%s">%s %s</span>', $image_url, "<span class='dashicons-wpdev-image wpdev-align-middle wpdev-mr-1'></span>", $label);
 
-} // end wpdev_preview_image;
+}
+}
+ // end wpdev_preview_image;
 
 /**
  * Returns the list of available icons. To add more icons you need use the filter
@@ -156,6 +174,7 @@ function wpdev_preview_image($image_url, $label = false): string {
  *
  * @return array With all available icons.
  */
+if (!function_exists('wpdev_get_icons_list')) {
 function wpdev_get_icons_list() {
 
 	$all_icons = array();
@@ -758,7 +777,9 @@ function wpdev_get_icons_list() {
 
 	return apply_filters('wpdev_icons_list', $all_icons);
 
-} // end wpdev_get_icons_list;
+}
+}
+ // end wpdev_get_icons_list;
 
 /**
  * Checks if the current theme is a block theme.
@@ -766,6 +787,7 @@ function wpdev_get_icons_list() {
  * @since 2.0.11
  * @return boolean
  */
+if (!function_exists('wpdev_is_block_theme')) {
 function wpdev_is_block_theme() {
 
 	if (function_exists('wp_is_block_theme')) {
@@ -776,7 +798,9 @@ function wpdev_is_block_theme() {
 
 	return false;
 
-} // end wpdev_is_block_theme;
+}
+}
+ // end wpdev_is_block_theme;
 
 /**
  * Returns the HTML markup of an empty state page.
@@ -790,6 +814,7 @@ function wpdev_is_block_theme() {
  * @param array $args List of the page arguments.
  * @return string
  */
+if (!function_exists('wpdev_render_empty_state')) {
 function wpdev_render_empty_state($args = array()) {
 
 	$args = wp_parse_args($args, array(
@@ -804,4 +829,6 @@ function wpdev_render_empty_state($args = array()) {
 
 	return wpdev_get_template_contents('base/empty-state', $args);
 
-} // end wpdev_render_empty_state;
+}
+}
+ // end wpdev_render_empty_state;

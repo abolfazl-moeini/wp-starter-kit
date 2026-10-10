@@ -21,11 +21,14 @@ defined( 'ABSPATH' ) || exit;
  * @param bool                 $replace    Replace existing id. Default true.
  * @return bool
  */
+if (!function_exists('wpdev_register_metabox')) {
 function wpdev_register_metabox( $page_id, $metabox_id, array $config = array(), $replace = true ) {
 
 	return Metabox_Registry::register( $page_id, $metabox_id, $config, $replace );
 
-} // end wpdev_register_metabox;
+}
+}
+ // end wpdev_register_metabox;
 
 /**
  * Get a registered metabox config.
@@ -36,11 +39,14 @@ function wpdev_register_metabox( $page_id, $metabox_id, array $config = array(),
  * @param string $metabox_id Metabox id.
  * @return array<string, mixed>|null
  */
+if (!function_exists('wpdev_get_metabox')) {
 function wpdev_get_metabox( $page_id, $metabox_id ) {
 
 	return Metabox_Registry::get( $page_id, $metabox_id );
 
-} // end wpdev_get_metabox;
+}
+}
+ // end wpdev_get_metabox;
 
 /**
  * Whether a metabox is registered.
@@ -51,11 +57,14 @@ function wpdev_get_metabox( $page_id, $metabox_id ) {
  * @param string $metabox_id Metabox id.
  * @return bool
  */
+if (!function_exists('wpdev_has_metabox')) {
 function wpdev_has_metabox( $page_id, $metabox_id ) {
 
 	return Metabox_Registry::has( $page_id, $metabox_id );
 
-} // end wpdev_has_metabox;
+}
+}
+ // end wpdev_has_metabox;
 
 /**
  * List metaboxes for a page.
@@ -65,6 +74,7 @@ function wpdev_has_metabox( $page_id, $metabox_id ) {
  * @param string $page_id Admin page slug. Empty returns all pages.
  * @return array<string, array<string, mixed>>
  */
+if (!function_exists('wpdev_list_metaboxes')) {
 function wpdev_list_metaboxes( $page_id = '' ) {
 
 	if ( '' === (string) $page_id ) {
@@ -73,7 +83,9 @@ function wpdev_list_metaboxes( $page_id = '' ) {
 
 	return Metabox_Registry::get_for_page( $page_id );
 
-} // end wpdev_list_metaboxes;
+}
+}
+ // end wpdev_list_metaboxes;
 
 /**
  * Unregister a metabox.
@@ -84,8 +96,11 @@ function wpdev_list_metaboxes( $page_id = '' ) {
  * @param string $metabox_id Metabox id.
  * @return void
  */
+if (!function_exists('wpdev_unregister_metabox')) {
 function wpdev_unregister_metabox( $page_id, $metabox_id ) {
 
 	Metabox_Registry::unregister( $page_id, $metabox_id );
 
-} // end wpdev_unregister_metabox;
+}
+}
+ // end wpdev_unregister_metabox;

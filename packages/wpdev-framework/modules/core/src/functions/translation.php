@@ -17,6 +17,7 @@ defined('ABSPATH') || exit;
  * @param string $string The string to get.
  * @return string
  */
+if (!function_exists('wpdev_get_translatable_string')) {
 function wpdev_get_translatable_string($string) {
 
 	if (is_string($string) === false) {
@@ -31,4 +32,6 @@ function wpdev_get_translatable_string($string) {
 
 	return wpdev_get_isset($translatable_strings, $string, $string);
 
-} // end wpdev_get_translatable_string;
+}
+}
+ // end wpdev_get_translatable_string;

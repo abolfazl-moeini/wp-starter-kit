@@ -22,8 +22,11 @@ use WPDevFramework\Modules\AdminCustomPage\Admin_Bar_Node_Registry;
  * @param bool                 $replace Replace existing id.
  * @return bool
  */
+if (!function_exists('wpdev_register_admin_bar_node')) {
 function wpdev_register_admin_bar_node( $id, array $config = array(), $replace = true ) {
 
 	return Admin_Bar_Node_Registry::register( $id, $config, $replace );
 
-} // end wpdev_register_admin_bar_node;
+}
+}
+ // end wpdev_register_admin_bar_node;

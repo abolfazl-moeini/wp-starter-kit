@@ -24,6 +24,7 @@ use \WPDevFramework\Dependencies\Mexitek\PHPColors\Color;
  * @param string $hex Hex code for the color. E.g. #000.
  * @return \WPDevFramework\Dependencies\Mexitek\PHPColors\Color
  */
+if (!function_exists('wpdev_color')) {
 function wpdev_color($hex) {
 
 	try {
@@ -38,7 +39,9 @@ function wpdev_color($hex) {
 
 	return $color;
 
-} // end wpdev_color;
+}
+}
+ // end wpdev_color;
 
 /**
  * Gets a random color for the progress bar.
@@ -48,6 +51,7 @@ function wpdev_color($hex) {
  * @param int $index The index number.
  * @return string
  */
+if (!function_exists('wpdev_get_random_color')) {
 function wpdev_get_random_color($index) {
 
 	$colors = array(
@@ -62,4 +66,6 @@ function wpdev_get_random_color($index) {
 
 	return wpdev_get_isset($colors, $index, $colors[ rand(0, count($colors) - 1) ]);
 
-} // end wpdev_get_random_color;
+}
+}
+ // end wpdev_get_random_color;

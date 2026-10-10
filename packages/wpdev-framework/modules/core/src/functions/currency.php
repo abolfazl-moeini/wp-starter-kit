@@ -14,6 +14,7 @@ defined('ABSPATH') || exit;
  *
  * @return array Return the currencies array.
  */
+if (!function_exists('wpdev_get_currencies')) {
 function wpdev_get_currencies(): array {
 
 	$currencies = apply_filters('wpdev_currencies', array(
@@ -70,7 +71,9 @@ function wpdev_get_currencies(): array {
 
 	return array_unique($currencies);
 
-} // end wpdev_get_currencies;
+}
+}
+ // end wpdev_get_currencies;
 
 /**
  * Gets the currency symbol of a currency.
@@ -80,6 +83,7 @@ function wpdev_get_currencies(): array {
  * @param string $currency Currency to get symbol of.
  * @return string
  */
+if (!function_exists('wpdev_get_currency_symbol')) {
 function wpdev_get_currency_symbol($currency = '') {
 
 	if (!$currency) {
@@ -222,7 +226,9 @@ function wpdev_get_currency_symbol($currency = '') {
 
 	return apply_filters('wpdev_currency_symbol', $currency_symbol, $currency);
 
-} // end wpdev_get_currency_symbol;
+}
+}
+ // end wpdev_get_currency_symbol;
 
 /**
  * Formats a value into our defined format
@@ -235,6 +241,7 @@ function wpdev_get_currency_symbol($currency = '') {
  * @param  string|null $precision Number of decimal places.
  * @return string Formatted Value.
  */
+if (!function_exists('wpdev_format_currency')) {
 function wpdev_format_currency($value, $currency = null, $format = null, $thousands_sep = null, $decimal_sep = null, $precision = null) {
 
 	$value = wpdev_to_float($value);
@@ -267,7 +274,9 @@ function wpdev_format_currency($value, $currency = null, $format = null, $thousa
 
 	return apply_filters('wpdev_format_currency', $format, $currency_symbol, $value);
 
-} // end wpdev_format_currency;
+}
+}
+ // end wpdev_format_currency;
 
 /**
  * Determines if WPDev is using a zero-decimal currency.
@@ -277,6 +286,7 @@ function wpdev_format_currency($value, $currency = null, $format = null, $thousa
  * @since  2.0.0
  * @return bool True if currency set to a zero-decimal currency.
  */
+if (!function_exists('wpdev_is_zero_decimal_currency')) {
 function wpdev_is_zero_decimal_currency($currency = 'USD') {
 
 	$zero_dec_currencies = array(
@@ -299,7 +309,9 @@ function wpdev_is_zero_decimal_currency($currency = 'USD') {
 
 	return apply_filters('wpdev_is_zero_decimal_currency', in_array($currency, $zero_dec_currencies, true));
 
-} // end wpdev_is_zero_decimal_currency;
+}
+}
+ // end wpdev_is_zero_decimal_currency;
 
 /**
  * Sets the number of decimal places based on the currency.
@@ -310,6 +322,7 @@ function wpdev_is_zero_decimal_currency($currency = 'USD') {
  * @since  2.0.0
  * @return int The number of decimal places.
  */
+if (!function_exists('wpdev_currency_decimal_filter')) {
 function wpdev_currency_decimal_filter($decimals = 2) {
 
 	$currency = 'USD';
@@ -322,7 +335,9 @@ function wpdev_currency_decimal_filter($decimals = 2) {
 
 	return apply_filters('wpdev_currency_decimal_filter', $decimals, $currency);
 
-} // end wpdev_currency_decimal_filter;
+}
+}
+ // end wpdev_currency_decimal_filter;
 
 /**
  * Returns the multiplier for the currency. Most currencies are multiplied by 100.
@@ -333,10 +348,13 @@ function wpdev_currency_decimal_filter($decimals = 2) {
  * @param string $currency The currency code, all uppercase.
  * @return int
  */
+if (!function_exists('wpdev_stripe_get_currency_multiplier')) {
 function wpdev_stripe_get_currency_multiplier($currency = 'USD') {
 
 	$multiplier = (wpdev_is_zero_decimal_currency($currency)) ? 1 : 100;
 
 	return apply_filters('wpdev_stripe_get_currency_multiplier', $multiplier, $currency);
 
-} // end wpdev_stripe_get_currency_multiplier;
+}
+}
+ // end wpdev_stripe_get_currency_multiplier;
