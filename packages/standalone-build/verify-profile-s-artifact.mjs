@@ -487,6 +487,13 @@ defined('ARRAY_N') || define('ARRAY_N', 'ARRAY_N');
 defined('OBJECT') || define('OBJECT', 'OBJECT');
 defined('OBJECT_K') || define('OBJECT_K', 'OBJECT_K');
 
+defined('MINUTE_IN_SECONDS') || define('MINUTE_IN_SECONDS', 60);
+defined('HOUR_IN_SECONDS')   || define('HOUR_IN_SECONDS', 3600);
+defined('DAY_IN_SECONDS')    || define('DAY_IN_SECONDS', 86400);
+defined('WEEK_IN_SECONDS')   || define('WEEK_IN_SECONDS', 604800);
+defined('MONTH_IN_SECONDS')  || define('MONTH_IN_SECONDS', 2592000);
+defined('YEAR_IN_SECONDS')   || define('YEAR_IN_SECONDS', 31536000);
+
 class WP_Error { public function get_error_message() { return ''; } public function get_error_code() { return ''; } }
 function is_wp_error($thing) { return $thing instanceof WP_Error; }
 

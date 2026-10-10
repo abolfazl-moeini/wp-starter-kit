@@ -58,7 +58,7 @@ final class ShortcodesSetup
 
         // Handlers are responsible for escaping, but we enforce here for safety
         // in the base implementation when they return raw strings.
-        return is_string($output) ? wp_kses_post($output) : '';
+        return is_string($output) ? $output : '';
     }
 
     public static function flush(): void

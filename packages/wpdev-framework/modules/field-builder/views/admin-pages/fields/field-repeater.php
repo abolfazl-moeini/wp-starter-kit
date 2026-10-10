@@ -112,6 +112,8 @@
     $show_add_new = false;
   }
 
+  $button_label = ! empty( $field->button ) ? $field->button : ( ! empty( $field->button_label ) ? $field->button_label : __( 'Add New Item', 'wpdev' ) );
+
   // 'allow_empty' control flag: when true, allows 0 rows without rendering an initial dummy row.
   $allow_empty = ! empty( $field->allow_empty );
   if ( array_key_exists( 'allow_empty', $field_atts ) ) {
@@ -376,7 +378,7 @@
 <li class="wpdev-block wpdev-full wpdev-pad-0 wpdev-mar-b-4" style="display:block !important;width:100% !important;box-sizing:border-box !important;" <?php echo $field->get_wrapper_html_attributes(); ?>>
 
   <a class="button wpdev-full wpdev-type-center" href="#" style="display:block !important;width:100% !important;text-align:center !important;" v-on:click.prevent="duplicate_and_clean($event, '.field-repeater-<?php echo esc_attr( sanitize_html_class( $field->id ) ); ?>')">
-      <?php _e( 'Add new Line', 'wpdev' ); ?>
+      <?php echo esc_html( $button_label ); ?>
   </a>
 
 </li>
