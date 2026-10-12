@@ -39,25 +39,27 @@ if ( ! defined( '{{slug_constant}}_PHP_MIN' ) ) {
 }
 
 if ( version_compare( PHP_VERSION, {{slug_constant}}_PHP_MIN, '<' ) ) {
-	/**
-	 * @return void
-	 */
-	function {{slug_underscore}}_php_version_notice() {
-		if ( function_exists( 'current_user_can' ) && ! current_user_can( 'activate_plugins' ) ) {
-			return;
-		}
-		printf(
-			'<div class="notice notice-error"><p>%s</p></div>',
-			esc_html(
-				sprintf(
-					/* translators: 1: plugin name, 2: required PHP version, 3: running PHP version */
-					__( '%1$s requires PHP %2$s or higher. This site is running PHP %3$s.', '{{textDomain}}' ),
-					'{{name}}',
-					{{slug_constant}}_PHP_MIN,
-					PHP_VERSION
+	if ( ! function_exists( '{{slug_underscore}}_php_version_notice' ) ) {
+		/**
+		 * @return void
+		 */
+		function {{slug_underscore}}_php_version_notice() {
+			if ( function_exists( 'current_user_can' ) && ! current_user_can( 'activate_plugins' ) ) {
+				return;
+			}
+			printf(
+				'<div class="notice notice-error"><p>%s</p></div>',
+				esc_html(
+					sprintf(
+						/* translators: 1: plugin name, 2: required PHP version, 3: running PHP version */
+						__( '%1$s requires PHP %2$s or higher. This site is running PHP %3$s.', '{{textDomain}}' ),
+						'{{name}}',
+						{{slug_constant}}_PHP_MIN,
+						PHP_VERSION
+					)
 				)
-			)
-		);
+			);
+		}
 	}
 	add_action( 'admin_notices', '{{slug_underscore}}_php_version_notice' );
 
@@ -86,6 +88,12 @@ if ( version_compare( PHP_VERSION, {{slug_constant}}_PHP_MIN, '<' ) ) {
 	// Do not load autoloaders or the rest of the plugin.
 	return;
 }
+
+// Prevent double bootstrap when co-installed copies (e.g. dev and standalone dist) coexist.
+if ( defined( '{{slug_constant}}_LOADED' ) ) {
+	return;
+}
+define( '{{slug_constant}}_LOADED', true );
 
 /*
  * -----------------------------------------------------------------------------
@@ -198,12 +206,14 @@ if ( ! function_exists( '{{slug_underscore}}_on_uninstall' ) ) {
  * plugin_dir_path(__FILE__) below.
  */
 add_action( 'init', '{{slug_underscore}}_load_textdomain', 1 );
-function {{slug_underscore}}_load_textdomain(): void {
-    load_plugin_textdomain(
-        '{{textDomain}}',
-        false,
-        dirname( plugin_basename( __FILE__ ) ) . '/languages'
-    );
+if ( ! function_exists( '{{slug_underscore}}_load_textdomain' ) ) {
+    function {{slug_underscore}}_load_textdomain(): void {
+        load_plugin_textdomain(
+            '{{textDomain}}',
+            false,
+            dirname( plugin_basename( __FILE__ ) ) . '/languages'
+        );
+    }
 }
 
 /*
@@ -222,47 +232,72 @@ add_action(
             return;
         }
         if ( defined( '{{slug_constant}}_PLUGIN_DIR' ) ) {
-            \WPDev\Core\Plugin::set_plugin_dir( {{slug_constant}}_PLUGIN_DIR );
+            if ( method_exists( \WPDev\Core\Plugin::class, 'set_plugin_dir' ) ) {
+                \WPDev\Core\Plugin::set_plugin_dir( {{slug_constant}}_PLUGIN_DIR );
+            }
             if (
                 class_exists( \WPDev\Support\Assets::class ) &&
                 defined( '{{slug_constant}}_PLUGIN_FILE' )
             ) {
-                \WPDev\Support\Assets::set_plugin_dir(
-                    {{slug_constant}}_PLUGIN_DIR,
-                    plugins_url( '', {{slug_constant}}_PLUGIN_FILE )
-                );
+                if ( method_exists( \WPDev\Support\Assets::class, 'set_plugin_dir' ) ) {
+                    \WPDev\Support\Assets::set_plugin_dir(
+                        {{slug_constant}}_PLUGIN_DIR,
+                        plugins_url( '', {{slug_constant}}_PLUGIN_FILE )
+                    );
+                }
                 // Shared vendors (handle: preact) — first registrant wins across plugins.
                 add_action(
                     'init',
                     static function (): void {
-                        \WPDev\Support\Assets::register_vendor_scripts();
+                        if ( method_exists( \WPDev\Support\Assets::class, 'register_vendor_scripts' ) ) {
+                            \WPDev\Support\Assets::register_vendor_scripts();
+                        }
                     },
                     1,
                     0
                 );
             }
         }
-        \WPDev\Core\Plugin::boot();
+        if ( method_exists( \WPDev\Core\Plugin::class, 'boot' ) ) {
+            \WPDev\Core\Plugin::boot();
+        }
     },
     10,
     0
 );
 // Safety net when plugins_loaded already fired (CLI / unit tests).
-if ( class_exists( \WPDev\Core\Plugin::class ) && did_action( 'plugins_loaded' ) ) {
+if (
+    class_exists( \WPDev\Core\Plugin::class )
+    && did_action( 'plugins_loaded' )
+    && ! ( defined( 'WP_SANDBOX_SCRAPING' ) && WP_SANDBOX_SCRAPING )
+) {
     if ( defined( '{{slug_constant}}_PLUGIN_DIR' ) ) {
-        \WPDev\Core\Plugin::set_plugin_dir( {{slug_constant}}_PLUGIN_DIR );
+        if ( method_exists( \WPDev\Core\Plugin::class, 'set_plugin_dir' ) ) {
+            \WPDev\Core\Plugin::set_plugin_dir( {{slug_constant}}_PLUGIN_DIR );
+        }
         if (
             class_exists( \WPDev\Support\Assets::class ) &&
             defined( '{{slug_constant}}_PLUGIN_FILE' )
         ) {
-            \WPDev\Support\Assets::set_plugin_dir(
-                {{slug_constant}}_PLUGIN_DIR,
-                plugins_url( '', {{slug_constant}}_PLUGIN_FILE )
-            );
-            // Shared vendors (handle: preact) — same contract as plugins_loaded path.
-            \WPDev\Support\Assets::register_vendor_scripts();
+            if ( method_exists( \WPDev\Support\Assets::class, 'set_plugin_dir' ) ) {
+                \WPDev\Support\Assets::set_plugin_dir(
+                    {{slug_constant}}_PLUGIN_DIR,
+                    plugins_url( '', {{slug_constant}}_PLUGIN_FILE )
+                );
+            }
+            if ( method_exists( \WPDev\Support\Assets::class, 'register_vendor_scripts' ) ) {
+                // Shared vendors (handle: preact) — same contract as plugins_loaded path.
+                \WPDev\Support\Assets::register_vendor_scripts();
+            }
         }
     }
-    \WPDev\Core\Plugin::boot();
-    \WPDev\Core\Plugin::loader()->boot_all();
+    if ( method_exists( \WPDev\Core\Plugin::class, 'boot' ) ) {
+        \WPDev\Core\Plugin::boot();
+    }
+    if ( method_exists( \WPDev\Core\Plugin::class, 'loader' ) ) {
+        $loader = \WPDev\Core\Plugin::loader();
+        if ( is_object( $loader ) && method_exists( $loader, 'boot_all' ) ) {
+            $loader->boot_all();
+        }
+    }
 }

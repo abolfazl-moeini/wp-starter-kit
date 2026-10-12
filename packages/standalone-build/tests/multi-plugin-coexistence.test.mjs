@@ -209,3 +209,84 @@ echo "ORDER_B_OK\\n";
   }
 });
 
+test("Multi-Plugin Coexistence: inlined closure with host framework detection coexists with UNGUARDED production framework helper", async () => {
+  const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "coexistence-unguarded-test-"));
+
+  // Create an UNGUARDED production framework helper (line 21 has no function_exists guard)
+  const unguardedFrameworkHelper = path.join(tmpDir, "framework-helper-unguarded.php");
+  await fs.promises.writeFile(
+    unguardedFrameworkHelper,
+    `<?php
+function wpdev_get_version() { return '2.13.11-prod'; }
+function wpdev_is_debug() { return false; }
+`,
+    "utf8"
+  );
+
+  // Inlined closure simulates functions-closure.php logic: detects active_plugins has wpdev/wpdev.php
+  const closureFunctionsDir = path.join(tmpDir, "functions");
+  await fs.promises.mkdir(closureFunctionsDir, { recursive: true });
+  await fs.promises.writeFile(
+    path.join(closureFunctionsDir, "helper.php"),
+    `<?php
+if (!function_exists('wpdev_get_version')) {
+    function wpdev_get_version() { return 'inlined-closure'; }
+}
+if (!function_exists('wpdev_is_debug')) {
+    function wpdev_is_debug() { return true; }
+}
+`,
+    "utf8"
+  );
+
+  // Test Order A: Inlined closure loads first on WordPress where wpdev is in active_plugins.
+  // Then the host plugin loads second (with unguarded helper).
+  const scriptA = `<?php
+define('ABSPATH', '\${tmpDir}/');
+$wp_options = array('active_plugins' => array('consumer-plugin/plugin.php', 'wpdev/wpdev.php'));
+function get_option($k, $d = array()) { global $wp_options; return isset($wp_options[$k]) ? $wp_options[$k] : $d; }
+
+// --- Inlined functions-closure.php execution ---
+$wpdev_is_host_framework_active = false;
+if (defined('WPDEV_BOOTSTRAP_FILE') || defined('WPDEV_VERSION')) {
+    $wpdev_is_host_framework_active = true;
+} else {
+    $wpdev_check_active = (array) get_option('active_plugins', array());
+    foreach ($wpdev_check_active as $wpdev_active_entry) {
+        $wpdev_active_norm = str_replace('\\\\\\\\', '/', $wpdev_active_entry);
+        if ('wpdev/wpdev.php' === $wpdev_active_norm || 'wpdev.php' === basename($wpdev_active_norm)) {
+            $wpdev_is_host_framework_active = true;
+            break;
+        }
+    }
+}
+
+$wpdev_closure_functions_dir = '${closureFunctionsDir}';
+if (!$wpdev_is_host_framework_active) {
+    foreach (glob($wpdev_closure_functions_dir . '/*.php') as $f) { require_once $f; }
+}
+
+// At this point, inlined closure deferral prevented premature declaration:
+assert(!function_exists('wpdev_get_version'));
+
+// --- Host wpdev plugin loads second with UNGUARDED helper ---
+require_once '${unguardedFrameworkHelper}';
+define('WPDEV_BOOTSTRAP_FILE', '\${tmpDir}/wpdev.php');
+
+assert(function_exists('wpdev_get_version'));
+assert(wpdev_get_version() === '2.13.11-prod');
+echo "PROD_UNGUARDED_COEXISTENCE_OK\\n";
+`;
+
+  const fileA = path.join(tmpDir, "order-a-prod.php");
+  await fs.promises.writeFile(fileA, scriptA, "utf8");
+
+  try {
+    const resA = await execFileAsync("php", [fileA]);
+    assert.equal(resA.stdout.trim(), "PROD_UNGUARDED_COEXISTENCE_OK");
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
+
+

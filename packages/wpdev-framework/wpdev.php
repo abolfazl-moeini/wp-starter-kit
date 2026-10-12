@@ -35,6 +35,13 @@
 // Exit if accessed directly
 defined( 'ABSPATH' ) || exit;
 
+// Prevent double bootstrap (standalone + embedded library or standalone plugins with inlined closure).
+if ( defined( 'WPDEV_LOADED' ) || function_exists( 'wpdev_services' ) ) {
+	return;
+}
+
+define( 'WPDEV_LOADED', true );
+define( 'WPDEV_BOOTSTRAP_FILE', __FILE__ );
 
 if ( ! defined( 'WPDEV_PLUGIN_FILE' ) ) {
 
@@ -42,11 +49,30 @@ if ( ! defined( 'WPDEV_PLUGIN_FILE' ) ) {
 
 } // end if;
 
+if ( ! defined( 'WPDEV_HOST_PLUGIN_FILE' ) ) {
+
+	define( 'WPDEV_HOST_PLUGIN_FILE', WPDEV_PLUGIN_FILE );
+
+} // end if;
+
+if ( ! defined( 'WPDEV_LIBRARY_MODE' ) ) {
+
+	define( 'WPDEV_LIBRARY_MODE', false );
+
+} // end if;
 
 /**
  * Require core file dependencies
  */
 require_once __DIR__ . '/constants.php';
+
+require_once __DIR__ . '/modules/core/src/functions/bootstrap-sandbox.php';
+
+if ( wpdev_should_skip_heavy_bootstrap() ) {
+	require_once __DIR__ . '/modules/core/src/class-hooks.php';
+	WPDevFramework\Hooks::init();
+	return;
+}
 
 require_once __DIR__ . '/autoload.php';
 
@@ -92,11 +118,15 @@ WPDevFramework\Hooks::init();
  * @return WPDev
  * @since 2.0.0
  */
-function wpdev() { // phpcs:ignore
+if ( ! function_exists( 'wpdev' ) ) {
 
-	return WPDev::get_instance();
+	function wpdev() { // phpcs:ignore
 
-} // end WPDev;
+		return WPDev::get_instance();
+
+	} // end WPDev;
+
+} // end if;
 
 add_action( 'plugins_loaded', function () {
 

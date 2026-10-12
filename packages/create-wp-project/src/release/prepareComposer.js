@@ -245,6 +245,9 @@ export function releaseStripFileNames() {
  */
 export function releaseStripFileGlobs() {
   return [
+    "*.md",
+    "*.MD",
+    "*.markdown",
     "coverage.xml*",
     "phpunit.xml*",
     "phpunit.xml",

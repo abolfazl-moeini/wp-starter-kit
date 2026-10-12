@@ -160,26 +160,28 @@ export function buildWpdevDependencyNoticeBlock(tpl = {}) {
  * BEGIN wpdev-dependency-notice
  */
 add_action( 'admin_notices', '${slugUnderscore}_wpdev_dependency_notice' );
-/**
- * @return void
- */
-function ${slugUnderscore}_wpdev_dependency_notice() {
-	if ( function_exists( 'wpdev_register_table' ) ) {
-		return;
-	}
-	if ( function_exists( 'current_user_can' ) && ! current_user_can( 'activate_plugins' ) ) {
-		return;
-	}
-	printf(
-		'<div class="notice notice-warning"><p>%s</p></div>',
-		esc_html(
-			sprintf(
-				/* translators: %s: plugin name */
-				__( '%s requires the WPDev Admin Framework plugin to be installed and active.', '${textDomain}' ),
-				'${name.replace(/'/g, "\\'")}'
+if ( ! function_exists( '${slugUnderscore}_wpdev_dependency_notice' ) ) {
+	/**
+	 * @return void
+	 */
+	function ${slugUnderscore}_wpdev_dependency_notice() {
+		if ( function_exists( 'wpdev_register_table' ) ) {
+			return;
+		}
+		if ( function_exists( 'current_user_can' ) && ! current_user_can( 'activate_plugins' ) ) {
+			return;
+		}
+		printf(
+			'<div class="notice notice-warning"><p>%s</p></div>',
+			esc_html(
+				sprintf(
+					/* translators: %s: plugin name */
+					__( '%s requires the WPDev Admin Framework plugin to be installed and active.', '${textDomain}' ),
+					'${name.replace(/'/g, "\\'")}'
+				)
 			)
-		)
-	);
+		);
+	}
 }
 /* END wpdev-dependency-notice */
 `;
@@ -245,7 +247,7 @@ export function stripWpdevDependencyNotice(phpSource) {
         "\n",
       )
       .replace(
-        /\r?\n?(?:\/\*\*[\s\S]*?\*\/\r?\n)?function\s+\w+_wpdev_dependency_notice\s*\([^)]*\)\s*(?::\s*void\s*)?\{[\s\S]*?\n\}\r?\n?/g,
+        /\r?\n?(?:if\s*\(\s*!\s*function_exists\s*\(\s*['"][^'"]*_wpdev_dependency_notice['"]\s*\)\s*\)\s*\{\s*)?(?:\/\*\*[\s\S]*?\*\/\r?\n)?function\s+\w+_wpdev_dependency_notice\s*\([^)]*\)\s*(?::\s*void\s*)?\{[\s\S]*?\n\}(?:\s*\})?\r?\n?/g,
         "\n",
       );
   }

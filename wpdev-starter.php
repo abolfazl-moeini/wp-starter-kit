@@ -18,6 +18,11 @@
 
 defined( 'ABSPATH' ) || exit;
 
+if ( defined( 'WPDEV_STARTER_LOADED' ) ) {
+	return;
+}
+define( 'WPDEV_STARTER_LOADED', true );
+
 if ( ! defined( 'WPDEV_STARTER_VERSION' )) {
 	define( 'WPDEV_STARTER_VERSION', '1.1.0' );
 }
@@ -43,15 +48,19 @@ foreach ($autoloadCandidates as $autoload) {
 // Inform Assets of the plugin root so path/URL resolution works correctly
 // regardless of whether the framework lives in packages/ (dev) or vendor/ (Composer).
 if ( class_exists( 'WPDev\\Support\\Assets' ) ) {
-	\WPDev\Support\Assets::set_plugin_dir(
-		WPDEV_STARTER_PLUGIN_DIR,
-		plugins_url( '', WPDEV_STARTER_PLUGIN_FILE )
-	);
+	if ( method_exists( 'WPDev\\Support\\Assets', 'set_plugin_dir' ) ) {
+		\WPDev\Support\Assets::set_plugin_dir(
+			WPDEV_STARTER_PLUGIN_DIR,
+			plugins_url( '', WPDEV_STARTER_PLUGIN_FILE )
+		);
+	}
 	// Shared vendors (handle: preact) — first registrant wins across plugins.
 	add_action(
 		'init',
 		static function (): void {
-			\WPDev\Support\Assets::register_vendor_scripts();
+			if ( method_exists( 'WPDev\\Support\\Assets', 'register_vendor_scripts' ) ) {
+				\WPDev\Support\Assets::register_vendor_scripts();
+			}
 		},
 		1,
 		0
@@ -97,12 +106,14 @@ if ( ! function_exists( 'wpdev_starter_on_uninstall' )) {
 }
 
 add_action( 'init', 'wpdev_starter_load_textdomain', 1 );
-function wpdev_starter_load_textdomain(): void {
-	load_plugin_textdomain(
-		'wpdev-starter',
-		false,
-		dirname( plugin_basename( __FILE__ ) ) . '/languages'
-	);
+if ( ! function_exists( 'wpdev_starter_load_textdomain' ) ) {
+	function wpdev_starter_load_textdomain(): void {
+		load_plugin_textdomain(
+			'wpdev-starter',
+			false,
+			dirname( plugin_basename( __FILE__ ) ) . '/languages'
+		);
+	}
 }
 
 /**
@@ -114,15 +125,30 @@ function wpdev_starter_load_textdomain(): void {
  * wp-cli, test bootstrap) — can re-run registration. An inline
  * closure cannot be called a second time by name; a function can.
  */
-function wpdev_starter_register_modules(): void {
-	WPDev\Core\Plugin::loader()->register( new WPDev\Modules\ExampleFeature\Module() );
-	WPDev\Core\Plugin::loader()->register( new WPDev\Modules\McpAbilities\Module() );
+if ( ! function_exists( 'wpdev_starter_register_modules' ) ) {
+	function wpdev_starter_register_modules(): void {
+		if ( ! class_exists( 'WPDev\\Core\\Plugin' ) || ! method_exists( 'WPDev\\Core\\Plugin', 'loader' ) ) {
+			return;
+		}
+		$loader = WPDev\Core\Plugin::loader();
+		if ( is_object( $loader ) && method_exists( $loader, 'register' ) ) {
+			if ( class_exists( 'WPDev\\Modules\\ExampleFeature\\Module' ) ) {
+				$loader->register( new WPDev\Modules\ExampleFeature\Module() );
+			}
+			if ( class_exists( 'WPDev\\Modules\\McpAbilities\\Module' ) ) {
+				$loader->register( new WPDev\Modules\McpAbilities\Module() );
+			}
+		}
+	}
 }
 
 add_action( 'plugins_loaded', 'wpdev_starter_register_modules', 5 );
 add_action( 'plugins_loaded', 'WPDev\\Core\\Plugin::boot', 10, 0 );
 
-if ( did_action( 'plugins_loaded' ) ) {
+if (
+	did_action( 'plugins_loaded' )
+	&& ! ( defined( 'WP_SANDBOX_SCRAPING' ) && WP_SANDBOX_SCRAPING )
+) {
 	// Late load: wpdev-starter.php was included after `plugins_loaded`
 	// already fired, so the add_action() calls above are too late to
 	// run. Re-run both halves of the normal flow so the plugin still
@@ -132,7 +158,14 @@ if ( did_action( 'plugins_loaded' ) ) {
 	// the loader. boot_all() fires the `_modules_loaded` action
 	// internally, so third-party listeners still see the signal
 	// even though `on_plugins_loaded` will not fire on this request.
-	WPDev\Core\Plugin::boot();
+	if ( method_exists( 'WPDev\\Core\\Plugin', 'boot' ) ) {
+		WPDev\Core\Plugin::boot();
+	}
 	wpdev_starter_register_modules();
-	WPDev\Core\Plugin::loader()->boot_all();
+	if ( method_exists( 'WPDev\\Core\\Plugin', 'loader' ) ) {
+		$loader = WPDev\Core\Plugin::loader();
+		if ( is_object( $loader ) && method_exists( $loader, 'boot_all' ) ) {
+			$loader->boot_all();
+		}
+	}
 }

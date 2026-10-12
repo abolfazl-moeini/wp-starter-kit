@@ -14,6 +14,8 @@ export const ROOT_DEV_DIRS = new Set([
   "bin",
   "docker-phpunit",
   "coverage",
+  "backup",
+  "backups",
   ".git",
   ".github",
   ".husky",

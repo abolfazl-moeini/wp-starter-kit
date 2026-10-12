@@ -207,9 +207,15 @@ describe("release strip / copy lists", () => {
     );
   });
 
-  test("strip globs cover coverage and phpunit xml", () => {
+  test("strip globs cover coverage, phpunit xml, and markdown files", () => {
     expect(releaseStripFileGlobs()).toEqual(
-      expect.arrayContaining(["coverage.xml*", "phpunit.xml*"]),
+      expect.arrayContaining([
+        "*.md",
+        "*.MD",
+        "*.markdown",
+        "coverage.xml*",
+        "phpunit.xml*",
+      ]),
     );
   });
 });
@@ -227,6 +233,9 @@ describe("shouldStripRelativePath", () => {
     ["CLAUDE.md", true],
     ["context.md", true],
     ["AGENTS.md", true],
+    ["README.md", true],
+    ["src/README.md", true],
+    ["includes/docs/guide.markdown", true],
     ["package.json", true],
     ["package-lock.json", true],
     ["phpunit.xml.dist", true],

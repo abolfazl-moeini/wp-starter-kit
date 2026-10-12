@@ -352,6 +352,10 @@ function shouldExcludeOnCopy(relative, excludeNames, outBase) {
     if (seg.startsWith(".") && seg !== "." && seg !== "..") return true;
   }
 
+  // Release documents / markdown exclusion at any depth
+  const base = segments[segments.length - 1];
+  if (base && /\.(md|markdown)$/i.test(base)) return true;
+
   // Root-only directory / file exclusions
   if (excludeNames.includes(rootSegment)) return true;
 

@@ -108,7 +108,11 @@ class Hooks {
 	 */
 	public static function on_deactivation() {
 
-		wpdev_log_add('wpdev-core', __('Deactivating WPDev...', 'wpdev'));
+		if ( function_exists( 'WPDevFramework\wpdev_log_add' ) ) {
+			wpdev_log_add('wpdev-core', __('Deactivating WPDev...', 'wpdev'));
+		} elseif ( function_exists( 'wpdev_log_add' ) ) {
+			\wpdev_log_add('wpdev-core', __('Deactivating WPDev...', 'wpdev'));
+		}
 
 		/*
 		 * Update the sunrise meta file.
