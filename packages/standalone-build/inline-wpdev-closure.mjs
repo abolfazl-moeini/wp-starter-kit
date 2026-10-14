@@ -931,7 +931,7 @@ export async function inlineWpdevClosure({
   let wpdevPluginDir;
   if (frameworkProvider) {
     wpdevPluginDir = frameworkProvider;
-  } else if (wpdevPluginDirOverride) {
+  } else if (wpdevPluginDirOverride && fs.existsSync(wpdevPluginDirOverride)) {
     wpdevPluginDir = wpdevPluginDirOverride;
   } else {
     const candidateProviderDirs = [
