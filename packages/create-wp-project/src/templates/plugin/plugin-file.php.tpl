@@ -258,8 +258,13 @@ add_action(
                 );
             }
         }
+        $config_file = is_readable( {{slug_constant}}_PLUGIN_DIR . 'wpdev.json' )
+            ? {{slug_constant}}_PLUGIN_DIR . 'wpdev.json'
+            : ( is_readable( {{slug_constant}}_PLUGIN_DIR . 'project.config.json' )
+                ? {{slug_constant}}_PLUGIN_DIR . 'project.config.json'
+                : null );
         if ( method_exists( \WPDev\Core\Plugin::class, 'boot' ) ) {
-            \WPDev\Core\Plugin::boot();
+            \WPDev\Core\Plugin::boot( $config_file );
         }
     },
     10,
@@ -291,8 +296,13 @@ if (
             }
         }
     }
+    $config_file = is_readable( {{slug_constant}}_PLUGIN_DIR . 'wpdev.json' )
+        ? {{slug_constant}}_PLUGIN_DIR . 'wpdev.json'
+        : ( is_readable( {{slug_constant}}_PLUGIN_DIR . 'project.config.json' )
+            ? {{slug_constant}}_PLUGIN_DIR . 'project.config.json'
+            : null );
     if ( method_exists( \WPDev\Core\Plugin::class, 'boot' ) ) {
-        \WPDev\Core\Plugin::boot();
+        \WPDev\Core\Plugin::boot( $config_file );
     }
     if ( method_exists( \WPDev\Core\Plugin::class, 'loader' ) ) {
         $loader = \WPDev\Core\Plugin::loader();

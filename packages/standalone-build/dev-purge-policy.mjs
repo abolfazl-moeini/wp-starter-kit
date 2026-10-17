@@ -16,6 +16,8 @@ export const ROOT_DEV_DIRS = new Set([
   "coverage",
   "backup",
   "backups",
+  "scripts",
+  "tools",
   ".git",
   ".github",
   ".husky",
@@ -253,6 +255,8 @@ export function getRsyncExcludeArgs() {
     "--exclude=/artifacts",
     "--exclude=/bin",
     "--exclude=/packages",
-    "--exclude=/docker-phpunit"
+    "--exclude=/docker-phpunit",
+    "--exclude=/scripts",
+    "--exclude=/tools"
   ];
 }

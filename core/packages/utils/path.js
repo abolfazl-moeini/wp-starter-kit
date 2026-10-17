@@ -43,11 +43,31 @@ export function dirname(path, levels = 1) {
  * @returns {string} The root directory path.
  */
 export function getRootPath() {
+  if (typeof process !== "undefined" && typeof process.cwd === "function") {
+    let cwdDir = process.cwd();
+    for (let i = 0; i < 12; i++) {
+      if (
+        existsSync(join(cwdDir, "wpdev.json")) ||
+        existsSync(join(cwdDir, "project.config.json"))
+      ) {
+        return cwdDir;
+      }
+      const parent = nodeDirname(cwdDir);
+      if (parent === cwdDir) {
+        break;
+      }
+      cwdDir = parent;
+    }
+  }
+
   const __filename = fileURLToPath(getMetaUrl());
   let dir = nodeDirname(__filename);
 
   for (let i = 0; i < 12; i++) {
-    if (existsSync(join(dir, "wpdev.json"))) {
+    if (
+      existsSync(join(dir, "wpdev.json")) ||
+      existsSync(join(dir, "project.config.json"))
+    ) {
       return dir;
     }
     const parent = nodeDirname(dir);

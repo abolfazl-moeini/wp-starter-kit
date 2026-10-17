@@ -81,6 +81,13 @@ final class Plugin {
 	private static ?array $config_cache = null;
 
 	/**
+	 * Map of parsed configs keyed by absolute path.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private static array $config_caches = array();
+
+	/**
 	 * The hook name fired by {@see Plugin::boot()}. Stored on the
 	 * instance so tests can observe what would have been passed to
 	 * `do_action()` without having to spy on the global WordPress
@@ -276,11 +283,12 @@ final class Plugin {
 	 * @throws \RuntimeException When the file is missing.
 	 */
 	public static function config( ?string $override_path = null ): array {
-		if ( null !== self::$config_cache && null === $override_path ) {
-			return self::$config_cache;
-		}
-
 		$path = $override_path ?? self::resolve_default_config_path();
+
+		if ( isset( self::$config_caches[ $path ] ) ) {
+			self::$config_cache = self::$config_caches[ $path ];
+			return self::$config_caches[ $path ];
+		}
 
 		if ( ! is_file( $path ) || ! is_readable( $path ) ) {
 			// The path is escaped before being placed in the user-
@@ -309,9 +317,9 @@ final class Plugin {
 			);
 		}
 
-		if ( null === $override_path ) {
-			self::$config_cache = $decoded;
-		}
+		self::$config_caches[ $path ] = $decoded;
+		self::$config_cache           = $decoded;
+
 		return $decoded;
 	}
 
@@ -358,6 +366,7 @@ final class Plugin {
 		self::$loaders                = array();
 		self::$config_path            = null;
 		self::$config_cache           = null;
+		self::$config_caches          = array();
 		self::$last_hook              = null;
 		self::$booted                 = false;
 		self::$booted_plugins         = array();
@@ -388,7 +397,9 @@ final class Plugin {
 	 *                           the override.
 	 */
 	public static function set_plugin_dir( ?string $path ): void {
-		self::$plugin_dir = ( null === $path || '' === $path ) ? null : $path;
+		self::$plugin_dir   = ( null === $path || '' === $path ) ? null : $path;
+		self::$config_path  = null;
+		self::$config_cache = null;
 	}
 
 	/**

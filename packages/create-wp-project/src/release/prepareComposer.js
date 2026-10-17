@@ -147,6 +147,8 @@ export function releaseStripDirNames() {
     "artifacts",
     "addons",
     "bin",
+    "scripts",
+    "tools",
   ];
 }
 
