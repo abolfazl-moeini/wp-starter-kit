@@ -153,20 +153,25 @@ class Compat {
 			return false;
 		}
 
-		$hash = md5( $path . '|' . $param_key . '|' . $rules );
-		$opt  = 'wpdev_wf_al_' . $hash;
-
-		if ( function_exists( 'get_option' ) && get_option( $opt ) ) {
-			return true;
-		}
-
 		if ( class_exists( 'wfWAF', false ) && ( $waf = \wfWAF::getInstance() ) ) {
+			if ( method_exists( $waf, 'isRuleParamWhitelisted' ) && $waf->isRuleParamWhitelisted( $rules, $path, $param_key ) ) {
+				return true;
+			}
+
 			$waf->whitelistRuleForParam( $path, $param_key, $rules, 'Allowlisted via WPDev Compat Module' );
 
+			$hash = md5( $path . '|' . $param_key . '|' . $rules );
+			$opt  = 'wpdev_wf_al_' . $hash;
 			if ( function_exists( 'update_option' ) ) {
 				update_option( $opt, 1, false );
 			}
 
+			return true;
+		}
+
+		$hash = md5( $path . '|' . $param_key . '|' . $rules );
+		$opt  = 'wpdev_wf_al_' . $hash;
+		if ( function_exists( 'get_option' ) && get_option( $opt ) ) {
 			return true;
 		}
 
