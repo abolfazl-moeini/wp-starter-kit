@@ -108,7 +108,20 @@ class Field implements \JsonSerializable {
 			'suffix'            => '',
 			'prefix_html_attr'  => array(),
 			'suffix_html_attr'  => array(),
+			'safe_transport'    => false,
 		));
+
+		// Repeater fields default to sortable = true unless explicitly configured.
+		if ( isset( $this->atts['type'] ) && 'repeater' === $this->atts['type'] && ! isset( $atts['sortable'] ) ) {
+			$this->atts['sortable'] = true;
+		}
+
+		if ( ! empty( $this->atts['safe_transport'] ) ) {
+			if ( ! isset( $this->atts['html_attr'] ) || ! is_array( $this->atts['html_attr'] ) ) {
+				$this->atts['html_attr'] = array();
+			}
+			$this->atts['html_attr']['data-safe-transport'] = 'base64';
+		}
 
 	} // end set_attributes;
 
@@ -161,8 +174,11 @@ class Field implements \JsonSerializable {
 			'checkbox'            => 'toggle',
 			'upload'              => 'image',
 			'file'                => 'image',
+			'media'               => 'image',
+			'wysiwyg'             => 'wp_editor',
 			// settings/fields has field-color.php; admin-pages chrome uses field-color-picker.php.
 			'color'               => 'color-picker',
+			'embed'               => 'textarea',
 			'model'               => 'text',
 			'number'              => 'text',
 			'url'                 => 'text',
@@ -359,6 +375,20 @@ class Field implements \JsonSerializable {
 	} // end __get;
 
 	/**
+	 * Check whether an attribute is set.
+	 *
+	 * @since 2.13.1
+	 *
+	 * @param string $att Attribute name.
+	 * @return bool
+	 */
+	public function __isset($att) {
+
+		return isset($this->atts[$att]) && false !== $this->atts[$att] && null !== $this->atts[$att];
+
+	} // end __isset;
+
+	/**
 	 * Returns the list of sanitization callbacks for each field type
 	 *
 	 * @since 2.0.0
@@ -431,6 +461,22 @@ class Field implements \JsonSerializable {
 	 */
 	public function sanitize() {
 
+		$custom_callback = null;
+		if ( isset( $this->atts['save_callback'] ) && is_callable( $this->atts['save_callback'] ) ) {
+			$custom_callback = $this->atts['save_callback'];
+		} elseif ( isset( $this->atts['sanitize_callback'] ) && is_callable( $this->atts['sanitize_callback'] ) ) {
+			$custom_callback = $this->atts['sanitize_callback'];
+		}
+
+		$this->value = apply_filters( 'wpdev_field_save_value', $this->value, $this->id, $this->atts );
+		if ( ! empty( $this->id ) ) {
+			$this->value = apply_filters( "wpdev_field_save_value_{$this->id}", $this->value, $this->atts );
+		}
+
+		if ( null !== $custom_callback ) {
+			$this->value = call_user_func( $custom_callback, $this->value, $this->id, $this->atts );
+		}
+
 		$type = isset( $this->atts['type'] ) ? (string) $this->atts['type'] : 'text';
 
 		if ( class_exists( 'WPDev\\Modules\\FieldBuilder\\Field_Type_Registry' )
@@ -438,12 +484,12 @@ class Field implements \JsonSerializable {
 
 			$field_def = is_array( $this->atts ) ? $this->atts : array();
 
-			if ( isset( $this->min ) ) {
-				$field_def['min'] = $this->min;
+			if ( isset( $this->atts['min'] ) && false !== $this->atts['min'] && '' !== $this->atts['min'] ) {
+				$field_def['min'] = $this->atts['min'];
 			}
 
-			if ( isset( $this->max ) ) {
-				$field_def['max'] = $this->max;
+			if ( isset( $this->atts['max'] ) && false !== $this->atts['max'] && '' !== $this->atts['max'] ) {
+				$field_def['max'] = $this->atts['max'];
 			}
 
 			$this->value = \WPDevFramework\Modules\FieldBuilder\Field_Type_Registry::sanitize(
@@ -520,11 +566,27 @@ class Field implements \JsonSerializable {
 
 		if ($this->allow_html) {
 
-			return stripslashes(wp_filter_post_kses(addslashes($value)));
+			if ( function_exists( 'current_user_can' ) && current_user_can( 'unfiltered_html' ) ) {
+				return stripslashes( (string) $value );
+			}
+
+			if ( function_exists( 'wpdev_sanitize_embed_html' ) ) {
+				return wpdev_sanitize_embed_html( $value );
+			}
+
+			if ( function_exists( 'wp_filter_post_kses' ) ) {
+				return stripslashes( wp_filter_post_kses( addslashes( (string) $value ) ) );
+			}
+
+			return function_exists( 'wp_kses_post' ) ? wp_kses_post( $value ) : strip_tags( (string) $value );
 
 		} // end if;
 
-		return wp_strip_all_tags(stripslashes($value));
+		if ( function_exists( 'wp_strip_all_tags' ) ) {
+			return wp_strip_all_tags( stripslashes( (string) $value ) );
+		}
+
+		return strip_tags( stripslashes( (string) $value ) );
 
 	} // end validate_textarea_field;
 
@@ -538,13 +600,23 @@ class Field implements \JsonSerializable {
 
 		if (is_callable($this->atts['html_attr'])) {
 
-			$this->atts['html_attr'] = call_user_func($this->atts['html_attr']);
+			// Pass $this so callables can hydrate per-row attrs (e.g. data-selected).
+			$this->atts['html_attr'] = call_user_func($this->atts['html_attr'], $this);
 
 		} // end if;
 
 		$attributes = $this->atts['html_attr'];
 
 		unset($this->atts['html_attr']['class']);
+
+		if ( in_array( $this->type, array( 'toggle', 'checkbox' ), true ) && isset( $attributes['v-model'] ) ) {
+			if ( isset( $attributes['true-value'] ) && (string) $attributes['true-value'] === '1' ) {
+				$v_model = $attributes['v-model'];
+				unset( $attributes['true-value'], $attributes['false-value'] );
+				$attributes[':true-value']  = "({$v_model} === '1' || {$v_model} === 1) ? {$v_model} : true";
+				$attributes[':false-value'] = 'false';
+			}
+		}
 
 		if ($this->type === 'number') {
 
