@@ -158,7 +158,15 @@ class Compat {
 				return true;
 			}
 
-			$waf->whitelistRuleForParam( $path, $param_key, $rules, 'Allowlisted via WPDev Compat Module' );
+			$waf->whitelistRuleForParam(
+				$path,
+				$param_key,
+				$rules,
+				array(
+					'disabled'    => false,
+					'description' => 'Allowlisted via WPDev Compat Module',
+				)
+			);
 
 			$hash = md5( $path . '|' . $param_key . '|' . $rules );
 			$opt  = 'wpdev_wf_al_' . $hash;
