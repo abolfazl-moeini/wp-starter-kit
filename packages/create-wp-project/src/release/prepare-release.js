@@ -619,6 +619,71 @@ async function createReleaseZip(outAbs, slug) {
 }
 
 /**
+ * Whether this consumer's release build should delegate to the canonical
+ * standalone assembler (profile S) instead of the generic vendor-deps
+ * pipeline.
+ *
+ * Routing root cause (fixed 2026-10): the canonical assembler embeds the
+ * full WPDev framework closure (WPDevFramework\* symbols) and REPLACES
+ * composer vendoring. That is only correct for consumers that actually
+ * integrate the standalone framework. A kit-runtime-only consumer
+ * (`phpFramework: "none"` — vendor packages/framework via composer,
+ * distMode: deps) routed through the canonical assembler produced either
+ * a shell zip with no framework (silent empty vendor; plugins register
+ * zero modules) or — with inlineFramework — a zip whose eager-preloaded
+ * closure fatals the whole site when the wpdev framework plugin is also
+ * active ("Cannot declare trait ..., because the name is already in
+ * use").
+ *
+ * Delegation therefore requires positive standalone intent — an explicit
+ * `phpFramework: "wpdev"` declaration or an embedded framework tree — and
+ * an explicit `phpFramework: "none"` is a hard opt-out. Bare kit markers
+ * (`kitVersion`, `packages/framework` existence) are NOT intent: every
+ * scaffolded consumer carries both, and the kit runtime is meant to be
+ * composer-vendored, never closure-inlined.
+ *
+ * @param {object} args
+ * @param {object|null} args.raw Parsed wpdev.json (or project.config.json).
+ * @param {object} args.options CLI options (useCanonicalAssembler, inlineFramework).
+ * @param {string|null} args.profile Resolved release profile.
+ * @param {boolean} args.isObfuscate
+ * @param {boolean} args.isSpaghetti
+ * @param {string} args.root Consumer project root.
+ * @param {string|null} args.canonicalAssemblerPath Resolved assembler entry (null when unavailable).
+ * @returns {boolean}
+ */
+export function shouldDelegateToCanonicalAssembler({
+  raw,
+  options = {},
+  profile = null,
+  isObfuscate = false,
+  isSpaghetti = false,
+  root = "",
+  canonicalAssemblerPath = null,
+}) {
+  const frameworkFeature =
+    raw?.features?.phpFramework ?? raw?.phpFramework ?? raw?.framework;
+
+  const isRegisteredConsumer = Boolean(
+    frameworkFeature === "wpdev" ||
+    (root && existsSync(path.join(root, "includes/framework"))),
+  );
+
+  return (
+    Boolean(canonicalAssemblerPath) &&
+    options.useCanonicalAssembler !== false &&
+    frameworkFeature !== "none" &&
+    (isRegisteredConsumer ||
+      options.useCanonicalAssembler === true ||
+      isObfuscate ||
+      isSpaghetti ||
+      Boolean(options.inlineFramework) ||
+      profile === "standalone" ||
+      Boolean(raw?.canonicalAssembler || raw?.features?.canonicalAssembler))
+  );
+}
+
+/**
  * True when child is parent or a directory inside it. A shared string prefix
  * such as `/var/wp-content-old` under `/var/wp-content` does not match.
  *
@@ -767,24 +832,20 @@ export async function prepareRelease(options = {}) {
     pluginRoot: root,
   });
 
-  const isRegisteredConsumer = Boolean(
-    raw?.features?.phpFramework === "wpdev" ||
-    raw?.phpFramework === "wpdev" ||
-    raw?.framework === "wpdev" ||
-    raw?.kitVersion ||
-    existsSync(path.join(root, "includes/framework")) ||
-    existsSync(path.join(root, "packages/framework")),
-  );
-  const shouldDelegateCanonical =
-    Boolean(canonicalAssemblerPath) &&
-    options.useCanonicalAssembler !== false &&
-    (isRegisteredConsumer ||
-      options.useCanonicalAssembler === true ||
-      isObfuscate ||
-      isSpaghetti ||
-      Boolean(options.inlineFramework) ||
-      profile === "standalone" ||
-      Boolean(raw?.canonicalAssembler || raw?.features?.canonicalAssembler));
+  /*
+   * Delegation intent — see shouldDelegateToCanonicalAssembler() for the
+   * routing root-cause rationale (kit-runtime-only consumers must take
+   * the generic vendor-deps path, never the standalone closure pipeline).
+   */
+  const shouldDelegateCanonical = shouldDelegateToCanonicalAssembler({
+    raw,
+    options,
+    profile,
+    isObfuscate,
+    isSpaghetti,
+    root,
+    canonicalAssemblerPath,
+  });
 
   if (shouldDelegateCanonical) {
     const importUrl =
