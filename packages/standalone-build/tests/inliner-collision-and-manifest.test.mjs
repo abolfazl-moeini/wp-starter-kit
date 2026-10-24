@@ -332,3 +332,77 @@ test("resolveConsumerNamespace: resolves namespace from wpdev.json globalName", 
 });
 
 
+
+test("Inliner: closure stays dormant when the host wpdev framework plugin is active (site-fatal regression)", async () => {
+  const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "inliner-coexistence-test-"));
+  const stagingPlugin = path.join(tmpDir, "my-plugin");
+  const wpdevPluginDir = path.join(tmpDir, "plugins/wpdev");
+
+  // Provider with the exact symbol class that fataled production sites:
+  // a framework trait plus a Core class, both eagerly preloaded by the
+  // generated closure before this fix.
+  await mkdir(path.join(wpdevPluginDir, "modules/core/src/traits"), { recursive: true });
+  await mkdir(path.join(wpdevPluginDir, "src/Core"), { recursive: true });
+  await writeFile(
+    path.join(wpdevPluginDir, "modules/core/src/traits/trait-singleton.php"),
+    "<?php namespace WPDevFramework\\Traits; trait Singleton { public static function get_instance() { static $i = null; if (null === $i) { $i = new static(); } return $i; } }",
+  );
+  await writeFile(
+    path.join(wpdevPluginDir, "src/Core/Plugin.php"),
+    "<?php namespace WPDev\\Core; class Plugin { const VERSION = '2.13.11'; }",
+  );
+
+  await mkdir(stagingPlugin, { recursive: true });
+  await writeFile(path.join(stagingPlugin, "my-plugin.php"), "<?php // Plugin Name: My Plugin");
+
+  const execFile = (await import("node:child_process")).execFile;
+  const run = (file, args) => new Promise((resolve) => {
+    execFile(file, args, { encoding: "utf8" }, (err, stdout, stderr) =>
+      resolve({ err, stdout, stderr: stderr || "" }));
+  });
+
+  try {
+    await inlineWpdevClosure({
+      stagingPlugin,
+      consumer: "my-plugin",
+      contentRoot: tmpDir,
+      wpdevPluginDirOverride: wpdevPluginDir,
+    });
+
+    const closure = path.join(stagingPlugin, "src/FrameworkClosure/functions-closure.php");
+    assert.equal(fs.existsSync(closure), true, "functions-closure.php must be generated");
+
+    // Generated closure must be syntactically valid.
+    const lint = await run("php", ["-l", closure]);
+    assert.equal(lint.err, null, `functions-closure.php must pass php -l: ${lint.stderr}`);
+
+    const probe = (hostActive) => `
+define('ABSPATH', sys_get_temp_dir() . '/');
+${hostActive ? "define('WPDEV_VERSION', '9.9.9');" : ""}
+require ${JSON.stringify(closure)};
+echo trait_exists('WPDevFramework\\\\Traits\\\\Singleton', false) ? 'declared' : 'dormant';
+`;
+
+    // Host framework already active: the closure must declare NOTHING — the
+    // eager preload previously declared the trait here and the site-wide
+    // wpdev plugin then fataled the request ("name is already in use").
+    const host = await run("php", ["-r", probe(true)]);
+    assert.equal(host.err, null, `host-active simulation must not error: ${host.stderr}`);
+    assert.equal(
+      host.stdout.trim(),
+      "dormant",
+      "closure must stay dormant while the host wpdev framework is active",
+    );
+
+    // No host framework: the closure owns the symbols and must work.
+    const standalone = await run("php", ["-r", probe(false)]);
+    assert.equal(standalone.err, null, `standalone simulation must not error: ${standalone.stderr}`);
+    assert.equal(
+      standalone.stdout.trim(),
+      "declared",
+      "closure must still provide framework symbols on framework-less sites",
+    );
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});
