@@ -2871,7 +2871,7 @@ class Plan3_Transformer {
 								if ( preg_match( '/^\\\\?([a-zA-Z0-9_\\\\]+)(?:\s+as\s+([a-zA-Z0-9_]+))?$/i', $expanded, $gm ) ) {
 									$group_target = ltrim( $gm[1], '\\' );
 									$group_parts  = explode( '\\', $group_target );
-									$group_alias  = isset( $gm[2] ) && $gm[2] !== '' ? $gm[2] : (string) end( $group_parts );
+									$group_alias  = isset( $gm[2] ) && $gm[2] !== '' ? $gm[2] : end( $group_parts );
 									if ( isset( $declared_type_shorts[ strtolower( $group_alias ) ] ) ) {
 										continue;
 									}
@@ -2967,7 +2967,7 @@ class Plan3_Transformer {
 								}
 								if ( $alias === '' ) {
 									$alias_parts = explode( '\\', $target_class );
-									$alias       = (string) end( $alias_parts );
+									$alias       = end( $alias_parts );
 								}
 								// Flattening moves this file's types to the global short name.
 								// Importing that same short name collides with the declaration.
@@ -3318,7 +3318,8 @@ class Plan3_Transformer {
 					}
 
 					$is_callable_method_string = $this->is_array_callable_method_string( $tokens, $i );
-					$is_callback_string = $is_callable_method_string || $this->is_callback_key_string( $tokens, $i ) || $this->is_callback_argument_string( $tokens, $i );
+					$is_callback_arg_string = $this->is_callback_key_string( $tokens, $i ) || $this->is_callback_argument_string( $tokens, $i );
+					$is_callback_string = $is_callable_method_string || $is_callback_arg_string;
 					$is_reflection = $this->is_reflection_or_instantiation_string( $tokens, $i );
 
 					// array('Class', 'method'): the first element names the class and must be
@@ -3327,7 +3328,7 @@ class Plan3_Transformer {
 					// Decision authority is the declared-universe resolver: only strings that
 					// resolve to a declared FQCN are rewritten; external names stay byte-identical.
 					$str_resolved_target = null;
-					if ( $is_reflection || $is_callable_method_string || $this->is_array_callable_class_string( $tokens, $i ) ) {
+					if ( $is_reflection || ( $is_callback_arg_string && strpos( $norm_str, '::' ) !== false ) || $this->is_array_callable_class_string( $tokens, $i ) ) {
 						$str_class_part = $norm_str;
 						$str_method_suffix = '';
 						$dc_pos = strpos( $norm_str, '::' );
@@ -3360,7 +3361,7 @@ class Plan3_Transformer {
 						continue;
 					}
 
-					if ( $is_callback_string ) {
+					if ( $is_callback_arg_string ) {
 						$func_target = $this->resolve_function_name( $norm_str, $current_namespace, $file_use_func_map );
 						if ( $func_target !== null ) {
 							$quote = $text[0];
