@@ -1435,6 +1435,9 @@ foreach ($iterator as $file) {
             // Guard WP_List_Table loading
             if (strpos($clean_expr, 'class-wp-list-table.php') !== false) {
                 $output .= "if (!class_exists('WP_List_Table', false) && defined('ABSPATH')) {\\n" .
+                    "    if (!class_exists('Walker', false) && file_exists(ABSPATH . 'wp-includes/class-wp-walker.php')) {\\n" .
+                    "        require_once ABSPATH . 'wp-includes/class-wp-walker.php';\\n" .
+                    "    }\\n" .
                     "    if (file_exists(ABSPATH . 'wp-admin/includes/template.php')) {\\n" .
                     "        require_once ABSPATH . 'wp-admin/includes/template.php';\\n" .
                     "    }\\n" .
@@ -1683,6 +1686,9 @@ spl_autoload_register(function ($class) use ($wpdev_closure_classmap) {
     if (!class_exists('WP_List_Table', false) && defined('ABSPATH')
         && (false !== strpos($wpdev_closure_file, '/table-builder/') || false !== strpos($wpdev_closure_file, 'list-table'))
     ) {
+        if (!class_exists('Walker', false) && file_exists(ABSPATH . 'wp-includes/class-wp-walker.php')) {
+            require_once ABSPATH . 'wp-includes/class-wp-walker.php';
+        }
         if (file_exists(ABSPATH . 'wp-admin/includes/template.php')) {
             require_once ABSPATH . 'wp-admin/includes/template.php';
         }
@@ -1859,11 +1865,13 @@ if (!defined('WPDEV_BOOTSTRAP_FILE') && !$wpdev_is_host_framework_active) {
 }
 
 
-if (class_exists('\\WPDevFramework\\Core\\Bounded_View_Root_Registry')) {
-    \\WPDevFramework\\Core\\Bounded_View_Root_Registry::register('closure-views', __DIR__ . '/views', 'internal-private');
-}
-if (class_exists('\\WPDevFramework\\Core\\Module_View_Registry')) {
-    \\WPDevFramework\\Core\\Module_View_Registry::register('closure-root', __DIR__ . '/views');
+if (!$wpdev_is_host_framework_active) {
+    if (class_exists('\\WPDevFramework\\Core\\Bounded_View_Root_Registry', false)) {
+        \\WPDevFramework\\Core\\Bounded_View_Root_Registry::register('closure-views', __DIR__ . '/views', 'internal-private');
+    }
+    if (class_exists('\\WPDevFramework\\Core\\Module_View_Registry', false)) {
+        \\WPDevFramework\\Core\\Module_View_Registry::register('closure-root', __DIR__ . '/views');
+    }
 }
 
 if (!defined('WPDEV_BOOTSTRAP_FILE') && !$wpdev_is_host_framework_active) {
