@@ -88,50 +88,84 @@ function wpdev_rmtree(string $dir): void
 }
 
 /**
- * @return list<string>
+ * @return array{root: list<string>, any: list<string>}
  */
 function wpdev_dist_exclude_patterns(): array
 {
     return [
-        'tests',
-        'dev',
-        'node_modules',
-        'vendor',
-        'dist',
-        '.git',
-        '.github',
-        '.husky',
-        'coverage',
-        '.phpunit.result.cache',
-        'phpunit.xml',
-        'phpstan.neon',
-        'phpcs.xml',
-        'rector.config.json',
-        'tsconfig.json',
-        '.eslintrc.cjs',
-        '.prettierignore',
-        'jest.config.mjs',
-        'package-lock.json',
-        'composer.lock',
-        // Phase 23.A2b: the kit's `src/Core` + `src/Support` are
-        // 1-line bridge shims that re-include the framework files
-        // from the kit's own `packages/framework/`. In the dist
-        // the framework is installed as a Composer dependency
-        // (wpdev/framework) under vendor/, so the shims are dead
-        // (and worse: they'd load the wrong path at runtime).
-        // Exclude them from the dist tree.
-        'src/Core',
-        'src/Support',
+        'root' => [
+            'packages',
+            'core',
+            'tools',
+            'skills',
+            'migration',
+            'docs',
+            'build',
+            'examples',
+            'wp-content',
+            'types',
+            'tests',
+            'dev',
+            'dist',
+            'coverage',
+            '.phpunit.result.cache',
+            'phpunit.xml',
+            'phpunit.xml.dist',
+            'phpstan.neon',
+            'phpcs.xml',
+            'rector.config.json',
+            'tsconfig.json',
+            '.eslintrc.cjs',
+            '.prettierignore',
+            'jest.config.mjs',
+            'package-lock.json',
+            'composer.lock',
+            'wpdev.example.json',
+            'budget-ledger.json',
+            'AGENTS.md',
+            'CLAUDE.md',
+            'commitlint.config.cjs',
+            'babel.config.js',
+            // Bridge shims are eliminated from source, but defensively excluded
+            // here in case legacy artifacts exist in older worktrees.
+            'src/Core',
+            'src/Support',
+            'src/Adapters',
+        ],
+        'any' => [
+            '.git',
+            '.github',
+            '.husky',
+            'node_modules',
+            'vendor',
+            '.DS_Store',
+        ],
     ];
 }
 
 /**
  * @param string $relative
- * @param list<string> $exclude
+ * @param array{root?: list<string>, any?: list<string>}|list<string> $exclude
  */
 function wpdev_should_exclude(string $relative, array $exclude): bool
 {
     $normalized = str_replace('\\', '/', $relative);
+
+    if (isset($exclude['root']) || isset($exclude['any'])) {
+        foreach ($exclude['root'] ?? [] as $pattern) {
+            if ($normalized === $pattern || str_starts_with($normalized, $pattern . '/')) {
+                return true;
+            }
+        }
+        $segments = explode('/', $normalized);
+        foreach ($exclude['any'] ?? [] as $pattern) {
+            if (in_array($pattern, $segments, true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     foreach ($exclude as $pattern) {
         if ($normalized === $pattern || str_starts_with($normalized, $pattern . '/')) {
             return true;
@@ -189,15 +223,18 @@ function wpdev_copy_tree(string $src, string $dest, array $exclude): void
 function wpdev_build_dist_composer_json(array $config, string $frameworkPath): string
 {
     $globalName = (string) ($config['globalName'] ?? 'WPDev');
+    $vendorPrefix = (string) ($config['vendorPrefix'] ?? 'WpdevVendor');
     $vendorNamespaceLower = strtolower($globalName);
     $slug = (string) ($config['slug'] ?? 'wpdev');
     $description = (string) ($config['description'] ?? "{$slug} — WordPress plugin built on wp-starter-kit");
     $phpMin = (string) ($config['phpMinVersion'] ?? '7.4');
     $licenseId = (string) ($config['licenseId'] ?? 'GPL-2.0-or-later');
 
-    // The vendor namespace root is the consumer's globalName. The
-    // framework's WPDev\\ namespace is shipped as a dependency
-    // (wpdev/framework) and resolved via the path repo.
+    // If globalName is WPDev (kit root), map the prefixed namespace in PSR-4 to src/.
+    $psr4Map = $globalName === 'WPDev'
+        ? ["{$vendorPrefix}\\{$globalName}\\" => 'src/']
+        : ["{$globalName}\\" => 'src/'];
+
     $payload = [
         'name' => "{$vendorNamespaceLower}/{$slug}",
         'description' => $description,
@@ -207,42 +244,25 @@ function wpdev_build_dist_composer_json(array $config, string $frameworkPath): s
             [
                 'type' => 'path',
                 'url' => $frameworkPath,
-                // symlink:false forces composer to MIRROR the
-                // framework files into vendor/ instead of
-                // symlinking. Strauss's vendoring step assumes
-                // real on-disk files at vendor/{vendor}/{name}/
-                // — symlinked paths confuse the Finders
-                // (strauss 0.8.1 can't traverse the symlink +
-                // dist-relative path correctly). The mirror
-                // adds a few KB to the dist but keeps the
-                // release flow hermetic.
                 'options' => ['symlink' => false],
             ],
         ],
         'require' => [
             'php' => ">={$phpMin}",
-            // wpdev/framework: *@dev is the path-repo-friendly
-            // form (it accepts the dev-main version that path
-            // repos resolve to). For the published-mode dep
-            // (Phase 23.B), the require would be a pinned semver.
             'wpdev/framework' => '*@dev',
         ],
         'autoload' => [
-            'psr-4' => [
-                "{$globalName}\\" => 'src/',
+            'psr-4' => $psr4Map,
+            'files' => [
+                'includes/asset-functions.php',
             ],
         ],
-        // Strauss reads config from composer.json extra/strauss
-        // (NOT the standalone strauss.json file). Whitelist only
-        // wpdev/framework so Strauss does not traverse
-        // brianhenryie/strauss's symfony deps (array PSR-4 paths
-        // crash FileEnumerator on strauss 0.11.x).
         'extra' => [
             'strauss' => [
                 'target_directory' => 'vendor-prefixed',
-                'namespace_prefix' => (string) ($config['vendorPrefix'] ?? 'WpdevVendor'),
-                'classmap_prefix' => ((string) ($config['vendorPrefix'] ?? 'WpdevVendor')) . '_',
-                'constant_prefix' => strtoupper((string) ($config['vendorPrefix'] ?? 'WpdevVendor')) . '_',
+                'namespace_prefix' => $vendorPrefix,
+                'classmap_prefix' => $vendorPrefix . '_',
+                'constant_prefix' => strtoupper($vendorPrefix) . '_',
                 'delete_vendor_files' => false,
                 'include_modified_files' => false,
                 'packages' => ['wpdev/framework'],
@@ -256,14 +276,44 @@ function wpdev_build_dist_composer_json(array $config, string $frameworkPath): s
                 ],
             ],
         ],
-        // Path repos resolve to `dev-main`. Accept dev versions
-        // so the dist can install the framework from the local
-        // path repo without an explicit override.
         'minimum-stability' => 'dev',
         'prefer-stable' => true,
     ];
 
     return json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+}
+
+/**
+ * Rewrite namespace references in all dist PHP files outside vendor directories.
+ */
+function wpdev_rewrite_namespace_references(string $dir, string $fromNs, string $toNs): void
+{
+    if ($fromNs === $toNs || $fromNs === '' || $toNs === '') {
+        return;
+    }
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)
+    );
+    foreach ($iterator as $item) {
+        /** @var SplFileInfo $item */
+        if ($item->isDir() || $item->getExtension() !== 'php') {
+            continue;
+        }
+        $path = $item->getPathname();
+        $relative = substr($path, strlen($dir) + 1);
+        if (str_starts_with($relative, 'vendor/') || str_starts_with($relative, 'vendor-prefixed/')) {
+            continue;
+        }
+        $content = (string) file_get_contents($path);
+        $updated = preg_replace(
+            '/(?<![A-Za-z0-9_\\\\])' . preg_quote($fromNs, '/') . '(?=\\\\[A-Za-z0-9_]+)/',
+            $toNs,
+            $content
+        );
+        if ($updated !== null && $updated !== $content) {
+            file_put_contents($path, $updated);
+        }
+    }
 }
 
 /**
@@ -350,19 +400,6 @@ mkdir($distRoot, 0755, true);
 $exclude = wpdev_dist_exclude_patterns();
 wpdev_copy_tree($root, $distRoot, $exclude);
 
-/**
- * Phase 23.A2 → 23.A6: the framework's `src/Core/` and
- * `src/Support/` moved into the `wpdev/framework` Composer
- * package (`packages/framework/src/`). The dist installs the
- * framework as a dependency via `composer install --no-dev`
- * (below), so we do NOT copy the framework into the dist's
- * `src/` — that would create a namespace conflict (the
- * project's own `WPDev\\` autoload and the framework's
- * `WPDev\\` autoload would both resolve to `src/`).
- */
-$marker = $distRoot . '/.dist-built';
-file_put_contents($marker, gmdate('c') . "\n");
-
 fwrite(STDOUT, "Built dist tree at {$distRoot}\n");
 
 /* -------------------------------------------------------------------- */
@@ -424,7 +461,46 @@ if ($straussExit !== 0) {
 fwrite(STDOUT, "vendor/bin/strauss completed in dist\n");
 
 /* -------------------------------------------------------------------- */
-/* Step 5: write the .dist-built marker (post-release)                  */
+/* Step 5: scope callers and clean up vendor/                           */
+/* -------------------------------------------------------------------- */
+
+$vendorPrefix = (string) ($config['vendorPrefix'] ?? 'WpdevVendor');
+wpdev_rewrite_namespace_references($distRoot, 'WPDev', "{$vendorPrefix}\\WPDev");
+
+// Remove unprefixed framework from vendor/ and dump authoritative autoload
+wpdev_rmtree($distRoot . '/vendor/wpdev');
+[$dumpExit, $dumpOut] = wpdev_run(
+    'composer dump-autoload --no-dev --classmap-authoritative 2>&1',
+    $distRoot
+);
+if ($dumpExit !== 0) {
+    fwrite(STDERR, "composer dump-autoload failed in {$distRoot} (exit {$dumpExit}):\n{$dumpOut}\n");
+    exit($dumpExit);
+}
+fwrite(STDOUT, "composer dump-autoload completed in dist\n");
+
+/* -------------------------------------------------------------------- */
+/* Step 6: Rector downgrade to phpMinVersion (Finding #5)              */
+/* -------------------------------------------------------------------- */
+
+$rectorBin = $root . '/vendor/bin/rector';
+$rectorBuildCfg = $root . '/dev/rector-build.php';
+$skipRector = in_array('--skip-rector', $argv, true);
+
+if (!$skipRector && is_file($rectorBin) && is_file($rectorBuildCfg)) {
+    [$rectorExit, $rectorOut] = wpdev_run(
+        'php ' . escapeshellarg($rectorBin) . ' process ' . escapeshellarg($distRoot) . ' -c ' . escapeshellarg($rectorBuildCfg) . ' --clear-cache 2>&1',
+        $distRoot
+    );
+    if ($rectorExit !== 0) {
+        fwrite(STDERR, "rector:build failed in {$distRoot} (exit {$rectorExit}):\n{$rectorOut}\n");
+        exit($rectorExit);
+    }
+    fwrite(STDOUT, "rector downgrade completed in dist\n");
+}
+
+/* -------------------------------------------------------------------- */
+/* Step 7: write the .dist-built marker (post-release)                  */
 /* -------------------------------------------------------------------- */
 
 $marker = $distRoot . '/.dist-built';

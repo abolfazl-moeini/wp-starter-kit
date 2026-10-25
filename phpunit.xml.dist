@@ -4,6 +4,7 @@
     backupGlobals="false"
     colors="true"
     verbose="true"
+    convertDeprecationsToExceptions="false"
 >
     <testsuites>
         <testsuite name="wp-starter-kit">
