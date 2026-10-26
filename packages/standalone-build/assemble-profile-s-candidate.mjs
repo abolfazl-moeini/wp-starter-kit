@@ -52,6 +52,11 @@ import {
   secureUnlinkSymbolMap,
   validatePhpSyntaxTree,
 } from "./profile-s-fail-closed.mjs";
+import {
+  findCompatibilityDirs,
+  deriveAutoExcludeClassmap,
+  sanitizeComposerClassmap,
+} from "./composer-classmap-isolation.mjs";
 import { resolveContentRoot } from "./resolve-content-root.mjs";
 import { createBuildPlan, resolveArtifactZipName, validateBuildPlan } from "./build-plan.mjs";
 
@@ -351,8 +356,12 @@ export async function assembleProfileSCandidate(options = {}) {
 
     // 3a. Downgrade all PHP files to PHP 7.4 via Rector (fail-closed for Profile S)
     const starterKitRoot = path.resolve(scriptDir, "../..");
+    const consumerRector = path.join(devDir, "vendor/bin/rector");
+    const starterKitRector = path.join(starterKitRoot, "vendor/bin/rector");
+    const candidateRector = fs.existsSync(consumerRector) ? consumerRector : starterKitRector;
+
     const { rectorBin, rectorConfig } = requireRectorForProfileS({
-      rectorBin: path.join(starterKitRoot, "vendor/bin/rector"),
+      rectorBin: candidateRector,
       rectorConfig: path.join(scriptDir, "rector-downgrade-php74.php"),
     });
 
@@ -588,12 +597,19 @@ export async function assembleProfileSCandidate(options = {}) {
       const closureCandidateDirs = candidateDirs.map(d => d.endsWith("/") ? d : d + "/");
       const mergedClassmap = [...new Set([...declaredClassmap, ...(closureCandidateDirs.length > 0 ? closureCandidateDirs : ["./"])])];
 
+      const autoCompatDirs = findCompatibilityDirs(stagingPlugin, candidateDirs);
+      const mergedExcludes = deriveAutoExcludeClassmap(
+        compData.autoload?.["exclude-from-classmap"],
+        autoCompatDirs,
+      );
+
       const tempComp = {
         ...compData,
         name: compData.name || "release/" + consumer,
         autoload: {
           ...(compData.autoload || {}),
           "classmap": mergedClassmap,
+          ...(mergedExcludes.length > 0 ? { "exclude-from-classmap": mergedExcludes } : {}),
           "psr-4": compData.autoload?.["psr-4"] || {},
           "files": finalAutoloadFiles
         }
@@ -665,6 +681,17 @@ export async function assembleProfileSCandidate(options = {}) {
             await writeFile(staticFile, patchedStatic, "utf8");
           }
         }
+      }
+
+      const sanitizeRes = sanitizeComposerClassmap(stagingPlugin, {
+        psr4: compData.autoload?.["psr-4"] || {},
+        vendorPrefix: options.vendorPrefix || "WpdevVendor",
+      });
+      if (sanitizeRes.strippedCount > 0) {
+        console.log(
+          `==> [Composer] Stripped ${sanitizeRes.strippedCount} foreign compatibility class(es) from classmap:`,
+          sanitizeRes.stripped.map((s) => s.normalizedClass).join(", "),
+        );
       }
     }
 

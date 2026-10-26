@@ -21,6 +21,7 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import { readZipEntries, verifyZipAgainstManifest } from "./canonical-artifact-manifest.mjs";
+import { verifyClassmapIsolation } from "./composer-classmap-isolation.mjs";
 
 const execFileAsync = promisify(execFile);
 
@@ -635,10 +636,15 @@ function get_role($role) { return null; }
 function remove_role($role) {}
 function wp_enqueue_style() {}
 function wp_enqueue_script() {}
-function did_action($hook) { global $wp_actions; return isset($wp_actions[$hook]) ? count($wp_actions[$hook]) : 0; }
+function register_rest_route() { return true; }
+if (!class_exists('WP_REST_Server', false)) {
+    class WP_REST_Server { const READABLE = 'GET'; const CREATABLE = 'POST'; const EDITABLE = 'POST, PUT, PATCH'; const DELETABLE = 'DELETE'; const ALLMETHODS = 'GET, POST, PUT, PATCH, DELETE'; }
+}
+function did_action($hook) { global $wp_actions_done; return $wp_actions_done[$hook] ?? 0; }
 function doing_action($hook = null) { return false; }
 function do_action($hook, ...$args) {
-    global $wp_actions;
+    global $wp_actions, $wp_actions_done;
+    $wp_actions_done[$hook] = ($wp_actions_done[$hook] ?? 0) + 1;
     if (isset($wp_actions[$hook])) {
         foreach ($wp_actions[$hook] as $cb) {
             if (!is_callable($cb)) {
@@ -775,6 +781,29 @@ echo "REGISTERED_FILTERS_COUNT: " . count($wp_filters) . "\n";
       failures.push(`Execution exception in bootstrap probe: ${output || err.message}`);
       results.testsFailed++;
       results.details.push({ test: "Zero-Fatal Bootstrap & Hook Registration", status: "failed", error: output || err.message });
+    }
+
+    // Probe 5b: Composer Classmap Isolation & Foreign Hijack Guard
+    const classmapVerifyRes = verifyClassmapIsolation(extractedPlugin);
+    if (!classmapVerifyRes.passed) {
+      const foreignList = classmapVerifyRes.foreignEntries
+        .map((e) => `${e.normalizedClass} -> ${e.relPath}`)
+        .join("; ");
+      failures.push(
+        `Composer classmap isolation failure: found foreign class(es) mapped to internal files: ${foreignList}`,
+      );
+      results.testsFailed++;
+      results.details.push({
+        test: "Composer Classmap Isolation & Foreign Hijack Guard",
+        status: "failed",
+        error: foreignList,
+      });
+    } else {
+      results.testsPassed++;
+      results.details.push({
+        test: "Composer Classmap Isolation & Foreign Hijack Guard",
+        status: "passed",
+      });
     }
 
     // Probe 6: Release Manifest & Parity Verification

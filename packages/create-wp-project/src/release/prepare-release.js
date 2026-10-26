@@ -48,6 +48,9 @@ import {
   prepareComposerForRelease,
   releaseCopyExcludeNames,
   shouldStripRelativePath,
+  findCompatibilityDirs,
+  deriveAutoExcludeClassmap,
+  sanitizeComposerClassmap,
 } from "./prepareComposer.js";
 import { gateReleaseTests } from "./releaseTests.js";
 import { createCanonicalZip } from "./canonical-zip.js";
@@ -1050,6 +1053,17 @@ export async function prepareRelease(options = {}) {
         ...new Set([...originalClassmap, ...discoveredClassmap]),
       ];
 
+      const declaredExcludes = Array.isArray(
+        originalAutoload["exclude-from-classmap"],
+      )
+        ? originalAutoload["exclude-from-classmap"]
+        : [];
+      const autoCompatDirs = findCompatibilityDirs(distRoot, candidateDirs);
+      const mergedExcludes = deriveAutoExcludeClassmap(
+        declaredExcludes,
+        autoCompatDirs,
+      );
+
       const tempComp = {
         ...compData,
         name: compData.name || "release/" + slug,
@@ -1067,6 +1081,9 @@ export async function prepareRelease(options = {}) {
           ...originalAutoload,
           ...(compData.autoload || {}),
           classmap: mergedClassmap,
+          ...(mergedExcludes.length > 0
+            ? { "exclude-from-classmap": mergedExcludes }
+            : {}),
         },
       };
       if (rootComp?.repositories) {
@@ -1096,6 +1113,18 @@ export async function prepareRelease(options = {}) {
       }
       if (dumpRes.status !== 0) {
         throw new Error("composer dump-autoload failed after transformation");
+      }
+
+      const sanitizeRes = sanitizeComposerClassmap(distRoot, {
+        psr4: {
+          ...(originalAutoload["psr-4"] || {}),
+          ...(compData.autoload?.["psr-4"] || {}),
+        },
+      });
+      if (sanitizeRes.strippedCount > 0) {
+        process.stdout.write(
+          `release: stripped ${sanitizeRes.strippedCount} foreign compatibility class(es) from autoloader classmap (${sanitizeRes.stripped.map((s) => s.normalizedClass).join(", ")})\n`,
+        );
       }
     }
   }

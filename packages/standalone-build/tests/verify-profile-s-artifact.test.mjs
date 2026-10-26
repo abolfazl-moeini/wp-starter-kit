@@ -283,3 +283,60 @@ test("Probe 2b carve-out: generated closure-classmap.php passes structural asser
     await rm(tmpDir, { recursive: true, force: true });
   }
 });
+
+test("Probe 5b: Composer Classmap Isolation rejects foreign internal classes", async () => {
+  const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "probe-5b-"));
+  try {
+    const { createCanonicalZip } = await import("../canonical-artifact-manifest.mjs");
+    const pluginDir = path.join(tmpDir, "sample-plugin");
+    await fs.promises.mkdir(path.join(pluginDir, "vendor/composer"), { recursive: true });
+    await fs.promises.mkdir(path.join(pluginDir, "src/Compatibility"), { recursive: true });
+
+    await fs.promises.writeFile(path.join(pluginDir, "sample-plugin.php"), `<?php
+/**
+ * Plugin Name: Sample Plugin
+ */
+`);
+
+    await fs.promises.writeFile(
+      path.join(pluginDir, "vendor/composer/autoload_psr4.php"),
+      `<?php
+$vendorDir = dirname(__DIR__);
+$baseDir = dirname($vendorDir);
+return array(
+    'SamplePlugin\\\\' => array($baseDir . '/src'),
+);
+`,
+    );
+
+    // Write autoload_classmap.php with a foreign class pointing to an internal file
+    await fs.promises.writeFile(
+      path.join(pluginDir, "vendor/composer/autoload_classmap.php"),
+      `<?php
+$vendorDir = dirname(__DIR__);
+$baseDir = dirname($vendorDir);
+return array(
+    'SamplePlugin\\\\Module' => $baseDir . '/src/Module.php',
+    'ThirdParty\\\\ForeignClass' => $baseDir . '/src/Compatibility/Stub.php',
+);
+`,
+    );
+
+    const zipPath = path.join(tmpDir, "sample-plugin.zip");
+    await createCanonicalZip({ sourceRoot: pluginDir, outputZip: zipPath, rootName: "sample-plugin" });
+
+    const report = await verifyProfileSArtifact({
+      zipPath,
+      consumer: "sample-plugin",
+      obfuscate: false,
+      requireManifest: false,
+    });
+
+    assert.equal(report.status, "failed");
+    const failureMsg = report.failures.join(" ");
+    assert.match(failureMsg, /Composer classmap isolation failure/);
+    assert.match(failureMsg, /ThirdParty\\ForeignClass/);
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
+});

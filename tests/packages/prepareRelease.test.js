@@ -15,6 +15,11 @@ import {
   releaseStripFileGlobs,
   shouldStripRelativePath,
   matchSimpleGlob,
+  deriveAutoExcludeClassmap,
+  extractPsr4PrefixesFromComposerJson,
+  extractPsr4PrefixesFromPsr4Php,
+  filterClassmapEntries,
+  filterAutoloadStaticClassmap,
 } from "../../packages/create-wp-project/src/release/prepareComposer.js";
 
 describe("resolveReleaseContentRoot", () => {
@@ -269,5 +274,116 @@ describe("matchSimpleGlob", () => {
   test("matches phpunit.xml*", () => {
     expect(matchSimpleGlob("phpunit.xml", "phpunit.xml*")).toBe(true);
     expect(matchSimpleGlob("phpunit.xml.dist", "phpunit.xml*")).toBe(true);
+  });
+});
+
+describe("classmap isolation & foreign stub protection", () => {
+  test("deriveAutoExcludeClassmap includes default safety globs and discovered dirs", () => {
+    const excludes = deriveAutoExcludeClassmap(
+      ["custom/exclude/"],
+      ["src/Modules/Foo/Compatibility/"],
+    );
+    expect(excludes).toContain("custom/exclude/");
+    expect(excludes).toContain("src/Modules/Foo/Compatibility/");
+    expect(excludes).toContain("**/[Cc]ompatibility/**");
+    expect(excludes).toContain("**/[Ss]tub/**");
+  });
+
+  test("extractPsr4PrefixesFromComposerJson extracts and normalizes namespaces", () => {
+    const prefixes = extractPsr4PrefixesFromComposerJson({
+      autoload: {
+        "psr-4": {
+          "Acme\\Plugin\\": "src/",
+          "Acme\\Plugin\\Sub": "src/Sub/",
+        },
+      },
+    });
+    expect(prefixes).toEqual(["Acme\\Plugin\\", "Acme\\Plugin\\Sub\\"]);
+  });
+
+  test("extractPsr4PrefixesFromPsr4Php extracts namespaces from PHP array", () => {
+    const php = `<?php
+return array(
+    'WPDev\\\\' => array($baseDir . '/src/FrameworkClosure/Core'),
+    'Acme\\\\Plugin\\\\Core\\\\' => array($baseDir . '/src/FrameworkClosure/Core/Core'),
+    'Acme\\\\Plugin\\\\' => array($baseDir . '/src'),
+);`;
+    const prefixes = extractPsr4PrefixesFromPsr4Php(php);
+    expect(prefixes).toEqual([
+      "WPDev\\",
+      "Acme\\Plugin\\Core\\",
+      "Acme\\Plugin\\",
+    ]);
+  });
+
+  test("filterClassmapEntries strips foreign stubs while preserving valid entries", () => {
+    const classmapContent = `<?php
+
+$vendorDir = dirname(__DIR__);
+$baseDir = dirname($vendorDir);
+
+return array(
+    'Composer\\\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
+    'Acme\\\\Plugin\\\\Module' => $baseDir . '/src/Module.php',
+    'ThirdParty\\\\Plugin\\\\ForeignStub' => $baseDir . '/src/Modules/Wheel/Compatibility/ForeignStub.php',
+    'WPDev\\\\Chameleon\\\\Assets\\\\AssetPipeline' => $baseDir . '/src/FrameworkClosure/Core/Chameleon/Assets/AssetPipeline.php',
+    '_c_abcdef12' => $baseDir . '/src/FrameworkClosure/Core/mangled.php',
+    'WPDev_Standalone_Container' => $baseDir . '/src/FrameworkClosure/functions-closure.php',
+    'ExternalVendor\\\\Package\\\\Class' => $vendorDir . '/vendor/package/Class.php',
+);
+`;
+
+    const { filteredContent, stripped } = filterClassmapEntries(
+      classmapContent,
+      {
+        allowedPrefixes: ["Acme\\Plugin\\"],
+      },
+    );
+
+    expect(stripped).toHaveLength(1);
+    expect(stripped[0].normalizedClass).toBe("ThirdParty\\Plugin\\ForeignStub");
+    expect(stripped[0].relPath).toBe(
+      "/src/Modules/Wheel/Compatibility/ForeignStub.php",
+    );
+
+    expect(filteredContent).toContain("'Acme\\\\Plugin\\\\Module'");
+    expect(filteredContent).toContain("'Composer\\\\InstalledVersions'");
+    expect(filteredContent).toContain(
+      "'WPDev\\\\Chameleon\\\\Assets\\\\AssetPipeline'",
+    );
+    expect(filteredContent).toContain("'_c_abcdef12'");
+    expect(filteredContent).toContain("'WPDev_Standalone_Container'");
+    expect(filteredContent).toContain("'ExternalVendor\\\\Package\\\\Class'");
+    expect(filteredContent).not.toContain(
+      "ThirdParty\\\\Plugin\\\\ForeignStub",
+    );
+  });
+
+  test("filterAutoloadStaticClassmap strips matching entries from classMap array", () => {
+    const staticContent = `<?php
+
+namespace Composer\\Autoload;
+
+class ComposerStaticInit
+{
+    public static $classMap = array (
+        'Composer\\\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'Acme\\\\Plugin\\\\Module' => __DIR__ . '/../..' . '/src/Module.php',
+        'ThirdParty\\\\Plugin\\\\ForeignStub' => __DIR__ . '/../..' . '/src/Modules/Wheel/Compatibility/ForeignStub.php',
+        'WPDev\\\\Chameleon\\\\Assets\\\\AssetPipeline' => __DIR__ . '/../..' . '/src/FrameworkClosure/Core/Chameleon/Assets/AssetPipeline.php',
+    );
+}
+`;
+
+    const filtered = filterAutoloadStaticClassmap(staticContent, [
+      "ThirdParty\\Plugin\\ForeignStub",
+    ]);
+
+    expect(filtered).toContain("'Acme\\\\Plugin\\\\Module'");
+    expect(filtered).toContain("'Composer\\\\InstalledVersions'");
+    expect(filtered).toContain(
+      "'WPDev\\\\Chameleon\\\\Assets\\\\AssetPipeline'",
+    );
+    expect(filtered).not.toContain("ThirdParty\\\\Plugin\\\\ForeignStub");
   });
 });

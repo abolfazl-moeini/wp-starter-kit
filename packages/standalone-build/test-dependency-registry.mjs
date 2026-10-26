@@ -1485,6 +1485,15 @@ export const REQUIRED_ARTIFACT_TESTS = deriveRequiredArtifactTests(CANONICAL_TES
 function buildDependencyGraph() {
   const graph = {
     _tools: Object.keys(CANONICAL_TEST_REGISTRY),
+    _wpdev: [
+      "closure-classmap.test.mjs",
+      "framework-closure-inventory.test.mjs",
+      "framework-template-inventory.test.mjs",
+      "inliner-collision-and-manifest.test.mjs",
+      "multi-plugin-coexistence.test.mjs",
+      "settings-panel-autoload.test.mjs",
+      "validate-closure-review-manifest.test.mjs",
+    ],
     "themes/sample-theme": [
       "sample-profile-s-plugin-artifact.test.mjs",
       "settings-field-inventory.test.mjs",
