@@ -304,9 +304,26 @@ class Form_Manager extends Base_Manager {
 			'capability' => "wpdev_delete_{$model}s",
 		));
 
+		/**
+		 * Capability required to open/submit the built-in bulk_actions.
+		 *
+		 * Default is manage_network (translated to manage_options on single-site).
+		 * Host plugins should filter this to a domain capability or register bulk_actions early.
+		 *
+		 * @since 2.x
+		 * @param string $capability Default manage_network.
+		 * @param string $model      Model slug from the request (may be empty).
+		 */
+		$bulk_capability = apply_filters(
+			'wpdev_bulk_actions_capability',
+			'manage_network',
+			$model
+		);
+
 		wpdev_register_form('bulk_actions', array(
-			'render'  => array($this, 'render_bulk_action_form'),
-			'handler' => array($this, 'handle_bulk_action_form'),
+			'render'     => array($this, 'render_bulk_action_form'),
+			'handler'    => array($this, 'handle_bulk_action_form'),
+			'capability' => $bulk_capability,
 		));
 
 		add_action('wpdev_handle_bulk_action_form', array($this, 'default_bulk_action_handler'), 100, 3);
@@ -553,7 +570,7 @@ class Form_Manager extends Base_Manager {
 			),
 			'ids'           => array(
 				'type'  => 'hidden',
-				'value' => implode(',', wpdev_request('bulk-delete', '')),
+				'value' => is_array(wpdev_request('bulk-delete')) ? implode(',', wpdev_request('bulk-delete')) : (string) wpdev_request('bulk-delete', ''),
 			),
 		));
 

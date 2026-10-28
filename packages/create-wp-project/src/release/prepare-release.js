@@ -207,10 +207,11 @@ export function parseArgs(argv) {
         val !== "s" &&
         val !== "clean" &&
         val !== "spaghetti" &&
-        val !== "standalone"
+        val !== "standalone" &&
+        val !== "standalone-spaghetti"
       ) {
         throw new Error(
-          `Invalid --profile '${val}'. Allowed: spaghetti, standalone, clean, s`,
+          `Invalid --profile '${val}'. Allowed: spaghetti, standalone, clean, standalone-spaghetti, s`,
         );
       }
       selectedProfiles.push(val);
@@ -225,10 +226,11 @@ export function parseArgs(argv) {
         val !== "s" &&
         val !== "clean" &&
         val !== "spaghetti" &&
-        val !== "standalone"
+        val !== "standalone" &&
+        val !== "standalone-spaghetti"
       ) {
         throw new Error(
-          `Invalid --profile '${val}'. Allowed: spaghetti, standalone, clean, s`,
+          `Invalid --profile '${val}'. Allowed: spaghetti, standalone, clean, standalone-spaghetti, s`,
         );
       }
       selectedProfiles.push(val);
@@ -871,7 +873,9 @@ export async function prepareRelease(options = {}) {
         options.inlineFramework !== undefined
           ? options.inlineFramework
           : (raw?.inlineFramework ??
-            (profile === "s" || profile === "standalone")),
+            (profile === "s" ||
+              profile === "standalone" ||
+              profile === "standalone-spaghetti")),
       spaghetti:
         options.spaghetti !== undefined
           ? options.spaghetti
