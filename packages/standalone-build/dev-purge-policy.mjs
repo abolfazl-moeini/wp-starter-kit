@@ -47,6 +47,14 @@ export const VENDOR_DEV_DIRS = new Set([
   "myclabs",
   "doctrine",
   "nikic",
+  "jetbrains",
+  "symfony",
+  "szepeviktor",
+  "phpcsstandards",
+  "phpdocumentor",
+  "php-stubs",
+  "psr",
+  "qossmic",
   ".git",
   ".github"
 ]);
@@ -104,6 +112,16 @@ export function shouldPurgeDirectory(relPath, isRoot, dirName) {
 
   if (isRoot) {
     return ROOT_DEV_DIRS.has(lowerName);
+  }
+
+  // Nested tests, docker-phpunit, dev-tools are ALWAYS dev artifacts regardless of parent directory
+  if (
+    lowerName === "tests" ||
+    lowerName === "unit-tests" ||
+    lowerName === "docker-phpunit" ||
+    lowerName === "dev-tools"
+  ) {
+    return true;
   }
 
   // Check if inside a protected production source tree

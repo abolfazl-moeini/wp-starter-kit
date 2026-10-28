@@ -118,6 +118,7 @@ export function releaseCopyExcludeNames() {
     ".phpunit.result.cache",
     "skills",
     "artifacts",
+    "tests",
     "unit-tests",
   ];
 }
