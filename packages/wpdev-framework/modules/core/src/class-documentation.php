@@ -47,31 +47,8 @@ class Documentation {
 
 		$links = array();
 
-		// WPDev Dashboard
-		$links['wpdev'] = 'https://help.wpdev.ir/en/articles/4803213-understanding-the-wpdev-dashboard';
-
 		// Settings Page
 		$links['wpdev-settings'] = 'https://help.wpdev.ir';
-
-		// Checkout Pages
-		$links['wpdev-checkout-forms']         = 'https://help.wpdev.ir/en/articles/4803465-checkout-forms';
-		$links['wpdev-edit-checkout-form']     = 'https://help.wpdev.ir/en/articles/4803465-checkout-forms';
-		$links['wpdev-populate-site-template'] = 'https://help.wpdev.ir/en/articles/4803661-pre-populate-site-template-with-data-from-checkout-forms';
-
-		// Products
-		$links['wpdev-products']     = 'https://help.wpdev.ir/en/articles/4803960-managing-your-products';
-		$links['wpdev-edit-product'] = 'https://help.wpdev.ir/en/articles/4803960-managing-your-products';
-
-		// Memberships
-		$links['wpdev-memberships']     = 'https://help.wpdev.ir/en/articles/4803989-managing-memberships';
-		$links['wpdev-edit-membership'] = 'https://help.wpdev.ir/en/articles/4803989-managing-memberships';
-
-		// Payments
-		$links['wpdev-payments']     = 'https://help.wpdev.ir/en/articles/4804023-managing-payments-and-invoices';
-		$links['wpdev-edit-payment'] = 'https://help.wpdev.ir/en/articles/4804023-managing-payments-and-invoices';
-
-		// WP Config Closte Instructions
-		$links['wpdev-closte-config'] = 'https://help.wpdev.ir/en/articles/4807812-setting-the-sunrise-constant-to-true-on-closte';
 
 		// Requirements
 		$links['wpdev-requirements'] = 'https://help.wpdev.ir/en/articles/4829561-wpdev-requirements';

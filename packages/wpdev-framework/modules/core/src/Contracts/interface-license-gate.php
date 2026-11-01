@@ -10,6 +10,10 @@ namespace WPDevFramework\Core\Contracts;
 
 defined( 'ABSPATH' ) || exit;
 
+if ( interface_exists( __NAMESPACE__ . '\License_Gate', false ) ) {
+	return;
+}
+
 /**
  * License gate contract (decouples form/UI registration from License boot order).
  */

@@ -106,7 +106,7 @@ final class AssetPipeline {
             }
         }
 
-        return (bool) $registry['needed'];
+        return $registry['needed'];
     }
 
     /**

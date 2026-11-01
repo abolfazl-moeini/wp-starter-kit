@@ -193,7 +193,6 @@ class Agent
     /**
      * Request agent forwarding of remote server
      *
-     * @param \phpseclib3\Net\SSH2 $ssh
      * @return bool
      */
     private function request_forwarding(SSH2 $ssh)
@@ -210,8 +209,6 @@ class Agent
      * This method is called upon successful channel
      * open to give the SSH Agent an opportunity
      * to take further action. i.e. request agent forwarding
-     *
-     * @param \phpseclib3\Net\SSH2 $ssh
      */
     public function registerChannelOpen(SSH2 $ssh)
     {

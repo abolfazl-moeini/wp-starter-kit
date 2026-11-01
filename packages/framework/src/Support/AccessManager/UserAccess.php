@@ -88,9 +88,6 @@ abstract class UserAccess extends QualifierBase
         return true;
     }
 
-    /**
-     * @param callable $callback
-     */
     protected function check_custom(callable $callback): bool
     {
         return (bool) call_user_func($callback, $callback);

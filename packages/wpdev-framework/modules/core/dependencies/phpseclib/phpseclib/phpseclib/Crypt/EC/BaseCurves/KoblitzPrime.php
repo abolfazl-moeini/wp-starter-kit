@@ -216,8 +216,6 @@ class KoblitzPrime extends \phpseclib3\Crypt\EC\BaseCurves\Prime
      * Calculates the parameters needed from the Euclidean algorithm as discussed at
      * http://diamond.boisestate.edu/~liljanab/MATH308/GuideToECC.pdf#page=148
      *
-     * @param BigInteger $u
-     * @param BigInteger $v
      * @return BigInteger[]
      */
     protected static function extendedGCD(BigInteger $u, BigInteger $v)

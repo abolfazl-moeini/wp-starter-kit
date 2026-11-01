@@ -40,14 +40,11 @@ abstract class ASN1
         if (empty($decoded)) {
             return \false;
         }
-        $components = Encoder::asn1map($decoded[0], Maps\DssSigValue::MAP);
-        return $components;
+        return Encoder::asn1map($decoded[0], Maps\DssSigValue::MAP);
     }
     /**
      * Returns a signature in the appropriate format
      *
-     * @param \phpseclib3\Math\BigInteger $r
-     * @param \phpseclib3\Math\BigInteger $s
      * @return string
      */
     public static function save(BigInteger $r, BigInteger $s)

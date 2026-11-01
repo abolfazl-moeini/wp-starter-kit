@@ -37,8 +37,6 @@ final class Generic extends BaseTag implements Factory\StaticMethod
     }
     /**
      * Creates a new tag that represents any unknown tag type.
-     *
-     * @return static
      */
     public static function create(string $body, string $name = '', ?DescriptionFactory $descriptionFactory = null, ?TypeContext $context = null) : self
     {

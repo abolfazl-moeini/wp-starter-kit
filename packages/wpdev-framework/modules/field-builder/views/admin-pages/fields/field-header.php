@@ -5,11 +5,11 @@
  * @since 2.0.0
  */
 ?>
-<li class="wpdev-bg-gray-100 wpdev-py-4 <?php echo esc_attr(trim($field->wrapper_classes)); ?>" <?php echo $field->get_wrapper_html_attributes(); ?>>
+<li class="wpdev-surface-gray-100 wpdev-pad-y-4 <?php echo esc_attr(trim($field->wrapper_classes)); ?>" <?php echo $field->get_wrapper_html_attributes(); ?>>
 
-  <div class="wpdev-block wpdev-w-full">
+  <div class="wpdev-block wpdev-full">
 
-    <h3 class="wpdev-my-1 wpdev-text-base wpdev-text-gray-800">
+    <h3 class="wpdev-mar-y-1 wpdev-type-base wpdev-type-gray-800">
 
       <?php echo $field->title; ?>
 
@@ -23,7 +23,7 @@
 
     <?php if ($field->desc) : ?>
 
-    <p class="wpdev-mt-1 wpdev-mb-0 wpdev-text-gray-700">
+    <p class="wpdev-mar-t-1 wpdev-mar-b-0 wpdev-type-gray-700">
 
       <?php echo $field->desc; ?>
 

@@ -46,6 +46,13 @@ class BuildDistTest extends \WPDevTest\TestCases\TestCase
         $this->assertDirectoryDoesNotExist($distDir . '/tests');
         $this->assertDirectoryDoesNotExist($distDir . '/dev');
         $this->assertDirectoryDoesNotExist($distDir . '/node_modules');
+        $this->assertDirectoryDoesNotExist($distDir . '/packages');
+        $this->assertDirectoryDoesNotExist($distDir . '/core');
+        $this->assertDirectoryDoesNotExist($distDir . '/tools');
+        $this->assertDirectoryDoesNotExist($distDir . '/skills');
+        $this->assertDirectoryDoesNotExist($distDir . '/vendor/wpdev', 'unprefixed framework must be removed from vendor/');
+        $this->assertFileDoesNotExist($distDir . '/phpunit.xml.dist');
+        $this->assertFileDoesNotExist($distDir . '/AGENTS.md');
         if (is_dir($this->root . '/packages/wpdev-framework/vendor')) {
             $this->assertDirectoryDoesNotExist(
                 $distDir . '/packages/wpdev-framework/vendor',

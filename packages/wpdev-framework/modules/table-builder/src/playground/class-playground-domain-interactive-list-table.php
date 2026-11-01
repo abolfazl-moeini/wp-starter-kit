@@ -99,7 +99,7 @@ class Playground_Domain_Interactive_List_Table extends Playground_Interactive_Li
 					$rows,
 					static function ( $row ) use ( $search ) {
 						$haystack = strtolower(
-							(string) ( $row->name ?? '' ) . ' ' . (string) ( $row->status ?? '' ) . ' ' . (string) ( $row->date ?? '' )
+							($row->name ?? '') . ' ' . ($row->status ?? '') . ' ' . ($row->date ?? '')
 						);
 
 						return false !== strpos( $haystack, $search );

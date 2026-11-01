@@ -60,7 +60,7 @@ class Tours {
 	 * @param string $id Tour id.
 	 * @return string
 	 */
-	protected function tour_meta_key( $id ) {
+	public function tour_meta_key( $id ) {
 
 		$id = preg_replace( '/[^A-Za-z0-9_-]+/', '', (string) $id );
 
@@ -69,7 +69,7 @@ class Tours {
 	} // end tour_meta_key;
 
 	/**
-	 * Whether the current user has finished a tour.
+	 * Whether a tour is marked as finished/seen for a user.
 	 *
 	 * @since 2.8.3
 	 *
@@ -77,11 +77,11 @@ class Tours {
 	 * @param int    $user_id Optional user id.
 	 * @return bool
 	 */
-	protected function user_finished_tour( $id, $user_id = 0 ) {
+	public function is_tour_finished( $id, $user_id = 0 ) {
 
 		$user_id = $user_id ? (int) $user_id : get_current_user_id();
 
-		if ( ! $user_id ) {
+		if ( ! $user_id || ! $id ) {
 			return false;
 		}
 
@@ -94,10 +94,10 @@ class Tours {
 		// Back-compat: older releases stored this in admin user-settings.
 		return (bool) get_user_setting( $meta_key, false );
 
-	} // end user_finished_tour;
+	} // end is_tour_finished;
 
 	/**
-	 * Persist tour completion for a user.
+	 * Backward compatibility alias for is_tour_finished.
 	 *
 	 * @since 2.8.3
 	 *
@@ -105,7 +105,22 @@ class Tours {
 	 * @param int    $user_id Optional user id.
 	 * @return bool
 	 */
-	protected function mark_user_tour_finished( $id, $user_id = 0 ) {
+	protected function user_finished_tour( $id, $user_id = 0 ) {
+
+		return $this->is_tour_finished( $id, $user_id );
+
+	} // end user_finished_tour;
+
+	/**
+	 * Persist tour completion/seen flag for a user.
+	 *
+	 * @since 2.8.3
+	 *
+	 * @param string $id      Tour id.
+	 * @param int    $user_id Optional user id.
+	 * @return bool
+	 */
+	public function mark_tour_finished( $id, $user_id = 0 ) {
 
 		$user_id = $user_id ? (int) $user_id : get_current_user_id();
 
@@ -122,7 +137,48 @@ class Tours {
 
 		return true;
 
+	} // end mark_tour_finished;
+
+	/**
+	 * Backward compatibility alias for mark_tour_finished.
+	 *
+	 * @since 2.8.3
+	 *
+	 * @param string $id      Tour id.
+	 * @param int    $user_id Optional user id.
+	 * @return bool
+	 */
+	protected function mark_user_tour_finished( $id, $user_id = 0 ) {
+
+		return $this->mark_tour_finished( $id, $user_id );
+
 	} // end mark_user_tour_finished;
+
+	/**
+	 * Reset tour seen flag so it can be displayed again naturally.
+	 *
+	 * @since 2.9.0
+	 *
+	 * @param string $id      Tour id.
+	 * @param int    $user_id Optional user id.
+	 * @return bool
+	 */
+	public function reset_tour( $id, $user_id = 0 ) {
+
+		$user_id = $user_id ? (int) $user_id : get_current_user_id();
+
+		if ( ! $user_id || ! $id ) {
+			return false;
+		}
+
+		$meta_key = $this->tour_meta_key( $id );
+
+		delete_user_meta( $user_id, $meta_key );
+		delete_user_setting( $meta_key );
+
+		return true;
+
+	} // end reset_tour;
 
 	/**
 	 * Mark the tour as finished for a particular user.
@@ -134,7 +190,7 @@ class Tours {
 
 		$id = wpdev_request( 'tour_id' );
 
-		if ( $id && $this->mark_user_tour_finished( $id ) ) {
+		if ( $id && $this->mark_tour_finished( $id ) ) {
 			wpdev_require_public_function( 'ajax' );
 			wpdev_ajax_success( array( 'tour_id' => $id ), 'tour_finished' );
 		}
@@ -152,9 +208,18 @@ class Tours {
 	 */
 	public function register_scripts() {
 
-		wpdev()->scripts->register_script('wpdev-shepherd', wpdev_get_module_asset_url('core', 'lib/shepherd.js', 'js'), array());
+		// Register directly with wp_register_script() instead of going through
+		// wpdev()->scripts — the Tours singleton is instantiated on wpdev_init
+		// (Service_Registry::boot), which can be earlier than WPDev::$scripts
+		// (populated later in WPDev::init(), and skipped entirely if
+		// Requirements::met() fails). WPDevFramework\Scripts::register_script()
+		// is itself just a thin wp_register_script() wrapper, so there's no
+		// behaviour difference — only reliability.
+		$version = function_exists( 'wpdev_get_version' ) ? wpdev_get_version() : false;
 
-		wpdev()->scripts->register_script('wpdev-tours', wpdev_get_module_asset_url('core', 'tours.js', 'js'), array('wpdev-shepherd', 'underscore'));
+		wp_register_script( 'wpdev-shepherd', wpdev_get_module_asset_url( 'core', 'lib/shepherd.js', 'js' ), array(), $version );
+
+		wp_register_script( 'wpdev-tours', wpdev_get_module_asset_url( 'core', 'tours.js', 'js' ), array( 'wpdev-shepherd', 'underscore' ), $version );
 
 	}  // end register_scripts;
 
@@ -245,6 +310,12 @@ class Tours {
 				} // end foreach;
 
 				$this->tours[$id] = $steps;
+
+				// Once-only tours are automatically flagged as seen on initial render for the user,
+				// preventing repeated display on refresh/navigation.
+				if ($once && get_current_user_id()) {
+					$this->mark_tour_finished( $id );
+				}
 
 			} // end if;
 

@@ -144,8 +144,7 @@ if ( !class_exists('Puc_v4p11_DebugBar_Panel', false) && class_exists('Debug_Bar
 			} else {
 				$result = $result . ' ago';
 			}
-			$result .= ' (' . $this->formatTimestamp($unixTime) . ')';
-			return $result;
+			return $result . (' (' . $this->formatTimestamp($unixTime) . ')');
 		}
 
 		private function formatTimestamp($unixTime) {

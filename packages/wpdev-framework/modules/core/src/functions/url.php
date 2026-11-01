@@ -52,27 +52,38 @@ function wpdev_replace_scheme($url, $new_scheme = '') {
  // end wpdev_replace_scheme;
 
 /**
- * Wrapper to the network_admin_url function for WPDev admin urls.
+ * Build a WPDev admin.php URL for the correct admin area (site vs network).
+ *
+ * Prefers where the page slug is registered (`Capability_Registry` panels):
+ * - only `admin_menu` → site admin (`wp-admin`)
+ * - only `network_admin_menu` → network admin (`wp-admin/network`)
+ * - both or unknown → current request context (`is_network_admin()`)
+ *
+ * The legacy name is kept for backward compatibility; callers should not switch
+ * to raw `network_admin_url( 'admin.php?page=…' )`.
  *
  * @since 2.0.0
  *
- * @param string $path WPDev page.
+ * @param string $path  WPDev page slug (may include extra query fragments after `&`).
  * @param array  $query URL query parameters.
  * @return string
  */
 if (!function_exists('wpdev_network_admin_url')) {
 function wpdev_network_admin_url($path, $query = array()) {
 
-	$path = sprintf('admin.php?page=%s', $path);
+	$page_slug = (string) $path;
+
+	if ( false !== strpos( $page_slug, '&' ) ) {
+		$page_slug = strstr( $page_slug, '&', true );
+	}
+
+	$page_slug  = sanitize_key( $page_slug );
+	$admin_path = sprintf( 'admin.php?page=%s', $path );
 
 	if ( function_exists( 'wpdev_is_network_context' ) && ! wpdev_is_network_context() ) {
-		$url = admin_url( $path );
-	} elseif ( function_exists( 'is_network_admin' ) && is_network_admin() ) {
-		$url = network_admin_url( $path );
-	} elseif ( function_exists( 'wpdev_playground_uses_site_admin_context' ) && wpdev_playground_uses_site_admin_context() ) {
-		$url = admin_url( $path );
+		$url = admin_url( $admin_path );
 	} else {
-		$url = network_admin_url( $path );
+		$url = wpdev_resolve_admin_page_base_url( $admin_path, $page_slug );
 	}
 
 	return add_query_arg( $query, $url );
@@ -80,6 +91,46 @@ function wpdev_network_admin_url($path, $query = array()) {
 }
 }
  // end wpdev_network_admin_url;
+
+/**
+ * Resolve site vs network base URL for a registered (or unknown) admin page.
+ *
+ * @since 2.12.1
+ *
+ * @param string $admin_path Path passed to admin_url / network_admin_url (e.g. admin.php?page=…).
+ * @param string $page_slug  Sanitized page id.
+ * @return string
+ */
+if (!function_exists('wpdev_resolve_admin_page_base_url')) {
+function wpdev_resolve_admin_page_base_url( $admin_path, $page_slug ) {
+
+	$panels = null;
+
+	if ( class_exists( '\WPDevFramework\Core\Capabilities\Capability_Registry' ) ) {
+		$panels = \WPDevFramework\Core\Capabilities\Capability_Registry::get_page_panels( $page_slug );
+	}
+
+	$has_site    = is_array( $panels ) && isset( $panels['admin_menu'] );
+	$has_network = is_array( $panels ) && isset( $panels['network_admin_menu'] );
+
+	if ( $has_site && ! $has_network ) {
+		return admin_url( $admin_path );
+	}
+
+	if ( $has_network && ! $has_site ) {
+		return network_admin_url( $admin_path );
+	}
+
+	// Both panels registered, or page not in the registry yet — follow current admin.
+	if ( function_exists( 'is_network_admin' ) && is_network_admin() ) {
+		return network_admin_url( $admin_path );
+	}
+
+	return admin_url( $admin_path );
+
+}
+}
+ // end wpdev_resolve_admin_page_base_url;
 
 /**
  * Get the light ajax implementation URL.
@@ -125,3 +176,24 @@ function wpdev_ajax_url($when = null, $query_args = array(), $site_id = false, $
 }
 }
  // end wpdev_ajax_url;
+
+/**
+ * Build a raw nonce URL suitable for JSON responses (without HTML-encoded &amp; entities).
+ *
+ * @since 2.14.0
+ *
+ * @param string     $url    Raw action URL.
+ * @param int|string $action Nonce action name.
+ * @param string     $name   Query argument name for nonce. Default '_wpnonce'.
+ * @return string Raw URL with nonce query argument.
+ */
+if ( ! function_exists( 'wpdev_nonce_url_for_json' ) ) {
+function wpdev_nonce_url_for_json( $url, $action = -1, $name = '_wpnonce' ) {
+
+	$nonce = function_exists( 'wp_create_nonce' ) ? wp_create_nonce( $action ) : '';
+
+	return add_query_arg( $name, $nonce, $url );
+
+}
+}
+// end wpdev_nonce_url_for_json;

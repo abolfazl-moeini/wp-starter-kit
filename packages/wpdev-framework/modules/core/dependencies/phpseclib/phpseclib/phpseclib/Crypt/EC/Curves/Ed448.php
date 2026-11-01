@@ -38,7 +38,6 @@ class Ed448 extends TwistedEdwards
      *
      * Used by EC\Keys\Common.php
      *
-     * @param BigInteger $y
      * @param boolean $sign
      * @return object[]
      */
@@ -99,8 +98,6 @@ class Ed448 extends TwistedEdwards
         //     secret scalar s.
         $dA = new BigInteger($h, 256);
         return ['dA' => $dA, 'secret' => $str];
-        $dA->secret = $str;
-        return $dA;
     }
     /**
      * Encode a point as a string
@@ -115,8 +112,7 @@ class Ed448 extends TwistedEdwards
         if ($x->isOdd()) {
             $y[0] = $y[0] | \chr(0x80);
         }
-        $y = \strrev($y);
-        return $y;
+        return \strrev($y);
     }
     /**
      * Creates a random scalar multiplier

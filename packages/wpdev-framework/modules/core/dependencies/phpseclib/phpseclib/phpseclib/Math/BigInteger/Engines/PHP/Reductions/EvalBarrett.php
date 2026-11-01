@@ -33,8 +33,6 @@ abstract class EvalBarrett extends Base
      * This calls a dynamically generated loop unrolled function that's specific to a given modulo.
      * Array lookups are avoided as are if statements testing for how many bits the host OS supports, etc.
      *
-     * @param array $n
-     * @param array $m
      * @param string $class
      * @return array
      */
@@ -46,7 +44,6 @@ abstract class EvalBarrett extends Base
     /**
      * Generate Custom Reduction
      *
-     * @param PHP $m
      * @param string $class
      * @return callable
      */
@@ -144,7 +141,6 @@ abstract class EvalBarrett extends Base
      * Inline Multiply (unknown, known)
      *
      * @param string $input
-     * @param array $arr
      * @param string $output
      * @param string $class
      * @return string
@@ -192,10 +188,9 @@ abstract class EvalBarrett extends Base
             $regular .= $class::BASE === 26 ? ');' : ';';
         }
         $regular .= '$' . $output . '[++$k] = $carry; $carry = 0;';
-        $regular .= '}}';
         //if (count($arr) < 2 * self::KARATSUBA_CUTOFF) {
         //}
-        return $regular;
+        return $regular . '}}';
     }
     /**
      * Inline Addition
@@ -235,8 +230,7 @@ abstract class EvalBarrett extends Base
                 }
                 ++$' . $result . '[$i];
             }';
-        $code .= self::generateInlineTrim($result);
-        return $code;
+        return $code . self::generateInlineTrim($result);
     }
     /**
      * Inline Subtraction 2
@@ -289,8 +283,7 @@ abstract class EvalBarrett extends Base
                 }
                 --$' . $result . '[$i];
             }';
-        $code .= self::generateInlineTrim($result);
-        return $code;
+        return $code . self::generateInlineTrim($result);
     }
     /**
      * Inline Subtraction 1
@@ -298,7 +291,6 @@ abstract class EvalBarrett extends Base
      * For when $unknown is more digits than $known. This is the easier use case to optimize for.
      *
      * @param string $unknown
-     * @param array $known
      * @param string $result
      * @param string $class
      * @return string
@@ -345,15 +337,13 @@ abstract class EvalBarrett extends Base
                 }
                 --$' . $result . '[$i];
             }';
-        $code .= self::generateInlineTrim($result);
-        return $code;
+        return $code . self::generateInlineTrim($result);
     }
     /**
      * Inline Comparison
      *
      * If $unknown >= $known then loop
      *
-     * @param array $known
      * @param string $unknown
      * @param string $subcode
      * @return string
@@ -374,7 +364,7 @@ abstract class EvalBarrett extends Base
                 case $' . $unknown . '[' . $i . '] < ' . $known[$i] . ':
                     goto end_' . $uniqid . ';';
         }
-        $code .= '
+        return $code . ('
                 default:
                     // do subcode
             }
@@ -382,8 +372,7 @@ abstract class EvalBarrett extends Base
             subcode_' . $uniqid . ':' . $subcode . '
             goto loop_' . $uniqid . ';
 
-            end_' . $uniqid . ':';
-        return $code;
+            end_' . $uniqid . ':');
     }
     /**
      * Convert a float to a string

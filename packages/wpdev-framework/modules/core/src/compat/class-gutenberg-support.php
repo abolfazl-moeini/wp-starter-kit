@@ -5,7 +5,7 @@
  * Allows WPDev to filter Gutenberg thingys.
  *
  * @since       1.9.14
- * @author      Arindo Duque
+ * @author      WPDev
  * @category    Admin
  * @package     WPDev/Compat
  * @version     0.0.1

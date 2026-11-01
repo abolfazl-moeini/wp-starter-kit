@@ -38,7 +38,6 @@ abstract class Hex implements EncoderInterface
      * leaks
      *
      * @param string $binString (raw binary)
-     * @return string
      * @throws TypeError
      */
     public static function encode(string $binString) : string
@@ -59,7 +58,6 @@ abstract class Hex implements EncoderInterface
      * leaks, returning uppercase letters (as per RFC 4648)
      *
      * @param string $binString (raw binary)
-     * @return string
      * @throws TypeError
      */
     public static function encodeUpper(string $binString) : string
@@ -79,8 +77,6 @@ abstract class Hex implements EncoderInterface
      * Convert a hexadecimal string into a binary string without cache-timing
      * leaks
      *
-     * @param string $encodedString
-     * @param bool $strictPadding
      * @return string (raw binary)
      * @throws RangeException
      */

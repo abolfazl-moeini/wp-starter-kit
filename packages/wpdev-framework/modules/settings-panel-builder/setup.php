@@ -27,3 +27,5 @@ require_once __DIR__ . '/src/class-settings.php';
 require_once __DIR__ . '/src/class-settings-section-registry.php';
 require_once __DIR__ . '/src/class-settings-storage.php';
 require_once __DIR__ . '/src/class-settings-save.php';
+require_once __DIR__ . '/src/class-option-store.php';
+require_once __DIR__ . '/src/migration/class-split-v2-settings-migration.php';

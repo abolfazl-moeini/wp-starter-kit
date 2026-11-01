@@ -18,47 +18,54 @@ defined('ABSPATH') || exit;
 
 /**
  * Geolocation Class.
+ *
+ * Slim / library builds never phone home by default. External IP / GeoIP HTTP
+ * lookups require an explicit host opt-in via filters (and disclosed services).
  */
 class Geolocation {
 
     /**
-     * GeoLite IPv4 DB.
+     * GeoLite IPv4 DB download URL.
+     *
+     * Empty in slim core — set via code changes or filters before calling update_database().
      *
      * @deprecated 3.4.0
      */
-    const GEOLITE_DB = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCountry/GeoIP.dat.gz';
+    const GEOLITE_DB = '';
 
     /**
-     * GeoLite IPv6 DB.
+     * GeoLite IPv6 DB download URL.
      *
      * @deprecated 3.4.0
      */
-    const GEOLITE_IPV6_DB = 'http://geolite.maxmind.com/download/geoip/database/GeoIPv6.dat.gz';
+    const GEOLITE_IPV6_DB = '';
 
     /**
-     * GeoLite2 DB.
+     * GeoLite2 DB download URL.
+     *
+     * Empty in slim core — host must supply a URL (and disclose the service) before download.
      *
      * @since 3.4.0
      */
-    const GEOLITE2_DB = 'http://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz';
+    const GEOLITE2_DB = '';
 
     /**
      * API endpoints for looking up user IP address.
+     *
+     * Empty by default; populate with `wpdev_geolocation_ip_lookup_apis` when opt-in.
+     *
+     * @var array
      */
-    private static array $ip_lookup_apis = array(
-        'ipify'             => 'http://api.ipify.org/',
-        'ipecho'            => 'http://ipecho.net/plain',
-        'ident'             => 'http://ident.me',
-        'whatismyipaddress' => 'http://bot.whatismyipaddress.com',
-    );
+    private static array $ip_lookup_apis = array();
 
     /**
-     * API endpoints for geolocating an IP address
+     * API endpoints for geolocating an IP address.
+     *
+     * Empty by default; populate with `wpdev_geolocation_geoip_apis` when opt-in.
+     *
+     * @var array
      */
-    private static array $geoip_apis = array(
-        'ipinfo.io'  => 'https://ipinfo.io/%s/json',
-        'ip-api.com' => 'http://ip-api.com/json/%s',
-    );
+    private static array $geoip_apis = array();
 
     /**
      * Check if server supports MaxMind GeoLite2 Reader.
@@ -69,6 +76,29 @@ class Geolocation {
     private static function supports_geolite2(): bool {
         return false; // version_compare( PHP_VERSION, '5.4.0', '>=' );
     } // end supports_geolite2;
+
+    /**
+     * Whether external HTTP lookups (IP / GeoIP APIs) are allowed.
+     *
+     * @since 2.11.0
+     * @return bool
+     */
+    private static function allow_external_lookup(): bool {
+
+        /**
+         * Opt-in for external geolocation / IP lookup HTTP requests.
+         *
+         * Default false so slim / WordPress.org host embeds do not phone home.
+         * Hosts that enable this must disclose services in their own readme.
+         *
+         * @since 2.11.0
+         *
+         * @param bool $allow Whether remote lookups are permitted.
+         */
+        return (bool) apply_filters( 'wpdev_geolocation_allow_external_lookup', false );
+
+    } // end allow_external_lookup;
+
     /**
      * Check if geolocation is enabled.
      *
@@ -150,13 +180,19 @@ class Geolocation {
 
     /**
      * Get user IP Address using an external service.
-     * This can be used as a fallback for users on localhost where
-     * get_ip_address() will be a local IP and non-geolocatable.
+     *
+     * Requires `wpdev_geolocation_allow_external_lookup` and non-empty
+     * `wpdev_geolocation_ip_lookup_apis`. Otherwise returns 0.0.0.0 with no HTTP.
      *
      * @return string
      */
     public static function get_external_ip_address() {
-        $external_ip_address = '0.0.0.0';
+        if ( ! self::allow_external_lookup() ) {
+            return '0.0.0.0';
+        } // end if;
+
+        $transient_name      = null;
+        $external_ip_address = false;
 
         if ( '' !== self::get_ip_address() ) {
             $transient_name      = 'external_ip_address_' . self::get_ip_address();
@@ -179,10 +215,12 @@ class Geolocation {
                 } // end if;
             } // end foreach;
 
-            set_transient( $transient_name, $external_ip_address, WEEK_IN_SECONDS );
+            if ( null !== $transient_name ) {
+                set_transient( $transient_name, $external_ip_address, WEEK_IN_SECONDS );
+            } // end if;
         } // end if;
 
-        return $external_ip_address;
+        return $external_ip_address ? $external_ip_address : '0.0.0.0';
     } // end get_external_ip_address;
 
 
@@ -191,10 +229,10 @@ class Geolocation {
      *
      * @param  string $ip_address   IP Address.
      * @param  bool   $fallback     If true, fallbacks to alternative IP detection (can be slower).
-     * @param  bool   $api_fallback If true, uses geolocation APIs if the database file doesn't exist (can be slower).
+     * @param  bool   $api_fallback If true, uses geolocation APIs if the database file doesn't exist (can be slower). Default false (no phone-home).
      * @return array
      */
-    public static function geolocate_ip($ip_address = '', $fallback = false, $api_fallback = true ) {
+    public static function geolocate_ip($ip_address = '', $fallback = false, $api_fallback = false ) {
         // Filter to allow custom geolocation of the IP address.
         $country_code = apply_filters( 'wpdev_geolocate_ip', false, $ip_address, $fallback, $api_fallback );
 
@@ -214,13 +252,13 @@ class Geolocation {
 
                 if ( self::supports_geolite2() && file_exists( $database ) ) {
                     $country_code = self::geolocate_via_db( $ip_address, $database );
-                } elseif ( $api_fallback ) {
+                } elseif ( $api_fallback && self::allow_external_lookup() ) {
                     $country_code = self::geolocate_via_api( $ip_address );
                 } else {
                     $country_code = '';
                 } // end if;
 
-                if ( !$country_code && $fallback ) {
+                if ( !$country_code && $fallback && self::allow_external_lookup() ) {
                     // May be a local environment - find external IP.
                     return self::geolocate_ip( self::get_external_ip_address(), false, $api_fallback );
                 } // end if;
@@ -252,12 +290,17 @@ class Geolocation {
      * Extract files with PharData. Tool built into PHP since 5.3.
      */
     public static function update_database() {
-        $logger = wc_get_logger();
-
-        if ( !self::supports_geolite2() ) {
-            $logger->notice( 'Requires PHP 5.4 to be able to download MaxMind GeoLite2 database', array( 'source' => 'geolocation' ) );
+        // Dead path while supports_geolite2() is false; keep guards before any remote I/O.
+        if ( ! self::supports_geolite2() ) {
             return;
         } // end if;
+
+        if ( ! self::allow_external_lookup() || '' === self::GEOLITE2_DB ) {
+            return;
+        } // end if;
+
+        // Optional WooCommerce logger when present (not a hard dependency for slim embeds).
+        $logger = function_exists( 'wc_get_logger' ) ? wc_get_logger() : null;
 
         require_once ABSPATH . 'wp-admin/includes/file.php';
 
@@ -283,7 +326,9 @@ class Geolocation {
                 $wp_filesystem->move( trailingslashit( dirname( $tmp_database_path ) ) . $file_path, $target_database_path, true );
                 $wp_filesystem->delete( trailingslashit( dirname( $tmp_database_path ) ) . $file->current()->getFileName() );
             } catch ( Exception $e ) {
-                $logger->notice( $e->getMessage(), array( 'source' => 'geolocation' ) );
+                if ( $logger ) {
+                    $logger->notice( $e->getMessage(), array( 'source' => 'geolocation' ) );
+                } // end if;
 
                 // Reschedule download of DB.
                 wp_clear_scheduled_hook( 'wpdev_geoip_updater' );
@@ -291,7 +336,7 @@ class Geolocation {
             } // end try;
             // Delete temp file regardless of success.
             $wp_filesystem->delete( $tmp_database_path );
-        } else {
+        } elseif ( $logger ) {
             $logger->notice(
                 'Unable to download GeoIP Database: ' . $tmp_database_path->get_error_message(),
                 array( 'source' => 'geolocation' )
@@ -331,6 +376,10 @@ class Geolocation {
      * @return string
      */
     private static function geolocate_via_api($ip_address ) {
+        if ( ! self::allow_external_lookup() ) {
+            return '';
+        } // end if;
+
         $country_code = get_transient( 'geoip_' . $ip_address );
 
         if ( false === $country_code ) {
@@ -349,20 +398,7 @@ class Geolocation {
                 $response         = wp_safe_remote_get( sprintf( $service_endpoint, $ip_address ), array( 'timeout' => 2 ) );
 
                 if ( !is_wp_error( $response ) && $response['body'] ) {
-                    switch ( $service_name ) {
-                        case 'ipinfo.io':
-                            $data         = json_decode( $response['body'] );
-                            $country_code = isset( $data->country ) ? $data->country : '';
-                            break;
-                        case 'ip-api.com':
-                            $data         = json_decode( $response['body'] );
-                            $country_code = isset( $data->countryCode ) ? $data->countryCode : ''; // @codingStandardsIgnoreLine
-                            break;
-                        default:
-                            $country_code = apply_filters( 'wpdev_geolocation_geoip_response_' . $service_name, '', $response['body'] );
-                            break;
-                    } // end switch;
-
+                    $country_code = apply_filters( 'wpdev_geolocation_geoip_response_' . $service_name, '', $response['body'] );
                     $country_code = sanitize_text_field( strtoupper( (string) $country_code ) );
 
                     if ( $country_code ) {
@@ -378,4 +414,3 @@ class Geolocation {
     } // end geolocate_via_api;
 
 } // end class Geolocation;
-

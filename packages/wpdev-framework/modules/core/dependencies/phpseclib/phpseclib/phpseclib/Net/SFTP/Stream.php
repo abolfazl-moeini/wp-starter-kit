@@ -215,11 +215,9 @@ class Stream
      *
      * @param string $path
      * @param string $mode
-     * @param int $options
-     * @param string $opened_path
      * @return bool
      */
-    private function _stream_open($path, $mode, $options, &$opened_path)
+    private function _stream_open($path, $mode)
     {
         $path = $this->parse_path($path);
         if ($path === \false) {
@@ -408,20 +406,18 @@ class Stream
     /**
      * Retrieve the underlaying resource
      *
-     * @param int $cast_as
      * @return resource
      */
-    private function _stream_cast($cast_as)
+    private function _stream_cast()
     {
         return $this->sftp->fsock;
     }
     /**
      * Advisory file locking
      *
-     * @param int $operation
      * @return bool
      */
-    private function _stream_lock($operation)
+    private function _stream_lock()
     {
         return \false;
     }
@@ -481,10 +477,9 @@ class Stream
      *                ATTRS      attrs
      *
      * @param string $path
-     * @param int $options
      * @return bool
      */
-    private function _dir_opendir($path, $options)
+    private function _dir_opendir($path)
     {
         $path = $this->parse_path($path);
         if ($path === \false) {
@@ -552,10 +547,9 @@ class Stream
      * $options. What does 8 correspond to?
      *
      * @param string $path
-     * @param int $options
      * @return bool
      */
-    private function _rmdir($path, $options)
+    private function _rmdir($path)
     {
         $path = $this->parse_path($path);
         if ($path === \false) {
@@ -581,11 +575,7 @@ class Stream
      */
     private function _stream_stat()
     {
-        $results = $this->sftp->stat($this->path);
-        if ($results === \false) {
-            return \false;
-        }
-        return $results;
+        return $this->sftp->stat($this->path);
     }
     /**
      * Delete a file
@@ -618,11 +608,7 @@ class Stream
         if ($path === \false) {
             return \false;
         }
-        $results = $flags & \STREAM_URL_STAT_LINK ? $this->sftp->lstat($path) : $this->sftp->stat($path);
-        if ($results === \false) {
-            return \false;
-        }
-        return $results;
+        return $flags & \STREAM_URL_STAT_LINK ? $this->sftp->lstat($path) : $this->sftp->stat($path);
     }
     /**
      * Truncate stream
@@ -645,12 +631,9 @@ class Stream
      * STREAM_OPTION_WRITE_BUFFER isn't supported for the same reason stream_flush isn't.
      * The other two aren't supported because of limitations in \phpseclib3\Net\SFTP.
      *
-     * @param int $option
-     * @param int $arg1
-     * @param int $arg2
      * @return bool
      */
-    private function _stream_set_option($option, $arg1, $arg2)
+    private function _stream_set_option()
     {
         return \false;
     }
@@ -672,7 +655,6 @@ class Stream
      * NET_SFTP_STREAM_LOGGING is enabled) the parameters will be passed through to the appropriate method.
      *
      * @param string $name
-     * @param array $arguments
      * @return mixed
      */
     public function __call($name, array $arguments)

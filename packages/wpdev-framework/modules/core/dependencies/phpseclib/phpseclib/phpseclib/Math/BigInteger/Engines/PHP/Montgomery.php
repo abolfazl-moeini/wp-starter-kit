@@ -35,9 +35,6 @@ abstract class Montgomery extends \phpseclib3\Math\BigInteger\Engines\PHP\Base
      * Performs modular exponentiation.
      *
      * @template T of Engine
-     * @param Engine $x
-     * @param Engine $e
-     * @param Engine $n
      * @param class-string<T> $class
      * @return T
      */

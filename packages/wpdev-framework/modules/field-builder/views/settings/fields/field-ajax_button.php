@@ -5,9 +5,9 @@
  * @since 2.0.0
  */
 ?>
-<div class="wpdev-my-6">
+<div class="wpdev-mar-y-6">
 
-  <div class="wpdev-flex">
+  <div class="wpdev-row">
 
     <div class="wpdev-w-1/3">
 
@@ -65,18 +65,45 @@
       }, 4000);
     }
 
-    // K1-09: route through the shared AJAX client (Ajax_Service envelope).
+    // K1-09 / integrate Phase 3.1: prefer shared AJAX client (Ajax_Service envelope).
     if (window.wpdev && window.wpdev.ajax) {
       window.wpdev.ajax.post(action, { nonce: nonce })
-        .then(function(res) { restore(res.message); })
-        .catch(function(err) { restore(err.message); });
+        .then(function(res) {
+          restore((res && res.message) || default_label);
+        })
+        .catch(function(err) {
+          restore((err && err.message) || default_label);
+        });
       return;
     }
 
+    // Fallback: still send the button nonce and guard the envelope.
     $.ajax({
-      url: "<?php echo esc_js(admin_url('admin-ajax.php?action=').$field->action); ?>",
+      url: "<?php echo esc_js(admin_url('admin-ajax.php')); ?>",
+      method: "POST",
       dataType: "json",
-      success: function(response) { restore(response.message); }
+      data: {
+        action: action,
+        nonce: nonce
+      },
+      success: function(response) {
+        if (!response || response.success === false) {
+          var msg = (response && response.message)
+            || (response && response.data && response.data.message)
+            || default_label;
+          restore(msg);
+          return;
+        }
+        restore((response && response.message) || default_label);
+      },
+      error: function(xhr) {
+        var msg = default_label;
+        try {
+          var parsed = JSON.parse(xhr.responseText);
+          msg = (parsed && parsed.message) || msg;
+        } catch (e) {}
+        restore(msg);
+      }
     });
 
   });

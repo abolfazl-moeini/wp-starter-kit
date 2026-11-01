@@ -111,6 +111,15 @@ class Settings_Save {
 				$new_value = isset( $settings_to_save[ $field_slug ] ) ? $settings_to_save[ $field_slug ] : $existing_value;
 
 				/*
+				 * Unify toggle boolean representations.
+				 */
+				if ( $field->type === 'toggle' && isset( $settings_to_save[ $field_slug ] ) ) {
+					$new_value = function_exists( 'wpdev_string_to_bool' )
+						? wpdev_string_to_bool( $settings_to_save[ $field_slug ] )
+						: (bool) $settings_to_save[ $field_slug ];
+				}
+
+				/*
 				 * For the current tab, we need to assume toggle fields default to off
 				 * when they are absent from the POST payload.
 				 */
@@ -123,6 +132,23 @@ class Settings_Save {
 					$new_value = false;
 
 				} // end if;
+
+				/*
+				 * If this field is conditionally hidden by its require rules,
+				 * invalid or empty posted values must not block save or corrupt existing data.
+				 */
+				if ( ! empty( $field_atts['require'] ) && is_array( $field_atts['require'] ) ) {
+					$context          = array_merge( $saved_settings, $settings, $settings_to_save );
+					$is_field_visible = true;
+					if ( class_exists( '\WPDevFramework\Modules\MetaboxBuilder\Metabox_Condition' ) ) {
+						$is_field_visible = \WPDevFramework\Modules\MetaboxBuilder\Metabox_Condition::evaluate_field_condition( $field_atts['require'], $context );
+					}
+					if ( ! $is_field_visible ) {
+						$settings[ $field_slug ] = ( false !== $existing_value ) ? $existing_value : ( $field->default ?? false );
+						do_action( 'wpdev_saving_setting', $field_slug, $field, $settings_to_save );
+						continue;
+					}
+				}
 
 				/*
 				 * Repeater controls post one array per subfield (image[], link[])

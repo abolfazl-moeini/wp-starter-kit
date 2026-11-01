@@ -8,11 +8,14 @@
 
 namespace WPDevFramework\Core\Services;
 
+use InvalidArgumentException;
 use WPDevFramework\Ajax;
 use WPDevFramework\Async_Calls;
 use WPDevFramework\Core\Ajax\Ajax_Response;
 use WPDevFramework\Core\Ajax\Ajax_Tab_Loader;
 use WPDevFramework\Core\Contracts\Ajax_Service_Contract;
+use WPDevFramework\Core\Security\Surface_Registry;
+use WPDevFramework\Core\Security\Surface_Type;
 use WPDevFramework\Light_Ajax;
 
 // Ensure ajax transport classes load from modules/core when the service boots.
@@ -127,6 +130,153 @@ class Ajax_Service implements Ajax_Service_Contract {
 	} // end register_handler;
 
 	/**
+	 * Register an authenticated AJAX action with mandatory capability and CSRF protection.
+	 *
+	 * Surface Model: CapabilityWrite.
+	 *
+	 * @param string               $action       Action slug without prefix.
+	 * @param string|null          $nonceAction  Nonce action name.
+	 * @param string|callable      $capability   Required user capability (mandatory; cannot be empty).
+	 * @param string|callable      $handler      Handler class name or callable.
+	 * @param array<string, mixed> $schema       Request validation schema.
+	 * @param array<string, mixed> $args         Additional transport options.
+	 * @param string|null          $nonce_action Nonce action snake_case fallback.
+	 * @return array<string, mixed> Surface registration record.
+	 * @throws InvalidArgumentException If capability is missing or empty.
+	 */
+	public function authenticated( $action, $nonceAction = null, $capability = 'manage_options', $handler = null, array $schema = array(), array $args = array(), $nonce_action = null ) {
+
+		if ( empty( $capability ) || ( is_string( $capability ) && trim( $capability ) === '' ) ) {
+			throw new InvalidArgumentException(
+				sprintf( 'Authenticated AJAX action "%s" requires a non-empty capability.', $action )
+			);
+		}
+
+		$nonce = null !== $nonceAction ? $nonceAction : ( null !== $nonce_action ? $nonce_action : $action );
+
+		$surface = Surface_Registry::register(
+			Surface_Type::CAPABILITY_WRITE,
+			'ajax',
+			$action,
+			$capability,
+			$handler,
+			$schema,
+			array_merge( $args, array( 'nonce_action' => $nonce ) )
+		);
+
+		$wrapped_handler = $this->wrap_handler_with_schema( $handler, $schema );
+
+		$registration_args = array_merge(
+			array(
+				'transport'    => 'admin',
+				'nopriv'       => false,
+				'capability'   => $capability,
+				'nonce_action' => $nonce,
+			),
+			$args
+		);
+
+		$this->register_handler( $action, $wrapped_handler, $registration_args );
+
+		return $surface;
+	}
+
+	/**
+	 * Register a public read AJAX action.
+	 *
+	 * Surface Model: PublicRead.
+	 *
+	 * @param string               $action  Action slug without prefix.
+	 * @param string|callable      $handler Handler class name or callable.
+	 * @param array<string, mixed> $schema  Request validation schema.
+	 * @param array<string, mixed> $args    Additional options.
+	 * @return array<string, mixed> Surface registration record.
+	 */
+	public function public_read( $action, $handler, array $schema = array(), array $args = array() ) {
+
+		$surface = Surface_Registry::register(
+			Surface_Type::PUBLIC_READ,
+			'ajax',
+			$action,
+			null,
+			$handler,
+			$schema,
+			$args
+		);
+
+		$wrapped_handler = $this->wrap_handler_with_schema( $handler, $schema );
+
+		$registration_args = array_merge(
+			array(
+				'transport'  => 'both',
+				'nopriv'     => true,
+				'skip_nonce' => true,
+				'capability' => null,
+			),
+			$args
+		);
+
+		$this->register_handler( $action, $wrapped_handler, $registration_args );
+
+		return $surface;
+	}
+
+	/**
+	 * Alias for authenticated AJAX action with capability enforcement.
+	 *
+	 * Surface Model: CapabilityWrite.
+	 *
+	 * @param string               $action      Action slug without prefix.
+	 * @param string               $nonceAction Nonce action name.
+	 * @param string|callable      $capability  Required user capability.
+	 * @param string|callable      $handler     Handler class name or callable.
+	 * @param array<string, mixed> $schema      Request validation schema.
+	 * @param array<string, mixed> $args        Additional options.
+	 * @return array<string, mixed> Surface registration record.
+	 */
+	public function capability_write( $action, $nonceAction, $capability, $handler, array $schema = array(), array $args = array() ) {
+		return $this->authenticated( $action, $nonceAction, $capability, $handler, $schema, $args );
+	}
+
+	/**
+	 * Wrap handler with schema validation and automatic class instantiation.
+	 *
+	 * @param string|callable      $handler Handler callable or class name.
+	 * @param array<string, mixed> $schema  Schema constraints.
+	 * @return callable
+	 */
+	protected function wrap_handler_with_schema( $handler, array $schema = array() ) {
+		return static function () use ( $handler, $schema ) {
+			if ( ! empty( $schema ) && isset( $_REQUEST ) && is_array( $_REQUEST ) ) {
+				foreach ( $schema as $param_name => $rules ) {
+					if ( is_array( $rules ) && ! empty( $rules['required'] ) && ! isset( $_REQUEST[ $param_name ] ) ) {
+						Ajax_Response::bad_request(
+							sprintf( 'Missing required parameter: %s', $param_name )
+						);
+						return;
+					}
+				}
+			}
+
+			if ( is_string( $handler ) && class_exists( $handler ) ) {
+				$instance = new $handler();
+				if ( method_exists( $instance, 'handle' ) ) {
+					return $instance->handle();
+				}
+				if ( is_callable( $instance ) ) {
+					return $instance();
+				}
+			}
+
+			if ( is_callable( $handler ) ) {
+				return call_user_func_array( $handler, func_get_args() );
+			}
+
+			throw new InvalidArgumentException( sprintf( 'Handler is not callable or valid class: %s', var_export( $handler, true ) ) );
+		};
+	}
+
+	/**
 	 * Wrap a handler with nonce and capability checks.
 	 *
 	 * @since 2.6.0
@@ -151,13 +301,15 @@ class Ajax_Service implements Ajax_Service_Contract {
 				}
 			}
 
-			$allowed = true;
-
-			if ( ! empty( $args['capability_callback'] ) && is_callable( $args['capability_callback'] ) ) {
+			if ( function_exists( 'wpdev_request_access_is_allowed' ) ) {
+				$allowed = wpdev_request_access_is_allowed( $args );
+			} elseif ( ! empty( $args['capability_callback'] ) && is_callable( $args['capability_callback'] ) ) {
 				$allowed = (bool) call_user_func( $args['capability_callback'] );
 			} elseif ( ! empty( $args['capability'] ) && function_exists( 'current_user_can' ) ) {
 				$cap     = function_exists( 'wpdev_admin_capability_for' ) ? wpdev_admin_capability_for( $args['capability'] ) : $args['capability'];
-				$allowed = current_user_can( $cap );
+				$allowed = (bool) current_user_can( $cap );
+			} else {
+				$allowed = false;
 			}
 
 			if ( ! $allowed ) {

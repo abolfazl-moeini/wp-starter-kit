@@ -101,6 +101,22 @@ Dev-only panel (requires active **wpdev-playground** plugin):
 - Markers: `settings_menu`, `Save Settings`, `Reset this section`
 - Acceptance markers: `settings_menu`, `Save Settings`, `Reset this section`
 
+## Extension via filters
+
+`src/functions/options.php` uses `wpdev_uses_site_admin_context()` (filter `wpdev_uses_site_admin_context`). Playground `pg_*` settings UI and helpers live in **wpdev-playground** (`includes/functions/playground-settings-core.php`), not in this module.
+
+## Registry completeness
+
+| Operation | Supported |
+|-----------|-----------|
+| `wpdev_register_settings_section` | register |
+| `wpdev_get_settings_section` | get |
+| `wpdev_has_settings_section` | has |
+| `wpdev_list_settings_sections` | list |
+| `wpdev_unregister_settings_section` | unregister |
+| `wpdev_register_settings_field` | register only |
+| `wpdev_register_settings_side_panel` | register only |
+
 ## References
 
 ### Module-local examples

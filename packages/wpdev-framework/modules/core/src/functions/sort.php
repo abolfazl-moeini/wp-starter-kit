@@ -22,11 +22,11 @@ defined('ABSPATH') || exit;
 if (!function_exists('wpdev_sort_by_column')) {
 function wpdev_sort_by_column($a, $b, $column = 'order') {
 
-	$a[$column] = isset($a[$column]) ? (int) $a[$column] : 50;
+	$a_order = ( is_array( $a ) && isset( $a[ $column ] ) ) ? (int) $a[ $column ] : 50;
 
-	$b[$column] = isset($b[$column]) ? (int) $b[$column] : 50;
+	$b_order = ( is_array( $b ) && isset( $b[ $column ] ) ) ? (int) $b[ $column ] : 50;
 
-	return $a[$column] - $b[$column];
+	return $a_order - $b_order;
 
 }
 }

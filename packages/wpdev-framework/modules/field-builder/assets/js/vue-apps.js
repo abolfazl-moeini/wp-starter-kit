@@ -29,6 +29,32 @@ const loadApp = (element, app_id, callback = null) => {
     });
   }
 
+  // Extract initial state from data-state and strip the attribute before Vue compiles the DOM template.
+  // This prevents Vue's template compiler from misidentifying template mustache tags (e.g. {{ticket_id}})
+  // inside serialized settings JSON as invalid attribute interpolations.
+  const rawState = (element && (element._wpdev_state || element.getAttribute("data-state") || (element.dataset && element.dataset.state))) || "{}";
+  if (element && element.removeAttribute) {
+    element.removeAttribute("data-state");
+  }
+  if (element && element.querySelectorAll) {
+    element.querySelectorAll("[data-state]").forEach((el) => {
+      el.removeAttribute("data-state");
+    });
+    // Sanitize static attribute values and textarea inner content containing template tokens
+    // (e.g. {{ticket_id}} in email notifications). Vue's v-model reactive binding populates
+    // the true live value from scoped state on mount, while preventing Vue 2's template compiler
+    // from aborting with "Interpolation inside attributes has been removed".
+    element.querySelectorAll("input, textarea").forEach((inp) => {
+      if (inp.hasAttribute("v-model")) {
+        if (inp.tagName.toLowerCase() === "textarea" && inp.textContent && inp.textContent.indexOf("{{") !== -1) {
+          inp.textContent = "";
+        } else if (inp.hasAttribute("value") && inp.getAttribute("value").indexOf("{{") !== -1) {
+          inp.setAttribute("value", "");
+        }
+      }
+    });
+  }
+
   window["wpdev_" + app_id] = new Vue$1(defineComponent({
     name: typeof app_id === "string" ? app_id : "",
     el: element,
@@ -68,7 +94,13 @@ const loadApp = (element, app_id, callback = null) => {
           masked: false
         }
       };
-      return Object.assign({}, JSON.parse(element.dataset.state || "{}"), settings);
+      let parsedState = {};
+      try {
+        parsedState = JSON.parse(rawState || "{}");
+      } catch (e) {
+        parsedState = {};
+      }
+      return Object.assign({}, parsedState, settings);
     },
     computed: {
       hooks: () => hooks,
@@ -229,7 +261,16 @@ const loadApp = (element, app_id, callback = null) => {
           }
         });
         const textAreas = clone.querySelectorAll("input, textarea");
-        textAreas.forEach((el) => el.value = "");
+        textAreas.forEach((el) => {
+          if (el.type === "checkbox" || el.type === "radio") {
+            return;
+          }
+          if (el.type === "hidden" && el.closest(".wpdev-toggle")) {
+            el.value = "0";
+            return;
+          }
+          el.value = "";
+        });
         clone.querySelectorAll("select").forEach((el) => {
           if (!el.classList.contains("selectized")) {
             el.selectedIndex = 0;
@@ -337,6 +378,8 @@ const loadApp = (element, app_id, callback = null) => {
           row.querySelectorAll("input, textarea, select").forEach((el) => {
             if (el.type === "checkbox" || el.type === "radio") {
               el.checked = false;
+            } else if (el.type === "hidden" && el.closest(".wpdev-toggle")) {
+              el.value = "0";
             } else if (el.tagName === "SELECT") {
               el.selectedIndex = 0;
             } else {
@@ -742,6 +785,15 @@ const wpdev_init_gallery_fields = (context) => {
 };
 window.wpdev_init_gallery_fields = wpdev_init_gallery_fields;
 
+// A selection-limit wrapper that is not rendered (hidden by a v-show conditional
+// toggle or an inactive tab) is not part of the current submission intent and
+// must never silently block saving.
+// Note: visibility:hidden / opacity:0 wrappers still occupy layout boxes and are
+// deliberately still validated; the framework hides fields only via v-show.
+const wpdev_wrapper_is_rendered = (wrapper) => (
+  typeof wrapper.getClientRects !== "function" || wrapper.getClientRects().length > 0
+);
+
 const wpdev_handle_selection_limit_submit = (e) => {
   const form = e.target;
   if (!form || !form.querySelectorAll) {
@@ -755,6 +807,9 @@ const wpdev_handle_selection_limit_submit = (e) => {
 
   for (let i = 0; i < limitedWrappers.length; i++) {
     const wrapper = limitedWrappers[i];
+    if (!wpdev_wrapper_is_rendered(wrapper)) {
+      continue;
+    }
     const exactLimit   = parseInt(wrapper.getAttribute("data-exact-items"), 10) || 0;
     const minLimit     = parseInt(wrapper.getAttribute("data-min-items"), 10) || 0;
     const maxLimit     = parseInt(wrapper.getAttribute("data-max-items"), 10) || 0;
@@ -849,6 +904,9 @@ document.addEventListener("click", function(e) {
   if (!limitedWrappers.length) return;
   for (let i = 0; i < limitedWrappers.length; i++) {
     const wrapper = limitedWrappers[i];
+    if (!wpdev_wrapper_is_rendered(wrapper)) {
+      continue;
+    }
     const exactLimit = parseInt(wrapper.getAttribute("data-exact-items"), 10) || 0;
     const maxLimit = parseInt(wrapper.getAttribute("data-max-items"), 10) || 0;
     const allCheckboxes = wrapper.querySelectorAll('input[type="checkbox"]');
@@ -937,10 +995,18 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.body.addEventListener("wubox:unload", function() {
     const modal = document.getElementById("WUB_window");
-    const app = modal.querySelector("ul[data-wpdev-app]");
-    const app_name = "wpdev_" + app.dataset["wpdevApp"];
-    delete window[app_name];
-    delete window[app_name + "_errors"];
+    if (!modal) {
+      return;
+    }
+    const apps = modal.querySelectorAll("[data-wpdev-app]");
+    apps.forEach(function(app) {
+      const appKey = (app && app.dataset && app.dataset["wpdevApp"]) || (app && app.getAttribute && app.getAttribute("data-wpdev-app"));
+      if (appKey) {
+        const app_name = "wpdev_" + appKey;
+        delete window[app_name];
+        delete window[app_name + "_errors"];
+      }
+    });
   });
   document.body.addEventListener("wubox:load", function() {
     loadApps();

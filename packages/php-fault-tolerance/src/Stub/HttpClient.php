@@ -8,19 +8,11 @@ namespace WPDev\FaultTolerance;
 
 final class HttpClient
 {
-    /**
-     * @param array $requests
-     * @return array
-     */
     public static function pool(array $requests): array
     {
         return self::batch($requests);
     }
 
-    /**
-     * @param array $requests
-     * @return array
-     */
     public static function batch(array $requests): array
     {
         $responses = [];

@@ -1,6 +1,6 @@
 <?php
 /**
- * WaaS domain module helpers (BC shim — use functions-module-managers.php).
+ * Domain module helpers (BC shim — use functions-module-managers.php).
  *
  * @package WPDevFramework\Core
  * @since   2.4.0

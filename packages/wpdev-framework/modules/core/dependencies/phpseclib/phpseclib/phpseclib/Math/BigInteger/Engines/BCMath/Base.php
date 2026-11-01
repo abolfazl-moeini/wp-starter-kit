@@ -44,9 +44,6 @@ abstract class Base extends BCMath
     /**
      * Performs modular exponentiation.
      *
-     * @param BCMath $x
-     * @param BCMath $e
-     * @param BCMath $n
      * @param string $class
      * @return BCMath
      */

@@ -256,9 +256,7 @@ abstract class Wizard_Admin_Page extends Base_Admin_Page {
 
 		$sections = array_filter($sections, fn($item) => wpdev_get_isset($item, 'addon') === false);
 
-		$current_section = isset($_GET[$this->section_slug]) ? sanitize_key($_GET[$this->section_slug]) : current(array_keys($sections));
-
-		return $current_section;
+		return isset($_GET[$this->section_slug]) ? sanitize_key($_GET[$this->section_slug]) : current(array_keys($sections));
 
 	} // end get_current_section;
 

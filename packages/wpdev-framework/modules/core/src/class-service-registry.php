@@ -9,6 +9,8 @@
 namespace WPDevFramework\Core;
 
 use WPDevFramework\Core\Contracts\Service_Contract;
+use WPDevFramework\Core\Rest\Route_Registrar;
+use WPDevFramework\Core\Services\Access_Service;
 use WPDevFramework\Core\Services\Ajax_Service;
 use WPDevFramework\Core\Services\Form_Service;
 use WPDevFramework\Core\Services\Modal_Service;
@@ -37,7 +39,9 @@ class Service_Registry extends Registry_Base {
 	 */
 	public static function boot() {
 
+		self::register( 'access', function_exists( 'wpdev_access' ) ? wpdev_access() : new Access_Service() );
 		self::register( 'ajax', new Ajax_Service() );
+		self::register( 'routes', new Route_Registrar() );
 		self::register( 'form', new Form_Service() );
 		self::register( 'modal', new Modal_Service() );
 		self::register( 'screen_options', new Screen_Options_Service() );

@@ -382,11 +382,7 @@ class wpdev_Plans {
 
 		_deprecated_function(__METHOD__, '2.0.0', 'wpdev_get_plans()');
 
-		if ( ! function_exists( 'wpdev_get_plans' ) ) {
-			return array();
-		}
-
-		$plans = wpdev_get_plans();
+		$plans = apply_filters( 'wpdev_catalog_list', array(), array(), 'plans' );
 
 		return $plans;
 
@@ -405,11 +401,7 @@ class wpdev_Plans {
 
 		_deprecated_function(__METHOD__, '2.0.0');
 
-		if ( ! function_exists( 'wpdev_get_plans' ) ) {
-			return false;
-		}
-
-		$plans = wpdev_get_plans();
+		$plans = apply_filters( 'wpdev_catalog_list', array(), array(), 'plans' );
 
 		return $plans ? $plans[0] : false;
 
@@ -595,14 +587,14 @@ class wpdev_Util {
 
 		_deprecated_function(__METHOD__, '2.0.0', 'wpdev_get_customers() w/ count = true');
 
-		$signups = wpdev_get_customers(array(
+		$signups = apply_filters( 'wpdev_record_query', 0, array(
 			'count'      => true,
 			'date_query' => array(
 				'column'    => 'date_registered',
 				'after'     => 'today',
 				'inclusive' => true,
 			),
-		));
+		), 'customers' );
 
 		return $signups;
 
@@ -663,7 +655,7 @@ class wpdev_Util {
 	 * @deprecated 2.0.0
 	 *
 	 * @param string $hex Hex code of the color.
-	 * @return \WPDevFramework\Dependencies\Mexitek\PHPColors\Color
+	 * @return \WPDev\Dependencies\Mexitek\PHPColors\Color
 	 */
 	public static function color($hex) {
 
@@ -905,7 +897,7 @@ class wpdev_Site_Hooks {
 
 		_deprecated_function(__CLASS__, '2.0.0', '\WPDevFramework\Models\Site::get_featured_image()');
 
-		$site = wpdev_get_site($site_id);
+		$site = apply_filters( 'wpdev_entity_lookup', null, $site_id, 'site' );
 
 		if (!$site) {
 
@@ -962,11 +954,11 @@ function wpdev_get_coupon($coupon_code, $return_invalid = false) {
 
 	_deprecated_function(__FUNCTION__, '2.0.0', 'wpdev_get_discount_code_by_code()');
 
-	if ( ! function_exists( 'wpdev_get_discount_code_by_code' ) ) {
+	$discount_code = apply_filters( 'wpdev_entity_lookup_by', null, 'code', $coupon_code, 'discount_code' );
+
+	if ( ! $discount_code ) {
 		return false;
 	}
-
-	$discount_code = wpdev_get_discount_code_by_code($coupon_code);
 
 	if (!$discount_code) {
 
@@ -1000,11 +992,11 @@ function wpdev_get_plan($plan_id) {
 
 	_deprecated_function(__FUNCTION__, '2.0.0', 'wpdev_get_product()');
 
-	if ( ! function_exists( 'wpdev_get_product' ) ) {
+	$plan = apply_filters( 'wpdev_entity_lookup', null, $plan_id, 'product' );
+
+	if ( ! $plan ) {
 		return false;
 	}
-
-	$plan = wpdev_get_product($plan_id);
 
 	if (!$plan) {
 
@@ -1033,11 +1025,7 @@ function wpdev_get_plan_by_slug($plan_slug) {
 
 	_deprecated_function(__FUNCTION__, '2.0.0', 'wpdev_get_product_by_slug()');
 
-	if ( ! function_exists( 'wpdev_get_product_by_slug' ) ) {
-		return false;
-	}
-
-	return wpdev_get_product_by_slug($plan_slug);
+	return apply_filters( 'wpdev_entity_lookup_by', null, 'slug', $plan_slug, 'product' );
 
 } // end wpdev_get_plan_by_slug;
 /**
@@ -1056,7 +1044,7 @@ function wpdev_get_subscription($user_id) {
 
 	_deprecated_function(__FUNCTION__, '2.0.0', 'wpdev_get_membership_by()');
 
-	return wpdev_get_membership_by('user_id', $user_id);
+	return apply_filters( 'wpdev_entity_lookup_by', null, 'user_id', $user_id, 'membership' );
 
 } // end wpdev_get_subscription;
 /**
@@ -1071,7 +1059,7 @@ function wpdev_get_subscription_by_integration_key($integration_key) {
 
 	_deprecated_function(__FUNCTION__, '2.0.0', 'wpdev_get_membership_by()');
 
-	return wpdev_get_membership_by('gateway_subscription_id', $integration_key);
+	return apply_filters( 'wpdev_entity_lookup_by', null, 'gateway_subscription_id', $integration_key, 'membership' );
 
 } // end wpdev_get_subscription_by_integration_key;
 /**
@@ -1087,7 +1075,7 @@ function wpdev_get_current_subscription() {
 
 	_deprecated_function(__FUNCTION__, '2.0.0', 'wpdev_get_membership_by()');
 
-	return wpdev_get_membership_by('user_id', $user_id);
+	return apply_filters( 'wpdev_entity_lookup_by', null, 'user_id', $user_id, 'membership' );
 
 } // end wpdev_get_current_subscription;
 
@@ -1109,11 +1097,11 @@ function wpdev_is_active_subscriber($user_id = false) {
 
 	if ($user_id === false) {
 
-		$membership = wpdev_get_current_site()->get_membership();
+		$membership = apply_filters( 'wpdev_current_site_membership', false );
 
 	} else {
 
-		$membership = wpdev_get_membership_by('user_id', get_current_user_id());
+		$membership = apply_filters( 'wpdev_entity_lookup_by', null, 'user_id', get_current_user_id(), 'membership' );
 
 	} // end if;
 
@@ -1142,13 +1130,13 @@ function wpdev_has_plan($user_id, $plan_id) {
 	 * are loaded. In that case, we just return false,
 	 * to prevent a fatal error.
 	 */
-	if (function_exists('wpdev_get_membership_by') === false) {
+	$membership = apply_filters( 'wpdev_entity_lookup_by', null, 'user_id', $user_id, 'membership' );
+
+	if ( ! $membership ) {
 
 		return false;
 
 	} // end if;
-
-	$membership = wpdev_get_membership_by('user_id', $user_id);
 
 	return $membership && absint($membership->get_plan_id()) === absint($plan_id);
 
@@ -1166,9 +1154,9 @@ function wpdev_get_active_gateway() {
 
 	_deprecated_function(__FUNCTION__, '2.0.0', 'wpdev_get_active_gateways()');
 
-	$active_gateways = wpdev_get_active_gateways();
+	$active_gateways = apply_filters( 'wpdev_catalog_list', array(), array(), 'active_gateways' );
 
-	return reset($active_gateways);
+	return $active_gateways ? reset( $active_gateways ) : false;
 
 } // end wpdev_get_active_gateway;
 /**

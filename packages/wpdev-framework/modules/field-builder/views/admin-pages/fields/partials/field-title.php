@@ -8,7 +8,7 @@
 
 <?php if ($field->title && is_string($field->title)) : ?>
 
-  <span class="wpdev-my-1 wpdev-text-2xs wpdev-uppercase wpdev-font-bold wpdev-block">
+  <span class="wpdev-mar-y-1 wpdev-type-2xs wpdev-uppercase wpdev-font-bold wpdev-block">
 
     <?php echo $field->title; ?>
 

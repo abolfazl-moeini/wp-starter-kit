@@ -60,7 +60,7 @@ class Discount_Code_Compat {
 		/*
 		 * Check if we have a new entity with this ID.
 		 */
-		$migrated_discount_code = wpdev_get_discount_code($object_id);
+		$migrated_discount_code = apply_filters( 'wpdev_compat_migrated_entity_lookup', null, $object_id, 'discount_code' );
 
 		if (!$migrated_discount_code) {
 

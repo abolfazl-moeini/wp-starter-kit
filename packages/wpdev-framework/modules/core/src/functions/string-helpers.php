@@ -39,7 +39,7 @@ function wpdev_string_to_bool($string) {
 if (!function_exists('wpdev_slug_to_name')) {
 function wpdev_slug_to_name($slug) {
 
-	$slug = str_replace(array('-', '_'), ' ', $slug);
+	$slug = str_replace(array('-', '_'), ' ', (string) $slug);
 
 	return ucwords($slug);
 
@@ -58,7 +58,7 @@ function wpdev_slug_to_name($slug) {
 if (!function_exists('wpdev_replace_dashes')) {
 function wpdev_replace_dashes($str) {
 
-	return str_replace('-', '_', $str);
+	return str_replace('-', '_', (string) $str);
 
 }
 }
@@ -78,7 +78,7 @@ function wpdev_replace_dashes($str) {
 if (!function_exists('wpdev_get_initials')) {
 function wpdev_get_initials($string, $max_size = 2) {
 
-	$words = explode(' ', $string);
+	$words = explode(' ', (string) $string);
 
 	$initials = '';
 

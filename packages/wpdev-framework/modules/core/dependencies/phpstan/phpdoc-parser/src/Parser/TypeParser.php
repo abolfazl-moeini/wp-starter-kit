@@ -138,7 +138,7 @@ class TypeParser
                     if ($type->name === 'object') {
                         $type = $this->parseObjectShape($tokens);
                     } else {
-                        $type = $this->parseArrayShape($tokens, $type, $type->name);
+                        $type = $this->parseArrayShape($tokens, $type->name);
                     }
                     if ($tokens->isCurrentTokenType(Lexer::TOKEN_OPEN_SQUARE_BRACKET)) {
                         $type = $this->tryParseArrayOrOffsetAccess($tokens, $this->enrichWithAttributes($tokens, $type, $startLine, $startIndex));
@@ -405,7 +405,7 @@ class TypeParser
                         if ($type->name === 'object') {
                             $type = $this->parseObjectShape($tokens);
                         } else {
-                            $type = $this->parseArrayShape($tokens, $this->enrichWithAttributes($tokens, $type, $startLine, $startIndex), $type->name);
+                            $type = $this->parseArrayShape($tokens, $type->name);
                         }
                         if ($tokens->isCurrentTokenType(Lexer::TOKEN_OPEN_SQUARE_BRACKET)) {
                             $type = $this->tryParseArrayOrOffsetAccess($tokens, $this->enrichWithAttributes($tokens, $type, $startLine, $startIndex));
@@ -491,7 +491,7 @@ class TypeParser
      * @phpstan-impure
      * @param Ast\Type\ArrayShapeNode::KIND_* $kind
      */
-    private function parseArrayShape(TokenIterator $tokens, Ast\Type\TypeNode $type, string $kind) : Ast\Type\ArrayShapeNode
+    private function parseArrayShape(TokenIterator $tokens, string $kind) : Ast\Type\ArrayShapeNode
     {
         $tokens->consumeTokenType(Lexer::TOKEN_OPEN_CURLY_BRACKET);
         $items = [];

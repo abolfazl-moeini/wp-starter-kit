@@ -33,9 +33,6 @@ abstract class OpenSSL
     /**
      * Performs modular exponentiation.
      *
-     * @param Engine $x
-     * @param Engine $e
-     * @param Engine $n
      * @return Engine
      */
     public static function powModHelper(\phpseclib3\Math\BigInteger\Engines\Engine $x, \phpseclib3\Math\BigInteger\Engines\Engine $e, \phpseclib3\Math\BigInteger\Engines\Engine $n)

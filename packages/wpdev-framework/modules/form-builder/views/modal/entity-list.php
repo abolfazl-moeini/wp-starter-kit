@@ -23,17 +23,17 @@ $empty_label = $empty_label ?? __( 'No Targets', 'wpdev' );
 
 			<?php foreach ( $targets as $target ) : ?>
 
-				<li class="wpdev-p-2 wpdev-m-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-200 wpdev-border-solid">
+				<li class="wpdev-pad-2 wpdev-mar-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-200 wpdev-border-solid">
 
-					<a title="<?php echo esc_attr( $target['display_name'] ?? '' ); ?>" href="<?php echo esc_url( $target['link'] ?? '#' ); ?>" class="<?php echo esc_attr( $modal_class ); ?> wpdev-table-card wpdev-text-gray-700 wpdev-p-2 wpdev-flex wpdev-flex-grow wpdev-rounded wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-no-underline">
+					<a title="<?php echo esc_attr( $target['display_name'] ?? '' ); ?>" href="<?php echo esc_url( $target['link'] ?? '#' ); ?>" class="<?php echo esc_attr( $modal_class ); ?> wpdev-table-card wpdev-type-gray-700 wpdev-pad-2 wpdev-row wpdev-grow wpdev-radius wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-no-underline">
 
-						<div class="wpdev-flex wpdev-relative wpdev-h-6 wpdev-w-6 wpdev-rounded-full wpdev-ring-2 wpdev-mx-4 wpdev-my-2 wpdev-box-border wpdev-ring-white wpdev-bg-gray-300 wpdev-items-center wpdev-justify-center">
+						<div class="wpdev-row wpdev-relative wpdev-h-6 wpdev-w-6 wpdev-radius-full wpdev-ring-2 wpdev-mar-x-4 wpdev-mar-y-2 wpdev-box-border wpdev-ring-white wpdev-surface-gray-300 wpdev-items-center wpdev-justify-center">
 
 							<?php echo $target['avatar'] ?? ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 
 						</div>
 
-						<div class="wpdev-pl-2">
+						<div class="wpdev-pad-l-2">
 
 							<strong class="wpdev-block"><?php echo esc_html( $target['display_name'] ?? '' ); ?><small class="wpdev-font-normal"> (#<?php echo esc_html( (string) ( $target['id'] ?? '' ) ); ?>)</small></strong>
 
@@ -53,15 +53,15 @@ $empty_label = $empty_label ?? __( 'No Targets', 'wpdev' );
 
 		<ul class="wpdev-widget-list">
 
-			<li class="wpdev-p-2 wpdev-m-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-400 wpdev-border-solid">
+			<li class="wpdev-pad-2 wpdev-mar-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-400 wpdev-border-solid">
 
-				<div class="wpdev-p-2 wpdev-mr-1 wpdev-flex wpdev-rounded wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-bg-white wpdev-relative wpdev-overflow-hidden">
+				<div class="wpdev-pad-2 wpdev-mar-r-1 wpdev-row wpdev-radius wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-surface-white wpdev-relative wpdev-overflow-hidden">
 
-					<span class="dashicons dashicons-wpdev-block wpdev-text-gray-600 wpdev-px-1 wpdev-pr-3">&nbsp;</span>
+					<span class="dashicons dashicons-wpdev-block wpdev-type-gray-600 wpdev-pad-x-1 wpdev-pad-r-3">&nbsp;</span>
 
 					<div>
 
-						<span class="wpdev-block wpdev-py-3 wpdev-text-gray-600 wpdev-text-2xs wpdev-font-bold wpdev-uppercase">
+						<span class="wpdev-block wpdev-pad-y-3 wpdev-type-gray-600 wpdev-type-2xs wpdev-font-bold wpdev-uppercase">
 
 							<?php echo esc_html( $empty_label ); ?>
 

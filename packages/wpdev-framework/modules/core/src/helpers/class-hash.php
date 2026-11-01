@@ -9,7 +9,7 @@
 
 namespace WPDevFramework\Helpers;
 
-use WPDevFramework\Dependencies\Hashids\Hashids;
+use WPDev\Dependencies\Hashids\Hashids;
 
 // Exit if accessed directly
 defined('ABSPATH') || exit;

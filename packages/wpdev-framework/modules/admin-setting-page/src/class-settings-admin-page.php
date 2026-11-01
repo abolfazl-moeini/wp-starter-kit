@@ -133,6 +133,12 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 		parent::register_scripts();
 
 		/*
+		 * Setup-unfinished boot skips Scripts::get_instance(); register defaults
+		 * before enqueue so Vue mounts and remove_block_ui runs (same as Edit/List).
+		 */
+		\WPDevFramework\Scripts::ensure_defaults_registered();
+
+		/*
 		 * Adds Vue.
 		 */
 		wp_enqueue_script('wpdev-vue-apps');
@@ -156,6 +162,35 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 	public function register_widgets() {
 
 		parent::register_widgets();
+
+		/**
+		 * Optional WaaS promo side panels (full zip via wpdev-waas-admin-panels addon).
+		 *
+		 * @since 2.10.0
+		 *
+		 * @param bool $register Whether to register promo panels. Default false.
+		 */
+		if ( apply_filters( 'wpdev_register_waas_settings_side_panels', false ) ) {
+			$this->register_waas_promo_side_panels();
+		}
+
+		if ( class_exists( '\WPDevFramework\License', false ) ) {
+			wpdev_register_settings_side_panel('all', array(
+				'title'  => __('Your License', 'wpdev'),
+				'render' => array($this, 'render_account_side_panel'),
+				'show'   => array(\WPDevFramework\License::get_instance(), 'is_not_whitelabel'),
+			));
+		}
+
+	} // end register_widgets;
+
+	/**
+	 * Register WaaS marketing side panels (moved behind filter in 2.10.0).
+	 *
+	 * @since 2.10.0
+	 * @return void
+	 */
+	public function register_waas_promo_side_panels() {
 
 		wpdev_register_settings_side_panel('general', array(
 			'title'  => __('Add-ons', 'wpdev'),
@@ -202,13 +237,7 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 			'render' => array($this, 'render_email_template_side_panel'),
 		));
 
-		wpdev_register_settings_side_panel('all', array(
-			'title'  => __('Your License', 'wpdev'),
-			'render' => array($this, 'render_account_side_panel'),
-			'show'   => array(\WPDevFramework\License::get_instance(), 'is_not_whitelabel'),
-		));
-
-	} // end register_widgets;
+	} // end register_waas_promo_side_panels;
 
 	// phpcs:disable
 
@@ -222,27 +251,32 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 		<div class="wpdev-widget-inset">
 
-			<div class="wpdev-p-4">
+			<div class="wpdev-pad-4">
 
-				<span class="wpdev-text-gray-700 wpdev-font-bold wpdev-uppercase wpdev-tracking-wide wpdev-text-xs">
+				<span class="wpdev-section-label">
 					<?php _e('WPDev Add-ons', 'wpdev'); ?>
 				</span>
 
-				<div class="wpdev-py-2">
-					<img class="wpdev-w-full" alt="<?php esc_attr_e('WPDev Add-ons', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/add-ons.png'); ?>">
+				<div class="wpdev-pad-y-2">
+					<img class="wpdev-full" alt="<?php esc_attr_e('WPDev Add-ons', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/add-ons.png'); ?>">
 				</div>
 
-				<p class="wpdev-text-gray-600 wpdev-p-0 wpdev-m-0">
+				<p class="wpdev-muted wpdev-mar-0 wpdev-pad-0">
 					<?php _e('You can extend WPDev\'s functionality by installing one of our add-ons!', 'wpdev'); ?>
 				</p>
 
 			</div>
 
-			<div class="wpdev-p-4 wpdev-bg-gray-100 wpdev-border-solid wpdev-border-0 wpdev-border-t wpdev-border-gray-300">
-				<a class="button wpdev-w-full wpdev-text-center" href="<?php echo wpdev_network_admin_url('wpdev-addons'); ?>">
+			<?php
+			$addons_url = (string) apply_filters( 'wpdev_addons_admin_url', '' );
+			if ( $addons_url ) :
+				?>
+			<div class="wpdev-panel-footer">
+				<a class="button wpdev-full wpdev-type-center" href="<?php echo esc_url( $addons_url ); ?>">
 					<?php _e('Check our Add-ons &rarr;', 'wpdev'); ?>
 				</a>
 			</div>
+			<?php endif; ?>
 
 		</div>
 
@@ -258,6 +292,10 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 	 */
 	public function render_account_side_panel() {
 
+		if ( ! class_exists( '\WPDevFramework\License', false ) ) {
+			return;
+		}
+
 		$customer = \WPDevFramework\License::get_instance()->get_customer();
 
 		$license = \WPDevFramework\License::get_instance()->get_license();
@@ -268,43 +306,43 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 			<?php if (empty($customer) || empty($license)) : ?>
 
-				<div class="wpdev-p-4">
+				<div class="wpdev-pad-4">
 
-					<span class="wpdev-p-2 wpdev-bg-red-100 wpdev-text-red-600 wpdev-rounded wpdev-block">
+					<span class="wpdev-pad-2 wpdev-surface-red-100 wpdev-type-red-600 wpdev-radius wpdev-block">
 						<?php _e('Your copy of WPDev is not currently active. That means you will not have access to plugin updates and add-ons.', 'wpdev'); ?>
 					</span>
 
 				</div>
 
-				<div class="wpdev-p-4 wpdev-bg-gray-100 wpdev-border-solid wpdev-border-0 wpdev-border-t wpdev-border-gray-300">
-					<a id="wpdev-activate-license-key-button" class="button wpdev-w-full wpdev-text-center wubox" title="<?php esc_attr_e('Activate WPDev', 'wpdev'); ?>" href="<?php echo wpdev_get_form_url('license_activation'); ?>">
+				<div class="wpdev-panel-footer">
+					<a id="wpdev-activate-license-key-button" class="button wpdev-full wpdev-type-center wubox" title="<?php esc_attr_e('Activate WPDev', 'wpdev'); ?>" href="<?php echo wpdev_get_form_url('license_activation'); ?>">
 						<?php _e('Activate WPDev &rarr;', 'wpdev'); ?>
 					</a>
 				</div>
 
 			<?php else : ?>
 
-				<div class="wpdev-p-4">
+				<div class="wpdev-pad-4">
 
-					<span class="wpdev-text-gray-700 wpdev-font-bold wpdev-uppercase wpdev-tracking-wide wpdev-text-xs">
+					<span class="wpdev-section-label">
 						<?php _e('Registered to', 'wpdev'); ?>
 					</span>
 
-					<p class="wpdev-text-gray-700 wpdev-p-0 wpdev-m-0 wpdev-mt-2">
+					<p class="wpdev-type-gray-700 wpdev-pad-0 wpdev-mar-0 wpdev-mar-t-2">
 						<?php printf('%s %s', $customer->first, $customer->last); ?>
-						<span class="wpdev-text-xs wpdev-text-gray-600 wpdev-block"><?php echo $customer->email; ?></span>
+						<span class="wpdev-type-xs wpdev-type-gray-600 wpdev-block"><?php echo $customer->email; ?></span>
 						<span class="
-							wpdev-flex wpdev-items-center wpdev-justify-between
-							wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-rounded
-							wpdev-bg-gray-100 wpdev-text-gray-600
-							wpdev-py-1 wpdev-px-2
-							wpdev-mt-3
-							wpdev-text-xs
+							wpdev-toolbar
+							wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-radius
+							wpdev-surface-gray-100 wpdev-type-gray-600
+							wpdev-pad-y-1 wpdev-pad-x-2
+							wpdev-mar-t-3
+							wpdev-type-xs
 						">
 							<?php echo substr_replace((string) $license->secret_key, str_repeat('*', 16), 4, 24); ?>
 							<a
 								title="<?php esc_attr_e('Deactivate WPDev License', 'wpdev'); ?>"
-								class="dashicons dashicons-trash wpdev-text-red-600 wubox"
+								class="dashicons dashicons-trash wpdev-type-red-600 wubox"
 								href="<?php echo wpdev_get_form_url('license_deactivation'); ?>"
 							></a>
 						</span>
@@ -314,8 +352,8 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 				<!-- <?php if (current_user_can('wpdev_license')) : ?>
 
-					<div class="wpdev-p-4 wpdev-bg-gray-100 wpdev-border-solid wpdev-border-0 wpdev-border-t wpdev-border-gray-300">
-						<a id="wpdev-manage-account-button" class="button wpdev-w-full wpdev-text-center wubox" href="<?php echo wpdev_get_form_url('license_activation'); ?>">
+					<div class="wpdev-panel-footer">
+						<a id="wpdev-manage-account-button" class="button wpdev-full wpdev-type-center wubox" href="<?php echo wpdev_get_form_url('license_activation'); ?>">
 							<?php _e('Manage your Account &rarr;', 'wpdev'); ?>
 						</a>
 					</div>
@@ -340,27 +378,35 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 		<div class="wpdev-widget-inset">
 
-			<div class="wpdev-p-4">
+			<div class="wpdev-pad-4">
 
-				<span class="wpdev-text-gray-700 wpdev-font-bold wpdev-uppercase wpdev-tracking-wide wpdev-text-xs">
+				<span class="wpdev-section-label">
 					<?php _e('Accept Payments wherever you are', 'wpdev'); ?>
 				</span>
 
-				<div class="wpdev-py-2">
-					<img class="wpdev-w-full" alt="<?php esc_attr_e('Accept payments wherever you are', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/gateway-add-ons.png'); ?>">
+				<div class="wpdev-pad-y-2">
+					<img class="wpdev-full" alt="<?php esc_attr_e('Accept payments wherever you are', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/gateway-add-ons.png'); ?>">
 				</div>
 
-				<p class="wpdev-text-gray-600 wpdev-p-0 wpdev-m-0">
+				<p class="wpdev-muted wpdev-mar-0 wpdev-pad-0">
 					<?php _e('We are constantly adding support to new payment gateways that can be installed as add-ons.', 'wpdev'); ?>
 				</p>
 
 			</div>
 
-			<div class="wpdev-p-4 wpdev-bg-gray-100 wpdev-border-solid wpdev-border-0 wpdev-border-t wpdev-border-gray-300">
-				<a class="button wpdev-w-full wpdev-text-center" href="<?php echo wpdev_network_admin_url('wpdev-addons', array('tab' => 'gateways')); ?>">
+			<?php
+			$gateways_addons_url = (string) apply_filters(
+				'wpdev_gateways_addons_admin_url',
+				(string) apply_filters( 'wpdev_addons_admin_url', '' )
+			);
+			if ( $gateways_addons_url ) :
+				?>
+			<div class="wpdev-panel-footer">
+				<a class="button wpdev-full wpdev-type-center" href="<?php echo esc_url( $gateways_addons_url ); ?>">
 					<?php _e('Check our supported Gateways &rarr;', 'wpdev'); ?>
 				</a>
 			</div>
+			<?php endif; ?>
 
 		</div>
 
@@ -378,17 +424,17 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 		<div class="wpdev-widget-inset">
 
-			<div class="wpdev-p-4">
+			<div class="wpdev-pad-4">
 
-				<span class="wpdev-text-gray-700 wpdev-font-bold wpdev-uppercase wpdev-tracking-wide wpdev-text-xs">
+				<span class="wpdev-section-label">
 					<?php _e('Checkout Forms', 'wpdev'); ?>
 				</span>
 
-				<div class="wpdev-py-2">
-					<img class="wpdev-w-full" alt="<?php esc_attr_e('Checkout Forms', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/checkout-forms.png'); ?>">
+				<div class="wpdev-pad-y-2">
+					<img class="wpdev-full" alt="<?php esc_attr_e('Checkout Forms', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/checkout-forms.png'); ?>">
 				</div>
 
-				<p class="wpdev-text-gray-600 wpdev-p-0 wpdev-m-0">
+				<p class="wpdev-muted wpdev-mar-0 wpdev-pad-0">
 					<?php _e('You can create multiple Checkout Forms for different occasions (seasonal campaigns, launches, etc)!', 'wpdev'); ?>
 				</p>
 
@@ -398,8 +444,8 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 			$checkout_forms_admin_url = apply_filters( 'wpdev_settings_checkout_forms_admin_url', '' );
 			if ( $checkout_forms_admin_url && current_user_can( 'wpdev_edit_checkout_forms' ) ) : ?>
 
-				<div class="wpdev-p-4 wpdev-bg-gray-100 wpdev-border-solid wpdev-border-0 wpdev-border-t wpdev-border-gray-300">
-					<a class="button wpdev-w-full wpdev-text-center" href="<?php echo esc_url( $checkout_forms_admin_url ); ?>">
+				<div class="wpdev-panel-footer">
+					<a class="button wpdev-full wpdev-type-center" href="<?php echo esc_url( $checkout_forms_admin_url ); ?>">
 						<?php _e('Manage Checkout Forms &rarr;', 'wpdev'); ?>
 					</a>
 				</div>
@@ -422,17 +468,17 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 		<div class="wpdev-widget-inset">
 
-			<div class="wpdev-p-4">
+			<div class="wpdev-pad-4">
 
-				<span class="wpdev-text-gray-700 wpdev-font-bold wpdev-uppercase wpdev-tracking-wide wpdev-text-xs">
+				<span class="wpdev-section-label">
 					<?php _e('Customize the Template Previewer', 'wpdev'); ?>
 				</span>
 
-				<div class="wpdev-py-2">
-					<img class="wpdev-w-full" alt="<?php esc_attr_e('Customize the Template Previewer', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/site-template.png'); ?>">
+				<div class="wpdev-pad-y-2">
+					<img class="wpdev-full" alt="<?php esc_attr_e('Customize the Template Previewer', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/site-template.png'); ?>">
 				</div>
 
-				<p class="wpdev-text-gray-600 wpdev-p-0 wpdev-m-0">
+				<p class="wpdev-muted wpdev-mar-0 wpdev-pad-0">
 					<?php _e('Did you know that you can customize colors, logos, and more options of the Site Template Previewer top-bar?', 'wpdev'); ?>
 				</p>
 
@@ -440,8 +486,8 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 			<?php if (current_user_can('wpdev_edit_sites')) : ?>
 
-				<div class="wpdev-p-4 wpdev-bg-gray-100 wpdev-border-solid wpdev-border-0 wpdev-border-t wpdev-border-gray-300">
-					<a class="button wpdev-w-full wpdev-text-center" target="_blank" href="<?php echo wpdev_network_admin_url('wpdev-customize-template-previewer'); ?>">
+				<div class="wpdev-panel-footer">
+					<a class="button wpdev-full wpdev-type-center" target="_blank" href="<?php echo wpdev_network_admin_url('wpdev-customize-template-previewer'); ?>">
 						<?php _e('Go to Customizer &rarr;', 'wpdev'); ?>
 					</a>
 				</div>
@@ -464,17 +510,17 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 		<div class="wpdev-widget-inset">
 
-			<div class="wpdev-p-4">
+			<div class="wpdev-pad-4">
 
-				<span class="wpdev-text-gray-700 wpdev-font-bold wpdev-uppercase wpdev-tracking-wide wpdev-text-xs">
+				<span class="wpdev-section-label">
 					<?php _e('Customize the Template Placeholders', 'wpdev'); ?>
 				</span>
 
-				<div class="wpdev-py-2">
-					<img class="wpdev-w-full" alt="<?php esc_attr_e('Customize the Template Placeholders', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/template-placeholders.png'); ?>">
+				<div class="wpdev-pad-y-2">
+					<img class="wpdev-full" alt="<?php esc_attr_e('Customize the Template Placeholders', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/template-placeholders.png'); ?>">
 				</div>
 
-				<p class="wpdev-text-gray-600 wpdev-p-0 wpdev-m-0">
+				<p class="wpdev-muted wpdev-mar-0 wpdev-pad-0">
 					<?php _e('If you are using placeholder substitutions inside your site templates, use this tool to add, remove, or change the default content of those placeholders.', 'wpdev'); ?>
 				</p>
 
@@ -482,8 +528,8 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 			<?php if (current_user_can('wpdev_edit_sites')) : ?>
 
-				<div class="wpdev-p-4 wpdev-bg-gray-100 wpdev-border-solid wpdev-border-0 wpdev-border-t wpdev-border-gray-300">
-					<a class="button wpdev-w-full wpdev-text-center" target="_blank" href="<?php echo wpdev_network_admin_url('wpdev-template-placeholders'); ?>">
+				<div class="wpdev-panel-footer">
+					<a class="button wpdev-full wpdev-type-center" target="_blank" href="<?php echo wpdev_network_admin_url('wpdev-template-placeholders'); ?>">
 						<?php _e('Edit Placeholders &rarr;', 'wpdev'); ?>
 					</a>
 				</div>
@@ -506,17 +552,17 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 		<div class="wpdev-widget-inset">
 
-			<div class="wpdev-p-4">
+			<div class="wpdev-pad-4">
 
-				<span class="wpdev-text-gray-700 wpdev-font-bold wpdev-uppercase wpdev-tracking-wide wpdev-text-xs">
+				<span class="wpdev-section-label">
 					<?php _e('Customize the Invoice Template', 'wpdev'); ?>
 				</span>
 
-				<div class="wpdev-py-2">
-					<img class="wpdev-w-full" alt="<?php esc_attr_e('Customize the Invoice Template', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/invoice-template.png'); ?>">
+				<div class="wpdev-pad-y-2">
+					<img class="wpdev-full" alt="<?php esc_attr_e('Customize the Invoice Template', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/invoice-template.png'); ?>">
 				</div>
 
-				<p class="wpdev-text-gray-600 wpdev-p-0 wpdev-m-0">
+				<p class="wpdev-muted wpdev-mar-0 wpdev-pad-0">
 					<?php _e('Did you know that you can customize colors, logos, and more options of the Invoice PDF template?', 'wpdev'); ?>
 				</p>
 
@@ -524,8 +570,8 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 			<?php if (current_user_can('wpdev_edit_payments')) : ?>
 
-				<div class="wpdev-p-4 wpdev-bg-gray-100 wpdev-border-solid wpdev-border-0 wpdev-border-t wpdev-border-gray-300">
-					<a class="button wpdev-w-full wpdev-text-center" target="_blank" href="<?php echo wpdev_network_admin_url('wpdev-customize-invoice-template'); ?>">
+				<div class="wpdev-panel-footer">
+					<a class="button wpdev-full wpdev-type-center" target="_blank" href="<?php echo wpdev_network_admin_url('wpdev-customize-invoice-template'); ?>">
 						<?php _e('Go to Customizer &rarr;', 'wpdev'); ?>
 					</a>
 				</div>
@@ -548,17 +594,17 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 		<div class="wpdev-widget-inset">
 
-			<div class="wpdev-p-4">
+			<div class="wpdev-pad-4">
 
-				<span class="wpdev-text-gray-700 wpdev-font-bold wpdev-uppercase wpdev-tracking-wide wpdev-text-xs">
+				<span class="wpdev-section-label">
 					<?php _e('Customize System Emails', 'wpdev'); ?>
 				</span>
 
-				<div class="wpdev-py-2">
-					<img class="wpdev-w-full" alt="<?php esc_attr_e('Customize System Emails', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/system-emails.png'); ?>">
+				<div class="wpdev-pad-y-2">
+					<img class="wpdev-full" alt="<?php esc_attr_e('Customize System Emails', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/system-emails.png'); ?>">
 				</div>
 
-				<p class="wpdev-text-gray-600 wpdev-p-0 wpdev-m-0">
+				<p class="wpdev-muted wpdev-mar-0 wpdev-pad-0">
 					<?php _e('You can completely customize the contents of the emails sent out by WPDev when particular events occur, such as Account Creation, Payment Failures, etc.', 'wpdev'); ?>
 				</p>
 
@@ -568,8 +614,8 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 			$system_emails_admin_url = apply_filters( 'wpdev_settings_system_emails_admin_url', '' );
 			if ( $system_emails_admin_url && current_user_can( 'wpdev_edit_broadcasts' ) ) : ?>
 
-				<div class="wpdev-p-4 wpdev-bg-gray-100 wpdev-border-solid wpdev-border-0 wpdev-border-t wpdev-border-gray-300">
-					<a class="button wpdev-w-full wpdev-text-center" target="_blank" href="<?php echo esc_url( $system_emails_admin_url ); ?>">
+				<div class="wpdev-panel-footer">
+					<a class="button wpdev-full wpdev-type-center" target="_blank" href="<?php echo esc_url( $system_emails_admin_url ); ?>">
 						<?php _e('Customize System Emails &rarr;', 'wpdev'); ?>
 					</a>
 				</div>
@@ -592,17 +638,17 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 		<div class="wpdev-widget-inset">
 
-			<div class="wpdev-p-4">
+			<div class="wpdev-pad-4">
 
-				<span class="wpdev-text-gray-700 wpdev-font-bold wpdev-uppercase wpdev-tracking-wide wpdev-text-xs">
+				<span class="wpdev-section-label">
 					<?php _e('Customize Email Template', 'wpdev'); ?>
 				</span>
 
-				<div class="wpdev-py-2">
-					<img class="wpdev-w-full" alt="<?php esc_attr_e('Customize Email Template', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/email-template.png'); ?>">
+				<div class="wpdev-pad-y-2">
+					<img class="wpdev-full" alt="<?php esc_attr_e('Customize Email Template', 'wpdev'); ?>" src="<?php echo wpdev_get_asset('sidebar/email-template.png'); ?>">
 				</div>
 
-				<p class="wpdev-text-gray-600 wpdev-p-0 wpdev-m-0">
+				<p class="wpdev-muted wpdev-mar-0 wpdev-pad-0">
 					<?php _e('If your network is using the HTML email option, you can customize the look and feel of the email template.', 'wpdev'); ?>
 				</p>
 
@@ -610,8 +656,8 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 			<?php if (current_user_can('wpdev_edit_broadcasts')) : ?>
 
-				<div class="wpdev-p-4 wpdev-bg-gray-100 wpdev-border-solid wpdev-border-0 wpdev-border-t wpdev-border-gray-300">
-					<a class="button wpdev-w-full wpdev-text-center" target="_blank" href="<?php echo wpdev_network_admin_url('wpdev-customize-email-template'); ?>">
+				<div class="wpdev-panel-footer">
+					<a class="button wpdev-full wpdev-type-center" target="_blank" href="<?php echo wpdev_network_admin_url('wpdev-customize-email-template'); ?>">
 						<?php _e('Customize Email Template &rarr;', 'wpdev'); ?>
 					</a>
 				</div>
@@ -668,8 +714,6 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 		wp_enqueue_script('wpdev-vue');
 		wp_enqueue_script('wpdev-selectizer');
 
-		$this->settings_write_conflict_notice();
-
 		do_action('wpdev_render_settings');
 
 		$template = class_exists( 'WPDev\\Modules\\AdminPageBuilder\\Page_Template_Registry' )
@@ -695,15 +739,7 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 	 */
 	public function get_sections() {
 
-		if ( function_exists( 'wpdev' ) && ( $wpdev = wpdev() ) && isset( $wpdev->settings ) && is_object( $wpdev->settings ) ) {
-			return $wpdev->settings->get_sections();
-		}
-
-		if ( class_exists( '\\WPDevFramework\\Settings' ) ) {
-			return \WPDevFramework\Settings::get_instance()->get_sections();
-		}
-
-		return array();
+		return wpdev()->settings->get_sections();
 
 	} // end get_sections;
 
@@ -719,7 +755,7 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 		$can_save = current_user_can( 'wpdev_edit_settings' )
 			|| current_user_can( 'manage_options' )
 			|| current_user_can( 'manage_network' )
-			|| ( is_string( $cap ) && current_user_can( $cap ) )
+			|| ( is_string( $cap ) && 'wpdev_read_settings' !== $cap && current_user_can( $cap ) )
 			|| ( function_exists( 'wpdev_admin_capability_for' ) && current_user_can( wpdev_admin_capability_for( 'manage_options' ) ) );
 
 		if ( ! $can_save ) {
@@ -739,45 +775,15 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 		};
 		add_filter( 'wpdev_settings_current_page_capability', $page_cap_filter );
 
-		if ( function_exists( 'wpdev' ) && ( $wpdev = wpdev() ) && isset( $wpdev->settings ) && is_object( $wpdev->settings ) ) {
-			$saved = $wpdev->settings->save_settings($_POST);
-		} elseif ( class_exists( '\\WPDevFramework\\Settings' ) ) {
-			$saved = \WPDevFramework\Settings::get_instance()->save_settings($_POST);
-		} else {
-			$saved = false;
-		}
+		wpdev()->settings->save_settings($_POST);
 
 		remove_filter( 'wpdev_settings_current_page_capability', $page_cap_filter );
 
-		if ( false === $saved ) {
-			wp_safe_redirect( add_query_arg( 'wpdev_settings_write_conflict', 1, wpdev_get_current_url() ) );
-
-			exit;
-		}
-
-		wp_safe_redirect(add_query_arg('updated', 1, wpdev_get_current_url()));
+		wp_redirect(add_query_arg('updated', 1, wpdev_get_current_url()));
 
 		exit;
 
 	} // end default_handler;
-
-	/**
-	 * Display a retryable notice when the shared settings write lock timed out.
-	 *
-	 * @since 2.6.1
-	 * @return void
-	 */
-	public function settings_write_conflict_notice() {
-
-		if ( ! wpdev_request( 'wpdev_settings_write_conflict' ) ) {
-			return;
-		}
-
-		echo '<div class="notice notice-warning is-dismissible"><p>';
-		echo esc_html__( 'Settings were not saved because another settings update was in progress. Please try again.', 'wpdev' );
-		echo '</p></div>';
-
-	} // end settings_write_conflict_notice;
 
 	/**
 	 * Default method for views.
@@ -845,56 +851,81 @@ class Settings_Admin_Page extends Wizard_Admin_Page {
 
 		uasort($fields, 'wpdev_sort_by_order');
 
-		$saved_all = Settings::get_instance()->get_all();
-		foreach ( $fields as $field_slug => &$field_atts ) {
-			if ( ! isset( $field_atts['value'] ) ) {
-				if ( is_array( $saved_all ) && array_key_exists( $field_slug, $saved_all ) && null !== $saved_all[ $field_slug ] ) {
-					$field_atts['value'] = $saved_all[ $field_slug ];
-				} elseif ( isset( $field_atts['default'] ) ) {
-					$field_atts['value'] = $field_atts['default'];
-				} elseif ( isset( $field_atts['default_value'] ) ) {
-					$field_atts['value'] = $field_atts['default_value'];
+		if ( empty( $fields ) ) {
+			// All fields were filtered out by capability check or none registered
+			$fields['no_access_notice'] = array(
+				'type'            => 'note',
+				'desc'            => __( 'You do not have permission to edit any settings in this section.', 'wpdev' ),
+				'content'         => __( 'You do not have permission to edit any settings in this section.', 'wpdev' ),
+				'classes'         => 'wpdev-notice wpdev-notice-warning',
+				'wrapper_classes' => 'wpdev-p-4',
+			);
+		} else {
+			/*
+			 * Get Field to save
+			 */
+			$fields['save'] = array(
+				'type'            => 'submit',
+				'title'           => __('Save Settings', 'wpdev'),
+				'classes'         => 'button button-primary button-large wpdev-mar-l-auto wpdev-full md:wpdev-w-auto',
+				'wrapper_classes' => 'wpdev-sticky wpdev-bottom-0 wpdev-save-button wpdev-mar-r-px wpdev-full md:wpdev-w-auto',
+				'html_attr'       => array(),
+			);
+
+			$cap = $this->supported_panels['admin_menu'] ?? 'manage_options';
+			$can_save = current_user_can( 'wpdev_edit_settings' )
+				|| current_user_can( 'manage_options' )
+				|| current_user_can( 'manage_network' )
+				|| ( is_string( $cap ) && current_user_can( $cap ) )
+				|| ( ! empty( $section_cap ) && is_string( $section_cap ) && current_user_can( $section_cap ) )
+				|| ( function_exists( 'wpdev_admin_capability_for' ) && current_user_can( wpdev_admin_capability_for( 'manage_options' ) ) );
+
+			if ( ! $can_save ) {
+
+				$fields['save']['html_attr']['disabled'] = 'disabled';
+
+			} // end if;
+		}
+
+		// Scope settings to fields defined on this settings page to prevent option leaking
+		// from unrelated plugins (e.g. rich HTML, multi-megabyte payloads, template placeholders).
+		$all_settings    = Settings::get_instance()->get_all( true );
+		$scoped_settings = array();
+		if ( ! empty( $sections ) && is_array( $sections ) ) {
+			foreach ( $sections as $page_section ) {
+				if ( ! empty( $page_section['fields'] ) && is_array( $page_section['fields'] ) ) {
+					foreach ( array_keys( $page_section['fields'] ) as $field_key ) {
+						if ( array_key_exists( $field_key, $all_settings ) ) {
+							$scoped_settings[ $field_key ] = $all_settings[ $field_key ];
+						}
+					}
 				}
 			}
 		}
-		unset( $field_atts );
 
-		/*
-		 * Get Field to save
-		 */
-		$fields['save'] = array(
-			'type'            => 'submit',
-			'title'           => __('Save Settings', 'wpdev'),
-			'classes'         => 'button button-primary button-large wpdev-ml-auto wpdev-w-full md:wpdev-w-auto',
-			'wrapper_classes' => 'wpdev-sticky wpdev-bottom-0 wpdev-save-button wpdev-mr-px wpdev-w-full md:wpdev-w-auto',
-			'html_attr'       => array(
-				'v-on:click' => 'send("window", "wpdev_block_ui", "#wpcontent")'
-			),
+		if ( empty( $scoped_settings ) ) {
+			$scoped_settings = $all_settings;
+		}
+
+		$state = wpdev_array_map_keys( 'wpdev_replace_dashes', $scoped_settings );
+		$state = apply_filters( 'wpdev_settings_page_state', $state, $section_slug, $this );
+
+		$json_state = wp_json_encode( $state );
+		$safe_state = str_replace(
+			array( '{{', '}}' ),
+			array( '\u007b\u007b', '\u007d\u007d' ),
+			$json_state
 		);
-
-		$cap = $this->supported_panels['admin_menu'] ?? 'manage_options';
-		$can_save = current_user_can( 'wpdev_edit_settings' )
-			|| current_user_can( 'manage_options' )
-			|| current_user_can( 'manage_network' )
-			|| ( is_string( $cap ) && current_user_can( $cap ) )
-			|| ( ! empty( $section_cap ) && is_string( $section_cap ) && current_user_can( $section_cap ) )
-			|| ( function_exists( 'wpdev_admin_capability_for' ) && current_user_can( wpdev_admin_capability_for( 'manage_options' ) ) );
-
-		if ( ! $can_save ) {
-
-			$fields['save']['html_attr']['disabled'] = 'disabled';
-
-		} // end if;
 
 		$form = new Form($section_slug, $fields, array(
 			'views'                 => 'admin-pages/fields',
 			'classes'               => 'wpdev-modal-form wpdev-widget-list wpdev-striped wpdev--mt-5 wpdev--mx-in wpdev--mb-in',
-			'field_wrapper_classes' => 'wpdev-w-full wpdev-box-border wpdev-items-center wpdev-flex wpdev-justify-between wpdev-p-4 wpdev-py-5 wpdev-m-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
+			'field_wrapper_classes' => 'wpdev-full wpdev-box-border wpdev-items-center wpdev-row wpdev-justify-between wpdev-pad-4 wpdev-pad-y-5 wpdev-mar-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
 			'html_attr'             => array(
 				'style'        => '',
 				'data-on-load' => 'remove_block_ui',
 				'data-wpdev-app'  => str_replace('-', '_', $section_slug),
-				'data-state'   => json_encode(wpdev_array_map_keys('wpdev_replace_dashes', Settings::get_instance()->get_all(true))),
+				'data-state'   => $safe_state,
 			),
 		));
 

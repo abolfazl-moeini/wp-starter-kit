@@ -6,13 +6,13 @@
  */
 ?>
 <div
-  class="wpdev-flex wpdev-justify-center wpdev-items-center wpdev-text-center wpdev-bg-contain wpdev-bg-no-repeat wpdev--mb-12 wpdev-pb-12"
+  class="wpdev-row wpdev-justify-center wpdev-items-center wpdev-type-center wpdev-surface-contain wpdev-surface-no-repeat wpdev--mb-12 wpdev-pad-b-12"
   style="background-image: url(<?php echo $display_background_image ? wpdev_get_asset('empty-state-bg.png', 'img') : ''; ?>); <?php echo $display_background_image ? "height: calc(100vh - 300px); background-position: center -30px;" : ''; ?>"
 >
 
-  <div class="wpdev-block wpdev-p-4 md:wpdev-pt-12 wpdev-self-center">
+  <div class="wpdev-block wpdev-pad-4 md:wpdev-pad-t-12 wpdev-self-center">
 
-    <span class="wpdev-block wpdev-text-2xl wpdev-text-gray-600">
+    <span class="wpdev-block wpdev-type-2xl wpdev-type-gray-600">
 
       <?php echo $message; ?>
 
@@ -20,7 +20,7 @@
 
     <?php if (!empty($link_url)) : ?>
 
-      <div class="wpdev-block wpdev-text-base wpdev-text-gray-500 wpdev-py-6">
+      <div class="wpdev-block wpdev-type-base wpdev-type-gray-500 wpdev-pad-y-6">
 
         <?php echo $sub_message; ?>
 
@@ -48,7 +48,7 @@
 
     <?php else : ?>
 
-      <div class="wpdev-block wpdev-text-base wpdev-text-gray-500 wpdev-py-6">
+      <div class="wpdev-block wpdev-type-base wpdev-type-gray-500 wpdev-pad-y-6">
 
         <?php echo $sub_message; ?>
 

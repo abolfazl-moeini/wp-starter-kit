@@ -78,9 +78,11 @@ function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
 				$candidate_file = wpdev_path( $rel );
 				if ( file_exists( $candidate_file ) ) {
 					$file_norm = wpdev_normalize_path( $candidate_file );
-					if ( function_exists( 'plugins_url' ) && defined( 'WP_PLUGIN_DIR' ) && wpdev_path_is_within( $file_norm, WP_PLUGIN_DIR ) ) {
+					if ( function_exists( 'plugins_url' ) && defined( 'WP_PLUGIN_DIR' ) ) {
 						$norm_plugins = wpdev_normalize_path( rtrim( WP_PLUGIN_DIR, '/\\' ) );
-						return plugins_url( ltrim( substr( $file_norm, strlen( $norm_plugins ) ), '/' ) );
+						if ( wpdev_path_is_within( $file_norm, $norm_plugins ) ) {
+							return plugins_url( ltrim( substr( $file_norm, strlen( $norm_plugins ) ), '/' ) );
+						}
 					}
 					return wpdev_url( $rel );
 				}
@@ -110,9 +112,11 @@ function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
 				$candidate_file = wpdev_path( $rel );
 				if ( file_exists( $candidate_file ) ) {
 					$file_norm = wpdev_normalize_path( $candidate_file );
-					if ( function_exists( 'plugins_url' ) && defined( 'WP_PLUGIN_DIR' ) && wpdev_path_is_within( $file_norm, WP_PLUGIN_DIR ) ) {
+					if ( function_exists( 'plugins_url' ) && defined( 'WP_PLUGIN_DIR' ) ) {
 						$norm_plugins = wpdev_normalize_path( rtrim( WP_PLUGIN_DIR, '/\\' ) );
-						return plugins_url( ltrim( substr( $file_norm, strlen( $norm_plugins ) ), '/' ) );
+						if ( wpdev_path_is_within( $file_norm, $norm_plugins ) ) {
+							return plugins_url( ltrim( substr( $file_norm, strlen( $norm_plugins ) ), '/' ) );
+						}
 					}
 					return wpdev_url( $rel );
 				}
@@ -143,8 +147,12 @@ function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
 		$url = plugins_url( $relative_from_module, $module_root . '/module.php' );
 	}
 
-	if ( empty( $url ) && function_exists( 'plugins_url' ) && defined( 'WP_PLUGIN_DIR' ) && wpdev_path_is_within( $module_root, WP_PLUGIN_DIR ) ) {
-		$url = plugins_url( $relative_from_module, $module_root . '/module.php' );
+	if ( empty( $url ) && function_exists( 'plugins_url' ) && defined( 'WP_PLUGIN_DIR' ) ) {
+		$norm_plugins = wpdev_normalize_path( rtrim( WP_PLUGIN_DIR, '/\\' ) );
+		if ( wpdev_path_is_within( $file_norm, $norm_plugins ) ) {
+			$rel = ltrim( substr( $file_norm, strlen( $norm_plugins ) ), '/' );
+			$url = plugins_url( $rel );
+		}
 	}
 
 	$under_plugins = defined( 'WP_PLUGIN_DIR' ) && wpdev_path_is_within( $file_norm, WP_PLUGIN_DIR );
@@ -222,9 +230,17 @@ function wpdev_license_gate() {
 	 * Filter the license gate instance.
 	 *
 	 * @since 2.5.0
+	 * @since 2.10.0 Default is Always_Licensed_Gate (open-core). Commercial
+	 *               clients replace via the wpdev-license addon.
 	 *
-	 * @param \WPDevFramework\Core\Contracts\License_Gate $gate Default License singleton.
+	 * @param \WPDevFramework\Core\Contracts\License_Gate $gate Default always-licensed gate.
 	 */
-	return apply_filters( 'wpdev_license_gate', \WPDevFramework\License::get_instance() );
+	static $default = null;
+
+	if ( null === $default ) {
+		$default = new \WPDevFramework\Core\Contracts\Always_Licensed_Gate();
+	}
+
+	return apply_filters( 'wpdev_license_gate', $default );
 
 } // end wpdev_license_gate;

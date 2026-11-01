@@ -39,8 +39,6 @@ abstract class Barrett extends Base
      * (x >> 1) + (x >> 1) != x / 2 + x / 2.  If x is even, they're the same, but if x is odd, they're not.  See the in-line
      * comments for details.
      *
-     * @param array $n
-     * @param array $m
      * @param class-string<PHP> $class
      * @return array
      */
@@ -121,8 +119,6 @@ abstract class Barrett extends Base
      * For numbers with more than four digits BigInteger::_barrett() is faster.  The difference between that and this
      * is that this function does not fold the denominator into a smaller form.
      *
-     * @param array $x
-     * @param array $n
      * @param string $class
      * @return array
      */
@@ -181,9 +177,7 @@ abstract class Barrett extends Base
      * If you're going to be doing array_slice($product->value, 0, $stop), some cycles can be saved.
      *
      * @see self::regularBarrett()
-     * @param array $x_value
      * @param bool $x_negative
-     * @param array $y_value
      * @param bool $y_negative
      * @param int $stop
      * @param string $class

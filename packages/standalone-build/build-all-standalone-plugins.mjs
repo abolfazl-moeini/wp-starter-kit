@@ -188,7 +188,7 @@ export async function runSelectedNodeTests({
   cwd = null,
   scriptDir: customScriptDir = scriptDir,
 } = {}) {
-  const resolvedCwd = cwd || defaultContentRoot();
+  const resolvedCwd = cwd || customScriptDir;
   if (!Array.isArray(testFiles)) {
     throw new Error("runSelectedNodeTests: testFiles must be an array");
   }
@@ -291,25 +291,31 @@ export async function runSelectedNodeTests({
       else resolve(val);
     };
 
-    const child = spawn(process.execPath, testArgs, {
+    const spawnOpts = {
       cwd: resolvedCwd,
-      signal,
       stdio: ["ignore", "pipe", "pipe"],
-    });
+    };
+    if (signal) spawnOpts.signal = signal;
+    const child = spawn(process.execPath, testArgs, spawnOpts);
 
+    const fullTestLog = fs.createWriteStream("/tmp/node-test-full.log", { flags: "w" });
     child.stdout.on("data", (chunk) => {
       stdoutBuf.push(chunk);
+      try { fullTestLog.write(chunk); } catch {}
     });
 
     child.stderr.on("data", (chunk) => {
       stderrBuf.push(chunk);
+      try { fullTestLog.write(chunk); } catch {}
     });
 
     child.on("error", (err) => {
+      try { fullTestLog.end(); } catch {}
       finalize(err);
     });
 
     child.on("close", (code) => {
+      try { fullTestLog.end(); } catch {}
       const durationMs = Date.now() - startTime;
       const outMeta = stdoutBuf.getMetadata();
       const errMeta = stderrBuf.getMetadata();
@@ -866,8 +872,9 @@ export function resolveBuildConfigPath(argv = process.argv, env = process.env, c
       path.resolve(contentRoot, "..", "build.config.json"),
       path.resolve(contentRoot, "..", "..", "build.config.json")
     );
+  } else {
+    candidates.push(path.resolve(process.cwd(), "build.config.json"));
   }
-  candidates.push(path.resolve(process.cwd(), "build.config.json"));
   for (const c of candidates) {
     if (fs.existsSync(c)) return c;
   }
@@ -1178,7 +1185,7 @@ export async function runPipelineOrchestration(options = {}) {
   // programmatic injection (tests); otherwise auto-discover with legacy
   // TARGET_REGISTRY fallback (see loadPipelineRegistry).
   const explicitConfigPath =
-    options.configPath || options.parsed?.configPath || resolveBuildConfigPath(process.argv);
+    options.configPath || options.parsed?.configPath || resolveBuildConfigPath(process.argv, process.env, customContentRoot);
   const injectedBundle = options.pipelineRegistry || null;
   const pipelineBundle = injectedBundle || (await loadPipelineRegistry({
     configPath: explicitConfigPath,

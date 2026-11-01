@@ -17,4 +17,4 @@ defined('ABSPATH') || exit;
  *
  * @since 1.0.0
  */
-class Compare extends \WPDevFramework\Dependencies\BerlinDB\Database\Compare {} // end class Compare;
+class Compare extends \WPDev\Dependencies\BerlinDB\Database\Compare {} // end class Compare;

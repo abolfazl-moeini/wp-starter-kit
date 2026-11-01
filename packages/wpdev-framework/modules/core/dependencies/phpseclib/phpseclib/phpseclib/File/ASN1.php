@@ -325,6 +325,7 @@ abstract class ASN1
                 $current['content'] = new BigInteger(\substr($content, $content_pos), -256);
                 break;
             case self::TYPE_REAL:
+            default:
                 // not currently supported
                 return \false;
             case self::TYPE_BIT_STRING:
@@ -459,8 +460,6 @@ abstract class ASN1
                 }
                 $current['content'] = self::decodeTime(\substr($content, $content_pos), $tag);
                 break;
-            default:
-                return \false;
         }
         $start += $length;
         // ie. length is the length of the full TLV encoding - it's not just the length of the value
@@ -473,7 +472,6 @@ abstract class ASN1
      *
      * "Special" mappings may be applied on a per tag-name basis via $special.
      *
-     * @param array $decoded
      * @param array $mapping
      * @param array $special
      * @return array|bool|Element|string|null
@@ -714,9 +712,6 @@ abstract class ASN1
                 }
             // fall-through
             case self::TYPE_OCTET_STRING:
-                return $decoded['content'];
-            case self::TYPE_NULL:
-                return '';
             case self::TYPE_BOOLEAN:
             case self::TYPE_NUMERIC_STRING:
             case self::TYPE_PRINTABLE_STRING:
@@ -730,6 +725,8 @@ abstract class ASN1
             case self::TYPE_UTF8_STRING:
             case self::TYPE_BMP_STRING:
                 return $decoded['content'];
+            case self::TYPE_NULL:
+                return '';
             case self::TYPE_INTEGER:
             case self::TYPE_ENUMERATED:
                 $temp = $decoded['content'];
@@ -785,9 +782,7 @@ abstract class ASN1
      * ASN.1 Encode (Helper function)
      *
      * @param Element|string|array|null $source
-     * @param array $mapping
      * @param int $idx
-     * @param array $special
      * @return string
      */
     private static function encode_der($source, array $mapping, $idx = null, array $special = [])
@@ -964,10 +959,21 @@ abstract class ASN1
                 }
             // fall-through
             case self::TYPE_OCTET_STRING:
+            case self::TYPE_NUMERIC_STRING:
+            case self::TYPE_TELETEX_STRING:
+            case self::TYPE_PRINTABLE_STRING:
+            case self::TYPE_UNIVERSAL_STRING:
+            case self::TYPE_UTF8_STRING:
+            case self::TYPE_BMP_STRING:
+            case self::TYPE_IA5_STRING:
+            case self::TYPE_VISIBLE_STRING:
+            case self::TYPE_VIDEOTEX_STRING:
+            case self::TYPE_GRAPHIC_STRING:
+            case self::TYPE_GENERAL_STRING:
                 /* The initial octet shall encode, as an unsigned binary integer with bit 1 as the least significant bit,
-                                   the number of unused bits in the final subsequent octet. The number shall be in the range zero to seven.
-                
-                                   -- http://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf#page=16 */
+                                      the number of unused bits in the final subsequent octet. The number shall be in the range zero to seven.
+                   
+                                      -- http://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf#page=16 */
                 $value = $source;
                 break;
             case self::TYPE_OBJECT_IDENTIFIER:
@@ -1009,19 +1015,6 @@ abstract class ASN1
                 return self::encode_der($source, $filters + $mapping, null, $special);
             case self::TYPE_NULL:
                 $value = '';
-                break;
-            case self::TYPE_NUMERIC_STRING:
-            case self::TYPE_TELETEX_STRING:
-            case self::TYPE_PRINTABLE_STRING:
-            case self::TYPE_UNIVERSAL_STRING:
-            case self::TYPE_UTF8_STRING:
-            case self::TYPE_BMP_STRING:
-            case self::TYPE_IA5_STRING:
-            case self::TYPE_VISIBLE_STRING:
-            case self::TYPE_VIDEOTEX_STRING:
-            case self::TYPE_GRAPHIC_STRING:
-            case self::TYPE_GENERAL_STRING:
-                $value = $source;
                 break;
             case self::TYPE_BOOLEAN:
                 $value = $source ? "\xff" : "\x00";
@@ -1197,8 +1190,6 @@ abstract class ASN1
      *
      * Load the relevant OIDs for a particular ASN.1 semantic mapping.
      * Previously loaded OIDs are retained.
-     *
-     * @param array $oids
      */
     public static function loadOIDs(array $oids)
     {
@@ -1210,8 +1201,6 @@ abstract class ASN1
      *
      * See \phpseclib3\File\X509, etc, for an example.
      * Previously loaded filters are not retained.
-     *
-     * @param array $filters
      */
     public static function setFilters(array $filters)
     {
@@ -1253,7 +1242,6 @@ abstract class ASN1
                     $c = $c << 8 | \ord($in[$i++]);
                 // fall-through
                 case $insize == 1:
-                    break;
                 case ($c & 0x80) == 0x0:
                     break;
                 case ($c & 0x40) == 0x0:

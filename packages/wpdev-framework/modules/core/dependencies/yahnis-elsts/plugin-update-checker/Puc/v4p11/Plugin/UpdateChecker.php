@@ -21,7 +21,7 @@ if ( !class_exists('Puc_v4p11_Plugin_UpdateChecker', false) ):
 		 */
 		protected $package;
 
-		private $extraUi = null;
+		private $extraUi;
 
 		/**
 		 * Class constructor.
@@ -134,9 +134,7 @@ if ( !class_exists('Puc_v4p11_Plugin_UpdateChecker', false) ):
 				$pluginInfo->filename = $this->pluginFile;
 				$pluginInfo->slug = $this->slug;
 			}
-
-			$pluginInfo = apply_filters($this->getUniqueName('request_info_result'), $pluginInfo, $result);
-			return $pluginInfo;
+			return apply_filters($this->getUniqueName('request_info_result'), $pluginInfo, $result);
 		}
 
 		/**
@@ -155,9 +153,7 @@ if ( !class_exists('Puc_v4p11_Plugin_UpdateChecker', false) ):
 			}
 			$update = Puc_v4p11_Plugin_Update::fromPluginInfo($pluginInfo);
 
-			$update = $this->filterUpdateResult($update);
-
-			return $update;
+			return $this->filterUpdateResult($update);
 		}
 
 		/**

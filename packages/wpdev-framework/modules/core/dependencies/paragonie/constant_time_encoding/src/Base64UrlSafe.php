@@ -40,9 +40,6 @@ abstract class Base64UrlSafe extends Base64
      * Base64 character set:
      * [A-Z]      [a-z]      [0-9]      -     _
      * 0x41-0x5a, 0x61-0x7a, 0x30-0x39, 0x2d, 0x5f
-     *
-     * @param int $src
-     * @return int
      */
     protected static function decode6Bits(int $src) : int
     {
@@ -62,9 +59,6 @@ abstract class Base64UrlSafe extends Base64
     /**
      * Uses bitwise operators instead of table-lookups to turn 8-bit integers
      * into 6-bit integers.
-     *
-     * @param int $src
-     * @return string
      */
     protected static function encode6Bits(int $src) : string
     {

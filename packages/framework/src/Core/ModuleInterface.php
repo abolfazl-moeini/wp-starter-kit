@@ -41,11 +41,9 @@ interface ModuleInterface {
 	public function boot(): void;
 
 	/**
-	 * Return the unique slug used to register and look up the module
-	 * inside the {@see ModuleLoader}. Slugs must be stable across
-	 * versions because they are part of the public contract.
-	 *
-	 * @return string
-	 */
-	public function get_slug(): string;
+     * Return the unique slug used to register and look up the module
+     * inside the {@see ModuleLoader}. Slugs must be stable across
+     * versions because they are part of the public contract.
+     */
+    public function get_slug(): string;
 }

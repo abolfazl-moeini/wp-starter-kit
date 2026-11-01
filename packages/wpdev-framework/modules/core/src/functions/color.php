@@ -14,7 +14,7 @@
 // Exit if accessed directly
 defined('ABSPATH') || exit;
 
-use \WPDevFramework\Dependencies\Mexitek\PHPColors\Color;
+use \WPDev\Dependencies\Mexitek\PHPColors\Color;
 
 /**
  * Returns a Color object.
@@ -22,7 +22,7 @@ use \WPDevFramework\Dependencies\Mexitek\PHPColors\Color;
  * @since 2.0.0
  *
  * @param string $hex Hex code for the color. E.g. #000.
- * @return \WPDevFramework\Dependencies\Mexitek\PHPColors\Color
+ * @return \WPDev\Dependencies\Mexitek\PHPColors\Color
  */
 if (!function_exists('wpdev_color')) {
 function wpdev_color($hex) {
@@ -55,13 +55,13 @@ if (!function_exists('wpdev_get_random_color')) {
 function wpdev_get_random_color($index) {
 
 	$colors = array(
-		'wpdev-bg-red-500',
-		'wpdev-bg-green-500',
-		'wpdev-bg-blue-500',
-		'wpdev-bg-yellow-500',
-		'wpdev-bg-orange-500',
-		'wpdev-bg-purple-500',
-		'wpdev-bg-pink-500',
+		'wpdev-surface-red-500',
+		'wpdev-surface-green-500',
+		'wpdev-surface-blue-500',
+		'wpdev-surface-yellow-500',
+		'wpdev-surface-orange-500',
+		'wpdev-surface-purple-500',
+		'wpdev-surface-pink-500',
 	);
 
 	return wpdev_get_isset($colors, $index, $colors[ rand(0, count($colors) - 1) ]);

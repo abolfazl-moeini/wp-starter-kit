@@ -1,0 +1,2378 @@
+/**
+ * WPDev admin layout stylesheet.
+ *
+ * Hand-written replacement for the historical Tailwind-compiled framework.css.
+ * Prefer BEM primitives (.wpdev-toolbar, .wpdev-panel-footer, .wpdev-section-label, …).
+ * Remaining .wpdev-* atomic classes are legacy compatibility only — do not add new ones.
+ */
+
+/* === BEM / layout primitives (prefer these over atomic utilities) === */
+.wpdev-styling .wpdev-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.wpdev-styling .wpdev-toolbar--start {
+  justify-content: flex-start;
+}
+.wpdev-styling .wpdev-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.wpdev-styling .wpdev-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.wpdev-styling .wpdev-panel-body {
+  padding: 1rem;
+  display: block;
+}
+.wpdev-styling .wpdev-panel-body.wpdev-inline,
+.wpdev-styling .wpdev-panel-body.wpdev-row {
+  display: flex;
+  align-items: center;
+}
+.wpdev-styling .wpdev-panel-footer {
+  padding: 1rem;
+  background-color: rgb(247, 250, 252);
+  border-style: solid;
+  border-width: 0;
+  border-top-width: 1px;
+  border-color: rgb(203, 213, 224);
+}
+.wpdev-styling .wpdev-section-label {
+  color: rgb(74, 85, 104);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  font-size: 0.75rem;
+}
+.wpdev-styling .wpdev-muted {
+  color: rgb(113, 128, 150);
+  padding: 0;
+  margin: 0;
+}
+.wpdev-styling .wpdev-full {
+  width: 100%;
+}
+.wpdev-styling .wpdev-card-row {
+  display: flex;
+  flex-grow: 1;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.25rem;
+  border: 1px solid rgb(203, 213, 224);
+  border-style: solid;
+  color: rgb(74, 85, 104);
+  padding: 0.25rem 0.5rem;
+}
+.wpdev-styling a.wpdev-card-row {
+  text-decoration: none;
+}
+.wpdev-styling [data-wpdev-app="settings_menu"] ul,
+.wpdev-styling [data-wpdev-app="tabs"] ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.wpdev-styling [data-wpdev-app="settings_menu"] li,
+.wpdev-styling [data-wpdev-app="tabs"] li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.wpdev-styling [data-wpdev-app="settings_menu"] a,
+.wpdev-styling [data-wpdev-app="tabs"] a {
+  text-align: start;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+:is(.rtl, [dir="rtl"]) .wpdev-styling [data-wpdev-app="settings_menu"] a,
+:is(.rtl, [dir="rtl"]) .wpdev-styling [data-wpdev-app="tabs"] a,
+.wpdev-styling:is(.rtl, [dir="rtl"]) [data-wpdev-app="settings_menu"] a,
+.wpdev-styling:is(.rtl, [dir="rtl"]) [data-wpdev-app="tabs"] a {
+  text-align: right;
+}
+.wpdev-styling [data-wpdev-app="settings_menu"] a .dashicons,
+.wpdev-styling [data-wpdev-app="settings_menu"] a span[class*="dashicons"],
+.wpdev-styling [data-wpdev-app="tabs"] a .dashicons,
+.wpdev-styling [data-wpdev-app="tabs"] a span[class*="dashicons"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.wpdev-styling [data-wpdev-app="settings_menu"] a .wpdev-tab-title,
+.wpdev-styling [data-wpdev-app="tabs"] a .wpdev-tab-title {
+  display: inline-block;
+  line-height: 1.4;
+}
+.wpdev-styling :is(.wpdev-pointer-events-none) {
+  pointer-events: none;
+}
+
+.wpdev-styling :is(.wpdev-static) {
+  position: static;
+}
+
+.wpdev-styling :is(.wpdev-fixed) {
+  position: fixed;
+}
+
+.wpdev-styling :is(.wpdev-absolute) {
+  position: absolute;
+}
+
+.wpdev-styling :is(.wpdev-relative) {
+  position: relative;
+}
+
+.wpdev-styling :is(.wpdev-sticky) {
+  position: sticky;
+}
+
+.wpdev-styling :is(.wpdev--inset-px) {
+  inset: -1px;
+}
+
+.wpdev-styling :is(.wpdev-bottom-0) {
+  bottom: 0px;
+}
+
+.wpdev-styling :is(.wpdev-left-0) {
+  inset-inline-start: 0px;
+}
+
+.wpdev-styling :is(.wpdev-left-1\/2) {
+  left: 50%;
+}
+
+.wpdev-styling :is(.wpdev-right-0) {
+  inset-inline-end: 0px;
+}
+
+.wpdev-styling :is(.wpdev-right-4) {
+  inset-inline-end: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-right-5) {
+  inset-inline-end: 1.25rem;
+}
+
+.wpdev-styling :is(.wpdev-top-0) {
+  top: 0px;
+}
+
+.wpdev-styling :is(.wpdev-top-4) {
+  top: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-z-10) {
+  z-index: 10;
+}
+
+.wpdev-styling :is(.wpdev-order-1) {
+  order: 1;
+}
+
+.wpdev-styling :is(.wpdev-order-12) {
+  order: 12;
+}
+
+.wpdev-styling :is(.wpdev-order-2) {
+  order: 2;
+}
+
+.wpdev-styling :is(.wpdev-order-3) {
+  order: 3;
+}
+
+.wpdev-styling :is(.wpdev-col-span-1) {
+  grid-column: span 1 / span 1;
+}
+
+.wpdev-styling :is(.wpdev-col-span-2) {
+  grid-column: span 2 / span 2;
+}
+
+.wpdev-styling :is(.wpdev-float-right) {
+  float: inline-end;
+}
+
+.wpdev-styling :is(.wpdev-float-left) {
+  float: inline-start;
+}
+
+.wpdev-styling :is(.wpdev-clear-both) {
+  clear: both;
+}
+
+.wpdev-styling :is(.wpdev--m-2) {
+  margin: -0.5rem;
+}
+
+.wpdev-styling :is(.wpdev--m-3) {
+  margin: -0.75rem;
+}
+
+.wpdev-styling :is(.wpdev--m-4) {
+  margin: -1rem;
+}
+
+.wpdev-styling :is(.wpdev--m-in) {
+  margin: -27px;
+}
+
+.wpdev-styling :is(.wpdev-m-0) {
+  margin: 0px;
+}
+
+.wpdev-styling :is(.wpdev-m-2) {
+  margin: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-m-4) {
+  margin: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-m-6) {
+  margin: 1.5rem;
+}
+
+.wpdev-styling :is(.wpdev-m-8) {
+  margin: 2rem;
+}
+
+.wpdev-styling :is(.wpdev-m-auto) {
+  margin: auto;
+}
+
+.wpdev-styling :is(.wpdev--mx-1) {
+  margin-inline-start: -0.25rem; margin-inline-end: -0.25rem;
+}
+
+.wpdev-styling :is(.wpdev--mx-2) {
+  margin-inline-start: -0.5rem; margin-inline-end: -0.5rem;
+}
+
+.wpdev-styling :is(.wpdev--mx-3) {
+  margin-inline-start: -0.75rem; margin-inline-end: -0.75rem;
+}
+
+.wpdev-styling :is(.wpdev--mx-4) {
+  margin-inline-start: -1rem; margin-inline-end: -1rem;
+}
+
+.wpdev-styling :is(.wpdev--mx-5) {
+  margin-inline-start: -1.25rem; margin-inline-end: -1.25rem;
+}
+
+.wpdev-styling :is(.wpdev--mx-6) {
+  margin-inline-start: -1.5rem; margin-inline-end: -1.5rem;
+}
+
+.wpdev-styling :is(.wpdev--mx-in) {
+  margin-inline-start: -27px; margin-inline-end: -27px;
+}
+
+.wpdev-styling :is(.wpdev--my-2) {
+  margin-top: -0.5rem; margin-bottom: -0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-mx-0) {
+  margin-inline-start: 0px; margin-inline-end: 0px;
+}
+
+.wpdev-styling :is(.wpdev-mx-1) {
+  margin-inline-start: 0.25rem; margin-inline-end: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-mx-2) {
+  margin-inline-start: 0.5rem; margin-inline-end: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-mx-3) {
+  margin-inline-start: 0.75rem; margin-inline-end: 0.75rem;
+}
+
+.wpdev-styling :is(.wpdev-mx-4) {
+  margin-inline-start: 1rem; margin-inline-end: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-mx-auto) {
+  margin-inline-start: auto; margin-inline-end: auto;
+}
+
+.wpdev-styling :is(.wpdev-my-0) {
+  margin-top: 0px; margin-bottom: 0px;
+}
+
+.wpdev-styling :is(.wpdev-my-1) {
+  margin-top: 0.25rem; margin-bottom: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-my-10) {
+  margin-top: 2.5rem; margin-bottom: 2.5rem;
+}
+
+.wpdev-styling :is(.wpdev-my-2) {
+  margin-top: 0.5rem; margin-bottom: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-my-3) {
+  margin-top: 0.75rem; margin-bottom: 0.75rem;
+}
+
+.wpdev-styling :is(.wpdev-my-4) {
+  margin-top: 1rem; margin-bottom: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-my-5) {
+  margin-top: 1.25rem; margin-bottom: 1.25rem;
+}
+
+.wpdev-styling :is(.wpdev-my-6) {
+  margin-top: 1.5rem; margin-bottom: 1.5rem;
+}
+
+.wpdev-styling :is(.wpdev--mb-1) {
+  margin-bottom: -0.25rem;
+}
+
+.wpdev-styling :is(.wpdev--mb-12) {
+  margin-bottom: -3rem;
+}
+
+.wpdev-styling :is(.wpdev--mb-2) {
+  margin-bottom: -0.5rem;
+}
+
+.wpdev-styling :is(.wpdev--mb-3) {
+  margin-bottom: -0.75rem;
+}
+
+.wpdev-styling :is(.wpdev--mb-5) {
+  margin-bottom: -1.25rem;
+}
+
+.wpdev-styling :is(.wpdev--mb-6) {
+  margin-bottom: -1.5rem;
+}
+
+.wpdev-styling :is(.wpdev--mb-8) {
+  margin-bottom: -2rem;
+}
+
+.wpdev-styling :is(.wpdev--mb-in) {
+  margin-bottom: -27px;
+}
+
+.wpdev-styling :is(.wpdev--ml-2) {
+  margin-inline-start: -0.5rem;
+}
+
+.wpdev-styling :is(.wpdev--ml-5) {
+  margin-inline-start: -1.25rem;
+}
+
+.wpdev-styling :is(.wpdev--mr-1) {
+  margin-inline-end: -0.25rem;
+}
+
+.wpdev-styling :is(.wpdev--mr-2) {
+  margin-inline-end: -0.5rem;
+}
+
+.wpdev-styling :is(.wpdev--mr-4) {
+  margin-inline-end: -1rem;
+}
+
+.wpdev-styling :is(.wpdev--mt-1) {
+  margin-top: -0.25rem;
+}
+
+.wpdev-styling :is(.wpdev--mt-2) {
+  margin-top: -0.5rem;
+}
+
+.wpdev-styling :is(.wpdev--mt-3) {
+  margin-top: -0.75rem;
+}
+
+.wpdev-styling :is(.wpdev--mt-4) {
+  margin-top: -1rem;
+}
+
+.wpdev-styling :is(.wpdev--mt-5) {
+  margin-top: -1.25rem;
+}
+
+.wpdev-styling :is(.wpdev--mt-7) {
+  margin-top: -32px;
+}
+
+.wpdev-styling :is(.wpdev--mt-8) {
+  margin-top: -2rem;
+}
+
+.wpdev-styling :is(.wpdev--mt-px) {
+  margin-top: -1px;
+}
+
+.wpdev-styling :is(.wpdev--mt-widget-inset) {
+  margin-top: -14px;
+}
+
+.wpdev-styling :is(.wpdev-mb-0) {
+  margin-bottom: 0px;
+}
+
+.wpdev-styling :is(.wpdev-mb-1) {
+  margin-bottom: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-mb-10) {
+  margin-bottom: 2.5rem;
+}
+
+.wpdev-styling :is(.wpdev-mb-2) {
+  margin-bottom: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-mb-3) {
+  margin-bottom: 0.75rem;
+}
+
+.wpdev-styling :is(.wpdev-mb-4) {
+  margin-bottom: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-mb-5) {
+  margin-bottom: 1.25rem;
+}
+
+.wpdev-styling :is(.wpdev-mb-6) {
+  margin-bottom: 1.5rem;
+}
+
+.wpdev-styling :is(.wpdev-mb-8) {
+  margin-bottom: 2rem;
+}
+
+.wpdev-styling :is(.wpdev-ml-0) {
+  margin-inline-start: 0px;
+}
+
+.wpdev-styling :is(.wpdev-ml-1) {
+  margin-inline-start: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-ml-2) {
+  margin-inline-start: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-ml-3) {
+  margin-inline-start: 0.75rem;
+}
+
+.wpdev-styling :is(.wpdev-ml-4) {
+  margin-inline-start: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-ml-5) {
+  margin-inline-start: 1.25rem;
+}
+
+.wpdev-styling :is(.wpdev-ml-6) {
+  margin-inline-start: 1.5rem;
+}
+
+.wpdev-styling :is(.wpdev-ml-8) {
+  margin-inline-start: 2rem;
+}
+
+.wpdev-styling :is(.wpdev-ml-auto) {
+  margin-inline-start: auto;
+}
+
+.wpdev-styling :is(.wpdev-mr-1) {
+  margin-inline-end: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-mr-2) {
+  margin-inline-end: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-mr-3) {
+  margin-inline-end: 0.75rem;
+}
+
+.wpdev-styling :is(.wpdev-mr-4) {
+  margin-inline-end: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-mr-auto) {
+  margin-inline-end: auto;
+}
+
+.wpdev-styling :is(.wpdev-mr-px) {
+  margin-inline-end: 1px;
+}
+
+.wpdev-styling :is(.wpdev-mt-0) {
+  margin-top: 0px;
+}
+
+.wpdev-styling :is(.wpdev-mt-1) {
+  margin-top: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-mt-10) {
+  margin-top: 2.5rem;
+}
+
+.wpdev-styling :is(.wpdev-mt-2) {
+  margin-top: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-mt-3) {
+  margin-top: 0.75rem;
+}
+
+.wpdev-styling :is(.wpdev-mt-4) {
+  margin-top: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-mt-5) {
+  margin-top: 1.25rem;
+}
+
+.wpdev-styling :is(.wpdev-mt-6) {
+  margin-top: 1.5rem;
+}
+
+.wpdev-styling :is(.wpdev-mt-8) {
+  margin-top: 2rem;
+}
+
+.wpdev-styling :is(.wpdev-box-border) {
+  box-sizing: border-box;
+}
+
+.wpdev-styling :is(.wpdev-block) {
+  display: block;
+}
+
+.wpdev-styling :is(.wpdev-inline-block) {
+  display: inline-block;
+}
+
+.wpdev-styling :is(.wpdev-d-inline) {
+  display: inline;
+}
+
+.wpdev-styling :is(.wpdev-flex) {
+  display: flex;
+}
+
+.wpdev-styling :is(.wpdev-inline-flex) {
+  display: inline-flex;
+}
+
+.wpdev-styling :is(.wpdev-table) {
+  display: table;
+}
+
+.wpdev-styling :is(.wpdev-grid) {
+  display: grid;
+}
+
+.wpdev-styling :is(.wpdev-hidden) {
+  display: none;
+}
+
+.wpdev-styling :is(.wpdev-h-0) {
+  height: 0px;
+}
+
+.wpdev-styling :is(.wpdev-h-1) {
+  height: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-h-12) {
+  height: 3rem;
+}
+
+.wpdev-styling :is(.wpdev-h-2) {
+  height: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-h-3) {
+  height: 0.75rem;
+}
+
+.wpdev-styling :is(.wpdev-h-4) {
+  height: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-h-48) {
+  height: 12rem;
+}
+
+.wpdev-styling :is(.wpdev-h-5) {
+  height: 1.25rem;
+}
+
+.wpdev-styling :is(.wpdev-h-6) {
+  height: 1.5rem;
+}
+
+.wpdev-styling :is(.wpdev-h-7) {
+  height: 32px;
+}
+
+.wpdev-styling :is(.wpdev-h-8) {
+  height: 2rem;
+}
+
+.wpdev-styling :is(.wpdev-h-auto) {
+  height: auto;
+}
+
+.wpdev-styling :is(.wpdev-h-full) {
+  height: 100%;
+}
+
+.wpdev-styling :is(.wpdev-h-screen) {
+  height: 100vh;
+}
+
+.wpdev-styling :is(.wpdev-h-thumb) {
+  height: 40px;
+}
+
+.wpdev-styling :is(.wpdev-max-h-2) {
+  max-height: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-max-h-screen) {
+  max-height: 100vh;
+}
+
+.wpdev-styling :is(.wpdev-w-0) {
+  width: 0px;
+}
+
+.wpdev-styling :is(.wpdev-w-1) {
+  width: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-w-1\/12) {
+  width: 8.333333%;
+}
+
+.wpdev-styling :is(.wpdev-w-1\/2) {
+  width: 50%;
+}
+
+.wpdev-styling :is(.wpdev-w-1\/3) {
+  width: 33.333333%;
+}
+
+.wpdev-styling :is(.wpdev-w-1\/4) {
+  width: 25%;
+}
+
+.wpdev-styling :is(.wpdev-w-1\/6) {
+  width: 16.666667%;
+}
+
+.wpdev-styling :is(.wpdev-w-12) {
+  width: 3rem;
+}
+
+.wpdev-styling :is(.wpdev-w-2) {
+  width: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-w-2\/12) {
+  width: 16.666667%;
+}
+
+.wpdev-styling :is(.wpdev-w-2\/3) {
+  width: 66.666667%;
+}
+
+.wpdev-styling :is(.wpdev-w-3) {
+  width: 0.75rem;
+}
+
+.wpdev-styling :is(.wpdev-w-3\/12) {
+  width: 25%;
+}
+
+.wpdev-styling :is(.wpdev-w-4) {
+  width: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-w-4\/12) {
+  width: 33.333333%;
+}
+
+.wpdev-styling :is(.wpdev-w-5) {
+  width: 1.25rem;
+}
+
+.wpdev-styling :is(.wpdev-w-5\/12) {
+  width: 41.666667%;
+}
+
+.wpdev-styling :is(.wpdev-w-6) {
+  width: 1.5rem;
+}
+
+.wpdev-styling :is(.wpdev-w-7) {
+  width: 32px;
+}
+
+.wpdev-styling :is(.wpdev-w-7\/12) {
+  width: 58.333333%;
+}
+
+.wpdev-styling :is(.wpdev-w-8) {
+  width: 2rem;
+}
+
+.wpdev-styling :is(.wpdev-w-8\/12) {
+  width: 66.666667%;
+}
+
+.wpdev-styling :is(.wpdev-w-auto) {
+  width: auto;
+}
+
+.wpdev-styling :is(.wpdev-w-full) {
+  width: 100%;
+}
+
+.wpdev-styling :is(.wpdev-w-thumb) {
+  width: 40px;
+}
+
+.wpdev-styling :is(.wpdev-min-w-0) {
+  min-width: 0px;
+}
+
+.wpdev-styling :is(.wpdev-min-w-full) {
+  min-width: 100%;
+}
+
+.wpdev-styling :is(.wpdev-max-w-screen-md) {
+  max-width: 768px;
+}
+
+.wpdev-styling :is(.wpdev-max-w-sm) {
+  max-width: 24rem;
+}
+
+.wpdev-styling :is(.wpdev-flex-1) {
+  flex: 1 1 0%;
+}
+
+.wpdev-styling :is(.wpdev-flex-none) {
+  flex: none;
+}
+
+.wpdev-styling :is(.wpdev-flex-shrink) {
+  flex-shrink: 1;
+}
+
+.wpdev-styling :is(.wpdev-flex-shrink-0) {
+  flex-shrink: 0;
+}
+
+.wpdev-styling :is(.wpdev-flex-grow) {
+  flex-grow: 1;
+}
+
+.wpdev-styling :is(.wpdev-table-auto) {
+  table-layout: auto;
+}
+
+.wpdev-styling :is(.wpdev--translate-x-1\/2) {
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.wpdev-styling :is(.wpdev-scale-150) {
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.wpdev-styling :is(.wpdev-transform) {
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.wpdev-styling :is(.wpdev-cursor-not-allowed) {
+  cursor: not-allowed;
+}
+
+.wpdev-styling :is(.wpdev-cursor-pointer) {
+  cursor: pointer;
+}
+
+.wpdev-styling :is(.wpdev-select-all) {
+  user-select: all;
+}
+
+.wpdev-styling :is(.wpdev-list-none) {
+  list-style-type: none;
+}
+
+.wpdev-styling :is(.wpdev-grid-flow-row) {
+  grid-auto-flow: row;
+}
+
+.wpdev-styling :is(.wpdev-grid-cols-1) {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.wpdev-styling :is(.wpdev-grid-cols-2) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wpdev-styling :is(.wpdev-grid-cols-3) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.wpdev-styling :is(.wpdev-flex-col) {
+  flex-direction: column;
+}
+
+.wpdev-styling :is(.wpdev-flex-wrap) {
+  flex-wrap: wrap;
+}
+
+.wpdev-styling :is(.wpdev-content-center) {
+  align-content: center;
+}
+
+.wpdev-styling :is(.wpdev-items-end) {
+  align-items: flex-end;
+}
+
+.wpdev-styling :is(.wpdev-items-center) {
+  align-items: center;
+}
+
+.wpdev-styling :is(.wpdev-items-stretch) {
+  align-items: stretch;
+}
+
+.wpdev-styling :is(.wpdev-justify-start) {
+  justify-content: flex-start;
+}
+
+.wpdev-styling :is(.wpdev-justify-end) {
+  justify-content: flex-end;
+}
+
+.wpdev-styling :is(.wpdev-justify-center) {
+  justify-content: center;
+}
+
+.wpdev-styling :is(.wpdev-justify-between) {
+  justify-content: space-between;
+}
+
+.wpdev-styling :is(.wpdev-gap-2) {
+  gap: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-gap-4) {
+  gap: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-gap-5) {
+  gap: 1.25rem;
+}
+
+.wpdev-styling :is(.wpdev-gap-6) {
+  gap: 1.5rem;
+}
+
+.wpdev-styling :is(.wpdev-gap-x-4) {
+  column-gap: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-gap-y-8) {
+  row-gap: 2rem;
+}
+
+.wpdev-styling :is(.wpdev-divide-gray-200 > :not([hidden]) ~ :not([hidden])) {
+  border-color: rgb(237, 242, 247);
+}
+
+.wpdev-styling :is(.wpdev-self-start) {
+  align-self: flex-start;
+}
+
+.wpdev-styling :is(.wpdev-self-end) {
+  align-self: flex-end;
+}
+
+.wpdev-styling :is(.wpdev-self-center) {
+  align-self: center;
+}
+
+.wpdev-styling :is(.wpdev-justify-self-end) {
+  justify-self: end;
+}
+
+.wpdev-styling :is(.wpdev-overflow-auto) {
+  overflow: auto;
+}
+
+.wpdev-styling :is(.wpdev-overflow-hidden) {
+  overflow: hidden;
+}
+
+.wpdev-styling :is(.wpdev-overflow-y-auto) {
+  overflow-y: auto;
+}
+
+.wpdev-styling :is(.wpdev-overflow-x-scroll) {
+  overflow-x: scroll;
+}
+
+.wpdev-styling :is(.wpdev-truncate) {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.wpdev-styling :is(.wpdev-rounded) {
+  border-radius: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-rounded-full) {
+  border-radius: 9999px;
+}
+
+.wpdev-styling :is(.wpdev-rounded-lg) {
+  border-radius: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-rounded-none) {
+  border-radius: 0px;
+}
+
+.wpdev-styling :is(.wpdev-rounded-sm) {
+  border-radius: 0.125rem;
+}
+
+.wpdev-styling :is(.wpdev-rounded-tl) {
+  border-start-start-radius: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-rounded-tr) {
+  border-start-end-radius: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-border) {
+  border-width: 1px;
+}
+
+.wpdev-styling :is(.wpdev-border-0) {
+  border-width: 0px;
+}
+
+.wpdev-styling :is(.wpdev-border-2) {
+  border-width: 2px;
+}
+
+.wpdev-styling :is(.wpdev-border-b) {
+  border-bottom-width: 1px;
+}
+
+.wpdev-styling :is(.wpdev-border-b-0) {
+  border-bottom-width: 0px;
+}
+
+.wpdev-styling :is(.wpdev-border-l) {
+  border-inline-start-width: 1px;
+}
+
+.wpdev-styling :is(.wpdev-border-l-0) {
+  border-inline-start-width: 0px;
+}
+
+.wpdev-styling :is(.wpdev-border-l-4) {
+  border-inline-start-width: 4px;
+}
+
+.wpdev-styling :is(.wpdev-border-r) {
+  border-inline-end-width: 1px;
+}
+
+.wpdev-styling :is(.wpdev-border-r-0) {
+  border-inline-end-width: 0px;
+}
+
+.wpdev-styling :is(.wpdev-border-t) {
+  border-top-width: 1px;
+}
+
+.wpdev-styling :is(.wpdev-border-t-0) {
+  border-top-width: 0px;
+}
+
+.wpdev-styling :is(.wpdev-border-solid) {
+  border-style: solid;
+}
+
+.wpdev-styling :is(.wpdev-border-dashed) {
+  border-style: dashed;
+}
+
+.wpdev-styling :is(.wpdev-border-none) {
+  border-style: none;
+}
+
+.wpdev-styling :is(.wpdev-border-blue-500) {
+  border-color: rgb(66, 153, 225);
+}
+
+.wpdev-styling :is(.wpdev-border-gray-200) {
+  border-color: rgb(237, 242, 247);
+}
+
+.wpdev-styling :is(.wpdev-border-gray-300) {
+  border-color: rgb(226, 232, 240);
+}
+
+.wpdev-styling :is(.wpdev-border-gray-400) {
+  border-color: rgb(203, 213, 224);
+}
+
+.wpdev-styling :is(.wpdev-border-green-300) {
+  border-color: rgb(154, 230, 180);
+}
+
+.wpdev-styling :is(.wpdev-border-red-200) {
+  border-color: rgb(254, 215, 215);
+}
+
+.wpdev-styling :is(.wpdev-border-red-300) {
+  border-color: rgb(254, 178, 178);
+}
+
+.wpdev-styling :is(.wpdev-border-transparent) {
+  border-color: transparent;
+}
+
+.wpdev-styling :is(.wpdev-border-white) {
+  border-color: rgb(255, 255, 255);
+}
+
+.wpdev-styling :is(.wpdev-border-yellow-300) {
+  border-color: rgb(250, 240, 137);
+}
+
+.wpdev-styling :is(.wpdev-border-yellow-500) {
+  border-color: rgb(236, 201, 75);
+}
+
+.wpdev-styling :is(.wpdev-bg-black) {
+  background-color: rgb(0, 0, 0);
+}
+
+.wpdev-styling :is(.wpdev-bg-blue-100) {
+  background-color: rgb(235, 248, 255);
+}
+
+.wpdev-styling :is(.wpdev-bg-blue-200) {
+  background-color: rgb(190, 227, 248);
+}
+
+.wpdev-styling :is(.wpdev-bg-blue-500) {
+  background-color: rgb(66, 153, 225);
+}
+
+.wpdev-styling :is(.wpdev-bg-gray-100) {
+  background-color: rgb(247, 250, 252);
+}
+
+.wpdev-styling :is(.wpdev-bg-gray-200) {
+  background-color: rgb(237, 242, 247);
+}
+
+.wpdev-styling :is(.wpdev-bg-gray-300) {
+  background-color: rgb(226, 232, 240);
+}
+
+.wpdev-styling :is(.wpdev-bg-gray-700) {
+  background-color: rgb(74, 85, 104);
+}
+
+.wpdev-styling :is(.wpdev-bg-gray-800) {
+  background-color: rgb(45, 55, 72);
+}
+
+.wpdev-styling :is(.wpdev-bg-green-100) {
+  background-color: rgb(240, 255, 244);
+}
+
+.wpdev-styling :is(.wpdev-bg-green-200) {
+  background-color: rgb(198, 246, 213);
+}
+
+.wpdev-styling :is(.wpdev-bg-green-300) {
+  background-color: rgb(154, 230, 180);
+}
+
+.wpdev-styling :is(.wpdev-bg-green-500) {
+  background-color: rgb(72, 187, 120);
+}
+
+.wpdev-styling :is(.wpdev-bg-orange-200) {
+  background-color: rgb(254, 235, 200);
+}
+
+.wpdev-styling :is(.wpdev-bg-orange-500) {
+  background-color: rgb(237, 137, 54);
+}
+
+.wpdev-styling :is(.wpdev-bg-orange-600) {
+  background-color: rgb(221, 107, 32);
+}
+
+.wpdev-styling :is(.wpdev-bg-pink-200) {
+  background-color: rgb(254, 215, 226);
+}
+
+.wpdev-styling :is(.wpdev-bg-pink-500) {
+  background-color: rgb(237, 100, 166);
+}
+
+.wpdev-styling :is(.wpdev-bg-purple-200) {
+  background-color: rgb(233, 216, 253);
+}
+
+.wpdev-styling :is(.wpdev-bg-purple-500) {
+  background-color: rgb(159, 122, 234);
+}
+
+.wpdev-styling :is(.wpdev-bg-purple-800) {
+  background-color: rgb(85, 60, 154);
+}
+
+.wpdev-styling :is(.wpdev-bg-red-100) {
+  background-color: rgb(255, 245, 245);
+}
+
+.wpdev-styling :is(.wpdev-bg-red-200) {
+  background-color: rgb(254, 215, 215);
+}
+
+.wpdev-styling :is(.wpdev-bg-red-500) {
+  background-color: rgb(245, 101, 101);
+}
+
+.wpdev-styling :is(.wpdev-bg-transparent) {
+  background-color: transparent;
+}
+
+.wpdev-styling :is(.wpdev-bg-white) {
+  background-color: rgb(255, 255, 255);
+}
+
+.wpdev-styling :is(.wpdev-bg-yellow-200) {
+  background-color: rgb(254, 252, 191);
+}
+
+.wpdev-styling :is(.wpdev-bg-yellow-500) {
+  background-color: rgb(236, 201, 75);
+}
+
+.wpdev-styling :is(.wpdev-bg-none) {
+  background-image: none;
+}
+
+.wpdev-styling :is(.wpdev-bg-contain) {
+  background-size: contain;
+}
+
+.wpdev-styling :is(.wpdev-bg-cover) {
+  background-size: cover;
+}
+
+.wpdev-styling :is(.wpdev-bg-center) {
+  background-position: center;
+}
+
+.wpdev-styling :is(.wpdev-bg-no-repeat) {
+  background-repeat: no-repeat;
+}
+
+.wpdev-styling :is(.wpdev-fill-current) {
+  fill: currentColor;
+}
+
+.wpdev-styling :is(.wpdev-object-cover) {
+  object-fit: cover;
+}
+
+.wpdev-styling :is(.wpdev-p-0) {
+  padding: 0px;
+}
+
+.wpdev-styling :is(.wpdev-p-1) {
+  padding: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-p-12) {
+  padding: 3rem;
+}
+
+.wpdev-styling :is(.wpdev-p-2) {
+  padding: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-p-3) {
+  padding: 0.75rem;
+}
+
+.wpdev-styling :is(.wpdev-p-4) {
+  padding: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-p-6) {
+  padding: 1.5rem;
+}
+
+.wpdev-styling :is(.wpdev-p-8) {
+  padding: 2rem;
+}
+
+.wpdev-styling :is(.wpdev-px-1) {
+  padding-inline-start: 0.25rem; padding-inline-end: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-px-2) {
+  padding-inline-start: 0.5rem; padding-inline-end: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-px-3) {
+  padding-inline-start: 0.75rem; padding-inline-end: 0.75rem;
+}
+
+.wpdev-styling :is(.wpdev-px-4) {
+  padding-inline-start: 1rem; padding-inline-end: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-px-6) {
+  padding-inline-start: 1.5rem; padding-inline-end: 1.5rem;
+}
+
+.wpdev-styling :is(.wpdev-py-0) {
+  padding-top: 0px; padding-bottom: 0px;
+}
+
+.wpdev-styling :is(.wpdev-py-1) {
+  padding-top: 0.25rem; padding-bottom: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-py-2) {
+  padding-top: 0.5rem; padding-bottom: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-py-3) {
+  padding-top: 0.75rem; padding-bottom: 0.75rem;
+}
+
+.wpdev-styling :is(.wpdev-py-4) {
+  padding-top: 1rem; padding-bottom: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-py-5) {
+  padding-top: 1.25rem; padding-bottom: 1.25rem;
+}
+
+.wpdev-styling :is(.wpdev-py-6) {
+  padding-top: 1.5rem; padding-bottom: 1.5rem;
+}
+
+.wpdev-styling :is(.wpdev-py-8) {
+  padding-top: 2rem; padding-bottom: 2rem;
+}
+
+.wpdev-styling :is(.wpdev-pb-0) {
+  padding-bottom: 0px;
+}
+
+.wpdev-styling :is(.wpdev-pb-1) {
+  padding-bottom: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-pb-12) {
+  padding-bottom: 3rem;
+}
+
+.wpdev-styling :is(.wpdev-pb-2) {
+  padding-bottom: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-pb-3) {
+  padding-bottom: 0.75rem;
+}
+
+.wpdev-styling :is(.wpdev-pb-4) {
+  padding-bottom: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-pb-8) {
+  padding-bottom: 2rem;
+}
+
+.wpdev-styling :is(.wpdev-pl-2) {
+  padding-inline-start: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-pl-4) {
+  padding-inline-start: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-pr-1) {
+  padding-inline-end: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-pr-3) {
+  padding-inline-end: 0.75rem;
+}
+
+.wpdev-styling :is(.wpdev-pt-0) {
+  padding-top: 0px;
+}
+
+.wpdev-styling :is(.wpdev-pt-1) {
+  padding-top: 0.25rem;
+}
+
+.wpdev-styling :is(.wpdev-pt-10) {
+  padding-top: 2.5rem;
+}
+
+.wpdev-styling :is(.wpdev-pt-2) {
+  padding-top: 0.5rem;
+}
+
+.wpdev-styling :is(.wpdev-pt-3) {
+  padding-top: 0.75rem;
+}
+
+.wpdev-styling :is(.wpdev-pt-4) {
+  padding-top: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-pt-6) {
+  padding-top: 1.5rem;
+}
+
+.wpdev-styling :is(.wpdev-pt-px) {
+  padding-top: 1px;
+}
+
+.wpdev-styling :is(.wpdev-text-left) {
+  text-align: start;
+}
+
+.wpdev-styling :is(.wpdev-text-center) {
+  text-align: center;
+}
+
+.wpdev-styling :is(.wpdev-text-right) {
+  text-align: end;
+}
+
+.wpdev-styling :is(.wpdev-text-justify) {
+  text-align: justify;
+}
+
+.wpdev-styling :is(.wpdev-align-baseline) {
+  vertical-align: baseline;
+}
+
+.wpdev-styling :is(.wpdev-align-middle) {
+  vertical-align: middle;
+}
+
+.wpdev-styling :is(.wpdev-align-bottom) {
+  vertical-align: bottom;
+}
+
+.wpdev-styling :is(.wpdev-align-text-top) {
+  vertical-align: text-top;
+}
+
+.wpdev-styling :is(.wpdev-align-text-bottom) {
+  vertical-align: text-bottom;
+}
+
+.wpdev-styling :is(.wpdev-font-mono) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.wpdev-styling :is(.wpdev-text-2xl) {
+  font-size: 1.5rem;
+}
+
+.wpdev-styling :is(.wpdev-text-2xs) {
+  font-size: .70rem;
+}
+
+.wpdev-styling :is(.wpdev-text-3xl) {
+  font-size: 1.875rem;
+}
+
+.wpdev-styling :is(.wpdev-text-3xs) {
+  font-size: .50rem;
+}
+
+.wpdev-styling :is(.wpdev-text-4xl) {
+  font-size: 2.25rem;
+}
+
+.wpdev-styling :is(.wpdev-text-5xl) {
+  font-size: 3rem;
+}
+
+.wpdev-styling :is(.wpdev-text-6xl) {
+  font-size: 4rem;
+}
+
+.wpdev-styling :is(.wpdev-text-base) {
+  font-size: 1rem;
+}
+
+.wpdev-styling :is(.wpdev-text-lg) {
+  font-size: 1.125rem;
+}
+
+.wpdev-styling :is(.wpdev-text-sm) {
+  font-size: 0.875rem;
+}
+
+.wpdev-styling :is(.wpdev-text-xl) {
+  font-size: 1.25rem;
+}
+
+.wpdev-styling :is(.wpdev-text-xs) {
+  font-size: 0.75rem;
+}
+
+.wpdev-styling :is(.wpdev-font-bold) {
+  font-weight: 700;
+}
+
+.wpdev-styling :is(.wpdev-font-medium) {
+  font-weight: 500;
+}
+
+.wpdev-styling :is(.wpdev-font-normal) {
+  font-weight: 400;
+}
+
+.wpdev-styling :is(.wpdev-font-semibold) {
+  font-weight: 600;
+}
+
+.wpdev-styling :is(.wpdev-uppercase) {
+  text-transform: uppercase;
+}
+
+.wpdev-styling :is(.wpdev-capitalize) {
+  text-transform: capitalize;
+}
+
+.wpdev-styling :is(.wpdev-normal-case) {
+  text-transform: none;
+}
+
+.wpdev-styling :is(.wpdev-leading-none) {
+  line-height: 1;
+}
+
+.wpdev-styling :is(.wpdev-leading-relaxed) {
+  line-height: 1.625;
+}
+
+.wpdev-styling :is(.wpdev-leading-snug) {
+  line-height: 1.375;
+}
+
+.wpdev-styling :is(.wpdev-tracking-wide) {
+  letter-spacing: 0.025em;
+}
+
+.wpdev-styling :is(.wpdev-tracking-wider) {
+  letter-spacing: 0.05em;
+}
+
+.wpdev-styling :is(.wpdev-text-blue-400) {
+  color: rgb(99, 179, 237);
+}
+
+.wpdev-styling :is(.wpdev-text-blue-600) {
+  color: rgb(49, 130, 206);
+}
+
+.wpdev-styling :is(.wpdev-text-blue-700) {
+  color: rgb(43, 108, 176);
+}
+
+.wpdev-styling :is(.wpdev-text-gray-100) {
+  color: rgb(247, 250, 252);
+}
+
+.wpdev-styling :is(.wpdev-text-gray-200) {
+  color: rgb(237, 242, 247);
+}
+
+.wpdev-styling :is(.wpdev-text-gray-300) {
+  color: rgb(226, 232, 240);
+}
+
+.wpdev-styling :is(.wpdev-text-gray-500) {
+  color: rgb(160, 174, 192);
+}
+
+.wpdev-styling :is(.wpdev-text-gray-600) {
+  color: rgb(113, 128, 150);
+}
+
+.wpdev-styling :is(.wpdev-text-gray-700) {
+  color: rgb(74, 85, 104);
+}
+
+.wpdev-styling :is(.wpdev-text-gray-800) {
+  color: rgb(45, 55, 72);
+}
+
+.wpdev-styling :is(.wpdev-text-gray-900) {
+  color: rgb(26, 32, 44);
+}
+
+.wpdev-styling :is(.wpdev-text-green-400) {
+  color: rgb(104, 211, 145);
+}
+
+.wpdev-styling :is(.wpdev-text-green-500) {
+  color: rgb(72, 187, 120);
+}
+
+.wpdev-styling :is(.wpdev-text-green-600) {
+  color: rgb(56, 161, 105);
+}
+
+.wpdev-styling :is(.wpdev-text-green-700) {
+  color: rgb(47, 133, 90);
+}
+
+.wpdev-styling :is(.wpdev-text-green-800) {
+  color: rgb(39, 103, 73);
+}
+
+.wpdev-styling :is(.wpdev-text-orange-700) {
+  color: rgb(192, 86, 33);
+}
+
+.wpdev-styling :is(.wpdev-text-pink-700) {
+  color: rgb(184, 50, 128);
+}
+
+.wpdev-styling :is(.wpdev-text-purple-700) {
+  color: rgb(107, 70, 193);
+}
+
+.wpdev-styling :is(.wpdev-text-red-400) {
+  color: rgb(252, 129, 129);
+}
+
+.wpdev-styling :is(.wpdev-text-red-500) {
+  color: rgb(245, 101, 101);
+}
+
+.wpdev-styling :is(.wpdev-text-red-600) {
+  color: rgb(229, 62, 62);
+}
+
+.wpdev-styling :is(.wpdev-text-red-700) {
+  color: rgb(197, 48, 48);
+}
+
+.wpdev-styling :is(.wpdev-text-red-800) {
+  color: rgb(155, 44, 44);
+}
+
+.wpdev-styling :is(.wpdev-text-white) {
+  color: rgb(255, 255, 255);
+}
+
+.wpdev-styling :is(.wpdev-text-yellow-700) {
+  color: rgb(183, 121, 31);
+}
+
+.wpdev-styling :is(.wpdev-text-yellow-800) {
+  color: rgb(151, 90, 22);
+}
+
+.wpdev-styling :is(.wpdev-line-through) {
+  text-decoration-line: line-through;
+}
+
+.wpdev-styling :is(.wpdev-no-underline) {
+  text-decoration-line: none;
+}
+
+.wpdev-styling :is(.wpdev-opacity-25) {
+  opacity: 0.25;
+}
+
+.wpdev-styling :is(.wpdev-opacity-50) {
+  opacity: 0.5;
+}
+
+.wpdev-styling :is(.wpdev-opacity-60) {
+  opacity: 0.6;
+}
+
+.wpdev-styling :is(.wpdev-opacity-75) {
+  opacity: 0.75;
+}
+
+.wpdev-styling :is(.wpdev-shadow) {
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.wpdev-styling :is(.wpdev-shadow-md) {
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.wpdev-styling :is(.wpdev-shadow-sm) {
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.wpdev-styling :is(.wpdev-outline-none) {
+  outline: 2px solid transparent; outline-offset: 2px;
+}
+
+.wpdev-styling :is(.wpdev-ring-2) {
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
+.wpdev-styling :is(.wpdev-filter) {
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+
+.wpdev-styling :is(.wpdev-transition-all) {
+  transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms;
+}
+
+.wpdev-styling :is(.focus-within\:wpdev-ring-1:focus-within) {
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
+
+.wpdev-styling :is(.hover\:wpdev-cursor-pointer:hover) {
+  cursor: pointer;
+}
+
+.wpdev-styling :is(.hover\:wpdev-border:hover) {
+  border-width: 1px;
+}
+
+.wpdev-styling :is(.hover\:wpdev-border-solid:hover) {
+  border-style: solid;
+}
+
+.wpdev-styling :is(.hover\:wpdev-border-gray-400:hover) {
+  border-color: rgb(203, 213, 224);
+}
+
+.wpdev-styling :is(.hover\:wpdev-bg-gray-200:hover) {
+  background-color: rgb(237, 242, 247);
+}
+
+.wpdev-styling :is(.hover\:wpdev-text-gray-600:hover) {
+  color: rgb(113, 128, 150);
+}
+
+.wpdev-styling :is(.hover\:wpdev-text-gray-700:hover) {
+  color: rgb(74, 85, 104);
+}
+
+.wpdev-styling :is(.hover\:wpdev-text-gray-800:hover) {
+  color: rgb(45, 55, 72);
+}
+
+.wpdev-styling :is(.hover\:wpdev-text-red-600:hover) {
+  color: rgb(229, 62, 62);
+}
+
+.wpdev-styling :is(.hover\:wpdev-shadow-none:hover) {
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.wpdev-styling :is(.focus\:wpdev-shadow-none:focus) {
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.wpdev-styling :is(.sm\:wpdev-col-span-1) {
+  grid-column: span 1 / span 1;
+}
+
+.wpdev-styling :is(.sm\:wpdev-col-span-2) {
+  grid-column: span 2 / span 2;
+}
+
+.wpdev-styling :is(.sm\:wpdev-col-span-4) {
+  grid-column: span 4 / span 4;
+}
+
+.wpdev-styling :is(.sm\:wpdev-col-span-8) {
+  grid-column: span 8 / span 8;
+}
+
+.wpdev-styling :is(.sm\:wpdev-col-start-5) {
+  grid-column-start: 5;
+}
+
+.wpdev-styling :is(.sm\:wpdev-float-right) {
+  float: inline-end;
+}
+
+.wpdev-styling :is(.sm\:wpdev-m-0) {
+  margin: 0px;
+}
+
+.wpdev-styling :is(.sm\:wpdev--mx-6) {
+  margin-inline-start: -1.5rem; margin-inline-end: -1.5rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-mx-2) {
+  margin-inline-start: 0.5rem; margin-inline-end: 0.5rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-mx-auto) {
+  margin-inline-start: auto; margin-inline-end: auto;
+}
+
+.wpdev-styling :is(.sm\:wpdev-my-0) {
+  margin-top: 0px; margin-bottom: 0px;
+}
+
+.wpdev-styling :is(.sm\:wpdev--mb-6) {
+  margin-bottom: -1.5rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev--mb-px) {
+  margin-bottom: -1px;
+}
+
+.wpdev-styling :is(.sm\:wpdev--ml-3) {
+  margin-inline-start: -0.75rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev--mr-7) {
+  margin-inline-end: -32px;
+}
+
+.wpdev-styling :is(.sm\:wpdev--mr-7\.5) {
+  margin-inline-end: -38px;
+}
+
+.wpdev-styling :is(.sm\:wpdev--mt-1) {
+  margin-top: -0.25rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev--mt-4) {
+  margin-top: -1rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-mb-0) {
+  margin-bottom: 0px;
+}
+
+.wpdev-styling :is(.sm\:wpdev-mb-1) {
+  margin-bottom: 0.25rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-ml-0) {
+  margin-inline-start: 0px;
+}
+
+.wpdev-styling :is(.sm\:wpdev-ml-2) {
+  margin-inline-start: 0.5rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-ml-4) {
+  margin-inline-start: 1rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-ml-6) {
+  margin-inline-start: 1.5rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-mr-4) {
+  margin-inline-end: 1rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-mr-6) {
+  margin-inline-end: 1.5rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-mt-0) {
+  margin-top: 0px;
+}
+
+.wpdev-styling :is(.sm\:wpdev-mt-1) {
+  margin-top: 0.25rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-block) {
+  display: block;
+}
+
+.wpdev-styling :is(.sm\:wpdev-inline-block) {
+  display: inline-block;
+}
+
+.wpdev-styling :is(.sm\:wpdev-inline) {
+  display: inline;
+}
+
+.wpdev-styling :is(.sm\:wpdev-flex) {
+  display: flex;
+}
+
+.wpdev-styling :is(.sm\:wpdev-grid) {
+  display: grid;
+}
+
+.wpdev-styling :is(.sm\:wpdev-hidden) {
+  display: none;
+}
+
+.wpdev-styling :is(.sm\:wpdev-h-12) {
+  height: 3rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-h-6) {
+  height: 1.5rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-w-1\/2) {
+  width: 50%;
+}
+
+.wpdev-styling :is(.sm\:wpdev-w-1\/3) {
+  width: 33.333333%;
+}
+
+.wpdev-styling :is(.sm\:wpdev-w-11\/12) {
+  width: 91.666667%;
+}
+
+.wpdev-styling :is(.sm\:wpdev-w-12) {
+  width: 3rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-w-8\/12) {
+  width: 66.666667%;
+}
+
+.wpdev-styling :is(.sm\:wpdev-w-auto) {
+  width: auto;
+}
+
+.wpdev-styling :is(.sm\:wpdev-max-w-full) {
+  max-width: 100%;
+}
+
+.wpdev-styling :is(.sm\:wpdev-max-w-screen-lg) {
+  max-width: 1024px;
+}
+
+.wpdev-styling :is(.sm\:wpdev-flex-shrink-0) {
+  flex-shrink: 0;
+}
+
+.wpdev-styling :is(.sm\:wpdev-grid-cols-12) {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.wpdev-styling :is(.sm\:wpdev-grid-cols-2) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wpdev-styling :is(.sm\:wpdev-grid-cols-3) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.wpdev-styling :is(.sm\:wpdev-flex-nowrap) {
+  flex-wrap: nowrap;
+}
+
+.wpdev-styling :is(.sm\:wpdev-items-center) {
+  align-items: center;
+}
+
+.wpdev-styling :is(.sm\:wpdev-justify-between) {
+  justify-content: space-between;
+}
+
+.wpdev-styling :is(.sm\:wpdev-gap-4) {
+  gap: 1rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-divide-y > :not([hidden]) ~ :not([hidden])) {
+  border-top-width: calc(1px * calc(1 - var(--tw-divide-y-reverse))); border-bottom-width: calc(1px * var(--tw-divide-y-reverse));
+}
+
+.wpdev-styling :is(.sm\:wpdev-divide-gray-200 > :not([hidden]) ~ :not([hidden])) {
+  border-color: rgb(237, 242, 247);
+}
+
+.wpdev-styling :is(.sm\:wpdev-border-l-0) {
+  border-inline-start-width: 0px;
+}
+
+.wpdev-styling :is(.sm\:wpdev-border-r-0) {
+  border-inline-end-width: 0px;
+}
+
+.wpdev-styling :is(.sm\:wpdev-border-t-0) {
+  border-top-width: 0px;
+}
+
+.wpdev-styling :is(.sm\:wpdev-bg-transparent) {
+  background-color: transparent;
+}
+
+.wpdev-styling :is(.sm\:wpdev-p-0) {
+  padding: 0px;
+}
+
+.wpdev-styling :is(.sm\:wpdev-p-2) {
+  padding: 0.5rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-px-4) {
+  padding-inline-start: 1rem; padding-inline-end: 1rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-py-3) {
+  padding-top: 0.75rem; padding-bottom: 0.75rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-pt-0) {
+  padding-top: 0px;
+}
+
+.wpdev-styling :is(.sm\:wpdev-pt-3) {
+  padding-top: 0.75rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-text-right) {
+  text-align: end;
+}
+
+.wpdev-styling :is(.sm\:wpdev-text-4xl) {
+  font-size: 2.25rem;
+}
+
+.wpdev-styling :is(.sm\:wpdev-normal-case) {
+  text-transform: none;
+}
+
+.wpdev-styling :is(.md\:wpdev-right-2) {
+  inset-inline-end: 0.5rem;
+}
+
+.wpdev-styling :is(.md\:wpdev-top-2) {
+  top: 0.5rem;
+}
+
+.wpdev-styling :is(.md\:wpdev-order-1) {
+  order: 1;
+}
+
+.wpdev-styling :is(.md\:wpdev-order-2) {
+  order: 2;
+}
+
+.wpdev-styling :is(.md\:wpdev-order-3) {
+  order: 3;
+}
+
+.wpdev-styling :is(.md\:wpdev-col-span-2) {
+  grid-column: span 2 / span 2;
+}
+
+.wpdev-styling :is(.md\:wpdev--mx-3) {
+  margin-inline-start: -0.75rem; margin-inline-end: -0.75rem;
+}
+
+.wpdev-styling :is(.md\:wpdev--mb-3) {
+  margin-bottom: -0.75rem;
+}
+
+.wpdev-styling :is(.md\:wpdev-mb-0) {
+  margin-bottom: 0px;
+}
+
+.wpdev-styling :is(.md\:wpdev-ml-4) {
+  margin-inline-start: 1rem;
+}
+
+.wpdev-styling :is(.md\:wpdev-ml-6) {
+  margin-inline-start: 1.5rem;
+}
+
+.wpdev-styling :is(.md\:wpdev-mr-0) {
+  margin-inline-end: 0px;
+}
+
+.wpdev-styling :is(.md\:wpdev-mr-6) {
+  margin-inline-end: 1.5rem;
+}
+
+.wpdev-styling :is(.md\:wpdev-mt-0) {
+  margin-top: 0px;
+}
+
+.wpdev-styling :is(.md\:wpdev-inline-block) {
+  display: inline-block;
+}
+
+.wpdev-styling :is(.md\:wpdev-flex) {
+  display: flex;
+}
+
+.wpdev-styling :is(.md\:wpdev-row) {
+  display: flex;
+}
+
+.wpdev-styling :is(.md\:wpdev-hidden) {
+  display: none;
+}
+
+.wpdev-styling :is(.md\:wpdev-max-h-20) {
+  max-height: 5rem;
+}
+
+.wpdev-styling :is(.md\:wpdev-w-1\/2) {
+  width: 50%;
+}
+
+.wpdev-styling :is(.md\:wpdev-w-1\/4) {
+  width: 25%;
+}
+
+.wpdev-styling :is(.md\:wpdev-w-10\/12) {
+  width: 83.333333%;
+}
+
+.wpdev-styling :is(.md\:wpdev-w-2\/12) {
+  width: 16.666667%;
+}
+
+.wpdev-styling :is(.md\:wpdev-w-3\/4) {
+  width: 75%;
+}
+
+.wpdev-styling :is(.md\:wpdev-w-4\/12) {
+  width: 33.333333%;
+}
+
+.wpdev-styling :is(.md\:wpdev-w-8\/12) {
+  width: 66.666667%;
+}
+
+.wpdev-styling :is(.md\:wpdev-w-9\/12) {
+  width: 75%;
+}
+
+.wpdev-styling :is(.md\:wpdev-w-auto) {
+  width: auto;
+}
+
+.wpdev-styling :is(.md\:wpdev-w-full) {
+  width: 100%;
+}
+
+.wpdev-styling :is(.md\:wpdev-max-w-full) {
+  max-width: 100%;
+}
+
+.wpdev-styling :is(.md\:wpdev-flex-1) {
+  flex: 1 1 0%;
+}
+
+.wpdev-styling :is(.md\:wpdev-scale-100) {
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.wpdev-styling :is(.md\:wpdev-grid-cols-2) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wpdev-styling :is(.md\:wpdev-grid-cols-3) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.wpdev-styling :is(.md\:wpdev-grid-cols-4) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.wpdev-styling :is(.md\:wpdev-grid-cols-5) {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.wpdev-styling :is(.md\:wpdev-grid-cols-6) {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.wpdev-styling :is(.md\:wpdev-border-solid) {
+  border-style: solid;
+}
+
+.wpdev-styling :is(.md\:wpdev-p-0) {
+  padding: 0px;
+}
+
+.wpdev-styling :is(.md\:wpdev-px-3) {
+  padding-inline-start: 0.75rem; padding-inline-end: 0.75rem;
+}
+
+.wpdev-styling :is(.md\:wpdev-px-4) {
+  padding-inline-start: 1rem; padding-inline-end: 1rem;
+}
+
+.wpdev-styling :is(.md\:wpdev-py-2) {
+  padding-top: 0.5rem; padding-bottom: 0.5rem;
+}
+
+.wpdev-styling :is(.md\:wpdev-pl-4) {
+  padding-inline-start: 1rem;
+}
+
+.wpdev-styling :is(.md\:wpdev-pr-3) {
+  padding-inline-end: 0.75rem;
+}
+
+.wpdev-styling :is(.md\:wpdev-pt-12) {
+  padding-top: 3rem;
+}
+
+.wpdev-styling :is(.md\:wpdev-text-xl) {
+  font-size: 1.25rem;
+}
+
+.wpdev-styling :is(.lg\:wpdev-col-span-2) {
+  grid-column: span 2 / span 2;
+}
+
+.wpdev-styling :is(.lg\:wpdev-col-span-3) {
+  grid-column: span 3 / span 3;
+}
+
+.wpdev-styling :is(.lg\:wpdev-col-span-6) {
+  grid-column: span 6 / span 6;
+}
+
+.wpdev-styling :is(.lg\:wpdev-col-span-10) {
+  grid-column: span 10 / span 10;
+}
+
+.wpdev-styling :is(.lg\:wpdev-col-span-12) {
+  grid-column: span 12 / span 12;
+}
+
+.wpdev-styling :is(.sm\:wpdev-col-span-10) {
+  grid-column: span 10 / span 10;
+}
+
+.wpdev-styling :is(.sm\:wpdev-col-span-12) {
+  grid-column: span 12 / span 12;
+}
+
+.wpdev-styling :is(.lg\:wpdev-col-start-10) {
+  grid-column-start: 10;
+}
+
+.wpdev-styling :is(.lg\:wpdev-mt-2) {
+  margin-top: 0.5rem;
+}
+
+.wpdev-styling :is(.lg\:wpdev-inline) {
+  display: inline;
+}
+
+.wpdev-styling :is(.lg\:wpdev-flex) {
+  display: flex;
+}
+
+.wpdev-styling :is(.lg\:wpdev-w-1\/4) {
+  width: 25%;
+}
+
+.wpdev-styling :is(.lg\:wpdev-w-10\/12) {
+  width: 83.333333%;
+}
+
+.wpdev-styling :is(.lg\:wpdev-w-2\/12) {
+  width: 16.666667%;
+}
+
+.wpdev-styling :is(.lg\:wpdev-max-w-none) {
+  max-width: none;
+}
+
+.wpdev-styling :is(.lg\:wpdev-grid-cols-3) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.wpdev-styling :is(.lg\:wpdev-grid-cols-4) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.wpdev-styling :is(.xl\:wpdev-w-8\/12) {
+  width: 66.666667%;
+}
+
+.wpdev-styling :is(.xl\:wpdev-grid-cols-3) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.wpdev-styling :is(.xl\:wpdev-grid-cols-4) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.wpdev-styling :is(.admin-lg\:wpdev-mx-auto) {
+  margin-inline-start: auto; margin-inline-end: auto;
+}
+
+/* Primitive aliases (ex-Tailwind gated utilities) */
+
+.wpdev-styling .wpdev-row {
+  display: flex;
+}
+
+.wpdev-styling .wpdev-row-inline {
+  display: inline-flex;
+}
+
+.wpdev-styling .wpdev-cols {
+  display: grid;
+}
+
+.wpdev-styling .wpdev-grow {
+  flex-grow: 1;
+}
+
+.wpdev-styling .wpdev-radius {
+  border-radius: 0.25rem;
+}
+
+/* leftover flex/grid aliases */
+.wpdev-styling .wpdev-shrink-0 { flex-shrink: 0; }
+.wpdev-styling .wpdev-row-none { flex: none; }
+.wpdev-styling .wpdev-g-0 { gap: 0; }
+.wpdev-styling :is(.wpdev-g-4) { gap: 1rem; }
+.wpdev-styling .wpdev-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.wpdev-styling .wpdev-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.wpdev-styling .wpdev-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.wpdev-styling .wpdev-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.wpdev-styling .wpdev-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+.wpdev-styling .wpdev-cols { display: grid; }
+
+/* Dynamic / responsive column helpers */
+.wpdev-styling .wpdev-row-wrap { flex-wrap: wrap; }
+.wpdev-styling .wpdev-row-nowrap { flex-wrap: nowrap; }
+.wpdev-styling .wpdev-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.wpdev-styling .wpdev-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.wpdev-styling .wpdev-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.wpdev-styling .wpdev-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.wpdev-styling .wpdev-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.wpdev-styling .wpdev-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.wpdev-styling .wpdev-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+@media (min-width: 640px) {
+  .wpdev-styling .sm\:wpdev-cols { display: grid; }
+  .wpdev-styling .sm\:wpdev-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  .wpdev-styling .sm\:wpdev-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wpdev-styling .sm\:wpdev-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .wpdev-styling .sm\:wpdev-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .wpdev-styling .sm\:wpdev-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .wpdev-styling .sm\:wpdev-row-nowrap { flex-wrap: nowrap; }
+}
+@media (min-width: 1024px) {
+  .wpdev-styling .lg\:wpdev-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  .wpdev-styling .lg\:wpdev-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wpdev-styling .lg\:wpdev-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .wpdev-styling .lg\:wpdev-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .wpdev-styling .lg\:wpdev-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .wpdev-styling .lg\:wpdev-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+@media (min-width: 1280px) {
+  .wpdev-styling .xl\:wpdev-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+  .wpdev-styling .xl\:wpdev-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wpdev-styling .xl\:wpdev-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .wpdev-styling .xl\:wpdev-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Legacy Tailwind names still used by widget-tabs / field wrappers (pad/mar/type/surface → px/m/text/bg). */
+.wpdev-styling :is(.wpdev-mar-0) { margin: 0px; }
+.wpdev-styling :is(.wpdev-mar-r-1) { margin-inline-end: 0.25rem; }
+.wpdev-styling :is(.wpdev-mar-y-1) { margin-top: 0.25rem; margin-bottom: 0.25rem; }
+.wpdev-styling :is(.wpdev-pad-0) { padding: 0px; }
+.wpdev-styling :is(.wpdev-pad-4) { padding: 1rem; }
+.wpdev-styling :is(.wpdev-pad-x-4) { padding-inline-start: 1rem; padding-inline-end: 1rem; }
+.wpdev-styling :is(.wpdev-pad-y-2) { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.wpdev-styling :is(.wpdev-pad-y-4) { padding-top: 1rem; padding-bottom: 1rem; }
+.wpdev-styling :is(.wpdev-pad-t-4) { padding-top: 1rem; }
+.wpdev-styling :is(.wpdev-pad-t-10) { padding-top: 2.5rem; }
+.wpdev-styling :is(.wpdev-pad-t-2px) { padding-top: 2px; }
+.wpdev-styling :is(.md\:wpdev-pad-x-3) { padding-inline-start: 0.75rem; padding-inline-end: 0.75rem; }
+.wpdev-styling :is(.md\:wpdev-pad-x-4) { padding-inline-start: 1rem; padding-inline-end: 1rem; }
+.wpdev-styling :is(.md\:wpdev-pad-y-2) { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.wpdev-styling :is(.wpdev-surface-gray-100) { background-color: rgb(247, 250, 252); }
+.wpdev-styling :is(.wpdev-surface-gray-200) { background-color: rgb(237, 242, 247); }
+.wpdev-styling :is(.wpdev-surface-gray-300) { background-color: rgb(226, 232, 240); }
+.wpdev-styling :is(.wpdev-surface-gray-800) { background-color: rgb(45, 55, 72); }
+.wpdev-styling :is(.wpdev-surface-white) { background-color: rgb(255, 255, 255); }
+.wpdev-styling :is(.wpdev-surface-blue-100) { background-color: rgb(235, 248, 255); }
+.wpdev-styling :is(.wpdev-type-xs) { font-size: 0.75rem; }
+.wpdev-styling :is(.wpdev-type-sm) { font-size: 0.875rem; }
+.wpdev-styling :is(.wpdev-type-base) { font-size: 1rem; }
+.wpdev-styling :is(.wpdev-type-2xs) { font-size: .70rem; }
+.wpdev-styling :is(.wpdev-type-center) { text-align: center; }
+.wpdev-styling :is(.wpdev-type-gray-500) { color: rgb(160, 174, 192); }
+.wpdev-styling :is(.wpdev-type-gray-600) { color: rgb(113, 128, 150); }
+.wpdev-styling :is(.wpdev-type-gray-700) { color: rgb(74, 85, 104); }
+.wpdev-styling :is(.wpdev-type-gray-800) { color: rgb(45, 55, 72); }
+
+/* Settings & metabox container widths under CSS Grid */
+.wpdev-styling #poststuff .metabox-holder {
+  width: 100%;
+  max-width: 100%;
+}
+.wpdev-styling #poststuff .wpdev-card,
+.wpdev-styling #poststuff .postbox {
+  width: 100%;
+  box-sizing: border-box;
+}
+

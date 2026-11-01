@@ -89,8 +89,7 @@ class Serializer
     {
         $text = $docblock->getSummary() . ((string) $docblock->getDescription() ? "\n\n" . $docblock->getDescription() : '');
         if ($wrapLength !== null) {
-            $text = wordwrap($text, $wrapLength);
-            return $text;
+            return wordwrap($text, $wrapLength);
         }
         return $text;
     }

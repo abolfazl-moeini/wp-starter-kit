@@ -200,6 +200,10 @@ const formSubmit = (form) => async (event) => {
     textAreaInput.value = textArea.value;
   }
   const blocked_form = wpdev_block_ui(form);
+  const existingNotice = form.querySelector(".wpdev-form-notice");
+  if (existingNotice) {
+    existingNotice.remove();
+  }
   if (window["wpdev_" + form.getAttribute("id") + "_errors"]) {
     window["wpdev_" + form.getAttribute("id") + "_errors"].errors = [];
   }
@@ -225,36 +229,129 @@ const formSubmit = (form) => async (event) => {
   } catch (requestError) {
     response = null;
   }
-  if (response === null || response.data === null) {
+  if (response === null || typeof response !== "object") {
     blocked_form.unblock();
     removeBox();
     return;
   }
   if (!response.success) {
     blocked_form.unblock();
+    const currentNotice = form.querySelector(".wpdev-form-notice");
+    if (currentNotice) {
+      currentNotice.remove();
+    }
     const formId = form.getAttribute("id");
     if (window["wpdev_" + formId + "_errors"]) {
-      window["wpdev_" + formId + "_errors"].errors = response.data;
+      window["wpdev_" + formId + "_errors"].errors = response.data || [];
     }
     const formApp = document.querySelector('[data-wpdev-app="' + formId + '_errors"]');
     formApp == null ? void 0 : formApp.setAttribute("tabindex", "-1");
     formApp == null ? void 0 : formApp.focus();
     return;
   }
-  if (typeof response.data.tables === "object") {
+  if (response.data == null) {
+    blocked_form.unblock();
+    removeBox();
+    return;
+  }
+  if (typeof response.data.download_url === "string" && response.data.download_url) {
+    blocked_form.unblock();
+    if (response.data.download_url.indexOf("blob:") === 0 || response.data.download_url.indexOf("data:") === 0) {
+      const link = document.createElement("a");
+      link.style.display = "none";
+      link.href = response.data.download_url;
+      link.setAttribute("download", response.data.download_filename || response.data.download_name || "");
+      (document.body || document.documentElement).appendChild(link);
+      link.click();
+      link.remove();
+    } else {
+      const iframe = document.createElement("iframe");
+      iframe.style.display = "none";
+      iframe.src = response.data.download_url;
+      (document.body || document.documentElement).appendChild(iframe);
+      const timer = setTimeout(() => {
+        iframe.remove();
+      }, 60000);
+      if (typeof timer === "object" && timer !== null && typeof timer.unref === "function") {
+        timer.unref();
+      }
+    }
+    if (typeof response.data.tables === "object" && response.data.tables !== null) {
+      Object.keys(response.data.tables).forEach((key) => {
+        if (window[key] && typeof window[key].update === "function") {
+          window[key].update();
+        }
+      });
+    }
+    if (response.data.close_modal) {
+      if (typeof response.data.message === "string" && response.data.message) {
+        if (typeof Swal !== "undefined" && typeof Swal.fire === "function") {
+          Swal.fire({ text: response.data.message, icon: "success" });
+        } else if (typeof alert === "function") {
+          alert(response.data.message);
+        }
+      }
+      removeBox();
+    } else {
+      if (typeof response.data.message === "string" && response.data.message) {
+        let notice = form.querySelector(".wpdev-form-notice");
+        if (!notice) {
+          notice = document.createElement("div");
+          notice.className = "wpdev-form-notice notice notice-success is-dismissible wpdev-pad-3 wpdev-surface-green-100 wpdev-text-green-800 wpdev-rounded wpdev-mar-b-4";
+          form.insertAdjacentElement("afterbegin", notice);
+        }
+        notice.innerHTML = "";
+        const p = document.createElement("p");
+        p.className = "wpdev-mar-0";
+        p.textContent = response.data.message;
+        notice.appendChild(p);
+        refreshBox();
+      }
+    }
+    return;
+  }
+  if (typeof response.data.tables === "object" && response.data.tables !== null) {
     blocked_form.unblock();
     removeBox();
     Object.keys(response.data.tables).forEach((key) => {
-      window[key].update();
+      if (window[key] && typeof window[key].update === "function") {
+        window[key].update();
+      }
     });
     return;
   }
   if (typeof response.data.redirect_url === "string" && response.data.redirect_url) {
+    blocked_form.unblock();
     window.location.href = response.data.redirect_url;
     return;
   }
-  if (typeof response.data.send === "object") {
-    window[response.data.send.scope][response.data.send.function_name](response.data.send.data, removeBox);
+  if (typeof response.data.send === "object" && response.data.send !== null) {
+    blocked_form.unblock();
+    const sendPayload = response.data.send;
+    const eventDetail = {
+      response: response,
+      send: sendPayload,
+      form: form,
+      close: removeBox,
+    };
+    try {
+      if (document && typeof document.dispatchEvent === "function") {
+        document.dispatchEvent(new CustomEvent("wubox:send", { detail: eventDetail }));
+      }
+      if (document.body && typeof document.body.dispatchEvent === "function") {
+        document.body.dispatchEvent(new CustomEvent("wubox:send", { detail: eventDetail }));
+      }
+    } catch (e) {}
+
+    const scopeObj = window[sendPayload.scope];
+    if (scopeObj && typeof scopeObj[sendPayload.function_name] === "function") {
+      scopeObj[sendPayload.function_name](sendPayload.data, removeBox);
+      return;
+    }
+    if (typeof console !== "undefined" && typeof console.warn === "function") {
+      console.warn("[wubox] send handler not found: window." + sendPayload.scope + "." + sendPayload.function_name, sendPayload);
+    }
+    removeBox();
     return;
   }
   blocked_form.unblock();
@@ -409,12 +506,19 @@ const refreshBox = () => {
   wpdev_initialize_editors();
   const content = document.getElementById("WUB_ajaxContent");
   const boxWindow = document.getElementById("WUB_window");
+  if (!content || !boxWindow) {
+    return;
+  }
+  // Vue updated() calls refresh on every state change (e.g. Confirm toggle).
+  // Preserve scroll so the lightbox does not jump to the top mid-interaction.
+  const scrollTop = content ? content.scrollTop : 0;
   content.style.height = "100vh";
   const max_height = window.innerHeight - 120;
   const height = form.offsetHeight >= max_height ? max_height : form.offsetHeight + 1;
   boxWindow.style.transition = "margin 200ms";
   content.style.height = height + "px";
   boxWindow.style.marginTop = "-" + height / 2 + "px";
+  content.scrollTop = scrollTop;
 };
 const setBoxWidth = (width) => {
   const content = document.getElementById("WUB_ajaxContent");
@@ -462,7 +566,8 @@ window.wubox = {
    */
   width: setBoxWidth
 };
+window.removeBox = removeBox;
 window.addEventListener("DOMContentLoaded", () => {
   window.wubox.init(".wubox", true, true);
 });
-})()
+})();

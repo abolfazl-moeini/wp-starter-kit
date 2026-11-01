@@ -41,7 +41,6 @@ $autoloadCandidates = [
 foreach ($autoloadCandidates as $autoload) {
 	if (is_file( $autoload )) {
 		require_once $autoload;
-		break;
 	}
 }
 

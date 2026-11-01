@@ -37,13 +37,48 @@ abstract class Post_Edit_Admin_Page {
 
 	public function __construct() {
 
-
 		add_action( 'add_meta_boxes', [ $this, 'register_meta_boxes' ] );
+
+		// [P1-2 FIX] Wire register_forms hook so subclasses can register
+		// wubox modal forms on CPT edit screens, matching Base_Admin_Page behavior.
+		add_action( 'wpdev_register_forms', [ $this, 'register_forms' ] );
+
+		if ( did_action( 'wpdev_register_forms' ) ) {
+			$this->register_forms();
+		}
+	}
+
+	/**
+	 * Register modal forms for this edit page.
+	 * Override in subclasses to register wubox forms.
+	 *
+	 * @since 2.14.0
+	 * @return void
+	 */
+	public function register_forms() {
+		// Override in subclasses.
 	}
 
 	public function register_meta_boxes( $post_type ) {
 
-		if(in_array( $post_type, $this->post_types()) ) {
+		if ( in_array( $post_type, $this->post_types(), true ) ) {
+
+			// [P1-1 FIX] Ensure wubox + vue-apps are loaded on CPT edit screens.
+			// wpdev_page_load only fires on Base_Admin_Page instances, but CPT edit
+			// screens use Post_Edit_Admin_Page which does not extend Base_Admin_Page.
+			// wpdev-vue-apps depends on wubox, so enqueuing it brings wubox automatically.
+			if ( class_exists( '\WPDevFramework\Scripts' ) ) {
+				\WPDevFramework\Scripts::ensure_defaults_registered();
+			}
+			wp_enqueue_style( 'wpdev-styling' );
+			wp_enqueue_style( 'wpdev-admin' );
+			wp_enqueue_script( 'wpdev-vue-apps' );
+
+			// Hydrate the edited model before widgets call get_object().
+			$this->get_object();
+			$this->edit = is_object( $this->object ) && method_exists( $this->object, 'exists' )
+				? (bool) $this->object->exists()
+				: false;
 
 			$this->register_widgets();
 		}
@@ -122,6 +157,57 @@ abstract class Post_Edit_Admin_Page {
 		return apply_filters( 'wpdev_edit_admin_page_labels', $default_labels );
 
 	} // end get_labels;
+
+	/**
+	 * Returns the model for the current WordPress post being edited.
+	 *
+	 * @since 2.8.4
+	 * @return \WPDevFramework\Models\Post_Base_Model
+	 */
+	public function get_object() {
+
+		if ( is_object( $this->object ) ) {
+			return $this->object;
+		}
+
+		$post_id = 0;
+
+		if ( isset( $_GET['post'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$post_id = absint( wp_unslash( $_GET['post'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		} elseif ( isset( $_POST['post_ID'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			$post_id = absint( wp_unslash( $_POST['post_ID'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		}
+
+		$post = $post_id ? get_post( $post_id ) : null;
+
+		if ( ! ( $post instanceof \WP_Post ) ) {
+			$post = isset( $GLOBALS['post'] ) && $GLOBALS['post'] instanceof \WP_Post
+				? $GLOBALS['post']
+				: null;
+		}
+
+		if ( $post instanceof \WP_Post ) {
+			$this->object = new \WPDevFramework\Models\Post_Base_Model(
+				array(
+					'id'            => (int) $post->ID,
+					'date_created'  => $post->post_date,
+					'date_modified' => $post->post_modified,
+					'title'         => $post->post_title,
+					'name'          => $post->post_title,
+					'content'       => $post->post_content,
+					'excerpt'       => $post->post_excerpt,
+					'status'        => $post->post_status,
+					'type'          => $post->post_type,
+					'author_id'     => (int) $post->post_author,
+				)
+			);
+		} else {
+			$this->object = new \WPDevFramework\Models\Post_Base_Model();
+		}
+
+		return $this->object;
+
+	} // end get_object;
 
 	/**
 	 * Displays the contents of the edit page.

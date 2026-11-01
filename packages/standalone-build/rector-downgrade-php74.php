@@ -14,6 +14,8 @@ return static function (RectorConfig $rectorConfig): void {
         $paths[] = __DIR__;
     }
 
+    $rectorConfig->disableParallel();
+
     $rectorConfig->paths($paths);
 
     $rectorConfig->sets([

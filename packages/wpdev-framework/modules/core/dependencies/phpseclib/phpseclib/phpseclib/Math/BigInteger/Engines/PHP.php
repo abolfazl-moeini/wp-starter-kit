@@ -170,9 +170,7 @@ abstract class PHP extends \phpseclib3\Math\BigInteger\Engines\Engine
     /**
      * Performs addition.
      *
-     * @param array $x_value
      * @param bool $x_negative
-     * @param array $y_value
      * @param bool $y_negative
      * @return array
      */
@@ -234,9 +232,7 @@ abstract class PHP extends \phpseclib3\Math\BigInteger\Engines\Engine
     /**
      * Performs subtraction.
      *
-     * @param array $x_value
      * @param bool $x_negative
-     * @param array $y_value
      * @param bool $y_negative
      * @return array
      */
@@ -297,9 +293,7 @@ abstract class PHP extends \phpseclib3\Math\BigInteger\Engines\Engine
     /**
      * Performs multiplication.
      *
-     * @param array $x_value
      * @param bool $x_negative
-     * @param array $y_value
      * @param bool $y_negative
      * @return array
      */
@@ -325,8 +319,6 @@ abstract class PHP extends \phpseclib3\Math\BigInteger\Engines\Engine
      * See {@link http://en.wikipedia.org/wiki/Karatsuba_algorithm Karatsuba algorithm} and
      * {@link http://math.libtomcrypt.com/files/tommath.pdf#page=120 MPM 5.2.3}.
      *
-     * @param array $x_value
-     * @param array $y_value
      * @return array
      */
     private static function karatsuba(array $x_value, array $y_value)
@@ -357,8 +349,6 @@ abstract class PHP extends \phpseclib3\Math\BigInteger\Engines\Engine
      *
      * Modeled after 'multiply' in MutableBigInteger.java.
      *
-     * @param array $x_value
-     * @param array $y_value
      * @return array
      */
     protected static function regularMultiply(array $x_value, array $y_value)
@@ -522,7 +512,6 @@ abstract class PHP extends \phpseclib3\Math\BigInteger\Engines\Engine
      *
      * abc / x = a00 / x + b0 / x + c / x
      *
-     * @param array $dividend
      * @param int $divisor
      * @return array
      */
@@ -561,7 +550,6 @@ abstract class PHP extends \phpseclib3\Math\BigInteger\Engines\Engine
     /**
      * Convert an array / boolean to a PHP BigInteger object
      *
-     * @param array $arr
      * @return static
      */
     protected function convertToObj(array $arr)
@@ -576,7 +564,6 @@ abstract class PHP extends \phpseclib3\Math\BigInteger\Engines\Engine
      *
      * Removes leading zeros and truncates (if necessary) to maintain the appropriate precision
      *
-     * @param PHP $result
      * @return static
      */
     protected function normalize(\phpseclib3\Math\BigInteger\Engines\PHP $result)
@@ -602,9 +589,7 @@ abstract class PHP extends \phpseclib3\Math\BigInteger\Engines\Engine
     /**
      * Compares two numbers.
      *
-     * @param array $x_value
      * @param bool $x_negative
-     * @param array $y_value
      * @param bool $y_negative
      * @return int
      * @see static::compare()
@@ -770,8 +755,6 @@ abstract class PHP extends \phpseclib3\Math\BigInteger\Engines\Engine
     /**
      * Performs modular exponentiation.
      *
-     * @param PHP $e
-     * @param PHP $n
      * @return PHP
      */
     protected function powModInner(\phpseclib3\Math\BigInteger\Engines\PHP $e, \phpseclib3\Math\BigInteger\Engines\PHP $n)
@@ -800,7 +783,6 @@ abstract class PHP extends \phpseclib3\Math\BigInteger\Engines\Engine
      * {@link http://www.cacr.math.uwaterloo.ca/hac/about/chap14.pdf#page=7 HAC 14.2.4} /
      * {@link http://math.libtomcrypt.com/files/tommath.pdf#page=141 MPM 5.3} for more information.
      *
-     * @param array $value
      * @return array
      */
     protected static function baseSquare(array $value)
@@ -832,7 +814,6 @@ abstract class PHP extends \phpseclib3\Math\BigInteger\Engines\Engine
      * See {@link http://en.wikipedia.org/wiki/Karatsuba_algorithm Karatsuba algorithm} and
      * {@link http://math.libtomcrypt.com/files/tommath.pdf#page=151 MPM 5.3.4}.
      *
-     * @param array $value
      * @return array
      */
     protected static function karatsubaSquare(array $value)
@@ -896,7 +877,6 @@ abstract class PHP extends \phpseclib3\Math\BigInteger\Engines\Engine
      *
      * ie. $s = gmp_scan1($n, 0) and $r = gmp_div_q($n, gmp_pow(gmp_init('2'), $s));
      *
-     * @param PHP $r
      * @return int
      * @see self::isPrime()
      */
@@ -905,8 +885,6 @@ abstract class PHP extends \phpseclib3\Math\BigInteger\Engines\Engine
         $r_value =& $r->value;
         for ($i = 0, $r_length = \count($r_value); $i < $r_length; ++$i) {
             $temp = ~$r_value[$i] & static::MAX_DIGIT;
-            for ($j = 1; $temp >> $j & 1; ++$j) {
-            }
             if ($j <= static::BASE) {
                 break;
             }
@@ -918,7 +896,6 @@ abstract class PHP extends \phpseclib3\Math\BigInteger\Engines\Engine
     /**
      * Performs exponentiation.
      *
-     * @param PHP $n
      * @return PHP
      */
     protected function powHelper(\phpseclib3\Math\BigInteger\Engines\PHP $n)

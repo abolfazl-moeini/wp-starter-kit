@@ -41,7 +41,7 @@ abstract class Customizer_Admin_Page extends Edit_Admin_Page {
 	 */
 	public function get_preview_url() {
 
-		return get_site_url(null);
+		return get_site_url();
 
 	} // end get_preview_url;
 

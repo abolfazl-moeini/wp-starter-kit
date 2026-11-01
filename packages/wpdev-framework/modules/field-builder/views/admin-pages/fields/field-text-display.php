@@ -47,7 +47,7 @@
 
     <?php else : ?>
 
-      <span class="wpdev-my-1 wpdev-inline-block">
+      <span class="wpdev-mar-y-1 wpdev-inline-block">
 
         <span id="<?php echo $field->id; ?>_value"><?php echo $field->display_value; ?></span>
 

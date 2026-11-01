@@ -71,10 +71,10 @@ class Form_Manager extends Base_Manager {
 		} // end if;
 
 		echo sprintf('
-      <div class="wpdev-modal-form wpdev-h-full wpdev-flex wpdev-items-center wpdev-justify-center wpdev-bg-gray-200 wpdev-m-0 wpdev-mt-0 wpdev--mb-3">
+      <div class="wpdev-modal-form wpdev-h-full wpdev-inline wpdev-justify-center wpdev-surface-gray-200 wpdev-mar-0 wpdev-mar-t-0 wpdev--mb-3">
         <div>
-          <span class="dashicons dashicons-warning wpdev-h-8 wpdev-w-8 wpdev-mx-auto wpdev-text-center wpdev-text-4xl wpdev-block"></span>
-          <span class="wpdev-block wpdev-text-sm">%s</span>
+          <span class="dashicons dashicons-warning wpdev-h-8 wpdev-w-8 wpdev-mar-x-auto wpdev-type-center wpdev-type-4xl wpdev-block"></span>
+          <span class="wpdev-block wpdev-type-sm">%s</span>
         </div>
       </div>
     ', $message);
@@ -105,8 +105,8 @@ class Form_Manager extends Base_Manager {
 
 		echo sprintf('
 		<div v-cloak data-wpdev-app="%s" data-state="%s">
-			<ul class="wpdev-p-4 wpdev-bg-red-200 wpdev-m-0 wpdev-list-none" v-if="errors.length">
-				<li class="wpdev-m-0 wpdev-p-0" v-for="error in errors">{{ error.message }}</li>
+			<ul class="wpdev-pad-4 wpdev-surface-red-200 wpdev-mar-0 wpdev-list-none" v-if="errors.length">
+				<li class="wpdev-mar-0 wpdev-pad-0" v-for="error in errors">{{ error.message }}</li>
 			</ul>
 		</div>', $form['id'] . '_errors', htmlspecialchars(json_encode(array('errors' => array()))));
 
@@ -183,13 +183,43 @@ class Form_Manager extends Base_Manager {
 
 		} // end if;
 
-		if (!current_user_can($form['capability'])) {
+		if ( ! $this->user_can_form( $form ) ) {
 
 			return $this->display_form_unavailable();
 
 		} // end if;
 
 	}  // end security_checks;
+
+	/**
+	 * Whether the current user may view or submit a registered form.
+	 *
+	 * Named access bindings win over the capability string.
+	 *
+	 * @since 2.13.1
+	 *
+	 * @param array<string, mixed> $form Form registration.
+	 * @return bool
+	 */
+	protected function user_can_form( $form ) {
+
+		if ( function_exists( 'wpdev_request_access_is_allowed' ) ) {
+			return (bool) wpdev_request_access_is_allowed( $form );
+		}
+
+		$capability = isset( $form['capability'] ) ? (string) $form['capability'] : 'manage_network';
+
+		if ( '' === $capability ) {
+			return false;
+		}
+
+		if ( function_exists( 'wpdev_admin_capability_for' ) ) {
+			$capability = wpdev_admin_capability_for( $capability );
+		}
+
+		return function_exists( 'current_user_can' ) && current_user_can( $capability );
+
+	} // end user_can_form;
 
 	/**
 	 * Returns a list of all the registered gateways.
@@ -298,10 +328,26 @@ class Form_Manager extends Base_Manager {
 
 		$model = wpdev_request('model');
 
+		/**
+		 * Capability required to open/submit the built-in delete_modal.
+		 *
+		 * Default is manage_network (translated to manage_options on single-site).
+		 * Host plugins should filter this to a domain capability or pass `access`.
+		 *
+		 * @since 2.x
+		 * @param string $capability Default manage_network.
+		 * @param string $model      Model slug from the request (may be empty).
+		 */
+		$capability = apply_filters(
+			'wpdev_delete_modal_capability',
+			'manage_network',
+			$model
+		);
+
 		wpdev_register_form('delete_modal', array(
 			'render'     => array($this, 'render_model_delete_form'),
 			'handler'    => array($this, 'handle_model_delete_form'),
-			'capability' => "wpdev_delete_{$model}s",
+			'capability' => $capability,
 		));
 
 		/**
@@ -324,6 +370,12 @@ class Form_Manager extends Base_Manager {
 			'render'     => array($this, 'render_bulk_action_form'),
 			'handler'    => array($this, 'handle_bulk_action_form'),
 			'capability' => $bulk_capability,
+		));
+
+		wpdev_register_form('wpdev_quick_add_term', array(
+			'render'     => array($this, 'render_quick_add_term_form'),
+			'handler'    => array($this, 'handle_quick_add_term_form'),
+			'capability' => 'edit_posts',
 		));
 
 		add_action('wpdev_handle_bulk_action_form', array($this, 'default_bulk_action_handler'), 100, 3);
@@ -394,7 +446,7 @@ class Form_Manager extends Base_Manager {
 						'title'           => __('Delete', 'wpdev'),
 						'placeholder'     => __('Delete', 'wpdev'),
 						'value'           => 'save',
-						'classes'         => 'button button-primary wpdev-w-full',
+						'classes'         => 'button button-primary wpdev-full',
 						'wrapper_classes' => 'wpdev-items-end',
 						'html_attr'       => array(
 							'v-bind:disabled' => '!confirmed',
@@ -423,8 +475,8 @@ class Form_Manager extends Base_Manager {
 			$form_attributes = apply_filters("wpdev_form_attributes_delete_{$model}_modal", array(
 				'title'                 => 'Delete',
 				'views'                 => 'admin-pages/fields',
-				'classes'               => 'wpdev-modal-form wpdev-widget-list wpdev-striped wpdev-m-0 wpdev-mt-0',
-				'field_wrapper_classes' => 'wpdev-w-full wpdev-box-border wpdev-items-center wpdev-flex wpdev-justify-between wpdev-p-4 wpdev-m-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
+				'classes'               => 'wpdev-modal-form wpdev-widget-list wpdev-striped wpdev-mar-0 wpdev-mar-t-0',
+				'field_wrapper_classes' => 'wpdev-full wpdev-box-border wpdev-items-center wpdev-row wpdev-justify-between wpdev-pad-4 wpdev-mar-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
 				'html_attr'             => array(
 					'data-wpdev-app' => 'true',
 					'data-state'  => json_encode(array(
@@ -554,7 +606,7 @@ class Form_Manager extends Base_Manager {
 				'title'           => wpdev_slug_to_name($action),
 				'placeholder'     => wpdev_slug_to_name($action),
 				'value'           => 'save',
-				'classes'         => 'button button-primary wpdev-w-full',
+				'classes'         => 'button button-primary wpdev-full',
 				'wrapper_classes' => 'wpdev-items-end',
 				'html_attr'       => array(
 					'v-bind:disabled' => '!confirmed',
@@ -576,8 +628,8 @@ class Form_Manager extends Base_Manager {
 
 		$form_attributes = apply_filters("wpdev_bulk_actions_{$action}_form", array(
 			'views'                 => 'admin-pages/fields',
-			'classes'               => 'wpdev-modal-form wpdev-widget-list wpdev-striped wpdev-m-0 wpdev-mt-0',
-			'field_wrapper_classes' => 'wpdev-w-full wpdev-box-border wpdev-items-center wpdev-flex wpdev-justify-between wpdev-p-4 wpdev-m-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
+			'classes'               => 'wpdev-modal-form wpdev-widget-list wpdev-striped wpdev-mar-0 wpdev-mar-t-0',
+			'field_wrapper_classes' => 'wpdev-full wpdev-box-border wpdev-items-center wpdev-row wpdev-justify-between wpdev-pad-4 wpdev-mar-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
 			'html_attr'             => array(
 				'data-wpdev-app' => 'true',
 				'data-state'  => json_encode(array(
@@ -643,5 +695,125 @@ class Form_Manager extends Base_Manager {
 		));
 
 	} // end default_bulk_action_handler;
+
+	/**
+	 * Renders the generic taxonomy quick-add modal form.
+	 *
+	 * @since 2.14.0
+	 * @return void
+	 */
+	public function render_quick_add_term_form() {
+
+		$taxonomy = sanitize_key( (string) wpdev_request( 'taxonomy', '' ) );
+		$field_id = sanitize_key( (string) wpdev_request( 'field_id', '' ) );
+		$tax_obj  = ! empty( $taxonomy ) ? get_taxonomy( $taxonomy ) : null;
+
+		$cap = ( $tax_obj && ! empty( $tax_obj->cap->edit_terms ) ) ? $tax_obj->cap->edit_terms : 'manage_categories';
+		if ( function_exists( 'wpdev_admin_capability_for' ) ) {
+			$cap = wpdev_admin_capability_for( $cap );
+		}
+		if ( ! current_user_can( $cap ) ) {
+			$this->display_form_unavailable();
+			return;
+		}
+
+		$label = $tax_obj ? $tax_obj->labels->singular_name : __( 'Item', 'wpdev' );
+
+		$fields = array(
+			'term_taxonomy' => array(
+				'type'  => 'hidden',
+				'value' => $taxonomy,
+			),
+			'term_field_id' => array(
+				'type'  => 'hidden',
+				'value' => $field_id,
+			),
+			'term_name'     => array(
+				'type'        => 'text',
+				'title'       => sprintf( __( '%s Name', 'wpdev' ), $label ),
+				'placeholder' => sprintf( __( 'Enter %s name...', 'wpdev' ), strtolower( $label ) ),
+				'required'    => true,
+			),
+			'submit_button' => array(
+				'type'            => 'submit',
+				'title'           => sprintf( __( 'Add %s', 'wpdev' ), $label ),
+				'placeholder'     => sprintf( __( 'Add %s', 'wpdev' ), $label ),
+				'value'           => 'submit',
+				'classes'         => 'button button-primary wpdev-full',
+				'wrapper_classes' => 'wpdev-items-end',
+			),
+		);
+
+		$form = new \WPDevFramework\UI\Form(
+			'wpdev_quick_add_term',
+			$fields,
+			array(
+				'views'   => 'admin-pages/fields',
+				'classes' => 'wpdev-modal-form wpdev-widget-list wpdev-striped wpdev-mar-0 wpdev-mar-t-0',
+			)
+		);
+
+		$form->render();
+
+	} // end render_quick_add_term_form;
+
+	/**
+	 * Handles submission of the generic taxonomy quick-add modal form.
+	 *
+	 * @since 2.14.0
+	 * @return void
+	 */
+	public function handle_quick_add_term_form() {
+
+		$taxonomy = sanitize_key( (string) wpdev_request( 'term_taxonomy', wpdev_request( 'taxonomy', '' ) ) );
+		$field_id = sanitize_key( (string) wpdev_request( 'term_field_id', wpdev_request( 'field_id', '' ) ) );
+		$tax_obj  = ! empty( $taxonomy ) ? get_taxonomy( $taxonomy ) : null;
+
+		if ( ! $tax_obj ) {
+			wp_send_json_error( array(
+				array( 'message' => __( 'Invalid taxonomy specified.', 'wpdev' ) ),
+			) );
+		}
+
+		$cap = ! empty( $tax_obj->cap->edit_terms ) ? $tax_obj->cap->edit_terms : 'manage_categories';
+		if ( function_exists( 'wpdev_admin_capability_for' ) ) {
+			$cap = wpdev_admin_capability_for( $cap );
+		}
+		if ( ! current_user_can( $cap ) ) {
+			wp_send_json_error( array(
+				array( 'message' => __( 'You do not have permission to add terms.', 'wpdev' ) ),
+			), 403 );
+		}
+
+		$name = sanitize_text_field( wp_unslash( (string) wpdev_request( 'term_name', '' ) ) );
+		if ( '' === $name ) {
+			wp_send_json_error( array(
+				array( 'message' => __( 'Please enter a name.', 'wpdev' ) ),
+			) );
+		}
+
+		$inserted = wp_insert_term( $name, $taxonomy );
+		if ( is_wp_error( $inserted ) ) {
+			wp_send_json_error( array(
+				array( 'message' => $inserted->get_error_message() ),
+			) );
+		}
+
+		$term_id = (int) $inserted['term_id'];
+
+		wp_send_json_success( array(
+			'send' => array(
+				'scope'         => 'wpdevQuickAddTerm',
+				'function_name' => 'onTermCreated',
+				'data'          => array(
+					'term_id'   => $term_id,
+					'term_name' => $name,
+					'taxonomy'  => $taxonomy,
+					'field_id'  => $field_id,
+				),
+			),
+		) );
+
+	} // end handle_quick_add_term_form;
 
 } // end class Form_Manager;

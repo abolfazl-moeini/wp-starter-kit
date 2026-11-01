@@ -242,11 +242,11 @@ class X509
     /**
      * @var ?array
      */
-    private $ipAddresses = null;
+    private $ipAddresses;
     /**
      * @var ?array
      */
-    private $domains = null;
+    private $domains;
     /**
      * Default Constructor.
      *
@@ -450,13 +450,12 @@ class X509
     /**
      * Save X.509 certificate
      *
-     * @param array $cert
      * @param int $format optional
      * @return string
      */
     public function saveX509(array $cert, $format = self::FORMAT_PEM)
     {
-        if (!\is_array($cert) || !isset($cert['tbsCertificate'])) {
+        if (!isset($cert['tbsCertificate'])) {
             return \false;
         }
         switch (\true) {
@@ -785,6 +784,7 @@ class X509
             case 'id-ce-subjectKeyIdentifier':
                 return Maps\KeyIdentifier::MAP;
             case 'id-ce-cRLDistributionPoints':
+            case 'id-ce-freshestCRL':
                 return Maps\CRLDistributionPoints::MAP;
             case 'id-ce-authorityKeyIdentifier':
                 return Maps\AuthorityKeyIdentifier::MAP;
@@ -847,13 +847,10 @@ class X509
                 return Maps\Extensions::MAP;
             // CRL extensions.
             case 'id-ce-cRLNumber':
-                return Maps\CRLNumber::MAP;
             case 'id-ce-deltaCRLIndicator':
                 return Maps\CRLNumber::MAP;
             case 'id-ce-issuingDistributionPoint':
                 return Maps\IssuingDistributionPoint::MAP;
-            case 'id-ce-freshestCRL':
-                return Maps\CRLDistributionPoints::MAP;
             case 'id-ce-cRLReasons':
                 return Maps\CRLReason::MAP;
             case 'id-ce-invalidityDate':
@@ -1885,7 +1882,6 @@ class X509
      *
      * Key needs to be a \phpseclib3\Crypt\RSA object
      *
-     * @param PublicKey $key
      * @return void
      */
     public function setPublicKey(PublicKey $key)
@@ -1896,8 +1892,6 @@ class X509
      * Set private key
      *
      * Key needs to be a \phpseclib3\Crypt\RSA object
-     *
-     * @param PrivateKey $key
      */
     public function setPrivateKey(PrivateKey $key)
     {
@@ -2012,13 +2006,12 @@ class X509
     /**
      * Save CSR request
      *
-     * @param array $csr
      * @param int $format optional
      * @return string
      */
     public function saveCSR(array $csr, $format = self::FORMAT_PEM)
     {
-        if (!\is_array($csr) || !isset($csr['certificationRequestInfo'])) {
+        if (!isset($csr['certificationRequestInfo'])) {
             return \false;
         }
         switch (\true) {
@@ -2096,13 +2089,12 @@ class X509
     /**
      * Save a SPKAC CSR request
      *
-     * @param array $spkac
      * @param int $format optional
      * @return string
      */
     public function saveSPKAC(array $spkac, $format = self::FORMAT_PEM)
     {
-        if (!\is_array($spkac) || !isset($spkac['publicKeyAndChallenge'])) {
+        if (!isset($spkac['publicKeyAndChallenge'])) {
             return \false;
         }
         $algorithm = $this->subArray($spkac, 'publicKeyAndChallenge/spki/algorithm/algorithm');
@@ -2183,13 +2175,12 @@ class X509
     /**
      * Save Certificate Revocation List.
      *
-     * @param array $crl
      * @param int $format optional
      * @return string
      */
     public function saveCRL(array $crl, $format = self::FORMAT_PEM)
     {
-        if (!\is_array($crl) || !isset($crl['tbsCertList'])) {
+        if (!isset($crl['tbsCertList'])) {
             return \false;
         }
         $filters = [];
@@ -2591,7 +2582,6 @@ class X509
     /**
      * Identify signature algorithm from key settings
      *
-     * @param PrivateKey $key
      * @throws \phpseclib3\Exception\UnsupportedAlgorithmException if the algorithm is unsupported
      * @return array
      */
@@ -2703,7 +2693,6 @@ class X509
      * implementing the checks included in _subArray() but without copying
      * a potentially large array by passing its reference by-value to is_array().
      *
-     * @param array $root
      * @param string $path
      * @return boolean
      */
@@ -2733,7 +2722,6 @@ class X509
      * Passing a reference (i.e. $root) by-value (i.e. to is_array())
      * creates a copy. If $root is an especially large array, this is expensive.
      *
-     * @param array $root
      * @param string $path  absolute path with / as component separator
      * @param bool $create optional
      * @return array|false
@@ -2755,7 +2743,6 @@ class X509
     /**
      * Get a reference to a subarray
      *
-     * @param array $root
      * @param string $path  absolute path with / as component separator
      * @param bool $create optional
      * @return array|false
@@ -2783,7 +2770,6 @@ class X509
     /**
      * Get a reference to an extension subarray
      *
-     * @param array $root
      * @param string $path optional absolute path with / as component separator
      * @param bool $create optional
      * @return array|false
@@ -2871,7 +2857,7 @@ class X509
         if (!\is_array($extensions)) {
             return \false;
         }
-        foreach ($extensions as $key => $value) {
+        foreach ($extensions as $value) {
             if ($value['extnId'] == $id) {
                 return $value['extnValue'];
             }
@@ -3035,7 +3021,7 @@ class X509
         if (!\is_array($attributes)) {
             return \false;
         }
-        foreach ($attributes as $key => $attribute) {
+        foreach ($attributes as $attribute) {
             if ($attribute['type'] == $id) {
                 $n = \count($attribute['value']);
                 switch (\true) {
@@ -3288,7 +3274,6 @@ class X509
     /**
      * Get the index of a revoked certificate.
      *
-     * @param array $rclist
      * @param string $serial
      * @param bool $create optional
      * @return int|false
@@ -3469,7 +3454,6 @@ class X509
      * Register the mapping for a custom/unsupported extension.
      *
      * @param string $id
-     * @param array $mapping
      */
     public static function registerExtension($id, array $mapping)
     {

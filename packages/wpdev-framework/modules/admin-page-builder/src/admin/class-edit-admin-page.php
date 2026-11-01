@@ -233,7 +233,7 @@ abstract class Edit_Admin_Page extends Base_Admin_Page {
 	 */
 	public function register_widgets() {
 
-		$screen = get_current_screen();
+		get_current_screen();
 
 		$this->add_info_widget('info', array(
 			'title'    => __('Timestamps', 'wpdev'),

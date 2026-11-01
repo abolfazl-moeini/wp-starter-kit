@@ -96,9 +96,8 @@ class Setup_Wizard_Admin_Page extends Wizard_Admin_Page {
      * Is this an old install migrating.
      *
      * @since 2.0.0
-     * @var bool|null
      */
-	private ?bool $is_migration = null;
+    private ?bool $is_migration = null;
 
 	/**
 	 * The integration object, if it exists.
@@ -109,16 +108,15 @@ class Setup_Wizard_Admin_Page extends Wizard_Admin_Page {
 	protected $integration;
 
 	/**
-	 * Overrides original construct method.
-	 *
-	 * We need to override the construct method to make sure
-	 * we make the necessary changes to the Wizard page when it's
-	 * being run for the first time.
-	 *
-	 * @since 2.0.0
-	 * @return void
-	 */
-	public function __construct() {
+     * Overrides original construct method.
+     *
+     * We need to override the construct method to make sure
+     * we make the necessary changes to the Wizard page when it's
+     * being run for the first time.
+     *
+     * @since 2.0.0
+     */
+    public function __construct() {
 
 		if (!$this->is_core_loaded()) {
 

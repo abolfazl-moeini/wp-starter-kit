@@ -129,9 +129,9 @@ class Legacy_Shortcodes {
 
 		$atts = shortcode_atts(array(), $atts, 'wpdev_paying_users');
 
-		$paying_customers = wpdev_get_customers(array(
+		$paying_customers = apply_filters( 'wpdev_record_query', 0, array(
 			'count' => true,
-		));
+		), 'customers' );
 
 		return $paying_customers;
 
@@ -170,7 +170,7 @@ class Legacy_Shortcodes {
 		 * First pass: try to get via the migrated_from_id property
 		 * to make sure we don't break links for legacy customers.
 		 */
-		$plan = function_exists( 'wpdev_get_product_by' ) ? wpdev_get_product_by( 'migrated_from_id', $atts['plan_id'] ) : null;
+		$plan = apply_filters( 'wpdev_entity_lookup_by', null, 'migrated_from_id', $atts['plan_id'], 'product' );
 
 		if ($plan) {
 
@@ -182,9 +182,9 @@ class Legacy_Shortcodes {
 		 * Second pass: try via the real ID, if new customers
 		 * decide to use the old shortcode.
 		 */
-		if (empty($path) && function_exists( 'wpdev_get_product' ) ) {
+		if (empty($path)) {
 
-			$plan = wpdev_get_product($atts['plan_id']);
+			$plan = apply_filters( 'wpdev_entity_lookup', null, $atts['plan_id'], 'product' );
 
 			if ($plan) {
 
@@ -232,11 +232,11 @@ class Legacy_Shortcodes {
 
 		foreach ($query_products as $product) {
 
-			if ( ! function_exists( 'wpdev_get_product' ) ) {
+			$product = apply_filters( 'wpdev_entity_lookup', null, $product, 'product' );
+
+			if ( ! $product ) {
 				continue;
 			}
-
-			$product = wpdev_get_product($product);
 
 			if (!$product) {
 
@@ -412,7 +412,7 @@ class Legacy_Shortcodes {
 			'type'                   => 'pricing_table',
 			'id'                     => 'pricing_table',
 			'required'               => true,
-			'pricing_table_products' => implode(',', wpdev_get_plans($search_arguments)),
+			'pricing_table_products' => implode( ',', apply_filters( 'wpdev_catalog_list', array(), $search_arguments, 'plans' ) ),
 			'pricing_table_template' => $layout,
 			'element_classes'        => $layout === 'legacy' ? 'wpdev-content-plan' : '',
 		);
@@ -455,9 +455,9 @@ class Legacy_Shortcodes {
 
 		do_action( 'wpdev_legacy_add_inline_checkout_script', $auto_submittable_field );
 
-		$final_fields = function_exists( 'wpdev_create_checkout_fields' )
-			? wpdev_create_checkout_fields( $checkout_form->get_step( 'checkout', true )['fields'] )
-			: $checkout_form->get_step( 'checkout', true )['fields'];
+		$checkout_fields = $checkout_form->get_step( 'checkout', true )['fields'];
+
+		$final_fields = apply_filters( 'wpdev_checkout_fields_build', $checkout_fields, $checkout_fields );
 
 		/*
 		 * Adds the product fields to keep them.
@@ -558,7 +558,7 @@ class Legacy_Shortcodes {
 			'name'                        => __('Templates', 'wpdev'),
 			'type'                        => 'template_selection',
 			'id'                          => 'template_selection',
-			'template_selection_sites'    => implode(',', $templates ? $templates : wpdev_get_site_templates($search_arguments)),
+			'template_selection_sites'    => implode( ',', $templates ? $templates : apply_filters( 'wpdev_catalog_list', array(), $search_arguments, 'site_templates' ) ),
 			'template_selection_template' => $layout,
 			'cols'                        => $atts['cols'],
 			'element_classes'             => $layout === 'legacy' ? 'wpdev-content-templates' : '',
@@ -579,9 +579,9 @@ class Legacy_Shortcodes {
 
 		$checkout_form->set_settings($steps);
 
-		$final_fields = function_exists( 'wpdev_create_checkout_fields' )
-			? wpdev_create_checkout_fields( $checkout_form->get_step( 'checkout', true )['fields'] )
-			: $checkout_form->get_step( 'checkout', true )['fields'];
+		$checkout_fields = $checkout_form->get_step( 'checkout', true )['fields'];
+
+		$final_fields = apply_filters( 'wpdev_checkout_fields_build', $checkout_fields, $checkout_fields );
 
 		$auto_submittable_field = $checkout->contains_auto_submittable_field($checkout_form->get_step('checkout', true)['fields']);
 

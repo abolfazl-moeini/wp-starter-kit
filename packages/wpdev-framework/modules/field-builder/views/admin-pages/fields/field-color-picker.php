@@ -21,9 +21,9 @@
 
     ?>
 
-    <div class="wpdev-mt-2">
+    <div class="wpdev-mar-t-2">
 
-      <color-picker class="form-control wpdev-w-full wpdev-my-1" name="<?php echo esc_attr($field->id); ?>" type="hidden" value="<?php echo esc_attr($field->value); ?>" <?php echo $field->get_html_attributes(); ?>></color-picker>
+      <color-picker class="form-control wpdev-full wpdev-mar-y-1" name="<?php echo esc_attr($field->id); ?>" type="hidden" value="<?php echo esc_attr($field->value); ?>" <?php echo $field->get_html_attributes(); ?>></color-picker>
 
     </div>
 

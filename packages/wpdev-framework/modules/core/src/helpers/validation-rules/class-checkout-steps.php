@@ -9,7 +9,7 @@
 
 namespace WPDevFramework\Helpers\Validation_Rules;
 
-use WPDevFramework\Dependencies\Rakit\Validation\Rule;
+use WPDev\Dependencies\Rakit\Validation\Rule;
 use WPDevFramework\Managers\Signup_Fields_Manager;
 
 // Exit if accessed directly
@@ -112,7 +112,7 @@ class Checkout_Steps extends Rule {
      */
     foreach ($value as $step) {
 
-      $found_submittable_field_types = \WPDevFramework\Dependencies\Arrch\Arrch::find($step['fields'], array(
+      $found_submittable_field_types = \WPDev\Dependencies\Arrch\Arrch::find($step['fields'], array(
         'where'    => array(
           array('type', $submittable_field_types),
         ),

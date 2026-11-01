@@ -416,9 +416,6 @@ class GMP extends \phpseclib3\Math\BigInteger\Engines\Engine
     /**
      * Performs some post-processing for randomRangePrime
      *
-     * @param Engine $x
-     * @param Engine $min
-     * @param Engine $max
      * @return GMP
      */
     protected static function randomRangePrimeInner(\phpseclib3\Math\BigInteger\Engines\Engine $x, \phpseclib3\Math\BigInteger\Engines\Engine $min, \phpseclib3\Math\BigInteger\Engines\Engine $max)

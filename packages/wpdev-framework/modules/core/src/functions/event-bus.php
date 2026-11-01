@@ -2,7 +2,7 @@
 /**
  * Framework event bus transport (hook namespace only).
  *
- * Persistence and event-type schemas live in examples (e.g. wpdev-events).
+ * Persistence and event-type schemas live in optional example modules.
  *
  * @package WPDevFramework\Core\Functions
  * @since   2.8.0

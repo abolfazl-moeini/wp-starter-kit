@@ -112,9 +112,7 @@ if ( !class_exists('Puc_v4p11_Factory', false) ):
 			}
 
 			//Add the current namespace to the class name(s).
-			if ( version_compare(PHP_VERSION, '5.3', '>=') ) {
-				$checkerClass = __NAMESPACE__ . '\\' . $checkerClass;
-			}
+			$checkerClass = __NAMESPACE__ . '\\' . $checkerClass;
 
 			if ( !isset($apiClass) ) {
 				//Plain old update checker.
@@ -233,7 +231,7 @@ if ( !class_exists('Puc_v4p11_Factory', false) ):
 				);
 				$seek = apply_filters('puc_get_source_uri', $seek);
 				$data = get_file_data($fullPath, $seek);
-				foreach ($data as $key => $uri) {
+				foreach ($data as $uri) {
 					if ( $uri ) {
 						return $uri;
 					}

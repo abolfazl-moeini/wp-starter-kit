@@ -45,22 +45,82 @@ class Scripts {
 	} // end init;
 
 	/**
-	 * Ensure default scripts and styles are registered and enqueued even when WPDev central plugin is inactive.
+	 * Ensure default WPDev scripts/styles are registered.
 	 *
-	 * @since 2.10.1
+	 * When network setup is unfinished, WPDev::init() returns before
+	 * Scripts::get_instance(), so wpdev-vue-apps is never registered.
+	 * Edit/list pages still enqueue that handle — call this first.
+	 *
+	 * Safe after `init`: the constructor hooks are skipped once that fired,
+	 * so this registers handles immediately instead of waiting for `init`.
+	 *
+	 * @since 2.8.6
 	 * @return void
 	 */
 	public static function ensure_defaults_registered() {
 
-		$instance = self::get_instance();
-		$instance->register_default_scripts();
-		$instance->register_default_styles();
-
-		if ( is_admin() ) {
-			$instance->enqueue_default_admin_styles();
+		if ( wp_script_is( 'wpdev-vue-apps', 'registered' ) ) {
+			return;
 		}
 
+		$scripts = self::get_instance();
+
+		if ( wp_script_is( 'wpdev-vue-apps', 'registered' ) ) {
+			return;
+		}
+
+		$scripts->register_default_scripts();
+		$scripts->register_default_styles();
+
 	} // end ensure_defaults_registered;
+
+	/**
+	 * Whether a WordPress locale is Persian (fa / fa_IR / fa-IR / …).
+	 *
+	 * @since 2.8.7
+	 *
+	 * @param mixed $locale Locale string.
+	 * @return bool
+	 */
+	public static function is_persian_wp_locale( $locale ) {
+
+		return is_string( $locale ) && 1 === preg_match( '/^fa([_-]|$)/i', $locale );
+
+	} // end is_persian_wp_locale;
+
+	/**
+	 * Resolve Flatpickr locale: Jalali (`fa`) when any active WP locale is Persian.
+	 *
+	 * Checks `determine_locale()`, site `get_locale()`, and `get_user_locale()`
+	 * so site language `fa_*` enables Shamsi even if the admin user profile is English.
+	 *
+	 * @since 2.8.7
+	 *
+	 * @return string `fa` or `default`
+	 */
+	protected function resolve_datepicker_locale() {
+
+		$candidates = array();
+
+		if ( function_exists( 'determine_locale' ) ) {
+			$candidates[] = determine_locale();
+		}
+
+		$candidates[] = get_locale();
+
+		if ( function_exists( 'get_user_locale' ) ) {
+			$candidates[] = get_user_locale();
+		}
+
+		foreach ( $candidates as $locale ) {
+			if ( self::is_persian_wp_locale( $locale ) ) {
+				return 'fa';
+			}
+		}
+
+		return 'default';
+
+	} // end resolve_datepicker_locale;
 
 	/**
 	 * Wrapper for the register scripts function.
@@ -72,9 +132,33 @@ class Scripts {
 	 * @param array  $deps List of dependency scripts.
 	 * @return void
 	 */
-	public function register_script($handle, $src, $deps = array()) {
+	public function register_script($handle, $src, $deps = array(), $ver = null) {
 
-		wp_register_script($handle, $src, $deps, wpdev_get_version());
+		$ver = ( null !== $ver ) ? $ver : wpdev_get_version();
+
+		global $wp_scripts;
+		if ( isset( $wp_scripts->registered[ $handle ] ) ) {
+			$existing = $wp_scripts->registered[ $handle ];
+			$existing_src = (string) ( $existing->src ?? '' );
+			$is_existing_closure = ( false !== strpos( $existing_src, 'FrameworkClosure' ) );
+			$is_incoming_closure = ( false !== strpos( (string) $src, 'FrameworkClosure' ) );
+
+			// Canonical always wins: Closure cannot override canonical even with a higher version.
+			if ( ! $is_existing_closure && $is_incoming_closure ) {
+				return;
+			}
+
+			// Canonical always overrides a pre-registered closure regardless of version.
+			if ( $is_existing_closure && ! $is_incoming_closure ) {
+				wp_deregister_script( $handle );
+			} elseif ( version_compare( (string) $ver, (string) ( $existing->ver ?? '0.0.0' ), '>' ) ) {
+				wp_deregister_script( $handle );
+			} else {
+				return;
+			}
+		}
+
+		wp_register_script($handle, $src, $deps, $ver);
 
 	} // end register_script;
 
@@ -86,11 +170,36 @@ class Scripts {
 	 * @param string $handle The script handle. Used to enqueue the script.
 	 * @param string $src URL to the file.
 	 * @param array  $deps List of dependency scripts.
+	 * @param string|null $ver Optional version string.
 	 * @return void
 	 */
-	public function register_style($handle, $src, $deps = array()) {
+	public function register_style($handle, $src, $deps = array(), $ver = null) {
 
-		wp_register_style($handle, $src, $deps, wpdev_get_version());
+		$ver = ( null !== $ver ) ? $ver : wpdev_get_version();
+
+		global $wp_styles;
+		if ( isset( $wp_styles->registered[ $handle ] ) ) {
+			$existing = $wp_styles->registered[ $handle ];
+			$existing_src = (string) ( $existing->src ?? '' );
+			$is_existing_closure = ( false !== strpos( $existing_src, 'FrameworkClosure' ) );
+			$is_incoming_closure = ( false !== strpos( (string) $src, 'FrameworkClosure' ) );
+
+			// Canonical always wins: Closure cannot override canonical even with a higher version.
+			if ( ! $is_existing_closure && $is_incoming_closure ) {
+				return;
+			}
+
+			// Canonical always overrides a pre-registered closure regardless of version.
+			if ( $is_existing_closure && ! $is_incoming_closure ) {
+				wp_deregister_style( $handle );
+			} elseif ( version_compare( (string) $ver, (string) ( $existing->ver ?? '0.0.0' ), '>' ) ) {
+				wp_deregister_style( $handle );
+			} else {
+				return;
+			}
+		}
+
+		wp_register_style($handle, $src, $deps, $ver);
 
 	} // end register_style;
 
@@ -112,16 +221,25 @@ class Scripts {
 		$this->register_script('wpdev-sweet-alert', wpdev_get_module_asset_url('core', 'lib/sweetalert2.all.js', 'js'));
 
 		/*
-		 * Adds Flat Picker
+		 * Adds Flat Picker (flatpickr-wrap: Jalali UI when locale is fa / fa-IR)
 		 */
 		$this->register_script('wpdev-flatpicker', wpdev_get_module_asset_url('core', 'lib/flatpicker.js', 'js'));
+		$this->register_script(
+			'wpdev-flatpicker-fa',
+			wpdev_get_module_asset_url('core', 'lib/flatpickr-l10n/fa.js', 'js'),
+			array( 'wpdev-flatpicker' )
+		);
+		$this->register_script(
+			'wpdev-jalaali',
+			wpdev_get_module_asset_url('core', 'lib/jalaali.js', 'js')
+		);
 
 		/*
 		 * Adds tipTip
 		 */
 		$this->register_script('wpdev-tiptip', wpdev_get_module_asset_url('core', 'lib/tiptip.js', 'js'), array('jquery-core'));
 
-		$list_deps = array( 'jquery', 'wpdev-vue', 'underscore', 'wpdev-flatpicker' );
+		$list_deps = array( 'jquery', 'wpdev-vue', 'underscore', 'wpdev-flatpicker', 'wpdev-flatpicker-fa', 'wpdev-jalaali' );
 
 		$this->register_script(
 			'wpdev-ajax-list-table-hooks',
@@ -135,7 +253,7 @@ class Scripts {
 		$this->register_script(
 			'wpdev-ajax-list-table',
 			wpdev_get_module_asset_url( 'table-builder', 'list-tables/list-tables-factory.js', 'js' ),
-			array( 'wpdev-ajax-list-table-hooks' )
+			array( 'wpdev-ajax-list-table-hooks', 'jquery-ui-sortable' )
 		);
 
 		/*
@@ -175,7 +293,7 @@ class Scripts {
 			'nonce'          => wp_create_nonce('wpdev-ajax-nonce'),
 		));
 
-		$functions_deps = array( 'jquery-core', 'wpdev-tiptip', 'wpdev-flatpicker', 'wpdev-block-ui', 'wpdev-accounting', 'clipboard', 'wp-hooks', 'wpdev-ajax' );
+		$functions_deps = array( 'jquery-core', 'wpdev-tiptip', 'wpdev-flatpicker', 'wpdev-flatpicker-fa', 'wpdev-jalaali', 'wpdev-block-ui', 'wpdev-accounting', 'clipboard', 'wp-hooks', 'wpdev-ajax' );
 
 		$this->register_script(
 			'wpdev-functions-utils',
@@ -191,6 +309,36 @@ class Scripts {
 			wpdev_get_module_asset_url( 'core', 'functions/functions-core.js', 'js' ),
 			array( 'wpdev-functions-utils' )
 		);
+		if ( function_exists( 'wp_add_inline_script' ) ) {
+			wp_add_inline_script(
+				'wpdev-functions',
+				'window.wpdev_on_load = window.wpdev_on_load || function(){};',
+				'before'
+			);
+		}
+
+		$datepicker_locale = $this->resolve_datepicker_locale();
+
+		/**
+		 * Filter Flatpickr locale used by WPDev datepickers.
+		 *
+		 * Return `fa` or `fa-IR` for Jalali calendar UI (values stay Gregorian).
+		 * Return `default` for Gregorian UI.
+		 *
+		 * By default, any WordPress locale matching `fa` / `fa_*` / `fa-*`
+		 * (site, user, or `determine_locale()`) enables Jalali.
+		 *
+		 * @param string $datepicker_locale Locale key for Flatpickr.
+		 * @param string $wp_locale         First matching Persian WP locale, or primary locale.
+		 */
+		$wp_locale_for_filter = get_locale();
+		if ( function_exists( 'determine_locale' ) ) {
+			$wp_locale_for_filter = determine_locale();
+		} elseif ( function_exists( 'get_user_locale' ) ) {
+			$wp_locale_for_filter = get_user_locale();
+		}
+
+		$datepicker_locale = apply_filters( 'wpdev_datepicker_locale', $datepicker_locale, $wp_locale_for_filter );
 
 		wp_localize_script('wpdev-functions', 'wpdev_settings', array(
 			'currency'           => wpdev_get_setting('currency_symbol', 'USD'),
@@ -201,12 +349,13 @@ class Scripts {
 			'precision'          => wpdev_get_setting('precision', 2),
 			'use_container'      => get_user_setting('wpdev_use_container', false),
 			'disable_image_zoom' => wpdev_get_setting('disable_image_zoom', false),
+			'datepicker_locale'  => $datepicker_locale,
 		));
 
 		/*
 		 * Adds Fields & Components
 		 */
-		$this->register_script('wpdev-fields', wpdev_get_module_asset_url('field-builder', 'fields.js', 'js'), array('jquery', 'wpdev-vue', 'wpdev-selectizer', 'wp-color-picker'));
+		$this->register_script('wpdev-fields', wpdev_get_module_asset_url('field-builder', 'fields.js', 'js'), array('jquery', 'jquery-ui-sortable', 'wpdev-vue', 'wpdev-selectizer', 'wp-color-picker'));
 
 		/*
 		 * Localize components
@@ -226,7 +375,8 @@ class Scripts {
 		/*
 		 * Adds Vue Apps
 		 */
-		$this->register_script('wpdev-vue-apps', wpdev_get_module_asset_url('field-builder', 'vue-apps.js', 'js'), array('wpdev-functions', 'wpdev-vue', 'wpdev-money-mask', 'wpdev-input-mask', 'wp-hooks'));
+		// vue-apps.js calls `window.wubox.refresh()`, so make sure wubox loads first.
+		$this->register_script('wpdev-vue-apps', wpdev_get_module_asset_url('field-builder', 'vue-apps.js', 'js'), array('wubox', 'wpdev-functions', 'wpdev-vue', 'wpdev-money-mask', 'wpdev-input-mask', 'wp-hooks', 'jquery-ui-sortable'));
 
 		/*
 		 * Adds Selectizer
@@ -236,9 +386,13 @@ class Scripts {
 
 		/*
 		 * Localize selectizer
+		 *
+		 * Run after `init` so theme/plugin CPTs (e.g. professors) exist when
+		 * Ajax::search_models() calls post_type_exists(). Default light ajax
+		 * boots on plugins_loaded and would miss those registrations.
 		 */
 		wp_localize_script('wpdev-functions', 'wpdev_selectizer', array(
-			'ajaxurl' => wpdev_ajax_url(),
+			'ajaxurl' => wpdev_ajax_url('init'),
 		));
 
 		/*
@@ -253,17 +407,27 @@ class Scripts {
 		/*
 		 * Adds our thickbox fork.
 		 */
-		$this->register_script('wubox', wpdev_get_module_asset_url('core', 'wubox.js', 'js'), array('wpdev-vue-apps'));
+		// wubox must be available before vue-apps; don't depend on wpdev-vue-apps.
+		$this->register_script('wubox', wpdev_get_module_asset_url('core', 'wubox.js', 'js'), array());
 
 		wp_localize_script('wubox', 'wuboxL10n', array(
-			'next'             => __('Next &gt;'),
-			'prev'             => __('&lt; Prev'),
-			'image'            => __('Image'),
-			'of'               => __('of'),
-			'close'            => __('Close'),
-			'noiframes'        => __('This feature requires inline frames. You have iframes disabled or your browser does not support them.'),
+			'next'             => __('Next &gt;', 'wpdev'),
+			'prev'             => __('&lt; Prev', 'wpdev'),
+			'image'            => __('Image', 'wpdev'),
+			'of'               => __('of', 'wpdev'),
+			'close'            => __('Close', 'wpdev'),
+			'noiframes'        => __('This feature requires inline frames. You have iframes disabled or your browser does not support them.', 'wpdev'),
 			'loadingAnimation' => includes_url('js/thickbox/loadingAnimation.gif'),
 		));
+
+		/*
+		 * Multi-state conditional metaboxes driver.
+		 */
+		$this->register_script(
+			'wpdev-metabox-conditions',
+			wpdev_get_module_asset_url( 'metabox-builder', 'metabox-conditions.js', 'js' ),
+			array()
+		);
 
 		/*
 		 * WordPress localizes month names and all, but
@@ -333,7 +497,7 @@ class Scripts {
 	 */
 	public function register_default_styles() {
 
-		$this->register_style('wpdev-styling', wpdev_get_module_asset_url('core', 'framework.css', 'css'), array(), wpdev_get_version());
+		$this->register_style('wpdev-styling', wpdev_get_module_asset_url('core', 'admin-layout.css', 'css'), array(), wpdev_get_version());
 
 		$this->register_style('wpdev-admin', wpdev_get_module_asset_url('core', 'admin.css', 'css'), array('wpdev-styling'), wpdev_get_version());
 
@@ -346,8 +510,6 @@ class Scripts {
 				isset( $args['ver'] ) ? $args['ver'] : wpdev_get_version()
 			);
 		}
-
-		$this->register_style('wpdev-flags', wpdev_get_module_asset_url('core', 'flags.css', 'css'), array(), wpdev_get_version());
 
 	} // end register_default_styles;
 

@@ -17,7 +17,6 @@ final class Renderer {
      *
      * @param string $file Absolute path to partial PHP file
      * @param array<string, mixed> $args Arguments accessible via $args inside partial
-     * @return string
      * @throws InvalidArgumentException
      */
     public static function safe_partial(string $file, array $args = []): string {
@@ -47,7 +46,6 @@ final class Renderer {
      *
      * @param string $inner_html ALREADY-ESCAPED HTML (typically from safe_partial or sanitized output).
      * @param array{class?: string, surface?: string, tag?: string, inherit_archetype?: bool} $attrs
-     * @return string
      */
     public static function render_root(string $inner_html, array $attrs = []): string {
         if (class_exists(AssetPipeline::class)) {
@@ -62,7 +60,7 @@ final class Renderer {
 
         $classes = ['ps-root'];
         if (!empty($attrs['class'])) {
-            $raw_classes = preg_split('/\s+/', trim((string) $attrs['class']));
+            $raw_classes = preg_split('/\s+/', trim($attrs['class']));
             if (is_array($raw_classes)) {
                 foreach ($raw_classes as $cls) {
                     $cleaned = function_exists('sanitize_html_class')
@@ -86,7 +84,7 @@ final class Renderer {
         }
 
         if (!empty($attrs['surface'])) {
-            $extra_attrs[] = sprintf("data-ps-surface='%s'", self::esc_html_attr((string) $attrs['surface']));
+            $extra_attrs[] = sprintf("data-ps-surface='%s'", self::esc_html_attr($attrs['surface']));
         }
 
         $attrs_str = !empty($extra_attrs) ? ' ' . implode(' ', $extra_attrs) : '';

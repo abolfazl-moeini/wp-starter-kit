@@ -5,9 +5,9 @@
  * @since 2.0.0
  */
 ?>
-<div class="wpdev-my-6">
+<div class="wpdev-mar-y-6">
 
-  <div class="wpdev-flex">
+  <div class="wpdev-row">
 
     <div class="wpdev-w-1/3">
 

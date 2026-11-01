@@ -430,13 +430,6 @@ abstract class SymmetricKey
      */
     private $openssl_emulate_ctr = \false;
     /**
-     * Don't truncate / null pad key
-     *
-     * @see self::clearBuffers()
-     * @var bool
-     */
-    private $skip_key_adjustment = \false;
-    /**
      * Has the key length explicitly been set or should it be derived from the key, itself?
      *
      * @see self::setKeyLength()
@@ -1053,7 +1046,6 @@ abstract class SymmetricKey
         if ($this->engine === self::ENGINE_OPENSSL) {
             switch ($this->mode) {
                 case self::MODE_STREAM:
-                    return \openssl_encrypt($plaintext, $this->cipher_name_openssl, $this->key, \OPENSSL_RAW_DATA | \OPENSSL_ZERO_PADDING);
                 case self::MODE_ECB:
                     return \openssl_encrypt($plaintext, $this->cipher_name_openssl, $this->key, \OPENSSL_RAW_DATA | \OPENSSL_ZERO_PADDING);
                 case self::MODE_CBC:
@@ -1408,8 +1400,6 @@ abstract class SymmetricKey
         if ($this->engine === self::ENGINE_OPENSSL) {
             switch ($this->mode) {
                 case self::MODE_STREAM:
-                    $plaintext = \openssl_decrypt($ciphertext, $this->cipher_name_openssl, $this->key, \OPENSSL_RAW_DATA | \OPENSSL_ZERO_PADDING);
-                    break;
                 case self::MODE_ECB:
                     $plaintext = \openssl_decrypt($ciphertext, $this->cipher_name_openssl, $this->key, \OPENSSL_RAW_DATA | \OPENSSL_ZERO_PADDING);
                     break;

@@ -70,7 +70,7 @@ class Memory_Trap {
 
 		$this->memory_reserve = str_repeat('*', 1024 * 1024);
 
-		!defined('WP_SANDBOX_SCRAPING') && define('WP_SANDBOX_SCRAPING', true); // phpcs:ignore
+		!defined('WPDEV_MEMORY_TRAP') && define('WPDEV_MEMORY_TRAP', true); // phpcs:ignore
 
 		register_shutdown_function(function() {
 

@@ -22,7 +22,6 @@ final class DataBatchLoader {
     /**
      * Register a loader for a specific contract.
      *
-     * @param string $contract_id
      * @param callable $loader callable(int $user_id): array<string, mixed>
      */
     public static function register_loader(string $contract_id, callable $loader): void {
@@ -64,9 +63,7 @@ final class DataBatchLoader {
      * Load all declared contracts for a user in a bounded number of operations (<= 2 + C queries).
      *
      * @param array<string, bool> $required_contracts
-     * @param int $user_id
      * @param int $depth Recursion depth tracker for circuit breaker
-     * @return DashboardContextV1
      */
     public static function load_context(array $required_contracts, int $user_id, int $depth = 0): DashboardContextV1 {
         if ($depth > self::MAX_RESOLUTION_DEPTH) {

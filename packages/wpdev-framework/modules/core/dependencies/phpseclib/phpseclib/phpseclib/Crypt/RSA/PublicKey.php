@@ -32,7 +32,6 @@ final class PublicKey extends RSA implements Common\PublicKey
     /**
      * Exponentiate
      *
-     * @param \phpseclib3\Math\BigInteger $x
      * @return \phpseclib3\Math\BigInteger
      */
     private function exponentiate(BigInteger $x)
@@ -278,11 +277,10 @@ final class PublicKey extends RSA implements Common\PublicKey
      * See {@link http://tools.ietf.org/html/rfc3447#section-7.2.1 RFC3447#section-7.2.1}.
      *
      * @param string $m
-     * @param bool $pkcs15_compat optional
      * @throws \LengthException if strlen($m) > $this->k - 11
      * @return bool|string
      */
-    private function rsaes_pkcs1_v1_5_encrypt($m, $pkcs15_compat = \false)
+    private function rsaes_pkcs1_v1_5_encrypt($m)
     {
         $mLen = \strlen($m);
         // Length checking
@@ -302,9 +300,8 @@ final class PublicKey extends RSA implements Common\PublicKey
         // RSA encryption
         $m = $this->os2ip($em);
         $c = $this->rsaep($m);
-        $c = $this->i2osp($c, $this->k);
         // Output the ciphertext C
-        return $c;
+        return $this->i2osp($c, $this->k);
     }
     /**
      * RSAES-OAEP-ENCRYPT
@@ -338,9 +335,8 @@ final class PublicKey extends RSA implements Common\PublicKey
         // RSA encryption
         $m = $this->os2ip($em);
         $c = $this->rsaep($m);
-        $c = $this->i2osp($c, $this->k);
         // Output the ciphertext C
-        return $c;
+        return $this->i2osp($c, $this->k);
     }
     /**
      * RSAEP

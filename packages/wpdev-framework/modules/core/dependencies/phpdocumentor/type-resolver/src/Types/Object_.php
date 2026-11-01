@@ -35,7 +35,7 @@ final class Object_ implements Type
     public function __construct(?Fqsen $fqsen = null)
     {
         if (strpos((string) $fqsen, '::') !== \false || strpos((string) $fqsen, '()') !== \false) {
-            throw new InvalidArgumentException('Object types can only refer to a class, interface or trait but a method, function, constant or ' . 'property was received: ' . (string) $fqsen);
+            throw new InvalidArgumentException('Object types can only refer to a class, interface or trait but a method, function, constant or ' . 'property was received: ' . $fqsen);
         }
         $this->fqsen = $fqsen;
     }

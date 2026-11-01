@@ -57,14 +57,43 @@ class Register_Endpoint {
 			'permission_callback' => \Closure::fromCallable([$api, 'check_authorization']),
 		));
 
-		register_rest_route($namespace, '/register', array(
+		$create_route = array(
 			'methods'             => \WP_REST_Server::CREATABLE,
 			'callback'            => array($this, 'handle_endpoint'),
 			'permission_callback' => \Closure::fromCallable([$api, 'check_authorization']),
-			'args'                => $this->get_rest_args(),
-		));
+		);
+
+		/*
+		 * SaaS domain models (Membership_Status, Payment_Status, …) are optional
+		 * in slimmed installs. Building REST arg schemas without them fatals on
+		 * every rest_api_init (including WooCommerce admin preloads).
+		 */
+		if (self::domain_schema_classes_available()) {
+			$create_route['args'] = $this->get_rest_args();
+		}
+
+		register_rest_route($namespace, '/register', $create_route);
 
 	} // end register_route;
+
+	/**
+	 * Whether the SaaS register-schema dependencies are loadable.
+	 *
+	 * Also read by the framework bootstrap, which skips booting this endpoint
+	 * entirely on installs without the SaaS domain models.
+	 *
+	 * @since 2.8.6
+	 * @return bool
+	 */
+	public static function domain_schema_classes_available() {
+
+		return class_exists(Membership_Status::class)
+			&& class_exists(Payment_Status::class)
+			&& class_exists(Site_Type::class)
+			&& class_exists(Cart::class)
+			&& class_exists(Billing_Address::class);
+
+	} // end domain_schema_classes_available;
 
 	/**
 	 * Handle the register endpoint get for zapier integration reasons.
@@ -111,18 +140,6 @@ class Register_Endpoint {
 			));
 
 			return $validation_errors;
-
-		} // end if;
-
-		if ( ! function_exists( 'wpdev_create_membership' ) || ! function_exists( 'wpdev_create_payment' ) ) {
-
-			return new \WP_Error(
-				'wpdev_examples_unavailable',
-				__( 'Customer registration requires the WPDev Examples plugin.', 'wpdev' ),
-				array(
-					'status' => 503,
-				)
-			);
 
 		} // end if;
 
@@ -205,7 +222,21 @@ class Register_Endpoint {
 
 			unset($membership_data['status']);
 
-			$membership = wpdev_create_membership($membership_data);
+			$membership = apply_filters( 'wpdev_entity_create', null, $membership_data, 'membership' );
+
+			if ( null === $membership ) {
+
+				return $this->rollback_and_return(
+					new \WP_Error(
+						'wpdev_entity_handler_unavailable',
+						__( 'Customer registration requires the WPDev Examples plugin.', 'wpdev' ),
+						array(
+							'status' => 503,
+						)
+					)
+				);
+
+			} // end if;
 
 			if (is_wp_error($membership)) {
 
@@ -236,7 +267,21 @@ class Register_Endpoint {
 			$payment_data['gateway']            = wpdev_get_isset($payment_method, 'gateway');
 			$payment_data['gateway_payment_id'] = wpdev_get_isset($payment_method, 'gateway_payment_id');
 
-			$payment = wpdev_create_payment($payment_data);
+			$payment = apply_filters( 'wpdev_entity_create', null, $payment_data, 'payment' );
+
+			if ( null === $payment ) {
+
+				return $this->rollback_and_return(
+					new \WP_Error(
+						'wpdev_entity_handler_unavailable',
+						__( 'Customer registration requires the WPDev Examples plugin.', 'wpdev' ),
+						array(
+							'status' => 503,
+						)
+					)
+				);
+
+			} // end if;
 
 			if (is_wp_error($payment)) {
 
@@ -555,7 +600,7 @@ class Register_Endpoint {
 
 		if ($customer_id) {
 
-			$customer = wpdev_get_customer($customer_id);
+			$customer = apply_filters( 'wpdev_entity_lookup', null, $customer_id, 'customer' );
 
 			if (!$customer) {
 
@@ -565,7 +610,19 @@ class Register_Endpoint {
 
 		} else {
 
-			$customer = wpdev_create_customer($p['customer']);
+			$customer = apply_filters( 'wpdev_entity_create', null, $p['customer'], 'customer' );
+
+			if ( null === $customer ) {
+
+				return new \WP_Error(
+					'wpdev_entity_handler_unavailable',
+					__( 'Customer registration requires the WPDev Examples plugin.', 'wpdev' ),
+					array(
+						'status' => 503,
+					)
+				);
+
+			} // end if;
 
 		} // end if;
 
@@ -615,7 +672,11 @@ class Register_Endpoint {
 
 		$site_url = wpdev_get_isset($site_data, 'site_url');
 
-		$d = wpdev_get_site_domain_and_path($site_url);
+		$d = apply_filters( 'wpdev_site_domain_and_path', null, $site_url );
+
+		if ( ! $d ) {
+			return new \WP_Error( 'wpdev_site_domain_unavailable', __( 'Site domain resolution is not available.', 'wpdev' ) );
+		}
 
 		/*
 		 * Validates the site url.

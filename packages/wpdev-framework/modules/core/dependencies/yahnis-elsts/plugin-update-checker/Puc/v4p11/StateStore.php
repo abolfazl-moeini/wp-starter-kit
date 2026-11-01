@@ -16,7 +16,7 @@ if ( !class_exists('Puc_v4p11_StateStore', false) ):
 		/**
 		 * @var Puc_v4p11_Update|null Cached update.
 		 */
-		protected $update = null;
+		protected $update;
 
 		/**
 		 * @var string Site option name.

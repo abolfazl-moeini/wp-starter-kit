@@ -21,7 +21,7 @@ add_filter(
 		}
 
 		/**
-		 * Legacy filter from the WaaS era (renamed hook; same semantics).
+		 * Legacy filter (renamed hook; same semantics).
 		 *
 		 * @param bool   $enabled   Whether the module is enabled.
 		 * @param string $module_id Module slug.
@@ -43,34 +43,36 @@ add_filter(
  * @param array<string, array<string, mixed>> $overrides_map Optional overrides.
  * @return void
  */
-function wpdev_register_module_admin_pages( $module_id, array $page_classes, $priority = 10, array $overrides_map = array() ) {
+if ( ! function_exists( 'wpdev_register_module_admin_pages' ) ) {
+	function wpdev_register_module_admin_pages( $module_id, array $page_classes, $priority = 10, array $overrides_map = array() ) {
 
-	$instantiate = static function () use ( $module_id, $page_classes, $overrides_map ) {
-		if ( ! apply_filters( 'wpdev_module_enabled', true, $module_id ) ) {
+		$instantiate = static function () use ( $module_id, $page_classes, $overrides_map ) {
+			if ( ! apply_filters( 'wpdev_module_enabled', true, $module_id ) ) {
+				return;
+			}
+
+			foreach ( $page_classes as $class_name ) {
+				if ( ! class_exists( $class_name ) ) {
+					continue;
+				}
+
+				$overrides = $overrides_map[ $class_name ] ?? array();
+
+				new $class_name( is_array( $overrides ) ? $overrides : array() );
+			}
+
+			do_action( 'wpdev_module_admin_pages_registered', $module_id, $page_classes );
+		};
+
+		if ( function_exists( 'did_action' ) && did_action( 'wpdev_admin_pages' ) ) {
+			$instantiate();
 			return;
 		}
 
-		foreach ( $page_classes as $class_name ) {
-			if ( ! class_exists( $class_name ) ) {
-				continue;
-			}
+		add_action( 'wpdev_admin_pages', $instantiate, $priority );
 
-			$overrides = $overrides_map[ $class_name ] ?? array();
-
-			new $class_name( is_array( $overrides ) ? $overrides : array() );
-		}
-
-		do_action( 'wpdev_module_admin_pages_registered', $module_id, $page_classes );
-	};
-
-	if ( function_exists( 'did_action' ) && did_action( 'wpdev_admin_pages' ) ) {
-		$instantiate();
-		return;
-	}
-
-	add_action( 'wpdev_admin_pages', $instantiate, $priority );
-
-} // end wpdev_register_module_admin_pages;
+	} // end wpdev_register_module_admin_pages;
+}
 
 /**
  * Boot a manager from a module on wpdev_load.
@@ -83,28 +85,30 @@ function wpdev_register_module_admin_pages( $module_id, array $page_classes, $pr
  * @param int         $priority      Hook priority.
  * @return void
  */
-function wpdev_boot_module_manager( $module_id, $manager_class, $manager_path = null, $priority = 5 ) {
+if ( ! function_exists( 'wpdev_boot_module_manager' ) ) {
+	function wpdev_boot_module_manager( $module_id, $manager_class, $manager_path = null, $priority = 5 ) {
 
-	add_action(
-		'wpdev_load',
-		static function () use ( $module_id, $manager_class, $manager_path ) {
+		add_action(
+			'wpdev_load',
+			static function () use ( $module_id, $manager_class, $manager_path ) {
 
-			if ( ! apply_filters( 'wpdev_module_enabled', true, $module_id ) ) {
-				return;
-			}
+				if ( ! apply_filters( 'wpdev_module_enabled', true, $module_id ) ) {
+					return;
+				}
 
-			if ( $manager_path && is_readable( $manager_path ) ) {
-				require_once $manager_path;
-			}
+				if ( $manager_path && is_readable( $manager_path ) ) {
+					require_once $manager_path;
+				}
 
-			if ( class_exists( $manager_class ) ) {
-				$manager_class::get_instance();
-			}
-		},
-		$priority
-	);
+				if ( class_exists( $manager_class ) ) {
+					$manager_class::get_instance();
+				}
+			},
+			$priority
+		);
 
-} // end wpdev_boot_module_manager;
+	} // end wpdev_boot_module_manager;
+}
 
 /**
  * Whether a module owns manager boot for the given id.
@@ -114,8 +118,10 @@ function wpdev_boot_module_manager( $module_id, $manager_class, $manager_path = 
  * @param string $module_id Module slug.
  * @return bool
  */
-function wpdev_module_boots_managers( $module_id ) {
+if ( ! function_exists( 'wpdev_module_boots_managers' ) ) {
+	function wpdev_module_boots_managers( $module_id ) {
 
-	return (bool) apply_filters( 'wpdev_module_enabled', true, $module_id );
+		return (bool) apply_filters( 'wpdev_module_enabled', true, $module_id );
 
-} // end wpdev_module_boots_managers;
+	} // end wpdev_module_boots_managers;
+}

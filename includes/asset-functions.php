@@ -166,16 +166,16 @@ if ( ! function_exists( 'wpdev_enqueue_stylesheet' ) ) {
 	}
 }
 
-/**
- * Base directory for stylesheet resolution (plugin dir or active theme).
- *
- * @return string
- */
-function wpdev_stylesheet_base_dir(): string {
-	if ( defined( 'WPDEV_STARTER_PLUGIN_DIR' ) ) {
-		return untrailingslashit( WPDEV_STARTER_PLUGIN_DIR );
+if ( ! function_exists( 'wpdev_stylesheet_base_dir' ) ) {
+	/**
+	 * Base directory for stylesheet resolution (plugin dir or active theme).
+	 */
+	function wpdev_stylesheet_base_dir(): string {
+		if ( defined( 'WPDEV_STARTER_PLUGIN_DIR' ) ) {
+			return untrailingslashit( WPDEV_STARTER_PLUGIN_DIR );
+		}
+		return untrailingslashit( get_template_directory() );
 	}
-	return untrailingslashit( get_template_directory() );
 }
 
 if ( ! function_exists( 'wpdev_stylesheet_file_path' ) ) {

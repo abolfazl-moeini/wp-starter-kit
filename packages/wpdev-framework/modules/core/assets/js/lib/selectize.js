@@ -1012,10 +1012,17 @@
 		}
 	
 		if (!Selectize.$testInput) {
+			/*
+			 * Keep the measuring span in-viewport and hidden.
+			 * Using left:-99999 expands document width on RTL and causes
+			 * horizontal scroll on settings Search Setting (and similar).
+			 */
 			Selectize.$testInput = $('<span />').css({
 				position: 'absolute',
-				top: -99999,
-				left: -99999,
+				top: 0,
+				left: 0,
+				visibility: 'hidden',
+				pointerEvents: 'none',
 				width: 'auto',
 				padding: 0,
 				whiteSpace: 'pre'
@@ -3837,12 +3844,15 @@
 						thisRef.$control.on('click', '.' + options.className, function(e) {
 							e.preventDefault();
 							if (self.isLocked) return;
-	
+
 							var $item = $(e.currentTarget).parent();
-							self.setActiveItem($item);
-							if (self.deleteSelection()) {
-								self.setCaret(self.items.length);
-							}
+							var value = $item.attr('data-value');
+							if (typeof value === 'undefined') return;
+
+							// Prefer removeItem over deleteSelection(): the latter always
+							// calls refreshOptions(true) and re-opens the dropdown.
+							self.removeItem(value);
+							self.setCaret(self.items.length);
 						});
 	
 					};

@@ -17,4 +17,4 @@ defined('ABSPATH') || exit;
  *
  * @since 1.0.0
  */
-class Date extends \WPDevFramework\Dependencies\BerlinDB\Database\Date {} // end class Date;
+class Date extends \WPDev\Dependencies\BerlinDB\Database\Date {} // end class Date;

@@ -12,7 +12,7 @@ namespace WPDevFramework\Helpers\Validation_Rules;
 // Exit if accessed directly
 defined('ABSPATH') || exit;
 
-use WPDevFramework\Dependencies\Rakit\Validation\Rule;
+use WPDev\Dependencies\Rakit\Validation\Rule;
 
 /**
  * Validates template sites.

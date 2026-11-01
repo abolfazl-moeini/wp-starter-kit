@@ -23,8 +23,6 @@ abstract class Montgomery extends Progenitor
     /**
      * Prepare a number for use in Montgomery Modular Reductions
      *
-     * @param array $x
-     * @param array $n
      * @param string $class
      * @return array
      */
@@ -43,8 +41,6 @@ abstract class Montgomery extends Progenitor
      * Interleaves the montgomery reduction and long multiplication algorithms together as described in
      * {@link http://www.cacr.math.uwaterloo.ca/hac/about/chap14.pdf#page=13 HAC 14.36}
      *
-     * @param array $x
-     * @param array $n
      * @param string $class
      * @return array
      */
@@ -92,7 +88,6 @@ abstract class Montgomery extends Progenitor
      *
      * Thanks to Pedro Gimeno Fortea for input!
      *
-     * @param array $x
      * @param string $class
      * @return int
      */

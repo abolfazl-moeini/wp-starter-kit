@@ -5,9 +5,9 @@
  * @since 2.0.0
  */
 ?>
-<div class="wpdev-my-6">
+<div class="wpdev-mar-y-6">
 
-  <div class="wpdev-flex">
+  <div class="wpdev-row">
 
     <div class="wpdev-w-1/3">
 
@@ -25,7 +25,7 @@
 
         <input type='hidden' value='0' name="<?php echo esc_attr($field->id); ?>">
 
-        <input <?php checked(wpdev_get_setting($field_slug)); ?> name="<?php echo esc_attr($field->id); ?>" type="<?php echo esc_attr($field->type); ?>" id="<?php echo esc_attr($field->id); ?>" value="1">
+        <input <?php checked(wpdev_get_setting($field->id)); ?> name="<?php echo esc_attr($field->id); ?>" type="<?php echo esc_attr($field->type); ?>" id="<?php echo esc_attr($field->id); ?>" value="1">
 
         <?php echo $field->title; ?>
 

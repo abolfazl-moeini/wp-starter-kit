@@ -44,13 +44,6 @@ final class HostTokenRecord {
      */
     private $contrast;
 
-    /**
-     * @param string $role
-     * @param string $value
-     * @param string $source
-     * @param float $confidence
-     * @param float|null $contrast
-     */
     public function __construct(
         string $role,
         string $value,

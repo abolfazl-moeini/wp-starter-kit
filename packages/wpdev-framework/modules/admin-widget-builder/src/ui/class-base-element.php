@@ -92,7 +92,7 @@ abstract class Base_Element {
 	 * @since 2.0.0
 	 * @var array
 	 */
-	protected static $metabox_cache = null;
+	protected static $metabox_cache;
 
 	/**
 	 * Sometimes we need to know if the element was actually loaded
@@ -271,17 +271,15 @@ abstract class Base_Element {
 		return static::$public_elements;
 
 	} // end get_public_elements;
-
-	/**
-	 * Sets blocks up for the block editor.
-	 *
-	 * @since 2.0.0
-	 *
-	 * @param null  $short_circuit The value passed.
-	 * @param array $block The parsed block data.
-	 * @return null
-	 */
-	public function setup_for_block_editor($short_circuit, $block) {
+    /**
+     * Sets blocks up for the block editor.
+     *
+     * @since 2.0.0
+     *
+     * @param null  $short_circuit The value passed.
+     * @param array $block The parsed block data.
+     */
+    public function setup_for_block_editor($short_circuit, $block) {
 
 		$should_load = false;
 
@@ -373,9 +371,9 @@ abstract class Base_Element {
 
 		if (is_array($wp_meta_boxes) && $contains_metaboxes && is_array($wp_meta_boxes[$screen->id])) {
 
-			foreach ($wp_meta_boxes[$screen->id] as $position => $priorities) {
+			foreach ($wp_meta_boxes[$screen->id] as $priorities) {
 
-				foreach ($priorities as $priority => $metaboxes) {
+				foreach ($priorities as $metaboxes) {
 
 					foreach ($metaboxes as $metabox_id => $metabox) {
 
@@ -1082,12 +1080,10 @@ abstract class Base_Element {
 			'data-state',
 		), 'inactive-', $content);
 
-		$content = str_replace(array(
+		return str_replace(array(
 			'{{',
 			'}}',
 		), '', $content);
-
-		return $content;
 
 	} // end display_template;
 

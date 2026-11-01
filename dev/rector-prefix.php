@@ -28,7 +28,6 @@ declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
 use Rector\Renaming\Rector\Name\RenameClassRector;
-use Rector\Set\ValueObject\SetList;
 
 set_time_limit(0);
 ini_set('max_execution_time', '0');
@@ -50,13 +49,10 @@ return static function (RectorConfig $rector_config): void {
         }
     }
 
-    // No mapping configured: register a benign set so Rector does not
-    // prompt to create a default `rector.php`. The set runs but does not
-    // change anything in wp-starter-kit's code (it is a no-op rewrite).
+    // No mapping configured: skip all paths so Rector exits cleanly
+    // as a true no-op without running unintended rulesets.
     if ($from === '' || $to === '' || $from === $to) {
-        $rector_config->sets([
-            SetList::DEAD_CODE,
-        ]);
+        $rector_config->skip(['*']);
         fwrite(STDERR, "rector:prefix: no prefix mapping (env or rector.prefix.json), nothing to do.\n");
         return;
     }
@@ -74,9 +70,7 @@ return static function (RectorConfig $rector_config): void {
     }
 
     if ($namespacePairs === []) {
-        $rector_config->sets([
-            SetList::DEAD_CODE,
-        ]);
+        $rector_config->skip(['*']);
         return;
     }
 

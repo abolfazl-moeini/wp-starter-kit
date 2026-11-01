@@ -9,14 +9,15 @@
 
 namespace WPDevFramework;
 
-use \WPDevFramework\Dependencies\Amp\Iterator;
-use \WPDevFramework\Dependencies\Amp\Sync\LocalSemaphore;
-use \WPDevFramework\Dependencies\Amp\Sync\ConcurrentIterator;
-use \WPDevFramework\Dependencies\Amp\Http\Client\Request;
-use \WPDevFramework\Dependencies\Amp\Http\Client\Connection\DefaultConnectionPool;
-use \WPDevFramework\Dependencies\Amp\Socket\ClientTlsContext;
-use \WPDevFramework\Dependencies\Amp\Socket\ConnectContext;
-use \WPDevFramework\Dependencies\Amp\Http\Client\HttpClientBuilder;
+use \WPDev\Dependencies\Amp\Iterator;
+use \WPDev\Dependencies\Amp\Sync\LocalSemaphore;
+use \WPDev\Dependencies\Amp\Sync\ConcurrentIterator;
+use \WPDev\Dependencies\Amp\Http\Client\Request;
+use \WPDev\Dependencies\Amp\Http\Client\Connection\UnlimitedConnectionPool;
+use \WPDev\Dependencies\Amp\Http\Client\Connection\DefaultConnectionFactory;
+use \WPDev\Dependencies\Amp\Socket\ClientTlsContext;
+use \WPDev\Dependencies\Amp\Socket\ConnectContext;
+use \WPDev\Dependencies\Amp\Http\Client\HttpClientBuilder;
 
 // Exit if accessed directly
 defined('ABSPATH') || exit;
@@ -197,7 +198,7 @@ class Async_Calls {
 	 * Builds and returns the client that will handle the calls.
 	 *
 	 * @since 2.0.7
-	 * @return \WPDevFramework\Dependencies\Amp\Http\Client\HttpClient;
+	 * @return \WPDev\Dependencies\Amp\Http\Client\HttpClient;
 	 */
 	public static function get_client() {
 
@@ -205,13 +206,17 @@ class Async_Calls {
 
 		$connect_base_context = new ConnectContext;
 
-		$tls_context = $client_tls_context->withoutPeerVerification();
+		$verify_peer = function_exists( 'apply_filters' )
+			? (bool) apply_filters( 'wpdev_async_calls_verify_ssl', true )
+			: true;
+
+		$tls_context = $verify_peer ? $client_tls_context : $client_tls_context->withoutPeerVerification();
 
 		$connect_context = $connect_base_context->withTlsContext($tls_context);
 
 		$builder = new HttpClientBuilder;
 
-		return $builder->usingPool(new DefaultConnectionPool(null, $connect_context))->build();
+		return $builder->usingPool(new UnlimitedConnectionPool(new DefaultConnectionFactory(null, $connect_context)))->build();
 
 	} // end get_client;
 
@@ -233,7 +238,7 @@ class Async_Calls {
 
 		$urls = self::build_url_list($id, $total, $chunk_size, $args);
 
-		$coroutine = \WPDevFramework\Dependencies\Amp\call(static function() use ($id, $total, $chunk_size, $parallel_threads, $client, $urls) {
+		$coroutine = \WPDev\Dependencies\Amp\call(static function() use ($id, $total, $chunk_size, $parallel_threads, $client, $urls) {
 
 			$results = array();
 
@@ -271,7 +276,7 @@ class Async_Calls {
 
 		});
 
-		$responses = \WPDevFramework\Dependencies\Amp\Promise\wait($coroutine);
+		$responses = \WPDev\Dependencies\Amp\Promise\wait($coroutine);
 
 		return $responses;
 

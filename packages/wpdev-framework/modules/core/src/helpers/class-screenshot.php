@@ -108,7 +108,7 @@ class Screenshot {
 
 		$file_path        = $upload['file'];
 		$file_name        = basename($file_path);
-		$file_type        = wp_check_filetype($file_name, null);
+		$file_type        = wp_check_filetype($file_name);
 		$attachment_title = sanitize_file_name(pathinfo($file_name, PATHINFO_FILENAME));
 		$wp_upload_dir    = wp_upload_dir();
 

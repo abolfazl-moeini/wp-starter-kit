@@ -23,8 +23,6 @@ abstract class Classic extends Base
     /**
      * Regular Division
      *
-     * @param array $x
-     * @param array $n
      * @param string $class
      * @return array
      */

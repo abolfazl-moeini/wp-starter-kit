@@ -17,9 +17,9 @@ defined('ABSPATH') || exit;
  * according to the environment. Can be used both for HTML, but is must useful when
  * dealing with CSS classes.
  *
- * E.g. <?php echo wpdev_env_picker('wpdev-m-0', 'wpdev--mx-3 wpdev--my-2'); ?>
+ * E.g. <?php echo wpdev_env_picker('wpdev-mar-0', 'wpdev--mx-3 wpdev--my-2'); ?>
  * In the backend, this will return the classes 'wpdev--mx-3 wpdev--my-2',
- * while it will return wpdev-m-0 omn the frontend.
+ * while it will return wpdev-mar-0 omn the frontend.
  *
  * Values can be anything, but will usually be strings.
  *

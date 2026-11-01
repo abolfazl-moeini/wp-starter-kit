@@ -4,6 +4,7 @@
  *
  * @since 2.0.0
  */
+$note_content = ! empty( $field->desc ) ? $field->desc : ( ! empty( $field->content ) ? $field->content : '' );
 ?>
 <li class="<?php echo esc_attr(trim($field->wrapper_classes)); ?>" <?php echo $field->get_wrapper_html_attributes(); ?>>
 
@@ -19,9 +20,9 @@
 
   ?>
 
-  <div class="<?php echo esc_attr('wpdev-my-0 '.$field->classes); ?>">
+  <div class="<?php echo esc_attr('wpdev-mar-y-0 '.$field->classes); ?>">
 
-    <?php echo $field->desc; ?>
+    <?php echo $note_content; ?>
 
   </div>
 

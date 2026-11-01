@@ -577,9 +577,7 @@ class Assert
     /**
      * Does non strict comparisons on the items, so ['3', 3] will not pass the assertion.
      *
-     * @param array  $values
      * @param string $message
-     *
      * @throws InvalidArgumentException
      */
     public static function uniqueValues(array $values, $message = '')
@@ -731,9 +729,7 @@ class Assert
      * @psalm-pure
      *
      * @param mixed  $value
-     * @param array  $values
      * @param string $message
-     *
      * @throws InvalidArgumentException
      */
     public static function oneOf($value, array $values, $message = '')
@@ -746,9 +742,7 @@ class Assert
      * @psalm-pure
      *
      * @param mixed  $value
-     * @param array  $values
      * @param string $message
-     *
      * @throws InvalidArgumentException
      */
     public static function inArray($value, array $values, $message = '')
@@ -1484,10 +1478,8 @@ class Assert
     /**
      * @psalm-param class-string<Throwable> $class
      *
-     * @param Closure $expression
      * @param string  $class
      * @param string  $message
-     *
      * @throws InvalidArgumentException
      */
     public static function throws(Closure $expression, $class = 'Exception', $message = '')

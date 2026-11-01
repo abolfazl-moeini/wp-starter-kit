@@ -80,14 +80,16 @@ final class CanonicalGraph {
         echo "</div>";
     }
 
-    public static function render_default_activity(\WPDev\Chameleon\Contracts\DashboardContextV1 $ctx): void {
+    public static function render_default_activity(): void
+    {
         echo "<div class='ps-activity-feed ps-card' data-section='activity_feed'>";
         echo "<h3 class='ps-heading'>Recent Activity</h3>";
         echo "<p class='ps-text-muted'>No recent activity.</p>";
         echo "</div>";
     }
 
-    public static function render_default_quick_actions(\WPDev\Chameleon\Contracts\DashboardContextV1 $ctx): void {
+    public static function render_default_quick_actions(): void
+    {
         echo "<div class='ps-quick-actions ps-card' data-section='quick_actions'>";
         echo "<h3 class='ps-heading'>Quick Actions</h3>";
         echo "</div>";

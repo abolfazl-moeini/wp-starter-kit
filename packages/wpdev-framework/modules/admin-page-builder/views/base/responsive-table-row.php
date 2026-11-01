@@ -77,7 +77,7 @@
 
         <div class="sm:wpdev-flex wpdev-items-center wpdev-text-xs wpdev-text-gray-600 sm:wpdev-mt-0">
 
-          <?php $first = true; foreach ($second_row as $slug => $item) : $w_classes = wpdev_get_isset($item, 'wrapper_classes', ''); ?>
+          <?php $first = true; foreach ($second_row as $item) : $w_classes = wpdev_get_isset($item, 'wrapper_classes', ''); ?>
 
             <?php if (wpdev_get_isset($item, 'url')) : ?>
 

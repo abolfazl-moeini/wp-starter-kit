@@ -146,7 +146,6 @@ abstract class DH extends AsymmetricKey
      *
      * $length is in bits
      *
-     * @param Parameters $params
      * @param int $length optional
      * @return DH\PrivateKey
      */

@@ -172,12 +172,15 @@ final class WPDev {
 		}
 
 		/*
-		 * Check if the WPDev requirements are present.
+		 * Hard-stop only on environment requirements (PHP / WordPress version).
 		 *
-		 * Everything we need to run our setup install needs top be loaded before this
-		 * and have no dependencies outside of the classes loaded so far.
+		 * `wpdev_setup_finished` must NOT block the runtime lifecycle
+		 * (`wpdev_load`, `wpdev_admin_pages`, `wpdev_register_forms`). Host plugins
+		 * need those hooks for menus, modals, and Ajax even before the installer
+		 * wizard completes. Table install / migration stay on the wizard via
+		 * Requirements::run_setup() and Core_Installer — not this gate.
 		 */
-		if (WPDevFramework\Requirements::met() === false || WPDevFramework\Requirements::run_setup() === false) {
+		if (WPDevFramework\Requirements::met() === false) {
 
 			return;
 
@@ -255,10 +258,31 @@ final class WPDev {
 	 */
 	public function setup_textdomain() {
 		/*
-		 * Loads the translation files.
+		 * Loads the translation files from the framework root (works in library mode).
 		 */
-		load_plugin_textdomain('wpdev', false, dirname((string) WPDEV_PLUGIN_BASENAME) . '/lang');
-		load_plugin_textdomain('wpdev-locations', false, dirname((string) WPDEV_PLUGIN_BASENAME) . '/lang');
+		$lang_rel = 'lang';
+		$locale   = function_exists( 'determine_locale' ) ? determine_locale() : get_locale();
+
+		if ( defined( 'WPDEV_PLUGIN_DIR' ) && is_dir( WPDEV_PLUGIN_DIR . 'lang' ) ) {
+			// Absolute paths work for nested library embeds where plugin_basename is wrong.
+			$wpdev_mo = WPDEV_PLUGIN_DIR . 'lang/wpdev-' . $locale . '.mo';
+			$loc_mo   = WPDEV_PLUGIN_DIR . 'lang/wpdev-locations-' . $locale . '.mo';
+
+			if ( is_readable( $wpdev_mo ) ) {
+				load_textdomain( 'wpdev', $wpdev_mo );
+			}
+			if ( is_readable( $loc_mo ) ) {
+				load_textdomain( 'wpdev-locations', $loc_mo );
+			}
+
+			// Also register relative paths for standalone installs / language packs.
+			load_plugin_textdomain( 'wpdev', false, dirname( (string) WPDEV_PLUGIN_BASENAME ) . '/' . $lang_rel );
+			load_plugin_textdomain( 'wpdev-locations', false, dirname( (string) WPDEV_PLUGIN_BASENAME ) . '/' . $lang_rel );
+			return;
+		}
+
+		load_plugin_textdomain( 'wpdev', false, dirname( (string) WPDEV_PLUGIN_BASENAME ) . '/' . $lang_rel );
+		load_plugin_textdomain( 'wpdev-locations', false, dirname( (string) WPDEV_PLUGIN_BASENAME ) . '/' . $lang_rel );
 
 	} // end setup_textdomain;
 

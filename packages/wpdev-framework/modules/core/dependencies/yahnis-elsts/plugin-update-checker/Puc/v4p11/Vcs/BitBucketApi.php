@@ -5,7 +5,7 @@ if ( !class_exists('Puc_v4p11_Vcs_BitBucketApi', false) ):
 		/**
 		 * @var Puc_v4p11_OAuthSignature
 		 */
-		private $oauth = null;
+		private $oauth;
 
 		/**
 		 * @var string
@@ -36,8 +36,6 @@ if ( !class_exists('Puc_v4p11_Vcs_BitBucketApi', false) ):
 		 * @return null|Puc_v4p11_Vcs_Reference
 		 */
 		public function chooseReference($configBranch) {
-			$updateSource = null;
-
 			//Check if there's a "Stable tag: 1.2.3" header that points to a valid tag.
 			$updateSource = $this->getStableTag($configBranch);
 

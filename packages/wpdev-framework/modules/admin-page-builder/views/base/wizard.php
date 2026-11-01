@@ -102,7 +102,7 @@
               <!-- Sub-menu -->
               <ul class="classes">
 
-                <?php foreach ($section['sub-sections'] as $sub_section_name => $sub_section) : ?>
+                <?php foreach ($section['sub-sections'] as $sub_section) : ?>
 
                   <li class="classes">
                     <a href="#" class="wpdev-block wpdev-py-2 wpdev-px-4 wpdev-no-underline wpdev-text-gray-500 hover:wpdev-text-gray-600 wpdev-text-sm">

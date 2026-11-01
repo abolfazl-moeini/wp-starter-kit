@@ -38,13 +38,11 @@ final class ModuleLoader {
 	private array $modules = array();
 
 	/**
-	 * The hook prefix used to namespace the filter and action
-	 * callbacks (e.g. `wpdev` → `wpdev_module_loader`,
-	 * `wpdev_modules_loaded`).
-	 *
-	 * @var string
-	 */
-	private string $hook_prefix;
+     * The hook prefix used to namespace the filter and action
+     * callbacks (e.g. `wpdev` → `wpdev_module_loader`,
+     * `wpdev_modules_loaded`).
+     */
+    private string $hook_prefix;
 
 	/**
 	 * @param string $hook_prefix Project hook prefix used to
@@ -104,24 +102,20 @@ final class ModuleLoader {
 	}
 
 	/**
-	 * Look up a registered module by slug, or null if unknown.
-	 *
-	 * @param string $slug The module slug.
-	 *
-	 * @return ModuleInterface|null
-	 */
-	public function get( string $slug ): ?ModuleInterface {
+     * Look up a registered module by slug, or null if unknown.
+     *
+     * @param string $slug The module slug.
+     */
+    public function get( string $slug ): ?ModuleInterface {
 		return $this->modules[ $slug ] ?? null;
 	}
 
 	/**
-	 * Whether a module with the given slug has been registered.
-	 *
-	 * @param string $slug The module slug.
-	 *
-	 * @return bool
-	 */
-	public function has( string $slug ): bool {
+     * Whether a module with the given slug has been registered.
+     *
+     * @param string $slug The module slug.
+     */
+    public function has( string $slug ): bool {
 		return isset( $this->modules[ $slug ] );
 	}
 

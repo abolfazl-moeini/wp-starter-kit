@@ -5,10 +5,11 @@
     colors="true"
     verbose="true"
     convertDeprecationsToExceptions="false"
+    executionOrder="random"
 >
     <testsuites>
         <testsuite name="wp-starter-kit">
-            <directory suffix=".php">./tests/phpunit</directory>
+            <directory suffix="Test.php">./tests/phpunit</directory>
             <exclude>./tests/phpunit/TestCases</exclude>
             <exclude>./tests/phpunit/fixtures</exclude>
         </testsuite>

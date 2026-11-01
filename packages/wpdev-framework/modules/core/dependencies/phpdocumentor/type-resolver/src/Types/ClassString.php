@@ -48,6 +48,6 @@ final class ClassString extends String_ implements PseudoType
         if ($this->fqsen === null) {
             return 'class-string';
         }
-        return 'class-string<' . (string) $this->fqsen . '>';
+        return 'class-string<' . $this->fqsen . '>';
     }
 }

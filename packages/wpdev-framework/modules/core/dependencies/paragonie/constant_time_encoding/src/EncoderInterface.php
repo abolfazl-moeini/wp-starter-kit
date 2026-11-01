@@ -36,14 +36,12 @@ interface EncoderInterface
      * leaks
      *
      * @param string $binString (raw binary)
-     * @return string
      */
     public static function encode(string $binString) : string;
     /**
      * Convert a binary string into a hexadecimal string without cache-timing
      * leaks
      *
-     * @param string $encodedString
      * @param bool $strictPadding Error on invalid padding
      * @return string (raw binary)
      */

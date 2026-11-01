@@ -95,6 +95,41 @@ trait Edit_Page_Widgets {
 	} // end metabox_view;
 
 	/**
+	 * Evaluate condition for a metabox widget.
+	 *
+	 * Returns false if the metabox should not be registered on the server.
+	 * Injects DOM data attributes if client-dynamic conditions exist.
+	 *
+	 * @param array $atts
+	 * @return bool
+	 */
+	protected function apply_metabox_condition( array &$atts ): bool {
+		if ( empty( $atts['condition'] ) || ! is_array( $atts['condition'] ) ) {
+			return true;
+		}
+
+		if ( ! class_exists( \WPDevFramework\Modules\MetaboxBuilder\Metabox_Condition::class ) ) {
+			return true;
+		}
+
+		$object_id = method_exists( $this, 'get_object_id' ) ? $this->get_object_id() : null;
+
+		if ( ! \WPDevFramework\Modules\MetaboxBuilder\Metabox_Condition::should_register_server( $atts['condition'], $object_id ) ) {
+			return false;
+		}
+
+		$dom_attrs = \WPDevFramework\Modules\MetaboxBuilder\Metabox_Condition::get_dom_attributes( $atts['condition'] );
+		if ( ! empty( $dom_attrs ) ) {
+			$atts['html_attr'] = array_merge( (array) ( $atts['html_attr'] ?? array() ), $dom_attrs );
+			if ( function_exists( 'wp_script_is' ) && wp_script_is( 'wpdev-metabox-conditions', 'registered' ) ) {
+				wp_enqueue_script( 'wpdev-metabox-conditions' );
+			}
+		}
+
+		return true;
+	}
+
+	/**
 	 * Adds a basic widget with info (and fields) to be shown.
 	 *
 	 * @since 2.0.0
@@ -186,6 +221,10 @@ trait Edit_Page_Widgets {
 			)
 		);
 
+		if ( ! $this->apply_metabox_condition( $atts ) ) {
+			return;
+		}
+
 		$atts['table']->set_context( 'widget' );
 
 		$atts['table']->set_ajax_table_id( $atts['table']->get_table_id() . '__' . sanitize_key( $id ) );
@@ -239,15 +278,26 @@ trait Edit_Page_Widgets {
 				'fields'                => array(),
 				'html_attr'             => array(),
 				'classes'               => '',
-				'field_wrapper_classes' => 'wpdev-w-full wpdev-box-border wpdev-items-center wpdev-flex wpdev-justify-between wpdev-p-4 wpdev-m-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
+				'field_wrapper_classes' => 'wpdev-full wpdev-box-border wpdev-items-center wpdev-row wpdev-justify-between wpdev-pad-4 wpdev-mar-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
 			)
 		);
 
+		if ( ! $this->apply_metabox_condition( $atts ) ) {
+			return;
+		}
+
 		$render_callback = function () use ( $atts ) {
+			if ( ! empty( $atts['condition'] ) && is_array( $atts['condition'] ) && class_exists( \WPDevFramework\Modules\MetaboxBuilder\Metabox_Condition::class ) ) {
+				$object_id = method_exists( $this, 'get_object_id' ) ? $this->get_object_id() : null;
+				if ( ! \WPDevFramework\Modules\MetaboxBuilder\Metabox_Condition::is_initially_visible( $atts['condition'], $object_id ) ) {
+					echo '<script>if(document.currentScript){var b=document.currentScript.closest(".postbox");if(b)b.style.display="none";}</script>';
+				}
+			}
+
 			if ( wpdev_get_isset( $atts['html_attr'], 'data-wpdev-app' ) ) {
 				$atts['fields']['loading'] = array(
 					'type'              => 'note',
-					'desc'              => sprintf( '<div class="wpdev-block wpdev-text-center wpdev-blinking-animation wpdev-text-gray-600 wpdev-my-1 wpdev-text-2xs wpdev-uppercase wpdev-font-semibold">%s</div>', __( 'Loading...', 'wpdev' ) ),
+					'desc'              => sprintf( '<div class="wpdev-block wpdev-type-center wpdev-blinking-animation wpdev-type-gray-600 wpdev-mar-y-1 wpdev-type-2xs wpdev-uppercase wpdev-font-semibold">%s</div>', __( 'Loading...', 'wpdev' ) ),
 					'wrapper_html_attr' => array(
 						'v-if' => 0,
 					),
@@ -259,7 +309,7 @@ trait Edit_Page_Widgets {
 				$atts['fields'],
 				array(
 					'views'                 => 'admin-pages/fields',
-					'classes'               => 'wpdev-widget-list wpdev-striped wpdev-m-0 wpdev--mt-2 wpdev--mb-3 wpdev--mx-3 ' . $atts['classes'],
+					'classes'               => 'wpdev-widget-list wpdev-striped wpdev-mar-0 wpdev--mt-2 wpdev--mb-3 wpdev--mx-3 ' . $atts['classes'],
 					'field_wrapper_classes' => $atts['field_wrapper_classes'],
 					'html_attr'             => $atts['html_attr'],
 					'before'                => $atts['before'],
@@ -308,6 +358,10 @@ trait Edit_Page_Widgets {
 			)
 		);
 
+		if ( ! $this->apply_metabox_condition( $atts ) ) {
+			return;
+		}
+
 		$current_section = wpdev_request( $id, current( array_keys( $atts['sections'] ) ) );
 
 		$atts['html_attr']['data-wpdev-app'] = $id;
@@ -320,6 +374,13 @@ trait Edit_Page_Widgets {
 		$tabs_view = $this->metabox_view( 'widget-tabs' );
 
 		$render_callback = function () use ( $atts, $tabs_view ) {
+				if ( ! empty( $atts['condition'] ) && is_array( $atts['condition'] ) && class_exists( \WPDevFramework\Modules\MetaboxBuilder\Metabox_Condition::class ) ) {
+					$object_id = method_exists( $this, 'get_object_id' ) ? $this->get_object_id() : null;
+					if ( ! \WPDevFramework\Modules\MetaboxBuilder\Metabox_Condition::is_initially_visible( $atts['condition'], $object_id ) ) {
+						echo '<script>if(document.currentScript){var b=document.currentScript.closest(".postbox");if(b)b.style.display="none";}</script>';
+					}
+				}
+
 				foreach ( $atts['sections'] as $section_id => &$section ) {
 					$section = wp_parse_args(
 						$section,
@@ -331,7 +392,7 @@ trait Edit_Page_Widgets {
 							'fields'                => array(),
 							'html_attr'             => array(),
 							'state'                 => array(),
-							'field_wrapper_classes' => 'wpdev-w-full wpdev-box-border wpdev-items-center wpdev-flex wpdev-justify-between wpdev-p-4 wpdev-m-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
+							'field_wrapper_classes' => 'wpdev-full wpdev-box-border wpdev-items-center wpdev-row wpdev-justify-between wpdev-pad-4 wpdev-mar-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
 						)
 					);
 
@@ -361,7 +422,7 @@ trait Edit_Page_Widgets {
 						$section['fields'],
 						array(
 							'views'                 => 'admin-pages/fields',
-							'classes'               => 'wpdev-widget-list wpdev-striped wpdev-m-0 wpdev-border-solid wpdev-border-gray-300 wpdev-border-0 wpdev-border-b',
+							'classes'               => 'wpdev-widget-list wpdev-striped wpdev-mar-0 wpdev-border-solid wpdev-border-gray-300 wpdev-border-0 wpdev-border-b',
 							'field_wrapper_classes' => $section['field_wrapper_classes'],
 							'html_attr'             => $section['html_attr'],
 							'before'                => $section['before'],
@@ -443,7 +504,7 @@ trait Edit_Page_Widgets {
 			'title'             => $labels['save_button_label'],
 			'placeholder'       => $labels['save_button_label'],
 			'value'             => 'save',
-			'classes'           => 'button button-primary wpdev-w-full',
+			'classes'           => 'button button-primary wpdev-full',
 			'html_attr'         => array(),
 			'wrapper_html_attr' => array(),
 		);
@@ -492,8 +553,8 @@ trait Edit_Page_Widgets {
 			'display_value'   => $labels['delete_button_label'] ?? '',
 			'placeholder'     => $labels['delete_button_label'] ?? '',
 			'value'           => 'delete',
-			'classes'         => 'button wubox wpdev-w-full wpdev-text-center',
-			'wrapper_classes' => 'wpdev-bg-gray-100',
+			'classes'         => 'button wubox wpdev-full wpdev-type-center',
+			'wrapper_classes' => 'wpdev-surface-gray-100',
 			'html_attr'       => array(
 				'title' => $labels['delete_button_label'],
 				'href'  => wpdev_get_form_url(

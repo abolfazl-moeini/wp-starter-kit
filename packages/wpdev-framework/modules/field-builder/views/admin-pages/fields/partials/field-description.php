@@ -8,7 +8,7 @@
 
 <?php if ($field->desc) : ?>
 
-  <p class="description wpdev-text-2xs" id="<?php echo $field->id; ?>-desc">
+  <p class="description wpdev-type-2xs" id="<?php echo $field->id; ?>-desc">
 
     <?php echo $field->desc; ?>
 

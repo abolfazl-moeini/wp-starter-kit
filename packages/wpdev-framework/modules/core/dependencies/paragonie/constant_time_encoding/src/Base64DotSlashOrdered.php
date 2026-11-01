@@ -40,9 +40,6 @@ abstract class Base64DotSlashOrdered extends Base64
      * Base64 character set:
      * [.-9]      [A-Z]      [a-z]
      * 0x2e-0x39, 0x41-0x5a, 0x61-0x7a
-     *
-     * @param int $src
-     * @return int
      */
     protected static function decode6Bits(int $src) : int
     {
@@ -58,9 +55,6 @@ abstract class Base64DotSlashOrdered extends Base64
     /**
      * Uses bitwise operators instead of table-lookups to turn 8-bit integers
      * into 6-bit integers.
-     *
-     * @param int $src
-     * @return string
      */
     protected static function encode6Bits(int $src) : string
     {

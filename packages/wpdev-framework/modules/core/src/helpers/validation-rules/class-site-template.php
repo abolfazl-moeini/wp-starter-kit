@@ -9,7 +9,7 @@
 
 namespace WPDevFramework\Helpers\Validation_Rules;
 
-use \WPDevFramework\Dependencies\Rakit\Validation\Rule;
+use \WPDev\Dependencies\Rakit\Validation\Rule;
 use \WPDevFramework\Database\Sites\Site_Type;
 
 // Exit if accessed directly
@@ -54,23 +54,32 @@ class Site_Template extends Rule {
 
 		} // end if;
 
-		if ( ! function_exists( 'wpdev_get_site' ) ) {
-			// Fail-closed: if the sites module is not loaded we cannot look up the template.
-			// Silently passing would accept arbitrary template ids.
+		/**
+		 * Allow examples to resolve an entity record by ID (e.g. a template site).
+		 *
+		 * Returning a non-null value short-circuits the default fail-closed behavior.
+		 *
+		 * @since 2.8.1
+		 *
+		 * @param mixed|null $entity      Default null (lookup unavailable).
+		 * @param int        $template_id Value being checked.
+		 */
+		$site = apply_filters( 'wpdev_entity_lookup', null, $template_id, 'site' );
+
+		if ( null === $site ) {
+			// Fail-closed: no example hooked in — cannot look up the template entity.
 			if ( function_exists( '_doing_it_wrong' ) ) {
 				_doing_it_wrong(
 					__CLASS__ . '::' . __METHOD__,
-					esc_html__( 'The site-template validation rule requires the WPDev Sites module to be loaded.', 'wpdev' ),
-					'2.5.0'
+					esc_html__( 'The site-template validation rule requires an example to hook wpdev_entity_lookup.', 'wpdev' ),
+					'2.8.1'
 				);
 			}
 
-			$this->message = __( 'Sites module is not available; site template validation cannot run.', 'wpdev' );
+			$this->message = __( 'Entity lookup is not available; template validation cannot run.', 'wpdev' );
 
 			return false;
 		}
-
-		$site = wpdev_get_site($template_id);
 
 		if (!$site || ($site->get_type() !== Site_Type::SITE_TEMPLATE && $site->get_type() !== Site_Type::CUSTOMER_OWNED)) {
 
@@ -90,7 +99,7 @@ class Site_Template extends Rule {
 
 			} // end if;
 
-			$customer = wpdev_get_current_customer();
+			$customer = apply_filters( 'wpdev_current_record_resolver', false );
 
 			if (!$customer || $site->get_customer_id() !== $customer->get_id()) {
 
@@ -114,25 +123,18 @@ class Site_Template extends Rule {
 
 		$product_ids_or_slugs = array_unique( $product_ids_or_slugs );
 
-		if ( $product_ids_or_slugs && function_exists( 'wpdev_get_product' ) && function_exists( 'wpdev_segregate_products' ) ) {
-
-			$products = array_map( 'wpdev_get_product', $product_ids_or_slugs );
-
-			$limits = new \WPDevFramework\Objects\Limitations();
-
-			list($plan, $additional_products) = wpdev_segregate_products($products);
-
-			$products = array_merge(array($plan), $additional_products);
-
-			foreach ($products as $product) {
-
-				$limits = $limits->merge($product->get_limitations());
-
-			} // end foreach;
-
-			$allowed_templates = $limits->site_templates->get_available_site_templates();
-
-		} // end if;
+		/**
+		 * Allow examples to resolve allowed template entity IDs for the current selection.
+		 *
+		 * Returning a non-false value short-circuits the default unrestricted behavior.
+		 * Examples should return an array of allowed template IDs, or false when unrestricted.
+		 *
+		 * @since 2.8.1
+		 *
+		 * @param array|false $allowed_templates Default false (no restriction).
+		 * @param array       $product_ids_or_slugs Selection identifiers from checkout.
+		 */
+		$allowed_templates = apply_filters( 'wpdev_validation_rule_selection_template_ids', false, $product_ids_or_slugs );
 
 		if (is_array($allowed_templates) && !in_array($template_id, $allowed_templates)) { // phpcs:ignore
 

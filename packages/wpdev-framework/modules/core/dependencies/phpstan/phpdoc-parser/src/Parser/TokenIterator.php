@@ -22,7 +22,7 @@ class TokenIterator
     /** @var list<int> */
     private $skippedTokenTypes = [Lexer::TOKEN_HORIZONTAL_WS];
     /** @var string|null */
-    private $newline = null;
+    private $newline;
     /**
      * @param list<array{string, int, int}> $tokens
      */

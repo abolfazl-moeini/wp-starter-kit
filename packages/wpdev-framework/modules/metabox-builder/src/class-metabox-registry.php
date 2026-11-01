@@ -172,11 +172,12 @@ class Metabox_Registry extends Registry_Base {
 	 *
 	 * @since 2.6.0
 	 *
-	 * @param string $page_id    Admin page slug.
-	 * @param string $metabox_id Optional single metabox id.
+	 * @param string          $page_id    Admin page slug.
+	 * @param string          $metabox_id Optional single metabox id.
+	 * @param object|int|null $post       Optional post object or ID.
 	 * @return void
 	 */
-	public static function render( $page_id, $metabox_id = '' ) {
+	public static function render( $page_id, $metabox_id = '', $post = null ) {
 
 		$boxes = self::get_for_page( $page_id );
 
@@ -188,6 +189,13 @@ class Metabox_Registry extends Registry_Base {
 		foreach ( $boxes as $config ) {
 			if ( empty( $config['callback'] ) || ! is_callable( $config['callback'] ) ) {
 				continue;
+			}
+
+			// Honor condition argument when registering metaboxes.
+			if ( ! empty( $config['condition'] ) && is_array( $config['condition'] ) && class_exists( Metabox_Condition::class ) ) {
+				if ( ! Metabox_Condition::matches_post( $config['condition'], $post ) ) {
+					continue;
+				}
 			}
 
 			call_user_func( $config['callback'], $config );

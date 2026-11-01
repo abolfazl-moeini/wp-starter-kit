@@ -236,7 +236,7 @@ export function stripWpdevDependencyNotice(phpSource) {
   const src = String(phpSource ?? "");
   // Prefer marked block (BEGIN…END), spanning the start/end comments.
   let content = src.replace(
-    /\/\*[\s\S]*?BEGIN wpdev-dependency-notice[\s\S]*?END wpdev-dependency-notice\s*\*\//gi,
+    /(?:\/\*(?:(?!\*\/)[\s\S])*?)?BEGIN wpdev-dependency-notice[\s\S]*?END wpdev-dependency-notice(?:\s*\*\/)?/gi,
     "",
   );
   // Fallback: function + add_action by name pattern.

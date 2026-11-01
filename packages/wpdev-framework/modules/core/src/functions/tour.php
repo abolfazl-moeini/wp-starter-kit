@@ -60,3 +60,75 @@ function wpdev_create_tour( $id, $steps = array(), $once = true ) {
 }
 }
  // end wpdev_create_tour;
+
+/**
+ * Check whether a tour has been marked as finished/seen for a user.
+ *
+ * @since 2.9.0
+ *
+ * @param string $id      Tour id.
+ * @param int    $user_id Optional user id.
+ * @return bool
+ */
+if (!function_exists('wpdev_is_tour_finished')) {
+function wpdev_is_tour_finished( $id, $user_id = 0 ) {
+
+	$api = wpdev_tour_api();
+
+	if ( $api instanceof Tour_Service ) {
+		return $api->is_tour_finished( $id, $user_id );
+	}
+
+	return $api->is_tour_finished( $id, $user_id );
+
+}
+}
+ // end wpdev_is_tour_finished;
+
+/**
+ * Mark a tour as finished/seen for a user.
+ *
+ * @since 2.9.0
+ *
+ * @param string $id      Tour id.
+ * @param int    $user_id Optional user id.
+ * @return bool
+ */
+if (!function_exists('wpdev_mark_tour_finished')) {
+function wpdev_mark_tour_finished( $id, $user_id = 0 ) {
+
+	$api = wpdev_tour_api();
+
+	if ( $api instanceof Tour_Service ) {
+		return $api->mark_tour_finished( $id, $user_id );
+	}
+
+	return $api->mark_tour_finished( $id, $user_id );
+
+}
+}
+ // end wpdev_mark_tour_finished;
+
+/**
+ * Reset a tour seen flag for a user so it can be shown again naturally.
+ *
+ * @since 2.9.0
+ *
+ * @param string $id      Tour id.
+ * @param int    $user_id Optional user id.
+ * @return bool
+ */
+if (!function_exists('wpdev_reset_tour')) {
+function wpdev_reset_tour( $id, $user_id = 0 ) {
+
+	$api = wpdev_tour_api();
+
+	if ( $api instanceof Tour_Service ) {
+		return $api->reset_tour( $id, $user_id );
+	}
+
+	return $api->reset_tour( $id, $user_id );
+
+}
+}
+ // end wpdev_reset_tour;

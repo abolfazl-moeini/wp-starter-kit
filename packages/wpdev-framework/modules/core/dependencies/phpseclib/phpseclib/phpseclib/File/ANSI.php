@@ -444,8 +444,6 @@ class ANSI
     /**
      * Returns the current coordinate without preformating
      *
-     * @param \stdClass $last_attr
-     * @param \stdClass $cur_attr
      * @param string $char
      * @return string
      */
@@ -493,8 +491,7 @@ class ANSI
             }
             $output .= $close . $open;
         }
-        $output .= \htmlspecialchars($char);
-        return $output;
+        return $output . \htmlspecialchars($char);
     }
     /**
      * Returns the current screen without preformating

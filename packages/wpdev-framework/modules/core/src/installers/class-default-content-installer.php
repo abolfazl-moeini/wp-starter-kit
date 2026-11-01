@@ -24,28 +24,6 @@ class Default_Content_Installer extends Base_Installer {
 	use \WPDevFramework\Traits\Singleton;
 
 	/**
-	 * Loads dependencies for when WPDev is not yet loaded.
-	 *
-	 * @since 2.0.0
-	 * @return void
-	 */
-	public function init() {
-
-		wpdev_require_public_function( 'email' );
-
-		wpdev_require_public_function( 'tax' );
-
-		wpdev_require_public_function( 'site' );
-
-		wpdev_require_public_function( 'customer' );
-
-		wpdev_require_public_function( 'product' );
-
-		wpdev_require_public_function( 'checkout-form' );
-
-	} // end init;
-
-	/**
 	 * Checks if we already created a template site.
 	 *
 	 * @since 2.0.0
@@ -55,7 +33,11 @@ class Default_Content_Installer extends Base_Installer {
 
 		$current_site = get_current_site();
 
-		$d = wpdev_get_site_domain_and_path('template');
+		$d = apply_filters( 'wpdev_site_domain_and_path', null, 'template' );
+
+		if ( ! $d ) {
+			return false;
+		}
 
 		return domain_exists($d->domain, $d->path, get_current_network_id());
 
@@ -79,7 +61,7 @@ class Default_Content_Installer extends Base_Installer {
 
 		} // end if;
 
-		return !empty(wpdev_get_plans());
+		return ! empty( apply_filters( 'wpdev_catalog_list', array(), array(), 'plans' ) );
 
 	} // end done_creating_products;
 
@@ -101,7 +83,7 @@ class Default_Content_Installer extends Base_Installer {
 
 		} // end if;
 
-		return !empty(wpdev_get_checkout_forms());
+		return ! empty( apply_filters( 'wpdev_catalog_list', array(), array(), 'checkout_forms' ) );
 
 	} // end done_creating_checkout_forms;
 
@@ -123,7 +105,7 @@ class Default_Content_Installer extends Base_Installer {
 
 		} // end if;
 
-		return !empty(wpdev_get_all_system_emails());
+		return ! empty( apply_filters( 'wpdev_catalog_list', array(), array(), 'system_emails' ) );
 
 	} // end done_creating_emails;
 
@@ -224,7 +206,11 @@ class Default_Content_Installer extends Base_Installer {
 	 */
 	public function _install_create_template_site() {
 
-		$d = wpdev_get_site_domain_and_path('template');
+		$d = apply_filters( 'wpdev_site_domain_and_path', null, 'template' );
+
+		if ( ! $d ) {
+			throw new \Exception( __( 'Site domain resolution requires the WPDev Examples plugin.', 'wpdev' ) );
+		}
 
 		$template_site = array(
 			'domain' => $d->domain,
@@ -233,7 +219,13 @@ class Default_Content_Installer extends Base_Installer {
 			'type'   => 'site_template',
 		);
 
-		$status = wpdev_create_site($template_site);
+		$status = apply_filters( 'wpdev_entity_create', null, $template_site, 'site' );
+
+		if ( null === $status ) {
+
+			throw new \Exception( __( 'Site creation requires the WPDev Examples plugin.', 'wpdev' ) );
+
+		} // end if;
 
 		if (is_wp_error($status)) {
 
@@ -268,7 +260,15 @@ class Default_Content_Installer extends Base_Installer {
 			'seo'     => wpdev_get_asset('seo.png', 'img/wizards'),
 		);
 
-		$images = array_map(array('\\WPDev\\Helpers\\Screenshot', 'save_image_from_url'), $images);
+		$images = array_map(
+			static function ( $url ) {
+				if ( class_exists( '\WPDevFramework\Helpers\Screenshot', false ) ) {
+					return \WPDevFramework\Helpers\Screenshot::save_image_from_url( $url );
+				}
+				return apply_filters( 'wpdev_save_screenshot_attachment', false, $url );
+			},
+			$images
+		);
 
 		$products = array();
 
@@ -334,7 +334,13 @@ class Default_Content_Installer extends Base_Installer {
 
 		foreach ($products as $product_data) {
 
-			$status = wpdev_create_product($product_data);
+			$status = apply_filters( 'wpdev_entity_create', null, $product_data, 'product' );
+
+			if ( null === $status ) {
+
+				throw new \Exception( __( 'Product creation requires the WPDev Examples plugin.', 'wpdev' ) );
+
+			} // end if;
 
 			if (is_wp_error($status)) {
 
@@ -359,17 +365,17 @@ class Default_Content_Installer extends Base_Installer {
 	 */
 	public function _install_create_checkout() {
 
-		if ( ! function_exists( 'wpdev_create_checkout_form' ) ) {
-			return;
-		}
-
 		$checkout_form = array(
 			'name'     => __('Registration Form', 'wpdev'),
 			'slug'     => 'main-form',
 			'settings' => array(),
 		);
 
-		$status = wpdev_create_checkout_form($checkout_form);
+		$status = apply_filters( 'wpdev_entity_create', null, $checkout_form, 'checkout_form' );
+
+		if ( null === $status ) {
+			return;
+		}
 
 		if (is_wp_error($status)) {
 
@@ -425,9 +431,7 @@ class Default_Content_Installer extends Base_Installer {
 	 */
 	public function _install_create_emails() {
 
-		if ( class_exists( '\\WPDev\\Managers\\Email_Manager' ) ) {
-			\WPDevFramework\Managers\Email_Manager::get_instance()->create_all_system_emails();
-		}
+		do_action( 'wpdev_installer_seed_system_emails' );
 
 	} // end _install_create_emails;
 

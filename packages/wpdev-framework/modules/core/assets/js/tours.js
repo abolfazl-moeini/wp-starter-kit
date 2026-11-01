@@ -60,6 +60,18 @@
 
       });
 
+      window[tour_id].on('cancel', function() {
+
+        markTourFinished(tour_id);
+
+      });
+
+      window[tour_id].on('start', function() {
+
+        markTourFinished(tour_id);
+
+      });
+
       _.each(tour, function(step, step_index) {
 
         const last_step = (step_index + 1) === tour.length;

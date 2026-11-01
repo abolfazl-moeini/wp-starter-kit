@@ -21,7 +21,6 @@ function wpdev_load_public_apis() {
 		'array-helpers',
 		'string-helpers',
 		'number-helpers',
-		'sunrise',
 		'legacy',
 		'site-context',
 		'sort',
@@ -39,7 +38,6 @@ function wpdev_load_public_apis() {
 		'countries',
 		'geolocation',
 		'translation',
-		'mock',
 		'model',
 		'url',
 		'assets',
@@ -54,6 +52,7 @@ function wpdev_load_public_apis() {
 		'color',
 		'danger',
 		'template',
+		'admin-notices',
 	);
 
 	foreach ( $public_functions as $function_file ) {

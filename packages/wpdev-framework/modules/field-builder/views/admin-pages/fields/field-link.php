@@ -7,7 +7,7 @@
 ?>
 <li class="<?php echo esc_attr(trim($field->wrapper_classes)); ?>" <?php echo $field->get_wrapper_html_attributes(); ?>>
 
-  <div class="wpdev-block wpdev-w-full">
+  <div class="wpdev-block wpdev-full">
 
     <?php
 

@@ -3,7 +3,7 @@
  * Adds support to multiple accounts for plugins such as WooCommerce.
  *
  * WordPress, even in multisite mode, has only one User database table.
- * This can cause problems in a WaaS environment.
+ * This can cause problems in a multisite platform environment.
  *
  * Image the following scenario:
  *

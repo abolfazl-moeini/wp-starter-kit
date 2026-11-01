@@ -9,7 +9,54 @@
 // Exit if accessed directly
 defined('ABSPATH') || exit;
 
-use \WPDevFramework\Dependencies\phpDocumentor\Reflection\DocBlockFactory;
+/**
+ * Parse supported PHPDoc tags from a raw docblock string.
+ *
+ * @since 2.8.4
+ *
+ * @param string|false $doc_comment Docblock from Reflection*.
+ * @return array<string, array<int, array{type: string, description: string}>>
+ */
+if (!function_exists('wpdev_reflection_parse_docblock_tags')) {
+function wpdev_reflection_parse_docblock_tags( $doc_comment ) {
+
+	$tags = array();
+
+	if ( ! is_string( $doc_comment ) || '' === trim( $doc_comment ) ) {
+		return $tags;
+	}
+
+	foreach ( preg_split( '/\R/', $doc_comment ) as $line ) {
+
+		$line = trim( $line );
+		$line = preg_replace( '/^\/\*\*?|\*\/$/', '', $line );
+		$line = ltrim( $line, "* \t" );
+
+		if ( '' === $line || '@' !== $line[0] ) {
+			continue;
+		}
+
+		if ( preg_match( '/^@param\s+(\S+)\s+\$\S+\s*(.*)$/i', $line, $matches ) ) {
+			$tags['param'][] = array(
+				'type'        => $matches[1],
+				'description' => trim( $matches[2] ),
+			);
+			continue;
+		}
+
+		if ( preg_match( '/^@options\s+(.+)$/i', $line, $matches ) ) {
+			$tags['options'][] = array(
+				'type'        => '',
+				'description' => trim( $matches[1] ),
+			);
+		}
+	}
+
+	return $tags;
+
+}
+}
+ // end wpdev_reflection_parse_docblock_tags;
 
 /**
  * Creates the REST API schema blueprint for an object based on setters.
@@ -25,16 +72,22 @@ function wpdev_reflection_parse_object_arguments($class_name) {
 	$base_schema = wpdev_reflection_parse_arguments_from_setters($class_name, true);
 
 	if (wpdev_are_code_comments_available() === false) {
-		/*
-		 * @todo add a logger.
-		 */
-		return $base_schema;
+
+		$arguments = array();
+
+		foreach ( $base_schema as $column ) {
+			$arguments[ $column['name'] ] = array(
+				'description' => '',
+				'type'        => '',
+				'required'    => false,
+			);
+		}
+
+		return $arguments;
 
 	} // end if;
 
 	$reflector = new \ReflectionClass($class_name);
-
-	$doc_block_factory = DocBlockFactory::createInstance();
 
 	$arguments = array();
 
@@ -47,7 +100,8 @@ function wpdev_reflection_parse_object_arguments($class_name) {
 
 		try {
 
-			$doc_block = $doc_block_factory->create($reflector->getMethod("set_{$column['name']}")->getDocComment());
+			$doc_comment = $reflector->getMethod("set_{$column['name']}")->getDocComment();
+			$doc_block   = wpdev_reflection_parse_docblock_tags( $doc_comment );
 
 		} catch (\Throwable $exception) {
 
@@ -58,13 +112,13 @@ function wpdev_reflection_parse_object_arguments($class_name) {
 
 		} // end try;
 
-		$param = $doc_block->getTagsByName('param');
+		$param = isset( $doc_block['param'] ) ? $doc_block['param'] : array();
 
-		if (isset($param[0]) && is_object($param[0])) {
+		if (isset($param[0]) && is_array($param[0])) {
 
 			$arguments[$column['name']] = array(
-				'description' => (string) $param[0]->getDescription(),
-				'type'        => (string) $param[0]->getType(),
+				'description' => (string) $param[0]['description'],
+				'type'        => (string) $param[0]['type'],
 				'required'    => false, // Actual value set later
 			);
 
@@ -86,11 +140,11 @@ function wpdev_reflection_parse_object_arguments($class_name) {
 
 			} // end if;
 
-			$option = $doc_block->getTagsByName('options');
+			$option = isset( $doc_block['options'] ) ? $doc_block['options'] : array();
 
 			if (isset($option[0])) {
 
-				$description = (string) $option[0]->getDescription();
+				$description = (string) $option[0]['description'];
 
 				if (strpos($description, '\\WPDev\\') !== false) {
 

@@ -201,6 +201,19 @@ class Maintenance_Mode {
 	 */
 	public function add_settings() {
 
+		// wpdev_load fires inside plugins_loaded (before init). Defer host/framework
+		// domain strings until init to avoid WP 6.7 _load_textdomain_just_in_time.
+		if ( ! did_action( 'init' ) ) {
+			add_action( 'init', array( $this, 'add_settings' ), 5 );
+			return;
+		}
+
+		static $registered = false;
+		if ( $registered ) {
+			return;
+		}
+		$registered = true;
+
 		wpdev_register_settings_field('sites', 'maintenance_mode', array(
 			'title'   => __('Site Maintenance Mode', 'wpdev'),
 			'desc'    => __('Allow your customers and super admins to quickly take sites offline via a toggle on the site dashboard.', 'wpdev'),

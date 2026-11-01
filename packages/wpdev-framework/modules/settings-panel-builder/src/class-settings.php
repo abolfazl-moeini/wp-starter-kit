@@ -18,6 +18,10 @@ use WPDevFramework\Modules\SettingsPanelBuilder\Settings_Section_Registry;
 // Exit if accessed directly
 defined('ABSPATH') || exit;
 
+require_once __DIR__ . '/class-settings-storage.php';
+require_once __DIR__ . '/class-settings-save.php';
+require_once __DIR__ . '/class-settings-section-registry.php';
+
 /**
  * WPDev settings helper class.
  *
@@ -265,6 +269,10 @@ class Settings {
 
 		// K3-01/K3-03: per-field resolution lives in the Settings_Save collaborator.
 		$settings = Settings_Save::resolve($sections, $saved_settings, $settings_to_save, $reset);
+
+		if ( ! $reset && ! empty( $saved_settings ) ) {
+			$settings = Settings_Save::merge_with_saved( $saved_settings, $settings );
+		}
 
 		/**
 		 * Allow developers to filter settings before save by WPDev.

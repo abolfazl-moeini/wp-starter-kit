@@ -122,7 +122,6 @@ final class ContractRegistry {
     /**
      * Filter raw data according to the contract's allowlist.
      *
-     * @param string $contract_id
      * @param array<string, mixed> $raw_data
      * @return array<string, mixed>
      */
@@ -176,7 +175,6 @@ final class ContractRegistry {
     /**
      * Static circular dependency detection.
      *
-     * @param string $new_id
      * @param array<string> $depends_on
      * @throws CircularDependencyException
      */

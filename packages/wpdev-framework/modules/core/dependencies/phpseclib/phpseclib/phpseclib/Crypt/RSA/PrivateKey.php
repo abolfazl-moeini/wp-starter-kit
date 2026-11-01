@@ -79,7 +79,6 @@ final class PrivateKey extends RSA implements Common\PrivateKey
     /**
      * Exponentiate
      *
-     * @param \phpseclib3\Math\BigInteger $x
      * @return \phpseclib3\Math\BigInteger
      */
     protected function exponentiate(BigInteger $x)
@@ -140,8 +139,6 @@ final class PrivateKey extends RSA implements Common\PrivateKey
      * Protects against timing attacks by employing RSA Blinding.
      * Returns $x->modPow($this->exponents[$i], $this->primes[$i])
      *
-     * @param \phpseclib3\Math\BigInteger $x
-     * @param \phpseclib3\Math\BigInteger $r
      * @param int $i
      * @return \phpseclib3\Math\BigInteger
      */
@@ -184,8 +181,7 @@ final class PrivateKey extends RSA implements Common\PrivateKey
         // ie. stlren($db)
         $maskedDB = $db ^ $dbMask;
         $maskedDB[0] = ~\chr(0xff << ($emBits & 7)) & $maskedDB[0];
-        $em = $maskedDB . $h . \chr(0xbc);
-        return $em;
+        return $maskedDB . $h . \chr(0xbc);
     }
     /**
      * RSASSA-PSS-SIGN
@@ -202,9 +198,8 @@ final class PrivateKey extends RSA implements Common\PrivateKey
         // RSA signature
         $m = $this->os2ip($em);
         $s = $this->rsasp1($m);
-        $s = $this->i2osp($s, $this->k);
         // Output the signature S
-        return $s;
+        return $this->i2osp($s, $this->k);
     }
     /**
      * RSASSA-PKCS1-V1_5-SIGN
@@ -228,9 +223,8 @@ final class PrivateKey extends RSA implements Common\PrivateKey
         // RSA signature
         $m = $this->os2ip($em);
         $s = $this->rsasp1($m);
-        $s = $this->i2osp($s, $this->k);
         // Output the signature S
-        return $s;
+        return $this->i2osp($s, $this->k);
     }
     /**
      * Create a signature
@@ -312,7 +306,6 @@ final class PrivateKey extends RSA implements Common\PrivateKey
         $em = $this->i2osp($m, $this->k);
         // EME-OAEP decoding
         $lHash = $this->hash->hash($this->label);
-        $y = \ord($em[0]);
         $maskedSeed = \substr($em, 1, $this->hLen);
         $maskedDB = \substr($em, $this->hLen + 1);
         $seedMask = $this->mgf1($maskedDB, $this->hLen);
@@ -415,9 +408,9 @@ final class PrivateKey extends RSA implements Common\PrivateKey
         if ($key !== false || count($this->primes) == 2) {
             return $key;
         }
-        
+
         $nSize = $this->getSize() >> 1;
-        
+
         $primes = [1 => clone self::$one, clone self::$one];
         $i = 1;
         foreach ($this->primes as $prime) {
@@ -426,15 +419,15 @@ final class PrivateKey extends RSA implements Common\PrivateKey
                 $i++;
             }
         }
-        
+
         $exponents = [];
         $coefficients = [2 => $primes[2]->modInverse($primes[1])];
-        
+
         foreach ($primes as $i => $prime) {
             $temp = $prime->subtract(self::$one);
             $exponents[$i] = $this->modulus->modInverse($temp);
         }
-        
+
         return $type::savePrivateKey($this->modulus, $this->publicExponent, $this->exponent, $primes, $exponents, $coefficients, $this->password, $options);
         */
     }

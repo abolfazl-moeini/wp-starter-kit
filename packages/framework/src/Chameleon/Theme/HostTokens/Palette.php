@@ -75,7 +75,6 @@ final class Palette {
     /**
      * Generate complete functional palette ramp for a primary color.
      *
-     * @param string $primaryHex
      * @return array<string, string>
      */
     public static function generate_ramp(string $primaryHex): array {

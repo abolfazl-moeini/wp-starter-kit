@@ -11,18 +11,16 @@ if ( !class_exists('Puc_v4p11_Vcs_ThemeUpdateChecker', false) ):
 		/**
 		 * @var Puc_v4p11_Vcs_Api Repository API client.
 		 */
-		protected $api = null;
+		protected $api;
 
 		/**
-		 * Puc_v4p11_Vcs_ThemeUpdateChecker constructor.
-		 *
-		 * @param Puc_v4p11_Vcs_Api $api
-		 * @param null $stylesheet
-		 * @param null $customSlug
-		 * @param int $checkPeriod
-		 * @param string $optionName
-		 */
-		public function __construct($api, $stylesheet = null, $customSlug = null, $checkPeriod = 12, $optionName = '') {
+         * Puc_v4p11_Vcs_ThemeUpdateChecker constructor.
+         *
+         * @param Puc_v4p11_Vcs_Api $api
+         * @param int $checkPeriod
+         * @param string $optionName
+         */
+        public function __construct($api, $stylesheet = null, $customSlug = null, $checkPeriod = 12, $optionName = '') {
 			$this->api = $api;
 			$this->api->setHttpFilterName($this->getUniqueName('request_update_options'));
 
@@ -76,9 +74,7 @@ if ( !class_exists('Puc_v4p11_Vcs_ThemeUpdateChecker', false) ):
 				//It looks like we didn't find a valid update after all.
 				$update = null;
 			}
-
-			$update = $this->filterUpdateResult($update);
-			return $update;
+			return $this->filterUpdateResult($update);
 		}
 
 		//FIXME: This is duplicated code. Both theme and plugin subclasses that use VCS share these methods.

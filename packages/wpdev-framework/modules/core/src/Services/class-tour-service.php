@@ -76,6 +76,45 @@ class Tour_Service implements Service_Contract {
 	} // end create_tour;
 
 	/**
+	 * Check if a tour has been finished/seen by a user.
+	 *
+	 * @param string $id      Tour id.
+	 * @param int    $user_id Optional user id.
+	 * @return bool
+	 */
+	public function is_tour_finished( $id, $user_id = 0 ) {
+
+		return $this->instance()->is_tour_finished( $id, $user_id );
+
+	} // end is_tour_finished;
+
+	/**
+	 * Mark a tour as finished/seen for a user.
+	 *
+	 * @param string $id      Tour id.
+	 * @param int    $user_id Optional user id.
+	 * @return bool
+	 */
+	public function mark_tour_finished( $id, $user_id = 0 ) {
+
+		return $this->instance()->mark_tour_finished( $id, $user_id );
+
+	} // end mark_tour_finished;
+
+	/**
+	 * Reset a tour seen flag for a user.
+	 *
+	 * @param string $id      Tour id.
+	 * @param int    $user_id Optional user id.
+	 * @return bool
+	 */
+	public function reset_tour( $id, $user_id = 0 ) {
+
+		return $this->instance()->reset_tour( $id, $user_id );
+
+	} // end reset_tour;
+
+	/**
 	 * Return legacy tours instance.
 	 *
 	 * @return Tours

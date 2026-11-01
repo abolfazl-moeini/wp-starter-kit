@@ -10,7 +10,7 @@ if ( !class_exists('Puc_v4p11_Vcs_PluginUpdateChecker') ):
 		/**
 		 * @var Puc_v4p11_Vcs_Api Repository API client.
 		 */
-		protected $api = null;
+		protected $api;
 
 		/**
 		 * Puc_v4p11_Vcs_PluginUpdateChecker constructor.

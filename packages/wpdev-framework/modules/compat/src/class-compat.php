@@ -30,21 +30,17 @@ class Compat {
 	const MAX_PAYLOAD_BYTES = 65536;
 
 	/**
-	 * Determine if Wordfence is installed and active in O(1) time without DB queries or autoloader hits.
-	 *
-	 * @return bool
-	 */
-	public static function is_active(): bool {
+     * Determine if Wordfence is installed and active in O(1) time without DB queries or autoloader hits.
+     */
+    public static function is_active(): bool {
 		return defined( 'WORDFENCE_VERSION' ) || class_exists( 'wordfence', false ) || class_exists( 'wfWAF', false );
 	}
 
 	/**
-	 * Initialize compatibility filters and scripts.
-	 * Bails immediately if Wordfence is not active (zero cold-boot overhead).
-	 *
-	 * @return void
-	 */
-	public static function init(): void {
+     * Initialize compatibility filters and scripts.
+     * Bails immediately if Wordfence is not active (zero cold-boot overhead).
+     */
+    public static function init(): void {
 		add_filter( 'wpdev_field_save_value', array( __CLASS__, 'decode_safe_transport' ), 5, 3 );
 
 		if ( function_exists( 'is_admin' ) && is_admin() ) {
@@ -53,12 +49,11 @@ class Compat {
 	}
 
 	/**
-	 * Encode raw content into safe transport envelope.
-	 *
-	 * @param string $value Content to encode.
-	 * @return string
-	 */
-	public static function encode( string $value ): string {
+     * Encode raw content into safe transport envelope.
+     *
+     * @param string $value Content to encode.
+     */
+    public static function encode( string $value ): string {
 		return self::ENVELOPE_PREFIX . base64_encode( $value );
 	}
 
@@ -187,14 +182,13 @@ class Compat {
 	}
 
 	/**
-	 * Enqueue minimal vanilla JS client-side encoder on admin edit pages.
-	 *
-	 * @param string $hook Admin screen hook.
-	 * @return void
-	 */
-	public static function enqueue_safe_transport_script( string $hook = '' ): void {
+     * Enqueue minimal vanilla JS client-side encoder on admin edit pages.
+     *
+     * @param string $hook Admin screen hook.
+     */
+    public static function enqueue_safe_transport_script( string $hook = '' ): void {
 		global $pagenow;
-		$current_page = isset( $pagenow ) ? (string) $pagenow : (string) $hook;
+		$current_page = isset( $pagenow ) ? (string) $pagenow : $hook;
 		if ( ! in_array( $current_page, array( 'post.php', 'post-new.php', 'admin.php', 'options.php' ), true ) ) {
 			return;
 		}

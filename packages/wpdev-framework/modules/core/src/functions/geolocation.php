@@ -10,7 +10,7 @@
 defined('ABSPATH') || exit;
 
 /**
- * Get the customers' IP address.
+ * Get the customers' IP address (local request headers only — no external lookup).
  *
  * @since 2.0.0
  * @return string
@@ -18,9 +18,9 @@ defined('ABSPATH') || exit;
 if (!function_exists('wpdev_get_ip')) {
 function wpdev_get_ip() {
 
-	$geolocation = \WPDevFramework\Geolocation::geolocate_ip('', true);
+	$ip = \WPDevFramework\Geolocation::get_ip_address();
 
-	return apply_filters('wpdev_get_ip', $geolocation['ip']);
+	return apply_filters( 'wpdev_get_ip', $ip );
 
 }
 }

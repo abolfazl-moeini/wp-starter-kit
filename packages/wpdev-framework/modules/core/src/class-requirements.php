@@ -270,7 +270,10 @@ class Requirements {
 		 * @since 2.0.0
 		 * @return bool
 		 */
-		$skip_network_activation_check = apply_filters('wpdev_skip_network_active_check', wpdev_is_must_use());
+		$skip_network_activation_check = apply_filters(
+			'wpdev_skip_network_active_check',
+			wpdev_is_must_use() || ( function_exists( 'wpdev_is_library_mode' ) && wpdev_is_library_mode() )
+		);
 
 		if ($skip_network_activation_check) {
 
@@ -284,7 +287,9 @@ class Requirements {
 
 		} // end if;
 
-		if (!is_plugin_active_for_network(WPDEV_PLUGIN_BASENAME) && !self::is_unit_test()) {
+		$host_basename = function_exists( 'wpdev_host_plugin_basename' ) ? wpdev_host_plugin_basename() : WPDEV_PLUGIN_BASENAME;
+
+		if (!is_plugin_active_for_network($host_basename) && !self::is_unit_test()) {
 
 			add_action('admin_notices', array('WPDevFramework\Requirements', 'notice_not_network_active'));
 

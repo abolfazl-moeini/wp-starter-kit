@@ -104,7 +104,6 @@ abstract class OpenSSH extends Progenitor
     /**
      * Convert an EC public key to the appropriate format
      *
-     * @param \phpseclib3\Crypt\EC\BaseCurves\Base $curve
      * @param \phpseclib3\Math\Common\FiniteField\Integer[] $publicKey
      * @param array $options optional
      * @return string
@@ -117,8 +116,7 @@ abstract class OpenSSH extends Progenitor
             if (isset($options['binary']) ? $options['binary'] : self::$binary) {
                 return $key;
             }
-            $key = 'ssh-ed25519 ' . \base64_encode($key) . ' ' . $comment;
-            return $key;
+            return 'ssh-ed25519 ' . \base64_encode($key) . ' ' . $comment;
         }
         $alias = self::getAlias($curve);
         $points = "\x04" . $publicKey[0]->toBytes() . $publicKey[1]->toBytes();
@@ -126,13 +124,11 @@ abstract class OpenSSH extends Progenitor
         if (isset($options['binary']) ? $options['binary'] : self::$binary) {
             return $key;
         }
-        $key = 'ecdsa-sha2-' . $alias . ' ' . \base64_encode($key) . ' ' . $comment;
-        return $key;
+        return 'ecdsa-sha2-' . $alias . ' ' . \base64_encode($key) . ' ' . $comment;
     }
     /**
      * Convert a private key to the appropriate format.
      *
-     * @param \phpseclib3\Math\BigInteger $privateKey
      * @param \phpseclib3\Crypt\EC\Curves\Ed25519 $curve
      * @param \phpseclib3\Math\Common\FiniteField\Integer[] $publicKey
      * @param string $secret optional

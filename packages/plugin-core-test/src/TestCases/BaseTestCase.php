@@ -50,15 +50,13 @@ abstract class BaseTestCase extends \WP_UnitTestCase {
 
 
 	/**
-	 * Set up the expectation that a filter will be applied during the test.
-	 *
-	 * todo: add custom error message support
-	 *
-	 * @param $filter
-	 *
-	 * @return MockObject\Builder\InvocationMocker
-	 */
-	public function expectFilter( $filter, ...$arguments ): MockObject\Builder\InvocationMocker {
+     * Set up the expectation that a filter will be applied during the test.
+     *
+     * todo: add custom error message support
+     *
+     * @param $filter
+     */
+    public function expectFilter( $filter, ...$arguments ): MockObject\Builder\InvocationMocker {
 
 		$mock = $this->getMockBuilder( \stdClass::class )
 		             ->setMethods( [ 'callback' ] )
@@ -72,11 +70,6 @@ abstract class BaseTestCase extends \WP_UnitTestCase {
 		            ->willReturn( $arguments[0] ?? null );
 	}
 
-	/**
-	 * @param string   $action
-	 * @param callable $callback
-	 * @param int      $priority
-	 */
 	public function expectAddAction( string $action, callable $callback, int $priority = 10, string $message = null ) {
 
 		global $wp_filter;

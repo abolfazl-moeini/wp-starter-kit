@@ -1,6 +1,6 @@
 <?php
 /**
- * Contains deprecated functions that get loaded at sunrise.
+ * Contains deprecated functions that load before the main plugin bootstrap.
  *
  * @package WPDev
  * @subpackage Deprecated

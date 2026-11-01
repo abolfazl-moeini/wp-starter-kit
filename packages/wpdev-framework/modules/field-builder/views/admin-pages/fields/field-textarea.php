@@ -7,7 +7,7 @@
 ?>
 <li class="<?php echo esc_attr(trim($field->wrapper_classes)); ?>" <?php echo $field->get_wrapper_html_attributes(); ?>>
 
-  <div class="wpdev-block wpdev-w-full">
+  <div class="wpdev-block wpdev-full">
 
     <?php
 
@@ -21,7 +21,7 @@
 
     ?>
 
-    <textarea class="form-control wpdev-w-full wpdev-my-1 <?php echo esc_attr(trim($field->classes)); ?>" name="<?php echo esc_attr($field->id); ?>" placeholder="<?php echo esc_attr($field->placeholder); ?>" <?php echo $field->get_html_attributes(); ?>><?php echo esc_attr($field->value); ?></textarea>
+    <textarea class="form-control wpdev-full wpdev-mar-y-1 <?php echo esc_attr(trim($field->classes)); ?>" name="<?php echo esc_attr($field->id); ?>" placeholder="<?php echo esc_attr($field->placeholder); ?>" <?php echo $field->get_html_attributes(); ?>><?php echo esc_attr($field->value); ?></textarea>
 
     <?php
 

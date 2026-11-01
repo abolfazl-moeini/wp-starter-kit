@@ -17,4 +17,4 @@ defined('ABSPATH') || exit;
  *
  * @since 1.0.0
  */
-class Meta extends \WPDevFramework\Dependencies\BerlinDB\Database\Meta {} // end class Meta;
+class Meta extends \WPDev\Dependencies\BerlinDB\Database\Meta {} // end class Meta;

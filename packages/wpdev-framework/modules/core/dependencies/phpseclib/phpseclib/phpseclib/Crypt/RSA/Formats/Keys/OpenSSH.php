@@ -64,8 +64,6 @@ abstract class OpenSSH extends Progenitor
     /**
      * Convert a public key to the appropriate format
      *
-     * @param \phpseclib3\Math\BigInteger $n
-     * @param \phpseclib3\Math\BigInteger $e
      * @param array $options optional
      * @return string
      */
@@ -76,18 +74,11 @@ abstract class OpenSSH extends Progenitor
             return $RSAPublicKey;
         }
         $comment = isset($options['comment']) ? $options['comment'] : self::$comment;
-        $RSAPublicKey = 'ssh-rsa ' . \base64_encode($RSAPublicKey) . ' ' . $comment;
-        return $RSAPublicKey;
+        return 'ssh-rsa ' . \base64_encode($RSAPublicKey) . ' ' . $comment;
     }
     /**
      * Convert a private key to the appropriate format.
      *
-     * @param \phpseclib3\Math\BigInteger $n
-     * @param \phpseclib3\Math\BigInteger $e
-     * @param \phpseclib3\Math\BigInteger $d
-     * @param array $primes
-     * @param array $exponents
-     * @param array $coefficients
      * @param string $password optional
      * @param array $options optional
      * @return string

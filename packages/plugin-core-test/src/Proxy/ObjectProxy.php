@@ -41,65 +41,57 @@ class ObjectProxy {
 	}
 
 	/**
-	 * Proxy a property.
-	 *
-	 * @param string $property
-	 * @param mixed  $value
-	 *
-	 * @since 1.0.8
-	 */
-	public function property_set( string $property, $value ): void {
+     * Proxy a property.
+     *
+     * @param mixed  $value
+     * @since 1.0.8
+     */
+    public function property_set( string $property, $value ): void {
 
 		$this->property_stack[ $property ] = $value;
 	}
 
 	/**
-	 * Get proxy property value.
-	 *
-	 * @param string $property
-	 *
-	 * @since 1.0.8
-	 * @return mixed
-	 */
-	public function property_get( string $property ) {
+     * Get proxy property value.
+     *
+     *
+     * @since 1.0.8
+     * @return mixed
+     */
+    public function property_get( string $property ) {
 
 		return $this->property_stack[ $property ] ?? null;
 	}
 
 	/**
-	 * Proxy a method.
-	 *
-	 * @param string $method
-	 * @param mixed  $value
-	 *
-	 * @since 1.0.8
-	 */
-	public function method_set( string $method, $value ): void {
+     * Proxy a method.
+     *
+     * @param mixed  $value
+     * @since 1.0.8
+     */
+    public function method_set( string $method, $value ): void {
 
 		$this->method_stack[ $method ] = $value;
 	}
 
 	/**
-	 * @param string $method
-	 *
-	 * @since 1.0.8
-	 * @return mixed
-	 */
-	public function method_get( string $method ) {
+     *
+     * @since 1.0.8
+     * @return mixed
+     */
+    public function method_get( string $method ) {
 
 		return $this->method_stack[ $method ] ?? null;
 	}
 
 	/**
-	 * Proxy a method.
-	 *
-	 * @param string $method
-	 * @param array  $arguments
-	 *
-	 * @since 1.0.8
-	 * @return mixed
-	 */
-	public function __call( string $method, array $arguments ) {
+     * Proxy a method.
+     *
+     *
+     * @since 1.0.8
+     * @return mixed
+     */
+    public function __call( string $method, array $arguments ) {
 
 		$override = $this->method_get( $method );
 
@@ -112,14 +104,13 @@ class ObjectProxy {
 	}
 
 	/**
-	 * Proxy a property.
-	 *
-	 * @param string $property
-	 *
-	 * @since 1.0.8
-	 * @return mixed
-	 */
-	public function __get( string $property ) {
+     * Proxy a property.
+     *
+     *
+     * @since 1.0.8
+     * @return mixed
+     */
+    public function __get( string $property ) {
 
 		$override = $this->property_get( $property );
 
@@ -127,33 +118,28 @@ class ObjectProxy {
 	}
 
 	/**
-	 * @param string $property
-	 * @param mixed  $value
-	 *
-	 * @since 1.0.8
-	 */
-	public function __set( string $property, $value ) {
+     * @param mixed  $value
+     * @since 1.0.8
+     */
+    public function __set( string $property, $value ) {
 
 		$this->property_set( $property, $value );
 	}
 
 	/**
-	 * @param string $property
-	 *
-	 * @since 1.0.8
-	 * @return bool
-	 */
-	public function __isset( string $property ) {
+     *
+     * @since 1.0.8
+     * @return bool
+     */
+    public function __isset( string $property ) {
 
 		return isset( $this->property_stack[ $property ] );
 	}
 
 	/**
-	 * @param string $property
-	 *
-	 * @since 1.0.8
-	 */
-	public function __unset( string $property ) {
+     * @since 1.0.8
+     */
+    public function __unset( string $property ) {
 
 		unset( $this->property_stack[ $property ] );
 	}

@@ -171,7 +171,7 @@ class Cron {
 			),
 		), $days_before_expiring);
 
-		$memberships = wpdev_get_memberships($query_params);
+		$memberships = apply_filters('wpdev_cron_memberships_query', array(), $query_params);
 
 		/*
 		 * Loop our memberships, triggering
@@ -214,7 +214,7 @@ class Cron {
 			),
 		));
 
-		$memberships = wpdev_get_memberships($query_params);
+		$memberships = apply_filters('wpdev_cron_memberships_query', array(), $query_params);
 
 		/*
 		 * Loop our memberships, triggering
@@ -242,13 +242,11 @@ class Cron {
 	 */
 	public function async_create_renewal_payment($membership_id, $trial = false) {
 
-		if ( ! $this->membership_examples_available()
-			|| ! function_exists( 'wpdev_membership_create_new_payment' )
-			|| ! function_exists( 'wpdev_get_registration_url' ) ) {
+		if ( ! $this->membership_examples_available() ) {
 			return false;
 		}
 
-		$membership = wpdev_get_membership($membership_id);
+		$membership = apply_filters('wpdev_cron_membership_lookup', null, $membership_id);
 
 		if (empty($membership)) {
 
@@ -269,7 +267,13 @@ class Cron {
 
 		if (empty($pending_payment)) {
 
-			$new_payment = wpdev_membership_create_new_payment($membership, false, !$trial);
+			$new_payment = apply_filters('wpdev_cron_create_renewal_payment', null, $membership, false, ! $trial);
+
+			if (empty($new_payment)) {
+
+				return false;
+
+			} // end if;
 
 			/*
 			 * Update the membership status.
@@ -278,9 +282,17 @@ class Cron {
 
 			$saved = $membership->save();
 
+			$registration_url = apply_filters('wpdev_cron_registration_url', '');
+
+			if (empty($registration_url)) {
+
+				return false;
+
+			} // end if;
+
 			$payment_url = add_query_arg(array(
 				'payment' => $new_payment->get_hash(),
-			), wpdev_get_registration_url());
+			), $registration_url);
 
 			$payload = array_merge(
 				array(
@@ -333,7 +345,7 @@ class Cron {
 			),
 		), $grace_period_days);
 
-		$memberships = wpdev_get_memberships($query_params);
+		$memberships = apply_filters('wpdev_cron_memberships_query', array(), $query_params);
 
 		/*
 		 * Loop our memberships, triggering
@@ -363,7 +375,7 @@ class Cron {
 			return false;
 		}
 
-		$membership = wpdev_get_membership($membership_id);
+		$membership = apply_filters('wpdev_cron_membership_lookup', null, $membership_id);
 
 		if (empty($membership)) {
 
@@ -395,7 +407,7 @@ class Cron {
 	 */
 	protected function membership_examples_available() {
 
-		return function_exists( 'wpdev_get_memberships' ) && function_exists( 'wpdev_get_membership' );
+		return (bool) apply_filters('wpdev_cron_memberships_available', false);
 
 	} // end membership_examples_available;
 

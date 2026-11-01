@@ -232,8 +232,7 @@ abstract class Strings
         for ($i = 1; $i < \count($parts); $i += 2) {
             $format .= \substr($parts[$i - 1], 0, -1) . \str_repeat(\substr($parts[$i - 1], -1), $parts[$i]);
         }
-        $format .= $parts[$i - 1];
-        return $format;
+        return $format . $parts[$i - 1];
     }
     /**
      * Convert binary data into bits

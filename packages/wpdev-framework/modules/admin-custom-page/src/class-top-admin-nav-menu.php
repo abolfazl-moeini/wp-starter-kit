@@ -26,12 +26,11 @@ defined('ABSPATH') || exit;
 class Top_Admin_Nav_Menu {
 
 	/**
-	 * Adds the hooks and actions
-	 *
-	 * @since 1.0.0
-	 * @return void
-	 */
-	public function __construct() {
+     * Adds the hooks and actions
+     *
+     * @since 1.0.0
+     */
+    public function __construct() {
 
 		add_action('admin_bar_menu', array($this, 'add_top_bar_menus'), 50);
 
@@ -122,8 +121,6 @@ class Top_Admin_Nav_Menu {
 		 * Add the sub-menus.
 		 */
 		$settings_tabs = Settings::get_instance()->get_sections();
-
-		$has_addons = false;
 
 		foreach ($settings_tabs as $tab => $tab_info) {
 

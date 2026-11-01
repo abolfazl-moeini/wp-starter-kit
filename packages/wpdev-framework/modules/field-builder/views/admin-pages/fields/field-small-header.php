@@ -23,7 +23,7 @@
 
     <?php if ($field->desc) : ?>
 
-      <span class="wpdev-my-1 wpdev-inline-block wpdev-text-xs"><?php echo $field->desc; ?></span>
+      <span class="wpdev-mar-y-1 wpdev-inline-block wpdev-type-xs"><?php echo $field->desc; ?></span>
 
     <?php endif; ?>
 

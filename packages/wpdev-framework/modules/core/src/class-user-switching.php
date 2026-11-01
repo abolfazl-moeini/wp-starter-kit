@@ -28,7 +28,12 @@ class User_Switching {
 	 */
 	public function __construct() {
 
-		add_action('plugins_loaded', array($this, 'register_forms'));
+		add_action( 'wpdev_register_forms', array( $this, 'register_forms' ) );
+
+		// Recovery if this boots after the forms hook already fired.
+		if ( did_action( 'wpdev_register_forms' ) ) {
+			$this->register_forms();
+		}
 
 	} // end __construct;
 	/**
@@ -51,9 +56,17 @@ class User_Switching {
 	 */
 	public function register_forms() {
 
-		wpdev_register_form('install_user_switching', array(
-			'render' => array($this, 'render_install_user_switching'),
-		));
+		if ( ! function_exists( 'wpdev_register_form' ) ) {
+			return;
+		}
+
+		wpdev_register_form(
+			'install_user_switching',
+			array(
+				'render'     => array( $this, 'render_install_user_switching' ),
+				'capability' => 'manage_network',
+			)
+		);
 
 	} // end register_forms;
 
@@ -76,8 +89,8 @@ class User_Switching {
 			'link'  => array(
 				'type'            => 'link',
 				'display_value'   => __('Install User Switching', 'wpdev'),
-				'classes'         => 'button button-primary wpdev-w-full',
-				'wrapper_classes' => 'wpdev-items-end wpdev-text-center wpdev-bg-gray-100',
+				'classes'         => 'button button-primary wpdev-full',
+				'wrapper_classes' => 'wpdev-items-end wpdev-type-center wpdev-surface-gray-100',
 				'html_attr'       => array(
 					'href' => add_query_arg(array(
 						's'    => 'user-switching',
@@ -91,8 +104,8 @@ class User_Switching {
 
 		$form = new \WPDevFramework\UI\Form('install_user_switching', $fields, array(
 			'views'                 => 'admin-pages/fields',
-			'classes'               => 'wpdev-modal-form wpdev-widget-list wpdev-striped wpdev-m-0 wpdev-mt-0',
-			'field_wrapper_classes' => 'wpdev-w-full wpdev-box-border wpdev-items-center wpdev-flex wpdev-justify-between wpdev-p-4 wpdev-m-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
+			'classes'               => 'wpdev-modal-form wpdev-widget-list wpdev-striped wpdev-mar-0 wpdev-mar-t-0',
+			'field_wrapper_classes' => 'wpdev-full wpdev-box-border wpdev-items-center wpdev-row wpdev-justify-between wpdev-pad-4 wpdev-mar-0 wpdev-border-t wpdev-border-l-0 wpdev-border-r-0 wpdev-border-b-0 wpdev-border-gray-300 wpdev-border-solid',
 			'html_attr'             => array(),
 		));
 

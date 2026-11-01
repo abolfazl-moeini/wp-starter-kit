@@ -7,7 +7,7 @@
 ?>
 <li class="<?php echo esc_attr(trim($field->wrapper_classes)); ?>" <?php echo $field->get_wrapper_html_attributes(); ?>>
 
-  <div class="wpdev-block wpdev-w-full <?php echo esc_attr($field->classes); ?>">
+  <div class="wpdev-block wpdev-full <?php echo esc_attr($field->classes); ?>">
 
     <?php
 
@@ -30,8 +30,8 @@
      */
     $form = new \WPDevFramework\UI\Form($field->id, $field->fields, array(
       'views'                 => 'admin-pages/fields',
-      'classes'               => trim('wpdev-flex '.esc_attr($field->classes)),
-      'field_wrapper_classes' => 'wpdev-bg-transparent',
+      'classes'               => trim('wpdev-row '.esc_attr($field->classes)),
+      'field_wrapper_classes' => 'wpdev-surface-transparent',
     ));
 
     $form->render();
@@ -40,7 +40,7 @@
 
     <?php if ($field->desc) : ?>
 
-      <div class="wpdev-mt-2 wpdev-block wpdev-bg-gray-100 wpdev-rounded wpdev-border-solid wpdev-border-gray-400 wpdev-border-t wpdev-border-l wpdev-border-b wpdev-border-r wpdev-text-2xs wpdev-py-2 wpdev-p-2">
+      <div class="wpdev-mar-t-2 wpdev-block wpdev-surface-gray-100 wpdev-radius wpdev-border-solid wpdev-border-gray-400 wpdev-border-t wpdev-border-l wpdev-border-b wpdev-border-r wpdev-type-2xs wpdev-pad-y-2 wpdev-pad-2">
 
         <?php echo $field->desc; ?>
 

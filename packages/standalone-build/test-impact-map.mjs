@@ -136,7 +136,10 @@ export function resolveImpactedTests({
         continue;
       }
 
-      const mapped = TEST_DEPENDENCY_GRAPH[key];
+      const mapped = TEST_DEPENDENCY_GRAPH[key] || (key.startsWith("themes/") ? [
+        "settings-field-inventory.test.mjs",
+        "validate-settings-ownership-review.test.mjs",
+      ] : null);
       if (mapped) {
         for (const t of mapped) {
           if (allTestFiles.includes(t)) {

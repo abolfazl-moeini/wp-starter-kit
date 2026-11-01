@@ -15,10 +15,7 @@ final class FailSoftBoundary {
     /**
      * Safely execute a renderer callback.
      *
-     * @param callable $renderer
-     * @param DashboardContextV1 $context
      * @param string $component_id Identifier for logging
-     * @return void
      */
     public static function execute(callable $renderer, DashboardContextV1 $context, string $component_id): void {
         try {

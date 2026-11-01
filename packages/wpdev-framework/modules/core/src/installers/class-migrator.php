@@ -9,8 +9,8 @@
 
 namespace WPDevFramework\Installers;
 
-use \WPDevFramework\Dependencies\Psr\Log\LogLevel;
-use \WPDevFramework\Dependencies\Ifsnop\Mysqldump\Mysqldump as MySQLDump;
+use \WPDev\Dependencies\Psr\Log\LogLevel;
+use \WPDev\Dependencies\Ifsnop\Mysqldump\Mysqldump as MySQLDump;
 use \WPDevFramework\UI\Template_Previewer;
 use \WPDevFramework\Models\Checkout_Form;
 use \WPDevFramework\Checkout\Legacy_Checkout;
@@ -1033,12 +1033,7 @@ class Migrator extends Base_Installer {
 
 		global $wpdb;
 
-		/*
-		 * Load dependencies.
-		 */
-		wpdev_require_public_function( 'product' );
-
-		if ( ! function_exists( 'wpdev_create_product' ) ) {
+		if ( ! $this->entity_handler_available( 'product' ) ) {
 			return;
 		}
 
@@ -1071,7 +1066,9 @@ class Migrator extends Base_Installer {
 			/*
 			 * Skip errors if a plan exists.
 			 */
-			if ( function_exists( 'wpdev_get_product_by_slug' ) && wpdev_get_product_by_slug( $plan->slug ) ) {
+			$existing_product = apply_filters( 'wpdev_entity_lookup_by', null, 'slug', $plan->slug, 'product' );
+
+			if ( $existing_product ) {
 
 				continue;
 
@@ -1214,7 +1211,13 @@ class Migrator extends Base_Installer {
 			/*
 			 * Creates product
 			 */
-			$product = wpdev_create_product($product_data);
+			$product = apply_filters( 'wpdev_entity_create', null, $product_data, 'product' );
+
+			if ( null === $product ) {
+
+				throw new \Exception( __( 'Product migration requires the WPDev Examples plugin.', 'wpdev' ) );
+
+			} // end if;
 
 			if (is_wp_error($product)) {
 
@@ -1242,7 +1245,9 @@ class Migrator extends Base_Installer {
 
 				$force_template = get_post_meta($plan->ID, 'wpdev_site_template', true);
 
-				if ($force_template && wpdev_get_site($force_template)) {
+				$force_template_site = apply_filters( 'wpdev_entity_lookup', null, $force_template, 'site' );
+
+				if ($force_template && $force_template_site) {
 
 					$site_template_mode = 'assign_template';
 
@@ -1267,7 +1272,7 @@ class Migrator extends Base_Installer {
 			 */
 			$site_templates_limit = array();
 
-			$available_site_templates = wpdev_get_site_templates();
+			$available_site_templates = apply_filters( 'wpdev_catalog_list', array(), array(), 'site_templates' );
 
 			foreach ($available_site_templates as $site_template) {
 
@@ -1517,6 +1522,20 @@ class Migrator extends Base_Installer {
 	} // end maybe_run_in_parallel;
 
 	/**
+	 * Whether an example module registered a handler for the given context.
+	 *
+	 * @since 2.8.1
+	 *
+	 * @param string $context Handler context (e.g. product, customer).
+	 * @return bool
+	 */
+	protected function entity_handler_available( $context ) {
+
+		return (bool) apply_filters( 'wpdev_entity_handler_available', false, $context );
+
+	} // end entity_handler_available;
+
+	/**
 	 * Builds an SQL limit clause to be used inside the installers.
 	 *
 	 * @since 2.0.7
@@ -1577,12 +1596,7 @@ class Migrator extends Base_Installer {
 		 */
 		$limit_clause = $this->build_limit_clause();
 
-		/*
-		 * Load dependencies.
-		 */
-		wpdev_require_public_function( 'customer' );
-
-		if ( ! function_exists( 'wpdev_create_customer' ) ) {
+		if ( ! $this->entity_handler_available( 'customer' ) ) {
 			return;
 		}
 
@@ -1601,19 +1615,27 @@ class Migrator extends Base_Installer {
 
 		foreach ($users as $user) {
 
-			if (wpdev_get_customer_by_user_id($user->user_id)) {
+			$existing_customer = apply_filters( 'wpdev_entity_lookup_by', null, 'user_id', $user->user_id, 'customer' );
+
+			if ( $existing_customer ) {
 
 				continue;
 
 			} // end if;
 
-			$customer = wpdev_create_customer(array(
+			$customer = apply_filters( 'wpdev_entity_create', null, array(
 				'user_id'            => $user->user_id,
 				'email_verification' => 'verified',
 				'vip'                => false,
 				'date_registered'    => $user->created_at,
 				'last_login'         => $user->created_at,
-			));
+			), 'customer' );
+
+			if ( null === $customer ) {
+
+				throw new \Exception( __( 'Customer migration requires the WPDev Examples plugin.', 'wpdev' ) );
+
+			} // end if;
 
 			if (is_wp_error($customer)) {
 
@@ -1663,14 +1685,9 @@ class Migrator extends Base_Installer {
 		 */
 		$limit_clause = $this->build_limit_clause();
 
-		/*
-		 * Load dependencies.
-		 */
 		wpdev_require_public_function( 'date' );
-		wpdev_require_public_function( 'customer' );
-		wpdev_require_public_function( 'membership' );
 
-		if ( ! function_exists( 'wpdev_create_membership' ) ) {
+		if ( ! $this->entity_handler_available( 'membership' ) ) {
 			return;
 		}
 
@@ -1704,15 +1721,17 @@ class Migrator extends Base_Installer {
 			/*
 			 * If we have already migrated, no need to do it again.
 			 */
-			if (wpdev_get_membership_by('migrated_from_id', $subscription->ID)) {
+			$existing_membership = apply_filters( 'wpdev_entity_lookup_by', null, 'migrated_from_id', $subscription->ID, 'membership' );
+
+			if ( $existing_membership ) {
 
 				continue;
 
 			} // end if;
 
-			$customer = wpdev_get_customer_by_user_id($subscription->user_id);
+			$customer = apply_filters( 'wpdev_entity_lookup_by', null, 'user_id', $subscription->user_id, 'customer' );
 
-			$product = wpdev_call_if_function_exists( 'wpdev_get_product_by', null, 'migrated_from_id', absint( $subscription->plan_id ) );
+			$product = apply_filters( 'wpdev_entity_lookup_by', null, 'migrated_from_id', absint( $subscription->plan_id ), 'product' );
 
 			$v1_subscription_meta = (object) ($subscription->meta ? maybe_unserialize($subscription->meta) : array());
 
@@ -1918,7 +1937,13 @@ class Migrator extends Base_Installer {
 
 			} // end if;
 
-			$membership = wpdev_create_membership($membership_data);
+			$membership = apply_filters( 'wpdev_entity_create', null, $membership_data, 'membership' );
+
+			if ( null === $membership ) {
+
+				throw new \Exception( __( 'Membership migration requires the WPDev Examples plugin.', 'wpdev' ) );
+
+			} // end if;
 
 			if (is_wp_error($membership)) {
 
@@ -1948,7 +1973,7 @@ class Migrator extends Base_Installer {
 
 		global $wpdb;
 
-		if ( ! function_exists( 'wpdev_create_payment' ) ) {
+		if ( ! $this->entity_handler_available( 'payment' ) ) {
 			return;
 		}
 
@@ -1970,14 +1995,6 @@ class Migrator extends Base_Installer {
 		 * Calculates the limit clause.
 		 */
 		$limit_clause = $this->build_limit_clause();
-
-		/*
-		 * Load dependencies.
-		 */
-		wpdev_require_public_function( 'customer' );
-		wpdev_require_public_function( 'membership' );
-		wpdev_require_public_function( 'tax' );
-		wpdev_require_public_function( 'payment' );
 
 		// phpcs:disable
 		$transactions = $wpdb->get_results(
@@ -2016,7 +2033,9 @@ class Migrator extends Base_Installer {
 			/*
 			 * If we have already migrated, no need to do it again.
 			 */
-			if (wpdev_get_payment_by('migrated_from_id', $transaction->id)) {
+			$existing_payment = apply_filters( 'wpdev_entity_lookup_by', null, 'migrated_from_id', $transaction->id, 'payment' );
+
+			if ( $existing_payment ) {
 
 				continue;
 
@@ -2028,15 +2047,15 @@ class Migrator extends Base_Installer {
 
 			} // end if;
 
-			$membership = wpdev_get_membership_by('user_id', $transaction->user_id);
+			$membership = apply_filters( 'wpdev_entity_lookup_by', null, 'user_id', $transaction->user_id, 'membership' );
 
-			$customer = wpdev_get_customer_by_user_id($transaction->user_id);
+			$customer = apply_filters( 'wpdev_entity_lookup_by', null, 'user_id', $transaction->user_id, 'customer' );
 
 			$product = '';
 
 			if (isset($transaction->plan_id)) {
 
-				$product = wpdev_call_if_function_exists( 'wpdev_get_product_by', null, 'migrated_from_id', $transaction->plan_id );
+				$product = apply_filters( 'wpdev_entity_lookup_by', null, 'migrated_from_id', $transaction->plan_id, 'product' );
 
 			} // end if;
 
@@ -2092,7 +2111,13 @@ class Migrator extends Base_Installer {
 
 			} // end if;
 
-			$payment = wpdev_create_payment($payment_data);
+			$payment = apply_filters( 'wpdev_entity_create', null, $payment_data, 'payment' );
+
+			if ( null === $payment ) {
+
+				throw new \Exception( __( 'Payment migration requires the WPDev Examples plugin.', 'wpdev' ) );
+
+			} // end if;
 
 			if (is_wp_error($payment)) {
 
@@ -2115,12 +2140,7 @@ class Migrator extends Base_Installer {
 
 		global $wpdb;
 
-		/*
-		 * Load dependencies.
-		 */
-		wpdev_require_public_function( 'discount-code' );
-
-		if ( ! function_exists( 'wpdev_get_discount_code_by_code' ) || ! function_exists( 'wpdev_create_discount_code' ) ) {
+		if ( ! $this->entity_handler_available( 'discount_code' ) ) {
 			return;
 		}
 
@@ -2143,7 +2163,9 @@ class Migrator extends Base_Installer {
 			/*
 			 * If we have already migrated, no need to do it again.
 			 */
-			if (wpdev_get_discount_code_by_code($coupon->slug)) {
+			$existing_discount_code = apply_filters( 'wpdev_entity_lookup_by', null, 'code', $coupon->slug, 'discount_code' );
+
+			if ( $existing_discount_code ) {
 
 				continue;
 
@@ -2169,7 +2191,7 @@ class Migrator extends Base_Installer {
 
 				foreach ($allowed_plans as $key => $plan_id) {
 
-					$product = wpdev_call_if_function_exists( 'wpdev_get_product_by', null, 'migrated_from_id', $plan_id );
+					$product = apply_filters( 'wpdev_entity_lookup_by', null, 'migrated_from_id', $plan_id, 'product' );
 
 					if ($product) {
 
@@ -2218,7 +2240,13 @@ class Migrator extends Base_Installer {
 
 			} // end if;
 
-			$discount_code = wpdev_create_discount_code($discount_code_data);
+			$discount_code = apply_filters( 'wpdev_entity_create', null, $discount_code_data, 'discount_code' );
+
+			if ( null === $discount_code ) {
+
+				throw new \Exception( __( 'Discount code migration requires the WPDev Examples plugin.', 'wpdev' ) );
+
+			} // end if;
 
 			if (is_wp_error($discount_code)) {
 
@@ -2258,14 +2286,7 @@ class Migrator extends Base_Installer {
 	 * @return void
 	 */
 	protected function _install_site_templates() {
-		/*
-		 * Load dependencies.
-		 */
-		wpdev_require_public_function( 'customer' );
-		wpdev_require_public_function( 'membership' );
-		wpdev_require_public_function( 'site' );
-
-		if ( ! function_exists( 'wpdev_get_site' ) ) {
+		if ( ! $this->entity_handler_available( 'site' ) ) {
 			return;
 		}
 
@@ -2307,7 +2328,7 @@ class Migrator extends Base_Installer {
 
 			foreach ($saved_templates as $template_id) {
 
-				$site_template = wpdev_get_site($template_id);
+				$site_template = apply_filters( 'wpdev_entity_lookup', null, $template_id, 'site' );
 
 				if (!$site_template) {
 
@@ -2345,7 +2366,13 @@ class Migrator extends Base_Installer {
 					 */
 					$image_url = $this->maybe_get_screenshot_url($site_template->get_id());
 
-					$attachment_id = \WPDevFramework\Helpers\Screenshot::save_image_from_url($image_url);
+					$attachment_id = false;
+
+					if ( class_exists( '\WPDevFramework\Helpers\Screenshot', false ) ) {
+						$attachment_id = \WPDevFramework\Helpers\Screenshot::save_image_from_url( $image_url );
+					} else {
+						$attachment_id = apply_filters( 'wpdev_save_screenshot_attachment', false, $image_url );
+					}
 
 					if ($attachment_id) {
 
@@ -2417,12 +2444,7 @@ class Migrator extends Base_Installer {
 
 		global $wpdb;
 
-		/*
-		 * Load dependencies.
-		 */
-		wpdev_require_public_function( 'domain' );
-
-		if ( ! function_exists( 'wpdev_create_domain' ) ) {
+		if ( ! $this->entity_handler_available( 'domain' ) ) {
 			return;
 		}
 
@@ -2443,7 +2465,7 @@ class Migrator extends Base_Installer {
 
 		foreach ($domains as $domain) {
 
-			$existing_domain = wpdev_get_domain_by_domain($domain->name);
+			$existing_domain = apply_filters( 'wpdev_entity_lookup_by', null, 'domain', $domain->name, 'domain' );
 
 			if ($existing_domain) {
 
@@ -2451,14 +2473,20 @@ class Migrator extends Base_Installer {
 
 			} // end if;
 
-			$domain = wpdev_create_domain(array(
+			$domain = apply_filters( 'wpdev_entity_create', null, array(
 				'stage'          => 'done',
 				'domain'         => $domain->name,
 				'blog_id'        => $domain->blog_id,
 				'active'         => $domain->active,
 				'primary_domain' => true,
 				'secure'         => $https,
-			));
+			), 'domain' );
+
+			if ( null === $domain ) {
+
+				throw new \Exception( __( 'Domain migration requires the WPDev Examples plugin.', 'wpdev' ) );
+
+			} // end if;
 
 			if (is_wp_error($domain)) {
 
@@ -2483,13 +2511,13 @@ class Migrator extends Base_Installer {
 		 */
 		require_once dirname( __DIR__ ) . '/deprecated/deprecated.php';
 		wpdev_require_public_function( 'legacy' );
-		wpdev_require_public_function( 'checkout-form' );
-		wpdev_require_public_function( 'site' );
 
 		/*
 			* Skip errors if a checkout form exists.
 			*/
-		if (wpdev_get_checkout_form_by_slug('main-form')) {
+		$existing_checkout_form = apply_filters( 'wpdev_entity_lookup_by', null, 'slug', 'main-form', 'checkout_form' );
+
+		if ( $existing_checkout_form ) {
 
 			return;
 
@@ -2502,11 +2530,17 @@ class Migrator extends Base_Installer {
 			'settings'          => array(),
 		);
 
-		if ( ! function_exists( 'wpdev_create_checkout_form' ) ) {
+		if ( ! $this->entity_handler_available( 'checkout_form' ) ) {
 			return;
 		}
 
-		$status = wpdev_create_checkout_form($checkout_form);
+		$status = apply_filters( 'wpdev_entity_create', null, $checkout_form, 'checkout_form' );
+
+		if ( null === $status ) {
+
+			throw new \Exception( __( 'Checkout form migration requires the WPDev Examples plugin.', 'wpdev' ) );
+
+		} // end if;
 
 		if (is_wp_error($status)) {
 
@@ -2620,10 +2654,7 @@ class Migrator extends Base_Installer {
 
 		global $wpdb;
 
-		wpdev_require_public_function( 'webhook' );
-		wpdev_require_public_function( 'broadcast' );
-
-		if ( ! function_exists( 'wpdev_create_broadcast' ) ) {
+		if ( ! $this->entity_handler_available( 'broadcast' ) ) {
 			return;
 		}
 
@@ -2651,7 +2682,7 @@ class Migrator extends Base_Installer {
 
 		foreach ($broadcasts as $broadcast) {
 
-			$existing_broadcast = wpdev_get_broadcast_by('migrated_from_id', $broadcast->ID);
+			$existing_broadcast = apply_filters( 'wpdev_entity_lookup_by', null, 'migrated_from_id', $broadcast->ID, 'broadcast' );
 
 			if ($existing_broadcast) {
 
@@ -2670,7 +2701,7 @@ class Migrator extends Base_Installer {
 
 			$customer_targets = array_map(function($user_id) {
 
-				$customer = wpdev_get_customer_by_user_id($user_id);
+				$customer = apply_filters( 'wpdev_entity_lookup_by', null, 'user_id', $user_id, 'customer' );
 
 				if ($customer) {
 
@@ -2684,7 +2715,7 @@ class Migrator extends Base_Installer {
 
 			$product_targets = array_map(function($old_plan_id) {
 
-				$product = wpdev_call_if_function_exists( 'wpdev_get_product_by', null, 'migrated_from_id', $old_plan_id );
+				$product = apply_filters( 'wpdev_entity_lookup_by', null, 'migrated_from_id', $old_plan_id, 'product' );
 
 				if ($product) {
 
@@ -2701,7 +2732,7 @@ class Migrator extends Base_Installer {
 				'products'  => array_filter($product_targets),
 			);
 
-			$broadcast = wpdev_create_broadcast(array(
+			$broadcast = apply_filters( 'wpdev_entity_create', null, array(
 				'name'             => $broadcast->post_title,
 				'content'          => $broadcast->post_content,
 				'type'             => $new_type,
@@ -2711,7 +2742,13 @@ class Migrator extends Base_Installer {
 				'message_targets'  => $targets,
 				'migrated_from_id' => $broadcast->ID,
 				'skip_validation'  => true,
-			));
+			), 'broadcast' );
+
+			if ( null === $broadcast ) {
+
+				throw new \Exception( __( 'Broadcast migration requires the WPDev Examples plugin.', 'wpdev' ) );
+
+			} // end if;
 
 			if (is_wp_error($broadcast)) {
 
@@ -2734,9 +2771,7 @@ class Migrator extends Base_Installer {
 
 		global $wpdb;
 
-		wpdev_require_public_function( 'webhook' );
-
-		if ( ! function_exists( 'wpdev_create_webhook' ) ) {
+		if ( ! $this->entity_handler_available( 'webhook' ) ) {
 			return;
 		}
 
@@ -2756,7 +2791,7 @@ class Migrator extends Base_Installer {
 
 		foreach ($webhooks as $webhook) {
 
-			$webhook = wpdev_create_webhook(array(
+			$webhook = apply_filters( 'wpdev_entity_create', null, array(
 				'name'             => $webhook->post_title,
 				'migrated_from_id' => $webhook->ID,
 				'webhook_url'      => get_post_meta($webhook->ID, 'wpdev_url', true),
@@ -2764,7 +2799,13 @@ class Migrator extends Base_Installer {
 				'active'           => (bool) get_post_meta($webhook->ID, 'wpdev_active', true),
 				'date_created'     => $webhook->post_date,
 				'date_modified'    => $webhook->post_modified,
-			));
+			), 'webhook' );
+
+			if ( null === $webhook ) {
+
+				throw new \Exception( __( 'Webhook migration requires the WPDev Examples plugin.', 'wpdev' ) );
+
+			} // end if;
 
 			if (is_wp_error($webhook)) {
 

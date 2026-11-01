@@ -43,7 +43,12 @@ class Ajax_Tab_Loader {
 			return;
 		}
 
-		add_action( 'wp_ajax_wpdev_load_admin_tab', array( __CLASS__, 'handle' ) );
+		$callback = array( __CLASS__, 'handle' );
+		if ( function_exists( 'wpdev_wrap_ajax_handler_callback' ) ) {
+			$callback = wpdev_wrap_ajax_handler_callback( $callback );
+		}
+
+		add_action( 'wp_ajax_wpdev_load_admin_tab', $callback );
 
 	} // end boot;
 

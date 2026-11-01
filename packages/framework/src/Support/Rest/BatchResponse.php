@@ -18,7 +18,6 @@ final class BatchResponse
      * original request via `extra.cacheKey`.
      *
      * @param mixed  $data
-     * @param string $cacheKey
      */
     public static function wrap($data, string $cacheKey): WP_REST_Response
     {
@@ -32,7 +31,6 @@ final class BatchResponse
      * Alias for {@see BatchResponse::wrap()} used in integration docs/tests.
      *
      * @param mixed  $data
-     * @param string $cacheKey
      */
     public static function forCacheKey($data, string $cacheKey): WP_REST_Response
     {

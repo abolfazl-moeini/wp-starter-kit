@@ -11,7 +11,7 @@ namespace WPDevFramework\Modules\FieldBuilder\Adapters;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Adapter between wpdev-checkout Signup_Field classes and field-builder views.
+ * Adapter between checkout signup field classes and field-builder views.
  */
 class Checkout_Signup_Field_Adapter {
 

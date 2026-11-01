@@ -1,7 +1,7 @@
 
-      <div id="general" data-type="heading" class="wpdev-bg-gray-100 wpdev--mt-1 wpdev--mx-3 wpdev-p-4 wpdev-border-solid wpdev-border-b wpdev-border-l-0 wpdev-border-r-0 wpdev-border-t-0 wpdev-border-gray-300">
-        <h3 class="wpdev-m-0 wpdev-p-0 wpdev-uppercase wpdev-text-gray-600 wpdev-text-sm wpdev-tracking-wide">General Options</h3>
-        <p class="wpdev-m-0 wpdev-p-0 wpdev-text-gray-600">Here we define some of the fundamental settings of the plugin.</p>
+      <div id="general" data-type="heading" class="wpdev-surface-gray-100 wpdev--mt-1 wpdev--mx-3 wpdev-pad-4 wpdev-border-solid wpdev-border-b wpdev-border-l-0 wpdev-border-r-0 wpdev-border-t-0 wpdev-border-gray-300">
+        <h3 class="wpdev-mar-0 wpdev-pad-0 wpdev-uppercase wpdev-type-gray-600 wpdev-type-sm wpdev-tracking-wide">General Options</h3>
+        <p class="wpdev-mar-0 wpdev-pad-0 wpdev-type-gray-600">Here we define some of the fundamental settings of the plugin.</p>
       </div>
 
       <table class="form-table">
@@ -25,9 +25,9 @@
         </tbody>
       </table>
 
-       <div id="general" data-type="heading" class="wpdev-bg-gray-100 wpdev--mt-1 wpdev--mx-3 wpdev-p-4 wpdev-border-solid wpdev-border-b wpdev-border-l-0 wpdev-border-r-0 wpdev-border-t wpdev-border-gray-300">
-        <h3 class="wpdev-m-0 wpdev-p-0 wpdev-uppercase wpdev-text-gray-600 wpdev-text-sm wpdev-tracking-wide">Currency Options</h3>
-        <p class="wpdev-m-0 wpdev-p-0 wpdev-text-gray-600">The following options affect how prices are displayed on the frontend, the backend and in reports.</p>
+       <div id="general" data-type="heading" class="wpdev-surface-gray-100 wpdev--mt-1 wpdev--mx-3 wpdev-pad-4 wpdev-border-solid wpdev-border-b wpdev-border-l-0 wpdev-border-r-0 wpdev-border-t wpdev-border-gray-300">
+        <h3 class="wpdev-mar-0 wpdev-pad-0 wpdev-uppercase wpdev-type-gray-600 wpdev-type-sm wpdev-tracking-wide">Currency Options</h3>
+        <p class="wpdev-mar-0 wpdev-pad-0 wpdev-type-gray-600">The following options affect how prices are displayed on the frontend, the backend and in reports.</p>
       </div>
 
       <table class="form-table">

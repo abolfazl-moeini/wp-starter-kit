@@ -13,18 +13,12 @@ if ( !class_exists('Puc_v4p11_Plugin_Package', false) ):
 		protected $pluginAbsolutePath = '';
 
 		/**
-		 * @var string Plugin basename.
-		 */
-		private $pluginFile;
-
-		/**
 		 * @var string|null
 		 */
-		private $cachedInstalledVersion = null;
+		private $cachedInstalledVersion;
 
 		public function __construct($pluginAbsolutePath, $updateChecker) {
 			$this->pluginAbsolutePath = $pluginAbsolutePath;
-			$this->pluginFile = plugin_basename($this->pluginAbsolutePath);
 
 			parent::__construct($updateChecker);
 

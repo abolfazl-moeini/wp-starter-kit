@@ -9,7 +9,7 @@
 
 namespace WPDevFramework\Helpers\Validation_Rules;
 
-use WPDevFramework\Dependencies\Rakit\Validation\Rule;
+use WPDev\Dependencies\Rakit\Validation\Rule;
 
 // Exit if accessed directly
 defined('ABSPATH') || exit;

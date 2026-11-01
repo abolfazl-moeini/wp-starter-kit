@@ -21,38 +21,21 @@ class Core_Updates {
 
 	use \WPDevFramework\Traits\Singleton;
 
-	/**
-	 * @var string
-	 */
 	protected string $cache_key = 'wpdev_core_update';
 
-	/**
-	 * @var string
-	 */
 	protected string $plugin_slug;
 
 	/**
-	 * Use a local cache to avoid multiple requests to the API.
-	 *
-	 * Only disable this for debugging
-	 *
-	 * @var boolean
-	 */
-	protected bool $cache_allowed = true;
+     * Use a local cache to avoid multiple requests to the API.
+     *
+     * Only disable this for debugging
+     */
+    protected bool $cache_allowed = true;
 
-	/**
-	 * @var string
-	 */
 	protected string $version;
 
-	/**
-	 * @var string
-	 */
 	protected string $plugin_id;
 
-	/**
-	 * @var string
-	 */
 	protected string $plugin_url = 'https://wpdev.ir';
 
 	/**

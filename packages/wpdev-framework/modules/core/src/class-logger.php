@@ -14,8 +14,8 @@ namespace WPDevFramework;
 // Exit if accessed directly
 defined('ABSPATH') || exit;
 
-use WPDevFramework\Dependencies\Psr\Log\AbstractLogger;
-use WPDevFramework\Dependencies\Psr\Log\LogLevel;
+use WPDev\Dependencies\Psr\Log\AbstractLogger;
+use WPDev\Dependencies\Psr\Log\LogLevel;
 
 /**
  * WPDev Logger

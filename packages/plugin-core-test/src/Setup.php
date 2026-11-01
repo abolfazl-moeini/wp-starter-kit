@@ -79,16 +79,14 @@ class Setup {
 	}
 
 	/**
-	 * Fix Wrong Plugin URL.
-	 *
-	 * @hooked plugins_url
-	 *
-	 * @param string $url
-	 *
-	 * @since  1.0.0
-	 * @return string
-	 */
-	public function plugin_url( string $url ): string {
+     * Fix Wrong Plugin URL.
+     *
+     * @hooked plugins_url
+     *
+     *
+     * @since  1.0.0
+     */
+    public function plugin_url( string $url ): string {
 
 		if ( preg_match( '/\/' . basename( PLUGIN_ROOT ) . '(.*?)$/', $url, $match ) ) {
 
@@ -122,14 +120,13 @@ class Setup {
 	}
 
 	/**
-	 * Prevent halt running scripts.
-	 *
-	 * @hooked WPDev/Exit
-	 *
-	 * @since  1.0.0
-	 * @return bool
-	 */
-	public function bs_exist(): bool {
+     * Prevent halt running scripts.
+     *
+     * @hooked WPDev/Exit
+     *
+     * @since  1.0.0
+     */
+    public function bs_exist(): bool {
 
 		$GLOBALS['bs_exit_status'] = true;
 

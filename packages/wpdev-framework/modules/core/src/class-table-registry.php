@@ -10,6 +10,10 @@ namespace WPDevFramework\Core;
 
 defined( 'ABSPATH' ) || exit;
 
+if ( class_exists( __NAMESPACE__ . '\Table_Registry', false ) ) {
+	return;
+}
+
 /**
  * Stores table factory callables keyed by Table_Loader property name.
  */

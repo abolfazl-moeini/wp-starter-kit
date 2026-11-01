@@ -39,7 +39,9 @@ class Settings_Write_Lock {
 		global $wpdb;
 
 		if ( ! is_object( $wpdb ) || ! method_exists( $wpdb, 'prepare' ) || ! method_exists( $wpdb, 'get_var' ) ) {
-			do_action( 'wpdev_option_lock_unavailable', $option_name, 'database-unavailable' );
+			if ( function_exists( 'do_action' ) ) {
+				do_action( 'wpdev_option_lock_unavailable', $option_name, 'database-unavailable' );
+			}
 
 			return false;
 		}
@@ -62,7 +64,9 @@ class Settings_Write_Lock {
 		);
 
 		if ( ! $acquired ) {
-			do_action( 'wpdev_option_lock_unavailable', $option_name, $context );
+			if ( function_exists( 'do_action' ) ) {
+				do_action( 'wpdev_option_lock_unavailable', $option_name, $context );
+			}
 
 			return false;
 		}
@@ -87,8 +91,7 @@ class Settings_Write_Lock {
 			return (bool) wpdev_uses_site_admin_context();
 		}
 
-		return function_exists( 'wpdev_playground_uses_site_admin_context' )
-			&& wpdev_playground_uses_site_admin_context();
+		return false;
 
 	} // end uses_site_context;
 }

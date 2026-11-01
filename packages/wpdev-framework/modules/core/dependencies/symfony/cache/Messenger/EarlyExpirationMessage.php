@@ -38,12 +38,12 @@ final class EarlyExpirationMessage
         } elseif (!\is_array($callback)) {
             $callback = (string) $callback;
         } elseif (!\is_object($callback[0])) {
-            $callback = [(string) $callback[0], (string) $callback[1]];
+            $callback = [$callback[0], $callback[1]];
         } else {
             if (null === ($id = $reverseContainer->getId($callback[0]))) {
                 return null;
             }
-            $callback = ['@' . $id, (string) $callback[1]];
+            $callback = ['@' . $id, $callback[1]];
         }
         return new self($item, $pool, $callback);
     }

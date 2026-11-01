@@ -198,7 +198,6 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
             $this->dbalAdapter->setLogger($logger);
             return;
         }
-        parent::setLogger($logger);
     }
     /**
      * {@inheritDoc}
@@ -459,7 +458,7 @@ class PdoAdapter extends AbstractAdapter implements PruneableInterface
             $insertStmt->bindValue(':lifetime', $lifetime, \PDO::PARAM_INT);
             $insertStmt->bindValue(':time', $now, \PDO::PARAM_INT);
         }
-        foreach ($values as $id => $data) {
+        foreach ($values as $data) {
             try {
                 $stmt->execute();
             } catch (\PDOException $e) {

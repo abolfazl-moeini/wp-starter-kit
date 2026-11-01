@@ -303,8 +303,7 @@ abstract class PuTTY
         $private = Strings::base64_encode($private);
         $key .= 'Private-Lines: ' . (\strlen($private) + 63 >> 6) . "\r\n";
         $key .= \chunk_split($private, 64);
-        $key .= 'Private-MAC: ' . Strings::bin2hex($hash->hash($source)) . "\r\n";
-        return $key;
+        return $key . ('Private-MAC: ' . Strings::bin2hex($hash->hash($source)) . "\r\n");
     }
     /**
      * Wrap a public key appropriately
@@ -318,7 +317,6 @@ abstract class PuTTY
     protected static function wrapPublicKey($key, $type)
     {
         $key = \pack('Na*a*', \strlen($type), $type, $key);
-        $key = "---- BEGIN SSH2 PUBLIC KEY ----\r\n" . 'Comment: "' . \str_replace(['\\', '"'], ['\\\\', '\\"'], self::$comment) . "\"\r\n" . \chunk_split(Strings::base64_encode($key), 64) . '---- END SSH2 PUBLIC KEY ----';
-        return $key;
+        return "---- BEGIN SSH2 PUBLIC KEY ----\r\n" . 'Comment: "' . \str_replace(['\\', '"'], ['\\\\', '\\"'], self::$comment) . "\"\r\n" . \chunk_split(Strings::base64_encode($key), 64) . '---- END SSH2 PUBLIC KEY ----';
     }
 }

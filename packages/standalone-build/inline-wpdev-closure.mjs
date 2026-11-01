@@ -931,7 +931,7 @@ export async function inlineWpdevClosure({
   let wpdevPluginDir;
   if (frameworkProvider) {
     wpdevPluginDir = frameworkProvider;
-  } else if (wpdevPluginDirOverride) {
+  } else if (wpdevPluginDirOverride && fs.existsSync(wpdevPluginDirOverride)) {
     wpdevPluginDir = wpdevPluginDirOverride;
   } else {
     const candidateProviderDirs = [
@@ -1744,6 +1744,12 @@ if (!$wpdev_is_host_framework_active) {
             if (is_array($module_dirs)) {
                 foreach ($module_dirs as $m_dir) {
                     $m_slug = basename($m_dir);
+                    if (method_exists('\\WPDevFramework\\Core\\Module_Loader', 'has') && \\WPDevFramework\\Core\\Module_Loader::has($m_slug)) {
+                        continue;
+                    }
+                    if (isset(\\WPDevFramework\\Core\\Module_Loader::all()[$m_slug])) {
+                        continue;
+                    }
                     \\WPDevFramework\\Core\\Module_Loader::register($m_slug, array(
                         'path'         => $m_dir,
                         'dependencies' => array(),

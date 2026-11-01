@@ -47,15 +47,15 @@ class Ed25519 extends TwistedEdwards
         $this->setReduction(function($x) {
             $parts = $x->bitwise_split(255);
             $className = $this->className;
-        
+
             if (count($parts) > 2) {
                 list(, $r) = $x->divide($className::$modulo);
                 return $r;
             }
-        
+
             $zero = new BigInteger();
             $c = new BigInteger(19);
-        
+
             switch (count($parts)) {
                 case 2:
                     list($qi, $ri) = $parts;
@@ -68,7 +68,7 @@ class Ed25519 extends TwistedEdwards
                     return $zero;
             }
             $r = $ri;
-        
+
             while ($qi->compare($zero) > 0) {
                 $temp = $qi->multiply($c)->bitwise_split(255);
                 if (count($temp) == 2) {
@@ -79,7 +79,7 @@ class Ed25519 extends TwistedEdwards
                 }
                 $r = $r->add($ri);
             }
-        
+
             while ($r->compare($className::$modulo) > 0) {
                 $r = $r->subtract($className::$modulo);
             }
@@ -94,7 +94,6 @@ class Ed25519 extends TwistedEdwards
      *
      * Used by EC\Keys\Common.php
      *
-     * @param BigInteger $y
      * @param boolean $sign
      * @return object[]
      */
@@ -184,8 +183,7 @@ class Ed25519 extends TwistedEdwards
         if ($x->isOdd()) {
             $y[0] = $y[0] | \chr(0x80);
         }
-        $y = \strrev($y);
-        return $y;
+        return \strrev($y);
     }
     /**
      * Creates a random scalar multiplier

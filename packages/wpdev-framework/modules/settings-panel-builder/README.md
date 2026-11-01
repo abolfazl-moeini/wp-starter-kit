@@ -1,25 +1,28 @@
 # settings-panel-builder
 
-Settings sections, save pipeline, side panels.
+Settings sections, fields, side panels, and the save pipeline used by production settings pages.
 
 ## Dependencies
 
 core, field-builder, form-builder, tab-navigation
 
-## Usage
+## Quick start
 
 ```php
-add_action( 'wpdev_settings-panel-builder_register', function () {
-	// Register components
+add_action( 'wpdev_load', function () {
+	wpdev_register_settings_section( 'my_plugin', array(
+		'title' => __( 'My Plugin', 'my-plugin' ),
+		'order' => 50,
+	) );
+	wpdev_register_settings_field( 'my_plugin', 'my_option', array(
+		'type'  => 'text',
+		'title' => __( 'Option', 'my-plugin' ),
+	) );
 } );
 ```
 
-## Canonical implementation
+## Docs
 
-`WPDevFramework\Settings` lives in `src/class-settings.php`.
-
-`modules/admin-setting-page/Settings.php` is a one-line shim for backward compatibility.
-
-## Legacy bridge
-
-`WPDevFramework\Modules\SettingsPanelBuilder\Settings` maps to `WPDevFramework\Settings` via `class_alias` in `legacy-aliases.php`.
+- API: [`API_DOC.md`](API_DOC.md)
+- Guide: [`../../docs/framework/modules/settings-panel-builder.md`](../../docs/framework/modules/settings-panel-builder.md)
+- Playground demos: **wpdev-playground** plugin (`playground-settings-panel-builder/`)

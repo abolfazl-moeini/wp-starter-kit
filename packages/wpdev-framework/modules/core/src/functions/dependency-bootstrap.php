@@ -1,6 +1,6 @@
 <?php
 /**
- * Bootstraps per-module dependency autoloading for early contexts (plugin + sunrise).
+ * Bootstraps per-module dependency autoloading for early plugin boot contexts.
  *
  * @package WPDevFramework\Core
  * @since   2.7.0
@@ -40,7 +40,7 @@ if ( ! function_exists( 'wpdev_bootstrap_dependency_manager' ) ) {
 	/**
 	 * Ensure the WPDev namespace autoloader vendor class is loadable.
 	 *
-	 * Required before WPDevFramework\Autoloader::init() in sunrise and plugin boot.
+	 * Required before WPDevFramework\Autoloader::init() during plugin boot.
 	 *
 	 * @since 2.7.0
 	 *

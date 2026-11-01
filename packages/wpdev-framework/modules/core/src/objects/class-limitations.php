@@ -481,7 +481,7 @@ class Limitations {
 
 		if (!empty($results)) {
 
-			$limitations = unserialize($results);
+			$limitations = unserialize( (string) $results, array( 'allowed_classes' => false ) );
 
 		} // end if;
 

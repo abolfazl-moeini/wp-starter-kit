@@ -124,8 +124,30 @@ class Field_Type_Registry extends Registry_Base {
 		$type   = sanitize_key( $type );
 		$config = self::get( $type );
 
+		$custom_callback = null;
+		if ( isset( $field['save_callback'] ) && is_callable( $field['save_callback'] ) ) {
+			$custom_callback = $field['save_callback'];
+		} elseif ( isset( $field['sanitize_callback'] ) && is_callable( $field['sanitize_callback'] ) ) {
+			$custom_callback = $field['sanitize_callback'];
+		}
+
+		if ( null !== $custom_callback ) {
+			$value = call_user_func( $custom_callback, $value, $field );
+		}
+
 		if ( isset( $config['sanitize'] ) && is_callable( $config['sanitize'] ) ) {
-			$value = call_user_func( $config['sanitize'], $value, $field );
+			/*
+			 * Core helpers registered as strings (esc_url_raw, sanitize_text_field, …)
+			 * must receive only $value. Passing $field as a second argument breaks
+			 * esc_url_raw / sanitize_url (expects $protocols) and can fatal when the
+			 * field array contains callables (seen as Closure in kses).
+			 * Closures / invokables keep ( $value, $field ) for type-specific rules.
+			 */
+			if ( is_string( $config['sanitize'] ) ) {
+				$value = call_user_func( $config['sanitize'], $value );
+			} else {
+				$value = call_user_func( $config['sanitize'], $value, $field );
+			}
 		}
 
 		/**

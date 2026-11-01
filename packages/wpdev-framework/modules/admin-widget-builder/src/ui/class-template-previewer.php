@@ -29,7 +29,7 @@ class Template_Previewer {
 	 * @since 2.0.11
 	 * @var null|array
 	 */
-	protected $available_templates = null;
+	protected $available_templates;
 
 	/**
 	 * Keeps the settings key for the top-bar.
@@ -127,7 +127,7 @@ class Template_Previewer {
 
 		$bg_color         = wpdev_color($settings['bg_color']);
 		$button_bg_color  = wpdev_color($settings['button_bg_color']);
-		$button_bg_darker = wpdev_color($button_bg_color->darken(4));
+		wpdev_color($button_bg_color->darken(4));
 
 		wp_register_script('wpdev-template-previewer', wpdev_get_module_asset_url('admin-widget-builder', 'template-previewer.js', 'js'), array(), wpdev_get_version());
 

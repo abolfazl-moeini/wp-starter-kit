@@ -36,7 +36,15 @@ wpdev_register_form( string $form_id, array $atts = [] ): void
 
 Register a form definition (fields, handler, modal/inline flags). Duplicate ids without replace semantics trigger `_doing_it_wrong`. @since 2.0.0
 
-**Common `$atts` keys:** `title`, `fields`, `handler`, `capability`, `modal`, `inline`.
+**Common `$atts` keys:**
+- `access` (string, recommended): Named access ID (e.g. `'acme.orders.create'`) evaluated via Two-Gate Access Service (`wpdev_can()`). Takes precedence over legacy `capability`.
+- `capability` (string): Legacy capability string (e.g. `'manage_woocommerce'`). Defaults to `'manage_network'` (which maps to `'manage_options'` on single-site).
+- `title` (string): Modal window title.
+- `fields` (array): Field definitions.
+- `render` (callable): Form rendering callback.
+- `handler` (callable): Form submission callback.
+- `modal` (bool): Modal display flag.
+- `inline` (bool): Inline display flag.
 
 ### `wpdev_get_form_url`
 
@@ -101,7 +109,8 @@ Enqueue Wubox modal assets when a page uses modal forms. @since 2.0.0
 
 ## Capabilities and context
 
-- Capability checks are enforced by form definitions/handlers (via core form service and manager).
+- **Two-Gate Form Authorization:** Form display and submission are guarded by `Form_Manager::security_checks()`. Specifying `'access' => 'my_plugin.feature.action'` routes evaluation through `wpdev_request_access_is_allowed()`, verifying both Gate 1 (WP base capability) and Gate 2 (AccessManager domain policy).
+- **Legacy Fallback:** If `'access'` is omitted, `'capability'` is checked via `current_user_can()`, mapping built-in network capabilities (`manage_network`) to single-site equivalents (`manage_options`).
 - Forms can run in modal (`wubox`) or inline mode depending on `wpdev_get_form_url(..., $inline = true)`.
 
 ## Registration and menu context

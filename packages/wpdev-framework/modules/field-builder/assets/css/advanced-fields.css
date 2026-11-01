@@ -1,0 +1,28 @@
+.wpdev-advanced-field {
+	margin: 0 0 12px;
+}
+
+.wpdev-advanced-row,
+.wpdev-advanced-cell {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+	margin: 0 0 8px;
+}
+
+.wpdev-advanced-cell {
+	flex: 1 1 160px;
+	flex-direction: column;
+	align-items: stretch;
+}
+
+.wpdev-advanced-cell input,
+.wpdev-advanced-cell textarea {
+	width: 100%;
+}
+
+.wpdev-advanced-rel label {
+	display: block;
+	margin: 0 0 4px;
+}

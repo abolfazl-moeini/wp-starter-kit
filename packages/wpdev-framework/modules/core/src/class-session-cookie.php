@@ -4,7 +4,7 @@
  *
  * This is usefull to handle multi step sign up process
  *
- * @author Arindo Duque <arindo@wpdev.ir>
+ * @author WPDev
  * @package WPDev
  * @since 2.0.18
  */
@@ -12,7 +12,7 @@
 namespace WPDevFramework;
 
 use \WPDevFramework\Contracts\Session;
-use \WPDevFramework\Dependencies\Delight\Cookie\Cookie;
+use \WPDev\Dependencies\Delight\Cookie\Cookie;
 
 // Exit if accessed directly
 defined('ABSPATH') || exit;

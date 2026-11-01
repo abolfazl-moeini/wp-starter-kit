@@ -48,9 +48,7 @@ if ( !class_exists('Puc_v4p11_Theme_UpdateChecker', false) ):
 				/** @var Puc_v4p11_Theme_Update $themeUpdate */
 				$themeUpdate->slug = $this->slug;
 			}
-
-			$themeUpdate = $this->filterUpdateResult($themeUpdate, $result);
-			return $themeUpdate;
+			return $this->filterUpdateResult($themeUpdate, $result);
 		}
 
 		protected function getNoUpdateItemFields() {

@@ -12,6 +12,16 @@ namespace WPDevFramework\UI;
 // Exit if accessed directly
 defined('ABSPATH') || exit;
 
+if ( ! function_exists( 'wpdev_string_to_bool' ) ) {
+	function wpdev_string_to_bool( $string ) {
+		if ( is_bool( $string ) ) {
+			return $string;
+		}
+		$str = strtolower( (string) $string );
+		return ( 'on' === $str || 'yes' === $str || '1' === $str || 'true' === $str || 1 === $string );
+	}
+}
+
 /**
  * Describes a field and contains helper functions for sanitization and validation.
  *
@@ -46,6 +56,9 @@ class Field implements \JsonSerializable {
 	public function __construct($id, $atts) {
 
 		$this->set_attributes($id, $atts);
+		if ( isset( $atts['value'] ) ) {
+			$this->set_value( $atts['value'] );
+		}
 
 	} // end __construct;
 
@@ -403,6 +416,7 @@ class Field implements \JsonSerializable {
 			'wp_editor'      => array($this, 'validate_textarea_field'),
 			'textarea'       => array($this, 'validate_textarea_field'),
 			'checkbox'       => 'wpdev_string_to_bool',
+			'toggle'         => 'wpdev_string_to_bool',
 			'multi_checkbox' => false,
 			'select2'        => false,
 			'multiselect'    => false,
@@ -479,7 +493,19 @@ class Field implements \JsonSerializable {
 
 		$type = isset( $this->atts['type'] ) ? (string) $this->atts['type'] : 'text';
 
-		if ( class_exists( 'WPDev\\Modules\\FieldBuilder\\Field_Type_Registry' )
+		if ( is_array( $this->value ) ) {
+			$this->value = self::sanitize_recursive( $this->value, 'sanitize_text_field' );
+			return;
+		}
+
+		if ( ( 'textarea' === $type || 'html' === $type || 'wp_editor' === $type ) && ! empty( $this->atts['allow_html'] ) ) {
+			if ( function_exists( 'wp_kses_post' ) ) {
+				$this->value = wp_kses_post( (string) $this->value );
+			}
+			return;
+		}
+
+		if ( ( class_exists( 'WPDevFramework\\Modules\\FieldBuilder\\Field_Type_Registry' ) || class_exists( 'WPDev\\Modules\\FieldBuilder\\Field_Type_Registry' ) )
 			&& null !== \WPDevFramework\Modules\FieldBuilder\Field_Type_Registry::get( $type ) ) {
 
 			$field_def = is_array( $this->atts ) ? $this->atts : array();
@@ -523,6 +549,27 @@ class Field implements \JsonSerializable {
 		$this->value = apply_filters( "wpdev_field_validate_{$type}", $this->value, $this->atts );
 
 	} // end sanitize;
+
+	/**
+	 * Recursively sanitize arrays while preserving keys and nested structure.
+	 *
+	 * @param mixed           $value             Input data.
+	 * @param callable|string $sanitize_callback Callback for scalar leaf nodes.
+	 * @return mixed
+	 */
+	public static function sanitize_recursive( $value, $sanitize_callback = 'sanitize_text_field' ) {
+		if ( ! is_array( $value ) ) {
+			return is_callable( $sanitize_callback ) ? call_user_func( $sanitize_callback, $value ) : $value;
+		}
+
+		$out = array();
+		foreach ( $value as $k => $v ) {
+			$clean_key = is_string( $k ) && function_exists( 'sanitize_key' ) ? sanitize_key( $k ) : $k;
+			$out[ $clean_key ] = self::sanitize_recursive( $v, $sanitize_callback );
+		}
+
+		return $out;
+	}
  /**
   * Sanitization callback for fields of type number.
   *

@@ -10,8 +10,6 @@ use WPDev\FaultTolerance\Resilient;
 
 if (!function_exists('resilient')) {
     /**
-     * @param callable $operation
-     * @param array    $options
      * @return mixed
      */
     function resilient(callable $operation, array $options = [])
@@ -22,7 +20,6 @@ if (!function_exists('resilient')) {
 
 if (!function_exists('http_batch')) {
     /**
-     * @param array $requests
      * @return array
      */
     function http_batch(array $requests)
@@ -33,7 +30,6 @@ if (!function_exists('http_batch')) {
 
 if (!function_exists('http_pool')) {
     /**
-     * @param array $requests
      * @return array
      */
     function http_pool(array $requests)

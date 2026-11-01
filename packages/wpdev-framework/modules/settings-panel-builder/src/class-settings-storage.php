@@ -14,8 +14,6 @@ namespace WPDevFramework\Modules\SettingsPanelBuilder;
 
 defined( 'ABSPATH' ) || exit;
 
-require_once __DIR__ . '/class-settings-write-lock.php';
-
 /**
  * Reads and writes the WPDev settings option with a request-level cache.
  */
@@ -66,6 +64,8 @@ class Settings_Storage {
 	/**
 	 * Return the raw settings array (loading from the option once).
 	 *
+	 * Merges dedicated per-panel options from Option_Store with legacy shared blob.
+	 *
 	 * @since 2.6.0
 	 * @return array
 	 */
@@ -75,9 +75,48 @@ class Settings_Storage {
 			$this->settings = wpdev_get_option( self::KEY );
 		}
 
-		return is_array( $this->settings ) ? $this->settings : array();
+		$all = is_array( $this->settings ) ? $this->settings : array();
+
+		// Merge values from registered panels in Option_Store
+		if ( class_exists( Settings_Section_Registry::class ) && class_exists( Option_Store::class ) ) {
+			foreach ( Settings_Section_Registry::all() as $slug => $section ) {
+				try {
+					$option_name = ! empty( $section['option_name'] ) ? (string) $section['option_name'] : (string) $slug;
+					$panel_store = Option_Store::for( (string) $slug, $option_name );
+					$panel_values = $panel_store->all();
+					if ( ! empty( $panel_values ) ) {
+						$all = array_replace( $all, $panel_values );
+					}
+				} catch ( \InvalidArgumentException $e ) {
+					// Reserved panel name
+				}
+			}
+		}
+
+		return $all;
 
 	} // end all;
+
+	/**
+	 * Resolve which registered section/panel owns a given setting key.
+	 *
+	 * @param string $setting Setting key.
+	 * @return array{0: string, 1: string}|null [panel_id, option_name] or null.
+	 */
+	public function resolve_panel_for_field( $setting ) {
+
+		if ( class_exists( Settings_Section_Registry::class ) ) {
+			foreach ( Settings_Section_Registry::all() as $slug => $section ) {
+				if ( ! empty( $section['fields'] ) && isset( $section['fields'][ $setting ] ) ) {
+					$opt_name = ! empty( $section['option_name'] ) ? (string) $section['option_name'] : (string) $slug;
+					return [ (string) $slug, $opt_name ];
+				}
+			}
+		}
+
+		return null;
+
+	} // end resolve_panel_for_field;
 
 	/**
 	 * Prime the in-memory cache without writing to the database.
@@ -103,6 +142,29 @@ class Settings_Storage {
 	 */
 	public function replace( array $settings ) {
 
+		// Also persist panel options for registered sections
+		if ( class_exists( Settings_Section_Registry::class ) && class_exists( Option_Store::class ) ) {
+			foreach ( Settings_Section_Registry::all() as $slug => $section ) {
+				if ( empty( $section['fields'] ) || ! is_array( $section['fields'] ) ) {
+					continue;
+				}
+				$panel_values = [];
+				foreach ( array_keys( $section['fields'] ) as $field_key ) {
+					if ( array_key_exists( $field_key, $settings ) ) {
+						$panel_values[ $field_key ] = $settings[ $field_key ];
+					}
+				}
+				if ( ! empty( $panel_values ) ) {
+					try {
+						$option_name = ! empty( $section['option_name'] ) ? (string) $section['option_name'] : (string) $slug;
+						Option_Store::for( (string) $slug, $option_name )->save( $panel_values );
+					} catch ( \InvalidArgumentException $e ) {
+						// Reserved name
+					}
+				}
+			}
+		}
+
 		$status         = wpdev_save_option( self::KEY, $settings );
 		$this->settings = $settings;
 
@@ -111,38 +173,9 @@ class Settings_Storage {
 	} // end replace;
 
 	/**
-	 * Persist registered-field changes without deleting settings registered by
-	 * another consumer of the shared v2_settings option.
-	 *
-	 * A page request may have loaded the option before a sibling request saves.
-	 * Re-read the option immediately before merging so the write starts from the
-	 * newest WordPress value rather than this object's request cache.
-	 *
-	 * @since 2.6.1
-	 *
-	 * @param array $resolved_settings Values resolved for this runtime's fields.
-	 * @return array Persisted full settings array.
-	 */
-	public function replace_registered( array $resolved_settings ) {
-
-		$save = function () use ( $resolved_settings ) {
-			$latest = wpdev_get_option( self::KEY );
-			$latest = is_array( $latest ) ? $latest : array();
-			$settings = Settings_Save::merge_with_saved( $latest, $resolved_settings );
-
-			if ( ! $this->replace( $settings ) ) {
-				return false;
-			}
-
-			return $settings;
-		};
-
-		return Settings_Write_Lock::run( self::KEY, $save );
-
-	} // end replace_registered;
-
-	/**
 	 * Get a single setting value with the legacy filter applied.
+	 *
+	 * Prioritizes Option_Store, falls back to legacy shared blob, then default.
 	 *
 	 * @since 2.6.0
 	 *
@@ -158,7 +191,21 @@ class Settings_Storage {
 			_doing_it_wrong( $setting, __( 'Dashes are no longer supported when registering a setting. You should change it to underscores in later versions.', 'wpdev' ), '2.0.0' );
 		}
 
-		$setting_value = isset( $settings[ $setting ] ) ? $settings[ $setting ] : $default;
+		$setting_value = null;
+		$panel_info    = $this->resolve_panel_for_field( $setting );
+
+		if ( $panel_info && class_exists( Option_Store::class ) ) {
+			try {
+				$panel_store   = Option_Store::for( $panel_info[0], $panel_info[1] );
+				$setting_value = $panel_store->get( $setting, null );
+			} catch ( \InvalidArgumentException $e ) {
+				$setting_value = null;
+			}
+		}
+
+		if ( null === $setting_value ) {
+			$setting_value = isset( $settings[ $setting ] ) ? $settings[ $setting ] : $default;
+		}
 
 		return apply_filters( 'wpdev_get_setting', $setting_value, $setting, $default, $settings );
 
@@ -181,6 +228,15 @@ class Settings_Storage {
 
 		if ( is_callable( $value ) ) {
 			$value = call_user_func( $value );
+		}
+
+		$panel_info = $this->resolve_panel_for_field( $setting );
+		if ( $panel_info && class_exists( Option_Store::class ) ) {
+			try {
+				Option_Store::for( $panel_info[0], $panel_info[1] )->set( $setting, $value );
+			} catch ( \InvalidArgumentException $e ) {
+				// Reserved name fallback
+			}
 		}
 
 		$settings[ $setting ] = $value;

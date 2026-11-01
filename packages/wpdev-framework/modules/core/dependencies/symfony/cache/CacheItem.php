@@ -19,7 +19,6 @@ use WPDev\Dependencies\Symfony\Contracts\Cache\ItemInterface;
  */
 final class CacheItem implements ItemInterface
 {
-    private const METADATA_EXPIRY_OFFSET = 1527506807;
     protected $key;
     protected $value;
     protected $isHit = \false;

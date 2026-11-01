@@ -6,6 +6,7 @@ Foundation module providing module loading, service registry, and legacy bridges
 
 | Id | Wrapper | Legacy class |
 |----|---------|--------------|
+| `access` | `Access_Service` | `Permission_Registry`, `Access_Policy_Registry`, `packages/access-manager` |
 | `ajax` | `Ajax_Service` | `WPDevFramework\Ajax`, `WPDevFramework\Light_Ajax`, `WPDevFramework\Async_Calls` |
 | `modal` | `Modal_Service` | `Form_Manager` + `add_wubox()` |
 | `form` | `Form_Service` | `WPDevFramework\Managers\Form_Manager` |
@@ -16,15 +17,31 @@ Foundation module providing module loading, service registry, and legacy bridges
 ## Usage
 
 ```php
+// Access control (Two-Gate Defense model: Gate 1 WP capability + Gate 2 AccessManager policy)
+wpdev_register_permission( 'acme.orders.view', array(
+    'owner'      => 'acme',
+    'capability' => 'acme_view_orders',
+    'scope'      => 'site',
+    'risk'       => 'read',
+    'label'      => 'View Orders',
+) );
+
+if ( wpdev_can( 'acme.orders.view' ) ) {
+    // Current user has permission
+}
+
+wpdev_require_access( 'acme.orders.refund', array( 'order_id' => 42 ) );
+
 // Access a service
 wpdev_services( 'ajax' )->listen( 'my_action', function () {
     wpdev_services( 'ajax' )->respond_success( array( 'ok' => true ) );
 } );
 
-// Register a modal form (legacy API preserved)
+// Register a modal form (supports 'access' => 'acme.items.edit')
 wpdev_services( 'form' )->register( 'my_modal', array(
     'title'   => 'Edit Item',
     'handler' => 'my_handler',
+    'access'  => 'acme.items.edit',
 ) );
 
 // Render a view

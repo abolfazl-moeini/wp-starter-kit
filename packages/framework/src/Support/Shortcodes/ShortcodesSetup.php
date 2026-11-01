@@ -13,7 +13,6 @@ final class ShortcodesSetup
     private static array $shortcodes = [];
 
     /**
-     * @param string $tag
      * @param string|Shortcode $handler
      */
     public static function register(string $tag, $handler): bool

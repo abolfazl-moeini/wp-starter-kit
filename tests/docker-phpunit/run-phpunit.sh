@@ -7,6 +7,11 @@
 #
 set -euo pipefail
 
+if [[ "${WPDEV_SKIP_TESTS:-0}" == "1" || "${WPDEV_SKIP_DOCKER:-0}" == "1" ]]; then
+  echo "Skipping docker phpunit tests (WPDEV_SKIP_TESTS or WPDEV_SKIP_DOCKER set)."
+  exit 0
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 FILTER="${1:-}"
 
@@ -78,6 +83,11 @@ render_wp_tests_config
 echo "Copying WordPress PHPUnit library into the PHP container..."
 docker exec "${PHP_SERVICE}" bash -c "
   set -euo pipefail
+
+if [[ "${WPDEV_SKIP_TESTS:-0}" == "1" || "${WPDEV_SKIP_DOCKER:-0}" == "1" ]]; then
+  echo "Skipping docker phpunit tests (WPDEV_SKIP_TESTS or WPDEV_SKIP_DOCKER set)."
+  exit 0
+fi
   rm -rf '${WP_TESTS_LIB_CONTAINER_PATH}'
   cp -r '${WORDPRESS_DEVELOP_CONTAINER_PATH}/tests/phpunit' '${WP_TESTS_LIB_CONTAINER_PATH}'
   cp '${DOCKER_PHPUNIT_CONTAINER_PATH}/wp-tests-config.php' '${WP_TESTS_LIB_CONTAINER_PATH}/wp-tests-config.php'

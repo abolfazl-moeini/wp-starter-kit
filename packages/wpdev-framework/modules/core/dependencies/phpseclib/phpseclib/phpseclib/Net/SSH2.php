@@ -933,7 +933,7 @@ class SSH2
      * @see https://tools.ietf.org/html/rfc4252#section-5.1
      * @var array|null
      */
-    private $auth_methods_to_continue = null;
+    private $auth_methods_to_continue;
     /**
      * Compression method
      *
@@ -1024,7 +1024,6 @@ class SSH2
         }
         /**
          * Typehint is required due to a bug in Psalm: https://github.com/vimeo/psalm/issues/7508
-         * @var \WeakReference<SSH2>|SSH2
          */
         self::$connections[$this->getResourceId()] = \class_exists('WeakReference') ? \WeakReference::create($this) : $this;
         if (\is_resource($host)) {
@@ -1342,7 +1341,7 @@ class SSH2
         $response = $kexinit_payload_server;
         Strings::shift($response, 1);
         // skip past the message number (it should be SSH_MSG_KEXINIT)
-        $server_cookie = Strings::shift($response, 16);
+        Strings::shift($response, 16);
         list($this->kex_algorithms, $this->server_host_key_algorithms, $this->encryption_algorithms_client_to_server, $this->encryption_algorithms_server_to_client, $this->mac_algorithms_client_to_server, $this->mac_algorithms_server_to_client, $this->compression_algorithms_client_to_server, $this->compression_algorithms_server_to_client, $this->languages_client_to_server, $this->languages_server_to_client, $first_kex_packet_follows) = Strings::unpackSSH2('L10C', $response);
         $this->supported_private_key_algorithms = $this->server_host_key_algorithms;
         if ($send_kex) {
@@ -1880,17 +1879,17 @@ class SSH2
                         case 'keyboard-interactive':
                             $hasArray = $hasString = \false;
                             foreach ($args as $arg) {
-                                if ($hasArray || \is_array($arg)) {
+                                if (\is_array($arg)) {
                                     $hasArray = \true;
                                     break;
                                 }
-                                if ($hasString || Strings::is_stringable($arg)) {
+                                if (Strings::is_stringable($arg)) {
                                     $hasString = \true;
                                     break;
                                 }
                             }
                             if ($hasArray && $hasString) {
-                                foreach ($args as $key => $arg) {
+                                foreach ($args as $arg) {
                                     if (\is_array($arg)) {
                                         $newargs[] = $arg;
                                         break 2;
@@ -2133,7 +2132,6 @@ class SSH2
      * Login with an ssh-agent provided key
      *
      * @param string $username
-     * @param \phpseclib3\System\SSH\Agent $agent
      * @return bool
      */
     private function ssh_agent_login($username, Agent $agent)
@@ -2154,7 +2152,6 @@ class SSH2
      *           by sending dummy SSH_MSG_IGNORE messages.}
      *
      * @param string $username
-     * @param \phpseclib3\Crypt\Common\PrivateKey $privatekey
      * @return bool
      * @throws \RuntimeException on connection error
      */
@@ -3638,8 +3635,6 @@ class SSH2
      * @param int $constant
      * @param string $message_number
      * @param string $message
-     * @param array &$message_number_log
-     * @param array &$message_log
      * @param int &$log_size
      * @param resource &$realtime_log_file
      * @param bool &$realtime_log_wrap
@@ -3860,8 +3855,6 @@ class SSH2
     /**
      * Formats a log for printing
      *
-     * @param array $message_log
-     * @param array $message_number_log
      * @return string
      */
     protected function format_log(array $message_log, array $message_number_log)
@@ -3908,8 +3901,6 @@ class SSH2
      * Returns the first value of the intersection of two arrays or false if
      * the intersection is empty. The order is defined by the first parameter.
      *
-     * @param array $array1
-     * @param array $array2
      * @return mixed False if intersection is empty, else intersected value.
      */
     private static function array_intersect_first(array $array1, array $array2)
@@ -3969,7 +3960,7 @@ class SSH2
      */
     public static function getSupportedKEXAlgorithms()
     {
-        $kex_algorithms = [
+        return [
             // Elliptic Curve Diffie-Hellman Key Agreement (ECDH) using
             // Curve25519. See doc/curve25519-sha256@libssh.org.txt in the
             // libssh repository for more information.
@@ -3996,7 +3987,6 @@ class SSH2
             'diffie-hellman-group18-sha512',
             'diffie-hellman-group1-sha1',
         ];
-        return $kex_algorithms;
     }
     /**
      * Returns a list of host key algorithms that phpseclib supports
@@ -4195,8 +4185,6 @@ class SSH2
     /**
      * Accepts an associative array with up to four parameters as described at
      * <https://www.php.net/manual/en/function.ssh2-connect.php>
-     *
-     * @param array $methods
      */
     public function setPreferredAlgorithms(array $methods)
     {
@@ -4434,7 +4422,6 @@ class SSH2
     public static function getConnections()
     {
         if (!\class_exists('WeakReference')) {
-            /** @var array<string, SSH2> */
             return self::$connections;
         }
         $temp = [];

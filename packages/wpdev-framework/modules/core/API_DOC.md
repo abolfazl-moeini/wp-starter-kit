@@ -54,7 +54,7 @@ Schedule admin page instantiation on `wpdev_admin_pages`.
 wpdev_services( ?string $id = null )
 ```
 
-Access ajax, form, modal, screen_options, tour, and view services. Pass `null` to return all registered services.
+Access access, ajax, form, modal, screen_options, tour, and view services. Pass `null` to return all registered services.
 
 ### `wpdev_register_service`
 
@@ -63,6 +63,157 @@ wpdev_register_service( string $id, Service_Contract $service, bool $replace = t
 ```
 
 Register a custom core service.
+
+### Access Control API (`modules/core/src/access.php`)
+
+Provides the central public facade for the Two-Gate Defense-in-Depth access control engine (`WPDev\Access\` via `packages/access-manager`).
+
+#### `wpdev_access`
+
+```php
+wpdev_access(): \WPDevFramework\Core\Services\Access_Service
+```
+
+Retrieve the singleton `Access_Service` instance coordinating permission/policy registries, capability resolvers, and two-gate evaluation. @since 2.13.1
+
+#### `wpdev_access_contract`
+
+```php
+wpdev_access_contract(): array
+```
+
+Returns the active `Access_Service::get_contract()` handshake without evaluating access, booting services, or writing registries. `contract_version` is integer `1`; `provider` is `wpdev`; `service_class` identifies the active service via `static::class`, not an absolute file path. If the loaded service lacks `get_contract()`, returns a non-array, or throws, the facade returns an empty array instead of fatalling. @since 2.13.1
+
+The `features` map explicitly reports booleans:
+
+- `true`: `permission_registry`, `policy_registry`, `native_capability_gate`, `explicit_policy_binding`, `strict_qualifiers`.
+- `false` (unsupported): `actor_evaluation`, `context_schema`, `user_restrictions`, `restriction_revision`, `pending_barriers`, `independent_recovery`, `grant_metadata`, `surface_bindings`, `readonly_preview`, `scoped_providers`.
+
+`actor_evaluation` remains false until scope and actor validation are complete. Partial metadata or surface integration does not establish full feature support. Consumers must require a recognized contract version and explicit `true` for each needed feature; function presence, framework version, or contract version alone makes no patch-level or full-support claim. Missing flags are unsupported.
+
+#### `wpdev_register_permission`
+
+```php
+wpdev_register_permission( string $id, array $config = array(), bool $replace = true ): bool
+```
+
+Register a permission in the catalog (`Permission_Registry`). @since 2.13.1
+
+| Param | Type | Description |
+|---|---|---|
+| `$id` | string | Unique namespaced permission ID (e.g. `'acme.orders.view'`). |
+| `$config` | array | Configuration array (`owner`, `capability`, `scope` = 'site'\|'network', `risk` = 'read'\|'write'\|'destructive'\|'administer', `label`, `description`). |
+| `$replace` | bool | Whether to replace an existing permission with the same ID. Default `true`. |
+
+#### `wpdev_get_permission`
+
+```php
+wpdev_get_permission( string $id ): ?array
+```
+
+Retrieve a registered permission definition from the catalog. @since 2.13.1
+
+#### `wpdev_has_permission`
+
+```php
+wpdev_has_permission( string $id ): bool
+```
+
+Check whether a permission ID is registered in the catalog. @since 2.13.1
+
+#### `wpdev_list_permissions`
+
+```php
+wpdev_list_permissions(): array
+```
+
+List all registered permissions in the catalog. @since 2.13.1
+
+#### `wpdev_unregister_permission`
+
+```php
+wpdev_unregister_permission( string $id ): void
+```
+
+Unregister a permission from the catalog. @since 2.13.1
+
+#### `wpdev_register_access_policy`
+
+```php
+wpdev_register_access_policy( string $id, array $config = array(), bool $replace = true ): bool
+```
+
+Register an AccessManager access policy (`Access_Policy_Registry`). @since 2.13.1
+
+| Param | Type | Description |
+|---|---|---|
+| `$id` | string | Policy identifier (e.g. `'acme_orders'`). |
+| `$config` | array | Policy config (`owner`, `qualifier` instance of `\WPDev\Access\Contracts\Qualifier_Interface` or `\WPDev\Access\QualifierBase`, `version`). |
+| `$replace` | bool | Whether to replace an existing policy. Default `true`. |
+
+#### `wpdev_get_access_policy`
+
+```php
+wpdev_get_access_policy( string $id ): ?array
+```
+
+Retrieve a registered access policy. @since 2.13.1
+
+#### `wpdev_has_access_policy`
+
+```php
+wpdev_has_access_policy( string $id ): bool
+```
+
+Check whether an access policy is registered. @since 2.13.1
+
+#### `wpdev_list_access_policies`
+
+```php
+wpdev_list_access_policies(): array
+```
+
+List all registered access policies. @since 2.13.1
+
+#### `wpdev_unregister_access_policy`
+
+```php
+wpdev_unregister_access_policy( string $id ): void
+```
+
+Unregister an access policy. @since 2.13.1
+
+#### `wpdev_can`
+
+```php
+wpdev_can( string $access_id, array $context = array() ): bool
+```
+
+Evaluate Two-Gate access for the current actor. Checks Gate 1 (native WP capability) AND Gate 2 (AccessManager domain rules). @since 2.13.1
+
+#### `wpdev_can_for_user`
+
+```php
+wpdev_can_for_user( mixed $user_id, string $access_id, array $context = array() ): bool
+```
+
+Evaluate access for a specific trusted user (server-side/audit only; never accept from untrusted client input). @since 2.13.1
+
+#### `wpdev_require_access`
+
+```php
+wpdev_require_access( string $access_id, array $context = array() ): void
+```
+
+Assert access for an access ID, throwing `WPDevFramework\Core\Access\Exceptions\Access_Denied_Exception` on failure. @since 2.13.1
+
+#### `wpdev_request_access_is_allowed`
+
+```php
+wpdev_request_access_is_allowed( array $args ): bool
+```
+
+Helper for surface adapters. Evaluates `$args['access']` or `$args['access_id']` via `wpdev_can()`. If omitted, falls back to `$args['capability_callback']` or `$args['capability']` with fail-closed semantics. @since 2.13.1
 
 ### `wpdev_create_tour`
 
@@ -76,21 +227,52 @@ Register an admin walkthrough/tour (Shepherd.js-based) through the core tour ser
 - Register before `in_admin_header`; late calls are ignored.
 - When `$once = true`, completion is stored per user and the tour is not shown again.
 
-### `wpdev_register_playground_panel`
+### `wpdev_add_admin_notice`
 
 ```php
-wpdev_register_playground_panel( string $module_id, array $args = [], bool $replace = true ): bool
+wpdev_add_admin_notice(
+	string $message,
+	string $type = 'info',
+	string $panel = 'admin',
+	string|false $dismissible_key = false,
+	array $actions = []
+): bool
 ```
 
-Dev-only: register a WPDev Playground submenu panel (requires the **wpdev-playground** plugin).
+Queue a WPDev-styled admin notice (network / site / user chrome). Prefer this over
+`wpdev()->notices->add()` and over raw `admin_notices` markup.
 
-### `wpdev_get_playground_panels`
+| Arg | Values / notes |
+|-----|----------------|
+| `$type` | `info` (blue), `warning`, `error`, `success` → `notice-{type}` |
+| `$panel` | `admin`, `network-admin`, or `user` |
+| `$dismissible_key` | Stable string for per-user dismiss, or `false` |
+| `$actions[]` | Buttons: `title`, `url` (required); optional `style` (`primary`\|`secondary`), `primary` (bool), `target` (`_blank`), `class` |
+
+Example (network Sites screen tip):
 
 ```php
-wpdev_get_playground_panels(): array
+wpdev_add_admin_notice(
+	__( 'Manage sites from WPDev → Sites.', 'my-plugin' ),
+	'info',
+	'network-admin',
+	'my-plugin-sites-tip',
+	array(
+		array(
+			'title'  => __( 'Go to WPDev Sites →', 'my-plugin' ),
+			'url'    => wpdev_network_admin_url( 'wpdev-sites' ),
+			'style'  => 'primary',
+		),
+		array(
+			'title'  => __( 'Whitelabel settings →', 'my-plugin' ),
+			'url'    => wpdev_network_admin_url( 'wpdev-settings', array( 'tab' => 'whitelabel' ) ),
+			'style'  => 'secondary',
+		),
+	)
+);
 ```
 
-List registered playground panels keyed by module id.
+Source: `modules/core/src/functions/admin-notices.php` · class `WPDevFramework\Admin_Notices`.
 
 ### `wpdev_register_admin_page`
 
@@ -140,6 +322,34 @@ wpdev_register_global_event_listener( callable $callback, int $priority = 10, in
 
 Register a listener for all WPDev events on `wpdev_event`.
 
+## Extension via filters (framework-only decoupling)
+
+Core never calls sibling-plugin functions directly. Optional behavior is wired through filters; **wpdev-playground** and **wpdev-examples** hook these when active.
+
+| Filter | Default | Hooked by |
+|--------|---------|-----------|
+| `wpdev_uses_site_admin_context` | `false` | wpdev-playground (parity production pages in site admin) |
+| `wpdev_menu_register_context` | `false` | wpdev-playground (`pg_*` menu wiring during panel setup) |
+| `wpdev_settings_search_result_url` | `null` | wpdev-playground (`pg_*` settings sections) |
+| `wpdev_entity_lookup` / `wpdev_entity_lookup_by` / `wpdev_entity_create` | `null` / fail-closed | wpdev-examples domain modules |
+| `wpdev_dashboard_stat_*` | empty / `0` | wpdev-examples (`includes/dashboard-hooks.php`) |
+| `wpdev_dashboard_widget_elements` | `array()` | wpdev-examples customer-panel widgets |
+
+Helpers: `wpdev_uses_site_admin_context()`, `wpdev_is_menu_register_context()` in `modules/core/src/functions/extension-context.php`.
+
+## Registry completeness (core-owned registries)
+
+| Entity | register | get | has | list | unregister |
+|--------|:--------:|:---:|:---:|:----:|:----------:|
+| service | Yes | via `wpdev_services()` | Yes | all via `wpdev_services()` | Yes |
+| table (schema) | Yes | — | — | — | — |
+| admin_page (rebind) | Yes | — | — | — | — |
+| ajax_handler | Yes | — | — | — | — |
+| migration | Yes | — | — | — | — |
+| event_listener | Yes | — | — | — | — |
+
+Register-only entities are intentional; see module builder `API_DOC.md` files for full CRUD subsets.
+
 ## Hooks and filters
 
 | Hook | Args | When |
@@ -149,6 +359,11 @@ Register a listener for all WPDev events on `wpdev_event`.
 | `wpdev_admin_pages` | none | Admin page instantiation phase |
 | `wpdev_register_forms` | form context payload | Form registration lifecycle phase |
 | `wpdev_module_enabled` | `bool $enabled, string $module_id` | Enables/disables per-module runtime bootstrap |
+| `wpdev_entity_lookup` | `mixed $default, $id, string $context = ''` | Framework decoupling: examples resolve domain records by id |
+| `wpdev_entity_lookup_by` | `mixed $default, string $field, $value, string $context` | Framework decoupling: examples resolve records by field |
+| `wpdev_entity_create` | `mixed $default, array $data, string $context` | Framework decoupling: examples create domain records during migration/install |
+| `wpdev_entity_handler_available` | `bool $default, string $context` | Framework decoupling: examples report whether a handler is available |
+| `wpdev_catalog_list` | `array $default, array $args, string $context` | Framework decoupling: examples return catalog lists (e.g. site templates) |
 
 ## Storage and option keys
 

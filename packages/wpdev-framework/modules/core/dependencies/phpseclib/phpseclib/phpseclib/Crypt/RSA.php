@@ -524,8 +524,7 @@ abstract class RSA extends AsymmetricKey
             throw new \LengthException('Intended encoded message length too short');
         }
         $ps = \str_repeat(\chr(0xff), $emLen - $tLen - 3);
-        $em = "\x00\x01{$ps}\x00{$t}";
-        return $em;
+        return "\x00\x01{$ps}\x00{$t}";
     }
     /**
      * EMSA-PKCS1-V1_5-ENCODE (without NULL)
@@ -577,8 +576,7 @@ abstract class RSA extends AsymmetricKey
             throw new \LengthException('Intended encoded message length too short');
         }
         $ps = \str_repeat(\chr(0xff), $emLen - $tLen - 3);
-        $em = "\x00\x01{$ps}\x00{$t}";
-        return $em;
+        return "\x00\x01{$ps}\x00{$t}";
     }
     /**
      * MGF1

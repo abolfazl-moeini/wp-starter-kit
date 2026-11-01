@@ -43,6 +43,6 @@ final class InterfaceString implements Type
         if ($this->fqsen === null) {
             return 'interface-string';
         }
-        return 'interface-string<' . (string) $this->fqsen . '>';
+        return 'interface-string<' . $this->fqsen . '>';
     }
 }

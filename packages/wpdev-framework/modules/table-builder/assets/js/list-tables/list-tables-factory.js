@@ -123,6 +123,29 @@
 
           params.searchParams.set('model', wpdev_list_table.model);
 
+          /*
+           * Re-attach page context (view/source filters, `page`, search, …).
+           * Form serialize includes them, but the strip above removed everything
+           * except bulk ids — handlers then defaulted to the wrong source.
+           */
+          const locationParams = new URLSearchParams(window.location.search);
+
+          locationParams.forEach((value, key) => {
+
+            if (key === 'action' || key === 'action2') {
+
+              return;
+
+            } // end if;
+
+            if (!params.searchParams.has(key)) {
+
+              params.searchParams.set(key, value);
+
+            } // end if;
+
+          });
+
           wubox.show(wpdev_list_table.i18n.confirm, wpdev_list_table.base_url + '&' + params.searchParams.toString());
 
         });
@@ -135,12 +158,28 @@
 
           // Simple way: use the URL to extract our needed variables
           const query = this.search.substring(1);
+          const parsedQuery = table.__get_query(query);
 
-          const data = $.extend({}, table.__get_query(query), {
+          delete parsedQuery.action;
+          delete parsedQuery.list_table_screen;
+          delete parsedQuery.table_id;
+
+          const data = $.extend({}, parsedQuery, {
             order: table.__query(query, 'order') || 'DESC',
             paged: table.__query(query, 'paged') || '1',
             s: table.__query(query, 's') || '',
           });
+
+          if (!data.page) {
+
+            const pageSlug = table.get_page_slug();
+            if (pageSlug) {
+
+              data.page = pageSlug;
+
+            }
+
+          }
 
           table.update(data);
 
@@ -187,6 +226,8 @@
           table.filters = table.init_filters();
 
         } // end if;
+
+        table.init_reorder();
 
         table.initialized = true;
 
@@ -296,12 +337,28 @@
           methods: {
             set_view(type, value) {
 
-              const query = window.location.href.split('?')[1];
+              const query = window.location.href.split('?')[1] || '';
+              const parsedQuery = table.__get_query(query);
 
-              const data = $.extend({}, table.__get_query(query), {
+              delete parsedQuery.action;
+              delete parsedQuery.list_table_screen;
+              delete parsedQuery.table_id;
+
+              const data = $.extend({}, parsedQuery, {
                 paged: table.__query(query, 'paged') || '1',
                 s: table.__query(query, 's') || '',
               });
+
+              if (!data.page) {
+
+                const pageSlug = table.get_page_slug();
+                if (pageSlug) {
+
+                  data.page = pageSlug;
+
+                }
+
+              }
 
               this.view = value;
 
@@ -355,6 +412,54 @@
 
       },
 
+      /**
+       * Resolve the admin page slug for query strings and pushState.
+       *
+       * @return {string}
+       */
+      get_page_slug() {
+
+        const $table_parent = $('[data-table-id="' + id + '"]').first();
+        const config = window[id + '_config'] || {};
+        let page = (config.page)
+          || $table_parent.find('input#page').val()
+          || $('form#posts-filter input[name="page"]').val()
+          || $('input[name="page"]').val()
+          || '';
+
+        if (!page && window.location.search) {
+
+          const match = window.location.search.match(/[?&]page=([^&]+)/);
+          if (match && match[1]) {
+
+            page = decodeURIComponent(match[1]);
+
+          }
+
+        }
+
+        if (!page) {
+
+          const screenId = $table_parent.data('screen-id')
+            || $table_parent.find('input#list_table_screen').val()
+            || '';
+
+          if (screenId.indexOf('toplevel_page_') === 0) {
+
+            page = screenId.substring(14);
+
+          } else if (screenId.indexOf('_page_') !== -1) {
+
+            page = screenId.substring(screenId.indexOf('_page_') + 6);
+
+          }
+
+        }
+
+        return page;
+
+      },
+
       set_history(data) {
 
         if (window[id + '_config'].context !== 'page') {
@@ -370,10 +475,30 @@
 
             return key === 'action' ||
               key === 'table_id' ||
+              key === 'list_table_screen' ||
               ! value ||
               key.indexOf('_') === 0;
 
           });
+
+          // Ensure 'page' is NEVER lost on admin.php pages
+          if (!history_vars.page) {
+
+            const pageSlug = this.get_page_slug();
+            if (pageSlug) {
+
+              history_vars.page = pageSlug;
+
+            }
+
+          }
+
+          // Safety guard: Never push an admin.php URL with no 'page' query param
+          if (!history_vars.page && window.location.pathname.indexOf('admin.php') !== -1) {
+
+            return;
+
+          }
 
           history.pushState({}, null, '?' + $.param(history_vars));
 
@@ -406,6 +531,20 @@
         };
 
         default_data['_ajax_' + id + '_nonce'] = $table_parent.find('#_ajax_' + id + '_nonce').val();
+
+        // Keep Screen Options hidden-column prefs in sync on ajax refresh.
+        const screenId = $table_parent.data('screen-id')
+          || $table_parent.find('input#list_table_screen').val()
+          || '';
+
+        if (screenId) {
+          default_data.list_table_screen = screenId;
+        }
+
+        const pageSlug = table.get_page_slug();
+        if (pageSlug) {
+          default_data.page = pageSlug;
+        }
 
         const form_data = $.extend(
           {},
@@ -441,8 +580,29 @@
           },
           success(response) {
 
-            if (response && typeof response.success === 'boolean' && response.data) {
-              response = response.data;
+            // Align with @wpdev/wpdev-bridge envelope contract (Phase 3.1).
+            // List-table refresh returns wp_send_json_success({ rows, ... }).
+            // Bare / failed payloads must not reach DOM updates.
+            let payload = response;
+
+            if (response && typeof response.success === 'boolean') {
+
+              if (!response.success || typeof response.data === 'undefined' || response.data === null) {
+
+                $content.animate({ opacity: 1 }, 300);
+                return;
+
+              }
+
+              payload = response.data;
+
+            }
+
+            if (!payload || typeof payload !== 'object') {
+
+              $content.animate({ opacity: 1 }, 300);
+              return;
+
             }
 
             table.set_history(form_data, default_data);
@@ -450,40 +610,42 @@
             $content.animate({ opacity: 1 }, 300);
 
             // Add the requested rows
-            if (typeof response.rows !== 'undefined') {
+            if (typeof payload.rows !== 'undefined') {
 
-              $content.html(response.rows);
+              $content.html(payload.rows);
 
             } // end if;
 
             // Add the requested rows
-            if (typeof response.count !== 'undefined') {
+            if (typeof payload.count !== 'undefined') {
 
-              // table.filters.count = response.count;
+              // table.filters.count = payload.count;
 
             } // end if;
 
             // Update column headers for sorting
-            if (response.column_headers.length) {
+            if (payload && typeof payload.column_headers === 'string' && payload.column_headers.length) {
 
-              $table_parent.find('thead tr, tfoot tr').html(response.column_headers);
+              $table_parent.find('thead tr, tfoot tr').html(payload.column_headers);
 
             } // end if;
 
             // Update pagination for navigation
-            if (response.pagination.top.length) {
+            if (payload && payload.pagination && typeof payload.pagination.top === 'string' && payload.pagination.top.length) {
 
-              $table_parent.find('.tablenav.top .tablenav-pages').html($(response.pagination.top).html());
-
-            } // end if;
-
-            if (response.pagination.bottom.length) {
-
-              $table_parent.find('.tablenav.bottom .tablenav-pages').html($(response.pagination.bottom).html());
+              $table_parent.find('.tablenav.top .tablenav-pages').html($(payload.pagination.top).html());
 
             } // end if;
 
-            hooks.doAction('wpdev_list_table_update', response, form_data, $table_parent);
+            if (payload && payload.pagination && typeof payload.pagination.bottom === 'string' && payload.pagination.bottom.length) {
+
+              $table_parent.find('.tablenav.bottom .tablenav-pages').html($(payload.pagination.bottom).html());
+
+            } // end if;
+
+            hooks.doAction('wpdev_list_table_update', payload, form_data, $table_parent);
+
+            table.init_reorder();
 
             // Init back our event handlers
             // table.init();
@@ -536,6 +698,142 @@
         } // end for;
 
         return _query;
+
+      },
+
+      /**
+       * Initializes drag-and-drop row reordering if table is reorderable.
+       *
+       * @since 2.15.0
+       */
+      init_reorder() {
+
+        const table = this;
+        const $table_parent = $('[data-table-id="' + id + '"]').first();
+
+        const isReorderable = $table_parent.data('reorderable') === true || $table_parent.attr('data-reorderable') === 'true';
+        if (!isReorderable) {
+          return;
+        }
+
+        const $tbody = $table_parent.find('table.wp-list-table tbody');
+        if (!$tbody.length || typeof $tbody.sortable !== 'function') {
+          return;
+        }
+
+        if ($tbody.hasClass('ui-sortable')) {
+          $tbody.sortable('destroy');
+        }
+
+        const isAllowed = $table_parent.data('reorder-allowed') !== false && $table_parent.attr('data-reorder-allowed') !== 'false';
+        if (!isAllowed) {
+          return;
+        }
+
+        $tbody.sortable({
+          items: 'tr:not(.no-items)',
+          handle: '.wpdev-row-drag-handle',
+          axis: 'y',
+          cursor: 'grabbing',
+          containment: $tbody,
+          placeholder: 'wpdev-sortable-placeholder',
+          helper: function(e, tr) {
+            const $originals = tr.children();
+            const $helper = tr.clone();
+            $helper.addClass('wpdev-dragging-row');
+            $helper.children().each(function(index) {
+              $(this).width($originals.eq(index).width());
+            });
+            return $helper;
+          },
+          start: function(e, ui) {
+            ui.placeholder.height(ui.item.height());
+            ui.item.data('prev-index', ui.item.index());
+          },
+          update: function() {
+            const ordered_ids = [];
+            $tbody.find('tr[data-id]').each(function() {
+              const rowId = $(this).data('id');
+              if (rowId) {
+                ordered_ids.push(rowId);
+              }
+            });
+
+            if (!ordered_ids.length) {
+              return;
+            }
+
+            $table_parent.addClass('wpdev-table-saving');
+
+            const nonce = $table_parent.find('#_ajax_' + id + '_nonce').val()
+              || $table_parent.find('#_wpnonce').val()
+              || (window[id + '_config'] && window[id + '_config'].nonce);
+
+            $.ajax({
+              url: ajaxurl,
+              type: 'POST',
+              data: {
+                action: 'wpdev_list_table_reorder_rows',
+                table_id: id,
+                ordered_ids: ordered_ids,
+                paged: table.__query(window.location.search, 'paged') || 1,
+                _ajax_nonce: nonce
+              }
+            }).done(function(response) {
+              $table_parent.removeClass('wpdev-table-saving');
+              if (!response || !response.success) {
+                $tbody.sortable('cancel');
+                const errMsg = (response && response.data && response.data.message) ? response.data.message : 'Reordering failed.';
+                if (typeof wpdev_toast_error === 'function') {
+                  wpdev_toast_error(errMsg);
+                } else {
+                  alert(errMsg);
+                }
+              } else {
+                $tbody.find('tr[data-id]').addClass('wpdev-row-saved');
+                setTimeout(function() {
+                  $tbody.find('tr[data-id]').removeClass('wpdev-row-saved');
+                }, 1500);
+
+                if (typeof wpdev_toast_success === 'function') {
+                  wpdev_toast_success(response.data && response.data.message ? response.data.message : 'Order updated successfully.');
+                }
+              }
+            }).fail(function() {
+              $table_parent.removeClass('wpdev-table-saving');
+              $tbody.sortable('cancel');
+              if (typeof wpdev_toast_error === 'function') {
+                wpdev_toast_error('Network error occurred.');
+              } else {
+                alert('Network error occurred.');
+              }
+            });
+          }
+        });
+
+        // WCAG 2.1 AA Keyboard Reordering on drag handles
+        $tbody.off('keydown.wpdev_reorder', '.wpdev-row-drag-handle').on('keydown.wpdev_reorder', '.wpdev-row-drag-handle', function(e) {
+          if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) {
+            return;
+          }
+          e.preventDefault();
+          const $row = $(this).closest('tr');
+          if (e.key === 'ArrowUp') {
+            const $prev = $row.prev('tr:not(.no-items)');
+            if ($prev.length) {
+              $row.insertBefore($prev);
+              $tbody.sortable('option', 'update')();
+              $(this).focus();
+            }
+          } else if (e.key === 'ArrowDown') {
+            const $next = $row.next('tr:not(.no-items)');
+            if ($next.length) {
+              $row.insertAfter($next);
+              $tbody.sortable('option', 'update')();
+              $(this).focus();
+            }
+          }
+        });
 
       },
 

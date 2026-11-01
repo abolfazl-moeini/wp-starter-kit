@@ -17,7 +17,7 @@ defined('ABSPATH') || exit;
  *
  * @since 1.0.0
  */
-class Query extends \WPDevFramework\Dependencies\BerlinDB\Database\Query {
+class Query extends \WPDev\Dependencies\BerlinDB\Database\Query {
 
  	/**
 	 * The prefix for the custom table.

@@ -10,6 +10,10 @@ namespace WPDevFramework\Core;
 
 defined( 'ABSPATH' ) || exit;
 
+if ( class_exists( __NAMESPACE__ . '\Module_View_Registry', false ) ) {
+	return;
+}
+
 /**
  * Maps module ids to view directory roots (searched in registration order).
  */

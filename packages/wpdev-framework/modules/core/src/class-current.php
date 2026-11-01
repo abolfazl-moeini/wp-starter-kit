@@ -237,7 +237,7 @@ class Current {
 	 */
 	public function load_currents() {
 
-		if ( ! function_exists( 'wpdev_get_current_customer' ) ) {
+		if ( ! apply_filters( 'wpdev_current_records_available', false ) ) {
 			return;
 		}
 
@@ -254,42 +254,61 @@ class Current {
 
 			$site_hash = wpdev_request( $site_url_param, get_query_var( 'site_hash' ) );
 
-			if ( function_exists( 'wpdev_get_site_by_hash' ) && class_exists( '\WPDevFramework\Models\Site' ) ) {
-				$site_from_url = wpdev_get_site_by_hash( $site_hash );
+			/**
+			 * Allow examples to resolve an entity record by hash.
+			 *
+			 * @since 2.8.1
+			 *
+			 * @param mixed|null $entity Default null (lookup unavailable).
+			 * @param string     $hash   Entity hash from the request.
+			 */
+			$site_from_url = apply_filters( 'wpdev_entity_lookup_by_hash', null, $site_hash );
 
-				if ( $site_from_url ) {
+			if ( $site_from_url ) {
 
-					$this->site_set_via_request = true;
+				$this->site_set_via_request = true;
 
-					$site = $site_from_url;
+				$site = $site_from_url;
 
-				} // end if;
-			}
+			} // end if;
 
 		} // end if;
 
-		$customer = wpdev_get_current_customer();
+		/**
+		 * Allow examples to resolve the current record (e.g. logged-in customer).
+		 *
+		 * @since 2.8.1
+		 *
+		 * @param mixed $record Default false.
+		 */
+		$customer = apply_filters( 'wpdev_current_record_resolver', false );
 
 		/**
 		 * On the front-end, we need to check for url overrides.
 		 */
 		if ( ! is_admin() ) {
 			/*
-			 * By default, we'll use the `site` parameter.
+			 * By default, we'll use the `customer` parameter.
 			 */
 			$customer_url_param = self::param_key( 'customer' );
 
-			if ( function_exists( 'wpdev_get_customer' ) ) {
-				$customer_from_url = wpdev_get_customer( wpdev_request( $customer_url_param, 0 ) );
+			/**
+			 * Allow examples to resolve a record by ID.
+			 *
+			 * @since 2.8.1
+			 *
+			 * @param mixed|null $record Default null (lookup unavailable).
+			 * @param int          $id   Record ID from the request.
+			 */
+			$customer_from_url = apply_filters( 'wpdev_record_lookup', null, wpdev_request( $customer_url_param, 0 ) );
 
-				if ( $customer_from_url ) {
+			if ( $customer_from_url ) {
 
-					$this->customer_set_via_request = true;
+				$this->customer_set_via_request = true;
 
-					$customer = $customer_from_url;
+				$customer = $customer_from_url;
 
-				} // end if;
-			}
+			} // end if;
 
 		} // end if;
 
@@ -304,11 +323,25 @@ class Current {
 
 		$membership_hash = wpdev_request( $membership_url_param, get_query_var( 'membership_hash' ) );
 
-		if ( $membership_hash && function_exists( 'wpdev_get_membership_by_hash' ) ) {
+		if ( $membership_hash ) {
 
-			$this->membership_set_via_request = true;
+			/**
+			 * Allow examples to resolve a record by hash.
+			 *
+			 * @since 2.8.1
+			 *
+			 * @param mixed|null $record Default null (lookup unavailable).
+			 * @param string     $hash   Record hash from the request.
+			 */
+			$membership_from_hash = apply_filters( 'wpdev_record_lookup_by_hash', null, $membership_hash );
 
-			$membership = wpdev_get_membership_by_hash( $membership_hash );
+			if ( null !== $membership_from_hash ) {
+
+				$this->membership_set_via_request = true;
+
+				$membership = $membership_from_hash;
+
+			} // end if;
 
 		} elseif ( $site ) {
 

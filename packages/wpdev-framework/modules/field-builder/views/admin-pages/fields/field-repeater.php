@@ -134,8 +134,8 @@
     if ( ! empty( $empty_state_config['message'] ) ) {
       $empty_message = $empty_state_config['message'];
     }
-    if ( ! empty( $empty_state_config['icon'] ) ) {
-      $empty_icon = $empty_state_config['icon'];
+    if ( array_key_exists( 'icon', $empty_state_config ) ) {
+      $empty_icon = (string) $empty_state_config['icon'];
     }
   }
   if ( $has_empty_state ) {

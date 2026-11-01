@@ -7,22 +7,10 @@ namespace WPDev\FaultTolerance;
 
 final class CircuitBreaker
 {
-    /** @var string */
-    private $key;
-
-    /** @var int */
-    private $failureThreshold;
-
-    /** @var int */
-    private $cooldownSeconds;
-
     /** @var mixed */
     private $fallback;
 
     /**
-     * @param string $key
-     * @param int    $failureThreshold
-     * @param int    $cooldownSeconds
      * @param mixed  $fallback
      */
     public function __construct(
@@ -31,9 +19,6 @@ final class CircuitBreaker
         int $cooldownSeconds = 60,
         $fallback = null
     ) {
-        $this->key = $key;
-        $this->failureThreshold = $failureThreshold;
-        $this->cooldownSeconds = $cooldownSeconds;
         $this->fallback = $fallback;
     }
 
@@ -46,7 +31,6 @@ final class CircuitBreaker
     }
 
     /**
-     * @param callable $operation
      * @return mixed
      */
     public function call(callable $operation)

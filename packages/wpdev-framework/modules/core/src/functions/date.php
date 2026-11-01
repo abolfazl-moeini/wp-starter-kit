@@ -57,7 +57,7 @@ function wpdev_validate_date( $date, $format = 'Y-m-d H:i:s' ) {
  *
  * @param  string|false  $date  Parsable date string.
  *
- * @return \WPDevFramework\Dependencies\Carbon\Carbon
+ * @return \WPDev\Dependencies\Carbon\Carbon
  * @since 2.0.0
  * @see https://carbon.nesbot.com/docs/
  *
@@ -71,7 +71,7 @@ function wpdev_date( $date = false ) {
 
 	} // end if;
 
-	return \WPDevFramework\Dependencies\Carbon\Carbon::parse( $date );
+	return \WPDev\Dependencies\Carbon\Carbon::parse( $date );
 
 }
 }
@@ -258,3 +258,45 @@ function wpdev_convert_php_date_format_to_moment_js_format( $php_date_format ): 
 }
 }
  // end wpdev_convert_php_date_format_to_moment_js_format;
+
+/**
+ * Format a Unix timestamp or date string into a pure Gregorian datetime string
+ * in the site timezone, immune to calendar plugins filtering wp_date or date_i18n.
+ *
+ * Use this when providing initial HTML `value` attributes for `wpdev-datepicker` inputs
+ * or for backend storage where Gregorian Y-m-d H:i / Y-m-d is strictly required.
+ *
+ * @param int|string $timestamp Unix timestamp or parseable datetime string.
+ * @param string     $format    PHP date format (default 'Y-m-d H:i').
+ *
+ * @return string Gregorian datetime string, or empty string on invalid input.
+ * @since 2.14.0
+ */
+if (!function_exists('wpdev_format_gregorian_datetime')) {
+function wpdev_format_gregorian_datetime( $timestamp, string $format = 'Y-m-d H:i' ): string {
+
+	if ( empty( $timestamp ) ) {
+		return '';
+	}
+
+	try {
+		$tz = function_exists( 'wp_timezone' ) ? wp_timezone() : new \DateTimeZone( 'UTC' );
+
+		if ( is_numeric( $timestamp ) ) {
+			$ts = (int) $timestamp;
+			if ( $ts <= 0 ) {
+				return '';
+			}
+			$dt = ( new \DateTimeImmutable( '@' . $ts ) )->setTimezone( $tz );
+		} else {
+			$dt = new \DateTimeImmutable( (string) $timestamp, $tz );
+		}
+
+		return $dt->format( $format );
+	} catch ( \Throwable $e ) {
+		return '';
+	}
+
+}
+}
+ // end wpdev_format_gregorian_datetime;

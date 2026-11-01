@@ -1,21 +1,23 @@
 # metabox-builder
 
-Edit screen metabox widgets.
+Edit-page metabox and widget registry with scoped registration per admin page.
 
 ## Dependencies
 
-core, form-builder, field-builder, tab-navigation
+core, form-builder, field-builder, tab-navigation, table-builder
 
-## Usage
+## Quick start
 
 ```php
-add_action( 'wpdev_metabox-builder_register', function () {
-	// Register components
+add_action( 'wpdev_load', function () {
+	wpdev_register_metabox( 'my_edit_page', 'my_details', array(
+		'title'  => __( 'Details', 'my-plugin' ),
+		'fields' => array( /* … */ ),
+	) );
 } );
 ```
 
-## Legacy bridge
+## Docs
 
-`WPDevFramework\Admin_Pages\Post_Edit_Admin_Page` canonical path: `src/admin/class-post-edit-admin-page.php`.
-
-`WPDevFramework\Modules\MetaboxBuilder\Edit_Admin_Page` aliases to `Edit_Admin_Page` via `legacy-aliases.php`.
+- API: [`API_DOC.md`](API_DOC.md)
+- Guide: [`../../docs/framework/modules/metabox-builder.md`](../../docs/framework/modules/metabox-builder.md)

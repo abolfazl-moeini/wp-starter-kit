@@ -54,7 +54,7 @@ final class AstraAdapter implements ThemeAdapterInterface {
 
         $btnRadius = $astraSettings['button-radius'] ?? null;
         if (!empty($btnRadius)) {
-            $cleanRadius = Sanitizer::sanitize_length((string) $btnRadius . 'px');
+            $cleanRadius = Sanitizer::sanitize_length($btnRadius . 'px');
             if ($cleanRadius !== null) {
                 $records[] = new HostTokenRecord(
                     HostTokenRecord::ROLE_RADIUS_CONTROL,

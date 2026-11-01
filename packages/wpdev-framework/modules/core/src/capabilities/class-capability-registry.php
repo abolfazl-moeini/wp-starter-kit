@@ -10,6 +10,10 @@ namespace WPDevFramework\Core\Capabilities;
 
 defined( 'ABSPATH' ) || exit;
 
+if ( class_exists( __NAMESPACE__ . '\Capability_Registry', false ) ) {
+	return;
+}
+
 /**
  * Maps admin panels and page slugs to capabilities.
  */
@@ -44,7 +48,14 @@ class Capability_Registry {
 	 */
 	public static function register_page( $page_slug, array $supported_panels ) {
 
-		self::$pages[ \sanitize_key( $page_slug ) ] = $supported_panels;
+		$key = \sanitize_key( $page_slug );
+
+		// Merge so dual registration (network class + site remount) keeps both panels.
+		if ( isset( self::$pages[ $key ] ) && is_array( self::$pages[ $key ] ) ) {
+			self::$pages[ $key ] = array_merge( self::$pages[ $key ], $supported_panels );
+		} else {
+			self::$pages[ $key ] = $supported_panels;
+		}
 
 	} // end register_page;
 

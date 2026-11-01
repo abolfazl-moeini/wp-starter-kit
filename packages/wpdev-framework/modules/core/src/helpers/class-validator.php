@@ -9,7 +9,7 @@
 
 namespace WPDevFramework\Helpers;
 
-use \WPDevFramework\Dependencies\Rakit\Validation\Validator as Validator_Helper;
+use \WPDev\Dependencies\Rakit\Validation\Validator as Validator_Helper;
 use \WPDevFramework\Helpers\Validation_Rules\Unique;
 use \WPDevFramework\Helpers\Validation_Rules\Unique_Site;
 use \WPDevFramework\Helpers\Validation_Rules\Exists;

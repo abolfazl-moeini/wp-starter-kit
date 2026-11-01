@@ -76,8 +76,9 @@ class Admin_Notices {
 	 * @param string  $notice The message to display on the notice block. Supports HTML.
 	 * @param string  $type Type of notice. Can be info, warning, error or success.
 	 * @param string  $panel Panel on which to show this notice. Can be network-admin, admin or user.
-	 * @param boolean $dismissible_key Key to keep track if this notice was already displayed and dismissed.
-	 * @param array   $actions List of buttons to add to the notification block.
+	 * @param boolean|string $dismissible_key Key to keep track if this notice was already displayed and dismissed.
+	 * @param array   $actions List of buttons. Each item: `title`, `url`, optional `style`
+	 *                         (`primary`|`secondary`), `primary` (bool), `target`, `class`.
 	 * @return void
 	 */
 	public function add($notice, $type = 'success', $panel = 'admin', $dismissible_key = false, $actions = array()) {
@@ -88,10 +89,56 @@ class Admin_Notices {
 			'type'            => $type,
 			'message'         => $notice,
 			'dismissible_key' => is_string($dismissible_key) ? $dismissible_key : false,
-			'actions'         => $actions,
+			'actions'         => $this->normalize_actions( $actions ),
 		);
 
 	}  // end add;
+
+	/**
+	 * Normalize notice action button configs.
+	 *
+	 * @since 2.8.6
+	 *
+	 * @param array $actions Raw action list.
+	 * @return array<int,array{title:string,url:string,style:string,target:string,class:string}>
+	 */
+	protected function normalize_actions( $actions ) {
+
+		if ( ! is_array( $actions ) || empty( $actions ) ) {
+			return array();
+		}
+
+		$normalized = array();
+
+		foreach ( $actions as $action ) {
+
+			if ( ! is_array( $action ) || empty( $action['title'] ) || empty( $action['url'] ) ) {
+				continue;
+			}
+
+			$style = 'secondary';
+
+			if ( ! empty( $action['primary'] ) ) {
+				$style = 'primary';
+			}
+
+			if ( ! empty( $action['style'] ) && in_array( $action['style'], array( 'primary', 'secondary' ), true ) ) {
+				$style = $action['style'];
+			}
+
+			$normalized[] = array(
+				'title'  => (string) $action['title'],
+				'url'    => (string) $action['url'],
+				'style'  => $style,
+				'target' => isset( $action['target'] ) ? (string) $action['target'] : '',
+				'class'  => isset( $action['class'] ) ? (string) $action['class'] : '',
+			);
+
+		} // end foreach;
+
+		return $normalized;
+
+	} // end normalize_actions;
 
 	/**
 	 * Returns the list of notices added for a particular panel.

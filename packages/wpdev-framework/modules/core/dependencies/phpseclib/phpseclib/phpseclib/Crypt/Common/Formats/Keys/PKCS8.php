@@ -199,8 +199,6 @@ abstract class PKCS8 extends \phpseclib3\Crypt\Common\Formats\Keys\PKCS
     {
         switch ($algo) {
             case 'desCBC':
-                $cipher = new TripleDES('cbc');
-                break;
             case 'des-EDE3-CBC':
                 $cipher = new TripleDES('cbc');
                 break;

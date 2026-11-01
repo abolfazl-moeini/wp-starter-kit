@@ -64,9 +64,6 @@ abstract class Base extends PHP
      * the other, a power of two - and recombine them, later.  This is the method that this modPow function uses.
      * {@link http://islab.oregonstate.edu/papers/j34monex.pdf Montgomery Reduction with Even Modulus} elaborates.
      *
-     * @param PHP $x
-     * @param PHP $e
-     * @param PHP $n
      * @param string $class
      * @return PHP
      */
@@ -92,8 +89,6 @@ abstract class Base extends PHP
     /**
      * Modular reduction preparation
      *
-     * @param array $x
-     * @param array $n
      * @param string $class
      * @see self::slidingWindow()
      * @return array
@@ -105,9 +100,6 @@ abstract class Base extends PHP
     /**
      * Modular multiply
      *
-     * @param array $x
-     * @param array $y
-     * @param array $n
      * @param string $class
      * @see self::slidingWindow()
      * @return array
@@ -120,8 +112,6 @@ abstract class Base extends PHP
     /**
      * Modular square
      *
-     * @param array $x
-     * @param array $n
      * @param string $class
      * @see self::slidingWindow()
      * @return array

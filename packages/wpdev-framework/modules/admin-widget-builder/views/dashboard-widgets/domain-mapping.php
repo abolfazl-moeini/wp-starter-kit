@@ -43,7 +43,7 @@
 
           <?php if ($domains) : ?>
 
-              <?php foreach ($domains as $key => $domain) : $item = $domain['domain_object']; ?>
+              <?php foreach ($domains as $domain) : $item = $domain['domain_object']; ?>
 
                   <tr>
 

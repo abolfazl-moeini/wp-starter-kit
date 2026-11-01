@@ -68,9 +68,7 @@ class ArrayAdapter implements AdapterInterface, CacheInterface, LoggerAwareInter
         if (\INF === $beta || !$item->isHit()) {
             $save = \true;
             $item->set($callback($item, $save));
-            if ($save) {
-                $this->save($item);
-            }
+            $this->save($item);
         }
         return $item->get();
     }

@@ -11,6 +11,4 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Module
 {
-	public static function init(): void {
-	}
 }

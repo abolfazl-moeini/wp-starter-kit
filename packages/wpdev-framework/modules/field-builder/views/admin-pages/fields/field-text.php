@@ -7,7 +7,7 @@
 ?>
 <li class="<?php echo esc_attr(trim($field->wrapper_classes)); ?>" <?php echo $field->get_wrapper_html_attributes(); ?>>
 
-  <div class="wpdev-block wpdev-w-full">
+  <div class="wpdev-block wpdev-full">
 
     <?php
 
@@ -23,15 +23,15 @@
 
     <?php if ($field->type === 'model') : ?>
 
-      <div class="wpdev-flex">
+      <div class="wpdev-row">
 
-        <div class="wpdev-w-full wpdev-my-1">
-          <input class="form-control wpdev-w-full" name="<?php echo esc_attr($field->id); ?>" type="text" placeholder="<?php echo esc_attr($field->placeholder); ?>" value="<?php echo esc_attr($field->value); ?>" <?php echo $field->get_html_attributes(); ?>>
+        <div class="wpdev-full wpdev-mar-y-1">
+          <input class="form-control wpdev-full" name="<?php echo esc_attr($field->id); ?>" type="text" placeholder="<?php echo esc_attr($field->placeholder); ?>" value="<?php echo esc_attr($field->value); ?>" <?php echo $field->get_html_attributes(); ?>>
         </div>
 
         <?php if (wpdev_get_isset($field->html_attr, 'data-base-link')) : ?>
 
-          <div class="wpdev-ml-1 wpdev-my-1" v-cloak>
+          <div class="wpdev-mar-l-1 wpdev-mar-y-1" v-cloak>
             <a
               v-bind:href="'<?php echo wpdev_get_isset($field->html_attr, 'data-base-link'); ?>' + '=' + <?php echo wpdev_get_isset($field->html_attr, 'v-model'); ?>"
               target="_blank"
@@ -39,7 +39,7 @@
               v-show='<?php echo wpdev_get_isset($field->html_attr, 'v-model'); ?>'
               <?php echo wpdev_tooltip_text(__('View', 'wpdev')); ?>
             >
-              <span class="dashicons-wpdev-popup wpdev-m-0 wpdev-p-0"></span>
+              <span class="dashicons-wpdev-popup wpdev-mar-0 wpdev-pad-0"></span>
             </a>
           </div>
 
@@ -49,13 +49,13 @@
 
     <?php elseif ($field->money) : ?>
 
-      <money class="form-control wpdev-w-full wpdev-my-1" name="<?php echo esc_attr($field->id); ?>" type="<?php echo esc_attr($field->type); ?>" placeholder="<?php echo esc_attr($field->placeholder); ?>" value="<?php echo esc_attr($field->value); ?>" <?php echo $field->get_html_attributes(); ?>></money>
+      <money class="form-control wpdev-full wpdev-mar-y-1" name="<?php echo esc_attr($field->id); ?>" type="<?php echo esc_attr($field->type); ?>" placeholder="<?php echo esc_attr($field->placeholder); ?>" value="<?php echo esc_attr($field->value); ?>" <?php echo $field->get_html_attributes(); ?>></money>
 
-      <input class="form-control wpdev-w-full wpdev-my-1" name="<?php echo esc_attr($field->id); ?>" type="<?php echo esc_attr($field->type); ?>" placeholder="<?php echo esc_attr($field->placeholder); ?>" value="<?php echo esc_attr($field->value); ?>" <?php echo $field->get_html_attributes(); ?> v-if="false">
+      <input class="form-control wpdev-full wpdev-mar-y-1" name="<?php echo esc_attr($field->id); ?>" type="<?php echo esc_attr($field->type); ?>" placeholder="<?php echo esc_attr($field->placeholder); ?>" value="<?php echo esc_attr($field->value); ?>" <?php echo $field->get_html_attributes(); ?> v-if="false">
 
     <?php else : ?>
 
-      <input class="form-control wpdev-w-full wpdev-my-1" name="<?php echo esc_attr($field->id); ?>" type="<?php echo esc_attr($field->type); ?>" placeholder="<?php echo esc_attr($field->placeholder); ?>" value="<?php echo esc_attr($field->value); ?>" <?php echo $field->get_html_attributes(); ?>>
+      <input class="form-control wpdev-full wpdev-mar-y-1" name="<?php echo esc_attr($field->id); ?>" type="<?php echo esc_attr($field->type); ?>" placeholder="<?php echo esc_attr($field->placeholder); ?>" value="<?php echo esc_attr($field->value); ?>" <?php echo $field->get_html_attributes(); ?>>
 
     <?php endif; ?>
 

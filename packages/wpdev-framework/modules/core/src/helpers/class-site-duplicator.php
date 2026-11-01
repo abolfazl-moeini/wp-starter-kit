@@ -9,26 +9,10 @@
 
 namespace WPDevFramework\Helpers;
 
-use WPDevFramework\Dependencies\Psr\Log\LogLevel;
+use WPDev\Dependencies\Psr\Log\LogLevel;
 
 // Exit if accessed directly
 defined( 'ABSPATH' ) || exit;
-
-add_action(
-	'plugins_loaded',
-	static function () {
-		if ( ! function_exists( 'wpdev_examples_file' ) ) {
-			return;
-		}
-
-		$duplicate_file = wpdev_examples_file( 'sites/src/duplication/duplicate.php' );
-
-		if ( '' !== $duplicate_file && is_readable( $duplicate_file ) ) {
-			require_once $duplicate_file;
-		}
-	},
-	6
-);
 
 if (!defined('MUCD_PRIMARY_SITE_ID')) {
 
@@ -101,7 +85,11 @@ class Site_Duplicator {
 	 */
 	public static function override_site($from_site_id, $to_site_id, $args = array()) {
 
-		$to_site = wpdev_get_site($to_site_id);
+		$to_site = apply_filters( 'wpdev_entity_lookup', null, $to_site_id, 'site' );
+
+		if ( ! $to_site ) {
+			return false;
+		}
 
 		$to_site_membership_id = $to_site->get_membership_id();
 
@@ -131,7 +119,11 @@ class Site_Duplicator {
 
 		} // end if;
 
-		$new_to_site = wpdev_get_site($duplicate_site_id);
+		$new_to_site = apply_filters( 'wpdev_entity_lookup', null, $duplicate_site_id, 'site' );
+
+		if ( ! $new_to_site ) {
+			return false;
+		}
 
 		$new_to_site->set_membership_id($to_site_membership_id);
 
@@ -179,6 +171,13 @@ class Site_Duplicator {
 	protected static function process_duplication($args) {
 
 		global $current_site, $wpdb;
+
+		if ( ! class_exists( '\MUCD_Duplicate' ) ) {
+			return new \WP_Error(
+				'duplication_unavailable',
+				__( 'Site duplication requires the WPDev Examples plugin (sites module).', 'wpdev' )
+			);
+		}
 
 		$args = wp_parse_args($args, array(
 			'email'        => '',    // Required arguments.

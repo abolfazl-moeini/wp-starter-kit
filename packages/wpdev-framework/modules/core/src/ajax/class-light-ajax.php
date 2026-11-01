@@ -134,7 +134,9 @@ class Light_Ajax {
 		/** Allow for cross-domain requests (from the front end). */
 		send_origin_headers();
 
-		header('Content-Type: text/html; charset=' . get_blog_option(wpdev_get_main_site_id(), 'blog_charset'));
+		// Match WP admin-ajax.php: get_option works on single-site; get_blog_option is MS-only
+		// and an unqualified call resolves to WPDevFramework\get_blog_option() (undefined).
+		header('Content-Type: text/html; charset=' . \get_option('blog_charset'));
 		header('X-Robots-Tag: noindex');
 
 		if (empty($_REQUEST['action'])) {

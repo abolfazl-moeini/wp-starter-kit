@@ -9,8 +9,8 @@ if ( !class_exists('Puc_v4p11_UpgraderStatus', false) ):
 	 * This class uses a few workarounds and heuristics to get the file name.
 	 */
 	class Puc_v4p11_UpgraderStatus {
-		private $currentType = null; //"plugin" or "theme".
-		private $currentId = null;   //Plugin basename or theme directory name.
+		private $currentType; //"plugin" or "theme".
+		private $currentId;   //Plugin basename or theme directory name.
 
 		public function __construct() {
 			//Keep track of which plugin/theme WordPress is currently upgrading.

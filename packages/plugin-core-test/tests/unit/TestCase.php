@@ -5,16 +5,14 @@ namespace WPDevTest\Unit;
 abstract class TestCase extends \WP_UnitTestCase {
 
 	/**
-	 * Fire private/protected method on an object.
-	 *
-	 * @param object|string $class instance or class name
-	 * @param string        $method
-	 * @param array         $arguments
-	 *
-	 * @throws \ReflectionException
-	 * @return mixed
-	 */
-	public function method_call( $class, string $method, array $arguments = [], bool $get_echo = false ) {
+     * Fire private/protected method on an object.
+     *
+     * @param object|string $class instance or class name
+     *
+     * @throws \ReflectionException
+     * @return mixed
+     */
+    public function method_call( $class, string $method, array $arguments = [], bool $get_echo = false ) {
 
 		$ref_object   = \is_string( $class ) ? new \ReflectionClass( $class ) : new \ReflectionObject( $class );
 		$ref_property = $ref_object->getMethod( $method );
@@ -28,15 +26,13 @@ abstract class TestCase extends \WP_UnitTestCase {
 	}
 
 	/**
-	 * Set value to a private/protected property.
-	 *
-	 * @param object|string $class instance or class name
-	 * @param string        $property
-	 * @param mixed         $value
-	 *
-	 * @return bool true on success or false otherwise
-	 */
-	public function property_set( $class, string $property, $value ): bool {
+     * Set value to a private/protected property.
+     *
+     * @param object|string $class instance or class name
+     * @param mixed         $value
+     * @return bool true on success or false otherwise
+     */
+    public function property_set( $class, string $property, $value ): bool {
 
 		try {
 
@@ -53,15 +49,13 @@ abstract class TestCase extends \WP_UnitTestCase {
 	}
 
 	/**
-	 * Get value of a private/protected property.
-	 *
-	 * @param object|string $class instance or class name
-	 * @param string $property
-	 * @param mixed &$value
-	 *
-	 * @return bool true on success or false otherwise
-	 */
-	public function property_get( $class, string $property, &$value ): bool {
+     * Get value of a private/protected property.
+     *
+     * @param object|string $class instance or class name
+     * @param mixed &$value
+     * @return bool true on success or false otherwise
+     */
+    public function property_get( $class, string $property, &$value ): bool {
 
 		try {
 

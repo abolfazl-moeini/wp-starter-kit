@@ -975,8 +975,6 @@ class SFTP extends \phpseclib3\Net\SSH2
      *
      * Intended for use with uasort()
      *
-     * @param array $a
-     * @param array $b
      * @return int
      */
     private function comparator(array $a, array $b)
@@ -2292,7 +2290,7 @@ class SFTP extends \phpseclib3\Net\SSH2
         }
         $packet = Strings::packSSH2('sNN', $this->realpath($path), NET_SFTP_OPEN_READ, 0);
         $this->send_sftp_packet(NET_SFTP_OPEN, $packet);
-        $response = $this->get_sftp_packet();
+        $this->get_sftp_packet();
         switch ($this->packet_type) {
             case NET_SFTP_HANDLE:
                 return \true;
@@ -2316,7 +2314,7 @@ class SFTP extends \phpseclib3\Net\SSH2
         }
         $packet = Strings::packSSH2('sNN', $this->realpath($path), NET_SFTP_OPEN_WRITE, 0);
         $this->send_sftp_packet(NET_SFTP_OPEN, $packet);
-        $response = $this->get_sftp_packet();
+        $this->get_sftp_packet();
         switch ($this->packet_type) {
             case NET_SFTP_HANDLE:
                 return \true;
@@ -2959,7 +2957,6 @@ class SFTP extends \phpseclib3\Net\SSH2
         switch (NET_SFTP_LOGGING) {
             case self::LOG_COMPLEX:
                 return $this->format_log($this->packet_log, $this->packet_type_log);
-                break;
             //case self::LOG_SIMPLE:
             default:
                 return $this->packet_type_log;

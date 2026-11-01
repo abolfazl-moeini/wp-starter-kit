@@ -164,7 +164,7 @@ abstract class AbstractTagAwareAdapter implements TagAwareAdapterInterface, TagA
                 $e = $this->doSave($values, $lifetime, $addTagData, $removeTagData);
             } catch (\Exception $e) {
             }
-            if (\true === $e || [] === $e) {
+            if ([] === $e) {
                 continue;
             }
             if (\is_array($e) || 1 === \count($values)) {
@@ -190,7 +190,7 @@ abstract class AbstractTagAwareAdapter implements TagAwareAdapterInterface, TagA
                     $e = $this->doSave($values, $lifetime, $addTagData, $removeTagData);
                 } catch (\Exception $e) {
                 }
-                if (\true === $e || [] === $e) {
+                if ([] === $e) {
                     continue;
                 }
                 $ok = \false;
@@ -277,7 +277,7 @@ abstract class AbstractTagAwareAdapter implements TagAwareAdapterInterface, TagA
             foreach ($value['tag-operations']['add'] as $tag => $tagId) {
                 $addTagData[$tagId][] = $id;
             }
-            foreach ($value['tag-operations']['remove'] as $tag => $tagId) {
+            foreach ($value['tag-operations']['remove'] as $tagId) {
                 $removeTagData[$tagId][] = $id;
             }
             unset($values[$id]['tag-operations']);

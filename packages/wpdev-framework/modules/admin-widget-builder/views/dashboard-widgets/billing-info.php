@@ -86,34 +86,49 @@
 
     <!-- Billing Address - End -->
 
-    <?php if ($membership->is_recurring() && false) : ?>
+    <?php if ($membership->is_recurring() && false) {
+    ?>
 
       <!-- Payment Method -->
 
       <div id="wpdev-payment-method">
 
         <!-- Title Element -->
-        <div class="wpdev-p-4 wpdev-flex wpdev-items-center <?php echo wpdev_env_picker('', 'wpdev-bg-gray-100 wpdev-border-solid wpdev-border-0 wpdev-border-b wpdev-border-t wpdev-border-gray-200'); ?>">
+        <div class="wpdev-p-4 wpdev-flex wpdev-items-center <?php 
+    echo wpdev_env_picker('', 'wpdev-bg-gray-100 wpdev-border-solid wpdev-border-0 wpdev-border-b wpdev-border-t wpdev-border-gray-200');
+    ?>">
 
-          <?php if (true) : ?>
+          <?php 
+    ?>
 
-            <h3 class="wpdev-m-0 <?php echo wpdev_env_picker('', 'wpdev-widget-title'); ?>">
+            <h3 class="wpdev-m-0 <?php 
+    echo wpdev_env_picker('', 'wpdev-widget-title');
+    ?>">
 
-              <?php echo __('Payment Method', 'wpdev'); ?>
+              <?php 
+    echo __('Payment Method', 'wpdev');
+    ?>
 
             </h3>
 
-          <?php endif; ?>
+          <?php 
+    ?>
 
           <div class="wpdev-ml-auto">
 
             <a
-              title="<?php esc_attr_e('Update Billing Address', 'wpdev'); ?>"
+              title="<?php 
+    esc_attr_e('Update Billing Address', 'wpdev');
+    ?>"
               class="wpdev-text-sm wpdev-no-underline wubox button"
-              href="<?php echo $update_billing_address_link; ?>"
+              href="<?php 
+    echo $update_billing_address_link;
+    ?>"
             >
 
-              <?php _e('Update', 'wpdev'); ?>
+              <?php 
+    _e('Update', 'wpdev');
+    ?>
 
             </a>
 
@@ -174,7 +189,8 @@
 
       <!-- Payment Method - End -->
 
-    <?php endif; ?>
+    <?php 
+} ?>
 
   </div>
 

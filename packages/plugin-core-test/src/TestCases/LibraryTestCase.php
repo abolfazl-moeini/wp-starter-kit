@@ -25,8 +25,6 @@ abstract class LibraryTestCase extends TestCase {
 
 	public function tearDown() {
 
-		parent::tearDown();
-
 		wp_deregister_script( $this->handle_name() );
 	}
 }

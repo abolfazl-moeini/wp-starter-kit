@@ -8700,8 +8700,10 @@ function generateCodeFrame(source, start, end) {
     count += lines[i].length + 1;
     if (count >= start) {
       for (var j = i - range; j <= i + range || end > count; j++) {
-        if (j < 0 || j >= lines.length)
+        if (j < 0)
           continue;
+        if (j >= lines.length)
+          break;
         res.push("".concat(j + 1).concat(repeat(" ", 3 - String(j + 1).length), "|  ").concat(lines[j]));
         var lineLength = lines[j].length;
         if (j === i) {

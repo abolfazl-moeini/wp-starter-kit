@@ -15,7 +15,6 @@ interface ThemeAdapterInterface {
      * Whether this adapter supports the currently active theme.
      *
      * @param WP_Theme $theme Active theme object.
-     * @return bool
      */
     public function supports(WP_Theme $theme): bool;
 
@@ -28,8 +27,6 @@ interface ThemeAdapterInterface {
 
     /**
      * Supported version range description.
-     *
-     * @return string
      */
     public function version_range(): string;
 }

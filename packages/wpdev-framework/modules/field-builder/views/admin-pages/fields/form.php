@@ -9,7 +9,7 @@
 
   <?php echo $form->before; ?>
 
-  <div class="wpdev-flex wpdev-flex-wrap">
+  <div class="wpdev-row wpdev-row-wrap">
 
     <?php if ($form->wrap_in_form_tag) : ?>
 
@@ -22,7 +22,7 @@
 
     <?php endif; ?>
 
-    <ul id="wpdev-form-<?php echo esc_attr($form->id); ?>" class="wpdev-flex-grow <?php echo esc_attr(trim($form->classes)); ?>" <?php echo $form->get_html_attributes(); ?>>
+    <ul id="wpdev-form-<?php echo esc_attr($form->id); ?>" class="wpdev-grow <?php echo esc_attr(trim($form->classes)); ?>" <?php if (! $form->wrap_in_form_tag) : echo $form->get_html_attributes(); endif; ?>>
 
       <?php echo $rendered_fields; ?>
 

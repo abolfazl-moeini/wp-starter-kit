@@ -15,11 +15,9 @@ namespace WPDev\Core;
 abstract class AbstractModule implements ModuleInterface {
 
 	/**
-	 * Return false to skip booting this module in the current request.
-	 *
-	 * @return bool
-	 */
-	public function should_boot(): bool {
+     * Return false to skip booting this module in the current request.
+     */
+    public function should_boot(): bool {
 		return true;
 	}
 }

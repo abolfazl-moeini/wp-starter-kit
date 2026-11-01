@@ -23,8 +23,6 @@ abstract class PowerOfTwo extends Base
     /**
      * Prepare a number for use in Montgomery Modular Reductions
      *
-     * @param array $x
-     * @param array $n
      * @param string $class
      * @return array
      */
@@ -35,8 +33,6 @@ abstract class PowerOfTwo extends Base
     /**
      * Power Of Two Reduction
      *
-     * @param array $x
-     * @param array $n
      * @param string $class
      * @return array
      */

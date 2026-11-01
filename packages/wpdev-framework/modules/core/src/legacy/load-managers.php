@@ -37,7 +37,7 @@ function wpdev_maybe_boot_manager( $module_id, $manager_class ) {
 function wpdev_load_managers() {
 
 	if ( ! apply_filters( 'wpdev_module_enabled', true, 'core' ) ) {
-		WPDevFramework\License::get_instance();
+		// Commercial License lives in addons/wpdev-license when present.
 	}
 
 	if ( ! \WPDevFramework\Core\Service_Registry::has( 'view' ) ) {

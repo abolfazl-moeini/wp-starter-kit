@@ -5,10 +5,9 @@ namespace WPDevTest\TestCases;
 abstract class BaseAjaxTestCase extends \WP_Ajax_UnitTestCase {
 
 	/**
-	 * @since 1.0.0
-	 * @return string
-	 */
-	abstract public function ajax_action(): string;
+     * @since 1.0.0
+     */
+    abstract public function ajax_action(): string;
 
 	public function setUp(): void {
 

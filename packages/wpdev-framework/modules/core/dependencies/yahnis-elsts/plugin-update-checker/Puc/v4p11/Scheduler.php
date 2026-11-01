@@ -17,7 +17,7 @@ if ( !class_exists('Puc_v4p11_Scheduler', false) ):
 		 */
 		protected $updateChecker;
 
-		private $cronHook = null;
+		private $cronHook;
 
 		/**
 		 * Scheduler constructor.

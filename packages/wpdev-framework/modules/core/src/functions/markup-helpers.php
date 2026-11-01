@@ -114,7 +114,7 @@ function wpdev_tooltip($tooltip, $icon = 'dashicons-editor-help') {
 
 	} else {
 
-		$markup .= sprintf('<span class="dashicons wpdev-text-xs wpdev-w-auto wpdev-h-auto wpdev-align-text-bottom %s"></span>', esc_attr($icon));
+		$markup .= sprintf('<span class="dashicons wpdev-type-xs wpdev-w-auto wpdev-h-auto wpdev-align-text-bottom %s"></span>', esc_attr($icon));
 
 	} // end if;
 
@@ -157,7 +157,7 @@ function wpdev_preview_image($image_url, $label = false): string {
 
 	} // end if;
 
-	return sprintf(' <span class="wpdev-image-preview wpdev-text-gray-600 wpdev-bg-gray-200 wpdev-p-1 wpdev-px-2 wpdev-ml-1 wpdev-inline-block wpdev-text-2xs wpdev-uppercase wpdev-font-bold wpdev-rounded wpdev-cursor-pointer wpdev-border-gray-300 wpdev-border wpdev-border-solid" data-image="%s">%s %s</span>', $image_url, "<span class='dashicons-wpdev-image wpdev-align-middle wpdev-mr-1'></span>", $label);
+	return sprintf(' <span class="wpdev-image-preview wpdev-type-gray-600 wpdev-surface-gray-200 wpdev-pad-1 wpdev-pad-x-2 wpdev-mar-l-1 wpdev-inline-block wpdev-type-2xs wpdev-uppercase wpdev-font-bold wpdev-radius wpdev-cursor-pointer wpdev-border-gray-300 wpdev-border wpdev-border-solid" data-image="%s">%s %s</span>', $image_url, "<span class='dashicons-wpdev-image wpdev-align-middle wpdev-mar-r-1'></span>", $label);
 
 }
 }
@@ -264,7 +264,7 @@ function wpdev_get_icons_list() {
 		'dashicons-wpdev-circular-graph',
 		'dashicons-wpdev-clapperboard',
 		'dashicons-wpdev-classic-computer',
-		'dashicons-wpdev-clipboard',
+		'dashicons-wpdev-overflow-hiddenboard',
 		'dashicons-wpdev-clock',
 		'dashicons-wpdev-cloud',
 		'dashicons-wpdev-code',

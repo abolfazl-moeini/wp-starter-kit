@@ -28,12 +28,20 @@ class SettingsLockDb {
   }
 }
 $GLOBALS['wpdb'] = new SettingsLockDb();
+require ${JSON.stringify(path.join(root, "modules/settings-panel-builder/src/class-settings-write-lock.php"))};
 require ${JSON.stringify(path.join(root, "modules/settings-panel-builder/src/class-settings-save.php"))};
 require ${JSON.stringify(path.join(root, "modules/settings-panel-builder/src/class-settings-storage.php"))};
 $storage = new \\WPDevFramework\\Modules\\SettingsPanelBuilder\\Settings_Storage();
 $storage->prime(array('theme' => 'stale', 'crm' => 'stale'));
 $GLOBALS['option']['v2_settings'] = array('theme' => 'old', 'crm' => 'latest', 'tickets' => 'latest');
-echo json_encode($storage->replace_registered(array('theme' => 'new')));
+$resolved = array('theme' => 'new');
+$saved = \\WPDevFramework\\Modules\\SettingsPanelBuilder\\Settings_Write_Lock::run('v2_settings', function () use ($storage, $resolved) {
+  $latest = wpdev_get_option('v2_settings');
+  $merged = \\WPDevFramework\\Modules\\SettingsPanelBuilder\\Settings_Save::merge_with_saved($latest, $resolved);
+  $storage->replace($merged);
+  return $merged;
+});
+echo json_encode($saved);
 `;
   await fs.writeFile(script, source, "utf8");
   const result = spawnSync("php", [script], { encoding: "utf8" });

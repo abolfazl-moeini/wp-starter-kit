@@ -122,16 +122,15 @@ trait WPDev_Deprecated {
 	/**
 	 * Deprecated: enqueue_select2.
 	 *
+	 * No-op: does not load Select2 from a CDN (WordPress.org guideline 8).
+	 * Use the bundled selectize field assets instead.
+	 *
 	 * @since 2.0.0
 	 * @return void
 	 */
 	public function enqueue_select2() {
 
-		_deprecated_function(__METHOD__, '2.0.0');
-
-		wp_enqueue_style('wpdev-select2css', 'https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.8/select2.css', false, '1.0', 'all');
-
-		wp_enqueue_script('wpdev-select2', 'https://cdnjs.cloudflare.com/ajax/libs/select2/3.4.8/select2.js', array('jquery'), '1.0', true);
+		_deprecated_function( __METHOD__, '2.0.0', 'selectize field assets' );
 
 	} // end enqueue_select2;
 

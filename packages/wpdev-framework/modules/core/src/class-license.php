@@ -28,11 +28,9 @@ class License implements License_Gate {
 	use \WPDevFramework\Traits\Singleton;
 
 	/**
-	 * The option key used to store the license data.
-	 *
-	 * @var string
-	 */
-	protected string $option_key = 'license_key';
+     * The option key used to store the license data.
+     */
+    protected string $option_key = 'license_key';
 
 	/**
 	 * Instantiate the necessary hooks.
@@ -73,9 +71,7 @@ class License implements License_Gate {
 
 		$data = (array) json_decode($body, true);
 
-		$signature = wpdev_get_isset($data, 'signature', 'no_signature');
-
-		return $signature;
+		return wpdev_get_isset($data, 'signature', 'no_signature');
 
 	} // end request_support_signature;
 
@@ -266,7 +262,7 @@ class License implements License_Gate {
 	 */
 	public function handle_deactivation_form() {
 
-		$license = License::get_instance();
+		License::get_instance();
 
 		if (!$this->deactivate()) {
 
@@ -367,14 +363,12 @@ class License implements License_Gate {
 		return true;
 
 	} // end activate;
-
-	/**
-	 * Deactivated the current license.
-	 *
-	 * @since 2.0.11
-	 * @return bool
-	 */
-	public function deactivate(): bool {
+    /**
+     * Deactivated the current license.
+     *
+     * @since 2.0.11
+     */
+    public function deactivate(): bool {
 
 		try {
 
@@ -641,16 +635,14 @@ class License implements License_Gate {
 		return $this->build_license_from_response($body);
 
 	} // end license_api_request;
-
-	/**
-	 * Build a license object from the API response.
-	 *
-	 * @since 2.4.0
-	 *
-	 * @param object $response Response from the API.
-	 * @return object
-	 */
-	protected function build_license_from_response(object $response): object {
+    /**
+     * Build a license object from the API response.
+     *
+     * @since 2.4.0
+     *
+     * @param object $response Response from the API.
+     */
+    protected function build_license_from_response(object $response): object {
 
 		$status = array(
 			'active',
@@ -663,7 +655,7 @@ class License implements License_Gate {
 		$license->is_whitelabeled = false;
 		$license->timestamp       = time();
 		$license->secret_key      = property_exists($response, 'key') ? $response->key : null;
-		$license->valid           = property_exists($response, 'status') ? in_array($response->status, $status, true) : false;
+		$license->valid           = property_exists($response, 'status') && in_array($response->status, $status, true);
 		$license->instance        = property_exists($response, 'instance') ? $response->instance : null;
 		$license->error           = property_exists($response, 'error') ? $response->error : null;
 

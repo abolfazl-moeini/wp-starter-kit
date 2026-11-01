@@ -87,13 +87,42 @@ interface Ajax_Service_Contract extends Service_Contract {
 	 * @param mixed    ...$args  Optional callback args.
 	 * @return void
 	 */
-	public function register_async_listener( $id, $callable, ...$args );
+	/**
+	 * Register an authenticated AJAX action with mandatory capability and CSRF protection.
+	 *
+	 * @param string               $action       Action slug without prefix.
+	 * @param string|null          $nonceAction  Nonce action name.
+	 * @param string|callable      $capability   Required user capability.
+	 * @param string|callable      $handler      Handler class name or callable.
+	 * @param array<string, mixed> $schema       Request validation schema.
+	 * @param array<string, mixed> $args         Additional transport options.
+	 * @param string|null          $nonce_action Nonce action snake_case fallback.
+	 * @return array<string, mixed> Surface registration record.
+	 */
+	public function authenticated( $action, $nonceAction = null, $capability = 'manage_options', $handler = null, array $schema = array(), array $args = array(), $nonce_action = null );
 
 	/**
-	 * Install registered async listeners.
+	 * Register a public read AJAX action.
 	 *
-	 * @return void
+	 * @param string               $action  Action slug without prefix.
+	 * @param string|callable      $handler Handler class name or callable.
+	 * @param array<string, mixed> $schema  Request validation schema.
+	 * @param array<string, mixed> $args    Additional options.
+	 * @return array<string, mixed> Surface registration record.
 	 */
-	public function install_async_listeners();
+	public function public_read( $action, $handler, array $schema = array(), array $args = array() );
+
+	/**
+	 * Alias for authenticated AJAX action with capability enforcement.
+	 *
+	 * @param string               $action      Action slug without prefix.
+	 * @param string               $nonceAction Nonce action name.
+	 * @param string|callable      $capability  Required user capability.
+	 * @param string|callable      $handler     Handler class name or callable.
+	 * @param array<string, mixed> $schema      Request validation schema.
+	 * @param array<string, mixed> $args        Additional options.
+	 * @return array<string, mixed> Surface registration record.
+	 */
+	public function capability_write( $action, $nonceAction, $capability, $handler, array $schema = array(), array $args = array() );
 
 } // end interface Ajax_Service_Contract;

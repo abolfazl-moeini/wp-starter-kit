@@ -13,7 +13,7 @@ if ( !class_exists('Puc_v4p11_Vcs_Api') ):
 		/**
 		 * @var mixed Authentication details for private repositories. Format depends on service.
 		 */
-		protected $credentials = null;
+		protected $credentials;
 
 		/**
 		 * @var string The filter tag that's used to filter options passed to wp_remote_get.
@@ -24,7 +24,7 @@ if ( !class_exists('Puc_v4p11_Vcs_Api') ):
 		/**
 		 * @var string|null
 		 */
-		protected $localDirectory = null;
+		protected $localDirectory;
 
 		/**
 		 * Puc_v4p11_Vcs_Api constructor.

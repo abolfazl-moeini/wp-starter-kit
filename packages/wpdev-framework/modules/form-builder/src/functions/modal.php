@@ -89,7 +89,7 @@ function wpdev_render_entity_list_modal( array $entities, array $args = array() 
 	$args = wp_parse_args(
 		$args,
 		array(
-			'wrapper_class' => 'wpdev-bg-gray-100 wpdev--mt-3 wpdev--mb-6 wpdev-max-h-2',
+			'wrapper_class' => 'wpdev-surface-gray-100 wpdev--mt-3 wpdev--mb-6 wpdev-max-h-2',
 			'modal_class'   => '',
 			'empty_label'   => __( 'No Targets', 'wpdev' ),
 		)

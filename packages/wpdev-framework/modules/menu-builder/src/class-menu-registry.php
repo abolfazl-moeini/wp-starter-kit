@@ -127,7 +127,7 @@ class Menu_Registry extends Registry_Base {
 		$page_slug = \sanitize_key( (string) $page_slug );
 
 		if ( isset( self::$page_hooks[ $page_slug ] ) ) {
-			return (string) self::$page_hooks[ $page_slug ];
+			return self::$page_hooks[ $page_slug ];
 		}
 
 		$config = self::get( $page_slug );

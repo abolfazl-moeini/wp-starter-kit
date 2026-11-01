@@ -287,6 +287,16 @@ function wpdev_sanitize_embed_html( $value ) {
 			'class' => true,
 			'style' => true,
 		),
+		'img'    => array(
+			'src'     => true,
+			'alt'     => true,
+			'title'   => true,
+			'class'   => true,
+			'style'   => true,
+			'width'   => true,
+			'height'  => true,
+			'loading' => true,
+		),
 	);
 
 	$clean = function_exists( 'wp_kses' ) ? (string) wp_kses( $value, $allowed ) : $value;

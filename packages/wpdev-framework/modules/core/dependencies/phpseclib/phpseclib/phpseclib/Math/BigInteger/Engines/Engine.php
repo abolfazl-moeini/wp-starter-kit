@@ -256,7 +256,6 @@ abstract class Engine implements \JsonSerializable
      *
      * {@internal See {@link http://www.cacr.math.uwaterloo.ca/hac/about/chap14.pdf#page=21 HAC 14.64} for more information.}
      *
-     * @param Engine $n
      * @return static|false
      */
     protected function modInverseHelper(\phpseclib3\Math\BigInteger\Engines\Engine $n)
@@ -470,8 +469,6 @@ abstract class Engine implements \JsonSerializable
             }
         } else {
             $temp = \ord($bits[0]);
-            for ($i = 0; $temp >> $i; ++$i) {
-            }
             $precision = 8 * \strlen($bits) - 8 + $i;
             $mask = \chr((1 << ($precision & 0x7)) - 1) . \str_repeat(\chr(0xff), $precision >> 3);
         }
@@ -541,8 +538,6 @@ abstract class Engine implements \JsonSerializable
     /**
      * Performs some pre-processing for powMod
      *
-     * @param Engine $e
-     * @param Engine $n
      * @return static|false
      */
     protected function powModOuter(\phpseclib3\Math\BigInteger\Engines\Engine $e, \phpseclib3\Math\BigInteger\Engines\Engine $n)
@@ -571,9 +566,6 @@ abstract class Engine implements \JsonSerializable
      * As such, this function has the same preconditions that the reductions being used do.
      *
      * @template T of Engine
-     * @param Engine $x
-     * @param Engine $e
-     * @param Engine $n
      * @param class-string<T> $class
      * @return T
      */
@@ -584,10 +576,6 @@ abstract class Engine implements \JsonSerializable
         //static $window_ranges = [0, 7, 36, 140, 450, 1303, 3529]; // from MPM 7.3.1
         $e_bits = $e->toBits();
         $e_length = \strlen($e_bits);
-        // calculate the appropriate window size.
-        // $window_size == 3 if $window_ranges is between 25 and 81, for example.
-        for ($i = 0, $window_size = 1; $i < \count($window_ranges) && $e_length > $window_ranges[$i]; ++$window_size, ++$i) {
-        }
         $n_value = $n->value;
         if (\method_exists(static::class, 'generateCustomReduction')) {
             static::generateCustomReduction($n, $class);
@@ -664,8 +652,6 @@ abstract class Engine implements \JsonSerializable
     /**
      * Performs some pre-processing for randomRangePrime
      *
-     * @param Engine $min
-     * @param Engine $max
      * @return static|false
      */
     protected static function randomRangePrimeOuter(\phpseclib3\Math\BigInteger\Engines\Engine $min, \phpseclib3\Math\BigInteger\Engines\Engine $max)
@@ -691,8 +677,6 @@ abstract class Engine implements \JsonSerializable
      * BigInteger::randomRange($min, $max)
      * BigInteger::randomRange($max, $min)
      *
-     * @param Engine $min
-     * @param Engine $max
      * @return Engine
      */
     protected static function randomRangeHelper(\phpseclib3\Math\BigInteger\Engines\Engine $min, \phpseclib3\Math\BigInteger\Engines\Engine $max)
@@ -745,9 +729,6 @@ abstract class Engine implements \JsonSerializable
     /**
      * Performs some post-processing for randomRangePrime
      *
-     * @param Engine $x
-     * @param Engine $min
-     * @param Engine $max
      * @return static|false
      */
     protected static function randomRangePrimeInner(\phpseclib3\Math\BigInteger\Engines\Engine $x, \phpseclib3\Math\BigInteger\Engines\Engine $min, \phpseclib3\Math\BigInteger\Engines\Engine $max)
@@ -990,7 +971,6 @@ abstract class Engine implements \JsonSerializable
     /**
      * Return the minimum BigInteger between an arbitrary number of BigIntegers.
      *
-     * @param array $nums
      * @return Engine
      */
     protected static function minHelper(array $nums)
@@ -1007,7 +987,6 @@ abstract class Engine implements \JsonSerializable
     /**
      * Return the minimum BigInteger between an arbitrary number of BigIntegers.
      *
-     * @param array $nums
      * @return Engine
      */
     protected static function maxHelper(array $nums)
@@ -1031,7 +1010,6 @@ abstract class Engine implements \JsonSerializable
      */
     public function createRecurringModuloFunction()
     {
-        $class = static::class;
         $fqengine = !\method_exists(static::$modexpEngine[static::class], 'reduce') ? '\\phpseclib3\\Math\\BigInteger\\Engines\\' . static::ENGINE_DIR . '\\DefaultEngine' : static::$modexpEngine[static::class];
         if (\method_exists($fqengine, 'generateCustomReduction')) {
             $func = $fqengine::generateCustomReduction($this, static::class);
@@ -1041,7 +1019,6 @@ abstract class Engine implements \JsonSerializable
                 return $r;
             };');
         }
-        $n = $this->value;
         return eval('return function(' . static::class . ' $x) use ($n, $fqengine, $class) {
             $r = new $class();
             $r->value = $fqengine::reduce($x->value, $n, $class);
@@ -1051,7 +1028,6 @@ abstract class Engine implements \JsonSerializable
     /**
      * Calculates the greatest common divisor and Bezout's identity.
      *
-     * @param Engine $n
      * @return array{gcd: Engine, x: Engine, y: Engine}
      */
     protected function extendedGCDHelper(\phpseclib3\Math\BigInteger\Engines\Engine $n)
@@ -1103,7 +1079,6 @@ abstract class Engine implements \JsonSerializable
     /**
      * Logical And
      *
-     * @param Engine $x
      * @return Engine
      */
     protected function bitwiseAndHelper(\phpseclib3\Math\BigInteger\Engines\Engine $x)
@@ -1118,7 +1093,6 @@ abstract class Engine implements \JsonSerializable
     /**
      * Logical Or
      *
-     * @param Engine $x
      * @return Engine
      */
     protected function bitwiseOrHelper(\phpseclib3\Math\BigInteger\Engines\Engine $x)
@@ -1133,7 +1107,6 @@ abstract class Engine implements \JsonSerializable
     /**
      * Logical Exclusive Or
      *
-     * @param Engine $x
      * @return Engine
      */
     protected function bitwiseXorHelper(\phpseclib3\Math\BigInteger\Engines\Engine $x)

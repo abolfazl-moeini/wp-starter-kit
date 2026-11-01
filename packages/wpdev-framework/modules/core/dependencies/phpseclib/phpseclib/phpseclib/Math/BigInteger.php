@@ -213,7 +213,6 @@ class BigInteger implements \JsonSerializable
     /**
      * Adds two BigIntegers.
      *
-     * @param BigInteger $y
      * @return BigInteger
      */
     public function add(\phpseclib3\Math\BigInteger $y)
@@ -223,7 +222,6 @@ class BigInteger implements \JsonSerializable
     /**
      * Subtracts two BigIntegers.
      *
-     * @param BigInteger $y
      * @return BigInteger
      */
     public function subtract(\phpseclib3\Math\BigInteger $y)
@@ -233,7 +231,6 @@ class BigInteger implements \JsonSerializable
     /**
      * Multiplies two BigIntegers
      *
-     * @param BigInteger $x
      * @return BigInteger
      */
     public function multiply(\phpseclib3\Math\BigInteger $x)
@@ -262,7 +259,6 @@ class BigInteger implements \JsonSerializable
      * ?>
      * </code>
      *
-     * @param BigInteger $y
      * @return BigInteger[]
      */
     public function divide(\phpseclib3\Math\BigInteger $y)
@@ -275,7 +271,6 @@ class BigInteger implements \JsonSerializable
      *
      * Say you have (30 mod 17 * x mod 17) mod 17 == 1.  x can be found using modular inverses.
      *
-     * @param BigInteger $n
      * @return BigInteger
      */
     public function modInverse(\phpseclib3\Math\BigInteger $n)
@@ -287,7 +282,6 @@ class BigInteger implements \JsonSerializable
      *
      * Say you have (30 mod 17 * x mod 17) mod 17 == 1.  x can be found using modular inverses.
      *
-     * @param BigInteger $n
      * @return BigInteger[]
      */
     public function extendedGCD(\phpseclib3\Math\BigInteger $n)
@@ -305,7 +299,6 @@ class BigInteger implements \JsonSerializable
      *
      * Say you have 693 and 609.  The GCD is 21.
      *
-     * @param BigInteger $n
      * @return BigInteger
      */
     public function gcd(\phpseclib3\Math\BigInteger $n)
@@ -401,8 +394,6 @@ class BigInteger implements \JsonSerializable
     /**
      * Performs modular exponentiation.
      *
-     * @param BigInteger $e
-     * @param BigInteger $n
      * @return BigInteger
      */
     public function powMod(\phpseclib3\Math\BigInteger $e, \phpseclib3\Math\BigInteger $n)
@@ -412,8 +403,6 @@ class BigInteger implements \JsonSerializable
     /**
      * Performs modular exponentiation.
      *
-     * @param BigInteger $e
-     * @param BigInteger $n
      * @return BigInteger
      */
     public function modPow(\phpseclib3\Math\BigInteger $e, \phpseclib3\Math\BigInteger $n)
@@ -434,7 +423,6 @@ class BigInteger implements \JsonSerializable
      *
      * {@internal Could return $this->subtract($x), but that's not as fast as what we do do.}
      *
-     * @param BigInteger $y
      * @return int in case < 0 if $this is less than $y; > 0 if $this is greater than $y, and 0 if they are equal.
      * @see self::equals()
      */
@@ -447,7 +435,6 @@ class BigInteger implements \JsonSerializable
      *
      * If you need to see if one number is greater than or less than another number, use BigInteger::compare()
      *
-     * @param BigInteger $x
      * @return bool
      */
     public function equals(\phpseclib3\Math\BigInteger $x)
@@ -466,7 +453,6 @@ class BigInteger implements \JsonSerializable
     /**
      * Logical And
      *
-     * @param BigInteger $x
      * @return BigInteger
      */
     public function bitwise_and(\phpseclib3\Math\BigInteger $x)
@@ -476,7 +462,6 @@ class BigInteger implements \JsonSerializable
     /**
      * Logical Or
      *
-     * @param BigInteger $x
      * @return BigInteger
      */
     public function bitwise_or(\phpseclib3\Math\BigInteger $x)
@@ -486,7 +471,6 @@ class BigInteger implements \JsonSerializable
     /**
      * Logical Exclusive Or
      *
-     * @param BigInteger $x
      * @return BigInteger
      */
     public function bitwise_xor(\phpseclib3\Math\BigInteger $x)
@@ -608,8 +592,6 @@ class BigInteger implements \JsonSerializable
      *
      * If there's not a prime within the given range, false will be returned.
      *
-     * @param BigInteger $min
-     * @param BigInteger $max
      * @return false|BigInteger
      */
     public static function randomRangePrime(\phpseclib3\Math\BigInteger $min, \phpseclib3\Math\BigInteger $max)
@@ -626,8 +608,6 @@ class BigInteger implements \JsonSerializable
      * BigInteger::randomRange($min, $max)
      * BigInteger::randomRange($max, $min)
      *
-     * @param BigInteger $min
-     * @param BigInteger $max
      * @return BigInteger
      */
     public static function randomRange(\phpseclib3\Math\BigInteger $min, \phpseclib3\Math\BigInteger $max)
@@ -664,7 +644,6 @@ class BigInteger implements \JsonSerializable
     /**
      * Performs exponentiation.
      *
-     * @param BigInteger $n
      * @return BigInteger
      */
     public function pow(\phpseclib3\Math\BigInteger $n)
@@ -674,7 +653,6 @@ class BigInteger implements \JsonSerializable
     /**
      * Return the minimum BigInteger between an arbitrary number of BigIntegers.
      *
-     * @param BigInteger ...$nums
      * @return BigInteger
      */
     public static function min(\phpseclib3\Math\BigInteger ...$nums)
@@ -688,7 +666,6 @@ class BigInteger implements \JsonSerializable
     /**
      * Return the maximum BigInteger between an arbitrary number of BigIntegers.
      *
-     * @param BigInteger ...$nums
      * @return BigInteger
      */
     public static function max(\phpseclib3\Math\BigInteger ...$nums)
@@ -702,8 +679,6 @@ class BigInteger implements \JsonSerializable
     /**
      * Tests BigInteger to see if it is between two integers, inclusive
      *
-     * @param BigInteger $min
-     * @param BigInteger $max
      * @return bool
      */
     public function between(\phpseclib3\Math\BigInteger $min, \phpseclib3\Math\BigInteger $max)
@@ -761,7 +736,6 @@ class BigInteger implements \JsonSerializable
      *
      * ie. $s = gmp_scan1($n, 0) and $r = gmp_div_q($n, gmp_pow(gmp_init('2'), $s));
      *
-     * @param BigInteger $r
      * @return int
      */
     public static function scan1divide(\phpseclib3\Math\BigInteger $r)

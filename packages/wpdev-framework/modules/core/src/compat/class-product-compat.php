@@ -62,11 +62,7 @@ class Product_Compat {
 		/*
 		 * Check if we have a new entity with this ID.
 		 */
-		if ( ! function_exists( 'wpdev_get_product' ) ) {
-			return;
-		}
-
-		$migrated_product = wpdev_get_product($object_id);
+		$migrated_product = apply_filters( 'wpdev_compat_migrated_entity_lookup', null, $object_id, 'product' );
 
 		if (!$migrated_product) {
 

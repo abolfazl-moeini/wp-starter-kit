@@ -32,6 +32,14 @@ Register a field type template. Config typically includes `class`, `sanitize`, a
 
 Registry CRUD helpers. `wpdev_get_field_type()` returns config array or `null`. @since 2.7.0
 
+## Registry completeness
+
+| Operation | Supported |
+|-----------|-----------|
+| register | Yes (`wpdev_register_field_type`) |
+| get / has / unregister | Yes |
+| list | Yes (`wpdev_list_field_types`) |
+
 ### `wpdev_field_view_context_map`
 
 ```php

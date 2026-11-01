@@ -37,6 +37,13 @@ class Module_Loader {
 	protected static $last_load_ms = null;
 
 	/**
+	 * Whether load_all() has completed (including wpdev_modules_loaded).
+	 *
+	 * @var bool
+	 */
+	protected static $all_loaded = false;
+
+	/**
 	 * Absolute path to the modules directory.
 	 *
 	 * @var string
@@ -46,27 +53,61 @@ class Module_Loader {
 	/**
 	 * Register a module definition.
 	 *
-	 * @param string               $id   Module slug (e.g. field-builder).
-	 * @param array<string, mixed> $args {
+	 * @param string               $id    Module slug (e.g. field-builder).
+	 * @param array<string, mixed> $args  {
 	 *     @type string   $path         Absolute path to module root.
 	 *     @type string[] $dependencies Module ids that must load first.
 	 *     @type callable $bootstrap    Optional callback invoked after setup.php.
 	 *     @type bool     $enabled      Whether the module is active. Default true.
 	 * }
+	 * @param string               $owner Owner of the registration ('core', 'host', or plugin slug). Default 'core'.
 	 * @return void
 	 */
-	public static function register( $id, $args = array() ) {
+	public static function register( $id, $args = array(), $owner = 'core' ) {
 
 		$defaults = array(
 			'path'         => '',
 			'dependencies' => array(),
 			'bootstrap'    => null,
 			'enabled'      => true,
+			'owner'        => $owner,
 		);
 
-		self::$modules[ $id ] = array_merge( $defaults, $args, array( 'id' => $id ) );
+		// If module is already registered, enforce ownership isolation.
+		if ( isset( self::$modules[ $id ] ) ) {
+			$existing_owner = self::$modules[ $id ]['owner'] ?? 'core';
+			$incoming_owner = (string) $owner;
+
+			// Coexistence defense: Do not allow a private FrameworkClosure to hijack
+			// an already-registered canonical or host framework module.
+			$incoming_path = isset( $args['path'] ) ? (string) $args['path'] : '';
+			$existing_path = (string) ( self::$modules[ $id ]['path'] ?? '' );
+			if ( false !== strpos( $incoming_path, 'FrameworkClosure' ) && false === strpos( $existing_path, 'FrameworkClosure' ) ) {
+				return;
+			}
+
+			// Reject module registration/override from a foreign owner if the module
+			// is already registered by canonical core, unless the owner is 'host'.
+			if ( $existing_owner !== $incoming_owner && 'host' !== $incoming_owner ) {
+				return;
+			}
+		}
+
+		self::$modules[ $id ] = array_merge( $defaults, $args, array( 'id' => $id, 'owner' => $owner ) );
 
 	} // end register;
+
+	/**
+	 * Whether a module is registered.
+	 *
+	 * @param string $id Module id.
+	 * @return bool
+	 */
+	public static function has( $id ) {
+
+		return isset( self::$modules[ $id ] );
+
+	} // end has;
 
 	/**
 	 * Return all registered modules.
@@ -99,6 +140,11 @@ class Module_Loader {
 	 */
 	public static function load_all( $modules_dir ) {
 
+		// Idempotent: late library boot + plugins_loaded must not re-fire addons.
+		if ( self::$all_loaded ) {
+			return;
+		}
+
 		$started = microtime( true );
 
 		self::$modules_dir = rtrim( $modules_dir, '/\\' );
@@ -122,9 +168,22 @@ class Module_Loader {
 		 */
 		do_action( 'wpdev_modules_loaded' );
 
+		self::$all_loaded   = true;
 		self::$last_load_ms = ( microtime( true ) - $started ) * 1000;
 
 	} // end load_all;
+
+	/**
+	 * Whether a full load_all() cycle has completed.
+	 *
+	 * @since 2.10.0
+	 * @return bool
+	 */
+	public static function is_all_loaded() {
+
+		return self::$all_loaded;
+
+	} // end is_all_loaded;
 
 	/**
 	 * Milliseconds for the last module bootstrap (P3).
@@ -401,6 +460,7 @@ class Module_Loader {
 		self::$modules      = array();
 		self::$loaded       = array();
 		self::$modules_dir  = '';
+		self::$all_loaded   = false;
 		self::$last_load_ms = null;
 
 	} // end reset;
@@ -430,5 +490,30 @@ class Module_Loader {
 		return ltrim( str_replace( self::$modules_dir, '', $path ), '/\\' );
 
 	} // end relative_path;
+
+	/**
+	 * Whether a plugin should load inline FrameworkClosure based on its wpdev.json manifest.
+	 *
+	 * @since 2.10.0
+	 *
+	 * @param string $plugin_dir Directory of the plugin.
+	 * @return bool
+	 */
+	public static function should_load_inline_framework( $plugin_dir ) {
+
+		$manifest = rtrim( $plugin_dir, '/\\' ) . '/wpdev.json';
+		if ( ! file_exists( $manifest ) || ! is_readable( $manifest ) ) {
+			return false;
+		}
+
+		$raw = file_get_contents( $manifest );
+		if ( ! is_string( $raw ) || '' === trim( $raw ) ) {
+			return false;
+		}
+
+		$data = json_decode( $raw, true );
+		return is_array( $data ) && ! empty( $data['inlineFramework'] );
+
+	} // end should_load_inline_framework;
 
 } // end class Module_Loader;

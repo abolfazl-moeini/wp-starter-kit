@@ -60,8 +60,17 @@ if ( ! function_exists( 'wpdev_field_view' ) ) {
 		$type = (string) $type;
 
 		$aliases = array(
-			'wp_editor' => 'wp-editor',
-			'wp-editor' => 'wp-editor',
+			'wp_editor'        => 'wp-editor',
+			'wp-editor'        => 'wp-editor',
+			'wysiwyg'          => 'wp-editor',
+			'embed'            => 'textarea',
+			'file'             => 'image',
+			'media'            => 'image',
+			'color'            => 'color-picker',
+			'multi_checkbox'   => 'multiselect',
+			'multicheckbox'    => 'multiselect',
+			'multi-checkbox'   => 'multiselect',
+			'checkboxes'       => 'multiselect',
 		);
 
 		if ( isset( $aliases[ $type ] ) ) {

@@ -20,7 +20,9 @@ defined('ABSPATH') || exit;
 
 if (!class_exists('WP_List_Table')) {
 
-	require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
+	if (file_exists(ABSPATH . 'wp-admin/includes/class-wp-list-table.php')) {
+		require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
+	}
 
 } // end if;
 
@@ -43,12 +45,44 @@ class Base_List_Table extends \WP_List_Table {
 	protected $id;
 
 	/**
+	 * Canonical stable table identifier (avoids class name dependency).
+	 *
+	 * @since 2.14.0
+	 * @var string
+	 */
+	protected string $table_id = '';
+
+	/**
 	 * Optional override for ajax/DOM table id (widget-scoped tables).
 	 *
 	 * @since 2.4.0
 	 * @var string
 	 */
 	protected $ajax_table_id = '';
+
+	/**
+	 * Optional named access id for table refresh and related actions.
+	 *
+	 * @since 2.13.1
+	 * @var string
+	 */
+	protected $access = '';
+
+	/**
+	 * Whether this list table supports drag-and-drop row reordering.
+	 *
+	 * @since 2.15.0
+	 * @var bool
+	 */
+	protected bool $reorderable = false;
+
+	/**
+	 * Column key used for manual ordering (defaults to 'menu_order').
+	 *
+	 * @since 2.15.0
+	 * @var string
+	 */
+	protected string $reorder_order_column = 'menu_order';
 
 	/**
 	 * Holds the query class for the object being listed.
@@ -106,11 +140,17 @@ class Base_List_Table extends \WP_List_Table {
      */
 	public function get_table_id(): string {
 
-		if ( ! empty( $this->ajax_table_id ) ) {
-			return $this->ajax_table_id;
+		if ( ! empty( $this->table_id ) ) {
+			return sanitize_key( $this->table_id );
 		}
 
-		return strtolower( substr( strrchr( static::class, '\\' ), 1 ) );
+		if ( ! empty( $this->ajax_table_id ) ) {
+			return sanitize_key( $this->ajax_table_id );
+		}
+
+		$pos   = strrchr( static::class, '\\' );
+		$short = false !== $pos ? substr( $pos, 1 ) : static::class;
+		return sanitize_key( strtolower( (string) $short ) );
 
 	} // end get_table_id;
 
@@ -289,7 +329,16 @@ class Base_List_Table extends \WP_List_Table {
 	 */
 	public function user_can_ajax_refresh() {
 
-		return current_user_can( 'manage_network' );
+		if ( ! empty( $this->access ) && is_string( $this->access ) && function_exists( 'wpdev_can' ) ) {
+			return (bool) wpdev_can( $this->access );
+		}
+
+		$cap = 'manage_network';
+		if ( function_exists( 'wpdev_admin_capability_for' ) ) {
+			$cap = wpdev_admin_capability_for( $cap );
+		}
+
+		return function_exists( 'current_user_can' ) && current_user_can( $cap );
 
 	} // end user_can_ajax_refresh;
 
@@ -310,6 +359,147 @@ class Base_List_Table extends \WP_List_Table {
 	} // end set_context;
 
 	/**
+	 * Rebind column filters to a WordPress admin screen.
+	 *
+	 * List pages must use get_current_screen() so Screen Options lists columns
+	 * via manage_{$screen->id}_columns. Widget-scoped tables keep their table id.
+	 *
+	 * @since 2.12.2
+	 *
+	 * @param string|\WP_Screen $screen Screen id or WP_Screen instance.
+	 * @return void
+	 */
+	public function bind_to_screen( $screen ) {
+
+		if ( empty( $screen ) ) {
+			return;
+		}
+
+		$new_screen = convert_to_screen( $screen );
+
+		if ( ! $new_screen || empty( $new_screen->id ) ) {
+			return;
+		}
+
+		$old_id = ( isset( $this->screen ) && isset( $this->screen->id ) ) ? $this->screen->id : '';
+
+		if ( $old_id === $new_screen->id ) {
+			return;
+		}
+
+		if ( $old_id ) {
+			remove_filter( "manage_{$old_id}_columns", array( $this, 'get_columns' ), 0 );
+		}
+
+		$this->screen          = $new_screen;
+		$this->_column_headers = null;
+
+		add_filter( "manage_{$this->screen->id}_columns", array( $this, 'get_columns' ), 0 );
+
+	} // end bind_to_screen;
+
+	/**
+	 * Screen id currently bound for column headers / hidden-column prefs.
+	 *
+	 * @since 2.12.2
+	 *
+	 * @return string
+	 */
+	public function get_bound_screen_id() {
+
+		if ( isset( $this->screen ) && ! empty( $this->screen->id ) ) {
+			return (string) $this->screen->id;
+		}
+
+		return (string) $this->id;
+
+	} // end get_bound_screen_id;
+
+	/**
+	 * Resolve list_table_screen from the current request (ajax refresh).
+	 *
+	 * @since 2.12.2
+	 *
+	 * @return string
+	 */
+	protected function request_list_table_screen() {
+
+		if ( function_exists( 'wpdev_request' ) ) {
+			return sanitize_key( (string) wpdev_request( 'list_table_screen', '' ) );
+		}
+
+		if ( isset( $_REQUEST['list_table_screen'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return sanitize_key( wp_unslash( (string) $_REQUEST['list_table_screen'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		}
+
+		return '';
+
+	} // end request_list_table_screen;
+
+	/**
+	 * Resolve the admin page slug for query strings and push state.
+	 *
+	 * @since 2.15.1
+	 *
+	 * @return string
+	 */
+	public function get_page_slug() {
+
+		if ( function_exists( 'wpdev_request' ) && '' !== (string) wpdev_request( 'page', '' ) ) {
+			return sanitize_key( (string) wpdev_request( 'page', '' ) );
+		}
+
+		if ( isset( $GLOBALS['plugin_page'] ) && '' !== (string) $GLOBALS['plugin_page'] ) {
+			return sanitize_key( (string) $GLOBALS['plugin_page'] );
+		}
+
+		if ( isset( $_REQUEST['page'] ) && '' !== (string) $_REQUEST['page'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return sanitize_key( wp_unslash( (string) $_REQUEST['page'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+		}
+
+		$screen_id = $this->get_bound_screen_id();
+		if ( '' !== $screen_id ) {
+			if ( 0 === strpos( $screen_id, 'toplevel_page_' ) ) {
+				return substr( $screen_id, 14 );
+			}
+			$pos = strpos( $screen_id, '_page_' );
+			if ( false !== $pos ) {
+				return substr( $screen_id, $pos + 6 );
+			}
+		}
+
+		return '';
+
+	} // end get_page_slug;
+
+	/**
+	 * Open the list-table DOM wrapper (data-table-id + data-screen-id).
+	 *
+	 * @since 2.12.2
+	 *
+	 * @param string $mode list|grid.
+	 * @return void
+	 */
+	protected function print_table_wrapper_open( $mode = 'list' ) {
+
+		$extra_attrs = '';
+		if ( $this->is_reorderable() ) {
+			$extra_attrs .= ' data-reorderable="true"';
+			$extra_attrs .= $this->is_reorder_allowed() ? ' data-reorder-allowed="true"' : ' data-reorder-allowed="false"';
+		}
+
+		printf(
+			'<div id="wpdev-%s" class="wpdev-list-table wpdev-mode-%s" data-table-id="%s" data-screen-id="%s"%s>',
+			esc_attr( $this->id ),
+			esc_attr( $mode ),
+			esc_attr( $this->id ),
+			esc_attr( $this->get_bound_screen_id() ),
+			$extra_attrs
+		);
+
+	} // end print_table_wrapper_open;
+
+	/**
 	 * Initializes the table.
 	 *
 	 * @since 2.0.0
@@ -324,8 +514,21 @@ class Base_List_Table extends \WP_List_Table {
 
 		$this->id = $this->get_table_id();
 
+		/*
+		 * Default screen is the table id (isolates widget-scoped tables).
+		 * Ajax refresh may pass list_table_screen so hidden columns match the
+		 * list page Screen Options prefs. List_Admin_Page::page_loaded() then
+		 * rebinds to get_current_screen() for the Columns panel.
+		 */
+		$default_screen = $this->id;
+		$request_screen = $this->request_list_table_screen();
+
+		if ( '' !== $request_screen ) {
+			$default_screen = $request_screen;
+		}
+
 		$args = wp_parse_args($args, array(
-			'screen' => $this->id,
+			'screen' => $default_screen,
 		));
 
 		parent::__construct($args);
@@ -411,16 +614,9 @@ class Base_List_Table extends \WP_List_Table {
 
 		$list_table_name = $this->id;
 
-		if (!empty($_REQUEST['mode'])) {
+		if (!empty($_REQUEST['mode']) && in_array($_REQUEST['mode'], array_keys($this->modes), true)) {
 
 			$mode = $_REQUEST['mode'];
-
-			if (in_array($mode, array_keys($this->modes), true)) {
-
-				$mode = $_REQUEST['mode'];
-
-			} // end if;
-
 			set_user_setting("{$list_table_name}_list_mode", $mode);
 
 		} else {
@@ -428,6 +624,10 @@ class Base_List_Table extends \WP_List_Table {
 			$mode = get_user_setting("{$list_table_name}_list_mode", current(array_keys($this->modes)));
 
 		} // end if;
+
+		if ( ! in_array( $mode, array_keys( $this->modes ), true ) ) {
+			$mode = current( array_keys( $this->modes ) ) ?: 'list';
+		}
 
 		$this->current_mode = $mode;
 
@@ -555,6 +755,61 @@ class Base_List_Table extends \WP_List_Table {
 	} // end has_items;
 
 	/**
+	 * Whether a non-all list view or search is active.
+	 *
+	 * Used so empty filtered views keep filter tabs clickable (other tabs may
+	 * still have rows). Checks view fields from get_views() plus built-in
+	 * status/type so host tabs that share those fields (e.g. CRM agent refs)
+	 * are covered even when they are not in get_views().
+	 *
+	 * @since 2.12.3
+	 * @return bool
+	 */
+	public function has_active_list_filter() {
+
+		if ( '' !== (string) wpdev_request( 's', '' ) ) {
+			return true;
+		}
+
+		$fields = array(
+			'status' => true,
+			'type'   => true,
+		);
+
+		foreach ( (array) $this->get_views() as $view ) {
+			if ( ! empty( $view['field'] ) ) {
+				$fields[ (string) $view['field'] ] = true;
+			}
+		}
+
+		foreach ( array_keys( $fields ) as $field ) {
+			$value = (string) wpdev_request( $field, 'all' );
+
+			if ( '' !== $value && 'all' !== $value ) {
+				return true;
+			}
+		}
+
+		return false;
+
+	} // end has_active_list_filter;
+
+	/**
+	 * Whether filter chrome should be greyed out on an empty list.
+	 *
+	 * Only when the list is empty and unfiltered (all / no search). Filtered
+	 * empties keep tabs enabled so the user can switch to views that have data.
+	 *
+	 * @since 2.12.3
+	 * @return bool
+	 */
+	public function should_disable_filters_when_empty() {
+
+		return ! $this->has_items() && ! $this->has_active_list_filter();
+
+	} // end should_disable_filters_when_empty;
+
+	/**
 	 * Returns the total record count. Used on pagination.
 	 *
 	 * @since 2.0.0
@@ -583,7 +838,7 @@ class Base_List_Table extends \WP_List_Table {
 	public function get_per_page_option_label(): string {
 
 		// translators: %s will be replaced by the data type plural name. e.g. Books.
-		return sprintf(__('%s per page'), $this->get_label('plural'));
+		return sprintf( __( '%s per page', 'wpdev' ), $this->get_label( 'plural' ) );
 
 	} // end get_per_page_option_label;
 
@@ -607,7 +862,7 @@ class Base_List_Table extends \WP_List_Table {
 	public function get_search_input_label(): string {
 
 		// translators: %s will be replaced with the data type plural name. e.g. Books.
-		return sprintf(__('Search %s'), $this->get_label('plural'));
+		return sprintf( __( 'Search %s', 'wpdev' ), $this->get_label( 'plural' ) );
 
 	} // end get_search_input_label;
 
@@ -688,7 +943,17 @@ class Base_List_Table extends \WP_List_Table {
 		/**
 		 * Page attribute to be used with the push state
 		 */
-		printf('<input type="hidden" id="page" name="page" value="%s" />', esc_attr(wpdev_request('page', '')));
+		printf('<input type="hidden" id="page" name="page" value="%s" />', esc_attr($this->get_page_slug()));
+
+		/**
+		 * Admin screen id for column prefs (Screen Options ↔ ajax refresh).
+		 *
+		 * @since 2.12.2
+		 */
+		printf(
+			'<input type="hidden" id="list_table_screen" name="list_table_screen" value="%s" />',
+			esc_attr( $this->get_bound_screen_id() )
+		);
 
 		/**
 		 * ID attribute to be used with the push state
@@ -718,7 +983,7 @@ class Base_List_Table extends \WP_List_Table {
 	 */
 	public function display_view_list() {
 
-		printf('<div id="wpdev-%s" class="wpdev-list-table wpdev-mode-list" data-table-id="%s">', esc_attr($this->id), esc_attr($this->id));
+		$this->print_table_wrapper_open( 'list' );
 
 		$this->display_ajax_filters();
 
@@ -739,7 +1004,7 @@ class Base_List_Table extends \WP_List_Table {
 	 */
 	public function display_view_grid() {
 
-		printf('<div id="wpdev-%s" class="wpdev-list-table wpdev-mode-grid" data-table-id="%s">', esc_attr($this->id), esc_attr($this->id));
+		$this->print_table_wrapper_open( 'grid' );
 
 		$this->display_ajax_filters();
 
@@ -761,11 +1026,20 @@ class Base_List_Table extends \WP_List_Table {
 	 */
 	public function display() {
 		/*
-		 * Any items at all?
+		 * Full empty-state only when the list is truly unfiltered. A filtered
+		 * empty view keeps table markup + no_items so tabs stay usable and
+		 * AJAX tbody refresh still has a target.
 		 */
-		if (!$this->has_items() && $this->context === 'page') {
+		if ( ! $this->has_items() && $this->context === 'page' && ! $this->has_active_list_filter() ) {
 
+			/*
+			 * Keep the same wrapper as display_view_* so bulk Apply JS
+			 * (`[data-table-id]`) and e2e locators still bind on empty lists.
+			 */
+			$this->print_table_wrapper_open( 'list' );
+			$this->display_ajax_filters();
 			echo wpdev_render_empty_state( $this->get_empty_state_args() );
+			echo '</div>';
 
 		} else {
 
@@ -804,6 +1078,23 @@ class Base_List_Table extends \WP_List_Table {
 			}
 		}
 
+		if ( ! empty( $this->_args['empty_state'] ) && is_array( $this->_args['empty_state'] ) ) {
+			$es = $this->_args['empty_state'];
+			if ( isset( $es['title'] ) && ! isset( $es['message'] ) ) {
+				$es['message'] = $es['title'];
+			}
+			if ( isset( $es['action']['text'] ) && ! isset( $es['link_label'] ) ) {
+				$es['link_label'] = $es['action']['text'];
+			}
+			if ( isset( $es['action']['url'] ) && ! isset( $es['link_url'] ) ) {
+				$es['link_url'] = $es['action']['url'];
+			}
+			if ( isset( $es['action']['classes'] ) && ! isset( $es['link_classes'] ) ) {
+				$es['link_classes'] = $es['action']['classes'];
+			}
+			$args = array_merge( $args, $es );
+		}
+
 		if ( empty( $this->_args['add_new'] ) ) {
 			$args['link_label']   = '';
 			$args['link_url']     = '';
@@ -816,6 +1107,21 @@ class Base_List_Table extends \WP_List_Table {
 	} // end get_empty_state_args;
 
 	/**
+	 * Return advanced filter-bar fields.
+	 *
+	 * Concrete tables may override this method. Keep an array default so calls
+	 * do not fall through to WP_List_Table::__call(), which returns false.
+	 *
+	 * @since 2.8.6
+	 * @return array
+	 */
+	public function get_filters() {
+
+		return array();
+
+	} // end get_filters;
+
+	/**
 	 * Display the filters if they exist.
 	 *
 	 * @todo: refator
@@ -825,6 +1131,7 @@ class Base_List_Table extends \WP_List_Table {
 	public function filters() {
 
 		$filters = $this->get_filters();
+		$filters = is_array( $filters ) ? $filters : array();
 
 		$views = apply_filters("wpdev_{$this->id}_get_views", $this->get_views());
 
@@ -869,6 +1176,20 @@ class Base_List_Table extends \WP_List_Table {
 	 */
 	public function single_row_list($item) {
 
+		if ( $this->is_reorderable() ) {
+			$row_id = $this->get_item_id( $item );
+			$order  = $this->get_item_order( $item );
+			printf(
+				'<tr id="record-%s" data-id="%s" data-order="%s" class="wpdev-sortable-row">',
+				esc_attr( (string) $row_id ),
+				esc_attr( (string) $row_id ),
+				esc_attr( (string) $order )
+			);
+			$this->single_row_columns( $item );
+			echo '</tr>';
+			return;
+		}
+
 		parent::single_row($item);
 
 	} // end single_row_list;
@@ -891,18 +1212,22 @@ class Base_List_Table extends \WP_List_Table {
 	 */
 	public function no_items() {
 
-		echo sprintf('<div class="wpdev-py-6 wpdev-text-gray-600 wpdev-text-sm wpdev-text-center">
+		echo sprintf('<div class="wpdev-pad-y-6 wpdev-type-gray-600 wpdev-type-sm wpdev-type-center">
 			<span class="">%s</span>
 		</div>', __('No items found', 'wpdev'));
 
 	} // end no_items;
 
 	/**
-	 * Returns an associative array containing the bulk action
+	 * Returns an associative array containing the bulk action.
+	 *
+	 * Visibility matches {@see \WP_List_Table::get_bulk_actions()} (`protected`).
+	 * Host overrides may stay `protected` or widen to `public`; they must not
+	 * narrow below the parent or PHP fatals at class load.
 	 *
 	 * @return array
 	 */
-	public function get_bulk_actions() {
+	protected function get_bulk_actions() {
 
 		$default_bulk_actions = array(
 			'delete' => __('Delete', 'wpdev'),
@@ -1026,6 +1351,12 @@ class Base_List_Table extends \WP_List_Table {
 
 		check_ajax_referer(sprintf('ajax-%s-nonce', $this->_get_js_var_name()), sprintf('_ajax_%s_nonce', $this->_get_js_var_name()));
 
+		$request_screen = $this->request_list_table_screen();
+
+		if ( '' !== $request_screen ) {
+			$this->bind_to_screen( $request_screen );
+		}
+
 		$this->set_context('ajax');
 
 		$this->prepare_items();
@@ -1050,6 +1381,30 @@ class Base_List_Table extends \WP_List_Table {
 		} // end if;
 
 		$rows = ob_get_clean();
+
+		$original_request_uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '';
+		$page_slug            = $this->get_page_slug();
+
+		if ( '' !== $page_slug ) {
+			$canonical_args = array( 'page' => $page_slug );
+			if ( ! empty( $_REQUEST['s'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$canonical_args['s'] = wp_unslash( (string) $_REQUEST['s'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			}
+			if ( ! empty( $_REQUEST['orderby'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$canonical_args['orderby'] = wp_unslash( (string) $_REQUEST['orderby'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			}
+			if ( ! empty( $_REQUEST['order'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+				$canonical_args['order'] = wp_unslash( (string) $_REQUEST['order'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			}
+			if ( method_exists( $this, 'get_extra_query_fields' ) && is_array( $this->get_extra_query_fields() ) ) {
+				foreach ( $this->get_extra_query_fields() as $extra_field ) {
+					if ( isset( $_REQUEST[ $extra_field ] ) && '' !== (string) $_REQUEST[ $extra_field ] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+						$canonical_args[ $extra_field ] = wp_unslash( (string) $_REQUEST[ $extra_field ] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+					}
+				}
+			}
+			$_SERVER['REQUEST_URI'] = add_query_arg( $canonical_args, admin_url( 'admin.php' ) );
+		}
 
 		/**
 		 * Get headers into a variable
@@ -1077,6 +1432,10 @@ class Base_List_Table extends \WP_List_Table {
 		$this->pagination('bottom');
 
 		$pagination_bottom = ob_get_clean();
+
+		if ( '' !== $page_slug ) {
+			$_SERVER['REQUEST_URI'] = $original_request_uri;
+		}
 
 		/**
 		 * Build the response
@@ -1193,10 +1552,10 @@ class Base_List_Table extends \WP_List_Table {
 
 			$not_found = __('No membership found', 'wpdev');
 
-			return "<div class='wpdev-table-card  wpdev-text-gray-700 wpdev-py-1 wpdev-px-2 wpdev-flex wpdev-flex-grow wpdev-block wpdev-rounded wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-relative wpdev-overflow-hidden'>
-				<span class='dashicons dashicons-wpdev-block wpdev-text-gray-600 wpdev-px-1 wpdev-pr-3'>&nbsp;</span>
+			return "<div class='wpdev-table-card  wpdev-type-gray-700 wpdev-pad-y-1 wpdev-pad-x-2 wpdev-row wpdev-grow wpdev-block wpdev-radius wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-relative wpdev-overflow-hidden'>
+				<span class='dashicons dashicons-wpdev-block wpdev-type-gray-600 wpdev-pad-x-1 wpdev-pad-r-3'>&nbsp;</span>
 				<div class=''>
-					<span class='wpdev-block wpdev-py-3 wpdev-text-gray-600 wpdev-text-2xs wpdev-font-bold wpdev-uppercase'>{$not_found}</span>
+					<span class='wpdev-block wpdev-pad-y-3 wpdev-type-gray-600 wpdev-type-2xs wpdev-font-bold wpdev-uppercase'>{$not_found}</span>
 				</div>
 			</div>";
 
@@ -1216,7 +1575,7 @@ class Base_List_Table extends \WP_List_Table {
 
 		$membership_link = wpdev_network_admin_url('wpdev-edit-membership', $url_atts);
 
-		$html = "<a href='{$membership_link}' class='wpdev-no-underline wpdev-table-card wpdev-text-gray-700 wpdev-py-1 wpdev-px-2 wpdev-pl-4 wpdev-flex wpdev-flex-grow wpdev-block wpdev-rounded wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-relative wpdev-overflow-hidden'>
+		$html = "<a href='{$membership_link}' class='wpdev-no-underline wpdev-table-card wpdev-type-gray-700 wpdev-pad-y-1 wpdev-pad-x-2 wpdev-pad-l-4 wpdev-row wpdev-grow wpdev-block wpdev-radius wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-relative wpdev-overflow-hidden'>
 			<div class='wpdev-absolute wpdev-top-0 wpdev-bottom-0 wpdev-left-0 wpdev-w-2 {$status_classes}'>&nbsp;</div>
 			<div class=''>
 				<strong class='wpdev-block'>{$reference} <small class='wpdev-font-normal'>(#{$id})</small></strong>
@@ -1244,10 +1603,10 @@ class Base_List_Table extends \WP_List_Table {
 
 			$not_found = __('No payment found', 'wpdev');
 
-			return "<div class='wpdev-table-card  wpdev-text-gray-700 wpdev-py-1 wpdev-px-2 wpdev-flex wpdev-flex-grow wpdev-block wpdev-rounded wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-relative wpdev-overflow-hidden'>
-				<span class='dashicons dashicons-wpdev-block wpdev-text-gray-600 wpdev-px-1 wpdev-pr-3'>&nbsp;</span>
+			return "<div class='wpdev-table-card  wpdev-type-gray-700 wpdev-pad-y-1 wpdev-pad-x-2 wpdev-row wpdev-grow wpdev-block wpdev-radius wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-relative wpdev-overflow-hidden'>
+				<span class='dashicons dashicons-wpdev-block wpdev-type-gray-600 wpdev-pad-x-1 wpdev-pad-r-3'>&nbsp;</span>
 				<div class=''>
-					<span class='wpdev-block wpdev-py-3 wpdev-text-gray-600 wpdev-text-2xs wpdev-font-bold wpdev-uppercase'>{$not_found}</span>
+					<span class='wpdev-block wpdev-pad-y-3 wpdev-type-gray-600 wpdev-type-2xs wpdev-font-bold wpdev-uppercase'>{$not_found}</span>
 				</div>
 			</div>";
 
@@ -1267,7 +1626,7 @@ class Base_List_Table extends \WP_List_Table {
 
 		$payment_link = wpdev_network_admin_url('wpdev-edit-payment', $url_atts);
 
-		$html = "<a href='{$payment_link}' class='wpdev-no-underline wpdev-table-card wpdev-text-gray-700 wpdev-py-1 wpdev-px-2 wpdev-pl-4 wpdev-flex wpdev-flex-grow wpdev-block wpdev-rounded wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-relative wpdev-overflow-hidden'>
+		$html = "<a href='{$payment_link}' class='wpdev-no-underline wpdev-table-card wpdev-type-gray-700 wpdev-pad-y-1 wpdev-pad-x-2 wpdev-pad-l-4 wpdev-row wpdev-grow wpdev-block wpdev-radius wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-relative wpdev-overflow-hidden'>
 			<div class='wpdev-absolute wpdev-top-0 wpdev-bottom-0 wpdev-left-0 wpdev-w-2 {$status_classes}'>&nbsp;</div>
 			<div class=''>
 				<strong class='wpdev-block'>{$reference} <small class='wpdev-font-normal'>(#{$id})</small></strong>
@@ -1295,10 +1654,10 @@ class Base_List_Table extends \WP_List_Table {
 
 			$not_found = __('No customer found', 'wpdev');
 
-			return "<div class='wpdev-table-card  wpdev-text-gray-700 wpdev-py-1 wpdev-px-2 wpdev-flex wpdev-flex-grow wpdev-rounded wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-relative wpdev-overflow-hidden'>
-				<span class='dashicons dashicons-wpdev-block wpdev-text-gray-600 wpdev-px-1 wpdev-pr-3'>&nbsp;</span>
+			return "<div class='wpdev-table-card  wpdev-type-gray-700 wpdev-pad-y-1 wpdev-pad-x-2 wpdev-row wpdev-grow wpdev-radius wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-relative wpdev-overflow-hidden'>
+				<span class='dashicons dashicons-wpdev-block wpdev-type-gray-600 wpdev-pad-x-1 wpdev-pad-r-3'>&nbsp;</span>
 				<div class=''>
-					<span class='wpdev-block wpdev-py-3 wpdev-text-gray-600 wpdev-text-2xs wpdev-font-bold wpdev-uppercase'>{$not_found}</span>
+					<span class='wpdev-block wpdev-pad-y-3 wpdev-type-gray-600 wpdev-type-2xs wpdev-font-bold wpdev-uppercase'>{$not_found}</span>
 				</div>
 			</div>";
 
@@ -1310,7 +1669,7 @@ class Base_List_Table extends \WP_List_Table {
 
 		$avatar = get_avatar($customer->get_user_id(), 32, 'identicon', '', array(
 			'force_display' => true,
-			'class'         => 'wpdev-rounded-full wpdev-mr-2',
+			'class'         => 'wpdev-radius-full wpdev-mar-r-2',
 		));
 
 		$display_name = $customer->get_display_name();
@@ -1321,10 +1680,10 @@ class Base_List_Table extends \WP_List_Table {
 
 		$customer_link = wpdev_network_admin_url('wpdev-edit-customer', $url_atts);
 
-		$html = "<a href='{$customer_link}' class='wpdev-no-underline wpdev-table-card wpdev-text-gray-700 wpdev-p-1 wpdev-flex wpdev-flex-grow wpdev-rounded wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300'>
+		$html = "<a href='{$customer_link}' class='wpdev-no-underline wpdev-table-card wpdev-type-gray-700 wpdev-pad-1 wpdev-row wpdev-grow wpdev-radius wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300'>
 			{$avatar}
-			<div class='wpdev-flex-wrap wpdev-overflow-hidden'>
-				<strong class='wpdev-block wpdev-flex-grow wpdev-truncate'>{$display_name} <small class='wpdev-font-normal'>(#{$id})</small></strong>
+			<div class='wpdev-row-wrap wpdev-overflow-hidden'>
+				<strong class='wpdev-block wpdev-grow wpdev-truncate'>{$display_name} <small class='wpdev-font-normal'>(#{$id})</small></strong>
 				<small class='wpdev-truncate wpdev-block'>{$email}</small>
 			</div>
 		</a>";
@@ -1349,10 +1708,10 @@ class Base_List_Table extends \WP_List_Table {
 
 			$not_found = __('No product found', 'wpdev');
 
-			return "<div class='wpdev-table-card wpdev-text-gray-700 wpdev-py-1 wpdev-px-2 wpdev-flex wpdev-flex-grow wpdev-rounded wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-relative wpdev-overflow-hidden'>
-				<span class='dashicons dashicons-wpdev-block wpdev-text-gray-600 wpdev-px-1 wpdev-pr-3'>&nbsp;</span>
+			return "<div class='wpdev-table-card wpdev-type-gray-700 wpdev-pad-y-1 wpdev-pad-x-2 wpdev-row wpdev-grow wpdev-radius wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-relative wpdev-overflow-hidden'>
+				<span class='dashicons dashicons-wpdev-block wpdev-type-gray-600 wpdev-pad-x-1 wpdev-pad-r-3'>&nbsp;</span>
 				<div class=''>
-					<span class='wpdev-block wpdev-py-3 wpdev-text-gray-600 wpdev-text-2xs wpdev-font-bold wpdev-uppercase'>{$not_found}</span>
+					<span class='wpdev-block wpdev-pad-y-3 wpdev-type-gray-600 wpdev-type-2xs wpdev-font-bold wpdev-uppercase'>{$not_found}</span>
 				</div>
 			</div>";
 
@@ -1364,8 +1723,8 @@ class Base_List_Table extends \WP_List_Table {
 
 		$image = $product->get_featured_image('thumbnail');
 
-		$image = $image ? sprintf('<img class="wpdev-w-7 wpdev-h-7 wpdev-rounded wpdev-mr-3" src="%s">', esc_attr($image)) : '
-			<div class="wpdev-w-7 wpdev-h-7 wpdev-bg-gray-200 wpdev-rounded wpdev-text-gray-600 wpdev-flex wpdev-items-center wpdev-justify-center wpdev-mr-2 wpdev-ml-1">
+		$image = $image ? sprintf('<img class="wpdev-w-7 wpdev-h-7 wpdev-radius wpdev-mar-r-3" src="%s">', esc_attr($image)) : '
+			<div class="wpdev-w-7 wpdev-h-7 wpdev-surface-gray-200 wpdev-radius wpdev-type-gray-600 wpdev-inline wpdev-justify-center wpdev-mar-r-2 wpdev-mar-l-1">
 				<span class="dashicons-wpdev-image"></span>
 			</div>';
 
@@ -1377,7 +1736,7 @@ class Base_List_Table extends \WP_List_Table {
 
 		$product_link = wpdev_network_admin_url('wpdev-edit-product', $url_atts);
 
-		$html = "<a href='{$product_link}' class='wpdev-table-card wpdev-no-underline wpdev-text-gray-700 wpdev-p-1 wpdev-flex wpdev-flex-grow wpdev-rounded wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300'>
+		$html = "<a href='{$product_link}' class='wpdev-table-card wpdev-no-underline wpdev-type-gray-700 wpdev-pad-1 wpdev-row wpdev-grow wpdev-radius wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300'>
 			{$image}
 			<div class=''>
 				<strong class='wpdev-block'>{$name} <small class='wpdev-font-normal'>(#{$id})</small></strong>
@@ -1405,10 +1764,10 @@ class Base_List_Table extends \WP_List_Table {
 
 			$not_found = __('No site found', 'wpdev');
 
-			return "<div class='wpdev-table-card  wpdev-text-gray-700 wpdev-py-0 wpdev-px-2 wpdev-flex wpdev-flex-grow wpdev-block wpdev-rounded wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-relative wpdev-overflow-hidden'>
-				<span class='dashicons dashicons-wpdev-block wpdev-text-gray-600 wpdev-px-1 wpdev-pr-3'>&nbsp;</span>
+			return "<div class='wpdev-table-card  wpdev-type-gray-700 wpdev-pad-y-0 wpdev-pad-x-2 wpdev-row wpdev-grow wpdev-block wpdev-radius wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300 wpdev-relative wpdev-overflow-hidden'>
+				<span class='dashicons dashicons-wpdev-block wpdev-type-gray-600 wpdev-pad-x-1 wpdev-pad-r-3'>&nbsp;</span>
 				<div class=''>
-					<span class='wpdev-block wpdev-py-3 wpdev-text-gray-600 wpdev-text-2xs wpdev-font-bold wpdev-uppercase'>{$not_found}</span>
+					<span class='wpdev-block wpdev-pad-y-3 wpdev-type-gray-600 wpdev-type-2xs wpdev-font-bold wpdev-uppercase'>{$not_found}</span>
 				</div>
 			</div>";
 
@@ -1424,11 +1783,11 @@ class Base_List_Table extends \WP_List_Table {
 
 		$title = $site->get_title();
 
-		$html = "<a href='{$site_link}' class='wpdev-table-card wpdev-no-underline wpdev-text-gray-700 wpdev-p-1 wpdev-flex wpdev-flex-grow wpdev-block wpdev-rounded wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300'>
-			<img class='wpdev-rounded wpdev-mr-3' height='40' width='40' src='{$avatar}'>
-			<div class='wpdev-flex wpdev-flex-wrap wpdev-overflow-hidden'>
-				<strong class='wpdev-w-full wpdev-truncate'>{$title}</strong>
-				<small class='wpdev-w-full wpdev-truncate'>{$site->get_active_site_url()}</small>
+		$html = "<a href='{$site_link}' class='wpdev-table-card wpdev-no-underline wpdev-type-gray-700 wpdev-pad-1 wpdev-row wpdev-grow wpdev-block wpdev-radius wpdev-items-center wpdev-border wpdev-border-solid wpdev-border-gray-300'>
+			<img class='wpdev-radius wpdev-mar-r-3' height='40' width='40' src='{$avatar}'>
+			<div class='wpdev-row wpdev-row-wrap wpdev-overflow-hidden'>
+				<strong class='wpdev-full wpdev-truncate'>{$title}</strong>
+				<small class='wpdev-full wpdev-truncate'>{$site->get_active_site_url()}</small>
 			</div>
 		</a>";
 
@@ -1451,13 +1810,13 @@ class Base_List_Table extends \WP_List_Table {
 		if (!$image) {
 
 			return '
-			<div class="wpdev-w-thumb wpdev-h-thumb wpdev-bg-gray-200 wpdev-rounded wpdev-text-gray-600 wpdev-flex wpdev-items-center wpdev-justify-center">
+			<div class="wpdev-w-thumb wpdev-h-thumb wpdev-surface-gray-200 wpdev-radius wpdev-type-gray-600 wpdev-inline wpdev-justify-center">
 				<span class="dashicons-wpdev-image"></span>
 			</div>';
 
 		} // end if;
 
-		return sprintf('<div class="wpdev-w-thumb wpdev-h-thumb wpdev-bg-gray-200 wpdev-rounded wpdev-overflow-hidden wpdev-text-center">
+		return sprintf('<div class="wpdev-w-thumb wpdev-h-thumb wpdev-surface-gray-200 wpdev-radius wpdev-overflow-hidden wpdev-type-center">
 			<img src="%s" class="wpdev-object-cover wpdev-w-thumb wpdev-h-thumb wpdev-image-preview" data-image="%s">
 		</div>', $image, $large_image);
 
@@ -1475,6 +1834,150 @@ class Base_List_Table extends \WP_List_Table {
 		return sprintf('<input type="checkbox" name="bulk-delete[]" value="%s" />', $item->get_id());
 
 	} // end column_cb;
+
+	/**
+	 * Render the reorder drag handle column cell.
+	 *
+	 * @since 2.15.0
+	 *
+	 * @param mixed $item Line item.
+	 * @return string
+	 */
+	public function column_reorder($item): string {
+
+		if ( ! $this->is_reorder_allowed() ) {
+			return '<span class="dashicons dashicons-menu wpdev-drag-disabled" title="' . esc_attr__( 'Reordering is disabled while search or column sort is active', 'wpdev' ) . '" style="opacity: 0.25; cursor: not-allowed;"></span>';
+		}
+
+		return '<span class="wpdev-row-drag-handle dashicons dashicons-menu" role="button" tabindex="0" aria-label="' . esc_attr__( 'Drag to reorder or use Alt+Up/Down', 'wpdev' ) . '"></span>';
+
+	} // end column_reorder;
+
+	/**
+	 * Check if this list table is declared as reorderable.
+	 *
+	 * @since 2.15.0
+	 * @return bool
+	 */
+	public function is_reorderable(): bool {
+
+		return (bool) $this->reorderable;
+
+	} // end is_reorderable;
+
+	/**
+	 * Check if drag-and-drop row reordering is allowed in the current view state.
+	 *
+	 * State Guard Invariant: manual reordering is locked when a search query ('s')
+	 * is active or when the table is ordered by any column other than the manual ordering column.
+	 *
+	 * @since 2.15.0
+	 * @return bool
+	 */
+	public function is_reorder_allowed(): bool {
+
+		if ( ! $this->is_reorderable() ) {
+			return false;
+		}
+
+		$current_orderby = function_exists( 'wpdev_request' )
+			? (string) wpdev_request( 'orderby', $this->reorder_order_column )
+			: ( isset( $_REQUEST['orderby'] ) ? (string) $_REQUEST['orderby'] : $this->reorder_order_column );
+
+		$search_query = function_exists( 'wpdev_request' )
+			? (string) wpdev_request( 's', '' )
+			: ( isset( $_REQUEST['s'] ) ? (string) $_REQUEST['s'] : '' );
+
+		$has_search       = '' !== trim( $search_query );
+		$is_default_order = empty( $current_orderby ) || $current_orderby === $this->reorder_order_column;
+
+		return ! $has_search && $is_default_order;
+
+	} // end is_reorder_allowed;
+
+	/**
+	 * Extract row ID from an item (object or array).
+	 *
+	 * @since 2.15.0
+	 * @param mixed $item Line item.
+	 * @return int|string
+	 */
+	public function get_item_id($item) {
+
+		if ( is_object( $item ) ) {
+			if ( method_exists( $item, 'get_id' ) ) {
+				return $item->get_id();
+			}
+			if ( isset( $item->id ) ) {
+				return $item->id;
+			}
+			if ( isset( $item->ID ) ) {
+				return $item->ID;
+			}
+		} elseif ( is_array( $item ) ) {
+			if ( isset( $item['id'] ) ) {
+				return $item['id'];
+			}
+			if ( isset( $item['ID'] ) ) {
+				return $item['ID'];
+			}
+		}
+
+		return 0;
+
+	} // end get_item_id;
+
+	/**
+	 * Extract order value from an item.
+	 *
+	 * @since 2.15.0
+	 * @param mixed $item Line item.
+	 * @return int
+	 */
+	public function get_item_order($item): int {
+
+		$col = $this->reorder_order_column;
+		if ( is_object( $item ) && isset( $item->$col ) ) {
+			return (int) $item->$col;
+		}
+		if ( is_array( $item ) && isset( $item[ $col ] ) ) {
+			return (int) $item[ $col ];
+		}
+
+		return 0;
+
+	} // end get_item_order;
+
+	/**
+	 * Check if current user has permission to reorder rows in this table.
+	 *
+	 * Defaults to user_can_ajax_refresh(). Host tables can override with domain capabilities.
+	 *
+	 * @since 2.15.0
+	 * @return bool
+	 */
+	public function user_can_reorder(): bool {
+
+		return $this->user_can_ajax_refresh();
+
+	} // end user_can_reorder;
+
+	/**
+	 * Persist the new row order. Host tables must implement this method.
+	 *
+	 * @since 2.15.0
+	 * @param list<int|string> $ordered_ids Array of row IDs in their new order.
+	 * @param int              $page_offset Base offset for paginated tables.
+	 * @return bool|\WP_Error
+	 */
+	public function reorder_items( array $ordered_ids, int $page_offset = 0 ) {
+
+		return new \WP_Error(
+			'not_implemented',
+			__( 'Host table must implement reorder_items().', 'wpdev' )
+		);
+
+	} // end reorder_items;
 	/**
 	 * Return the js var name. This will be used on other places.
 	 *
@@ -1482,7 +1985,12 @@ class Base_List_Table extends \WP_List_Table {
 	 */
 	public function _get_js_var_name(): string {
 
-		return str_replace('-', '_', $this->id);
+		/*
+		 * Must match `data-table-id` / wrapper id (`$this->id`). Hyphen→underscore
+		 * broke list-tables-factory.js binding for host ids like `my-plugin-list`.
+		 * `window[table_id]` already supports hyphens.
+		 */
+		return (string) $this->id;
 
 	} // end _get_js_var_name;
 
@@ -1514,6 +2022,7 @@ class Base_List_Table extends \WP_List_Table {
 					window[table_id + '_config'] = {
 						filters: <?php echo json_encode($this->get_filters()); ?>,
 						context: <?php echo json_encode($this->context); ?>,
+						page: <?php echo json_encode( $this->get_page_slug() ); ?>,
 					}
 
 					window[table_id] = wpdev_create_list(table_id).init();
@@ -1567,6 +2076,13 @@ class Base_List_Table extends \WP_List_Table {
 	 */
 	public function get_default_date_filter_options() {
 
+		$day_start = static function (int $timestamp): string {
+			return wpdev_format_gregorian_datetime($timestamp, 'Y-m-d 00:00:00');
+		};
+		$day_end = static function (int $timestamp): string {
+			return wpdev_format_gregorian_datetime($timestamp, 'Y-m-d 23:59:59');
+		};
+
 		return array(
 			'all'           => array(
 				'label'  => __('All', 'wpdev'),
@@ -1575,38 +2091,38 @@ class Base_List_Table extends \WP_List_Table {
 			),
 			'today'         => array(
 				'label'  => __('Today', 'wpdev'),
-				'after'  => date_i18n('Y-m-d 00:00:00', strtotime('today')),
-				'before' => date_i18n('Y-m-d 23:59:59', strtotime('today')),
+				'after'  => $day_start(strtotime('today')),
+				'before' => $day_end(strtotime('today')),
 			),
 			'yesterday'     => array(
 				'label'  => __('Yesterday', 'wpdev'),
-				'after'  => date_i18n('Y-m-d 00:00:00', strtotime('yesterday')),
-				'before' => date_i18n('Y-m-d 23:59:59', strtotime('yesterday')),
+				'after'  => $day_start(strtotime('yesterday')),
+				'before' => $day_end(strtotime('yesterday')),
 			),
 			'last_week'     => array(
 				'label'  => __('Last 7 Days', 'wpdev'),
-				'after'  => date_i18n('Y-m-d 00:00:00', strtotime('last week')),
-				'before' => date_i18n('Y-m-d 23:59:59', strtotime('today')),
+				'after'  => $day_start(strtotime('last week')),
+				'before' => $day_end(strtotime('today')),
 			),
 			'last_month'    => array(
 				'label'  => __('Last 30 Days', 'wpdev'),
-				'after'  => date_i18n('Y-m-d 00:00:00', strtotime('last month')),
-				'before' => date_i18n('Y-m-d 23:59:59', strtotime('today')),
+				'after'  => $day_start(strtotime('last month')),
+				'before' => $day_end(strtotime('today')),
 			),
 			'current_month' => array(
 				'label'  => __('Current Month', 'wpdev'),
-				'after'  => date_i18n('Y-m-d 00:00:00', strtotime('first day of this month')),
-				'before' => date_i18n('Y-m-d 23:59:59', strtotime('today')),
+				'after'  => $day_start(strtotime('first day of this month')),
+				'before' => $day_end(strtotime('today')),
 			),
 			'last_year'     => array(
 				'label'  => __('Last 12 Months', 'wpdev'),
-				'after'  => date_i18n('Y-m-d 00:00:00', strtotime('last year')),
-				'before' => date_i18n('Y-m-d 23:59:59', strtotime('today')),
+				'after'  => $day_start(strtotime('last year')),
+				'before' => $day_end(strtotime('today')),
 			),
 			'year_to_date'  => array(
 				'label'  => __('Year to Date', 'wpdev'),
-				'after'  => date_i18n('Y-m-d 00:00:00', strtotime('first day of january this year')),
-				'before' => date_i18n('Y-m-d 23:59:59', strtotime('today')),
+				'after'  => $day_start(strtotime('first day of january this year')),
+				'before' => $day_end(strtotime('today')),
 			),
 			'custom'        => array(
 				'label'  => __('Custom', 'wpdev'),
@@ -1632,6 +2148,10 @@ class Base_List_Table extends \WP_List_Table {
 	 * @return array.
 	 */
 	protected function get_schema_columns($args = array(), $operator = 'and', $field = false) {
+
+		if ( empty( $this->query_class ) || ! is_string( $this->query_class ) || ! class_exists( $this->query_class ) ) {
+			return array();
+		}
 
 		$query_class = new $this->query_class();
 

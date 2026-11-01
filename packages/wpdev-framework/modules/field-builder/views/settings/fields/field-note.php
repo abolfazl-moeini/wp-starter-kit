@@ -5,9 +5,9 @@
  * @since 2.0.0
  */
 ?>
-<div class="wpdev-my-6">
+<div class="wpdev-mar-y-6">
 
-  <div class="wpdev-flex">
+  <div class="wpdev-row">
 
     <?php if ($field->title) : ?>
 
@@ -23,13 +23,14 @@
 
     <?php endif; ?>
 
-    <div class="<?php echo esc_attr($field->title ? 'wpdev-w-2/3' : 'wpdev-w-full'); ?>">
+    <div class="<?php echo esc_attr($field->title ? 'wpdev-w-2/3' : 'wpdev-full'); ?>">
 
-      <?php if ($field->desc) : ?>
+      <?php $note_content = ! empty( $field->desc ) ? $field->desc : ( ! empty( $field->content ) ? $field->content : '' ); ?>
+      <?php if ( $note_content ) : ?>
 
-        <p class="description" id="<?php echo $field->id; ?>-desc">
+        <p class="description" id="<?php echo esc_attr($field->id); ?>-desc">
 
-          <?php echo $field->desc; ?>
+          <?php echo $note_content; ?>
 
         </p>
 

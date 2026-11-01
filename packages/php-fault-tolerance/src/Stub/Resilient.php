@@ -8,8 +8,6 @@ namespace WPDev\FaultTolerance;
 final class Resilient
 {
     /**
-     * @param callable $operation
-     * @param array    $options
      * @return mixed
      */
     public static function resilient(callable $operation, array $options = [])

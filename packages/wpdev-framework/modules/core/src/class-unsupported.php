@@ -52,7 +52,7 @@ class Unsupported {
 
 		add_action('plugins_loaded', array('\WPDevFramework\Unsupported', 'unload_unsupported_addons'), 0);
 
-		add_action('plugins_loaded', array('\WPDevFramework\Unsupported', 'force_updater'), 20);
+		// Private updater (PUC) lives in addons/wpdev-updater when present.
 
 		add_action('in_admin_header', array('\WPDevFramework\Unsupported', 'maybe_add_notices'), 0);
 
@@ -138,70 +138,16 @@ class Unsupported {
 	} // end unload_unsupported_addons;
 
 	/**
-	 * Install the newer version of the plugin updater for add-ons that can already be updated.
+	 * Add-ons queued for private update checkers (consumed by wpdev-updater addon).
 	 *
-	 * @since 2.0.5
-	 * @return void
+	 * @since 2.10.0
+	 * @return array
 	 */
-	public static function force_updater() {
+	public static function get_to_upgrade() {
 
-		global $pagenow;
+		return self::$to_upgrade;
 
-		if ($pagenow !== 'plugins.php') {
-
-			return;
-
-		}
-
-		if ( wpdev()->is_loaded() === false || !is_network_admin()) {
-
-			return;
-
-		} // end if;
-
-		$license_key = \WPDevFramework\License::get_instance()->get_license_key();
-
-		if (!$license_key) {
-
-			return;
-
-		} // end if;
-
-		foreach (self::$to_upgrade as $addon_to_upgrade) {
-
-			$info = self::replace_with($addon_to_upgrade);
-
-			if ($info && wpdev_get_isset($info, 'slug', false)) {
-
-				try {
-
-					$url = add_query_arg(array(
-						'action'       => 'get_metadata',
-						'slug'         => $info['slug'],
-						'beta_program' => 2,
-					), 'https://versions.wpdev.ir/updates/');
-
-					$url = wpdev_with_license_key($url);
-
-					$guess_plugin_path = WP_PLUGIN_DIR . '/' . $info['slug'] . '/' . $info['slug'] . '.php';
-
-					if (file_exists($guess_plugin_path)) {
-
-						$checker = \Puc_v4_Factory::buildUpdateChecker($url, $guess_plugin_path, $info['slug']);
-
-					} // end if;
-
-				} catch (\Throwable $exception) {
-
-					// Nothing to do.
-
-				} // end try;
-
-			} // end if;
-
-		} // end foreach;
-
-	} // end force_updater;
+	} // end get_to_upgrade;
 
 	/**
 	 * Maybe add necessary admin notices about installing WPDev version 2.
@@ -230,7 +176,7 @@ class Unsupported {
 
 			$message[] = '<p>' . __('It seems that you have not run the WPDev upgrader yet. That is the first thing we need to do.', 'wpdev') . '</p>';
 
-			$message[] = sprintf('<a class="button" href="%s">%s</a>', network_admin_url('admin.php?page=wpdev-setup'), __('Visit the Installer to finish the upgrade &rarr;', 'wpdev'));
+			$message[] = sprintf('<a class="button" href="%s">%s</a>', admin_url( 'admin.php?page=wpdev-setup' ), __('Visit the Installer to finish the upgrade &rarr;', 'wpdev'));
 
 		} // end if;
 

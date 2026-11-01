@@ -5,15 +5,15 @@
  * @since 2.0.0
  */
 ?>
-<li class="<?php echo esc_attr(trim($field->wrapper_classes)); ?> wpdev-bg-gray-200" style="margin-bottom: -1px;" <?php echo $field->get_wrapper_html_attributes(); ?>>
+<li class="<?php echo esc_attr(trim($field->wrapper_classes)); ?> wpdev-surface-gray-200" style="margin-bottom: -1px;" <?php echo $field->get_wrapper_html_attributes(); ?>>
 
-  <div class="wpdev--m-4 wpdev-px-1">
+  <div class="wpdev--m-4 wpdev-pad-x-1">
 
     <?php foreach ($field->options as $option_value => $option_label) : ?>
 
       <label
-        class="wpdev-mt-1 wpdev-inline-block wpdev-uppercase wpdev-text-xs wpdev-text-gray-500 wpdev-px-4 wpdev-py-3 wpdev-font-bold wpdev-border-solid wpdev-border wpdev-border-b-0 wpdev-border-transparent wpdev-rounded-tl wpdev-rounded-tr "
-        v-bind:class="'<?php echo esc_attr($option_value); ?>' == <?php echo esc_attr($field->id); ?> ? 'wpdev-bg-white wpdev-text-gray-600 wpdev-border-gray-300' : ''"
+        class="wpdev-mar-t-1 wpdev-inline-block wpdev-uppercase wpdev-type-xs wpdev-type-gray-500 wpdev-pad-x-4 wpdev-pad-y-3 wpdev-font-bold wpdev-border-solid wpdev-border wpdev-border-b-0 wpdev-border-transparent wpdev-radius-tl wpdev-radius-tr "
+        v-bind:class="'<?php echo esc_attr($option_value); ?>' == <?php echo esc_attr($field->id); ?> ? 'wpdev-surface-white wpdev-type-gray-600 wpdev-border-gray-300' : ''"
       >
 
         <?php echo $option_label; ?>

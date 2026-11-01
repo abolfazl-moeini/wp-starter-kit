@@ -22,9 +22,13 @@ Module_Loader::register(
 
 wpdev_register_module_views( 'metabox-builder' );
 
+require_once __DIR__ . '/src/class-metabox-condition.php';
 require_once __DIR__ . '/src/admin/trait-edit-page-widgets.php';
 require_once __DIR__ . '/src/class-metabox-registry.php';
 require_once __DIR__ . '/src/functions/metabox.php';
+require_once __DIR__ . '/src/class-native-post-metabox.php';
+
+\WPDevFramework\Modules\MetaboxBuilder\Native_Post_Metabox::init();
 
 Component_Registry::init();
 Metabox_Registry::init();

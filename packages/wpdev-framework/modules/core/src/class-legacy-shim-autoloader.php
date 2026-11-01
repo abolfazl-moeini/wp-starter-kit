@@ -97,7 +97,7 @@ class Legacy_Shim_Autoloader {
 		// in 2.8.0 are mapped via the BC class map below; the prefix must be
 		// recognised by is_legacy_namespace() for the autoloader to fire.
 		'WPDev\\Modules',
-		// WaaS Examples live under examples/ and use a WPDevFramework\Examples\* namespace
+		// Examples live under examples/ and use a WPDevFramework\Examples\* namespace
 		// (WPDevFramework\Examples\AdminSettingPageDefaults\Sections\*, etc.). The
 		// autoloader must know to scan examples/ for these classes.
 		'WPDev\\Examples',
@@ -255,31 +255,6 @@ class Legacy_Shim_Autoloader {
 			$plugin_root . '/modules/wizard/class-*.php',
 		);
 
-		// BC class map: legacy FQCNs that were moved to wpdev-examples/ in 2.8.0
-		// still need to resolve from their original namespace. The autoloader
-		// points them at the new file and creates a class_alias so external
-		// code that imported the old FQCN continues to work.
-		$examples_root = defined( 'WPDEV_EXAMPLES_DIR' )
-			? rtrim( (string) WPDEV_EXAMPLES_DIR, '/\\' )
-			: '';
-
-		if ( '' === $examples_root && function_exists( 'apply_filters' ) ) {
-			$filtered = apply_filters( 'wpdev_examples_dir', null );
-
-			if ( is_string( $filtered ) && '' !== $filtered ) {
-				$examples_root = rtrim( $filtered, '/\\' );
-			}
-		}
-
-		$bc_aliases = array();
-
-		if ( '' !== $examples_root ) {
-			$bc_aliases = array(
-				'WPDev\\Modules\\AdminSettingPage\\WPDev_Settings_Default_Sections'
-					=> $examples_root . '/admin-setting-page-defaults/src/class-wpdev-settings-default-sections.php',
-			);
-		}
-
 		foreach ( $root_wpdev_globs as $pattern ) {
 			foreach ( glob( $pattern ) ?: array() as $file ) {
 				$parsed = self::parse_class_from_file( $file );
@@ -290,35 +265,31 @@ class Legacy_Shim_Autoloader {
 			}
 		}
 
-		// Apply BC aliases: the autoloader will require the new file when the old
-		// FQCN is requested, and the file itself runs class_alias() at the bottom.
-		foreach ( $bc_aliases as $legacy_fqcn => $new_file ) {
-			if ( ! isset( $map[ $legacy_fqcn ] ) && is_readable( $new_file ) ) {
-				$map[ $legacy_fqcn ] = $new_file;
-			}
-		}
-
 		foreach ( $scan_roots as $root ) {
 			if ( ! is_dir( $root ) ) {
 				continue;
 			}
 
-			$iterator = new \RecursiveIteratorIterator(
-				new \RecursiveDirectoryIterator( $root, \FilesystemIterator::SKIP_DOTS )
-			);
+			try {
+				$iterator = new \RecursiveIteratorIterator(
+					new \RecursiveDirectoryIterator( $root, \FilesystemIterator::SKIP_DOTS )
+				);
 
-			foreach ( $iterator as $file ) {
-				if ( ! $file->isFile() || 'php' !== $file->getExtension() ) {
-					continue;
+				foreach ( $iterator as $file ) {
+					if ( ! $file->isFile() || 'php' !== $file->getExtension() ) {
+						continue;
+					}
+
+					$parsed = self::parse_class_from_file( $file->getPathname() );
+
+					if ( ! $parsed ) {
+						continue;
+					}
+
+					$map[ $parsed['class'] ] = $parsed['file'];
 				}
-
-				$parsed = self::parse_class_from_file( $file->getPathname() );
-
-				if ( ! $parsed ) {
-					continue;
-				}
-
-				$map[ $parsed['class'] ] = $parsed['file'];
+			} catch ( \Throwable $e ) {
+				continue;
 			}
 		}
 
@@ -339,13 +310,7 @@ class Legacy_Shim_Autoloader {
 	} // end build_class_map;
 
 	/**
-	 * Parse namespace and class/trait name from a PHP file header.
-	 *
-	 * @param string $file Absolute file path.
-	 * @return array{class: string, file: string}|null
-	 */
-	/**
-	 * Public wrapper for Examples_Shim_Autoloader and tests.
+	 * Parse namespace and class/trait name from a PHP file header (public wrapper for tests).
 	 *
 	 * @since 2.8.0
 	 *

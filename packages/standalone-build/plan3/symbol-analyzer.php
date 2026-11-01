@@ -259,8 +259,7 @@ class Plan3_Symbol_Analyzer {
 									foreach ( $stmt->traits as $t ) {
 										$traits[] = $t->toString();
 									}
-									if ( ! empty( $stmt->adaptations ) ) {
-										foreach ( $stmt->adaptations as $adaptation ) {
+									foreach ( $stmt->adaptations as $adaptation ) {
 											if ( isset( $adaptation->method ) && $adaptation->method instanceof Node\Identifier ) {
 												$ad_method = strtolower( $adaptation->method->toString() );
 												$this->analyzer->preserved_members[ $fqcn ]['methods'][ $ad_method ] = 'trait_adaptation';
@@ -269,7 +268,6 @@ class Plan3_Symbol_Analyzer {
 												}
 											}
 										}
-									}
 								} elseif ( $stmt instanceof Node\Stmt\ClassMethod ) {
 									$m_name = strtolower( $stmt->name->toString() );
 									$vis    = $stmt->isPrivate() ? 'private' : ( $stmt->isProtected() ? 'protected' : 'public' );
@@ -852,7 +850,7 @@ class Plan3_Symbol_Analyzer {
 		while ( $changed && $passes < 10 ) {
 			$changed = false;
 			$passes++;
-			foreach ( $this->classes as $c_name => &$class ) {
+			foreach ( $this->classes as &$class ) {
 				$new_traits = array();
 				foreach ( $class['traits'] as $t_name ) {
 					if ( isset( $this->classes[ $t_name ] ) ) {
@@ -1086,7 +1084,7 @@ class Plan3_Symbol_Analyzer {
 		// 5. Finalize Global Variables & Re-check Preserved Decisions
 		if ( ! empty( $this->project_global_vars ) ) {
 			foreach ( $this->file_var_decisions as $f_path => &$decisions ) {
-				foreach ( $decisions as $offset => &$item ) {
+				foreach ( $decisions as &$item ) {
 					if ( isset( $this->project_global_vars[ $item['var'] ] ) ) {
 						$item['action'] = 'preserve';
 					}
@@ -1094,8 +1092,8 @@ class Plan3_Symbol_Analyzer {
 			}
 			unset( $item, $decisions );
 
-			foreach ( $this->file_compact_decisions as $f_path => &$compacts ) {
-				foreach ( $compacts as $offset => &$item ) {
+			foreach ( $this->file_compact_decisions as &$compacts ) {
+				foreach ( $compacts as &$item ) {
 					if ( is_array( $item ) && $item[0] === 'rewrite' ) {
 						foreach ( $item[1] as $arg ) {
 							if ( isset( $this->project_global_vars[ '$' . $arg ] ) ) {

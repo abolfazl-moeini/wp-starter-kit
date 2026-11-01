@@ -58,9 +58,6 @@ return array(
 		'WPDev\\Dependencies\\Delight\\Http\\' => array(
 			__DIR__ . '/delight-im/http/src',
 		),
-		'WPDev\\Dependencies\\Doctrine\\Deprecations\\' => array(
-			__DIR__ . '/doctrine/deprecations/lib/Doctrine/Deprecations',
-		),
 		'WPDev\\Dependencies\\Hashids\\' => array(
 			__DIR__ . '/hashids/hashids/src',
 		),
@@ -73,37 +70,17 @@ return array(
 		'WPDev\\Dependencies\\Pablo_Pacheco\\WP_Namespace_Autoloader\\' => array(
 			__DIR__ . '/pablo-sg-pacheco/wp-namespace-autoloader/src',
 		),
-		'WPDev\\Dependencies\\ParagonIE\\ConstantTime\\' => array(
-			__DIR__ . '/paragonie/constant_time_encoding/src',
-		),
-		'WPDev\\Dependencies\\phpDocumentor\\Reflection\\' => array(
-			__DIR__ . '/phpdocumentor/reflection-common/src',
-			__DIR__ . '/phpdocumentor/reflection-docblock/src',
-			__DIR__ . '/phpdocumentor/type-resolver/src',
-		),
-		'bcmath_compat\\' => array(
-			__DIR__ . '/phpseclib/bcmath_compat/src',
-		),
-		'phpseclib3\\' => array(
-			__DIR__ . '/phpseclib/phpseclib/phpseclib',
-		),
-		'WPDev\\Dependencies\\PHPStan\\PhpDocParser\\' => array(
-			__DIR__ . '/phpstan/phpdoc-parser/src',
-		),
 		'WPDev\\Dependencies\\Psr\\Container\\' => array(
 			__DIR__ . '/psr/container/src',
+		),
+		'WPDev\\Dependencies\\Psr\\Log\\' => array(
+			__DIR__ . '/psr/log/src',
 		),
 		'WPDev\\Dependencies\\Rakit\\Validation\\' => array(
 			__DIR__ . '/rakit/validation/src',
 		),
 		'WPDev\\Dependencies\\Arrch\\' => array(
 			__DIR__ . '/rpnzl/arrch/src/Arrch',
-		),
-		'WPDev\\Dependencies\\Symfony\\Component\\Cache\\' => array(
-			__DIR__ . '/symfony/cache/',
-		),
-		'WPDev\\Dependencies\\Symfony\\Contracts\\Cache\\' => array(
-			__DIR__ . '/symfony/cache-contracts/',
 		),
 		'Symfony\\Polyfill\\Mbstring\\' => array(
 			__DIR__ . '/symfony/polyfill-mbstring/',
@@ -129,9 +106,6 @@ return array(
 		'WPDev\\Dependencies\\Symfony\\Component\\VarExporter\\' => array(
 			__DIR__ . '/symfony/var-exporter/',
 		),
-		'WPDev\\Dependencies\\Webmozart\\Assert\\' => array(
-			__DIR__ . '/webmozart/assert/src',
-		),
 	),
 	'classmap' => array(
 	),
@@ -148,14 +122,11 @@ return array(
 		__DIR__ . '/amphp/socket/src/Internal/functions.php',
 		__DIR__ . '/amphp/sync/src/functions.php',
 		__DIR__ . '/amphp/sync/src/ConcurrentIterator/functions.php',
-		__DIR__ . '/phpseclib/bcmath_compat/lib/bcmath.php',
-		__DIR__ . '/phpseclib/phpseclib/phpseclib/bootstrap.php',
 		__DIR__ . '/symfony/deprecation-contracts/function.php',
 		__DIR__ . '/symfony/polyfill-mbstring/bootstrap.php',
 		__DIR__ . '/symfony/polyfill-php73/bootstrap.php',
 		__DIR__ . '/symfony/polyfill-php80/bootstrap.php',
 		__DIR__ . '/symfony/polyfill-php81/bootstrap.php',
 		__DIR__ . '/symfony/translation/Resources/functions.php',
-		__DIR__ . '/yahnis-elsts/plugin-update-checker/load-v4p11.php',
 	),
 );

@@ -50,13 +50,15 @@ function wpdev_wrap_ajax_handler_callback( $callback, $args = array() ) {
 			}
 		}
 
-		$allowed = true;
-
-		if ( ! empty( $args['capability_callback'] ) && is_callable( $args['capability_callback'] ) ) {
+		if ( function_exists( 'wpdev_request_access_is_allowed' ) ) {
+			$allowed = wpdev_request_access_is_allowed( $args );
+		} elseif ( ! empty( $args['capability_callback'] ) && is_callable( $args['capability_callback'] ) ) {
 			$allowed = (bool) call_user_func( $args['capability_callback'] );
 		} elseif ( ! empty( $args['capability'] ) && function_exists( 'current_user_can' ) ) {
 			$cap     = function_exists( 'wpdev_admin_capability_for' ) ? wpdev_admin_capability_for( $args['capability'] ) : $args['capability'];
-			$allowed = current_user_can( $cap );
+			$allowed = (bool) current_user_can( $cap );
+		} else {
+			$allowed = false;
 		}
 
 		if ( ! $allowed ) {
@@ -253,3 +255,27 @@ if ( ! function_exists( 'wpdev_ajax_error_wp_error' ) ) {
 
 	} // end wpdev_ajax_error_wp_error;
 }
+
+if ( ! function_exists( 'wpdev_ajax' ) ) {
+	/**
+	 * Retrieve the core Ajax_Service instance.
+	 *
+	 * @since 2.14.0
+	 *
+	 * @return \WPDevFramework\Core\Services\Ajax_Service
+	 */
+	function wpdev_ajax() {
+		static $instance = null;
+
+		if ( function_exists( 'wpdev_services' ) && wpdev_services( 'ajax' ) instanceof \WPDevFramework\Core\Services\Ajax_Service ) {
+			return wpdev_services( 'ajax' );
+		}
+
+		if ( null === $instance ) {
+			$instance = new \WPDevFramework\Core\Services\Ajax_Service();
+		}
+
+		return $instance;
+	}
+}
+

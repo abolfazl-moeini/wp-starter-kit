@@ -46,9 +46,6 @@ final class Deprecated extends BaseTag implements Factory\StaticMethod
         $this->version = $version;
         $this->description = $description;
     }
-    /**
-     * @return static
-     */
     public static function create(?string $body, ?DescriptionFactory $descriptionFactory = null, ?TypeContext $context = null) : self
     {
         if (empty($body)) {

@@ -55,7 +55,7 @@
 
     <?php else : ?>
 
-      <span class="wpdev-my-1 wpdev-inline-block">
+      <span class="wpdev-mar-y-1 wpdev-inline-block">
 
         <?php echo $field->display_value; ?>
 
@@ -68,12 +68,12 @@
   <?php if ($field->edit) : ?>
 
     <div class="wpdev-block" v-show="!edit">
-      <a href="#" class="wpdev-p-2 wpdev--m-2 wp-ui-text-highlight" v-on:click="open($event)" data-field="<?php echo esc_attr($field_slug); ?>">
+      <a href="#" class="wpdev-pad-2 wpdev--m-2 wp-ui-text-highlight" v-on:click="open($event)" data-field="<?php echo esc_attr($field->id); ?>">
         <?php echo wpdev_tooltip(__('Edit'), 'dashicons-edit'); ?>
       </a>
     </div>
 
-    <div v-cloak class="wpdev-block wpdev-w-full" v-show="edit">
+    <div v-cloak class="wpdev-block wpdev-full" v-show="edit">
 
       <?php
 
@@ -87,7 +87,7 @@
 
       ?>
 
-      <input class="form-control wpdev-w-full wpdev-my-1" name="<?php echo esc_attr($field->id); ?>" type="text" placeholder="<?php echo esc_attr($field->placeholder); ?>" value="<?php echo esc_attr($field->value); ?>" <?php echo $field->get_html_attributes(); ?>>
+      <input class="form-control wpdev-full wpdev-mar-y-1" name="<?php echo esc_attr($field->id); ?>" type="text" placeholder="<?php echo esc_attr($field->placeholder); ?>" value="<?php echo esc_attr($field->value); ?>" <?php echo $field->get_html_attributes(); ?>>
 
       <?php
 
@@ -108,7 +108,7 @@
   <?php if ($field->copy) : ?>
 
     <div class="wpdev-block" v-show="!edit">
-      <a href="#" class="wpdev-p-2 wpdev--m-2" v-on:click="edit($event, '<?php echo esc_js($field_slug); ?>')" data-field="<?php echo esc_attr($field_slug); ?>">
+      <a href="#" class="wpdev-pad-2 wpdev--m-2" v-on:click="edit($event, '<?php echo esc_js($field->id); ?>')" data-field="<?php echo esc_attr($field->id); ?>">
         <?php echo wpdev_tooltip(__('Copy'), 'dashicons-admin-page'); ?>
       </a>
     </div>

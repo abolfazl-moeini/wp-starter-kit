@@ -44,20 +44,16 @@ use WPDev\Core\Plugin;
 final class Assets {
 
 	/**
-	 * Consumer-supplied plugin root directory path (trailing slash).
-	 * Null until {@see Assets::set_plugin_dir()} is called.
-	 *
-	 * @var string|null
-	 */
-	private static ?string $plugin_dir = null;
+     * Consumer-supplied plugin root directory path (trailing slash).
+     * Null until {@see Assets::set_plugin_dir()} is called.
+     */
+    private static ?string $plugin_dir = null;
 
 	/**
-	 * Consumer-supplied plugin root public URL (trailing slash).
-	 * Null until {@see Assets::set_plugin_dir()} is called.
-	 *
-	 * @var string|null
-	 */
-	private static ?string $plugin_url = null;
+     * Consumer-supplied plugin root public URL (trailing slash).
+     * Null until {@see Assets::set_plugin_dir()} is called.
+     */
+    private static ?string $plugin_url = null;
 
 	/**
 	 * Set the plugin root so Assets can resolve paths and URLs correctly.
@@ -391,20 +387,18 @@ final class Assets {
 	}
 
 	// ------------------------------------------------------------------
-	// Internals
-	// ------------------------------------------------------------------
-
-	/**
-	 * Map an absolute filesystem path to a public URL relative to the
-	 * plugin root. Mirrors the legacy `wpdev_resolve_asset_url()` shape:
-	 * if the file lives inside the plugin root, the relative subpath is
-	 * preserved; otherwise fall back to a basename URL through
-	 * `plugins_url()`.
-	 *
-	 * @param string $abs_path Absolute filesystem path to a `.js`/`.css` file.
-	 * @return string
-	 */
-	private static function resolve_asset_url( string $abs_path ): string {
+    // Internals
+    // ------------------------------------------------------------------
+    /**
+     * Map an absolute filesystem path to a public URL relative to the
+     * plugin root. Mirrors the legacy `wpdev_resolve_asset_url()` shape:
+     * if the file lives inside the plugin root, the relative subpath is
+     * preserved; otherwise fall back to a basename URL through
+     * `plugins_url()`.
+     *
+     * @param string $abs_path Absolute filesystem path to a `.js`/`.css` file.
+     */
+    private static function resolve_asset_url( string $abs_path ): string {
 		$paths     = self::resolve_paths();
 		$base_path = rtrim( $paths['base_path'], '/\\' );
 		$base_url  = $paths['base_url'];

@@ -63,6 +63,10 @@ class Whitelabel {
 
 		add_action('wpdev_load', array($this, 'add_settings'), 20);
 
+		if ( did_action( 'wpdev_load' ) ) {
+			$this->add_settings();
+		}
+
 		add_action('admin_init', array($this, 'clear_footer_texts'));
 
 		add_action('init', array($this, 'hooks'));
@@ -127,88 +131,92 @@ class Whitelabel {
 	 */
 	public function replace_text($translation, $text, $domain) {
 
-		if ($this->allowed_domains === null) {
+		static $reentrancy_guard = false;
+		if ($reentrancy_guard) {
+			return $translation;
+		}
+		$reentrancy_guard = true;
 
-			$this->allowed_domains = apply_filters('wpdev_replace_text_allowed_domains', array(
-				'default',
-				'wpdev',
-			));
+		try {
+			if ($this->allowed_domains === null) {
+				$this->allowed_domains = array('default', 'wpdev');
+				$this->allowed_domains = apply_filters('wpdev_replace_text_allowed_domains', $this->allowed_domains);
+			} // end if;
 
-		} // end if;
+			if (!in_array($domain, $this->allowed_domains, true)) {
 
-		if (!in_array($domain, $this->allowed_domains, true)) {
+				return $translation;
+
+			} // end if;
+
+			/**
+			 * Prevent replacement when dealing with URLs.
+			 *
+			 * WordPress uses translation functions to allow for its own URLs to
+			 * be changed to the different locales. This means that if we try to
+			 * edit those URLs, we might break things. PHP 8.0 is specially
+			 * unforgiving in that scenario.
+			 *
+			 * @since 2.1.0
+			 */
+			if (strncmp($translation, 'http', strlen('http')) === 0) {
+
+				return $translation;
+
+			} // end if;
+
+			if ($this->init === false) {
+				$this->init = true;
+				$search_and_replace = array();
+
+				$site_plural = wpdev_get_setting('rename_site_plural');
+
+				if ($site_plural) {
+
+					$search_and_replace['sites'] = strtolower((string) $site_plural);
+					$search_and_replace['Sites'] = ucfirst((string) $site_plural);
+
+				} // end if;
+
+				$site_singular = wpdev_get_setting('rename_site_singular');
+
+				if ($site_singular) {
+
+					$search_and_replace['site'] = strtolower((string) $site_singular);
+					$search_and_replace['Site'] = ucfirst((string) $site_singular);
+
+				} // end if;
+
+				$wordpress = wpdev_get_setting('rename_wordpress');
+
+				if ($wordpress) {
+
+					$search_and_replace['wordpress'] = strtolower((string) $wordpress);
+					$search_and_replace['WordPress'] = ucfirst((string) $wordpress);
+					$search_and_replace['Wordpress'] = ucfirst((string) $wordpress);
+					$search_and_replace['wordPress'] = ucfirst((string) $wordpress);
+
+				} // end if;
+
+				if ($search_and_replace) {
+
+					$this->search  = array_keys($search_and_replace);
+					$this->replace = array_values($search_and_replace);
+
+				} // end if;
+
+			} // end if;
+
+			if (!empty($this->search)) {
+
+				return str_replace($this->search, $this->replace, $translation);
+
+			} // end if;
 
 			return $translation;
-
-		} // end if;
-
-		/**
-		 * Prevent replacement when dealing with URLs.
-		 *
-		 * WordPress uses translation functions to allow for its own URLs to
-		 * be changed to the different locales. This means that if we try to
-		 * edit those URLs, we might break things. PHP 8.0 is specially
-		 * unforgiving in that scenario.
-		 *
-		 * @since 2.1.0
-		 */
-		if (strncmp($translation, 'http', strlen('http')) === 0) {
-
-			return $translation;
-
-		} // end if;
-
-		if ($this->init === false) {
-
-			$search_and_replace = array();
-
-			$site_plural = wpdev_get_setting('rename_site_plural');
-
-			if ($site_plural) {
-
-				$search_and_replace['sites'] = strtolower((string) $site_plural);
-				$search_and_replace['Sites'] = ucfirst((string) $site_plural);
-
-			} // end if;
-
-			$site_singular = wpdev_get_setting('rename_site_singular');
-
-			if ($site_singular) {
-
-				$search_and_replace['site'] = strtolower((string) $site_singular);
-				$search_and_replace['Site'] = ucfirst((string) $site_singular);
-
-			} // end if;
-
-			$wordpress = wpdev_get_setting('rename_wordpress');
-
-			if ($wordpress) {
-
-				$search_and_replace['wordpress'] = strtolower((string) $wordpress);
-				$search_and_replace['WordPress'] = ucfirst((string) $wordpress);
-				$search_and_replace['Wordpress'] = ucfirst((string) $wordpress);
-				$search_and_replace['wordPress'] = ucfirst((string) $wordpress);
-
-			} // end if;
-
-			if ($search_and_replace) {
-
-				$this->search  = array_keys($search_and_replace);
-				$this->replace = array_values($search_and_replace);
-
-			} // end if;
-
-			$this->init = true;
-
-		} // end if;
-
-		if (!empty($this->search)) {
-
-			return str_replace($this->search, $this->replace, $translation);
-
-		} // end if;
-
-		return $translation;
+		} finally {
+			$reentrancy_guard = false;
+		}
 
 	} // end replace_text;
 
@@ -220,6 +228,19 @@ class Whitelabel {
 	 * @return void
 	 */
 	public function add_settings() {
+
+		// wpdev_load fires inside plugins_loaded (before init). Defer host/framework
+		// domain strings until init to avoid WP 6.7 _load_textdomain_just_in_time.
+		if ( ! did_action( 'init' ) ) {
+			add_action( 'init', array( $this, 'add_settings' ), 5 );
+			return;
+		}
+
+		static $registered = false;
+		if ( $registered ) {
+			return;
+		}
+		$registered = true;
 
 		wpdev_register_settings_section('whitelabel', array(
 			'title' => __('Whitelabel', 'wpdev'),
@@ -242,12 +263,14 @@ class Whitelabel {
 			'default' => 1,
 		));
 
-		wpdev_register_settings_field('whitelabel', 'hide_sites_menu', array(
-			'title'   => __('Hide Sites Admin Menu', 'wpdev'),
-			'desc'    => __('We recommend that you manage all of your sites using the WPDev &rarr; Sites page. To avoid confusion, you can hide the default "Sites" item from the WordPress admin menu by toggling this option.', 'wpdev'),
-			'type'    => 'toggle',
-			'default' => 0,
-		));
+		if (function_exists('is_multisite') && is_multisite()) {
+			wpdev_register_settings_field('whitelabel', 'hide_sites_menu', array(
+				'title'   => __('Hide Sites Admin Menu', 'wpdev'),
+				'desc'    => __('We recommend that you manage all of your sites using the WPDev &rarr; Sites page. To avoid confusion, you can hide the default "Sites" item from the WordPress admin menu by toggling this option.', 'wpdev'),
+				'type'    => 'toggle',
+				'default' => 0,
+			));
+		}
 
 		wpdev_register_settings_field('whitelabel', 'rename_wordpress', array(
 			'title'       => __('Replace the word "WordPress"', 'wpdev'),
@@ -257,23 +280,25 @@ class Whitelabel {
 			'default'     => '',
 		));
 
-		wpdev_register_settings_field('whitelabel', 'rename_site_singular', array(
-			'title'           => __('Replace the word "Site" (singular)', 'wpdev'),
-			'placeholder'     => __('e.g. App', 'wpdev'),
-			'desc'            => __('Replace all occurrences of the word "Site" with a different word.', 'wpdev'),
-			'type'            => 'text',
-			'default'         => '',
-			'wrapper_classes' => 'wpdev-w-1/2',
-		));
+		if (function_exists('is_multisite') && is_multisite()) {
+			wpdev_register_settings_field('whitelabel', 'rename_site_singular', array(
+				'title'           => __('Replace the word "Site" (singular)', 'wpdev'),
+				'placeholder'     => __('e.g. App', 'wpdev'),
+				'desc'            => __('Replace all occurrences of the word "Site" with a different word.', 'wpdev'),
+				'type'            => 'text',
+				'default'         => '',
+				'wrapper_classes' => 'wpdev-w-1/2',
+			));
 
-		wpdev_register_settings_field('whitelabel', 'rename_site_plural', array(
-			'title'           => __('Replace the word "Sites" (plural)', 'wpdev'),
-			'placeholder'     => __('e.g. Apps', 'wpdev'),
-			'desc'            => __('Replace all occurrences of the word "Sites" with a different word.', 'wpdev'),
-			'type'            => 'text',
-			'default'         => '',
-			'wrapper_classes' => 'wpdev-w-1/2',
-		));
+			wpdev_register_settings_field('whitelabel', 'rename_site_plural', array(
+				'title'           => __('Replace the word "Sites" (plural)', 'wpdev'),
+				'placeholder'     => __('e.g. Apps', 'wpdev'),
+				'desc'            => __('Replace all occurrences of the word "Sites" with a different word.', 'wpdev'),
+				'type'            => 'text',
+				'default'         => '',
+				'wrapper_classes' => 'wpdev-w-1/2',
+			));
+		}
 
 	} // end add_settings;
 

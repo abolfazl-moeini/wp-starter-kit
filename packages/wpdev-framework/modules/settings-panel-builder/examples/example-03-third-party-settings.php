@@ -17,15 +17,18 @@ add_action(
 	static function () {
 
 		// --- Section 1: General -------------------------------------------------
+		// Capability cascades to all fields in this section unless explicitly overridden.
 		wpdev_register_settings_section(
 			'my_addon_general',
 			array(
-				'title' => __( 'My Add-on', 'wpdev' ),
-				'desc'  => __( 'Settings for my add-on.', 'wpdev' ),
-				'icon'  => 'dashicons-wpdev-rocket',
+				'title'      => __( 'My Add-on', 'wpdev' ),
+				'desc'       => __( 'Settings for my add-on.', 'wpdev' ),
+				'icon'       => 'dashicons-wpdev-rocket',
+				'capability' => 'my_addon_manage_settings',
 			)
 		);
 
+		// Inherits 'my_addon_manage_settings' capability from section.
 		wpdev_register_settings_field(
 			'my_addon_general',
 			'my_addon_enabled',
@@ -37,15 +40,45 @@ add_action(
 			)
 		);
 
+		// Sensitive field: overrides section capability with explicit 'manage_options' (least privilege).
 		wpdev_register_settings_field(
 			'my_addon_general',
 			'my_addon_api_key',
 			array(
-				'title'   => __( 'API Key', 'wpdev' ),
-				'desc'    => __( 'Your third-party API key.', 'wpdev' ),
-				'type'    => 'text',
+				'title'      => __( 'API Key', 'wpdev' ),
+				'desc'       => __( 'Your third-party API key (administrators only).', 'wpdev' ),
+				'type'       => 'text',
+				'default'    => '',
+				'capability' => 'manage_options',
+				'require'    => array( 'my_addon_enabled' => 1 ),
+			)
+		);
+
+		// Embed field: handles Aparat scripts, YouTube, iframes safely without data loss.
+		wpdev_register_settings_field(
+			'my_addon_general',
+			'my_addon_video_embed',
+			array(
+				'title'   => __( 'Promotional Video Embed', 'wpdev' ),
+				'desc'    => __( 'Paste Aparat, YouTube, or iframe embed code. Scripts will safely convert to responsive iframes.', 'wpdev' ),
+				'type'    => 'embed',
 				'default' => '',
-				'require' => array( 'my_addon_enabled' => 1 ),
+			)
+		);
+
+		// WYSIWYG editor: enqueues media and enables media buttons for rich content authoring.
+		wpdev_register_settings_field(
+			'my_addon_general',
+			'my_addon_notice_content',
+			array(
+				'title'   => __( 'Notice Banner Content', 'wpdev' ),
+				'desc'    => __( 'Rich text notice with media library buttons enabled.', 'wpdev' ),
+				'type'    => 'wp_editor',
+				'default' => '',
+				'args'    => array(
+					'textarea_rows' => 4,
+					'media_buttons' => true,
+				),
 			)
 		);
 
@@ -79,7 +112,7 @@ add_action(
 			array(
 				'title'  => __( 'Need help?', 'wpdev' ),
 				'render' => static function () {
-					echo '<div class="wpdev-p-4">' . esc_html__( 'Read the docs for setup steps.', 'wpdev' ) . '</div>';
+					echo '<div class="wpdev-pad-4">' . esc_html__( 'Read the docs for setup steps.', 'wpdev' ) . '</div>';
 				},
 			)
 		);

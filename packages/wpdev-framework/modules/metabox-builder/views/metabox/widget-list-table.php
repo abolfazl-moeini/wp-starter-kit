@@ -26,9 +26,9 @@
 
 <?php /*else : ?>
 
-  <div class="wpdev-p-12 wpdev-h-12 wpdev--mt-1 wpdev--mx-3 wpdev--mb-3 wpdev-bg-gray-100 wpdev-text-gray-500 wpdev-text-xs wpdev-text-center">
-    <span class="dashicons dashicons-warning wpdev-h-8 wpdev-w-8 wpdev-mx-auto wpdev-text-center wpdev-text-4xl wpdev-block"></span>
-    <span class="wpdev-block wpdev-text-sm wpdev-mt-2">
+  <div class="wpdev-pad-12 wpdev-h-12 wpdev--mt-1 wpdev--mx-3 wpdev--mb-3 wpdev-surface-gray-100 wpdev-type-gray-500 wpdev-type-xs wpdev-type-center">
+    <span class="dashicons dashicons-warning wpdev-h-8 wpdev-w-8 wpdev-mar-x-auto wpdev-type-center wpdev-type-4xl wpdev-block"></span>
+    <span class="wpdev-block wpdev-type-sm wpdev-mar-t-2">
         <?php printf(__('%s will show up here once this item is saved.', 'wpdev'), $title); ?>
     </span>
   </div>

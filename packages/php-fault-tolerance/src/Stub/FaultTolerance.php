@@ -7,11 +7,6 @@ namespace WPDev\FaultTolerance;
 
 final class FaultTolerance
 {
-    /**
-     * @param string $key
-     * @param int    $threshold
-     * @param int    $cooldown
-     */
     public static function circuitBreaker(
         string $key,
         int $threshold = 5,
@@ -20,28 +15,17 @@ final class FaultTolerance
         return new CircuitBreaker($key, $threshold, $cooldown);
     }
 
-    /**
-     * @param array $requests
-     * @return array
-     */
     public static function httpPool(array $requests): array
     {
         return HttpClient::pool($requests);
     }
 
-    /**
-     * @param array $requests
-     * @return array
-     */
     public static function httpBatch(array $requests): array
     {
         return HttpClient::batch($requests);
     }
 
     /**
-     * @param callable $fn
-     * @param int      $retries
-     * @param int      $delay
      * @param mixed    $fallback
      * @return mixed
      */

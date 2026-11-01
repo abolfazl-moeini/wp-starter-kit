@@ -7,7 +7,7 @@
  * @since 2.0.0
  */
 
-foreach ($notices as $key => $notice) : ?>
+foreach ($notices as $notice) : ?>
 
 <div class="notice wpdev-hidden wpdev-admin-notice wpdev-styling hover:wpdev-styling notice-<?php echo esc_attr($notice['type']); ?> <?php echo $notice['dismissible_key'] ? esc_attr('is-dismissible') : ''; ?>">
 

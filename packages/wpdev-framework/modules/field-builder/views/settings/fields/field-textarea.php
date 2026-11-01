@@ -5,9 +5,9 @@
  * @since 2.0.0
  */
 ?>
-<div class="wpdev-my-6">
+<div class="wpdev-mar-y-6">
 
-  <div class="wpdev-flex">
+  <div class="wpdev-row">
 
     <div class="wpdev-w-1/3">
 
@@ -21,7 +21,7 @@
 
     <div class="wpdev-w-2/3">
 
-      <textarea cols="60" rows="7" name="<?php echo esc_attr($field->id); ?>" id="<?php echo esc_attr($field->id); ?>" class="regular-text" placeholder="<?php echo $field->placeholder ? esc_attr($field->placeholder) : ''; ?>"><?php echo esc_textarea(stripslashes(wpdev_get_setting($field_slug))); ?></textarea>
+      <textarea cols="60" rows="7" name="<?php echo esc_attr($field->id); ?>" id="<?php echo esc_attr($field->id); ?>" class="regular-text" placeholder="<?php echo $field->placeholder ? esc_attr($field->placeholder) : ''; ?>"><?php echo esc_textarea(stripslashes((string) ($field->value !== null && $field->value !== false ? $field->value : wpdev_get_setting($field->id)))); ?></textarea>
 
       <?php if ($field->desc) : ?>
 

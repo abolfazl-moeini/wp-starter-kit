@@ -141,7 +141,11 @@ class API {
 
 			wpdev_save_setting('api_secret', wp_generate_password(24, false));
 
-			wp_safe_redirect(network_admin_url('admin.php?page=wpdev-settings&tab=api&api=refreshed&updated=1'));
+			wp_safe_redirect( wpdev_network_admin_url( 'wpdev-settings', array(
+				'tab'     => 'api',
+				'api'     => 'refreshed',
+				'updated' => 1,
+			) ) );
 
 			exit;
 

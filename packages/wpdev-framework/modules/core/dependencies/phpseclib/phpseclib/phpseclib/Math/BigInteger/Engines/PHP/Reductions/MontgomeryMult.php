@@ -28,9 +28,6 @@ abstract class MontgomeryMult extends \phpseclib3\Math\BigInteger\Engines\PHP\Re
      *
      * @see self::_prepMontgomery()
      * @see self::_montgomery()
-     * @param array $x
-     * @param array $y
-     * @param array $m
      * @param class-string<PHP> $class
      * @return array
      */

@@ -48,30 +48,26 @@ final class Plugin {
 	private static ?self $instance = null;
 
 	/**
-	 * Module loader that owns every registered feature module.
-	 *
-	 * @var ModuleLoader|null
-	 */
-	private static ?ModuleLoader $loader = null;
+     * Module loader that owns every registered feature module.
+     */
+    private static ?ModuleLoader $loader = null;
 
 	/**
 	 * Override path for the project config JSON. Resolved at boot
 	 * time and cached for the rest of the request.
 	 */
-	private static $config_path = null;
+	private static $config_path;
 
 	/**
-	 * Consumer-supplied plugin root. When set, {@see
-	 * Plugin::resolve_default_config_path()} anchors the config
-	 * file here instead of walking up from `__DIR__`. Required for
-	 * Composer deployments where the framework is loaded from
-	 * `vendor/wpdev/framework/` — the default `dirname(__DIR__, 2)`
-	 * would otherwise resolve into the vendor tree and miss the
-	 * consumer's config file.
-	 *
-	 * @var string|null
-	 */
-	private static ?string $plugin_dir = null;
+     * Consumer-supplied plugin root. When set, {@see
+     * Plugin::resolve_default_config_path()} anchors the config
+     * file here instead of walking up from `__DIR__`. Required for
+     * Composer deployments where the framework is loaded from
+     * `vendor/wpdev/framework/` — the default `dirname(__DIR__, 2)`
+     * would otherwise resolve into the vendor tree and miss the
+     * consumer's config file.
+     */
+    private static ?string $plugin_dir = null;
 
 	/**
 	 * Parsed contents of `wpdev.json` (or legacy `project.config.json`).
@@ -88,21 +84,17 @@ final class Plugin {
 	private static array $config_caches = array();
 
 	/**
-	 * The hook name fired by {@see Plugin::boot()}. Stored on the
-	 * instance so tests can observe what would have been passed to
-	 * `do_action()` without having to spy on the global WordPress
-	 * function (which is a no-op in the project's test bootstrap).
-	 *
-	 * @var string|null
-	 */
-	private static ?string $last_hook = null;
+     * The hook name fired by {@see Plugin::boot()}. Stored on the
+     * instance so tests can observe what would have been passed to
+     * `do_action()` without having to spy on the global WordPress
+     * function (which is a no-op in the project's test bootstrap).
+     */
+    private static ?string $last_hook = null;
 
 	/**
-	 * Whether {@see Plugin::boot()} has run in this process.
-	 *
-	 * @var bool
-	 */
-	private static bool $booted = false;
+     * Whether {@see Plugin::boot()} has run in this process.
+     */
+    private static bool $booted = false;
 
 	/**
 	 * Map of booted plugins keyed by slug.
@@ -119,11 +111,9 @@ final class Plugin {
 	private static array $loaders = array();
 
 	/**
-	 * Whether feature modules have been booted.
-	 *
-	 * @var bool
-	 */
-	private static bool $modules_booted = false;
+     * Whether feature modules have been booted.
+     */
+    private static bool $modules_booted = false;
 
 	/**
 	 * Map of booted module flags keyed by plugin slug.
@@ -324,12 +314,11 @@ final class Plugin {
 	}
 
 	/**
-	 * Test seam: did {@see Plugin::boot()} run in this process?
-	 *
-	 * @param string|null $slug Optional plugin slug to check.
-	 * @return bool
-	 */
-	public static function is_booted( ?string $slug = null ): bool {
+     * Test seam: did {@see Plugin::boot()} run in this process?
+     *
+     * @param string|null $slug Optional plugin slug to check.
+     */
+    public static function is_booted( ?string $slug = null ): bool {
 		if ( null !== $slug ) {
 			return ! empty( self::$booted_plugins[ $slug ] );
 		}
@@ -337,11 +326,9 @@ final class Plugin {
 	}
 
 	/**
-	 * Test seam: the hook name Plugin::boot() would have fired.
-	 *
-	 * @return string|null
-	 */
-	public static function last_loaded_hook(): ?string {
+     * Test seam: the hook name Plugin::boot() would have fired.
+     */
+    public static function last_loaded_hook(): ?string {
 		return self::$last_hook;
 	}
 
@@ -482,7 +469,7 @@ final class Plugin {
 			$config_file = self::resolve_default_config_path();
 			$plugin_root = dirname( $config_file );
 		}
-		$root = rtrim( (string) $plugin_root, '/\\' );
+		$root = rtrim( $plugin_root, '/\\' );
 
 		$candidates = array(
 			$root . '/packages/polaris-stack/dist',

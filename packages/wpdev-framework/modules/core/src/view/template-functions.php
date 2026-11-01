@@ -17,6 +17,7 @@ defined('ABSPATH') || exit;
  * @param string|false $default_view View to be used if the view passed is not found. Used as fallback.
  * @return void
  */
+if ( ! function_exists( 'wpdev_get_template' ) ) {
 function wpdev_get_template($view, $args = array(), $default_view = false) {
 
 	/**
@@ -76,6 +77,14 @@ function wpdev_get_template($view, $args = array(), $default_view = false) {
 
 	if ( ! file_exists( $template ) && $default_view ) {
 
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_trigger_error
+			trigger_error(
+				sprintf( 'WPDev view [%s] not found. Falling back to default view [%s].', $view, $default_view ),
+				E_USER_NOTICE
+			);
+		}
+
 		$template = wpdev_path( "views/$default_view.php" );
 
 		$module_default = class_exists( '\WPDevFramework\Core\Module_View_Registry' )
@@ -112,6 +121,7 @@ function wpdev_get_template($view, $args = array(), $default_view = false) {
 	include $template;
 
 } // end wpdev_get_template;
+}
 
 /**
  * Alias function to be used on the templates;
@@ -122,6 +132,7 @@ function wpdev_get_template($view, $args = array(), $default_view = false) {
  * @param string|false $default_view View to be used if the view passed is not found. Used as fallback.
  * @return string
  */
+if ( ! function_exists( 'wpdev_get_template_contents' ) ) {
 function wpdev_get_template_contents($view, $args = array(), $default_view = false) {
 
 	ob_start();
@@ -131,6 +142,7 @@ function wpdev_get_template_contents($view, $args = array(), $default_view = fal
 	return ob_get_clean();
 
 } // end wpdev_get_template_contents;
+}
 
 /**
  * Render a WPDev view template (canonical API — J-004).
@@ -142,6 +154,7 @@ function wpdev_get_template_contents($view, $args = array(), $default_view = fal
  * @param string|false         $default_view Fallback view path.
  * @return void
  */
+if ( ! function_exists( 'wpdev_view' ) ) {
 function wpdev_view( $view, $args = array(), $default_view = false ) {
 
 	if ( function_exists( 'wpdev_services' ) && wpdev_services( 'view' ) ) {
@@ -152,6 +165,7 @@ function wpdev_view( $view, $args = array(), $default_view = false ) {
 	wpdev_get_template( $view, $args, $default_view );
 
 } // end wpdev_view;
+}
 
 /**
  * Render a view and return HTML (canonical API — J-004).
@@ -163,6 +177,7 @@ function wpdev_view( $view, $args = array(), $default_view = false ) {
  * @param string|false         $default_view Fallback view path.
  * @return string
  */
+if ( ! function_exists( 'wpdev_view_contents' ) ) {
 function wpdev_view_contents( $view, $args = array(), $default_view = false ) {
 
 	if ( function_exists( 'wpdev_services' ) && wpdev_services( 'view' ) ) {
@@ -172,6 +187,7 @@ function wpdev_view_contents( $view, $args = array(), $default_view = false ) {
 	return wpdev_get_template_contents( $view, $args, $default_view );
 
 } // end wpdev_view_contents;
+}
 
 /**
  * Resolve absolute path for a view slug.
@@ -181,6 +197,7 @@ function wpdev_view_contents( $view, $args = array(), $default_view = false ) {
  * @param string $view View slug.
  * @return string
  */
+if ( ! function_exists( 'wpdev_view_locate' ) ) {
 function wpdev_view_locate( $view ) {
 
 	if ( function_exists( 'wpdev_services' ) && wpdev_services( 'view' ) ) {
@@ -198,3 +215,4 @@ function wpdev_view_locate( $view ) {
 	return wpdev_path( 'views/' . $view . '.php' );
 
 } // end wpdev_view_locate;
+}

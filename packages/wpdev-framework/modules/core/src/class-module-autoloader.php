@@ -44,10 +44,9 @@ class Module_Autoloader {
 		'TableBuilder'          => 'table-builder',
 		'MetaboxBuilder'        => 'metabox-builder',
 		'AdminWidgetBuilder'    => 'admin-widget-builder',
-		'WaasEvents'            => 'wpdev-events',
-		'WaasPayments'          => 'wpdev-payments',
-		'WaasCustomers'         => 'wpdev-customers',
-		'WaasProducts'          => 'wpdev-products',
+		'UserProfileBuilder'    => 'user-profile-builder',
+		'Wizard'                => 'wizard',
+		'Compat'                => 'compat',
 	);
 
 	/**
@@ -125,6 +124,20 @@ class Module_Autoloader {
 	 */
 	protected static function load_core_class( $relative, $legacy_fqcn = null, $new_fqcn = null ) {
 
+		$resolved_new = $new_fqcn ?: 'WPDevFramework\\Core\\' . $relative;
+
+		// Already loaded (e.g. via setup.php require_once with a different
+		// path casing). Do not require_once again — on case-insensitive FS,
+		// Capabilities/ vs capabilities/ are distinct require_once keys.
+		if (
+			class_exists( $resolved_new, false )
+			|| interface_exists( $resolved_new, false )
+			|| trait_exists( $resolved_new, false )
+		) {
+			self::register_legacy_alias( $legacy_fqcn, $resolved_new );
+			return;
+		}
+
 		$base = dirname( __DIR__ ) . '/src/';
 
 		foreach ( self::candidate_filenames( $relative ) as $file ) {
@@ -132,7 +145,7 @@ class Module_Autoloader {
 
 			if ( file_exists( $path ) ) {
 				require_once $path;
-				self::register_legacy_alias( $legacy_fqcn, $new_fqcn ?: 'WPDevFramework\\Core\\' . $relative );
+				self::register_legacy_alias( $legacy_fqcn, $resolved_new );
 				return;
 			}
 		}
@@ -149,6 +162,17 @@ class Module_Autoloader {
 	 */
 	protected static function load_module_class( $relative, $legacy_fqcn = null, $new_fqcn = null ) {
 
+		$resolved_new = $new_fqcn ?: 'WPDevFramework\\Modules\\' . $relative;
+
+		if (
+			class_exists( $resolved_new, false )
+			|| interface_exists( $resolved_new, false )
+			|| trait_exists( $resolved_new, false )
+		) {
+			self::register_legacy_alias( $legacy_fqcn, $resolved_new );
+			return;
+		}
+
 		$parts = explode( '\\', $relative );
 
 		if ( empty( $parts[0] ) ) {
@@ -156,8 +180,9 @@ class Module_Autoloader {
 		}
 
 		$module_segment = $parts[0];
-		$module_dir     = isset( self::$module_map[ $module_segment ] )
-			? self::$module_map[ $module_segment ]
+		$module_map     = apply_filters( 'wpdev_module_autoloader_map', self::$module_map );
+		$module_dir     = isset( $module_map[ $module_segment ] )
+			? $module_map[ $module_segment ]
 			: self::pascal_to_kebab( $module_segment );
 
 		array_shift( $parts );
@@ -169,7 +194,7 @@ class Module_Autoloader {
 
 			if ( file_exists( $path ) ) {
 				require_once $path;
-				self::register_legacy_alias( $legacy_fqcn, $new_fqcn ?: 'WPDevFramework\\Modules\\' . $relative );
+				self::register_legacy_alias( $legacy_fqcn, $resolved_new );
 				return;
 			}
 		}
@@ -211,6 +236,11 @@ class Module_Autoloader {
 	/**
 	 * Build candidate filenames for a relative class path.
 	 *
+	 * Tries WordPress-style `interface-` / `trait-` / `class-` prefixes.
+	 * Directory segments are tried both as declared (PascalCase namespaces
+	 * like `Contracts/`, `Services/`) and lowercased — macOS is
+	 * case-insensitive so only Linux hosts surface the mismatch.
+	 *
 	 * @param string $relative Relative class path.
 	 * @return string[]
 	 */
@@ -220,17 +250,28 @@ class Module_Autoloader {
 		$class = array_pop( $parts );
 		$class = strtolower( str_replace( '_', '-', $class ) );
 
-		$dir = '';
+		$dirs = array( '' );
 
 		if ( ! empty( $parts ) ) {
-			$dir = strtolower( str_replace( '_', '-', implode( '/', $parts ) ) ) . '/';
+			$as_declared = implode( '/', $parts ) . '/';
+			$as_lower    = strtolower( str_replace( '_', '-', implode( '/', $parts ) ) ) . '/';
+			// Prefer on-disk WordPress casing (lowercase dirs) first so
+			// require_once keys match explicit setup.php includes.
+			$dirs = array( $as_lower );
+			if ( $as_declared !== $as_lower ) {
+				$dirs[] = $as_declared;
+			}
 		}
 
-		return array(
-			$dir . 'interface-' . $class . '.php',
-			$dir . 'trait-' . $class . '.php',
-			$dir . 'class-' . $class . '.php',
-		);
+		$candidates = array();
+
+		foreach ( $dirs as $dir ) {
+			$candidates[] = $dir . 'interface-' . $class . '.php';
+			$candidates[] = $dir . 'trait-' . $class . '.php';
+			$candidates[] = $dir . 'class-' . $class . '.php';
+		}
+
+		return $candidates;
 
 	} // end candidate_filenames;
 

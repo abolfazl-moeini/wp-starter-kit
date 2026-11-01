@@ -422,7 +422,7 @@ class Sunrise {
 
 		$data = Sunrise::read_sunrise_meta();
 
-		$sys_info = array_merge($sys_info,
+		return array_merge($sys_info,
 			array(
 				'Sunrise Data' => array(
 					'sunrise-status'           => array(
@@ -458,8 +458,6 @@ class Sunrise {
 				),
 			)
 		);
-
-		return $sys_info;
 
 	} // end system_info;
 
@@ -611,7 +609,7 @@ class Sunrise {
 	 */
 	protected static function load_development_mode() {
 
-		$should_load_tools = wpdev_load_dev_tools();
+		wpdev_load_dev_tools();
 
 	} // end load_development_mode;
 

@@ -12,7 +12,7 @@ if ( !class_exists('Puc_v4p11_UpdateChecker', false) ):
 		 * and should be logged to the standard PHP error log.
 		 * @var bool
 		 */
-		public $debugMode = null;
+		public $debugMode;
 
 		/**
 		 * @var string Where to store the update info.
@@ -68,7 +68,7 @@ if ( !class_exists('Puc_v4p11_UpdateChecker', false) ):
 		/**
 		 * @var Puc_v4p11_DebugBar_Extension|null
 		 */
-		protected $debugBarExtension = null;
+		protected $debugBarExtension;
 
 		public function __construct($metadataUrl, $directoryName, $slug = null, $checkPeriod = 12, $optionName = '') {
 			$this->debugMode = (bool)(constant('WP_DEBUG'));

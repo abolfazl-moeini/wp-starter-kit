@@ -9,7 +9,7 @@
 
 namespace WPDevFramework\Helpers\Validation_Rules;
 
-use WPDevFramework\Dependencies\Rakit\Validation\Rule;
+use WPDev\Dependencies\Rakit\Validation\Rule;
 
 // Exit if accessed directly
 defined('ABSPATH') || exit;
@@ -45,36 +45,41 @@ class Products extends Rule {
 	 */
 	 public function check($products) : bool { // phpcs:ignore
 
-		if ( ! function_exists( 'wpdev_get_product' ) || ! function_exists( 'wpdev_segregate_products' ) ) {
-			// Fail-closed: if the products module is not loaded, we cannot validate the
-			// submitted product ids. Returning `true` would silently accept any value,
-			// which is unsafe for a validation rule. Reject and signal the misuse.
+		/**
+		 * Allow examples to validate a submitted entity selection (e.g. checkout products).
+		 *
+		 * Returning a non-null value short-circuits the default fail-closed behavior.
+		 * Examples should return true when the selection is valid, false when it is not.
+		 *
+		 * @since 2.8.1
+		 *
+		 * @param bool|null $result   Default null (validation unavailable).
+		 * @param mixed     $products Value being checked.
+		 */
+		$result = apply_filters( 'wpdev_validation_rule_entity_selection', null, $products );
+
+		if ( null === $result ) {
+			// Fail-closed: no example hooked in — cannot validate the submitted selection.
 			if ( function_exists( '_doing_it_wrong' ) ) {
 				_doing_it_wrong(
 					__CLASS__ . '::' . __METHOD__,
-					esc_html__( 'The products validation rule requires the WPDev Products module to be loaded.', 'wpdev' ),
-					'2.5.0'
+					esc_html__( 'The products validation rule requires an example to hook wpdev_validation_rule_entity_selection.', 'wpdev' ),
+					'2.8.1'
 				);
 			}
 
-			$this->message = __( 'Products module is not available; product validation cannot run.', 'wpdev' );
+			$this->message = __( 'Entity selection validation is not available.', 'wpdev' );
 
 			return false;
 		}
 
-		$products = (array) $products;
-
-		$product_objects = array_map('wpdev_get_product', $products);
-
-		list($plan, $additional_products) = wpdev_segregate_products($product_objects);
-
-		if ($plan) {
+		if ( $result ) {
 
 			return true;
 
 		} // end if;
 
-		$this->message = __('A plan is required.', 'wpdev');
+		$this->message = __( 'A plan is required.', 'wpdev' );
 
 		return false;
 

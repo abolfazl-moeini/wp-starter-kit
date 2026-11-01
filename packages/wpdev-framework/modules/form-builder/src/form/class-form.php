@@ -71,6 +71,10 @@ class Form implements \JsonSerializable {
 			),
 		)));
 
+		if ( empty( $this->atts['field_wrapper_classes'] ) && ! empty( $this->atts['modal'] ) ) {
+			$this->atts['field_wrapper_classes'] = 'wpdev-full wpdev-box-border wpdev-p-4 wpdev-border-b wpdev-border-gray-200';
+		}
+
 		$this->set_fields($fields);
 
 	} // end __construct;

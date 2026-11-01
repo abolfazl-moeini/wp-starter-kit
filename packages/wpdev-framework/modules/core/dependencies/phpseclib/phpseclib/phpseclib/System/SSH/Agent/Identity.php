@@ -90,8 +90,6 @@ class Identity implements PrivateKey
      * Set Public Key
      *
      * Called by \phpseclib3\System\SSH\Agent::requestIdentities()
-     *
-     * @param \phpseclib3\Crypt\Common\PublicKey $key
      */
     public function withPublicKey(PublicKey $key)
     {

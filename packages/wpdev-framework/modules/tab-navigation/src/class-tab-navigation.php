@@ -94,9 +94,7 @@ class Tab_Navigation {
 				'slug'    => (string) $slug,
 				'label'   => isset( $view['label'] ) ? $view['label'] : (string) $slug,
 				'url'     => isset( $view['url'] ) ? $view['url'] : '#',
-				'current' => function_exists( 'wpdev_request' )
-					? wpdev_request( $field, 'all' ) === $slug
-					: false,
+				'current' => function_exists( 'wpdev_request' ) && wpdev_request( $field, 'all' ) === $slug,
 			);
 		}
 

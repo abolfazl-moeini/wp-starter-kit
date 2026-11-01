@@ -32,17 +32,11 @@ class Mapping {
 
 		_deprecated_function(__METHOD__, '2.0.0', 'wpdev_get_domain_by_domain($domain)');
 
-		if (!function_exists('wpdev_get_domain_by_domain')) {
-
-			return false;
-
-		} // end if;
-
 		$domain = false;
 
 		foreach ((array) $domains as $url_to_search) {
 
-			$found_domain = wpdev_get_domain_by_domain($url_to_search);
+			$found_domain = apply_filters( 'wpdev_entity_lookup_by', null, 'domain', $url_to_search, 'domain' );
 
 			if ($found_domain) {
 

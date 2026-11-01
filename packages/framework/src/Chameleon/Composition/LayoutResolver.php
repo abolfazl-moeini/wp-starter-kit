@@ -49,7 +49,7 @@ final class LayoutResolver {
                     break;
 
                 case 'inject':
-                    self::apply_inject($tree, $injected_slots, $patch);
+                    self::apply_inject($injected_slots, $patch);
                     break;
 
                 default:
@@ -65,7 +65,7 @@ final class LayoutResolver {
         self::attach_injected_slots($tree, $injected_slots);
 
         // Sort sections within each region by weight ascending
-        foreach ($tree as $region_id => &$region_data) {
+        foreach ($tree as &$region_data) {
             if (!empty($region_data['sections'])) {
                 uasort($region_data['sections'], function (array $a, array $b): int {
                     return ($a['weight'] ?? 10) <=> ($b['weight'] ?? 10);
@@ -80,8 +80,6 @@ final class LayoutResolver {
      * Render the resolved composition tree to output buffer.
      *
      * @param array<string, array{sections: array<string, array<string, mixed>>}> $resolved_tree
-     * @param DashboardContextV1 $context
-     * @return void
      */
     public static function render_tree(array $resolved_tree, DashboardContextV1 $context): void {
         foreach ($resolved_tree as $region_id => $region) {
@@ -164,7 +162,7 @@ final class LayoutResolver {
         }
     }
 
-    private static function apply_inject(array &$tree, array &$injected_slots, array $patch): void {
+    private static function apply_inject(array &$injected_slots, array $patch): void {
         $slot = (string) ($patch['slot'] ?? '');
         $id = (string) ($patch['id'] ?? '');
 

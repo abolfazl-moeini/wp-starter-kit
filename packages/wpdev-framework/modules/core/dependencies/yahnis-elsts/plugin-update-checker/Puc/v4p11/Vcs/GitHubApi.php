@@ -30,12 +30,12 @@ if ( !class_exists('Puc_v4p11_Vcs_GitHubApi', false) ):
 		/**
 		 * @var string|null Regular expression that's used to filter release assets by name. Optional.
 		 */
-		protected $assetFilterRegex = null;
+		protected $assetFilterRegex;
 
 		/**
 		 * @var string|null The unchanging part of a release asset URL. Used to identify download attempts.
 		 */
-		protected $assetApiBaseUrl = null;
+		protected $assetApiBaseUrl;
 
 		/**
 		 * @var bool
@@ -220,8 +220,7 @@ if ( !class_exists('Puc_v4p11_Vcs_GitHubApi', false) ):
 			$code = wp_remote_retrieve_response_code($response);
 			$body = wp_remote_retrieve_body($response);
 			if ( $code === 200 ) {
-				$document = json_decode($body);
-				return $document;
+				return json_decode($body);
 			}
 
 			$error = new WP_Error(
@@ -281,13 +280,12 @@ if ( !class_exists('Puc_v4p11_Vcs_GitHubApi', false) ):
 		 * @return string
 		 */
 		public function buildArchiveDownloadUrl($ref = 'master') {
-			$url = sprintf(
+			return sprintf(
 				'https://api.github.com/repos/%1$s/%2$s/zipball/%3$s',
 				urlencode($this->userName),
 				urlencode($this->repositoryName),
 				urlencode($ref)
 			);
-			return $url;
 		}
 
 		/**

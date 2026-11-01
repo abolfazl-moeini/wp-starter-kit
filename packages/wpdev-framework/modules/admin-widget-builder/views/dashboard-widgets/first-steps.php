@@ -33,7 +33,7 @@
 
   <ul class="wpdev-m-0 wpdev-p-0">
 
-    <?php $index = 1; foreach ($steps as $step_slug => $step) : ?>
+    <?php $index = 1; foreach ($steps as $step) : ?>
 
       <li
         class="sm:wpdev-flex wpdev-py-2 wpdev-px-4 wpdev-content-center wpdev-items-center wpdev-m-0 wpdev-border-solid wpdev-border-0 wpdev-border-t wpdev-border-gray-300 <?php echo $step['done'] ? 'wpdev-bg-white wpdev-opacity-75' : 'wpdev-bg-gray-100' ; ?>"
