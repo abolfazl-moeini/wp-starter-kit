@@ -8,7 +8,7 @@ import {
 } from "../../packages/create-wp-project/src/generators/docs.js";
 import { scaffoldProject } from "../../packages/create-wp-project/src/index.js";
 import { defaultFeatures } from "../../packages/create-wp-project/src/features.js";
-import { validateAssets } from "../../tools/build-docs.mjs";
+import { validateAssets } from "../../packages/create-wp-project/src/docs-utils.js";
 import { prepareRelease } from "../../packages/create-wp-project/src/release/prepare-release.js";
 
 describe("generators/docs.js — In-Repo Docs-as-Code", () => {
@@ -32,9 +32,8 @@ describe("generators/docs.js — In-Repo Docs-as-Code", () => {
       "docs/user-guide/02-settings-overview.md",
     );
     expect(descriptor.owns).toContain("docs/technical/architecture.md");
-    expect(descriptor.owns).toContain("docs/assets/.gitkeep");
+    expect(descriptor.owns).toContain("docs/user-guide/assets/.gitkeep");
     expect(descriptor.owns).toContain("docs/templates/feature-manual.md");
-    expect(descriptor.owns).toContain("tools/build-docs.mjs");
   });
 
   test("run() returns all expected docs files when docs is 'on'", () => {
@@ -59,17 +58,13 @@ describe("generators/docs.js — In-Repo Docs-as-Code", () => {
       "Test Docs Plugin",
     );
     expect(out.files["docs/technical/architecture.md"]).toContain("test_docs");
-    expect(out.files["tools/build-docs.mjs"]).toContain(
-      "In-Repo Docs-as-Code build runner",
-    );
     expect(out.dirs).toEqual(
       expect.arrayContaining([
         "docs",
         "docs/user-guide",
+        "docs/user-guide/assets",
         "docs/technical",
-        "docs/assets",
         "docs/templates",
-        "tools",
       ]),
     );
   });
@@ -106,14 +101,14 @@ describe("generators/docs.js — In-Repo Docs-as-Code", () => {
       "docs/user-guide/02-settings-overview.md",
     );
     const archPath = path.join(tmp, "docs/technical/architecture.md");
-    const runnerPath = path.join(tmp, "tools/build-docs.mjs");
+    const gitkeepPath = path.join(tmp, "docs/user-guide/assets/.gitkeep");
     const wpdevJsonPath = path.join(tmp, "wpdev.json");
     const packageJsonPath = path.join(tmp, "package.json");
 
     await expect(fs.access(introPath)).resolves.toBeUndefined();
     await expect(fs.access(settingsPath)).resolves.toBeUndefined();
     await expect(fs.access(archPath)).resolves.toBeUndefined();
-    await expect(fs.access(runnerPath)).resolves.toBeUndefined();
+    await expect(fs.access(gitkeepPath)).resolves.toBeUndefined();
 
     // Verify wpdev.json docs config
     const wpdevJson = JSON.parse(await fs.readFile(wpdevJsonPath, "utf8"));
@@ -124,13 +119,11 @@ describe("generators/docs.js — In-Repo Docs-as-Code", () => {
 
     // Verify package.json scripts
     const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf8"));
-    expect(packageJson.scripts["docs:build"]).toBe("node tools/build-docs.mjs");
-    expect(packageJson.scripts["docs:pdf"]).toBe(
-      "node tools/build-docs.mjs --format=pdf",
+    expect(packageJson.scripts["docs:build"]).toBe("wpdev-manual build .");
+    expect(packageJson.scripts["docs:scan"]).toBe(
+      "wpdev-manual scan . --table",
     );
-    expect(packageJson.scripts["docs:docx"]).toBe(
-      "node tools/build-docs.mjs --format=docx",
-    );
+    expect(packageJson.scripts["docs:lint"]).toBe("wpdev-manual lint .");
   });
 
   test("validateAssets() detects missing local images and passes valid/remote assets", async () => {

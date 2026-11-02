@@ -798,18 +798,45 @@ export async function prepareRelease(options = {}) {
 
   let docsPdfPath = null;
   if (options.withDocs) {
-    const docsRunner = path.join(root, "tools/build-docs.mjs");
-    if (!existsSync(docsRunner)) {
+    const candidates = [
+      process.env.WPDEV_MANUAL_BIN,
+      process.env.HARNESS_MANUAL_BIN,
+      path.join(process.env.HOME || "", ".local/bin/wpdev-manual"),
+      path.join(process.env.HOME || "", ".local/bin/harness-manual"),
+      path.resolve(root, "../wpdev-platform/agent-harness/bin/wpdev-manual"),
+      path.resolve(root, "../../wpdev-platform/agent-harness/bin/wpdev-manual"),
+      path.resolve(root, "../agent-harness/bin/wpdev-manual"),
+    ].filter(Boolean);
+
+    let manualBin = null;
+    for (const c of candidates) {
+      if (existsSync(c)) {
+        manualBin = c;
+        break;
+      }
+    }
+    if (!manualBin) {
+      for (const cmd of ["wpdev-manual", "harness-manual"]) {
+        const whichRes = spawnSync("which", [cmd], { encoding: "utf8" });
+        if (whichRes.status === 0 && whichRes.stdout.trim()) {
+          manualBin = whichRes.stdout.trim();
+          break;
+        }
+      }
+    }
+
+    if (!manualBin) {
       throw new Error(
-        `--with-docs requested but tools/build-docs.mjs is missing at ${docsRunner}`,
+        `--with-docs requested but 'wpdev-manual' CLI was not found. Install wpdev-platform or set WPDEV_MANUAL_BIN.`,
       );
     }
+
     process.stderr.write(
-      "release: compiling client documentation manuals (--with-docs)...\n",
+      `release: compiling client documentation manuals via ${manualBin} (--with-docs)...\n`,
     );
     const docsRes = spawnSync(
-      process.execPath,
-      [docsRunner, "--format=pdf", `--root=${root}`],
+      manualBin,
+      ["build", root, `--output-dir=${path.join(outAbs, "docs")}`],
       {
         stdio: "inherit",
       },

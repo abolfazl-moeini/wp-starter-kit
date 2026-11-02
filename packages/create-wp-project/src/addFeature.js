@@ -513,13 +513,13 @@ export async function addFeature(dir, id, variant, _opts = {}) {
     await updateJsonFile(path.join(dir, "package.json"), (pkg) => {
       pkg.scripts = pkg.scripts || {};
       if (newFeatures.docs !== "off") {
-        pkg.scripts["docs:scan"] = "node tools/scan-admin-panels.mjs";
-        pkg.scripts["docs:build"] = "node tools/build-docs.mjs";
-        pkg.scripts["docs:pdf"] = "node tools/build-docs.mjs --format=pdf";
-        pkg.scripts["docs:docx"] = "node tools/build-docs.mjs --format=docx";
+        pkg.scripts["docs:scan"] = "wpdev-manual scan . --table";
+        pkg.scripts["docs:build"] = "wpdev-manual build .";
+        pkg.scripts["docs:lint"] = "wpdev-manual lint .";
       } else {
         delete pkg.scripts["docs:scan"];
         delete pkg.scripts["docs:build"];
+        delete pkg.scripts["docs:lint"];
         delete pkg.scripts["docs:pdf"];
         delete pkg.scripts["docs:docx"];
       }

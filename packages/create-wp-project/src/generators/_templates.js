@@ -150,10 +150,9 @@ export function packageJsonForAnswers(answers, features) {
   const docsOn = !features || features.docs !== "off";
   const docsScripts = docsOn
     ? {
-        "docs:scan": "node tools/scan-admin-panels.mjs",
-        "docs:build": "node tools/build-docs.mjs",
-        "docs:pdf": "node tools/build-docs.mjs --format=pdf",
-        "docs:docx": "node tools/build-docs.mjs --format=docx",
+        "docs:scan": "wpdev-manual scan . --table",
+        "docs:build": "wpdev-manual build .",
+        "docs:lint": "wpdev-manual lint .",
       }
     : {};
 

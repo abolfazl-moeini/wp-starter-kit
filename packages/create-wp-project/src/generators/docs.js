@@ -5,9 +5,8 @@
  *   - docs/user-guide/01-introduction.md
  *   - docs/user-guide/02-settings-overview.md
  *   - docs/technical/architecture.md
- *   - docs/assets/.gitkeep
+ *   - docs/user-guide/assets/.gitkeep
  *   - docs/templates/feature-manual.md
- *   - tools/build-docs.mjs
  */
 
 import { existsSync, readFileSync } from "node:fs";
@@ -46,20 +45,15 @@ export function run(ctx) {
       loadDocsTemplate("templates/feature-manual.md.tpl"),
       tpl,
     ),
-    "docs/assets/.gitkeep": "# docs/assets placeholder\n",
-    "tools/build-docs.mjs": loadDocsTemplate("tools/build-docs.mjs"),
-    "tools/scan-admin-panels.mjs": loadDocsTemplate(
-      "tools/scan-admin-panels.mjs",
-    ),
+    "docs/user-guide/assets/.gitkeep": "# docs/user-guide/assets placeholder\n",
   };
 
   const dirs = [
     "docs",
     "docs/user-guide",
+    "docs/user-guide/assets",
     "docs/technical",
-    "docs/assets",
     "docs/templates",
-    "tools",
   ];
 
   return {
@@ -77,10 +71,8 @@ export const descriptor = {
     "docs/user-guide/01-introduction.md",
     "docs/user-guide/02-settings-overview.md",
     "docs/technical/architecture.md",
-    "docs/assets/.gitkeep",
+    "docs/user-guide/assets/.gitkeep",
     "docs/templates/feature-manual.md",
-    "tools/build-docs.mjs",
-    "tools/scan-admin-panels.mjs",
   ],
   run,
 };
