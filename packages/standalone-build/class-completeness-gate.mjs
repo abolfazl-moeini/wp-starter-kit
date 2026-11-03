@@ -47,6 +47,9 @@ export async function validateClassCompleteness({ devDir, stagingPlugin, consume
           }
           if ($file->isFile() && $file->getExtension() === 'php') {
               $path = $file->getPathname();
+              if (preg_match('#[\\\\/]tests?[\\\\/]#i', $path)) {
+                  continue;
+              }
               $code = file_get_contents($path);
               $tokens = token_get_all($code);
               $ns = '';
