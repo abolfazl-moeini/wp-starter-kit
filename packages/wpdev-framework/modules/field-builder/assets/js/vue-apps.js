@@ -221,8 +221,118 @@ const loadApp = (element, app_id, callback = null) => {
         if (!target) {
           return;
         }
+
+        // If target is a hidden template row, reveal and enable it instead of cloning
+        if (target.getAttribute("data-repeater-template") === "1") {
+          target.removeAttribute("data-repeater-template");
+          if (target.id && target.id.endsWith("-template")) {
+            target.id = target.id.replace(/-template$/, "-line");
+          }
+          const fieldset = target.querySelector("fieldset.wpdev-repeater-template-fieldset");
+          if (fieldset) {
+            fieldset.disabled = false;
+          }
+          target.querySelectorAll("input, select, textarea, button").forEach((el) => {
+            el.disabled = false;
+          });
+          const isAccordion = target.classList.contains("wpdev-repeater-accordion-item");
+          target.style.setProperty("display", isAccordion ? "flex" : "block", "important");
+
+          if (target.classList.contains("wpdev-repeater-sortable-item") && !target.querySelector(".wpdev-repeater-sort-handle")) {
+            const handle = document.createElement("span");
+            handle.className = "wpdev-repeater-sort-handle wpdev-cursor-grab wpdev-no-underline wpdev-type-center wpdev-row-inline wpdev-items-center wpdev-justify-center wpdev-surface-gray-200 wpdev-opacity-70 hover:wpdev-opacity-100 wpdev-radius wpdev-type-gray-700 wpdev-w-6 wpdev-h-6 wpdev-shadow-xs";
+            handle.style.cssText = isAccordion ? "cursor:grab;margin-inline-end:0.5rem;flex-shrink:0;" : "position:absolute;top:0.5rem;inset-inline-start:0.5rem;z-index:2;cursor:grab;";
+            handle.title = "Drag to reorder";
+            handle.setAttribute("aria-label", "Drag to reorder");
+            handle.innerHTML = '<span class="dashicons dashicons-menu wpdev-align-middle" aria-hidden="true" style="font-size:16px;line-height:24px;width:16px;height:24px;"></span>';
+            if (isAccordion) {
+              const accTitleRow = target.querySelector(".wpdev-repeater-accordion-header > div:first-child");
+              if (accTitleRow) accTitleRow.prepend(handle);
+            } else {
+              target.prepend(handle);
+            }
+          }
+
+          if (!target.querySelector(".wpdev-remove-repeater-line")) {
+            const rmBtn = document.createElement("a");
+            rmBtn.href = "#";
+            rmBtn.className = "wpdev-remove-repeater-line wpdev-no-underline wpdev-type-center wpdev-row-inline wpdev-items-center wpdev-justify-center wpdev-surface-black wpdev-opacity-60 hover:wpdev-opacity-100 wpdev-radius-full wpdev-type-white wpdev-w-5 wpdev-h-5 wpdev-shadow-sm";
+            rmBtn.style.cssText = isAccordion ? "flex-shrink:0;" : "position:absolute;top:0.5rem;inset-inline-end:0.5rem;z-index:2;";
+            rmBtn.title = "Remove line";
+            rmBtn.setAttribute("aria-label", "Remove line");
+            rmBtn.innerHTML = '<span class="dashicons-wpdev-cross wpdev-align-middle" aria-hidden="true"></span>';
+            if (isAccordion) {
+              const accRightRow = target.querySelector(".wpdev-repeater-accordion-header > div:last-child");
+              if (accRightRow) accRightRow.prepend(rmBtn);
+            } else {
+              target.prepend(rmBtn);
+            }
+          }
+
+          if (isAccordion && !target.querySelector(".wpdev-repeater-accordion-chevron")) {
+            const chevron = document.createElement("span");
+            chevron.className = "wpdev-repeater-accordion-chevron dashicons dashicons-arrow-down-alt2 wpdev-type-gray-600";
+            chevron.setAttribute("aria-hidden", "true");
+            const accRightRow = target.querySelector(".wpdev-repeater-accordion-header > div:last-child");
+            if (accRightRow) accRightRow.appendChild(chevron);
+          }
+
+          const emptyState = target.parentNode ? target.parentNode.querySelector(".wpdev-repeater-empty-state") : null;
+          if (emptyState) {
+            emptyState.style.display = "none";
+          }
+
+          if (isAccordion) {
+            target.classList.add("is-open");
+            const content = target.querySelector(".wpdev-repeater-accordion-content");
+            if (content) {
+              content.style.display = "";
+            }
+            const hdr = target.querySelector(".wpdev-repeater-accordion-header");
+            if (hdr) {
+              hdr.setAttribute("aria-expanded", "true");
+            }
+          }
+
+          setTimeout(() => {
+            target.querySelectorAll("textarea.wp-editor-area").forEach((tx) => {
+              const id = tx.id;
+              if (id && window.wp && window.wp.editor && typeof window.wp.editor.initialize === "function") {
+                try {
+                  window.wp.editor.initialize(id, {
+                    tinymce: { wpautop: true },
+                    quicktags: true,
+                    mediaButtons: true,
+                  });
+                } catch (e) {}
+              }
+            });
+          }, 50);
+
+          if (typeof window.wpdev_initialize_imagepicker === "function") {
+            window.wpdev_initialize_imagepicker();
+          }
+          if (typeof window.wpdev_initialize_selectizer === "function") {
+            window.wpdev_initialize_selectizer(target);
+          }
+          if (typeof window.wpdev_init_sortable_repeaters === "function") {
+            window.wpdev_init_sortable_repeaters(target.parentNode);
+          }
+          return;
+        }
+
         const clone = target.cloneNode(true);
         clone.id = clone.id + "_copy";
+        clone.removeAttribute("data-repeater-template");
+        const cloneFieldset = clone.querySelector("fieldset.wpdev-repeater-template-fieldset");
+        if (cloneFieldset) {
+          cloneFieldset.disabled = false;
+        }
+        clone.querySelectorAll("input, select, textarea, button").forEach((el) => {
+          el.disabled = false;
+        });
+        const isAccordionClone = clone.classList.contains("wpdev-repeater-accordion-item");
+        clone.style.setProperty("display", isAccordionClone ? "flex" : "block", "important");
 
         // Remove cloned Selectize UI wrappers so new row has a fresh container
         clone.querySelectorAll(".selectize-control").forEach((el) => el.remove());
@@ -260,6 +370,41 @@ const loadApp = (element, app_id, callback = null) => {
             label.setAttribute("for", idMap.get(forId));
           }
         });
+
+        // Clean cloned TinyMCE editors and re-initialize with fresh textarea
+        clone.querySelectorAll(".wpdev-editor-wrap-container, .wpdev-form-field-wp_editor").forEach((container) => {
+          const origTextarea = container.querySelector("textarea.wp-editor-area") || container.querySelector("textarea");
+          if (!origTextarea) {
+            return;
+          }
+          const fieldName = origTextarea.getAttribute("name") || "";
+          const newEditorId = "wpdev_ed_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 7);
+
+          container.innerHTML = "";
+
+          const cleanTextarea = document.createElement("textarea");
+          cleanTextarea.className = "wp-editor-area wpdev-full wpdev-input";
+          cleanTextarea.rows = 6;
+          cleanTextarea.id = newEditorId;
+          cleanTextarea.name = fieldName;
+          cleanTextarea.value = "";
+          cleanTextarea.style.display = "";
+
+          container.appendChild(cleanTextarea);
+
+          setTimeout(() => {
+            if (window.wp && window.wp.editor && typeof window.wp.editor.initialize === "function") {
+              try {
+                window.wp.editor.initialize(newEditorId, {
+                  tinymce: { wpautop: true },
+                  quicktags: true,
+                  mediaButtons: true,
+                });
+              } catch (e) {}
+            }
+          }, 50);
+        });
+
         const textAreas = clone.querySelectorAll("input, textarea");
         textAreas.forEach((el) => {
           if (el.type === "checkbox" || el.type === "radio") {
@@ -269,7 +414,9 @@ const loadApp = (element, app_id, callback = null) => {
             el.value = "0";
             return;
           }
-          el.value = "";
+          if (!el.classList.contains("wp-editor-area")) {
+            el.value = "";
+          }
         });
         clone.querySelectorAll("select").forEach((el) => {
           if (!el.classList.contains("selectized")) {
@@ -365,16 +512,26 @@ const loadApp = (element, app_id, callback = null) => {
           return;
         }
         const list = row.parentNode;
-        const siblings = list.querySelectorAll(":scope > " + query);
+        const siblings = list.querySelectorAll(":scope > " + (query || ".field-repeater"));
         const emptyState = list.querySelector(".wpdev-repeater-empty-state");
 
         // Keep one blank seed row so “Add new Line” can still clone, unless emptyState is enabled.
         if (siblings.length <= 1) {
-          if (emptyState) {
-            row.remove();
-            emptyState.style.display = "block";
-            return;
-          }
+          // Remove active TinyMCE editors on this row
+          row.querySelectorAll("textarea.wp-editor-area").forEach((tx) => {
+            const id = tx.id;
+            if (id && window.wp && window.wp.editor && typeof window.wp.editor.remove === "function") {
+              try {
+                window.wp.editor.remove(id);
+              } catch (e) {}
+            } else if (id && typeof tinymce !== "undefined" && tinymce.get(id)) {
+              try {
+                tinymce.get(id).remove();
+              } catch (e) {}
+            }
+            tx.value = "";
+          });
+
           row.querySelectorAll("input, textarea, select").forEach((el) => {
             if (el.type === "checkbox" || el.type === "radio") {
               el.checked = false;
@@ -385,6 +542,9 @@ const loadApp = (element, app_id, callback = null) => {
             } else {
               el.value = "";
             }
+            if (emptyState) {
+              el.disabled = true;
+            }
           });
           row.querySelectorAll(".selectized, [data-model]").forEach((el) => {
             if (el.selectize) {
@@ -394,15 +554,45 @@ const loadApp = (element, app_id, callback = null) => {
           row.querySelectorAll(".wpdev-wrapper-image-field img").forEach((img) => {
             img.removeAttribute("src");
             img.classList.add("wpdev-absolute");
+            img.style.display = "none";
           });
           row.querySelectorAll(".wpdev-wrapper-image-field-upload-actions").forEach((el) => {
+            el.style.display = "none";
+          });
+          row.querySelectorAll(".wpdev-change-image-wrapper").forEach((el) => {
             el.style.display = "none";
           });
           row.querySelectorAll(".wpdev-add-image-wrapper").forEach((el) => {
             el.style.display = "";
           });
+
+          if (emptyState) {
+            row.setAttribute("data-repeater-template", "1");
+            const fieldset = row.querySelector("fieldset.wpdev-repeater-template-fieldset");
+            if (fieldset) {
+              fieldset.disabled = true;
+            }
+            row.style.setProperty("display", "none", "important");
+            emptyState.style.display = "block";
+            return;
+          }
           return;
         }
+
+        // Multiple rows: remove active TinyMCE editors before DOM removal
+        row.querySelectorAll("textarea.wp-editor-area").forEach((tx) => {
+          const id = tx.id;
+          if (id && window.wp && window.wp.editor && typeof window.wp.editor.remove === "function") {
+            try {
+              window.wp.editor.remove(id);
+            } catch (e) {}
+          } else if (id && typeof tinymce !== "undefined" && tinymce.get(id)) {
+            try {
+              tinymce.get(id).remove();
+            } catch (e) {}
+          }
+        });
+
         row.remove();
         const accordionSiblings = list.querySelectorAll(":scope > .wpdev-repeater-accordion-item");
         if (accordionSiblings.length > 0) {

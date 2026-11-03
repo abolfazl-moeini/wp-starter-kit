@@ -193,7 +193,13 @@
     $repeater_item_class .= ' wpdev-repeater-accordion-item';
   }
 
-  $render_repeater_row = function ( $key, $value, $position, $is_last ) use (
+  $render_repeater_row = function (
+    $key,
+    $value,
+    $position,
+    $is_last,
+    $is_template = false
+  ) use (
     $field,
     $is_sortable,
     $is_accordion,
@@ -219,10 +225,14 @@
         $item_classes .= ' is-open';
       }
       $item_classes .= ' wpdev-block wpdev-full wpdev-relative wpdev-surface-white wpdev-border wpdev-border-gray-300 wpdev-radius wpdev-mar-b-4 wpdev-overflow-hidden';
-      $item_style    = 'display:flex !important;flex-direction:column !important;width:100% !important;max-width:100% !important;box-sizing:border-box !important;padding:0 !important;';
+      $item_style    = $is_template
+        ? 'display:none !important;flex-direction:column !important;width:100% !important;max-width:100% !important;box-sizing:border-box !important;padding:0 !important;'
+        : 'display:flex !important;flex-direction:column !important;width:100% !important;max-width:100% !important;box-sizing:border-box !important;padding:0 !important;';
     } else {
       $item_classes .= ' wpdev-block wpdev-full wpdev-relative wpdev-surface-gray-100 wpdev-radius wpdev-pad-4 wpdev-mar-b-4';
-      $item_style    = 'display:block !important;width:100% !important;box-sizing:border-box !important;' . ( $is_sortable ? 'padding-inline-start:2.5rem;' : '' );
+      $item_style    = $is_template
+        ? 'display:none !important;width:100% !important;box-sizing:border-box !important;' . ( $is_sortable ? 'padding-inline-start:2.5rem;' : '' )
+        : 'display:block !important;width:100% !important;box-sizing:border-box !important;' . ( $is_sortable ? 'padding-inline-start:2.5rem;' : '' );
     }
 
     $row_title = '';
@@ -252,9 +262,10 @@
     }
     ?>
     <li
-      id="<?php echo esc_attr( $field_id ); ?>-line"
+      id="<?php echo esc_attr( $is_template ? $field_id . '-template' : $field_id . '-line' ); ?>"
       class="<?php echo esc_attr( trim( $item_classes ) ); ?>"
       <?php echo $field->get_wrapper_html_attributes(); ?>
+      <?php if ( $is_template ) : ?> data-repeater-template="1"<?php endif; ?>
       <?php if ( $is_sortable ) : ?> data-repeater-sortable-id="<?php echo esc_attr( sanitize_html_class( $field->id ) ); ?>"<?php endif; ?>
       style="<?php echo esc_attr( $item_style ); ?>"
     >
@@ -269,7 +280,7 @@
           <?php if ( ! empty( $badge_field ) ) : ?> data-badge-field="<?php echo esc_attr( $badge_field ); ?>"<?php endif; ?>
         >
           <div class="wpdev-row wpdev-items-center wpdev-flex-grow wpdev-gap-2">
-            <?php if ( $is_sortable ) { $repeater_sort_handle( true ); } ?>
+            <?php if ( $is_sortable && ! $is_template ) { $repeater_sort_handle( true ); } ?>
             <span class="wpdev-repeater-accordion-title wpdev-font-semibold wpdev-type-gray-800 wpdev-type-sm">
               <span class="wpdev-repeater-accordion-label"><?php echo esc_html( $item_label ); ?></span>
               <span class="wpdev-repeater-accordion-badge">#<span class="wpdev-repeater-accordion-index"><?php echo ( $position + 1 ); ?></span></span>
@@ -282,11 +293,14 @@
             </span>
           </div>
           <div class="wpdev-row wpdev-items-center wpdev-gap-3">
-            <?php $repeater_remove_button( true ); ?>
-            <span class="wpdev-repeater-accordion-chevron dashicons dashicons-arrow-down-alt2 wpdev-type-gray-600" aria-hidden="true"></span>
+            <?php if ( ! $is_template ) { $repeater_remove_button( true ); } ?>
+            <?php if ( ! $is_template ) : ?>
+              <span class="wpdev-repeater-accordion-chevron dashicons dashicons-arrow-down-alt2 wpdev-type-gray-600" aria-hidden="true"></span>
+            <?php endif; ?>
           </div>
         </div>
-        <div class="wpdev-repeater-accordion-content wpdev-full wpdev-pad-4"<?php if ( ! $is_open ) : ?> style="display:none;"<?php else : ?> style="display:block;width:100% !important;max-width:100% !important;box-sizing:border-box !important;flex-grow:1 !important;clear:both !important;"<?php endif; ?>>
+        <div class="wpdev-repeater-accordion-content wpdev-full wpdev-pad-4"<?php if ( ! $is_open && ! $is_template ) : ?> style="display:none;"<?php else : ?> style="display:block;width:100% !important;max-width:100% !important;box-sizing:border-box !important;flex-grow:1 !important;clear:both !important;"<?php endif; ?>>
+          <?php if ( $is_template ) : ?><fieldset disabled class="wpdev-repeater-template-fieldset" style="border:0;margin:0;padding:0;min-width:0;width:100%;"><?php endif; ?>
           <?php
             $row_fields = array();
             foreach ( $defined_fields as $sub_key => $sub_config ) {
@@ -312,11 +326,13 @@
 
             $form->render();
           ?>
+          <?php if ( $is_template ) : ?></fieldset><?php endif; ?>
         </div>
       <?php else : ?>
-        <?php if ( $is_sortable ) { $repeater_sort_handle( false ); } ?>
-        <?php $repeater_remove_button( false ); ?>
+        <?php if ( $is_sortable && ! $is_template ) { $repeater_sort_handle( false ); } ?>
+        <?php if ( ! $is_template ) { $repeater_remove_button( false ); } ?>
         <div class="wpdev-full">
+          <?php if ( $is_template ) : ?><fieldset disabled class="wpdev-repeater-template-fieldset" style="border:0;margin:0;padding:0;min-width:0;width:100%;"><?php endif; ?>
           <?php
             $row_fields = array();
             foreach ( $defined_fields as $sub_key => $sub_config ) {
@@ -342,6 +358,7 @@
 
             $form->render();
           ?>
+          <?php if ( $is_template ) : ?></fieldset><?php endif; ?>
         </div>
       <?php endif; ?>
     </li>
@@ -352,11 +369,13 @@
     $position  = 0;
     $field_len = count( $field->values );
     foreach ( $field->values as $key => $value ) {
-      $render_repeater_row( $key, $value, $position, $position === $field_len - 1 );
+      $render_repeater_row( $key, $value, $position, $position === $field_len - 1, false );
       $position++;
     }
   } elseif ( empty( $allow_empty ) ) {
-    $render_repeater_row( null, null, 0, true );
+    $render_repeater_row( null, null, 0, true, false );
+  } else {
+    $render_repeater_row( null, null, 0, true, true );
   }
 
   if ( $has_empty_state ) :

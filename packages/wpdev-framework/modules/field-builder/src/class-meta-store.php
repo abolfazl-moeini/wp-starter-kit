@@ -62,7 +62,7 @@ class Meta_Store {
 
 			// Check for legacy discrete rows before assuming scalar is the final data
 			$legacy_rows = self::read_discrete_rows( $post_id, $field_name );
-			if ( ! empty( $legacy_rows ) ) {
+			if ( null !== $legacy_rows ) {
 				return $legacy_rows;
 			}
 
@@ -72,7 +72,7 @@ class Meta_Store {
 
 		// Fallback: look for legacy discrete EAV rows (e.g. syllabus_0_title when primary key was missing)
 		$legacy_rows = self::read_discrete_rows( $post_id, $field_name );
-		if ( ! empty( $legacy_rows ) ) {
+		if ( null !== $legacy_rows ) {
 			return $legacy_rows;
 		}
 
@@ -210,19 +210,33 @@ class Meta_Store {
 	 *
 	 * @param int    $post_id    Post ID.
 	 * @param string $field_name Field name.
-	 * @return array<int, array<string, mixed>>
+	 * @return array<int, array<string, mixed>>|null
 	 */
-	private static function read_discrete_rows( int $post_id, string $field_name ): array {
+	private static function read_discrete_rows( int $post_id, string $field_name ): ?array {
 		$all_entries = self::get_all_post_meta_entries( $post_id );
-		$pattern     = '/^' . preg_quote( $field_name, '/' ) . '_(\d+)_(.+)$/';
-		$rows        = array();
+		$count_raw   = isset( $all_entries[ $field_name ] )
+			? $all_entries[ $field_name ]
+			: ( function_exists( 'get_post_meta' ) ? get_post_meta( $post_id, $field_name, true ) : null );
+		$max_count   = is_numeric( $count_raw ) ? (int) $count_raw : null;
+
+		$pattern              = '/^' . preg_quote( $field_name, '/' ) . '_(\d+)_(.+)$/';
+		$has_discrete_entries = false;
+		$rows                 = array();
 
 		foreach ( $all_entries as $key => $val ) {
 			if ( preg_match( $pattern, (string) $key, $matches ) ) {
-				$idx      = (int) $matches[1];
-				$sub_name = $matches[2];
-				$rows[ $idx ][ $sub_name ] = $val;
+				$has_discrete_entries = true;
+				$idx                  = (int) $matches[1];
+				if ( null !== $max_count && $idx >= $max_count ) {
+					continue;
+				}
+				$sub_name                   = $matches[2];
+				$rows[ $idx ][ $sub_name ]  = $val;
 			}
+		}
+
+		if ( ! $has_discrete_entries && empty( $rows ) ) {
+			return null;
 		}
 
 		if ( empty( $rows ) ) {
@@ -267,13 +281,19 @@ class Meta_Store {
 			return array_keys( $GLOBALS['wpdev_test_meta'][ $post_id ] );
 		}
 
+		if ( function_exists( 'get_post_meta' ) ) {
+			$meta = get_post_meta( $post_id );
+			if ( is_array( $meta ) && ! empty( $meta ) ) {
+				return array_keys( $meta );
+			}
+		}
+
 		if ( is_object( $wpdb ) && method_exists( $wpdb, 'get_col' ) && isset( $wpdb->postmeta ) ) {
 			$keys = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT meta_key FROM {$wpdb->postmeta} WHERE post_id = %d", $post_id ) );
 			return is_array( $keys ) ? $keys : array();
 		}
 
-		$meta = get_post_meta( $post_id );
-		return is_array( $meta ) ? array_keys( $meta ) : array();
+		return array();
 	}
 
 	/**
@@ -287,23 +307,31 @@ class Meta_Store {
 		$entries = array();
 
 		if ( isset( $GLOBALS['wpdev_test_meta'][ $post_id ] ) && is_array( $GLOBALS['wpdev_test_meta'][ $post_id ] ) ) {
-			return $GLOBALS['wpdev_test_meta'][ $post_id ];
+			foreach ( $GLOBALS['wpdev_test_meta'][ $post_id ] as $k => $v ) {
+				$entries[ (string) $k ] = function_exists( 'maybe_unserialize' ) ? maybe_unserialize( $v ) : $v;
+			}
+			return $entries;
+		}
+
+		if ( function_exists( 'get_post_meta' ) ) {
+			$meta = get_post_meta( $post_id );
+			if ( is_array( $meta ) && ! empty( $meta ) ) {
+				foreach ( $meta as $k => $v ) {
+					$raw = is_array( $v ) ? ( $v[0] ?? '' ) : $v;
+					$entries[ (string) $k ] = function_exists( 'maybe_unserialize' ) ? maybe_unserialize( $raw ) : $raw;
+				}
+				return $entries;
+			}
 		}
 
 		if ( is_object( $wpdb ) && method_exists( $wpdb, 'get_results' ) && isset( $wpdb->postmeta ) ) {
 			$rows = $wpdb->get_results( $wpdb->prepare( "SELECT meta_key, meta_value FROM {$wpdb->postmeta} WHERE post_id = %d", $post_id ), 'ARRAY_A' );
 			if ( is_array( $rows ) ) {
 				foreach ( $rows as $r ) {
-					$entries[ $r['meta_key'] ] = $r['meta_value'];
+					$val = $r['meta_value'];
+					$entries[ (string) $r['meta_key'] ] = function_exists( 'maybe_unserialize' ) ? maybe_unserialize( $val ) : $val;
 				}
 				return $entries;
-			}
-		}
-
-		$meta = get_post_meta( $post_id );
-		if ( is_array( $meta ) ) {
-			foreach ( $meta as $k => $v ) {
-				$entries[ $k ] = is_array( $v ) ? ( $v[0] ?? '' ) : $v;
 			}
 		}
 
