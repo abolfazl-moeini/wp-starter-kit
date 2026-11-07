@@ -202,7 +202,7 @@ class Option_Store {
 	 *
 	 * @return mixed
 	 */
-	private function read_raw_option(): mixed {
+	private function read_raw_option() {
 		if ( $this->is_site_context() || ! function_exists( 'get_network_option' ) ) {
 			return function_exists( 'get_option' ) ? get_option( $this->option_name, null ) : null;
 		}
@@ -275,7 +275,7 @@ class Option_Store {
 	 * @param mixed  $default    Default value if not found.
 	 * @return mixed
 	 */
-	public function get( string $field_name = '', mixed $default = null ): mixed {
+	public function get( string $field_name = '', $default = null ) {
 		if ( '' === $field_name ) {
 			return $this->all();
 		}
@@ -334,7 +334,7 @@ class Option_Store {
 	 * @param mixed  $value      Value.
 	 * @return bool
 	 */
-	public function set( string $field_name, mixed $value ): bool {
+	public function set( string $field_name, $value ): bool {
 		return $this->save( [ $field_name => $value ] );
 	}
 

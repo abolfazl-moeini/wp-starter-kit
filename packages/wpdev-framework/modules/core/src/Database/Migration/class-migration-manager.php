@@ -104,7 +104,7 @@ class Migration_Manager {
 	 * @param mixed $arg Plugin slug string or associative array containing 'plugin_slug'.
 	 * @return void
 	 */
-	public static function handle_async_action( mixed $arg ): void {
+	public static function handle_async_action( $arg ): void {
 		$plugin_slug = is_array( $arg ) ? ( $arg['plugin_slug'] ?? ( $arg[0] ?? '' ) ) : (string) $arg;
 		$plugin_slug = trim( (string) $plugin_slug );
 
