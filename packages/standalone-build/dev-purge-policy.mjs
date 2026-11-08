@@ -18,6 +18,7 @@ export const ROOT_DEV_DIRS = new Set([
   "backups",
   "scripts",
   "tools",
+  "react-source",
   ".git",
   ".github",
   ".husky",
@@ -261,7 +262,9 @@ export async function purgeDevelopmentTree(dir, consumer = "", rootDir = null) {
  */
 export function getRsyncExcludeArgs() {
   return [
+    "--exclude=node_modules",
     "--exclude=/node_modules",
+    "--exclude=/react-source",
     "--exclude=/.git",
     "--exclude=/dist",
     "--exclude=/build",

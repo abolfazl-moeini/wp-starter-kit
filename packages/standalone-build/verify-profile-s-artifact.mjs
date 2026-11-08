@@ -599,6 +599,17 @@ function update_option($option, $value, $autoload = null) {
     $wp_options[$option] = $value;
     return true;
 }
+function delete_option($option) {
+    global $wp_options;
+    unset($wp_options[$option]);
+    return true;
+}
+function get_transient($transient) { return false; }
+function set_transient($transient, $value, $expiration = 0) { return true; }
+function delete_transient($transient) { return true; }
+function get_site_transient($transient) { return false; }
+function set_site_transient($transient, $value, $expiration = 0) { return true; }
+function delete_site_transient($transient) { return true; }
 function get_network_option($network_id, $option, $default = false) { return get_option($option, $default); }
 function update_network_option($network_id, $option, $value) { return update_option($option, $value); }
 function sanitize_key($key) { return strtolower(preg_replace('/[^a-z0-9_\\-]/i', '', (string)$key)); }
@@ -618,6 +629,15 @@ function plugin_basename($file) { return basename(dirname($file)) . '/' . basena
 function __($text, $domain = 'default') { return $text; }
 function _e($text, $domain = 'default') { echo $text; }
 function _x($text, $context, $domain = 'default') { return $text; }
+function translate($text, $domain = 'default') { return $text; }
+function _n($single, $plural, $number, $domain = 'default') { return $number === 1 ? $single : $plural; }
+function _nx($single, $plural, $number, $context, $domain = 'default') { return $number === 1 ? $single : $plural; }
+function esc_html__($text, $domain = 'default') { return $text; }
+function esc_html_e($text, $domain = 'default') { echo $text; }
+function esc_html_x($text, $context, $domain = 'default') { return $text; }
+function esc_attr__($text, $domain = 'default') { return $text; }
+function esc_attr_e($text, $domain = 'default') { echo $text; }
+function esc_attr_x($text, $context, $domain = 'default') { return $text; }
 function esc_html($text) { return $text; }
 function esc_attr($text) { return $text; }
 function esc_sql($data) { return addslashes((string)$data); }
@@ -639,6 +659,19 @@ function wp_enqueue_script() {}
 function register_rest_route() { return true; }
 if (!class_exists('WP_REST_Server', false)) {
     class WP_REST_Server { const READABLE = 'GET'; const CREATABLE = 'POST'; const EDITABLE = 'POST, PUT, PATCH'; const DELETABLE = 'DELETE'; const ALLMETHODS = 'GET, POST, PUT, PATCH, DELETE'; }
+}
+if (!class_exists('WP_REST_Controller', false)) {
+    abstract class WP_REST_Controller {
+        protected $namespace;
+        protected $rest_base;
+        public function register_routes() {}
+    }
+}
+if (!class_exists('WP_REST_Request', false)) {
+    class WP_REST_Request {}
+}
+if (!class_exists('WP_REST_Response', false)) {
+    class WP_REST_Response {}
 }
 function did_action($hook) { global $wp_actions_done; return $wp_actions_done[$hook] ?? 0; }
 function doing_action($hook = null) { return false; }
