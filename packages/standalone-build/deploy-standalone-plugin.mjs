@@ -22,6 +22,7 @@ import { fileURLToPath } from "node:url";
 import { runDirectDeployTransaction } from "./build-all-standalone-plugins.mjs";
 import { resolveContentRoot } from "./resolve-content-root.mjs";
 import { readZipEntries } from "./canonical-artifact-manifest.mjs";
+import { auditArtifact } from "./verify-release-artifact.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -35,11 +36,17 @@ export function parseDeployArgs(argv = process.argv.slice(2)) {
     preserveBackup: false,
     healthUrl: null,
     healthToken: null,
+    skipVerify: false,
+    allowUnmanifested: false,
   };
 
   for (const arg of argv) {
     if (arg === "--keep-backup") {
       options.preserveBackup = true;
+    } else if (arg === "--skip-verify") {
+      options.skipVerify = true;
+    } else if (arg === "--allow-unmanifested") {
+      options.allowUnmanifested = true;
     } else if (arg.startsWith("--plugins-dir=")) {
       const val = arg.slice("--plugins-dir=".length);
       if (!val) throw new Error("Value for --plugins-dir cannot be empty");
@@ -201,6 +208,37 @@ export async function runDeployCli(argv = process.argv.slice(2)) {
   console.log(`   Content Root: ${contentRoot}\n`);
 
   const startTime = Date.now();
+
+  // Pre-flight artifact audit (fail-closed, SOP §3: a broken artifact must be
+  // rejected before it touches the live site — never patched at runtime).
+  if (!options.skipVerify) {
+    console.log("  [0/4] Auditing artifact (provenance, dev vendor, autoload integrity, coexistence)...");
+    const audit = await auditArtifact(zipPath, {
+      pluginsDir,
+      allowUnmanifested: options.allowUnmanifested,
+    });
+    if (!audit.passed) {
+      console.error("\n❌ Deployment REJECTED by artifact audit:");
+      for (const f of audit.fatals) {
+        console.error(`   [FATAL:${f.check}] ${f.message}`);
+      }
+      for (const w of audit.warnings) {
+        console.error(`   [WARN:${w.check}] ${w.message}`);
+      }
+      console.error(
+        "\n   Rebuild the artifact through the canonical release pipeline" +
+          "\n   (`composer release:dist` / `npm run release`), or re-run with" +
+          "\n   --allow-unmanifested / --skip-verify ONLY if you fully accept the risks above."
+      );
+      return 1;
+    }
+    for (const w of audit.warnings) {
+      console.warn(`   [WARN:${w.check}] ${w.message}`);
+    }
+    console.log("  [0/4] Artifact audit passed ✅\n");
+  } else {
+    console.log("  [0/4] Artifact audit SKIPPED (--skip-verify) ⚠️\n");
+  }
 
   try {
     const result = await runDirectDeployTransaction({

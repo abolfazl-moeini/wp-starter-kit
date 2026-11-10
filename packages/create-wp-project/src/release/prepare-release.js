@@ -81,6 +81,103 @@ function getReleaseScriptDir(pluginRoot) {
   return process.cwd();
 }
 
+/**
+ * Locate the kit's fail-closed artifact auditor. Consumers may build on a
+ * machine without the kit checkout — in that case the audit is skipped with a
+ * warning and the deploy-side gate (deploy-standalone-plugin.mjs) remains the
+ * hard stop.
+ */
+function resolveArtifactAuditor({ fromDir, pluginRoot }) {
+  const starterKit = String(process.env.WPDEV_STARTER_KIT || "").trim();
+  const candidates = [];
+  if (starterKit) {
+    candidates.push(
+      path.join(
+        starterKit,
+        "packages/standalone-build/verify-release-artifact.mjs",
+      ),
+    );
+  }
+  const defaultKit = path.join(
+    os.homedir(),
+    "Documents/ideas/extend-kit/wp-starter-kit",
+  );
+  if (existsSync(defaultKit)) {
+    candidates.push(
+      path.join(
+        defaultKit,
+        "packages/standalone-build/verify-release-artifact.mjs",
+      ),
+    );
+  }
+  if (fromDir) {
+    let dir = path.resolve(fromDir);
+    for (let i = 0; i < 10; i += 1) {
+      candidates.push(
+        path.join(dir, "packages/standalone-build/verify-release-artifact.mjs"),
+      );
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  }
+  if (pluginRoot) {
+    let dir = path.resolve(pluginRoot);
+    for (let i = 0; i < 10; i += 1) {
+      candidates.push(
+        path.join(
+          dir,
+          "wp-starter-kit/packages/standalone-build/verify-release-artifact.mjs",
+        ),
+      );
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  }
+  const found = candidates.find((c) => existsSync(c));
+  return found ? path.resolve(found) : null;
+}
+
+/**
+ * Post-zip artifact audit (fail-closed when the auditor is available):
+ * provenance markers, dev vendor purge, autoload integrity, Strauss scoping,
+ * php -l and cross-plugin symbol coexistence. See
+ * packages/standalone-build/verify-release-artifact.mjs for the check catalog
+ * and the production incidents this gate closes.
+ */
+async function auditBuiltZip(zipPath, { root, pluginsDir }) {
+  if (process.env.JEST_WORKER_ID !== undefined) {
+    return;
+  }
+  const auditorPath = resolveArtifactAuditor({
+    fromDir: getReleaseScriptDir(root),
+    pluginRoot: root,
+  });
+  if (!auditorPath) {
+    process.stderr.write(
+      "release: artifact auditor (wp-starter-kit) not found — skipping post-zip audit; the deploy gate will still verify.\n",
+    );
+    return;
+  }
+  const auditUrl =
+    process.env.JEST_WORKER_ID !== undefined
+      ? auditorPath
+      : pathToFileURL(auditorPath).href;
+  const { auditArtifact } = await import(auditUrl);
+  const audit = await auditArtifact(zipPath, { pluginsDir });
+  if (!audit.passed) {
+    const lines = audit.fatals.map((f) => `  [FATAL:${f.check}] ${f.message}`);
+    throw new Error(
+      `Release ZIP failed artifact audit (${audit.fatals.length} fatal):\n${lines.join("\n")}`,
+    );
+  }
+  for (const w of audit.warnings) {
+    process.stderr.write(`release: [WARN:${w.check}] ${w.message}\n`);
+  }
+  process.stderr.write("release: artifact audit passed ✅\n");
+}
+
 function normalizeStandaloneModuleLoaders(distRoot) {
   rewriteModuleLoaderRegisterToDuckTyped(distRoot);
   assertDuckTypedModuleLoaders(distRoot);
@@ -944,6 +1041,9 @@ export async function prepareRelease(options = {}) {
     const zipPath = skipZip
       ? null
       : result.outputProfileSZipPath || path.join(outAbs, `${slug}.zip`);
+    if (zipPath) {
+      await auditBuiltZip(zipPath, { root, pluginsDir: located.pluginsDir });
+    }
     return {
       distRoot,
       zipPath,
@@ -1175,6 +1275,13 @@ export async function prepareRelease(options = {}) {
   }
 
   const zipPath = skipZip ? null : await createReleaseZip(outAbs, slug);
+
+  if (zipPath) {
+    await auditBuiltZip(zipPath, {
+      root,
+      pluginsDir: resolveReleaseContentRoot(root).pluginsDir,
+    });
+  }
 
   return { distRoot, zipPath, docsPdfPath, slug, version, phpMinVersion };
 }

@@ -275,11 +275,57 @@ export async function assembleProfileSCandidate(options = {}) {
         entry: TARGET_REGISTRY[consumer] || { bootstrapFile: options.bootstrapFile || `${consumer}.php` },
       }
     : await resolveConsumerSource({ contentRoot, consumer, pluginsDir: pluginsDirArg });
-  const bootstrapFile = options.bootstrapFile || resolvedSource.bootstrapFile || `${consumer}.php`;
   const devDir = resolvedSource.sourceDir;
 
+  /**
+   * Header-aware bootstrap resolution (production incident fix): the wpdev.json
+   * slug may differ from the live plugin folder/entry (e.g. slug 'tamland-lms'
+   * vs entry 'tamland-lms-integration.php', with `${slug}.php` present only as
+   * a header-less compat shim). Blindly trusting `${consumer}.php` produced a
+   * staged artifact whose "entry file" had no plugin header — which the
+   * black-box gate correctly rejects. Resolve the entry by its actual header
+   * instead, keeping the explicit option/registry value as the first candidate.
+   */
+  const hasPluginHeader = (filePath) => {
+    try {
+      return fs.readFileSync(filePath, "utf8").slice(0, 8000).includes("Plugin Name:");
+    } catch {
+      return false;
+    }
+  };
+  const resolveBootstrapFile = () => {
+    const preferred = options.bootstrapFile || resolvedSource.bootstrapFile || null;
+    const candidates = [];
+    if (preferred) candidates.push(path.resolve(devDir, preferred));
+    const sourceFolderName = path.basename(devDir);
+    candidates.push(path.join(devDir, `${sourceFolderName}.php`));
+    candidates.push(path.join(devDir, `${consumer}.php`));
+    for (const candidate of candidates) {
+      if (fs.existsSync(candidate) && hasPluginHeader(candidate)) return candidate;
+    }
+    // Last resort: any root-level PHP file carrying a plugin header.
+    try {
+      for (const entry of fs.readdirSync(devDir, { withFileTypes: true })) {
+        if (!entry.isFile() || !entry.name.endsWith(".php")) continue;
+        const candidate = path.join(devDir, entry.name);
+        if (hasPluginHeader(candidate)) return candidate;
+      }
+    } catch {
+      /* fall through to fail-closed error */
+    }
+    throw new Error(
+      `No bootstrap file with a "Plugin Name:" header found in source root '${devDir}' ` +
+        `(checked: ${candidates.map((c) => path.basename(c)).join(", ")}). The scaffold bootstrap must carry the plugin header.`
+    );
+  };
+  const bootstrapFile = resolveBootstrapFile();
+  // Artifact root identity = the LIVE plugin folder name (WordPress uses the
+  // folder for the active_plugins option; zipping under a different root would
+  // orphan the site's activation state on deploy).
+  const artifactRootName = path.basename(devDir);
+
   const stagingRoot = await (await import("node:fs/promises")).mkdtemp(path.join(os.tmpdir(), `profile-s-${consumer}-`));
-  const stagingPlugin = path.join(stagingRoot, consumer);
+  const stagingPlugin = path.join(stagingRoot, artifactRootName);
   await mkdir(stagingPlugin, { recursive: true });
 
   try {
@@ -296,7 +342,7 @@ export async function assembleProfileSCandidate(options = {}) {
     await createCanonicalZip({
       sourceRoot: stagingPlugin,
       outputZip: baselineZip,
-      rootName: consumer,
+      rootName: artifactRootName,
     });
     const baselineBytes = await readFile(baselineZip);
     const baselineSha = crypto.createHash("sha256").update(baselineBytes).digest("hex");
@@ -698,6 +744,49 @@ export async function assembleProfileSCandidate(options = {}) {
 
     await secureUnlinkSymbolMap(path.join(stagingRoot, "symbol-map.json"));
 
+    // 5c. Uniquify the Composer autoloader bootstrap classes (production
+    // incident fix): composer derives ComposerAutoloaderInit<md5> /
+    // ComposerStaticInit<md5> from the composer.json content. Co-installed
+    // copies of a consumer built from the SAME composer.json therefore declare
+    // the SAME global class names, and whichever WordPress loads second fatals
+    // with "Cannot declare class ComposerAutoloaderInit…, because the name is
+    // already in use" — a fatal that surfaces as an intermittent "Plugin could
+    // not be activated" error. Suffix the identifiers per artifact root so
+    // every artifact owns a unique autoloader bootstrap.
+    const uniquifyComposerAutoloaderInit = () => {
+      const vendorComposerDir = path.join(stagingPlugin, "vendor", "composer");
+      if (!fs.existsSync(path.join(vendorComposerDir, "autoload_real.php"))) {
+        return { filesChanged: 0, suffix: null };
+      }
+      const suffix = crypto
+        .createHash("sha256")
+        .update(artifactRootName)
+        .digest("hex")
+        .slice(0, 12);
+      let filesChanged = 0;
+      const renameTargets = [
+        path.join(vendorComposerDir, "autoload_real.php"),
+        path.join(vendorComposerDir, "autoload_static.php"),
+        path.join(stagingPlugin, "vendor", "autoload.php"),
+      ];
+      for (const filePath of renameTargets) {
+        if (!fs.existsSync(filePath)) continue;
+        const original = fs.readFileSync(filePath, "utf8");
+        const renamed = original
+          .replace(/\bComposerAutoloaderInit([0-9a-f]{32})\b/g, `ComposerAutoloaderInit$1_${suffix}`)
+          .replace(/\bComposerStaticInit([0-9a-f]{32})\b/g, `ComposerStaticInit$1_${suffix}`);
+        if (renamed !== original) {
+          fs.writeFileSync(filePath, renamed, "utf8");
+          filesChanged += 1;
+        }
+      }
+      if (filesChanged > 0) {
+        console.log(`==> 5c. Uniquified Composer autoloader init classes (suffix _${suffix}) in ${filesChanged} file(s)`);
+      }
+      return { filesChanged, suffix };
+    };
+    uniquifyComposerAutoloaderInit();
+
     console.log("==> 6. Validating PHP syntax across all transformed files...");
     await validatePhpSyntaxTree(stagingPlugin, {
       phpBin: targetInterpreter.bin,
@@ -715,7 +804,7 @@ export async function assembleProfileSCandidate(options = {}) {
     const resolvedProfile = profile === "s" ? "s" : (profile === "spaghetti" || profile === "standalone-spaghetti" ? "standalone-spaghetti" : (profile === "clean" ? "clean" : String(profile)));
     const artifactManifest = await generateArtifactManifest({
       rootDir: stagingPlugin,
-      consumer,
+      consumer: artifactRootName,
       profile: manifestProfile,
       toolchain,
       transformerProvenance: {
@@ -737,7 +826,7 @@ export async function assembleProfileSCandidate(options = {}) {
     await createCanonicalZip({
       sourceRoot: stagingPlugin,
       outputZip: stagedCandidateZip,
-      rootName: consumer,
+      rootName: artifactRootName,
     });
 
     const zipBytes = await readFile(stagedCandidateZip);
@@ -748,7 +837,7 @@ export async function assembleProfileSCandidate(options = {}) {
     console.log("==> 8b. Verifying packaged ZIP parity against canonical artifact manifest...");
     const zipVerifyReport = await verifyZipAgainstManifest({
       zipPath: stagedCandidateZip,
-      consumer,
+      consumer: artifactRootName,
       manifest: artifactManifest,
     });
     if (zipVerifyReport.status !== "valid") {
@@ -759,7 +848,7 @@ export async function assembleProfileSCandidate(options = {}) {
     console.log("==> 8c. Running black-box verification probes on staged candidate ZIP...");
     const verifyReport = await verifyProfileSArtifact({
       zipPath: stagedCandidateZip,
-      consumer,
+      consumer: artifactRootName,
       profile,
       stripComments: buildPlan.capabilities.stripComments,
       inlineFramework: buildPlan.capabilities.inlineFramework,
@@ -780,7 +869,7 @@ export async function assembleProfileSCandidate(options = {}) {
     const harnessRes = await exec(process.execPath, [
       path.join(scriptDir, "prepare-artifact-phpunit-harness.mjs"),
       contentRoot,
-      consumer,
+      artifactRootName,
       stagedCandidateZip,
       zipSha256,
     ]);
@@ -808,7 +897,30 @@ export async function assembleProfileSCandidate(options = {}) {
       console.log("==> skipZip: verified candidate ZIP was not published");
     }
 
-    const targetDir = path.join(outputDir, consumer);
+    // 10b. Fail-closed artifact audit (provenance, dev vendor purge, autoload
+    // integrity, Strauss scoping, cross-plugin symbol coexistence). Closes the
+    // two proven production incidents documented in verify-release-artifact.mjs:
+    // out-of-pipeline ZIPs and the alias-before-declaration activation fatal.
+    if (!skipZip && !options.skipArtifactAudit) {
+      console.log("==> 10b. Running fail-closed artifact audit on published ZIP...");
+      const { auditArtifact } = await import("./verify-release-artifact.mjs");
+      const audit = await auditArtifact(outputZip, {
+        pluginsDir: pluginsDirArg || null,
+        phpBin: targetInterpreter.bin,
+      });
+      if (!audit.passed) {
+        const lines = audit.fatals.map((f) => `  [FATAL:${f.check}] ${f.message}`);
+        throw new Error(
+          `Published artifact failed release audit (${audit.fatals.length} fatal) — refusing to hand over a broken ZIP:\n${lines.join("\n")}`
+        );
+      }
+      for (const w of audit.warnings) {
+        console.warn(`==> [AUDIT WARN:${w.check}] ${w.message}`);
+      }
+      console.log("==> Artifact audit passed ✅");
+    }
+
+    const targetDir = path.join(outputDir, artifactRootName);
     if (emitDistDir) {
       const tempTargetDir = path.join(outputDir, `.${consumer}.dist-tmp-${Date.now()}`);
       await cp(stagingPlugin, tempTargetDir, { recursive: true });

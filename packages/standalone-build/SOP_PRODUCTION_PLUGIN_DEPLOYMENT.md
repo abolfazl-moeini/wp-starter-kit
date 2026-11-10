@@ -189,3 +189,44 @@ mv wp-content/plugins/<consumer-slug>-old wp-content/plugins/<consumer-slug>
 - پچ کردن `autoload_real.php` تولیدشدهٔ Composer.
 - سبز ماندن سایت اگر فایل اجباری از آرتیفکت غایب باشد.
 - تضمین صفر خطا هنگام سوئیچ بدون توقف/drain ترافیک در هاست‌های بدون لود بالانسر.
+
+---
+
+## ۴. گیت ممیزی آرتیفکت پیش از استقرار (Artifact Audit Gate)
+
+`deploy-standalone-plugin.mjs` پیش از هر تراکنش deploy، آرتیفکت را با
+`verify-release-artifact.mjs` ممیزی می‌کند (fail-closed). این گیت از دو حادثهٔ
+واقعی production بسته شده است:
+
+1. **ZIP خارج از pipeline** — zip کردن مستقیم درخت dev، vendor کامل با پکیج‌های
+   dev (phpunit/phpstan/rector با `files` autoload اضطراری)، `composer.lock` و
+   `tests/` را به production می‌فرستد.
+2. **تعارض symbol بین-پلاگینی** — وردپرس پلاگین‌ها را بر اساس ترتیب الفبایی
+   پوشه‌ها لود می‌کند؛ اگر پلاگینی با `class_alias` نام کلاس قدیمی را اشغال کند و
+   پلاگین دیگری همان کلاس را top-level declare کند، فعال‌سازی با
+   «Plugin could not be activated because it triggered a fatal error» شکست
+   می‌خورد (گاهی فقط یک‌بار، گاهی همیشگی).
+
+### چک‌های ممیزی
+
+| Check                | Severity | شرح                                                                                      |
+| -------------------- | -------- | ---------------------------------------------------------------------------------------- |
+| `provenance`         | fatal    | `artifact-manifest.json` یا `.dist-built` باید موجود باشد (یعنی خروجی pipeline رسمی است) |
+| `dev-tree`           | fatal    | `composer.lock`, `tests/`, `dev/`, `node_modules/`, `.husky/`, … نباید ship شوند         |
+| `dev-vendor`         | fatal    | پکیج‌های dev در `vendor/` و autoload `files` اضطراری آن‌ها                               |
+| `autoload-integrity` | fatal    | هر مدخل `autoload_files.php` / `autoload.files` باید در درخت موجود باشد                  |
+| `scoping`            | fatal    | اگر Strauss پیکربندی شده باشد، `vendor-prefixed/autoload.php` باید موجود باشد            |
+| `php-lint`           | fatal    | `php -l` روی همهٔ PHPهای خود آرتیفکت                                                     |
+| `coexistence`        | fatal    | تعارض global symbol یا الگوی alias-before-declaration با پلاگین‌های همسایه               |
+
+### اجرای دستی
+
+```bash
+node packages/standalone-build/verify-release-artifact.mjs <zip-or-dir> \
+  --plugins-dir=/path/to/wp-content/plugins
+```
+
+- خروجی غیرصفر = آرتیفکت ممنوع‌الاستقرار است.
+- `--allow-unmanifested` فقط برای ممیزی آرتیفکت‌های legacy (بدون manifest) —
+  بقیهٔ چک‌ها همچنان برقرارند.
+- `--skip-verify` روی deploy فقط با مسئولیت کامل و با ثبت در تیکت انجام شود.
