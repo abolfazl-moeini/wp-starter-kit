@@ -19,6 +19,7 @@ defined('ABSPATH') || exit;
  *
  * @deprecated 2.0.0
  */
+if ( ! ( class_exists( 'wpdev_Domain_Mapping', false ) || interface_exists( 'wpdev_Domain_Mapping', false ) || trait_exists( 'wpdev_Domain_Mapping', false ) ) ) {
 class wpdev_Domain_Mapping {
 
 	/**
@@ -51,4 +52,6 @@ class wpdev_Domain_Mapping {
 
 	} // end get_hosting_support_text;
 
-} // end class wpdev_Domain_Mapping;
+}
+}
+ // end class wpdev_Domain_Mapping;

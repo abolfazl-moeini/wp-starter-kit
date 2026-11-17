@@ -15,6 +15,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * @return void
  */
+if ( ! function_exists( 'wpdev_register_default_widget_datasources' ) ) {
 function wpdev_register_default_widget_datasources() {
 
 	/**
@@ -24,4 +25,6 @@ function wpdev_register_default_widget_datasources() {
 	 */
 	do_action( 'wpdev_register_widget_datasources' );
 
-} // end wpdev_register_default_widget_datasources;
+}
+}
+ // end wpdev_register_default_widget_datasources;

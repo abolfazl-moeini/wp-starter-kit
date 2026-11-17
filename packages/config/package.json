@@ -1,0 +1,21 @@
+{
+  "name": "@wpdev/config",
+  "version": "1.0.0",
+  "description": "Typed runtime configuration, dataset hydration, and nonce lifecycle manager for WPDev applications.",
+  "type": "module",
+  "sideEffects": false,
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./middleware": "./middleware.ts",
+    "./types": "./types.ts"
+  },
+  "files": [
+    "index.ts",
+    "middleware.ts",
+    "types.ts",
+    "src"
+  ],
+  "license": "MIT"
+}

@@ -19,6 +19,7 @@ defined('ABSPATH') || exit;
  *
  * @deprecated 2.0.0
  */
+if ( ! ( class_exists( 'wpdev_Settings', false ) || interface_exists( 'wpdev_Settings', false ) || trait_exists( 'wpdev_Settings', false ) ) ) {
 class wpdev_Settings {
 
 	/**
@@ -138,13 +139,16 @@ class wpdev_Settings {
 
 	} // end get_countries;
 
-} // end class wpdev_Settings;
+}
+}
+ // end class wpdev_Settings;
 
 /**
  * Deprecated: wpdev_Page
  *
  * @deprecated 2.0.0
  */
+if ( ! ( class_exists( 'wpdev_Page', false ) || interface_exists( 'wpdev_Page', false ) || trait_exists( 'wpdev_Page', false ) ) ) {
 class wpdev_Page extends \WPDevFramework\Admin_Pages\Base_Admin_Page {
 
 	/**
@@ -227,13 +231,16 @@ class wpdev_Page extends \WPDevFramework\Admin_Pages\Base_Admin_Page {
 	 */
 	public function output() {} // end output;
 
-} // end class wpdev_Page;
+}
+}
+ // end class wpdev_Page;
 
 /**
  * Deprecated: wpdev_Site_Templates
  *
  * @deprecated 2.0.0
  */
+if ( ! ( class_exists( 'wpdev_Site_Templates', false ) || interface_exists( 'wpdev_Site_Templates', false ) || trait_exists( 'wpdev_Site_Templates', false ) ) ) {
 class wpdev_Site_Templates {
 
 	/**
@@ -252,13 +259,16 @@ class wpdev_Site_Templates {
 
 	} // end get_template_preview_url;
 
-} // end class wpdev_Site_Templates;
+}
+}
+ // end class wpdev_Site_Templates;
 
 /**
  * Deprecated: wpdev_Mail
  *
  * @deprecated 2.0.0
  */
+if ( ! ( class_exists( 'wpdev_Mail', false ) || interface_exists( 'wpdev_Mail', false ) || trait_exists( 'wpdev_Mail', false ) ) ) {
 class wpdev_Mail {
 
 	use \WPDevFramework\Traits\Singleton;
@@ -336,7 +346,9 @@ class wpdev_Mail {
 
 	} // end register_template;
 
-} // end class wpdev_Mail;
+}
+}
+ // end class wpdev_Mail;
 
 /**
  * Deprecated: Returns the wpdev_Mail instance.
@@ -345,17 +357,21 @@ class wpdev_Mail {
  * @since 2.0.0
  * @return wpdev_Mail
  */
+if ( ! function_exists( 'wpdev_Mail' ) ) {
 function wpdev_Mail() { // phpcs:ignore
 
 	_deprecated_function(__METHOD__, '2.0.0');
 
 	return wpdev_Mail::get_instance();
 
-} // end wpdev_Mail;
+}
+}
+ // end wpdev_Mail;
 
 /**
  * Deprecated: wpdev_Plans class.
  */
+if ( ! ( class_exists( 'wpdev_Plans', false ) || interface_exists( 'wpdev_Plans', false ) || trait_exists( 'wpdev_Plans', false ) ) ) {
 class wpdev_Plans {
 
 	/**
@@ -407,7 +423,9 @@ class wpdev_Plans {
 
 	} // end get_most_popular_plan;
 
-} // end class wpdev_Plans;
+}
+}
+ // end class wpdev_Plans;
 
 /**
  * Deprecated: wpdev_Multi_Network
@@ -420,6 +438,7 @@ class wpdev_Plans {
  *
  * @deprecated 2.0.0
  */
+if ( ! ( class_exists( 'wpdev_Multi_Network', false ) || interface_exists( 'wpdev_Multi_Network', false ) || trait_exists( 'wpdev_Multi_Network', false ) ) ) {
 class wpdev_Multi_Network {
 
 	/**
@@ -439,7 +458,9 @@ class wpdev_Multi_Network {
 
 	} // end __callStatic;
 
-} // end class wpdev_Multi_Network;
+}
+}
+ // end class wpdev_Multi_Network;
 
 /**
  * Deprecated: wpdev_Help_Pointers
@@ -451,6 +472,7 @@ class wpdev_Multi_Network {
  *
  * @deprecated 2.0.0
  */
+if ( ! ( class_exists( 'wpdev_Help_Pointers', false ) || interface_exists( 'wpdev_Help_Pointers', false ) || trait_exists( 'wpdev_Help_Pointers', false ) ) ) {
 class wpdev_Help_Pointers {
 
 	/**
@@ -465,7 +487,9 @@ class wpdev_Help_Pointers {
 
 	} // end __construct;
 
-} // end class wpdev_Help_Pointers;
+}
+}
+ // end class wpdev_Help_Pointers;
 
 /**
  * Deprecated: wpdev_Util
@@ -475,6 +499,7 @@ class wpdev_Help_Pointers {
  *
  * @deprecated 2.0.0
  */
+if ( ! ( class_exists( 'wpdev_Util', false ) || interface_exists( 'wpdev_Util', false ) || trait_exists( 'wpdev_Util', false ) ) ) {
 class wpdev_Util {
 
 	/**
@@ -665,13 +690,16 @@ class wpdev_Util {
 
 	} // end color;
 
-} // end class wpdev_Util;
+}
+}
+ // end class wpdev_Util;
 
 /**
  * Deprecated: wpdev_Logger
  *
  * @deprecated 2.0.0
  */
+if ( ! ( class_exists( 'wpdev_Logger', false ) || interface_exists( 'wpdev_Logger', false ) || trait_exists( 'wpdev_Logger', false ) ) ) {
 class wpdev_Logger {
 
 	/**
@@ -706,13 +734,16 @@ class wpdev_Logger {
 
 	} // end __callStatic;
 
-} // end class wpdev_Logger;
+}
+}
+ // end class wpdev_Logger;
 
 /**
  * Deprecated: wpdev_Links
  *
  * @deprecated 2.0.0
  */
+if ( ! ( class_exists( 'wpdev_Links', false ) || interface_exists( 'wpdev_Links', false ) || trait_exists( 'wpdev_Links', false ) ) ) {
 class wpdev_Links {
 
 	use \WPDevFramework\Traits\Singleton;
@@ -733,7 +764,9 @@ class wpdev_Links {
 
 	} // end get_link;
 
-} // end class wpdev_Links;
+}
+}
+ // end class wpdev_Links;
 
 /*
  * Models
@@ -761,6 +794,7 @@ class wpdev_Links {
  *
  * @since 2.0.0
  */
+if ( ! ( class_exists( 'wpdev_Deprecated_Model', false ) || interface_exists( 'wpdev_Deprecated_Model', false ) || trait_exists( 'wpdev_Deprecated_Model', false ) ) ) {
 trait wpdev_Deprecated_Model {
 
 	/**
@@ -814,16 +848,21 @@ trait wpdev_Deprecated_Model {
 	 */
 	public function after_set($key, $value) {} // end after_set;
 
-} // end trait wpdev_Deprecated_Model;
+}
+}
+ // end trait wpdev_Deprecated_Model;
 
 /**
  * Deprecated: wpdev_Gateway
  *
  * @since 2.0.0
  */
+if ( ! ( class_exists( 'wpdev_Gateway', false ) || interface_exists( 'wpdev_Gateway', false ) || trait_exists( 'wpdev_Gateway', false ) ) ) {
 abstract class wpdev_Gateway {
 
-} // end class wpdev_Gateway;
+}
+}
+ // end class wpdev_Gateway;
 
 /**
  * Deprecated: wpdev_Site_Hooks
@@ -831,6 +870,7 @@ abstract class wpdev_Gateway {
  * @todo implement this for the legacy checkout.
  * @since 2.0.0
  */
+if ( ! ( class_exists( 'wpdev_Site_Hooks', false ) || interface_exists( 'wpdev_Site_Hooks', false ) || trait_exists( 'wpdev_Site_Hooks', false ) ) ) {
 class wpdev_Site_Hooks {
 
 	/**
@@ -909,13 +949,16 @@ class wpdev_Site_Hooks {
 
 	} // end get_template_preview_url;
 
-} // end class wpdev_Site_Hooks;
+}
+}
+ // end class wpdev_Site_Hooks;
 
 /**
  * Deprecated: wpdev_Transactions
  *
  * @deprecated 2.0.0
  */
+if ( ! ( class_exists( 'wpdev_Transactions', false ) || interface_exists( 'wpdev_Transactions', false ) || trait_exists( 'wpdev_Transactions', false ) ) ) {
 class wpdev_Transactions {
 
 	/**
@@ -936,7 +979,9 @@ class wpdev_Transactions {
 
 	} // end get_current_time;
 
-} // end class wpdev_Transactions;
+}
+}
+ // end class wpdev_Transactions;
 /*
  * Functions
  */
@@ -950,6 +995,7 @@ class wpdev_Transactions {
  * @param boolean $return_invalid If we should return the coupon even if it is no longer valid.
  * @return \WPDevFramework\Models\Discount_Code|false
  */
+if ( ! function_exists( 'wpdev_get_coupon' ) ) {
 function wpdev_get_coupon($coupon_code, $return_invalid = false) {
 
 	_deprecated_function(__FUNCTION__, '2.0.0', 'wpdev_get_discount_code_by_code()');
@@ -978,7 +1024,9 @@ function wpdev_get_coupon($coupon_code, $return_invalid = false) {
 
 	return new wpdev_Coupon($discount_code);
 
-} // end wpdev_get_coupon;
+}
+}
+ // end wpdev_get_coupon;
 
 /**
  * Deprecated: Returns a plan based on the id passed
@@ -988,6 +1036,7 @@ function wpdev_get_coupon($coupon_code, $return_invalid = false) {
  * @param integer $plan_id The plan id to get.
  * @return \WPDevFramework\Models\Product|false
  */
+if ( ! function_exists( 'wpdev_get_plan' ) ) {
 function wpdev_get_plan($plan_id) {
 
 	_deprecated_function(__FUNCTION__, '2.0.0', 'wpdev_get_product()');
@@ -1010,7 +1059,9 @@ function wpdev_get_plan($plan_id) {
 
 	return new wpdev_Plan($plan);
 
-} // end wpdev_get_plan;
+}
+}
+ // end wpdev_get_plan;
 
 /**
  * Deprecated: Gets a plan by its slug.
@@ -1021,13 +1072,16 @@ function wpdev_get_plan($plan_id) {
  * @param string $plan_slug The plan slug.
  * @return \WPDevFramework\Models\Product|false
  */
+if ( ! function_exists( 'wpdev_get_plan_by_slug' ) ) {
 function wpdev_get_plan_by_slug($plan_slug) {
 
 	_deprecated_function(__FUNCTION__, '2.0.0', 'wpdev_get_product_by_slug()');
 
 	return apply_filters( 'wpdev_entity_lookup_by', null, 'slug', $plan_slug, 'product' );
 
-} // end wpdev_get_plan_by_slug;
+}
+}
+ // end wpdev_get_plan_by_slug;
 /**
  * Deprecated: Returns a subscription object based on the user.
  *
@@ -1040,13 +1094,16 @@ function wpdev_get_plan_by_slug($plan_slug) {
  * @param  int $user_id User id to get subscription from.
  * @return \WPDevFramework\Models\Membership|false
  */
+if ( ! function_exists( 'wpdev_get_subscription' ) ) {
 function wpdev_get_subscription($user_id) {
 
 	_deprecated_function(__FUNCTION__, '2.0.0', 'wpdev_get_membership_by()');
 
 	return apply_filters( 'wpdev_entity_lookup_by', null, 'user_id', $user_id, 'membership' );
 
-} // end wpdev_get_subscription;
+}
+}
+ // end wpdev_get_subscription;
 /**
  * Deprecated: Returns a subscription object based on the integration key.
  *
@@ -1055,13 +1112,16 @@ function wpdev_get_subscription($user_id) {
  * @param string $integration_key The gateway subscription key/id.
  * @return \WPDevFramework\Models\Membership|false
  */
+if ( ! function_exists( 'wpdev_get_subscription_by_integration_key' ) ) {
 function wpdev_get_subscription_by_integration_key($integration_key) {
 
 	_deprecated_function(__FUNCTION__, '2.0.0', 'wpdev_get_membership_by()');
 
 	return apply_filters( 'wpdev_entity_lookup_by', null, 'gateway_subscription_id', $integration_key, 'membership' );
 
-} // end wpdev_get_subscription_by_integration_key;
+}
+}
+ // end wpdev_get_subscription_by_integration_key;
 /**
  * Deprecated: Return a subscription object based on the current user.
  *
@@ -1069,6 +1129,7 @@ function wpdev_get_subscription_by_integration_key($integration_key) {
  * @deprecated 2.0.0
  * @return \WPDevFramework\Models\Membership|false
  */
+if ( ! function_exists( 'wpdev_get_current_subscription' ) ) {
 function wpdev_get_current_subscription() {
 
 	$user_id = get_current_user_id();
@@ -1077,7 +1138,9 @@ function wpdev_get_current_subscription() {
 
 	return apply_filters( 'wpdev_entity_lookup_by', null, 'user_id', $user_id, 'membership' );
 
-} // end wpdev_get_current_subscription;
+}
+}
+ // end wpdev_get_current_subscription;
 
 /**
  * Deprecated: Checks if the current user is an active subscriber.
@@ -1091,6 +1154,7 @@ function wpdev_get_current_subscription() {
  * @param integer $user_id The user ID.
  * @return boolean
  */
+if ( ! function_exists( 'wpdev_is_active_subscriber' ) ) {
 function wpdev_is_active_subscriber($user_id = false) {
 
 	_deprecated_function(__FUNCTION__, '2.0.0');
@@ -1107,7 +1171,9 @@ function wpdev_is_active_subscriber($user_id = false) {
 
 	return $membership && $membership->is_active();
 
-}  // end wpdev_is_active_subscriber;
+}
+}
+  // end wpdev_is_active_subscriber;
 
 /**
  * Deprecated: Checks if a given user is a customer of a given plan.
@@ -1119,6 +1185,7 @@ function wpdev_is_active_subscriber($user_id = false) {
  * @param integer $plan_id The plan Id.
  * @return boolean
  */
+if ( ! function_exists( 'wpdev_has_plan' ) ) {
 function wpdev_has_plan($user_id, $plan_id) {
 
 	_deprecated_function(__FUNCTION__, '2.0.0');
@@ -1140,7 +1207,9 @@ function wpdev_has_plan($user_id, $plan_id) {
 
 	return $membership && absint($membership->get_plan_id()) === absint($plan_id);
 
-} // end wpdev_has_plan;
+}
+}
+ // end wpdev_has_plan;
 
 /**
  * Deprecated: Returns the gateway being used by the current user at the moment.
@@ -1150,6 +1219,7 @@ function wpdev_has_plan($user_id, $plan_id) {
  *
  * @return object Gateway class
  */
+if ( ! function_exists( 'wpdev_get_active_gateway' ) ) {
 function wpdev_get_active_gateway() {
 
 	_deprecated_function(__FUNCTION__, '2.0.0', 'wpdev_get_active_gateways()');
@@ -1158,7 +1228,9 @@ function wpdev_get_active_gateway() {
 
 	return $active_gateways ? reset( $active_gateways ) : false;
 
-} // end wpdev_get_active_gateway;
+}
+}
+ // end wpdev_get_active_gateway;
 /**
  * Deprecated: Generates the price description.
  *
@@ -1169,13 +1241,16 @@ function wpdev_get_active_gateway() {
  * @param int     $interval Deprecated Argument.
  * @param boolean $extended Deprecated Argument.
  */
+if ( ! function_exists( 'wpdev_get_interval_string' ) ) {
 function wpdev_get_interval_string($price = null, $interval = null, $extended = null): string {
 
 	_deprecated_function(__FUNCTION__, '2.0.0', '\WPDevFramework\Models\Product::get_price_description()');
 
 	return '';
 
-} // end wpdev_get_interval_string;
+}
+}
+ // end wpdev_get_interval_string;
 
 /**
  * Deprecated: get_wpdev_currencies.
@@ -1185,13 +1260,16 @@ function wpdev_get_interval_string($price = null, $interval = null, $extended = 
  * @since 2.0.0
  * @return array
  */
+if ( ! function_exists( 'get_wpdev_currencies' ) ) {
 function get_wpdev_currencies() { // phpcs:ignore
 
 	_deprecated_function(__FUNCTION__, '2.0.0', 'wpdev_get_currencies()');
 
 	return wpdev_get_currencies();
 
-} // end get_wpdev_currencies;
+}
+}
+ // end get_wpdev_currencies;
 
 /**
  * Deprecated: get_wpdev_currency_symbol.
@@ -1202,10 +1280,13 @@ function get_wpdev_currencies() { // phpcs:ignore
  * @param string $currency Currency code.
  * @return string
  */
+if ( ! function_exists( 'get_wpdev_currency_symbol' ) ) {
 function get_wpdev_currency_symbol($currency = '') { // phpcs:ignore
 
 	_deprecated_function(__FUNCTION__, '2.0.0', 'wpdev_get_currency_symbol()');
 
 	return wpdev_get_currency_symbol($currency);
 
-} // end get_wpdev_currency_symbol;
+}
+}
+ // end get_wpdev_currency_symbol;

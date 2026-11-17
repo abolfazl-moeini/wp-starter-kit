@@ -11,12 +11,16 @@
  *   1. Resolve the target dir from the input shape.
  *   2. Resolve the `to` version:
  *      a) `runOptions.to` (from `--to <version>`) when present.
- *      b) otherwise fall back to `engine.getDepVersions()` —
- *         we treat the registry's "kit version" entry as the
- *         "latest" version. The dep-versions registry is
- *         anchored to the kit's own `package.json` and is the
- *         single source of truth for "what version is in the
- *         box right now". Tests inject a fake registry.
+ *      b) otherwise the registry's explicit "_kit" entry when
+ *         the injected registry provides one, then
+ *         `engine.latestMigrationVersion()` — the highest
+ *         registered migration is the update flow's "latest
+ *         kit version". A dep RANGE from the registry is never
+ *         a valid target.
+ *      The dep-versions registry is anchored to the kit's own
+ *      `package.json` and is the single source of truth for
+ *      "what versions are in the box right now". Tests inject
+ *      a fake registry.
  *   3. Call `engine.planUpdate(dir, to)`. NEVER writes to disk.
  *   4. On `{ok:false}` return the engine's reason verbatim
  *      (the bin layer prints + exits 1). Do NOT render the
@@ -118,13 +122,19 @@ export async function runUpdate(dirOrInput, deps = {}) {
 
   // 3. Resolve the `to` version. Priority:
   //    a) `runOptions.to` (from --to=).
-  //    b) `engine.getDepVersions()` registry — we treat the
-  //       registry's "_kit" key (or, as a defensive fallback,
-  //       the registry's first entry) as "the kit's own
-  //       version". This is the "0.0.0-latest" placeholder
-  //       behaviour called out in the plan.
-  //    c) A hard-coded "0.0.0" string (the last-resort
+  //    b) `engine.getDepVersions()` registry — the registry's
+  //       explicit "_kit" entry when an injected/test registry
+  //       provides one.
+  //    c) `engine.latestMigrationVersion()` — the highest
+  //       registered migration, which IS the update flow's
+  //       "latest kit version". A project at that version has
+  //       consumed every known migration.
+  //    d) A hard-coded "0.0.0" string (the last-resort
   //       "no info, do nothing" answer).
+  //    NEVER fall back to an arbitrary registry dep value: the
+  //    registry stores dependency RANGES (e.g. typescript's
+  //    "^5.6.0") — treating the first one as a kit version made
+  //    the default target a random dep range.
   let to;
   if (typeof runOptions.to === "string" && runOptions.to.length > 0) {
     to = runOptions.to;
@@ -134,14 +144,12 @@ export async function runUpdate(dirOrInput, deps = {}) {
   ) {
     try {
       const reg = engine.getDepVersions();
-      // Prefer the "_kit" entry; fall back to the first
-      // map entry's value (any one will do for the
-      // version-comparison that planUpdate does).
-      if (reg && typeof reg.get === "function") {
-        to = reg.get("_kit") || reg.values().next().value || "0.0.0";
-      } else {
-        to = "0.0.0";
-      }
+      to =
+        (reg && typeof reg.get === "function" ? reg.get("_kit") : null) ||
+        (typeof engine.latestMigrationVersion === "function"
+          ? engine.latestMigrationVersion()
+          : null) ||
+        "0.0.0";
     } catch {
       to = "0.0.0";
     }

@@ -947,7 +947,7 @@ export async function inlineWpdevClosure({
     ].filter(Boolean);
     wpdevPluginDir = candidateProviderDirs.find((d) => fs.existsSync(d)) || candidateProviderDirs[0];
   }
-  const bootstrapFileName = bootstrapFile || `${consumer}.php`;
+  const bootstrapFileName = bootstrapFile ? path.basename(bootstrapFile) : `${consumer}.php`;
   const mainPhpPath = path.join(stagingPlugin, bootstrapFileName);
   const mainPhpExists = fs.existsSync(mainPhpPath);
   const mainPhpHeader = mainPhpExists ? await readFile(mainPhpPath, "utf8") : "";
@@ -1776,13 +1776,23 @@ if (!defined('WPDEV_BOOTSTRAP_FILE') && !$wpdev_is_host_framework_active) {
                 $sub = ltrim(substr((string)$dir, 5), '/');
                 return __DIR__ . '/views' . ($sub !== '' ? '/' . $sub : '');
             }
+            if ('' !== (string)$dir && file_exists(__DIR__ . '/' . ltrim((string)$dir, '/'))) {
+                return __DIR__ . '/' . ltrim((string)$dir, '/');
+            }
             return defined('WPDEV_PLUGIN_DIR') ? WPDEV_PLUGIN_DIR . $dir : dirname(__DIR__) . '/' . ltrim((string)$dir, '/');
         }
     }
 
     if (!function_exists('wpdev_url')) {
         function wpdev_url($dir = '') {
-            return defined('WPDEV_PLUGIN_URL') ? apply_filters('wpdev_url', WPDEV_PLUGIN_URL . $dir) : plugins_url(ltrim((string)$dir, '/'), __FILE__);
+            if (defined('WPDEV_PLUGIN_URL')) {
+                return apply_filters('wpdev_url', WPDEV_PLUGIN_URL . $dir);
+            }
+            $rel = ltrim((string)$dir, '/');
+            if ('' !== $rel && file_exists(__DIR__ . '/' . $rel)) {
+                return plugins_url($rel, __FILE__);
+            }
+            return plugins_url($rel, __FILE__);
         }
     }
 

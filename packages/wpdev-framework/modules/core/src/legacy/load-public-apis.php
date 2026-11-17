@@ -15,6 +15,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * @return void
  */
+if ( ! function_exists( 'wpdev_load_public_apis' ) ) {
 function wpdev_load_public_apis() {
 
 	$public_functions = array(
@@ -63,4 +64,6 @@ function wpdev_load_public_apis() {
 		wpdev_require_public_function( 'admin' );
 	}
 
-} // end wpdev_load_public_apis;
+}
+}
+ // end wpdev_load_public_apis;

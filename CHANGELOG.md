@@ -16,6 +16,36 @@ follows [Semantic Versioning](https://semver.org/).
   - Added `--with-docs` flag to `release:dist` (`prepare-release.js`) to compile and package `<slug>-user-manual.pdf` alongside the production release zip while excluding raw markdown sources from the runtime zip.
   - Added `docs` toggle to feature catalog (`FEATURE_CATALOG`), manifests, presets (`minimal: off`, `standard/full: on`), and scaffolding generator (`generators/docs.js`).
 
+### Fixed
+
+- **`wpdev update` default target resolution**: the CLI treated the dep
+  registry's FIRST entry (e.g. `typescript: "^5.6.0"`) as "the latest kit
+  version" when no explicit `_kit` entry existed. The default target is now
+  `latestMigrationVersion()` — the highest registered migration — via a new
+  engine export (`@wpdev/create-wp-project`). A dep range is never a kit
+  version.
+- **Semver range-prefix parsing** (`compareSemver`, `planUpdate`): targets
+  like `"^5.6.0"` parsed as `[0, 5, 6]` (`parseInt("^5")` → NaN → 0), so a
+  default update from `0.0.0` silently skipped every migration ≥ `1.0.0`.
+  `^` / `~` / `=` / `v` prefixes are now stripped before parsing.
+- **Feature-aware dep changes**: `planUpdate` and `runMigrations` gated the
+  dep registry by the manifest's `features` — a `js: "none"` project no
+  longer receives the JS toolchain (babel/jest/eslint/preact/…) as `add`.
+  The e2e npm set ships only with `e2eTest: "playwright"`, husky/lint-staged
+  only with `husky != "off"`; the e2e set is now registered at all
+  (`SCAFFOLD_E2E_DEVDEPS`, shared with the scaffold template so they cannot
+  drift) — previously it was unknown to the registry and showed up as a
+  bogus `remove` for every e2e project.
+- **Manifest preservation on update**: `runMigrations` rebuilt the manifest
+  via `buildManifest({ kitVersion, features, distMode })`, which dropped
+  branding fields (`slug`, `globalName`, `textDomain`, `hookPrefix`,
+  `restNamespace`, …) and extra keys (`buildEngine`, `docs`, `build`). The
+  runner now MERGES into the post-migration manifest.
+- **Schema migration chain**: a schema-0 project only ran the `0→1` step —
+  the loop compared every step against the original schema — and the final
+  rebuild masked it by force-stamping `schema: 2`. The chain now advances
+  per applied step and the manifest merge preserves the real value.
+
 ## [1.1.0] - 2026-09-29
 
 ### Added

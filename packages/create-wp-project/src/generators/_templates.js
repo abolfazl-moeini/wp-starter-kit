@@ -19,6 +19,7 @@ import {
   getDepVersions,
   CONSUMER_RUNTIME_WPDEV_PACKAGES,
   CONSUMER_BUILD_WPDEV_PACKAGES,
+  SCAFFOLD_E2E_DEVDEPS,
 } from "../dep-versions.js";
 import { deriveUiFramework } from "../derive-ui-framework.js";
 import { resolveEngineSrcDir } from "../resolve-kit-paths.js";
@@ -138,14 +139,7 @@ export function packageJsonForAnswers(answers, features) {
         "test:e2e": "wp-scripts test-playwright",
       }
     : {};
-  const e2eDevDeps = e2eOn
-    ? {
-        "@playwright/test": "^1.58.2",
-        "@wordpress/e2e-test-utils-playwright": "^1.41.0",
-        "@wordpress/env": "^10.39.0",
-        "@wordpress/scripts": "^30.0.0",
-      }
-    : {};
+  const e2eDevDeps = e2eOn ? { ...SCAFFOLD_E2E_DEVDEPS } : {};
 
   const docsOn = !features || features.docs !== "off";
   const docsScripts = docsOn

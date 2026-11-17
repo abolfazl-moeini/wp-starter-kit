@@ -145,6 +145,7 @@ function workspaceDirFor(name) {
   // `packages/<basename>/` and build tools in
   // `core/packages/<basename>/`.
   const LIBS = [
+    "config",
     "hooks",
     "utils",
     "rest-utils",
@@ -300,6 +301,27 @@ const REQUIRED_COMPOSER_ENTRIES = [
 ];
 
 /**
+ * The e2e npm devDependencies the scaffold emits when
+ * `e2eTest` is "playwright" (the js-none lean template included).
+ * Single source of truth for BOTH the scaffold template
+ * (`generators/_templates.js` spreads this map into the
+ * consumer's package.json) and this registry (so `planUpdate`
+ * can bump/manage them). These deps are NOT read from the
+ * kit's own package.json — the kit doesn't e2e-test through
+ * them; the ranges below are the scaffold contract.
+ *
+ * `planUpdate` gates this set on `features.e2eTest ===
+ * "playwright"`; they must never land on a project whose
+ * feature set doesn't ship e2e tests.
+ */
+export const SCAFFOLD_E2E_DEVDEPS = {
+  "@playwright/test": "^1.58.2",
+  "@wordpress/e2e-test-utils-playwright": "^1.41.0",
+  "@wordpress/env": "^10.39.0",
+  "@wordpress/scripts": "^30.0.0",
+};
+
+/**
  * Read the vendored WPDev Admin Framework version from
  * `packages/wpdev-framework/constants.php` (`WPDEV_VERSION`).
  *
@@ -349,6 +371,9 @@ export function getDepVersions() {
     for (const name of REQUIRED_WPDEV_PACKAGES) {
       const v = readKitPackageVersion(name);
       if (v) m.set(name, v);
+    }
+    for (const [name, range] of Object.entries(SCAFFOLD_E2E_DEVDEPS)) {
+      m.set(name, range);
     }
     for (const name of REQUIRED_COMPOSER_ENTRIES) {
       const v = readKitComposerDep(name);

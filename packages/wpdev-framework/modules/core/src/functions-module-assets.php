@@ -18,6 +18,7 @@ use WPDevFramework\Core\Module_Loader;
  * @param string $path Path.
  * @return string
  */
+if ( ! function_exists( 'wpdev_normalize_path' ) ) {
 function wpdev_normalize_path( $path ) {
 
 	if ( function_exists( 'wp_normalize_path' ) ) {
@@ -26,7 +27,9 @@ function wpdev_normalize_path( $path ) {
 
 	return str_replace( '\\', '/', (string) $path );
 
-} // end wpdev_normalize_path;
+}
+}
+ // end wpdev_normalize_path;
 
 /**
  * Whether a path is the same as or nested under a root directory.
@@ -37,6 +40,7 @@ function wpdev_normalize_path( $path ) {
  * @param string $root Root directory.
  * @return bool
  */
+if ( ! function_exists( 'wpdev_path_is_within' ) ) {
 function wpdev_path_is_within( $path, $root ) {
 
 	$path = wpdev_normalize_path( $path );
@@ -44,7 +48,9 @@ function wpdev_path_is_within( $path, $root ) {
 
 	return $path === $root || strncmp( $path, $root . '/', strlen( $root . '/' ) ) === 0;
 
-} // end wpdev_path_is_within;
+}
+}
+ // end wpdev_path_is_within;
 
 /**
  * Return URL for a module asset, falling back to plugin assets/.
@@ -56,6 +62,7 @@ function wpdev_path_is_within( $path, $root ) {
  * @param string $assets_dir Subdirectory under assets/ (js, css, img).
  * @return string
  */
+if ( ! function_exists( 'wpdev_get_module_asset_url' ) ) {
 function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
 
 	$raw_asset = $asset;
@@ -174,7 +181,9 @@ function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
 	 */
 	return apply_filters( 'wpdev_module_asset_url', $url, $module_id, $relative_from_module, $module_root );
 
-} // end wpdev_get_module_asset_url;
+}
+}
+ // end wpdev_get_module_asset_url;
 
 /**
  * Register or enqueue a script from a module assets directory.
@@ -188,6 +197,7 @@ function wpdev_get_module_asset_url( $module_id, $asset, $assets_dir = 'js' ) {
  * @param bool   $enqueue        True to enqueue; false to register only.
  * @return void
  */
+if ( ! function_exists( 'wpdev_enqueue_module_script' ) ) {
 function wpdev_enqueue_module_script( $module_id, $handle, $asset, $deps = array(), $enqueue = false ) {
 
 	$src = wpdev_get_module_asset_url( $module_id, $asset, 'js' );
@@ -200,7 +210,9 @@ function wpdev_enqueue_module_script( $module_id, $handle, $asset, $deps = array
 		wp_enqueue_script( $handle );
 	}
 
-} // end wpdev_enqueue_module_script;
+}
+}
+ // end wpdev_enqueue_module_script;
 
 /**
  * Register a module views directory for template resolution.
@@ -211,11 +223,14 @@ function wpdev_enqueue_module_script( $module_id, $handle, $asset, $deps = array
  * @param string|null $path      Optional absolute views root.
  * @return void
  */
+if ( ! function_exists( 'wpdev_register_module_views' ) ) {
 function wpdev_register_module_views( $module_id, $path = null ) {
 
 	\WPDevFramework\Core\Module_View_Registry::register( $module_id, $path );
 
-} // end wpdev_register_module_views;
+}
+}
+ // end wpdev_register_module_views;
 
 /**
  * Return the license gate implementation.
@@ -224,6 +239,7 @@ function wpdev_register_module_views( $module_id, $path = null ) {
  *
  * @return \WPDevFramework\Core\Contracts\License_Gate
  */
+if ( ! function_exists( 'wpdev_license_gate' ) ) {
 function wpdev_license_gate() {
 
 	/**
@@ -243,4 +259,6 @@ function wpdev_license_gate() {
 
 	return apply_filters( 'wpdev_license_gate', $default );
 
-} // end wpdev_license_gate;
+}
+}
+ // end wpdev_license_gate;

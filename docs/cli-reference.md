@@ -323,8 +323,18 @@ wpdev update [dir] [flags]
 Calls `planUpdate(dir, toVersion)` and prints JSON plan:
 
 - `migrations` — version steps that would run
-- `depChanges` — npm and Composer add/remove/bump diffs
+- `depChanges` — npm and Composer add/remove/bump diffs, gated by the
+  manifest's `features` (a `js: "none"` project is never offered the JS
+  toolchain; the e2e npm set only with `e2eTest: "playwright"`)
 - `noop: true` when already at or past target version
+
+### Target version resolution
+
+Without `--to`, the target is the **latest registered migration**
+(`latestMigrationVersion()`), not the engine package version: a project at
+or above that version has consumed the whole migration chain. An explicit
+`_kit` entry in an injected registry takes precedence; a dependency range
+from the registry is never used as a target.
 
 ### Apply (`--run`)
 

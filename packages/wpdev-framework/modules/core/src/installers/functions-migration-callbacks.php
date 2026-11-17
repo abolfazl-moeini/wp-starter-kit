@@ -18,13 +18,16 @@ defined( 'ABSPATH' ) || exit;
  *
  * @return array<string, callable>
  */
+if ( ! function_exists( 'wpdev_migration_callbacks' ) ) {
 function wpdev_migration_callbacks() {
 
 	static $callbacks = array();
 
 	return $callbacks;
 
-} // end wpdev_migration_callbacks;
+}
+}
+ // end wpdev_migration_callbacks;
 
 /**
  * Register a migration callback for a given installer slug.
@@ -39,6 +42,7 @@ function wpdev_migration_callbacks() {
  * @param callable $callback Callback that performs the migration step.
  * @return bool True when the callback was registered.
  */
+if ( ! function_exists( 'wpdev_register_migration' ) ) {
 function wpdev_register_migration( $slug, $callback ) {
 
 	$slug = sanitize_key( (string) $slug );
@@ -53,7 +57,9 @@ function wpdev_register_migration( $slug, $callback ) {
 
 	return true;
 
-} // end wpdev_register_migration;
+}
+}
+ // end wpdev_register_migration;
 
 /**
  * Run a registered migration callback for the given slug.
@@ -67,6 +73,7 @@ function wpdev_register_migration( $slug, $callback ) {
  * @param string $slug Installer slug.
  * @return bool True when a callback ran.
  */
+if ( ! function_exists( 'wpdev_run_migration_callback' ) ) {
 function wpdev_run_migration_callback( $slug ) {
 
 	$slug     = sanitize_key( (string) $slug );
@@ -89,7 +96,9 @@ function wpdev_run_migration_callback( $slug ) {
 
 	return true;
 
-} // end wpdev_run_migration_callback;
+}
+}
+ // end wpdev_run_migration_callback;
 
 /**
  * Reset the migration registry (unit tests).
@@ -98,8 +107,11 @@ function wpdev_run_migration_callback( $slug ) {
  *
  * @return void
  */
+if ( ! function_exists( 'wpdev_reset_migration_callbacks' ) ) {
 function wpdev_reset_migration_callbacks() {
 
 	$GLOBALS['_wpdev_migration_callbacks'] = array();
 
-} // end wpdev_reset_migration_callbacks;
+}
+}
+ // end wpdev_reset_migration_callbacks;

@@ -19,6 +19,7 @@ defined( 'ABSPATH' ) || exit;
  * @param string|null $context Optional context: network, user, site.
  * @return bool
  */
+if ( ! function_exists( 'wpdev_user_can' ) ) {
 function wpdev_user_can( $cap, $context = null ) {
 
 	if ( ! is_user_logged_in() ) {
@@ -43,7 +44,9 @@ function wpdev_user_can( $cap, $context = null ) {
 
 	return current_user_can( $cap );
 
-} // end wpdev_user_can;
+}
+}
+ // end wpdev_user_can;
 
 /**
  * Resolve the capability registered for an admin page slug.
@@ -54,11 +57,14 @@ function wpdev_user_can( $cap, $context = null ) {
  * @param string|null $context   Optional: network, user, site.
  * @return string|null
  */
+if ( ! function_exists( 'wpdev_page_capability' ) ) {
 function wpdev_page_capability( $page_slug, $context = null ) {
 
 	return Capability_Registry::capability_for_page( $page_slug, $context );
 
-} // end wpdev_page_capability;
+}
+}
+ // end wpdev_page_capability;
 
 /**
  * Resolve the capability required for the current admin panel context.
@@ -68,8 +74,11 @@ function wpdev_page_capability( $page_slug, $context = null ) {
  * @param array<string,string>|null $supported_panels Panel => capability map.
  * @return string
  */
+if ( ! function_exists( 'wpdev_resolve_admin_capability' ) ) {
 function wpdev_resolve_admin_capability( $supported_panels = null ) {
 
 	return Capability_Registry::resolve_for_context( $supported_panels );
 
-} // end wpdev_resolve_admin_capability;
+}
+}
+ // end wpdev_resolve_admin_capability;

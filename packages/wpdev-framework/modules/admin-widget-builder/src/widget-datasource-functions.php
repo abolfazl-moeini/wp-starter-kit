@@ -19,11 +19,14 @@ defined( 'ABSPATH' ) || exit;
  * @param callable $callback Callback.
  * @return void
  */
+if ( ! function_exists( 'wpdev_register_widget_datasource' ) ) {
 function wpdev_register_widget_datasource( $id, $callable, $replace = true ) {
 
 	return Widget_Datasource_Registry::register( $id, $callable, $replace );
 
-} // end wpdev_register_widget_datasource;
+}
+}
+ // end wpdev_register_widget_datasource;
 
 /**
  * Whether a widget datasource is registered.
@@ -33,11 +36,14 @@ function wpdev_register_widget_datasource( $id, $callable, $replace = true ) {
  * @param string $id Datasource slug.
  * @return bool
  */
+if ( ! function_exists( 'wpdev_has_widget_datasource' ) ) {
 function wpdev_has_widget_datasource( $id ) {
 
 	return Widget_Datasource_Registry::has( $id );
 
-} // end wpdev_has_widget_datasource;
+}
+}
+ // end wpdev_has_widget_datasource;
 
 /**
  * List registered widget datasources.
@@ -46,11 +52,14 @@ function wpdev_has_widget_datasource( $id ) {
  *
  * @return array<string, callable>
  */
+if ( ! function_exists( 'wpdev_list_widget_datasources' ) ) {
 function wpdev_list_widget_datasources() {
 
 	return Widget_Datasource_Registry::all();
 
-} // end wpdev_list_widget_datasources;
+}
+}
+ // end wpdev_list_widget_datasources;
 
 /**
  * Unregister a widget datasource.
@@ -60,11 +69,14 @@ function wpdev_list_widget_datasources() {
  * @param string $id Datasource slug.
  * @return void
  */
+if ( ! function_exists( 'wpdev_unregister_widget_datasource' ) ) {
 function wpdev_unregister_widget_datasource( $id ) {
 
 	Widget_Datasource_Registry::unregister( $id );
 
-} // end wpdev_unregister_widget_datasource;
+}
+}
+ // end wpdev_unregister_widget_datasource;
 
 /**
  * Resolve a widget datasource.
@@ -75,8 +87,11 @@ function wpdev_unregister_widget_datasource( $id ) {
  * @param array<string, mixed> $context Optional context.
  * @return mixed
  */
+if ( ! function_exists( 'wpdev_widget_datasource' ) ) {
 function wpdev_widget_datasource( $id, array $context = array() ) {
 
 	return Widget_Datasource_Registry::resolve( $id, $context );
 
-} // end wpdev_widget_datasource;
+}
+}
+ // end wpdev_widget_datasource;

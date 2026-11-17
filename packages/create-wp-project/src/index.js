@@ -82,6 +82,7 @@ import {
   selectMigrations,
   runMigrations,
   compareSemver,
+  latestMigrationVersion,
 } from "./migrations/index.js";
 //
 // Phase 24.7–24.10 — planUpdate, doctor, getDepVersions.
@@ -674,6 +675,7 @@ export {
   selectMigrations,
   runMigrations,
   compareSemver,
+  latestMigrationVersion,
   // Phase 24.7–24.10 — plan, doctor, dep registry.
   planUpdate,
   doctorProject,

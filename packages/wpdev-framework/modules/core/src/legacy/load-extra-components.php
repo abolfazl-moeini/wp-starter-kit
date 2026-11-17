@@ -22,6 +22,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * @return void
  */
+if ( ! function_exists( 'wpdev_load_extra_components' ) ) {
 function wpdev_load_extra_components() {
 
 	if ( ! \WPDevFramework\Core\Service_Registry::has( 'tour' ) ) {
@@ -67,4 +68,6 @@ function wpdev_load_extra_components() {
 
 	// Framework settings tab: admin.php?page=wpdev-settings&tab=whitelabel
 	\WPDevFramework\Whitelabel::get_instance();
-} // end wpdev_load_extra_components;
+}
+}
+ // end wpdev_load_extra_components;

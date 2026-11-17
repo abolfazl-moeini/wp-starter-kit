@@ -15,6 +15,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * @return void
  */
+if ( ! function_exists( 'wpdev_load_legacy_monolith_admin_pages' ) ) {
 function wpdev_load_legacy_monolith_admin_pages() {
 
 	new \WPDevFramework\Admin_Pages\Checkout_Form_List_Admin_Page();
@@ -55,4 +56,6 @@ function wpdev_load_legacy_monolith_admin_pages() {
 	new \WPDevFramework\Admin_Pages\Customer_Panel\Template_Switching_Admin_Page();
 	new \WPDevFramework\Tax\Dashboard_Taxes_Tab();
 
-} // end wpdev_load_legacy_monolith_admin_pages;
+}
+}
+ // end wpdev_load_legacy_monolith_admin_pages;

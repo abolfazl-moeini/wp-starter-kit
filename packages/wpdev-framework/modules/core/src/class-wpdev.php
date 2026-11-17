@@ -18,6 +18,7 @@ defined('ABSPATH') || exit;
  * @package WPDev
  * @since 2.0.0
  */
+if ( ! ( class_exists( 'WPDev', false ) || interface_exists( 'WPDev', false ) || trait_exists( 'WPDev', false ) ) ) {
 final class WPDev {
 
 	use \WPDevFramework\Traits\Singleton, \WPDevFramework\Traits\WPDev_Deprecated;
@@ -375,4 +376,6 @@ final class WPDev {
 
 	} // end load_managers;
 
-} // end class WPDev;
+}
+}
+ // end class WPDev;

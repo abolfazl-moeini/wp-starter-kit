@@ -472,7 +472,7 @@ function auditCoexistence(root, artifactSymbols, artifactAliasUsages, pluginsDir
     .filter((dir) => {
       const base = path.basename(dir);
       if (path.resolve(dir) === path.resolve(root) || base === path.basename(root)) return false;
-      // Skip dev/source pairs of the same plugin (e.g. 'nikamooz-dev' vs 'nikamooz')
+      // Skip dev/source pairs of the same plugin (e.g. 'sample-plugin-dev' vs 'sample-plugin')
       if (base.replace(/-dev$/, "") === currentSlug.replace(/-dev$/, "")) return false;
       // Inlined WPDev framework closure: 'wpdev' is the framework provider being inlined,
       // and runtime guards (!function_exists / !class_exists) ensure non-colliding coexistence.

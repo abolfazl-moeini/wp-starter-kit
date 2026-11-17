@@ -17,6 +17,7 @@ defined( 'ABSPATH' ) || exit;
  * @param string $manager_class Manager FQCN.
  * @return void
  */
+if ( ! function_exists( 'wpdev_maybe_boot_manager' ) ) {
 function wpdev_maybe_boot_manager( $module_id, $manager_class ) {
 
 	if ( function_exists( 'wpdev_module_boots_managers' ) && wpdev_module_boots_managers( $module_id ) ) {
@@ -27,13 +28,16 @@ function wpdev_maybe_boot_manager( $module_id, $manager_class ) {
 		$manager_class::get_instance();
 	}
 
-} // end wpdev_maybe_boot_manager;
+}
+}
+ // end wpdev_maybe_boot_manager;
 
 /**
  * Boot framework managers only (domain managers load from examples).
  *
  * @return void
  */
+if ( ! function_exists( 'wpdev_load_managers' ) ) {
 function wpdev_load_managers() {
 
 	if ( ! apply_filters( 'wpdev_module_enabled', true, 'core' ) ) {
@@ -44,4 +48,6 @@ function wpdev_load_managers() {
 		WPDevFramework\Views::get_instance();
 	}
 
-} // end wpdev_load_managers;
+}
+}
+ // end wpdev_load_managers;

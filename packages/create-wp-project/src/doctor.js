@@ -39,7 +39,10 @@ import {
 } from "./features.js";
 import { getDepVersions } from "./dep-versions.js";
 import { getOwnedPathsForFeature } from "./generators/index.js";
-import { getMaxKnownSchema } from "./migrations/index.js";
+import {
+  getMaxKnownSchema,
+  latestMigrationVersion,
+} from "./migrations/index.js";
 import { projectConfigToAnswers } from "./project-config-io.js";
 import { validateProjectConfig } from "./validate-config.js";
 
@@ -338,7 +341,15 @@ export function doctorProject(dir) {
   const project =
     typeof manifest.kitVersion === "string" ? manifest.kitVersion : null;
   if (project && installed !== "0.0.0") {
-    if (compareSemver(project, installed) > 0) {
+    // A project at/above the latest registered migration has
+    // consumed the WHOLE migration chain — it is current even
+    // when the engine's package version lags the migration
+    // versions (package releases and migrations drift on
+    // purpose). Only a project BETWEEN the package version and
+    // the migration chain tip is genuinely stale.
+    const consumedAllMigrations =
+      compareSemver(project, latestMigrationVersion()) >= 0;
+    if (!consumedAllMigrations && compareSemver(project, installed) > 0) {
       result.warnings.push(
         `project manifest kitVersion (${project}) is newer than the installed kit (${installed}) — run wpdev update`,
       );

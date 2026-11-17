@@ -36,6 +36,7 @@ require_once __DIR__ . '/src/class-bulk-action-pipeline.php';
  * @since 2.15.1
  * @return void
  */
+if ( ! function_exists( 'wpdev_table_builder_heal_screen_redirect' ) ) {
 function wpdev_table_builder_heal_screen_redirect() {
 
 	if ( ! is_admin() || ( function_exists( 'wp_doing_ajax' ) && wp_doing_ajax() ) ) {
@@ -68,5 +69,7 @@ function wpdev_table_builder_heal_screen_redirect() {
 		}
 	}
 
-} // end wpdev_table_builder_heal_screen_redirect;
+}
+}
+ // end wpdev_table_builder_heal_screen_redirect;
 add_action( 'admin_init', 'wpdev_table_builder_heal_screen_redirect', 1 );

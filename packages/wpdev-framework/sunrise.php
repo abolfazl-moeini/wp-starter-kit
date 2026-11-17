@@ -108,6 +108,7 @@ if ( '' !== $wpdev_mercator && is_readable( $wpdev_mercator ) ) {
  * @since 2.0.0
  * @return void
  */
+if ( ! function_exists( 'wpdev_remove_sunrise_warning' ) ) {
 function wpdev_remove_sunrise_warning() {
 
 	if ( function_exists( 'wpdev' ) === false) {
@@ -124,6 +125,8 @@ function wpdev_remove_sunrise_warning() {
 
 	} // end if;
 
-} // end wpdev_remove_sunrise_warning;
+}
+}
+ // end wpdev_remove_sunrise_warning;
 
 // WPDev Ends #

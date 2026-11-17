@@ -321,8 +321,15 @@ export async function assembleProfileSCandidate(options = {}) {
   const bootstrapFile = resolveBootstrapFile();
   // Artifact root identity = the LIVE plugin folder name (WordPress uses the
   // folder for the active_plugins option; zipping under a different root would
-  // orphan the site's activation state on deploy).
-  const artifactRootName = path.basename(devDir);
+  // orphan the site's activation state on deploy). When devDir is *-dev, the live
+  // folder name is the slug without '-dev' (e.g. tamland-core).
+  const artifactRootName =
+    options.deployDirectoryName ||
+    resolvedSource.entry?.deployDirectoryName ||
+    (consumer && !consumer.endsWith("-dev") ? consumer : null) ||
+    (path.basename(devDir).endsWith("-dev")
+      ? path.basename(devDir).slice(0, -4)
+      : path.basename(devDir));
 
   const stagingRoot = await (await import("node:fs/promises")).mkdtemp(path.join(os.tmpdir(), `profile-s-${consumer}-`));
   const stagingPlugin = path.join(stagingRoot, artifactRootName);
@@ -925,7 +932,7 @@ export async function assembleProfileSCandidate(options = {}) {
       const tempTargetDir = path.join(outputDir, `.${consumer}.dist-tmp-${Date.now()}`);
       await cp(stagingPlugin, tempTargetDir, { recursive: true });
       if (fs.existsSync(targetDir)) {
-        await rm(targetDir, { recursive: true, force: true });
+        await rm(targetDir, { recursive: true, force: true, maxRetries: 3, retryDelay: 100 });
       }
       await fs.promises.rename(tempTargetDir, targetDir);
     }

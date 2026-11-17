@@ -11,6 +11,7 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { doctorProject } from "../../packages/create-wp-project/src/doctor.js";
+import { latestMigrationVersion } from "../../packages/create-wp-project/src/migrations/index.js";
 
 const ROOT = process.cwd();
 const WPDev = join(ROOT, "packages/cli/bin/wpdev.js");
@@ -103,8 +104,6 @@ describe("smoke — full-featured project (P7-T2)", () => {
     expect(report.errors).toEqual([]);
   });
 
-
-
   test("wpdev set phpMinVersion succeeds", () => {
     const r = runWpdev(["set", "phpMinVersion", "8.1"], SMOKE_DIR);
     expect(r.status).toBe(0);
@@ -112,12 +111,18 @@ describe("smoke — full-featured project (P7-T2)", () => {
     expect(m.features.phpMinVersion).toBe("8.1");
   });
 
-  test("wpdev update --run --force is idempotent at 1.0.0", () => {
+  test("wpdev update --run --force reaches the latest migration and is idempotent", () => {
+    // Default target = latest registered migration. The seeded
+    // 1.0.0 project is behind it, so the first run APPLIES the
+    // remaining migrations; the second run must then be the
+    // "already current" no-op.
     const r = runWpdev(["update", "--run", "--force"], SMOKE_DIR);
     expect(r.status).toBe(0);
-    expect(r.stdout).toMatch(/nothing to do|no changes/i);
+    expect(readManifest(SMOKE_DIR).kitVersion).toBe(latestMigrationVersion());
     const again = runWpdev(["update", "--run", "--force"], SMOKE_DIR);
     expect(again.status).toBe(0);
+    expect(again.stdout).toMatch(/nothing to do|no changes|already/i);
+    expect(readManifest(SMOKE_DIR).kitVersion).toBe(latestMigrationVersion());
   });
 });
 

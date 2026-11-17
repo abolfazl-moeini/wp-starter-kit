@@ -80,6 +80,7 @@ import * as path from "node:path";
 import { readManifest } from "./manifest.js";
 import {
   CONSUMER_RUNTIME_WPDEV_PACKAGES,
+  SCAFFOLD_E2E_DEVDEPS,
   getDepVersions,
 } from "./dep-versions.js";
 import { updateJsonFile } from "./json-utils.js";
@@ -167,19 +168,74 @@ function diffDeps(projectDeps, registry) {
 }
 
 /**
+ * Gate the registry by the project's features so a diff only
+ * offers deps the project's feature set actually ships. The
+ * npm toolchain is feature-driven in the scaffold (a
+ * `js: "none"` template emits a lean package.json with no
+ * build/lint chain), so offering those deps as `add` on a
+ * js-none project would pollute it on every `wpdev update`.
+ *
+ * Gate rules:
+ *  - Composer entries + the `wpdevFramework` marker stay — the
+ *    PHP toolchain is universal across kit projects.
+ *  - The e2e npm set ships only with `e2eTest: "playwright"`.
+ *  - husky/lint-staged ship only when `husky != "off"`.
+ *  - Every other npm entry ships only when `js != "none"`.
+ *
+ * A `features`-less call (null/undefined) keeps the unfiltered
+ * registry — back-compat for callers without a manifest at
+ * hand.
+ *
+ * @param {Map<string,string>} registry
+ * @param {Record<string,string>|null|undefined} features
+ * @returns {Map<string,string>}
+ */
+function registryForFeatures(registry, features) {
+  if (!features || typeof features !== "object") return registry;
+  const filtered = new Map();
+  for (const [name, range] of registry) {
+    if (depKind(name) !== "package") {
+      filtered.set(name, range);
+      continue;
+    }
+    if (E2E_NPM_PACKAGES.has(name)) {
+      if (features.e2eTest === "playwright") filtered.set(name, range);
+      continue;
+    }
+    if (HUSKY_NPM_PACKAGES.has(name)) {
+      if (features.husky !== "off") filtered.set(name, range);
+      continue;
+    }
+    if (features.js === "none") continue;
+    filtered.set(name, range);
+  }
+  return filtered;
+}
+
+/** npm deps that only exist when `e2eTest` is "playwright". */
+const E2E_NPM_PACKAGES = new Set(Object.keys(SCAFFOLD_E2E_DEVDEPS));
+
+/** npm deps that only exist when `husky` is not "off". */
+const HUSKY_NPM_PACKAGES = new Set(["husky", "lint-staged"]);
+
+/**
  * Build the depChanges object for the plan: package + composer
- * sides, each with `{ add, remove, bump }`. Files that don't
- * exist contribute an empty `projectDeps` (so every registry
- * entry shows up as `add`).
+ * sides, each with `{ add, remove, bump }`, gated by the
+ * project's feature set. Files that don't exist contribute an
+ * empty `projectDeps` (so every gated registry entry shows up
+ * as `add`).
  *
  * @param {string} dir
+ * @param {Record<string,string>|null|undefined} [features]
+ *   the manifest's `features` map; pass null to diff against
+ *   the unfiltered registry (back-compat).
  * @returns {{
  *   package: { add: Object, remove: Object, bump: Object },
  *   composer: { add: Object, remove: Object, bump: Object }
  * }}
  */
-export function computeDepChanges(dir) {
-  const registry = getDepVersions();
+export function computeDepChanges(dir, features = null) {
+  const registry = registryForFeatures(getDepVersions(), features);
 
   const pkg = readJsonOrNull(path.join(dir, PACKAGE_JSON_FILENAME));
   // npm's `dependencies` and `devDependencies` are BOTH
@@ -407,10 +463,12 @@ export function planUpdate(dir, toVersion) {
     description: m.description,
   }));
 
-  // 4. Compute the dep diff. Files that don't exist
-  //    contribute an empty dep set → the registry's entries
-  //    all show up as `add`.
-  const depChanges = computeDepChanges(dir);
+  // 4. Compute the dep diff, gated by the project's features so
+  //    the plan never offers deps the project's feature set
+  //    doesn't ship (e.g. the JS toolchain on a js:none project).
+  //    Files that don't exist contribute an empty dep set → the
+  //    (gated) registry's entries all show up as `add`.
+  const depChanges = computeDepChanges(dir, manifest.features);
 
   return {
     ok: true,
@@ -435,7 +493,14 @@ function semverLte(a, b) {
   return compareTriples(parseTriples(a), parseTriples(b)) <= 0;
 }
 function parseTriples(v) {
+  // Strip npm range prefixes ("^", "~", "=", "v") first — the
+  // update flow legitimately receives registry-style targets
+  // like "^5.6.0", and parseInt("^5") is NaN (→ 0), which
+  // silently turned such a target into [0, 5, 6] and skipped
+  // every migration ≥ 1.0.0.
   return String(v)
+    .trim()
+    .replace(/^[v=~^]+/, "")
     .split(".")
     .slice(0, 3)
     .map((n) => parseInt(n, 10) || 0);

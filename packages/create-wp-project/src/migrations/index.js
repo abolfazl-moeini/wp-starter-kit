@@ -42,7 +42,6 @@ import * as path from "node:path";
 import {
   readManifest,
   writeManifest,
-  buildManifest,
   withMigrationTrail,
   MANIFEST_SCHEMA,
 } from "../manifest.js";
@@ -167,14 +166,59 @@ export function compareSemver(a, b) {
       `compareSemver: both arguments must be strings (got ${typeof a}, ${typeof b})`,
     );
   }
-  const aParts = a.split(".").map((n) => parseInt(n, 10));
-  const bParts = b.split(".").map((n) => parseInt(n, 10));
+  const aParts = stripVersionRangePrefixes(a)
+    .split(".")
+    .map((n) => parseInt(n, 10));
+  const bParts = stripVersionRangePrefixes(b)
+    .split(".")
+    .map((n) => parseInt(n, 10));
   for (let i = 0; i < 3; i++) {
     const av = aParts[i] || 0;
     const bv = bParts[i] || 0;
     if (av !== bv) return av - bv;
   }
   return 0;
+}
+
+/**
+ * Strip npm range prefixes ("^", "~", "=" and the "v" version
+ * tag) so a registry-style value like "^5.6.0" parses as
+ * [5, 6, 0] instead of [0, 5, 6] (parseInt("^5") is NaN).
+ * The update flow legitimately receives range-shaped targets —
+ * the dep registry stores ranges verbatim — so the comparator
+ * must tolerate them. Bare versions pass through unchanged.
+ *
+ * @param {string} version  a bare or range-prefixed semver string
+ * @returns {string} the bare "major.minor.patch" string
+ */
+function stripVersionRangePrefixes(version) {
+  return version.trim().replace(/^[v=~^]+/, "");
+}
+
+/**
+ * The highest version registered in the migration chain — the
+ * update engine's real "latest kit version". A project whose
+ * manifest `kitVersion` is >= this value has consumed every
+ * known migration; there is nothing newer to update to, even
+ * when the engine's own package version lags the migration
+ * chain (package releases and migration versions drift on
+ * purpose — migrations may land across several package
+ * releases).
+ *
+ * The CLI's default `wpdev update` target resolves to this
+ * (unless the caller passes `--to=` or the injected registry
+ * carries an explicit `_kit` entry). It must never fall back to
+ * a dep range from `getDepVersions()` — a dependency range is
+ * not a kit version.
+ *
+ * @returns {string} the latest registered migration version,
+ *                   or "0.0.0" when the registry is empty.
+ */
+export function latestMigrationVersion() {
+  const migrations = getMigrations();
+  return migrations.length > 0
+    ? migrations[migrations.length - 1].version
+    : "0.0.0";
 }
 
 /* -------------------------------------------------------------------- */
@@ -333,7 +377,14 @@ export async function runMigrations(dir, { from, to } = {}) {
   const warnings = [];
 
   // 5. Schema migrations (if manifest schema is behind kit).
-  const currentSchema =
+  //    A LET, not a const: each applied step ADVANCES the
+  //    running schema so a multi-step chain (0→1→2) walks the
+  //    whole path. The previous code compared every step against
+  //    the ORIGINAL schema, so a schema-0 project only ever ran
+  //    the 0→1 step — and the old buildManifest final-rebuild
+  //    masked that by force-stamping `schema: MANIFEST_SCHEMA`
+  //    without actually running the 1→2 migration.
+  let currentSchema =
     typeof manifest.schema === "number" ? manifest.schema : MANIFEST_SCHEMA;
   for (const sm of SCHEMA_MIGRATIONS) {
     if (currentSchema !== sm.fromSchema) continue;
@@ -359,6 +410,7 @@ export async function runMigrations(dir, { from, to } = {}) {
       };
     }
     if (result && result.warning) warnings.push(result.warning);
+    currentSchema = sm.toSchema;
   }
 
   // 6. Select the version migrations to run.
@@ -392,13 +444,24 @@ export async function runMigrations(dir, { from, to } = {}) {
     if (result && result.warning) warnings.push(result.warning);
   }
 
-  // 8. Apply dependency version bumps from the kit registry.
+  // 8. Re-read the post-migration manifest: migrations may have
+  //    patched glue on disk (e.g. 0.2.0 vendored->deps distMode
+  //    flip, feature backfills). Both the dep diff and the final
+  //    write below must see THAT state, not the pre-run one.
+  const after = readManifest(dir) || manifest;
+  const migratedAt = new Date().toISOString();
+
+  // 9. Apply dependency version bumps from the kit registry,
+  //    gated by the project's features so the run never injects
+  //    a toolchain the feature set doesn't ship (e.g. the JS
+  //    build chain on a js:"none" project, or the e2e set
+  //    without e2eTest:"playwright").
   let appliedDepChanges = {
     package: { add: {}, remove: {}, bump: {} },
     composer: { add: {}, remove: {}, bump: {} },
   };
   try {
-    const depChanges = computeDepChanges(dir);
+    const depChanges = computeDepChanges(dir, after.features || null);
     appliedDepChanges = await applyDepChanges(dir, depChanges, {
       applyRemoves: false,
     });
@@ -411,20 +474,17 @@ export async function runMigrations(dir, { from, to } = {}) {
     };
   }
 
-  // 9. All migrations succeeded — bump the manifest's kitVersion.
-  //    We rebuild the manifest to preserve the existing shape
-  //    (features, distMode) and only swap kitVersion + generatedAt.
-  //    Re-read after migrations in case a migration (e.g. 0.2.0
-  //    vendored->deps) patched distMode or other glue on disk.
-  const after = readManifest(dir) || manifest;
-  const migratedAt = new Date().toISOString();
+  // 10. All migrations succeeded — bump the manifest's kitVersion.
+  //     MERGE into the post-migration manifest instead of
+  //     rebuilding it: buildManifest only emits the fields it is
+  //     explicitly passed, so a rebuild here would silently drop
+  //     branding fields (slug, globalName, textDomain, hookPrefix,
+  //     restNamespace, …) and any extra keys the project carries
+  //     (buildEngine, docs, build). The merge swaps kitVersion +
+  //     generatedAt in place and preserves everything else
+  //     verbatim, including key order.
   const nextManifest = withMigrationTrail(
-    buildManifest({
-      kitVersion: to,
-      features: after.features || manifest.features || {},
-      distMode: after.distMode || manifest.distMode || "deps",
-      generatedAt: migratedAt,
-    }),
+    { ...after, kitVersion: to, generatedAt: migratedAt },
     {
       previousKitVersion: manifest.kitVersion,
       migratedAt,
