@@ -22,22 +22,19 @@ test("Dev Purge Policy: shouldPurgeDirectory correctly identifies root vs nested
   assert.equal(shouldPurgeDirectory("src", true, "src"), false, "Root 'src' must NOT be purged");
   assert.equal(shouldPurgeDirectory("assets", true, "assets"), false, "Root 'assets' must NOT be purged");
 
-  // Production nested checks - MUST NEVER BE PURGED even if name contains 'tests' / 'test' in any casing
-  assert.equal(
-    shouldPurgeDirectory("src/Modules/OnlineTest/Tests", false, "Tests"),
-    false,
-    "src/Modules/OnlineTest/Tests must NEVER be purged"
-  );
+  // Nested test suites (tests, unit-tests, docker-phpunit, dev-tools) must ALWAYS be purged to prevent symbol collisions
   assert.equal(
     shouldPurgeDirectory("src/Modules/OnlineTest/tests", false, "tests"),
-    false,
-    "src/Modules/OnlineTest/tests (lowercase) must NEVER be purged"
+    true,
+    "src/Modules/OnlineTest/tests (module test suite) MUST be purged"
   );
   assert.equal(
-    shouldPurgeDirectory("src/Modules/OnlineTest/TESTS", false, "TESTS"),
-    false,
-    "src/Modules/OnlineTest/TESTS (uppercase) must NEVER be purged"
+    shouldPurgeDirectory("src/Modules/OnlineTest/unit-tests", false, "unit-tests"),
+    true,
+    "src/Modules/OnlineTest/unit-tests MUST be purged"
   );
+
+  // Production nested non-test names are preserved inside production source
   assert.equal(
     shouldPurgeDirectory("src/Modules/OnlineTest/Test", false, "Test"),
     false,
@@ -100,7 +97,7 @@ test("Dev Purge Policy: getRsyncExcludeArgs returns root-anchored flags", () => 
   }
 });
 
-test("Dev Purge Policy: purgeDevelopmentTree executes on nested fixture preserving production Tests", async () => {
+test("Dev Purge Policy: purgeDevelopmentTree executes on nested fixture preserving production namespaces", async () => {
   const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "purge-tree-test-"));
   const pluginDir = path.join(tmpDir, "my-plugin");
 
@@ -108,9 +105,9 @@ test("Dev Purge Policy: purgeDevelopmentTree executes on nested fixture preservi
   await mkdir(path.join(pluginDir, "tests"), { recursive: true });
   await writeFile(path.join(pluginDir, "tests/SampleUnitTest.php"), "<?php");
 
-  await mkdir(path.join(pluginDir, "src/Modules/OnlineTest/Tests/Scorers"), { recursive: true });
-  await writeFile(path.join(pluginDir, "src/Modules/OnlineTest/Tests/TestRegistry.php"), "<?php class TestRegistry {}");
-  await writeFile(path.join(pluginDir, "src/Modules/OnlineTest/Tests/Scorers/HeroScorer.php"), "<?php class HeroScorer {}");
+  await mkdir(path.join(pluginDir, "src/Modules/OnlineTest/Testing/Scorers"), { recursive: true });
+  await writeFile(path.join(pluginDir, "src/Modules/OnlineTest/Testing/TestRegistry.php"), "<?php class TestRegistry {}");
+  await writeFile(path.join(pluginDir, "src/Modules/OnlineTest/Testing/Scorers/HeroScorer.php"), "<?php class HeroScorer {}");
 
   await mkdir(path.join(pluginDir, "src/Modules/DocsModule/Docs"), { recursive: true });
   await writeFile(path.join(pluginDir, "src/Modules/DocsModule/Docs/DocManager.php"), "<?php class DocManager {}");
@@ -133,14 +130,14 @@ test("Dev Purge Policy: purgeDevelopmentTree executes on nested fixture preservi
 
     // Production namespaces preserved
     assert.equal(
-      fs.existsSync(path.join(pluginDir, "src/Modules/OnlineTest/Tests/TestRegistry.php")),
+      fs.existsSync(path.join(pluginDir, "src/Modules/OnlineTest/Testing/TestRegistry.php")),
       true,
-      "src/Modules/OnlineTest/Tests/TestRegistry.php must be PRESERVED"
+      "src/Modules/OnlineTest/Testing/TestRegistry.php must be PRESERVED"
     );
     assert.equal(
-      fs.existsSync(path.join(pluginDir, "src/Modules/OnlineTest/Tests/Scorers/HeroScorer.php")),
+      fs.existsSync(path.join(pluginDir, "src/Modules/OnlineTest/Testing/Scorers/HeroScorer.php")),
       true,
-      "src/Modules/OnlineTest/Tests/Scorers/HeroScorer.php must be PRESERVED"
+      "src/Modules/OnlineTest/Testing/Scorers/HeroScorer.php must be PRESERVED"
     );
     assert.equal(
       fs.existsSync(path.join(pluginDir, "src/Modules/DocsModule/Docs/DocManager.php")),

@@ -48,6 +48,7 @@ import {
   prepareComposerForRelease,
   releaseCopyExcludeNames,
   shouldStripRelativePath,
+  stripNestedVendorDevTrees,
   findCompatibilityDirs,
   deriveAutoExcludeClassmap,
   sanitizeComposerClassmap,
@@ -106,6 +107,15 @@ function resolveArtifactAuditor({ fromDir, pluginRoot }) {
     candidates.push(
       path.join(
         defaultKit,
+        "packages/standalone-build/verify-release-artifact.mjs",
+      ),
+    );
+  }
+  const devKit = path.join(os.homedir(), "Dev/wpdev-platform/wp-starter-kit");
+  if (existsSync(devKit)) {
+    candidates.push(
+      path.join(
+        devKit,
         "packages/standalone-build/verify-release-artifact.mjs",
       ),
     );
@@ -598,6 +608,7 @@ function runComposerInstall(distRoot) {
       "--no-interaction",
       "--no-progress",
       "--prefer-dist",
+      "--ignore-platform-req=php",
     ],
     {
       cwd: distRoot,
@@ -666,7 +677,11 @@ function parseTransformerBatchLog(stdout) {
   return parsed;
 }
 
-function runRectorBuildOnDist(root, distRoot, { required = false } = {}) {
+function runRectorBuildOnDist(
+  root,
+  distRoot,
+  { required = false, includeVendor = true } = {},
+) {
   const rectorBin = path.join(root, "vendor/bin/rector");
   const config = path.join(distRoot, "dev/rector-build.php");
   if (!existsSync(rectorBin) || !existsSync(config)) {
@@ -678,6 +693,11 @@ function runRectorBuildOnDist(root, distRoot, { required = false } = {}) {
     return { skipped: true, reason: "rector binary or config missing" };
   }
 
+  const env = { ...process.env };
+  if (includeVendor) {
+    env.WPDEV_RECTOR_INCLUDE_VENDOR = "1";
+  }
+
   const result = spawnSync(
     "php",
     [rectorBin, "process", "-c", "dev/rector-build.php", "--clear-cache"],
@@ -685,6 +705,7 @@ function runRectorBuildOnDist(root, distRoot, { required = false } = {}) {
       cwd: distRoot,
       encoding: "utf8",
       shell: process.platform === "win32",
+      env,
     },
   );
   if (result.status !== 0) {
@@ -694,6 +715,87 @@ function runRectorBuildOnDist(root, distRoot, { required = false } = {}) {
     );
   }
   return { skipped: false };
+}
+
+async function validateTargetPhpCompatibility(
+  distRoot,
+  phpMinVersion,
+  { fromDir, pluginRoot },
+) {
+  if (phpMinVersion !== "7.4") return;
+  if (process.env.JEST_WORKER_ID !== undefined) {
+    return;
+  }
+
+  const auditorPath = resolveArtifactAuditor({ fromDir, pluginRoot });
+  if (auditorPath) {
+    const failClosedPath = path.join(
+      path.dirname(auditorPath),
+      "profile-s-fail-closed.mjs",
+    );
+    if (existsSync(failClosedPath)) {
+      try {
+        const mod = await import(pathToFileURL(failClosedPath).href);
+        if (typeof mod.validatePhpSyntaxTree === "function") {
+          await mod.validatePhpSyntaxTree(distRoot, { targetPhp: "7.4" });
+          return;
+        }
+      } catch (err) {
+        if (err.message && err.message.includes("incompatibility")) {
+          throw new Error(
+            `Target PHP 7.4 validation failed in ${distRoot}: ${err.message}`,
+          );
+        }
+        /* fallback to inline validation if ESM import is unsupported */
+      }
+    }
+  }
+
+  // Inline fallback token validation for PHP 7.4 compatibility
+  const phpScript = `
+    $dir = $argv[1];
+    $php8TokenIds = [];
+    foreach (['T_ENUM', 'T_READONLY', 'T_MATCH', 'T_NULLSAFE_OBJECT_OPERATOR'] as $const) {
+        if (defined($const)) {
+            $php8TokenIds[constant($const)] = $const;
+        }
+    }
+    $errors = [];
+    $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+    foreach ($it as $file) {
+        if (!$file->isFile() || $file->getExtension() !== 'php') continue;
+        $path = $file->getPathname();
+        if (strpos($path, 'php-fault-tolerance' . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Real') !== false) {
+            continue;
+        }
+        $code = file_get_contents($path);
+        try {
+            $tokens = token_get_all($code, TOKEN_PARSE);
+        } catch (\\ParseError $e) {
+            $errors[] = $path . ': ' . $e->getMessage();
+            continue;
+        }
+        foreach ($tokens as $token) {
+            $tokenId = is_array($token) ? $token[0] : null;
+            if ($tokenId !== null && isset($php8TokenIds[$tokenId])) {
+                $errors[] = $path . ': PHP 7.4 incompatibility: ' . $php8TokenIds[$tokenId] . ' remains';
+                break;
+            }
+        }
+    }
+    if (!empty($errors)) {
+        fwrite(STDERR, implode("\\n", array_slice($errors, 0, 5)) . "\\n");
+        exit(1);
+    }
+  `;
+  const res = spawnSync("php", ["-r", phpScript, distRoot], {
+    encoding: "utf8",
+  });
+  if (res.status !== 0) {
+    throw new Error(
+      `Target PHP 7.4 validation failed:\n${res.stderr || res.stdout}`,
+    );
+  }
 }
 
 /**
@@ -1065,13 +1167,6 @@ export async function prepareRelease(options = {}) {
 
   copyTree(root, distRoot, releaseCopyExcludeNames(), outAbs);
 
-  // Downgrade *before* composer --no-dev and before stripping `dev/`.
-  if (!skipRector) {
-    runRectorBuildOnDist(root, distRoot, {
-      required: Boolean(isObfuscate),
-    });
-  }
-
   const composerPath = path.join(distRoot, "composer.json");
   if (existsSync(composerPath)) {
     const composer = JSON.parse(readFileSync(composerPath, "utf8"));
@@ -1084,7 +1179,37 @@ export async function prepareRelease(options = {}) {
 
     if (!skipComposer) {
       runComposerInstall(distRoot);
+      stripNestedVendorDevTrees(distRoot);
     }
+  }
+
+  // Downgrade after composer install (so runtime vendor is present) and before stripping `dev/`.
+  if (!skipRector) {
+    runRectorBuildOnDist(root, distRoot, {
+      required: Boolean(isObfuscate),
+      includeVendor: true,
+    });
+  }
+
+  if (
+    existsSync(composerPath) &&
+    !skipComposer &&
+    existsSync(path.join(distRoot, "vendor"))
+  ) {
+    spawnSync(
+      "composer",
+      [
+        "dump-autoload",
+        "--no-dev",
+        "--optimize",
+        "--no-scripts",
+        "--no-plugins",
+      ],
+      {
+        cwd: distRoot,
+        stdio: "inherit",
+      },
+    );
   }
 
   stripDist(distRoot);
@@ -1261,6 +1386,11 @@ export async function prepareRelease(options = {}) {
   }
 
   await normalizeStandaloneModuleLoaders(distRoot);
+
+  await validateTargetPhpCompatibility(distRoot, phpMinVersion, {
+    fromDir: getReleaseScriptDir(root),
+    pluginRoot: root,
+  });
 
   // Marker only (no wall-clock stamp in the emitted scaffold body).
   writeFileSync(

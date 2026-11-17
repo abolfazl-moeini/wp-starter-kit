@@ -160,7 +160,8 @@ export function shouldPurgeDirectory(relPath, isRoot, dirName) {
       lowerName === "demo" ||
       lowerName === "demos" ||
       lowerName === "sample" ||
-      lowerName === "samples"
+      lowerName === "samples" ||
+      lowerName === "vendor"
     ) {
       return true;
     }
@@ -262,7 +263,6 @@ export async function purgeDevelopmentTree(dir, consumer = "", rootDir = null) {
  */
 export function getRsyncExcludeArgs() {
   return [
-    "--exclude=node_modules",
     "--exclude=/node_modules",
     "--exclude=/react-source",
     "--exclude=/.git",

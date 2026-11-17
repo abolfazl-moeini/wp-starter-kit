@@ -31,18 +31,73 @@ return static function (RectorConfig $rector_config, array $options = []): void 
 
     $skip = [];
 
-    if (!empty($options['include_vendor'])) {
-        // Walk every vendor subdir except the rector binary itself.
-        $dir = new DirectoryIterator($src . '/vendor');
-        foreach ($dir as $file_info) {
-            if (!$file_info->isDir() || $file_info->isDot()) {
-                continue;
+    // Parse vendor/composer/installed.json to identify dev packages and installation status.
+    $isNoDevInstalled = false;
+    $devPackages = [];
+    $installedJsonPath = $src . '/vendor/composer/installed.json';
+    if (is_file($installedJsonPath)) {
+        $installedRaw = (string) file_get_contents($installedJsonPath);
+        $installedData = json_decode($installedRaw, true);
+        if (is_array($installedData)) {
+            $isNoDevInstalled = array_key_exists('dev', $installedData) && $installedData['dev'] === false;
+            if (!empty($installedData['dev-package-names']) && is_array($installedData['dev-package-names'])) {
+                $devPackages = $installedData['dev-package-names'];
             }
-            if (in_array($file_info->getFilename(), ['rector', 'phpunit', 'phpstan'], true)) {
-                continue;
-            }
-            $skip[] = $file_info->getPathname();
         }
+    }
+
+    $includeRuntimeVendor = !empty($options['include_runtime_vendor'])
+        || !empty($options['include_vendor'])
+        || getenv('WPDEV_RECTOR_INCLUDE_VENDOR') === '1'
+        || ($isNoDevInstalled && !empty($options['auto_vendor_on_nodev']));
+
+    if ($includeRuntimeVendor && is_dir($src . '/vendor')) {
+        // Skip Composer internal autoloader and bin
+        $skip[] = $src . '/vendor/composer';
+        $skip[] = $src . '/vendor/bin';
+        $skip[] = '*/vendor/*/*/vendor/*';
+
+        // Skip any known dev packages from installed.json
+        foreach ($devPackages as $devPkg) {
+            $skip[] = $src . '/vendor/' . $devPkg;
+        }
+
+        // Defensive fallback skips for dev tooling, stubs, and polyfills
+        $devToolFallback = [
+            'rector',
+            'phpunit',
+            'phpstan',
+            'yoast',
+            'sebastian',
+            'phar-io',
+            'theseer',
+            'myclabs',
+            'doctrine',
+            'nikic',
+            'jetbrains',
+            'php-stubs',
+            'mockery',
+            'dealerdirect',
+            'squizlabs',
+            'wp-coding-standards',
+            'phpcsstandards',
+            'szepeviktor',
+        ];
+        foreach ($devToolFallback as $toolName) {
+            $skip[] = $src . '/vendor/' . $toolName;
+            $skip[] = '*/vendor/' . $toolName . '/*';
+            $skip[] = '*/vendor/*/' . $toolName . '/*';
+        }
+
+        // Polyfills should not be downgraded (they already polyfill syntax/functions)
+        $skip[] = '*/vendor/symfony/polyfill-*';
+
+        // Skip non-production code inside third-party packages
+        $skip[] = '*/vendor/*/*/tests/*';
+        $skip[] = '*/vendor/*/*/test/*';
+        $skip[] = '*/vendor/*/*/docs/*';
+        $skip[] = '*/vendor/*/*/examples/*';
+        $skip[] = '*/vendor/*/*/demo/*';
     } else {
         $skip[] = $src . '/vendor';
     }
@@ -53,6 +108,8 @@ return static function (RectorConfig $rector_config, array $options = []): void 
     $skip[] = $src . '/vendor-prefixed';
     // Dual-load Real/ tree is intentional PHP 8.1+; Stub/ is the <8.1 path.
     $skip[] = $src . '/packages/php-fault-tolerance/src/Real';
+    $skip[] = '*/php-fault-tolerance/src/Real/*';
+    $skip[] = '*/php-fault-tolerance/src/Real';
 
     if (empty($options['include_tests'])) {
         $skip[] = $src . '/tests';

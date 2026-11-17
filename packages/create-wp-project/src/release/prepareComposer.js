@@ -296,6 +296,11 @@ export function shouldStripRelativePath(relativePath) {
   const segments = normalized.split("/").filter(Boolean);
   const base = segments[segments.length - 1];
 
+  // Strip nested vendor/ directories inside path-repo packages (e.g. vendor/wpdev/pkg/vendor/...)
+  if (segments[0] === "vendor" && segments.slice(1).includes("vendor")) {
+    return true;
+  }
+
   // Any segment that is a strip directory name, or any leading dot-dir.
   for (const seg of segments) {
     if (seg.startsWith(".") && seg !== "." && seg !== "..") {
@@ -684,4 +689,67 @@ export function sanitizeComposerClassmap(pluginDir, options = {}) {
     strippedCount: stripped.length,
     stripped,
   };
+}
+
+/**
+ * Purge nested path-repo development trees (nested vendor/, tests/, docs/, examples/)
+ * inside distRoot/vendor/ immediately after composer install.
+ *
+ * @param {string} distRoot Absolute path to dist root
+ */
+export function stripNestedVendorDevTrees(distRoot) {
+  const vendorDir = path.join(distRoot, "vendor");
+  if (!fs.existsSync(vendorDir)) return;
+
+  const stack = ["vendor"];
+  const toDelete = [];
+
+  while (stack.length > 0) {
+    const rel = stack.pop();
+    const abs = path.join(distRoot, rel);
+    let entries;
+    try {
+      entries = fs.readdirSync(abs, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const childRel = `${rel}/${entry.name}`.replace(/\\/g, "/");
+      const lowerName = entry.name.toLowerCase();
+
+      // Nested vendor inside an installed package (e.g. vendor/wpdev/system-one/vendor)
+      if (childRel.split("/").slice(1).includes("vendor")) {
+        toDelete.push(childRel);
+        continue;
+      }
+
+      // Dev dirs inside vendor packages
+      if (
+        lowerName === "tests" ||
+        lowerName === "test" ||
+        lowerName === "unit-tests" ||
+        lowerName === "docs" ||
+        lowerName === "doc" ||
+        lowerName === "examples" ||
+        lowerName === "example" ||
+        lowerName === "demo" ||
+        lowerName === "demos"
+      ) {
+        toDelete.push(childRel);
+        continue;
+      }
+
+      stack.push(childRel);
+    }
+  }
+
+  // Delete deepest first
+  toDelete.sort((a, b) => b.length - a.length);
+  for (const rel of toDelete) {
+    try {
+      fs.rmSync(path.join(distRoot, rel), { recursive: true, force: true });
+    } catch {}
+  }
 }

@@ -20,7 +20,7 @@ ini_set('max_execution_time', '0');
 
 return static function (RectorConfig $rector_config): void {
     $shared = include __DIR__ . '/rector-config.php';
-    $shared($rector_config);
+    $shared($rector_config, ['auto_vendor_on_nodev' => true]);
 
     $phpMin = '7.4';
     $root = dirname(__DIR__);

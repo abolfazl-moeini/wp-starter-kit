@@ -174,20 +174,34 @@ const NAMESPACE_RE = /(?:^|\n)namespace\s+[\w\\]+;/;
 /**
  * Collect global-namespace symbols declared at top level of a PHP file.
  * Files with a namespace block are skipped (their symbols are namespaced).
+ * Symbols guarded by function_exists / class_exists are excluded (safe coexistence).
  */
-function collectGlobalSymbols(filePath, source) {
+function collectGlobalSymbols(filePath, source, rawSource = source) {
   if (NAMESPACE_RE.test(source)) return { symbols: [], hasAliasCall: false };
+  // Inline JavaScript inside PHP views declares JS globals, not PHP symbols:
+  // blank out <script> bodies that contain no PHP open tag so the global
+  // symbol regexes below only ever see real PHP declarations.
+  source = source.replace(
+    /<script\b[^>]*>([\s\S]*?)<\/script>/gi,
+    (full, body) => (body.includes("<?") ? full : "<script></script>"),
+  );
   const symbols = new Set();
   let match;
   const reDecl = new RegExp(GLOBAL_DECL_RE.source, "g");
-  while ((match = reDecl.exec(source)) !== null) symbols.add(match[2]);
+  while ((match = reDecl.exec(source)) !== null) {
+    const sym = match[2];
+    const isGuarded = new RegExp(`(?:class_exists|interface_exists|trait_exists)\\s*\\(\\s*['"](?:\\\\)?${sym}['"]`, "i").test(rawSource);
+    if (!isGuarded) symbols.add(sym);
+  }
   const reFunc = new RegExp(GLOBAL_FUNC_RE.source, "g");
   while ((match = reFunc.exec(source)) !== null) {
-    if (match[1] && !["if", "foreach", "for", "while", "switch", "function"].includes(match[1])) {
-      symbols.add(match[1]);
+    const sym = match[1];
+    if (sym && !["if", "foreach", "for", "while", "switch", "function"].includes(sym)) {
+      const isGuarded = new RegExp(`function_exists\\s*\\(\\s*['"](?:\\\\)?${sym}['"]`, "i").test(rawSource);
+      if (!isGuarded) symbols.add(sym);
     }
   }
-  return { symbols, hasAliasCall: CLASS_ALIAS_RE.test(source) };
+  return { symbols, hasAliasCall: CLASS_ALIAS_RE.test(rawSource) };
 }
 
 /** Scan one plugin folder for global symbols + class_alias usage. */
@@ -205,6 +219,10 @@ function scanPluginForCoexistence(pluginDir) {
     // except composer autoload maps which eagerly load in production.
     if (rel.startsWith("vendor/") && !rel.startsWith("vendor/composer/")) continue;
     if (rel.startsWith("node_modules/") || rel.startsWith("tests/") || rel.startsWith("dev/")) continue;
+    // Nested build outputs (dist/) are not runtime-loaded from a plugin
+    // directory; their uniquified vendor autoloader names would otherwise
+    // self-collide with the artifact being audited.
+    if (rel.startsWith("dist/") || rel === "dist") continue;
     const abs = path.join(pluginDir, rel);
     let source;
     try {
@@ -213,20 +231,25 @@ function scanPluginForCoexistence(pluginDir) {
       continue;
     }
     const stripped = stripPhpNoise(source);
-    const { symbols, hasAliasCall } = collectGlobalSymbols(abs, stripped);
+    const { symbols, hasAliasCall } = collectGlobalSymbols(abs, stripped, source);
     for (const sym of symbols) result.declares.add(sym);
     if (hasAliasCall) result.filesWithAliasCall.push(rel);
 
-    // Alias-context references: the symbol name appears as a quoted string in
-    // a file that also calls class_alias() (compat maps pass the legacy name
-    // as a variable-built string, so we scan the comment-stripped source that
-    // KEEPS string literals).
+    // Alias-context references: target of class_alias() or compat class_map entries.
     if (hasAliasCall) {
       const withStrings = stripPhpComments(source);
-      const quotedSymRe = /['"]\\?([A-Za-z_]\w*(?:\\[A-Za-z_]\w*)*)['"]/g;
+      // Explicit class_alias('Target', 'Alias') second argument
+      const directAliasRe = /class_alias\s*\([^,]+,\s*['"]\\?([A-Za-z_]\w*(?:\\[A-Za-z_]\w*)*)['"]/g;
       let m;
-      while ((m = quotedSymRe.exec(withStrings)) !== null) {
+      while ((m = directAliasRe.exec(withStrings)) !== null) {
         const name = m[1].split("\\").pop();
+        if (!result.aliasUsages.has(name)) result.aliasUsages.set(name, new Set());
+        result.aliasUsages.get(name).add(rel);
+      }
+      // Compat map entries: 'Legacy_Name' => [ ... 'target' ... ]
+      const mapAliasRe = /['"]([A-Za-z_]\w*)['"]\s*=>\s*\[[^\]]*['"]target['"]/g;
+      while ((m = mapAliasRe.exec(withStrings)) !== null) {
+        const name = m[1];
         if (!result.aliasUsages.has(name)) result.aliasUsages.set(name, new Set());
         result.aliasUsages.get(name).add(rel);
       }
@@ -297,6 +320,21 @@ function auditArtifactTree(root, { artifactSlug }) {
         message: `Artifact ships development leftover '${rel}'.`,
       });
     }
+  }
+
+  // --- Check: nested vendor directories inside installed packages -----------
+  const nestedVendorHits = allFiles.filter((f) => {
+    const parts = f.split("/");
+    return parts[0] === "vendor" && parts.slice(1).includes("vendor");
+  });
+  if (nestedVendorHits.length > 0) {
+    findings.push({
+      check: "nested-vendor",
+      severity: "fatal",
+      message:
+        `Production artifact ships nested vendor directory inside installed packages (${nestedVendorHits.slice(0, 3).join(", ")}). ` +
+        `Path repository dev trees must be stripped during release packaging.`,
+    });
   }
 
   // --- Check: dev vendor packages ------------------------------------------
@@ -394,14 +432,21 @@ function auditArtifactTree(root, { artifactSlug }) {
   return { findings, stats, allFiles };
 }
 
-/** Lint shipped PHP files (artifact's own code + composer maps). */
+/** Lint shipped PHP files (artifact's own code + composer maps + runtime vendor). */
 function lintArtifactPhp(root, allFiles, phpBin) {
   const failures = [];
-  const targets = allFiles.filter(
-    (f) =>
-      f.endsWith(".php") &&
-      (!f.startsWith("vendor/") || f.startsWith("vendor/composer/") || f.startsWith("vendor/wpdev/"))
-  );
+  const targets = allFiles.filter((f) => {
+    if (!f.endsWith(".php")) return false;
+    // Dual-load Real/ tree is intentional PHP 8.1+; Stub/ is the <8.1 path.
+    if (f.includes("php-fault-tolerance/src/Real/") || f.endsWith("php-fault-tolerance/src/Real")) {
+      return false;
+    }
+    // Skip test/doc/fixture subdirs if any survived in third-party vendor
+    if (/\/(tests?|docs?|examples?|demo)\//i.test(f)) {
+      return false;
+    }
+    return true;
+  });
   for (const rel of targets) {
     const res = spawnSync(phpBin, ["-l", path.join(root, rel)], { encoding: "utf8" });
     if (res.status !== 0) {
@@ -415,14 +460,25 @@ function lintArtifactPhp(root, allFiles, phpBin) {
  * Cross-plugin coexistence audit: detects the alias-before-declaration
  * pattern that fatals WordPress during plugin activation.
  */
-function auditCoexistence(root, artifactSymbols, artifactAliasUsages, pluginsDir) {
+function auditCoexistence(root, artifactSymbols, artifactAliasUsages, pluginsDir, artifactSlug = "") {
   const findings = [];
   if (!pluginsDir || !existsSync(pluginsDir)) return findings;
+
+  const currentSlug = artifactSlug || path.basename(root);
 
   const siblings = readdirSync(pluginsDir, { withFileTypes: true })
     .filter((e) => e.isDirectory() && !e.name.startsWith("."))
     .map((e) => path.join(pluginsDir, e.name))
-    .filter((dir) => path.resolve(dir) !== path.resolve(root) && path.basename(dir) !== path.basename(root));
+    .filter((dir) => {
+      const base = path.basename(dir);
+      if (path.resolve(dir) === path.resolve(root) || base === path.basename(root)) return false;
+      // Skip dev/source pairs of the same plugin (e.g. 'nikamooz-dev' vs 'nikamooz')
+      if (base.replace(/-dev$/, "") === currentSlug.replace(/-dev$/, "")) return false;
+      // Inlined WPDev framework closure: 'wpdev' is the framework provider being inlined,
+      // and runtime guards (!function_exists / !class_exists) ensure non-colliding coexistence.
+      if (base === "wpdev" && existsSync(path.join(root, "src/FrameworkClosure"))) return false;
+      return true;
+    });
 
   for (const siblingDir of siblings) {
     const sibling = scanPluginForCoexistence(siblingDir);
@@ -537,7 +593,7 @@ async function runAudit(opts) {
   }
 
   findings.push(
-    ...auditCoexistence(artifactRoot, artifactScan.declares, artifactScan.aliasUsages, opts.pluginsDir)
+    ...auditCoexistence(artifactRoot, artifactScan.declares, artifactScan.aliasUsages, opts.pluginsDir, artifactSlug)
   );
 
   if (tempExtract) rmSync(tempExtract, { recursive: true, force: true });
