@@ -6,42 +6,55 @@ const LOCALIZE_VAR =
     ? __WPDEV_LOCALIZE_VAR__
     : "WPDevLoc";
 
+const FORBIDDEN_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
 function getLocalizeRoot() {
   return globalThis[LOCALIZE_VAR];
 }
 
 export const localize = {
   get(index) {
-    if (!index) {
+    if (!index || typeof index !== "string") {
       return;
     }
 
     const root = getLocalizeRoot();
-    if (!root) {
+    if (!root || typeof root !== "object") {
       return;
     }
 
     if (index.indexOf(".") === -1) {
-      return root[index];
+      if (FORBIDDEN_KEYS.has(index)) {
+        return;
+      }
+      return Object.prototype.hasOwnProperty.call(root, index)
+        ? root[index]
+        : undefined;
     }
 
-    let parts = index.split(".");
-    let current = root[parts[0]];
+    const parts = index.split(".");
+    let current = root;
 
-    if (!current) {
-      return;
-    }
-
-    parts = parts.slice(1);
-
-    const len = parts.length - 1;
-
-    for (let i = 0; i <= len; i++) {
-      if (typeof current[parts[i]] !== "object" && i !== len) {
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (FORBIDDEN_KEYS.has(part)) {
+        return;
+      }
+      if (
+        !current ||
+        typeof current !== "object" ||
+        !Object.prototype.hasOwnProperty.call(current, part)
+      ) {
         return;
       }
 
-      current = current[parts[i]];
+      current = current[part];
+      if (
+        i < parts.length - 1 &&
+        (current === null || typeof current !== "object")
+      ) {
+        return;
+      }
     }
 
     return current;

@@ -43,9 +43,14 @@ final class Template
     public static function render(string $template, string $directory): string
     {
         ob_start();
-        self::load($template, $directory);
+        try {
+            self::load($template, $directory);
 
-        return (string) ob_get_clean();
+            return (string) ob_get_clean();
+        } catch (\Throwable $e) {
+            ob_end_clean();
+            throw $e;
+        }
     }
 
     /**
@@ -93,9 +98,21 @@ final class Template
     public static function render_messages($the_error): string
     {
         $errors = self::normalize_messages($the_error);
-        self::set_variable('messages', $errors);
+        $vars = &self::bag();
+        $had_prev = array_key_exists('messages', $vars);
+        $prev = $had_prev ? $vars['messages'] : null;
+        $vars['messages'] = $errors;
 
-        return self::render('messages.php', __DIR__ . '/views');
+        try {
+            return self::render('messages.php', __DIR__ . '/views');
+        } finally {
+            $vars = &self::bag();
+            if ($had_prev) {
+                $vars['messages'] = $prev;
+            } else {
+                unset($vars['messages']);
+            }
+        }
     }
 
     /**
@@ -120,11 +137,37 @@ final class Template
 
     private static function resolve_path(string $directory, string $template): string
     {
-        if (function_exists('trailingslashit')) {
-            return trailingslashit($directory) . $template;
+        if (strpos($template, "\0") !== false || strpos($directory, "\0") !== false) {
+            return '';
         }
 
-        return rtrim($directory, "/\\") . '/' . ltrim($template, "/\\");
+        $clean_template = ltrim(str_replace('\\', '/', $template), '/');
+        $segments = explode('/', $clean_template);
+        if (in_array('..', $segments, true) || in_array('.', $segments, true)) {
+            return '';
+        }
+
+        if (function_exists('trailingslashit')) {
+            $candidate = trailingslashit($directory) . $clean_template;
+        } else {
+            $candidate = rtrim($directory, "/\\") . '/' . $clean_template;
+        }
+
+        $real_dir = realpath($directory);
+        if ($real_dir !== false) {
+            $real_path = realpath($candidate);
+            if ($real_path !== false) {
+                $real_dir_prefix = rtrim(str_replace('\\', '/', $real_dir), '/') . '/';
+                $real_path_clean = str_replace('\\', '/', $real_path);
+                if (strpos($real_path_clean, $real_dir_prefix) !== 0 && $real_path_clean !== rtrim($real_dir_prefix, '/')) {
+                    return '';
+                }
+
+                return $real_path;
+            }
+        }
+
+        return $candidate;
     }
 
     /**

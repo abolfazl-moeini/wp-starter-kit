@@ -142,4 +142,151 @@ describe("createBatchRequest cache behavior", () => {
     expect(result.response.ok).toBe(true);
     expect(mockedApiFetch).toHaveBeenCalledTimes(2);
   });
+
+  test("throws RangeError on non-positive requestChunk", () => {
+    expect(() =>
+      createBatchRequest<Req, Res>({
+        uniqueKey: "cacheKey",
+        cacheDriver: "memory",
+        requestChunk: 0,
+        requestDelay: 10,
+        method: "POST",
+        path: "/wpdev/v1/items",
+        batchEndpoint: "/batch/v1",
+      }),
+    ).toThrow(RangeError);
+
+    expect(() =>
+      createBatchRequest<Req, Res>({
+        uniqueKey: "cacheKey",
+        cacheDriver: "memory",
+        requestChunk: -5,
+        requestDelay: 10,
+        method: "POST",
+        path: "/wpdev/v1/items",
+        batchEndpoint: "/batch/v1",
+      }),
+    ).toThrow(RangeError);
+  });
+
+  test("sends outer POST and subrequest method matching WP Core /batch/v1 protocol", async () => {
+    mockedApiFetch.mockResolvedValue({
+      responses: [
+        { body: { data: { ok: true }, extra: { cacheKey: "wp-core-batch" } } },
+      ],
+    });
+
+    const batch = createBatchRequest<Req, Res>({
+      uniqueKey: "cacheKey",
+      cacheDriver: "memory",
+      requestChunk: 10,
+      requestDelay: 20,
+      method: "PUT",
+      path: "/wpdev/v1/items/123",
+      batchEndpoint: "/batch/v1",
+    });
+
+    const pending = batch({ cacheKey: "wp-core-batch" });
+    jest.advanceTimersByTime(20);
+    await pending;
+
+    expect(mockedApiFetch).toHaveBeenCalledWith({
+      path: "/batch/v1",
+      method: "POST",
+      data: {
+        requests: [
+          {
+            method: "PUT",
+            path: "/wpdev/v1/items/123",
+            body: { cacheKey: "wp-core-batch" },
+          },
+        ],
+      },
+    });
+  });
+
+  test("subrequest HTTP 4xx fails with error", async () => {
+    mockedApiFetch.mockResolvedValue({
+      responses: [
+        {
+          status: 404,
+          body: { code: "not_found", message: "Item not found" },
+        },
+      ],
+    });
+
+    const batch = createBatchRequest<Req, Res>({
+      uniqueKey: "cacheKey",
+      cacheDriver: "memory",
+      requestChunk: 10,
+      requestDelay: 10,
+      method: "GET",
+      path: "/wpdev/v1/items",
+      batchEndpoint: "/batch/v1",
+    });
+
+    const pending = batch({ cacheKey: "missing" });
+    jest.advanceTimersByTime(10);
+    await expect(pending).rejects.toThrow(/status 404/);
+  });
+
+  test("requireCacheKey: false allows standard WP REST responses without extra.cacheKey", async () => {
+    mockedApiFetch.mockResolvedValue({
+      responses: [
+        {
+          status: 200,
+          body: { ok: true },
+        },
+      ],
+    });
+
+    const batch = createBatchRequest<Req, Res>({
+      uniqueKey: "cacheKey",
+      cacheDriver: "memory",
+      requestChunk: 10,
+      requestDelay: 10,
+      method: "GET",
+      path: "/wpdev/v1/items",
+      batchEndpoint: "/batch/v1",
+      requireCacheKey: false,
+    });
+
+    const pending = batch({ cacheKey: "std-endpoint" });
+    jest.advanceTimersByTime(10);
+    const result = await pending;
+
+    expect(result.fresh).toBe(true);
+    expect(result.response.ok).toBe(true);
+  });
+
+  test("clearCache() clears cache and allows re-fetching", async () => {
+    mockedApiFetch.mockResolvedValue({
+      responses: [{ body: { data: { ok: true }, extra: { cacheKey: "clr" } } }],
+    });
+
+    const batch = createBatchRequest<Req, Res>({
+      uniqueKey: "cacheKey",
+      cacheDriver: "memory",
+      requestChunk: 10,
+      requestDelay: 10,
+      method: "POST",
+      path: "/wpdev/v1/items",
+      batchEndpoint: "/batch/v1",
+    });
+
+    const p1 = batch({ cacheKey: "clr" });
+    jest.advanceTimersByTime(10);
+    const r1 = await p1;
+    expect(r1.fresh).toBe(true);
+
+    // Call clearCache
+    batch.clearCache();
+
+    // Next fetch should trigger network request
+    const p2 = batch({ cacheKey: "clr" });
+    jest.advanceTimersByTime(10);
+    const r2 = await p2;
+    expect(r2.fresh).toBe(true);
+    expect(mockedApiFetch).toHaveBeenCalledTimes(2);
+  });
 });

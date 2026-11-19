@@ -24,6 +24,8 @@ if ( ! class_exists( ParserFactory::class ) ) {
 	exit( 3 );
 }
 
+global $argc, $argv;
+
 if ( $argc !== 4 ) {
 	fwrite( STDERR, "usage: php php-ast-transform.php <map-json> <input> <output>\n" );
 	exit( 2 );
@@ -50,6 +52,7 @@ try {
 				$this->mapping = $mapping;
 			}
 
+			/** @return null|Node */
 			public function enterNode( Node $node ) {
 				if ( $node instanceof Node\Stmt\Function_ && isset( $this->mapping[ $node->name->toString() ] ) ) {
 					$node->name = new Node\Identifier(

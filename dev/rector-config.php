@@ -27,7 +27,10 @@ declare(strict_types=1);
 use Rector\Config\RectorConfig;
 
 return static function (RectorConfig $rector_config, array $options = []): void {
-    $src = dirname(__DIR__);
+    $rectorRoot = getenv('WPDEV_RECTOR_ROOT');
+    $src = ($rectorRoot !== false && $rectorRoot !== '' && is_dir($rectorRoot))
+        ? (realpath($rectorRoot) ?: $rectorRoot)
+        : (is_file(getcwd() . '/wpdev.json') ? getcwd() : dirname(__DIR__));
 
     $skip = [];
 
@@ -51,15 +54,20 @@ return static function (RectorConfig $rector_config, array $options = []): void 
         || getenv('WPDEV_RECTOR_INCLUDE_VENDOR') === '1'
         || ($isNoDevInstalled && !empty($options['auto_vendor_on_nodev']));
 
-    if ($includeRuntimeVendor && is_dir($src . '/vendor')) {
+    if ($includeRuntimeVendor && (is_dir($src . '/vendor') || is_dir($src . '/vendor-prefixed'))) {
         // Skip Composer internal autoloader and bin
         $skip[] = $src . '/vendor/composer';
         $skip[] = $src . '/vendor/bin';
+        $skip[] = $src . '/vendor-prefixed/composer';
+        $skip[] = '*/vendor/composer/*';
+        $skip[] = '*/vendor/bin/*';
+        $skip[] = '*/vendor-prefixed/composer/*';
         $skip[] = '*/vendor/*/*/vendor/*';
 
         // Skip any known dev packages from installed.json
         foreach ($devPackages as $devPkg) {
             $skip[] = $src . '/vendor/' . $devPkg;
+            $skip[] = '*/vendor/' . $devPkg . '/*';
         }
 
         // Defensive fallback skips for dev tooling, stubs, and polyfills
@@ -100,12 +108,16 @@ return static function (RectorConfig $rector_config, array $options = []): void 
         $skip[] = '*/vendor/*/*/demo/*';
     } else {
         $skip[] = $src . '/vendor';
+        $skip[] = $src . '/vendor-prefixed';
+        $skip[] = '*/vendor/*';
+        $skip[] = '*/vendor-prefixed/*';
     }
 
     $skip[] = $src . '/dev';
+    $skip[] = '*/dev/*';
     $skip[] = $src . '/node_modules';
     $skip[] = $src . '/*/node_modules';
-    $skip[] = $src . '/vendor-prefixed';
+    $skip[] = '*/node_modules/*';
     // Dual-load Real/ tree is intentional PHP 8.1+; Stub/ is the <8.1 path.
     $skip[] = $src . '/packages/php-fault-tolerance/src/Real';
     $skip[] = '*/php-fault-tolerance/src/Real/*';
@@ -113,6 +125,7 @@ return static function (RectorConfig $rector_config, array $options = []): void 
 
     if (empty($options['include_tests'])) {
         $skip[] = $src . '/tests';
+        $skip[] = '*/tests/*';
     }
 
     $rector_config->paths([$src]);
@@ -121,6 +134,9 @@ return static function (RectorConfig $rector_config, array $options = []): void 
     // WordPress function stubs so Rector can resolve WP function signatures
     // when scanning the `includes/` tree.
     $wp_stubs = $src . '/vendor/php-stubs/wordpress-stubs/wordpress-stubs.php';
+    if (!is_file($wp_stubs)) {
+        $wp_stubs = dirname(__DIR__) . '/vendor/php-stubs/wordpress-stubs/wordpress-stubs.php';
+    }
     if (is_file($wp_stubs)) {
         $rector_config->autoloadPaths([$wp_stubs]);
     }

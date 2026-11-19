@@ -19,7 +19,7 @@ require_once __DIR__ . '/colors.php';
 if ( ! defined( 'SOURCE_ROOT' ) ) {
 	$source_root = getenv( 'WPDEV_SOURCE_ROOT' );
 	if ( $source_root === false || $source_root === '' ) {
-		$source_root = getenv( 'WPDEV_SOURCE_ROOT' );
+		$source_root = getenv( 'WPSK_SOURCE_ROOT' );
 	}
 	define( 'SOURCE_ROOT', ( $source_root !== false && $source_root !== '' ) ? $source_root : dirname( __DIR__, 2 ) );
 }
@@ -37,7 +37,9 @@ if ( ! defined( 'TRANSLATION_HELPER' ) ) {
 function wpdev_list_components(): array {
 	$out = [];
 	$patterns = [
+		SOURCE_ROOT . '/src/Modules/*/assets/entries/*.tsx',
 		SOURCE_ROOT . '/src/Modules/*/assets/entries/*.ts',
+		SOURCE_ROOT . '/src/Modules/*/assets/entries/*.jsx',
 		SOURCE_ROOT . '/src/Modules/*/assets/entries/*.js',
 	];
 	foreach ( $patterns as $pattern ) {

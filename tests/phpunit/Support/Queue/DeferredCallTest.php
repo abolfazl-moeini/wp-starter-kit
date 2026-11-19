@@ -99,6 +99,13 @@ class DeferredCallTest extends \WPDevTest\TestCases\TestCase
      * (remove_action + add_action) when a later queue() arrives with a
      * different priority.
      */
+    /**
+     * Regression test for R4 (DeferredCall priority clobber):
+     *
+     * Queuing callbacks with different priorities must register both priority
+     * buckets so each callback runs at its own requested priority without
+     * clobbering earlier registrations.
+     */
     public function test_priority_is_updated_when_a_subsequent_queue_uses_a_different_priority(): void
     {
         DeferredCall::queue('drift_hook', [
@@ -116,16 +123,16 @@ class DeferredCallTest extends \WPDevTest\TestCases\TestCase
             'priority' => 99,
         ]);
 
-        $this->assertSame(
-            99,
-            has_action('drift_hook', [DeferredCall::class, 'run_queue']),
-            'second queue() with priority 99 must move the registration to priority 99'
-        );
         global $wp_filter;
-        $this->assertArrayNotHasKey(
+        $this->assertArrayHasKey(
             10,
             $wp_filter['drift_hook']->callbacks ?? [],
-            'the stale priority-10 registration must be removed — leaving both would double-fire run_queue'
+            'the priority-10 registration must be preserved'
+        );
+        $this->assertArrayHasKey(
+            99,
+            $wp_filter['drift_hook']->callbacks ?? [],
+            'the priority-99 registration must also be registered'
         );
     }
 

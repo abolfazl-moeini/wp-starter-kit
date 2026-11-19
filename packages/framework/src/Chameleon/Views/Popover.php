@@ -13,7 +13,7 @@ final class Popover {
      *
      * @param array{
      *   id: string,
-     *   content: string,
+     *   content?: string,
      *   class?: string
      * } $args
      */

@@ -99,9 +99,15 @@ export async function fetchPhpSourceVersionOptions(deps = {}) {
   }
 
   try {
+    const signal =
+      typeof AbortSignal !== "undefined" &&
+      typeof AbortSignal.timeout === "function"
+        ? AbortSignal.timeout(1500)
+        : undefined;
+    const fetchOpts = signal ? { signal } : {};
     const [happyRes, activeRes] = await Promise.all([
-      fetchFn(WP_HAPPY_URL),
-      fetchFn(PHP_ACTIVE_URL),
+      fetchFn(WP_HAPPY_URL, fetchOpts),
+      fetchFn(PHP_ACTIVE_URL, fetchOpts),
     ]);
     if (!happyRes?.ok || !activeRes?.ok) {
       return fallback();

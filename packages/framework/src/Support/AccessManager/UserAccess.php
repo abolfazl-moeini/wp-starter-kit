@@ -72,7 +72,7 @@ abstract class UserAccess extends QualifierBase
      */
     protected function check_all(array $caps, string $type): bool
     {
-        if (empty($caps)) {
+        if (empty($caps) || ($type !== 'current' && $type !== 'upper')) {
             return false;
         }
 
@@ -90,7 +90,7 @@ abstract class UserAccess extends QualifierBase
 
     protected function check_custom(callable $callback): bool
     {
-        return (bool) call_user_func($callback, $callback);
+        return (bool) call_user_func($callback, $this);
     }
 
     /**
@@ -182,7 +182,9 @@ abstract class UserAccess extends QualifierBase
                 self::$static_mock_caps[$target_cap] = [];
             }
             foreach ($rules as $rule) {
-                self::$static_mock_caps[$target_cap][] = $rule;
+                if (!in_array($rule, self::$static_mock_caps[$target_cap], true)) {
+                    self::$static_mock_caps[$target_cap][] = $rule;
+                }
             }
         }
     }
@@ -257,61 +259,74 @@ abstract class UserAccess extends QualifierBase
         }
 
         $asked_cap = $args[0] ?? '';
-        if ($asked_cap === '') {
+        if ($asked_cap === '' || $asked_cap === 'do_not_allow' || in_array('do_not_allow', $caps, true)) {
             return $allcaps;
         }
 
-        // Fast-fail: if capability is neither mapped nor mocked, exit in O(1) immediately
-        $is_mapped = isset(self::$static_mapped_caps[$asked_cap]);
-        $is_mocked = isset(self::$static_mock_caps[$asked_cap]);
+        // Fast-fail: check if asked_cap or any primitive cap in $caps is mapped or mocked
+        $relevant_caps = array_unique(array_filter(array_merge([$asked_cap], $caps)));
+        $mapped_matches = [];
+        $mocked_matches = [];
 
-        if (!$is_mapped && !$is_mocked) {
+        foreach ($relevant_caps as $c) {
+            if (isset(self::$static_mapped_caps[$c])) {
+                $mapped_matches[] = $c;
+            }
+            if (isset(self::$static_mock_caps[$c])) {
+                $mocked_matches[] = $c;
+            }
+        }
+
+        if (empty($mapped_matches) && empty($mocked_matches)) {
             return $allcaps;
         }
 
         self::$is_filtering = true;
         try {
             // 1. Mapped Capabilities: In-memory dynamic granting to roles (Fast O(1) lookup)
-            if ($is_mapped) {
-                foreach (self::$static_mapped_caps[$asked_cap] as $role) {
+            foreach ($mapped_matches as $cap) {
+                foreach (self::$static_mapped_caps[$cap] as $role) {
                     if (!empty($allcaps[$role])) {
+                        $allcaps[$cap] = true;
                         $allcaps[$asked_cap] = true;
+                        unset($allcaps['do_not_allow']);
+
                         return $allcaps;
                     }
                 }
             }
 
             // 2. Mock Capabilities: 3-Tier contextual spoofing
-            if (!$is_mocked) {
-                return $allcaps;
-            }
+            foreach ($mocked_matches as $cap) {
+                $rules = self::$static_mock_caps[$cap];
+                foreach ($rules as $rule) {
+                    // Tier 2: Prerequisite Role Gate
+                    if (empty($allcaps[$rule['role']])) {
+                        continue;
+                    }
 
-            $rules = self::$static_mock_caps[$asked_cap];
-            foreach ($rules as $rule) {
-                // Tier 2: Prerequisite Role Gate
-                if (empty($allcaps[$rule['role']])) {
-                    continue;
-                }
+                    // Tier 3: Bounded Call Stack Inspection
+                    $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $rule['depth']);
+                    foreach ($trace as $frame) {
+                        $file   = $frame['file'] ?? '';
+                        $class  = $frame['class'] ?? '';
+                        $caller = $rule['caller'];
 
-                // Tier 3: Bounded Call Stack Inspection
-                $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $rule['depth']);
-                foreach ($trace as $frame) {
-                    $file   = $frame['file'] ?? '';
-                    $class  = $frame['class'] ?? '';
-                    $caller = $rule['caller'];
+                        if (
+                            ($class !== '' && stripos($class, $caller) !== false)
+                            || ($file !== '' && (stripos($file, $caller) !== false || basename($file) === $caller))
+                        ) {
+                            $allcaps[$cap] = true;
+                            $allcaps[$asked_cap] = true;
+                            unset($allcaps['do_not_allow']);
 
-                    if (
-                        ($class !== '' && stripos($class, $caller) !== false)
-                        || ($file !== '' && (stripos($file, $caller) !== false || basename($file) === $caller))
-                    ) {
-                        $allcaps[$asked_cap] = true;
+                            if (function_exists('do_action')) {
+                                $user_id = is_object($user) && isset($user->ID) ? (int) $user->ID : 0;
+                                do_action('wpdev_contextual_mock_cap_applied', $cap, $rule['role'], $caller, $user_id);
+                            }
 
-                        if (function_exists('do_action')) {
-                            $user_id = is_object($user) && isset($user->ID) ? (int) $user->ID : 0;
-                            do_action('wpdev_contextual_mock_cap_applied', $asked_cap, $rule['role'], $caller, $user_id);
+                            return $allcaps;
                         }
-
-                        return $allcaps;
                     }
                 }
             }

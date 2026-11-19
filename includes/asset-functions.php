@@ -66,6 +66,10 @@ if ( ! function_exists( 'wpdev_bundle_file_path' ) ) {
 	 * @return string
 	 */
 	function wpdev_bundle_file_path( $file_name ) {
+		$paths = WPDev\Support\Assets::resolve_paths();
+		if ( ! empty( $paths['base_path'] ) ) {
+			return untrailingslashit( $paths['base_path'] ) . '/assets/bundles/' . $file_name;
+		}
 		return untrailingslashit( get_template_directory() ) . '/assets/bundles/' . $file_name;
 	}
 }
@@ -78,6 +82,10 @@ if ( ! function_exists( 'wpdev_bundle_file_url' ) ) {
 	 * @return string
 	 */
 	function wpdev_bundle_file_url( $file_name ) {
+		$paths = WPDev\Support\Assets::resolve_paths();
+		if ( ! empty( $paths['base_url'] ) ) {
+			return untrailingslashit( $paths['base_url'] ) . '/assets/bundles/' . $file_name;
+		}
 		return untrailingslashit( get_template_directory_uri() ) . '/assets/bundles/' . $file_name;
 	}
 }
@@ -149,18 +157,9 @@ if ( ! function_exists( 'wpdev_enqueue_stylesheet' ) ) {
 	 * @return bool
 	 */
 	function wpdev_enqueue_stylesheet( $file_name, $extra_deps = [] ) {
-		$plugin_path = function_exists( 'plugin_dir_path' )
-			? rtrim( plugin_dir_path( __FILE__ ), '/\\' ) . '/assets/stylesheets/' . $file_name
-			: '';
-
-		$resolved_plugin = '' !== $plugin_path ? realpath( $plugin_path ) : false;
-		$plugin_root     = function_exists( 'plugin_dir_path' )
-			? realpath( rtrim( plugin_dir_path( __FILE__ ), '/\\' ) )
-			: false;
-
-		$abs_path = ( $resolved_plugin && $plugin_root && strpos( $resolved_plugin, $plugin_root ) === 0 )
-			? $resolved_plugin
-			: wpdev_stylesheet_file_path( $file_name );
+		$paths    = WPDev\Support\Assets::resolve_paths();
+		$base_dir = ! empty( $paths['base_path'] ) ? untrailingslashit( $paths['base_path'] ) : wpdev_stylesheet_base_dir();
+		$abs_path = $base_dir . '/assets/stylesheets/' . $file_name;
 
 		return WPDev\Support\Assets::enqueue_legacy_bundle_style( $abs_path, $extra_deps );
 	}
@@ -171,6 +170,10 @@ if ( ! function_exists( 'wpdev_stylesheet_base_dir' ) ) {
 	 * Base directory for stylesheet resolution (plugin dir or active theme).
 	 */
 	function wpdev_stylesheet_base_dir(): string {
+		$paths = WPDev\Support\Assets::resolve_paths();
+		if ( ! empty( $paths['base_path'] ) ) {
+			return untrailingslashit( $paths['base_path'] );
+		}
 		if ( defined( 'WPDEV_STARTER_PLUGIN_DIR' ) ) {
 			return untrailingslashit( WPDEV_STARTER_PLUGIN_DIR );
 		}

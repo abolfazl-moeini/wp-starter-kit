@@ -3,7 +3,7 @@
   "description": "WordPress Theme/Plugin Starter Kit",
   "type": "project",
   "license": "MIT",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "repositories": [
     {
       "type": "path",
@@ -16,10 +16,10 @@
   "require": {
     "php": ">=7.4",
     "composer/installers": "^2.2",
-    "brianhenryie/strauss": "^0.11",
-    "wpdev/framework": "*@dev"
+    "wpdev/framework": "*"
   },
   "require-dev": {
+    "brianhenryie/strauss": "^0.11",
     "phpunit/phpunit": "^9.6",
     "wp-coding-standards/wpcs": "^3.0",
     "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
@@ -68,12 +68,6 @@
       "@php ./dev/fix-autoloader.php"
     ],
     "scope:vendor": "@php vendor/bin/strauss",
-    "post-install-cmd": [
-      "@scope:vendor"
-    ],
-    "post-update-cmd": [
-      "@scope:vendor"
-    ],
     "release:dist": "@php dev/release/build-dist.php",
     "test:pre": "@php ./tests/patch/apply-patches.php",
     "translation:generate:php": "@php dev/translation/generate-php.php",

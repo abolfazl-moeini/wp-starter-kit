@@ -22,10 +22,14 @@
 
 declare(strict_types=1);
 
-$composer_dir = dirname(__DIR__) . '/vendor/composer';
+$composer_dirs = [
+    dirname(__DIR__) . '/vendor/composer',
+    dirname(__DIR__) . '/vendor-prefixed/composer',
+];
 
-if (!is_dir($composer_dir)) {
-    fwrite(STDERR, "fix-autoloader: vendor/composer not found, skipping.\n");
+$existing_dirs = array_filter($composer_dirs, 'is_dir');
+if (empty($existing_dirs)) {
+    fwrite(STDERR, "fix-autoloader: composer directories not found, skipping.\n");
     exit(0);
 }
 
@@ -45,22 +49,32 @@ if ($from === '' || $to === '' || $from === $to) {
     exit(0);
 }
 
-// On disk, namespaced strings appear with escaped separators: `OldName\\Sub`.
+// On disk, Composer autoloader files store namespace keys with escaped separators: `'OldName\\Sub'`.
 $needle      = str_replace('\\', '\\\\', $from);
 $replacement = str_replace('\\', '\\\\', $to);
+$pattern     = '/([\'"])' . preg_quote($needle, '/') . '(\\\\\\\\)/';
 
 $updated = 0;
-foreach (glob($composer_dir . '/*') as $file) {
-    if (!is_file($file)) {
-        continue;
+foreach ($existing_dirs as $composer_dir) {
+    foreach (glob($composer_dir . '/*') ?: [] as $file) {
+        if (!is_file($file)) {
+            continue;
+        }
+        $content = (string) file_get_contents($file);
+        $rewritten = preg_replace_callback(
+            $pattern,
+            static function (array $m) use ($replacement): string {
+                return $m[1] . $replacement . $m[2];
+            },
+            $content
+        );
+        if ($rewritten === null || $rewritten === $content) {
+            continue;
+        }
+        file_put_contents($file, $rewritten);
+        $updated++;
     }
-    $content = (string) file_get_contents($file);
-    if (strstr($content, $needle) === false) {
-        continue;
-    }
-    file_put_contents($file, str_replace($needle, $replacement, $content));
-    $updated++;
 }
 
-fwrite(STDOUT, sprintf("fix-autoloader: rewrote %d file(s) in vendor/composer/.\n", $updated));
+fwrite(STDOUT, sprintf("fix-autoloader: rewrote %d file(s) in composer autoloader dirs.\n", $updated));
 exit(0);

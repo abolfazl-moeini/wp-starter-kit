@@ -118,14 +118,25 @@ function wpdev_dist_exclude_patterns(): array
             '.eslintrc.cjs',
             '.prettierignore',
             'jest.config.mjs',
+            'package.json',
             'package-lock.json',
             'composer.lock',
             'wpdev.example.json',
             'budget-ledger.json',
             'AGENTS.md',
             'CLAUDE.md',
+            'README.md',
+            'CHANGELOG.md',
             'commitlint.config.cjs',
             'babel.config.js',
+            '.npmrc',
+            '.gitmodules',
+            '.gitignore',
+            '.editorconfig',
+            '.idea',
+            '.claude',
+            '.workbuddy-ai',
+            '.vscode',
             // Bridge shims are eliminated from source, but defensively excluded
             // here in case legacy artifacts exist in older worktrees.
             'src/Core',
@@ -139,6 +150,10 @@ function wpdev_dist_exclude_patterns(): array
             'node_modules',
             'vendor',
             '.DS_Store',
+            '.idea',
+            '.claude',
+            '.workbuddy-ai',
+            '.vscode',
         ],
     ];
 }
@@ -235,22 +250,39 @@ function wpdev_build_dist_composer_json(array $config, string $frameworkPath): s
         ? ["{$vendorPrefix}\\{$globalName}\\" => 'src/']
         : ["{$globalName}\\" => 'src/'];
 
+    $ftPath = dirname($frameworkPath) . '/php-fault-tolerance';
+    $hasFaultTolerance = is_dir($ftPath) && is_file($ftPath . '/composer.json');
+
+    $repositories = [
+        [
+            'type' => 'path',
+            'url' => $frameworkPath,
+            'options' => ['symlink' => false],
+        ],
+    ];
+    $require = [
+        'php' => ">={$phpMin}",
+        'wpdev/framework' => '*@dev',
+    ];
+    $straussPackages = ['wpdev/framework'];
+
+    if ($hasFaultTolerance) {
+        $repositories[] = [
+            'type' => 'path',
+            'url' => $ftPath,
+            'options' => ['symlink' => false],
+        ];
+        $require['wpdev/php-fault-tolerance'] = '*@dev';
+        $straussPackages[] = 'wpdev/php-fault-tolerance';
+    }
+
     $payload = [
         'name' => "{$vendorNamespaceLower}/{$slug}",
         'description' => $description,
         'type' => 'wordpress-plugin',
         'license' => $licenseId,
-        'repositories' => [
-            [
-                'type' => 'path',
-                'url' => $frameworkPath,
-                'options' => ['symlink' => false],
-            ],
-        ],
-        'require' => [
-            'php' => ">={$phpMin}",
-            'wpdev/framework' => '*@dev',
-        ],
+        'repositories' => $repositories,
+        'require' => $require,
         'autoload' => [
             'psr-4' => $psr4Map,
             'files' => [
@@ -265,7 +297,7 @@ function wpdev_build_dist_composer_json(array $config, string $frameworkPath): s
                 'constant_prefix' => strtoupper($vendorPrefix) . '_',
                 'delete_vendor_files' => false,
                 'include_modified_files' => false,
-                'packages' => ['wpdev/framework'],
+                'packages' => $straussPackages,
                 'exclude_from_prefix' => [
                     'namespaces' => [],
                     'file_patterns' => [],
@@ -286,9 +318,43 @@ function wpdev_build_dist_composer_json(array $config, string $frameworkPath): s
 /**
  * Rewrite namespace references in all dist PHP files outside vendor directories.
  */
-function wpdev_rewrite_namespace_references(string $dir, string $fromNs, string $toNs): void
+function wpdev_rewrite_php_file_namespace(string $path, string $fromNs, string $toNs): void
+{
+    if (!is_file($path)) {
+        return;
+    }
+    $content = (string) file_get_contents($path);
+
+    // 1. Quoted string literals with double backslashes (e.g. "WPDev\\Core" or '\WPDev\\Core')
+    $updated = preg_replace_callback(
+        '/(^|[^A-Za-z0-9_\\\\])(\\\\\\\\)?(' . preg_quote($fromNs, '/') . ')(\\\\\\\\[A-Za-z0-9_]+)/',
+        static function ($m) use ($toNs) {
+            $toNsDouble = str_replace('\\', '\\\\', $toNs);
+            return $m[1] . $m[2] . $toNsDouble . $m[4];
+        },
+        $content
+    );
+
+    // 2. Unquoted PHP code / single backslash (e.g. \WPDev\Core or WPDev\Core)
+    $updated = preg_replace_callback(
+        '/(^|[^A-Za-z0-9_\\\\])(\\\\)?(' . preg_quote($fromNs, '/') . ')(\\\\[A-Za-z0-9_]+)/',
+        static function ($m) use ($toNs) {
+            return $m[1] . $m[2] . $toNs . $m[4];
+        },
+        (string) $updated
+    );
+
+    if ($updated !== null && $updated !== $content) {
+        file_put_contents($path, $updated);
+    }
+}
+
+function wpdev_rewrite_namespace_references(string $dir, string $fromNs, string $toNs, bool $skipVendor = true): void
 {
     if ($fromNs === $toNs || $fromNs === '' || $toNs === '') {
+        return;
+    }
+    if (!is_dir($dir)) {
         return;
     }
     $iterator = new RecursiveIteratorIterator(
@@ -300,19 +366,13 @@ function wpdev_rewrite_namespace_references(string $dir, string $fromNs, string 
             continue;
         }
         $path = $item->getPathname();
-        $relative = substr($path, strlen($dir) + 1);
-        if (str_starts_with($relative, 'vendor/') || str_starts_with($relative, 'vendor-prefixed/')) {
-            continue;
+        if ($skipVendor) {
+            $relative = substr($path, strlen($dir) + 1);
+            if (strpos($relative, 'vendor/') === 0 || strpos($relative, 'vendor-prefixed/') === 0) {
+                continue;
+            }
         }
-        $content = (string) file_get_contents($path);
-        $updated = preg_replace(
-            '/(?<![A-Za-z0-9_\\\\])' . preg_quote($fromNs, '/') . '(?=\\\\[A-Za-z0-9_]+)/',
-            $toNs,
-            $content
-        );
-        if ($updated !== null && $updated !== $content) {
-            file_put_contents($path, $updated);
-        }
+        wpdev_rewrite_php_file_namespace($path, $fromNs, $toNs);
     }
 }
 
@@ -320,29 +380,25 @@ function wpdev_rewrite_namespace_references(string $dir, string $fromNs, string 
  * @param array<string,mixed> $config
  * @return string JSON-encoded strauss.json
  */
-function wpdev_build_dist_strauss_json(array $config): string
+function wpdev_build_dist_strauss_json(array $config, string $frameworkPath = ''): string
 {
     $vendorPrefix = (string) ($config['vendorPrefix'] ?? 'WpdevVendor');
+    $packages = ['wpdev/framework'];
+    if ($frameworkPath !== '') {
+        $ftPath = dirname($frameworkPath) . '/php-fault-tolerance';
+        if (is_dir($ftPath) && is_file($ftPath . '/composer.json')) {
+            $packages[] = 'wpdev/php-fault-tolerance';
+        }
+    }
+
     $payload = [
         'target_directory' => 'vendor-prefixed',
         'namespace_prefix' => $vendorPrefix,
         'classmap_prefix' => $vendorPrefix . '_',
         'constant_prefix' => strtoupper($vendorPrefix) . '_',
-        // Phase 23.A6: WPDev is no longer excluded from prefixing.
-        // The framework is a dependency (vendor/wpdev/framework/),
-        // so its WPDev namespace SHOULD be scoped to
-        // {vendorPrefix}\WPDev\... The dist's `vendor/` is the
-        // only thing strauss touches, and the framework lives
-        // there.
         'delete_vendor_files' => false,
         'include_modified_files' => false,
-        // Whitelist: only process wpdev/framework. Strauss 0.8.1
-        // chokes on multi-dir PSR-4 entries (e.g. some symfony
-        // polyfills ship `"X\\": ["src/", "Resources/"]`). The
-        // dist's vendor/ also contains the bundled dev tools
-        // (brianhenryie/strauss + symfony/* + composer/*), which
-        // we don't want scoped — only the framework.
-        'packages' => ['wpdev/framework'],
+        'packages' => $packages,
         'exclude_from_prefix' => [
             'namespaces' => [],
             'file_patterns' => [],
@@ -385,6 +441,13 @@ function wpdev_run(string $cmd, string $cwd): array
 require_once __DIR__ . '/freshness.php';
 
 $skipFreshness = in_array('--skip-freshness', $argv, true);
+if (in_array('--with-docs', $argv, true)) {
+    fwrite(
+        STDERR,
+        "dev/release/build-dist.php does not compile docs directly. Use the consumer release CLI (`wpdev release --with-docs` / `packages/create-wp-project/src/release/run-release.js --with-docs`) which delegates to wpdev-manual.\n"
+    );
+    exit(1);
+}
 if (!$skipFreshness && !wpdev_check_build_freshness($root)) {
     fwrite(STDERR, "Build outputs are stale. Run 'npm run build' first.\n");
     exit(1);
@@ -412,7 +475,7 @@ file_put_contents(
 );
 file_put_contents(
     $distRoot . '/strauss.json',
-    wpdev_build_dist_strauss_json($config)
+    wpdev_build_dist_strauss_json($config, $frameworkPath)
 );
 
 fwrite(STDOUT, "Emitted consumer composer.json + strauss.json in dist\n");
@@ -460,24 +523,28 @@ if ($straussExit !== 0) {
 }
 fwrite(STDOUT, "vendor/bin/strauss completed in dist\n");
 
-/* -------------------------------------------------------------------- */
-/* Step 5: scope callers and clean up vendor/                           */
-/* -------------------------------------------------------------------- */
-
 $vendorPrefix = (string) ($config['vendorPrefix'] ?? 'WpdevVendor');
-wpdev_rewrite_namespace_references($distRoot, 'WPDev', "{$vendorPrefix}\\WPDev");
 
-// Remove unprefixed framework from vendor/ and dump authoritative autoload
-wpdev_rmtree($distRoot . '/vendor/wpdev');
-[$dumpExit, $dumpOut] = wpdev_run(
-    'composer dump-autoload --no-dev --classmap-authoritative 2>&1',
-    $distRoot
-);
-if ($dumpExit !== 0) {
-    fwrite(STDERR, "composer dump-autoload failed in {$distRoot} (exit {$dumpExit}):\n{$dumpOut}\n");
-    exit($dumpExit);
+$ftPath = dirname($frameworkPath) . '/php-fault-tolerance';
+if (is_dir($ftPath . '/src')) {
+    $targetFtSrc = $distRoot . '/vendor-prefixed/wpdev/php-fault-tolerance/src';
+    if (!is_dir($targetFtSrc)) {
+        mkdir($targetFtSrc, 0755, true);
+    }
+    wpdev_copy_tree($ftPath . '/src', $targetFtSrc, []);
+    // Scope Real/, Stub/, and functions.php so php-fault-tolerance classes match the vendor prefix.
+    // bootstrap.php's autoloader regex already matches both prefixed and unprefixed namespaces.
+    wpdev_rewrite_namespace_references($targetFtSrc . '/Real', 'WPDev', "{$vendorPrefix}\\WPDev", false);
+    wpdev_rewrite_namespace_references($targetFtSrc . '/Stub', 'WPDev', "{$vendorPrefix}\\WPDev", false);
+    wpdev_rewrite_php_file_namespace($targetFtSrc . '/functions.php', 'WPDev', "{$vendorPrefix}\\WPDev");
 }
-fwrite(STDOUT, "composer dump-autoload completed in dist\n");
+
+/* -------------------------------------------------------------------- */
+/* Step 5: scope callers and downgrade syntax                           */
+/* -------------------------------------------------------------------- */
+
+wpdev_rewrite_namespace_references($distRoot, 'WPDev', "{$vendorPrefix}\\WPDev");
+fwrite(STDOUT, "Rewrote namespace references in dist\n");
 
 /* -------------------------------------------------------------------- */
 /* Step 6: Rector downgrade to phpMinVersion (Finding #5)              */
@@ -488,6 +555,7 @@ $rectorBuildCfg = $root . '/dev/rector-build.php';
 $skipRector = in_array('--skip-rector', $argv, true);
 
 if (!$skipRector && is_file($rectorBin) && is_file($rectorBuildCfg)) {
+    putenv("WPDEV_RECTOR_ROOT={$distRoot}");
     [$rectorExit, $rectorOut] = wpdev_run(
         'php ' . escapeshellarg($rectorBin) . ' process ' . escapeshellarg($distRoot) . ' -c ' . escapeshellarg($rectorBuildCfg) . ' --clear-cache 2>&1',
         $distRoot
@@ -498,6 +566,18 @@ if (!$skipRector && is_file($rectorBin) && is_file($rectorBuildCfg)) {
     }
     fwrite(STDOUT, "rector downgrade completed in dist\n");
 }
+
+// Remove unprefixed framework/vendor packages from vendor/ and dump authoritative autoload AFTER rector
+wpdev_rmtree($distRoot . '/vendor/wpdev');
+[$dumpExit, $dumpOut] = wpdev_run(
+    'composer dump-autoload --no-dev --classmap-authoritative 2>&1',
+    $distRoot
+);
+if ($dumpExit !== 0) {
+    fwrite(STDERR, "composer dump-autoload failed in {$distRoot} (exit {$dumpExit}):\n{$dumpOut}\n");
+    exit($dumpExit);
+}
+fwrite(STDOUT, "composer dump-autoload completed in dist\n");
 
 /* -------------------------------------------------------------------- */
 /* Step 7: write the .dist-built marker (post-release)                  */

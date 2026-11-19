@@ -3328,9 +3328,9 @@ class Plan3_Transformer {
 					// Decision authority is the declared-universe resolver: only strings that
 					// resolve to a declared FQCN are rewritten; external names stay byte-identical.
 					$str_resolved_target = null;
+					$str_method_suffix = '';
 					if ( $is_reflection || ( $is_callback_arg_string && strpos( $norm_str, '::' ) !== false ) || $this->is_array_callable_class_string( $tokens, $i ) ) {
 						$str_class_part = $norm_str;
-						$str_method_suffix = '';
 						$dc_pos = strpos( $norm_str, '::' );
 						if ( $dc_pos !== false ) {
 							$maybe_method = substr( $norm_str, $dc_pos + 2 );

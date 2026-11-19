@@ -43,6 +43,18 @@ describe("@wpdev/wpdev-bridge/ajax", () => {
     expect(normalizeEnvelope("1").success).toBe(false);
   });
 
+  test("normalizeEnvelope maps WP die(0) and die(-1) to failures", () => {
+    expect(normalizeEnvelope(0).success).toBe(false);
+    expect(normalizeEnvelope(0).code).toBe("handler_missing");
+    expect(normalizeEnvelope("0").success).toBe(false);
+    expect(normalizeEnvelope("0").code).toBe("handler_missing");
+
+    expect(normalizeEnvelope(-1).success).toBe(false);
+    expect(normalizeEnvelope(-1).code).toBe("invalid_nonce");
+    expect(normalizeEnvelope("-1").success).toBe(false);
+    expect(normalizeEnvelope("-1").code).toBe("invalid_nonce");
+  });
+
   test("hasData guards missing data", () => {
     expect(
       hasData({ success: true, code: "success", message: "", data: { a: 1 } }),

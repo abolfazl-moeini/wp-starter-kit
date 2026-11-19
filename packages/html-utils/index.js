@@ -23,6 +23,8 @@
  */
 import { h, render } from "preact";
 
+const FORBIDDEN_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
 /* ---------- Preact mount helpers --------------------------------------- */
 
 /**
@@ -49,6 +51,7 @@ export function elementProps(element) {
     const key = attr.name
       .slice("data-".length)
       .replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    if (FORBIDDEN_KEYS.has(key)) continue;
     // Try JSON parse so booleans/numbers/objects come through typed.
     let value = attr.value;
     try {
@@ -131,7 +134,20 @@ export function isRTL() {
 
 export function extractFormData(formHtmlElement) {
   if (!formHtmlElement) return {};
-  return Object.fromEntries(new FormData(formHtmlElement));
+  const out = {};
+  for (const [k, v] of new FormData(formHtmlElement).entries()) {
+    if (FORBIDDEN_KEYS.has(k)) continue;
+    if (Object.prototype.hasOwnProperty.call(out, k)) {
+      if (Array.isArray(out[k])) {
+        out[k].push(v);
+      } else {
+        out[k] = [out[k], v];
+      }
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
 }
 
 export function findFormElement(wrapper) {

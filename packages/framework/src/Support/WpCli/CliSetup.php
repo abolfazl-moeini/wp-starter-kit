@@ -28,7 +28,7 @@ final class CliSetup
     {
         $classname = $command instanceof Command ? get_class($command) : $command;
 
-        if (!is_string($classname) || !class_exists($classname)) {
+        if (!class_exists($classname)) {
             return false;
         }
         if (!is_subclass_of($classname, Command::class)) {

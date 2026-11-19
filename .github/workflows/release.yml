@@ -34,7 +34,7 @@ jobs:
           cache: "npm"
 
       - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress
+        run: composer install --prefer-dist --no-progress --ignore-platform-req=php --no-scripts
 
       - name: Install npm dependencies
         run: npm ci
@@ -53,12 +53,14 @@ jobs:
       - name: Create source archive
         run: |
           mkdir -p release-archive
-          cp -r core dev packages tests docs includes assets build release-archive/
-          cp wpdev.json composer.json package.json release-archive/
-          cp phpunit.xml phpcs.xml phpstan.neon release-archive/
+          cp -r core dev packages tests docs includes assets build src config tools skills release-archive/
+          cp wpdev.json composer.json package.json wpdev-starter.php functions.php release-archive/
+          cp phpcs.xml phpstan.neon release-archive/
+          if [ -f phpunit.xml.dist ]; then cp phpunit.xml.dist release-archive/; fi
+          if [ -f phpunit.xml ]; then cp phpunit.xml release-archive/; fi
           if [ -f README.md ]; then cp README.md release-archive/; fi
           if [ -f CHANGELOG.md ]; then cp CHANGELOG.md release-archive/; fi
-          tar -czf wpdev-starter-${{ github.ref_name }}.tar.gz -C release-archive .
+          tar --exclude="node_modules" --exclude="vendor" -czf wpdev-starter-${{ github.ref_name }}.tar.gz -C release-archive .
 
       - name: Create zip archive
         run: |

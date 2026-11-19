@@ -16,7 +16,7 @@ final class Dialog {
      * @param array{
      *   id: string,
      *   title: string,
-     *   content: string,
+     *   content?: string,
      *   actions?: string,
      *   class?: string
      * } $args

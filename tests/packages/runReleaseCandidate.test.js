@@ -13,6 +13,16 @@ describe("release candidate mode", () => {
     expect(parseArgs(["--candidate", "--root=."]).candidate).toBe(true);
   });
 
+  test("honors --no-inline-framework even when --profile s or --standalone is passed", () => {
+    expect(
+      parseArgs(["--profile", "s", "--no-inline-framework"]).inlineFramework,
+    ).toBe(false);
+    expect(
+      parseArgs(["--profile", "standalone", "--no-inline-framework"])
+        .inlineFramework,
+    ).toBe(false);
+  });
+
   test("emits review-only output and refuses promotion", () => {
     const report = createCandidateReport(root);
     expect(report.mode).toBe("candidate");

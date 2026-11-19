@@ -21,7 +21,13 @@ if ( ! function_exists( '_tests_dir' ) ) {
 	function _tests_dir() {
 
 		if ( ! $_tests_dir = getenv( 'WP_TESTS_DIR' ) ) {
-			throw new Exception( "WP_TESTS_DIR not defined." );
+			if ( file_exists( '/tmp/wordpress-tests-lib/includes/functions.php' ) ) {
+				$_tests_dir = '/tmp/wordpress-tests-lib';
+			} elseif ( file_exists( '/var/www/wordpress-tests-lib/includes/functions.php' ) ) {
+				$_tests_dir = '/var/www/wordpress-tests-lib';
+			} else {
+				throw new Exception( "WP_TESTS_DIR not defined." );
+			}
 		}
 
 		return $_tests_dir;

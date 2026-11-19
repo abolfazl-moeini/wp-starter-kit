@@ -13,7 +13,7 @@ final class Details {
      *
      * @param array{
      *   summary: string,
-     *   content: string,
+     *   content?: string,
      *   open?: bool,
      *   class?: string
      * } $args

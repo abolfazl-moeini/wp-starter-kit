@@ -15,7 +15,7 @@ use WP_REST_Response;
  */
 final class RestSetup
 {
-    /** @var array<class-string<RestHandler>> */
+    /** @var array<string, RestHandler|class-string<RestHandler>> */
     private static array $routes = [];
 
     /**
@@ -23,28 +23,19 @@ final class RestSetup
      */
     public static function register($handler): bool
     {
-        // $handler is `string|RestHandler`; both branches of the
-        // ternary return a string (get_class() always does, and the
-        // string-RestHandler case falls through to $handler). So
-        // $classname is statically known to be a string here.
         $classname = $handler instanceof RestHandler ? get_class($handler) : $handler;
 
-        // Fail fast on misconfigured class strings. Without this check,
-        // the error would surface inside rest_init() as a cryptic
-        // "Class 'X' not found" — or a TypeError when WP's
-        // register_rest_route() tries to invoke a non-RestHandler
-        // instance. Both are hard to diagnose from a stack trace; the
-        // return-false contract here lets the caller log + skip the
-        // bad route without breaking the rest of the registration.
-        if ( ! is_string( $classname ) || ! class_exists( $classname ) ) {
+        if ( ! class_exists( $classname ) ) {
             return false;
         }
         if ( ! is_subclass_of( $classname, RestHandler::class ) ) {
             return false;
         }
 
-        if (!in_array($classname, self::$routes, true)) {
-            self::$routes[] = $classname;
+        $key = $handler instanceof RestHandler ? (spl_object_hash($handler) . '_' . $classname) : $classname;
+
+        if (!isset(self::$routes[$key]) && !in_array($classname, self::$routes, true)) {
+            self::$routes[$key] = $handler;
             return true;
         }
         return false;
@@ -57,19 +48,24 @@ final class RestSetup
 
     public static function rest_init(): void
     {
-        $config = Plugin::config();
+        try {
+            $config = Plugin::config();
+        } catch (\Throwable $e) {
+            $config = [];
+        }
+
         $namespace = !empty($config['restNamespace']) && is_string($config['restNamespace'])
             ? $config['restNamespace']
             : (!empty($config['slug']) && is_string($config['slug']) ? $config['slug'] . '/v1' : 'wpdev/v1');
 
-        foreach (self::$routes as $handlerClass) {
+        foreach (self::$routes as $entry) {
             /** @var RestHandler $handler */
-            $handler = new $handlerClass();
+            $handler = $entry instanceof RestHandler ? $entry : new $entry();
 
             $args = [
                 'methods'             => $handler->methods(),
                 'callback'            => [$handler, 'rest_response'],
-                'permission_callback' => [$handler, 'rest_permission'],
+                'permission_callback' => [$handler, 'permission_callback'],
             ];
 
             if ($handler instanceof AllowBatch) {
@@ -126,10 +122,10 @@ final class RestSetup
         self::$routes = [];
     }
 
-    /** @return array<class-string<RestHandler>> */
+    /** @return list<class-string<RestHandler>> */
     public static function routes(): array
     {
-        return self::$routes;
+        return array_keys(self::$routes);
     }
 }
 

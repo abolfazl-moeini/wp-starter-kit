@@ -122,7 +122,12 @@ describe("@wpdev/config", () => {
         },
       };
 
-      const config = getModuleConfig({
+      const config = getModuleConfig<{
+        restUrl: string;
+        brand: string;
+        nonce?: string;
+        allowOrder: boolean;
+      }>({
         module: "tickets",
         legacyGlobals: ["wpdevLegacySettings"],
         defaults: {
@@ -147,7 +152,7 @@ describe("@wpdev/config", () => {
       container.dataset.isArchived = "false";
       container.dataset.zeroFlag = "0";
 
-      const config = getModuleConfig({
+      const config = getModuleConfig<Record<string, any>>({
         module: "tickets",
         container,
         defaults: {

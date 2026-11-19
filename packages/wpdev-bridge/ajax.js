@@ -54,6 +54,27 @@ export function normalizeEnvelope(json) {
     };
   }
 
+  // WordPress admin-ajax failure responses:
+  // 0 / "0": action handler not found or action parameter missing
+  if (json === 0 || json === "0") {
+    return {
+      success: false,
+      code: "handler_missing",
+      message: "AJAX handler not found or action not registered.",
+      data: null,
+    };
+  }
+
+  // -1 / "-1": check_ajax_referer failure (invalid or expired nonce)
+  if (json === -1 || json === "-1") {
+    return {
+      success: false,
+      code: "invalid_nonce",
+      message: "AJAX request failed nonce verification.",
+      data: null,
+    };
+  }
+
   // Light-ajax fallthrough (`die('1')`) and bare payloads.
   if (json === 1 || json === "1") {
     return {
@@ -174,13 +195,27 @@ async function fetchRequest(method, action, payload, url, signal) {
   let finalUrl = url;
 
   if (method === "GET") {
-    const query = Object.keys(bodyPayload)
-      .map(
-        (k) =>
-          `${encodeURIComponent(k)}=${encodeURIComponent(String(bodyPayload[k]))}`,
-      )
-      .join("&");
-    finalUrl += (finalUrl.indexOf("?") === -1 ? "?" : "&") + query;
+    const params = new URLSearchParams();
+    for (const [k, v] of Object.entries(bodyPayload)) {
+      if (v == null) {
+        continue;
+      }
+      if (Array.isArray(v)) {
+        for (const item of v) {
+          if (item != null) {
+            params.append(`${k}[]`, String(item));
+          }
+        }
+      } else if (typeof v === "object") {
+        params.append(k, JSON.stringify(v));
+      } else {
+        params.append(k, String(v));
+      }
+    }
+    const query = params.toString();
+    if (query) {
+      finalUrl += (finalUrl.indexOf("?") === -1 ? "?" : "&") + query;
+    }
   } else {
     const body = new FormData();
     Object.keys(bodyPayload).forEach((k) => {

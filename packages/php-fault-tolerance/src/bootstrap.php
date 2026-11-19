@@ -21,15 +21,13 @@ $wpdev_ft_base = __DIR__ . '/' . $wpdev_ft_impl . '/';
  */
 spl_autoload_register(
     static function ($class) use ($wpdev_ft_base) {
-        $prefix = 'WPDev\\FaultTolerance\\';
-        $len = strlen($prefix);
-        if (strncmp($class, $prefix, $len) !== 0) {
-            return;
-        }
-        $relative = str_replace('\\', '/', substr($class, $len));
-        $file = $wpdev_ft_base . $relative . '.php';
-        if (is_readable($file)) {
-            require $file;
+        $cleanClass = ltrim($class, '\\');
+        if (preg_match('/^(?:[A-Za-z0-9_]+\\\\)?WPDev\\\\FaultTolerance\\\\(.*)$/', $cleanClass, $m)) {
+            $relative = str_replace('\\', '/', $m[1]);
+            $file = $wpdev_ft_base . $relative . '.php';
+            if (is_readable($file)) {
+                require $file;
+            }
         }
     },
     true,

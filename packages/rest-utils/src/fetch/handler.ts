@@ -14,21 +14,35 @@ export type BatchRequestConfig<TRequest> = {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   path: string;
   batchEndpoint: string;
+  requireCacheKey?: boolean;
+  maxEntries?: number;
+  ttlMs?: number;
 };
 
 type BatchApiResponse<TResponse> = {
   responses?: Array<{
-    body?: {
-      data?: TResponse;
-      extra?: { cacheKey?: string };
-    };
+    status?: number;
+    headers?: Record<string, string>;
+    body?:
+      | {
+          data?: TResponse;
+          extra?: { cacheKey?: string };
+        }
+      | TResponse;
   }>;
 };
 
+export type BatchRequestHandler<TRequest, TResponse> = {
+  (params: TRequest): Promise<BatchResult<TResponse>>;
+  clearCache: () => void;
+  cache: CacheStore<BatchResult<TResponse>>;
+};
+
 function chunk<T>(items: T[], size: number): T[][] {
+  const step = Math.max(1, Math.floor(size));
   const out: T[][] = [];
-  for (let i = 0; i < items.length; i += size) {
-    out.push(items.slice(i, i + size));
+  for (let i = 0; i < items.length; i += step) {
+    out.push(items.slice(i, i + step));
   }
   return out;
 }
@@ -36,9 +50,21 @@ function chunk<T>(items: T[], size: number): T[][] {
 export function createBatchRequest<
   TRequest extends Record<string, unknown>,
   TResponse,
->(config: BatchRequestConfig<TRequest>) {
+>(
+  config: BatchRequestConfig<TRequest>,
+): BatchRequestHandler<TRequest, TResponse> {
+  if (!Number.isInteger(config.requestChunk) || config.requestChunk < 1) {
+    throw new RangeError(
+      `requestChunk must be an integer >= 1, received ${config.requestChunk}`,
+    );
+  }
+
   const cache: CacheStore<BatchResult<TResponse>> = createCache(
     config.cacheDriver,
+    {
+      maxEntries: config.maxEntries,
+      ttlMs: config.ttlMs,
+    },
   );
   const stack: TRequest[] = [];
   const deferred = new Map<
@@ -72,9 +98,10 @@ export function createBatchRequest<
     try {
       const result = await apiFetch<BatchApiResponse<TResponse>>({
         path: config.batchEndpoint,
-        method: config.method,
+        method: "POST",
         data: {
           requests: requests.map((body) => ({
+            method: config.method,
             path: config.path,
             body,
           })),
@@ -85,16 +112,43 @@ export function createBatchRequest<
       for (let i = 0; i < requests.length; i++) {
         const request = requests[i];
         const key = String(request[config.uniqueKey]);
-        const body = responses[i]?.body;
-        const cacheKey = body?.extra?.cacheKey;
+        const responseItem = responses[i];
+
+        if (
+          responseItem &&
+          typeof responseItem.status === "number" &&
+          responseItem.status >= 400
+        ) {
+          fail(
+            key,
+            new Error(
+              `Batch request failed with status ${responseItem.status}`,
+            ),
+          );
+          continue;
+        }
+
+        const rawBody = responseItem?.body;
+        const envelope =
+          rawBody && typeof rawBody === "object" && "extra" in rawBody
+            ? (rawBody as { data?: TResponse; extra?: { cacheKey?: string } })
+            : undefined;
+
+        const cacheKey =
+          envelope?.extra?.cacheKey ??
+          (config.requireCacheKey === false ? key : undefined);
 
         if (!cacheKey) {
           fail(key, new Error(`Missing extra.cacheKey for batch key "${key}"`));
           continue;
         }
 
+        const responseData = envelope
+          ? (envelope.data ?? ({} as TResponse))
+          : (rawBody as TResponse);
+
         settle(key, {
-          response: (body?.data ?? {}) as TResponse,
+          response: responseData,
           fresh: true,
         });
         if (cacheKey !== key) {
@@ -127,7 +181,7 @@ export function createBatchRequest<
     timer = setTimeout(flush, config.requestDelay);
   };
 
-  return (params: TRequest): Promise<BatchResult<TResponse>> => {
+  const handler = ((params: TRequest): Promise<BatchResult<TResponse>> => {
     const key = String(params[config.uniqueKey]);
     const cached = cache.get(key);
 
@@ -146,5 +200,13 @@ export function createBatchRequest<
 
     cache.set(key, promise);
     return promise;
+  }) as BatchRequestHandler<TRequest, TResponse>;
+
+  handler.clearCache = (): void => {
+    cache.clear();
   };
+
+  handler.cache = cache;
+
+  return handler;
 }

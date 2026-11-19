@@ -100,7 +100,10 @@ export function parseArgs(argv) {
     opts.profile = unique[0];
     opts.obfuscate = unique[0] === "s";
     opts.spaghetti = unique[0] === "spaghetti" ? true : undefined;
-    if (unique[0] === "standalone" || unique[0] === "s") {
+    if (
+      (unique[0] === "standalone" || unique[0] === "s") &&
+      opts.inlineFramework === undefined
+    ) {
       opts.inlineFramework = true;
     }
   }

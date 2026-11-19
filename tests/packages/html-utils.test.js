@@ -53,6 +53,21 @@ describe("@wpdev/html-utils — elementProps", () => {
     expect(props.label).toBe("plain string with spaces");
     expect(props.url).toBe("https://example.test/path?q=1");
   });
+
+  test("ignores prototype pollution attributes in elementProps", async () => {
+    const { elementProps } = await import("../../packages/html-utils/index.js");
+    const el = document.createElement("div");
+    el.setAttribute("data-__proto__", '{"polluted":"yes"}');
+    el.setAttribute("data-constructor", "foo");
+    el.setAttribute("data-prototype", "bar");
+    el.setAttribute("data-valid", "ok");
+    const props = elementProps(el);
+    expect(props.valid).toBe("ok");
+    expect(props.__proto__).toBe(Object.prototype);
+    expect(Object.prototype.polluted).toBeUndefined();
+    expect(props.constructor).toBe(Object);
+    expect(props.prototype).toBeUndefined();
+  });
 });
 
 describe("@wpdev/html-utils — isInputNameValid (whole-string whitelist)", () => {
@@ -120,5 +135,40 @@ describe("@wpdev/html-utils — mountComponent", () => {
     }
     expect(() => mountComponent("does-not-exist", Noop, {})).not.toThrow();
     expect(document.getElementById("does-not-exist")).toBeNull();
+  });
+});
+
+describe("@wpdev/html-utils — extractFormData", () => {
+  test("extracts scalar and multi-value fields", async () => {
+    const { extractFormData } =
+      await import("../../packages/html-utils/index.js");
+    const form = document.createElement("form");
+    form.innerHTML = `
+      <input type="text" name="title" value="Test Post" />
+      <input type="checkbox" name="categories[]" value="news" checked />
+      <input type="checkbox" name="categories[]" value="updates" checked />
+      <input type="checkbox" name="tags" value="tag1" checked />
+      <input type="checkbox" name="tags" value="tag2" checked />
+    `;
+    const data = extractFormData(form);
+    expect(data.title).toBe("Test Post");
+    expect(data["categories[]"]).toEqual(["news", "updates"]);
+    expect(data.tags).toEqual(["tag1", "tag2"]);
+  });
+
+  test("ignores prototype pollution keys in form fields", async () => {
+    const { extractFormData } =
+      await import("../../packages/html-utils/index.js");
+    const form = document.createElement("form");
+    form.innerHTML = `
+      <input type="text" name="__proto__" value="polluted" />
+      <input type="text" name="constructor" value="bad" />
+      <input type="text" name="prototype" value="worse" />
+      <input type="text" name="valid" value="good" />
+    `;
+    const data = extractFormData(form);
+    expect(data.valid).toBe("good");
+    expect(Object.prototype.polluted).toBeUndefined();
+    expect(data.constructor).toBe(Object);
   });
 });

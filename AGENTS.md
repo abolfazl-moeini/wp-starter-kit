@@ -59,10 +59,10 @@ wp-starter-kit/
 │   ├── rule-engine/                   # Conditional rules & dynamic evaluation engine
 │   ├── translation/                   # Gettext translation compiler & extraction scripts
 │   ├── ui-components/                 # Reusable Preact/React UI elements
-│   └── build-go/                      # New Go build system (wpdev-build: config, hash, sidecar, CLI)
+│   └── build-go/                      # W1 pilot Go build tooling (wpdev-build: config, hash, sidecar)
 │
-├── core/packages/                     # JS build workspaces (esbuild orchestration)
-│   ├── build/                         # [DEPRECATED] Legacy Node.js build CLIs (deprecated in favor of build-go)
+├── core/packages/                     # Active JS build workspaces (esbuild orchestration)
+│   ├── build/                         # Active Node.js/esbuild build CLIs (dependencies, components, styles, assets)
 │   ├── dependency-extraction-esbuild-plugin/ # Emits WordPress .asset.php sidecars
 │   └── utils/                         # Config readers and build helpers
 │
@@ -107,18 +107,18 @@ Plugins boot through `src/Core/Plugin.php`:
 - If a module includes frontend assets, entries reside in `src/Modules/{ModuleName}/assets/entries/*.{ts,tsx}` and compile automatically into `assets/bundles/{Module}-{entry}.js`.
 - Duck-Typed Module Registration: In standalone/inlined builds, module loaders accept `object` to allow plugins to coexist without strict type-locking collisions.
 
-### 3.3 The Legacy 4-Stage Client Build Pipeline (Deprecated)
+### 3.3 The Active 4-Stage Client Build Pipeline
 
-Managed by esbuild via `npm run build` or `npm run dev` (`core/packages/build/` — **Deprecated**):
+Managed by esbuild via `npm run build` or `npm run dev` (`core/packages/build/` — **Active**):
 
 1. `build:dependencies`: Extracts vendor libraries into `{slug}-deps.js` with `.asset.php` sidecar.
 2. `build:components`: Scans module entries and compiles Preact/React/Polaris components.
 3. `build:styles`: Bundles CSS with content-hash sidecars.
 4. `build:assets`: Synchronizes third-party assets from `node_modules` into `assets/libraries/`.
 
-### 3.4 The Go Build System (`packages/build-go`)
+### 3.4 The Go Build System W1 Pilot (`packages/build-go`)
 
-The next-generation build system is implemented in Go (`packages/build-go` / binary `wpdev-build`) with zero-drift parity:
+A W1 pilot CLI (`packages/build-go` / binary `wpdev-build`) covering config, hashing, and sidecars only (does not yet replace esbuild, watch, assets, or zip):
 
 - **`wpdev-build config`**: Fast `wpdev.json` discovery, validation, and JSON serialization with JS falsy/truthy semantics.
 - **`wpdev-build hash`**: WHATWG-compliant lossy UTF-8 MD5 asset hashing matching Node.js `Buffer.toString("utf8")`.

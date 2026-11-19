@@ -32,6 +32,16 @@ function wpdev_dir_max_mtime(string $dir): int
  */
 function wpdev_check_build_freshness(string $root): bool
 {
+    $cfgPath = $root . '/wpdev.json';
+    if (!is_file($cfgPath)) {
+        $cfgPath = $root . '/project.config.json';
+    }
+    $cfg = is_file($cfgPath) ? json_decode((string) file_get_contents($cfgPath), true) : [];
+    if (!is_array($cfg)) {
+        $cfg = [];
+    }
+    $cfgMtime = is_file($cfgPath) ? (filemtime($cfgPath) ?: 0) : 0;
+
     $entries = array_merge(
         glob($root . '/src/Modules/*/assets/entries/*.ts') ?: [],
         glob($root . '/src/Modules/*/assets/entries/*.tsx') ?: [],
@@ -43,7 +53,7 @@ function wpdev_check_build_freshness(string $root): bool
         $moduleDir = basename(dirname(dirname(dirname($entry))));
         $base = basename($entry);
         $name = preg_replace('/\.(ts|tsx|js|jsx)$/', '', $base);
-        if ($name === null || $name === '') {
+        if (!is_string($name) || $name === '') {
             continue;
         }
 
@@ -60,14 +70,15 @@ function wpdev_check_build_freshness(string $root): bool
             return false;
         }
 
-        // Compare newest source mtime in the module's assets directory vs bundle
+        // Compare newest source mtime (and wpdev.json mtime) vs bundle
         $moduleAssetsDir = $root . '/src/Modules/' . $moduleDir . '/assets';
         $maxSourceMtime = wpdev_dir_max_mtime($moduleAssetsDir);
         if ($maxSourceMtime === 0) {
             $maxSourceMtime = filemtime($entry) ?: 0;
         }
+        $effectiveSourceMtime = max($maxSourceMtime, $cfgMtime);
 
-        if ($maxSourceMtime > $bundleMtimeJs || $maxSourceMtime > $bundleMtimePhp) {
+        if ($effectiveSourceMtime > $bundleMtimeJs || $effectiveSourceMtime > $bundleMtimePhp) {
             return false;
         }
     }
@@ -78,17 +89,12 @@ function wpdev_check_build_freshness(string $root): bool
     $depsSource = is_file($depsSourceTs) ? $depsSourceTs : (is_file($depsSourceJs) ? $depsSourceJs : null);
 
     if ($depsSource !== null) {
-        $cfgPath = $root . '/wpdev.json';
-        if (!is_file($cfgPath)) {
-            $cfgPath = $root . '/project.config.json';
-        }
-        $cfg = is_file($cfgPath) ? json_decode((string) file_get_contents($cfgPath), true) : [];
         $depsBundle = (string) ($cfg['depsBundle'] ?? 'wpdev-starter-deps.js');
 
         $depsBundleJs = $root . '/assets/bundles/' . $depsBundle;
         $depsBundlePhp = preg_replace('/\.js$/', '.asset.php', $depsBundleJs);
 
-        if (!is_file($depsBundleJs) || !is_file($depsBundlePhp)) {
+        if (!is_string($depsBundlePhp) || $depsBundlePhp === $depsBundleJs || !is_file($depsBundleJs) || !is_file($depsBundlePhp)) {
             return false;
         }
 
@@ -100,7 +106,40 @@ function wpdev_check_build_freshness(string $root): bool
             return false;
         }
 
-        if ($depsSourceMtime > $depsJsMtime || $depsSourceMtime > $depsPhpMtime) {
+        $effectiveDepsMtime = max($depsSourceMtime, $cfgMtime);
+        if ($effectiveDepsMtime > $depsJsMtime || $effectiveDepsMtime > $depsPhpMtime) {
+            return false;
+        }
+
+        // Verify shared Preact vendor bundle when uiFramework === 'preact'
+        if (($cfg['uiFramework'] ?? '') === 'preact') {
+            if (!is_file($root . '/assets/bundles/preact.js') || !is_file($root . '/assets/bundles/preact.asset.php')) {
+                return false;
+            }
+        }
+    }
+
+    // Check style entry points (wpdev.json build.styleEntryPoints or legacy build.config.json)
+    $styleEntries = [];
+    if (isset($cfg['build']['styleEntryPoints']) && is_array($cfg['build']['styleEntryPoints'])) {
+        $styleEntries = $cfg['build']['styleEntryPoints'];
+    } elseif (is_file($root . '/build.config.json')) {
+        $buildCfg = json_decode((string) file_get_contents($root . '/build.config.json'), true);
+        $styleEntries = is_array($buildCfg) ? ($buildCfg['styleEntryPoints'] ?? []) : [];
+    }
+
+    foreach ($styleEntries as $styleEntry) {
+        $absStyle = $root . '/' . ltrim((string) $styleEntry, '/');
+        if (!is_file($absStyle)) {
+            continue;
+        }
+        $assetPhp = preg_replace('/\.css$/i', '.asset.php', $absStyle);
+        if (!is_string($assetPhp) || $assetPhp === $absStyle || !is_file($assetPhp)) {
+            return false;
+        }
+        $styleMtime = filemtime($absStyle);
+        $assetMtime = filemtime($assetPhp);
+        if ($styleMtime === false || $assetMtime === false || $styleMtime > $assetMtime) {
             return false;
         }
     }

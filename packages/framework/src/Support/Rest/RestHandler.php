@@ -34,6 +34,19 @@ abstract class RestHandler
     abstract public function rest_permission(): bool;
 
     /**
+     * Public wrapper registered as the route's permission_callback.
+     * Delegates to rest_permission() by default, but allows subclasses
+     * to inspect $request without breaking LSP.
+     *
+     * @param WP_REST_Request|null $request
+     * @return bool|\WP_Error
+     */
+    public function permission_callback(?WP_REST_Request $request = null)
+    {
+        return $this->rest_permission();
+    }
+
+    /**
      * The route endpoint segment (e.g. 'items').
      */
     abstract public function rest_end_point(): string;

@@ -100,8 +100,13 @@ export class RuleEngine {
     let lastSession = deepClone(session);
     let complete = false;
     let pending = 0;
+    let cycles = 0;
+    const MAX_CYCLES = 1000;
 
     const runRule = (idx) => {
+      if (complete) {
+        return;
+      }
       if (idx >= rules.length) {
         if (pending === 0 && !complete) {
           complete = true;
@@ -111,6 +116,8 @@ export class RuleEngine {
         return;
       }
       const rule = rules[idx];
+      let advanced = false;
+
       const api = {
         rule: () => rule,
         when: (outcome) => {
@@ -127,16 +134,14 @@ export class RuleEngine {
               next(() => cb(session));
               return;
             }
-            // After firing a rule's `then`, advance to the next rule
-            // in declaration order. Re-running from rule 0 only happens
-            // when the rule's `then` body explicitly calls `api.restart()`
-            // or `api.next()`. This avoids an infinite loop when two
-            // rules each mutate the session and would otherwise each
-            // see a "changed fact" and re-trigger the engine.
-            next(() => {
-              pending--;
-              runRule(idx + 1);
-            });
+
+            if (!advanced && !complete) {
+              advanced = true;
+              next(() => {
+                pending--;
+                runRule(idx + 1);
+              });
+            }
           } else {
             next(() => {
               pending--;
@@ -144,18 +149,50 @@ export class RuleEngine {
             });
           }
         },
-        restart: () => runRule(0),
+        restart: () => {
+          if (complete) return;
+          advanced = true;
+          cycles++;
+          if (cycles > MAX_CYCLES) {
+            complete = true;
+            session.matchPath = matchPath;
+            next(() => cb(session));
+            return;
+          }
+          next(() => {
+            pending--;
+            runRule(0);
+          });
+        },
         stop: () => {
+          if (complete) return;
           complete = true;
+          advanced = true;
+          pending = 0;
           session.matchPath = matchPath;
           next(() => cb(session));
         },
         next: () => {
+          if (complete || advanced) return;
+          advanced = true;
           if (!ignore && !isEqualish(lastSession, session)) {
             lastSession = deepClone(session);
-            next(() => runRule(0));
+            cycles++;
+            if (cycles > MAX_CYCLES) {
+              complete = true;
+              session.matchPath = matchPath;
+              next(() => cb(session));
+              return;
+            }
+            next(() => {
+              pending--;
+              runRule(0);
+            });
           } else {
-            next(() => runRule(idx + 1));
+            next(() => {
+              pending--;
+              runRule(idx + 1);
+            });
           }
         },
       };

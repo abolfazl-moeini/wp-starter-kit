@@ -1,4 +1,5 @@
 import { existsSync, watch as fsWatch } from "node:fs";
+import path from "node:path";
 import {
   fileCheckSum,
   phpFileContent,
@@ -48,12 +49,16 @@ export function buildStyleAssetFile(cssFilePath) {
  */
 export async function buildStyles(options = {}) {
   const buildConfig = options.buildConfig ?? (await readBuildConfig());
+  const cwd = options.cwd ?? process.cwd();
   const entries = buildConfig?.styleEntryPoints ?? [];
   const watch = options.watch ?? false;
 
   const results = [];
   for (const cssFilePath of entries) {
-    const assetPath = await buildStyleAssetFile(cssFilePath);
+    const absPath = path.isAbsolute(cssFilePath)
+      ? cssFilePath
+      : path.resolve(cwd, cssFilePath);
+    const assetPath = await buildStyleAssetFile(absPath);
     console.info(`Done: ${assetPath}`);
     results.push(assetPath);
   }
@@ -64,15 +69,15 @@ export async function buildStyles(options = {}) {
 
   const watchers = [];
   for (const cssFilePath of entries) {
-    const watcher = fsWatch(cssFilePath, async () => {
+    const absPath = path.isAbsolute(cssFilePath)
+      ? cssFilePath
+      : path.resolve(cwd, cssFilePath);
+    const watcher = fsWatch(absPath, async () => {
       try {
-        const assetPath = await buildStyleAssetFile(cssFilePath);
+        const assetPath = await buildStyleAssetFile(absPath);
         console.info(`Rebuilt: ${assetPath}`);
       } catch (error) {
-        console.error(
-          `Style rebuild failed for ${cssFilePath}:`,
-          error.message,
-        );
+        console.error(`Style rebuild failed for ${absPath}:`, error.message);
       }
     });
     watchers.push(watcher);

@@ -108,4 +108,54 @@ describe("@wpdev/rule-engine", () => {
     engine.findRules(query);
     expect(query).toEqual({ name: "test", priority: undefined });
   });
+
+  test("api.stop() stops processing further rules", async () => {
+    const { RuleEngine } = await import("../../packages/rule-engine/index.js");
+    const engine = new RuleEngine();
+    let secondRan = false;
+    engine.register([
+      {
+        name: "first",
+        condition: () => true,
+        then: (api, fact) => {
+          fact.first = true;
+          api.stop();
+        },
+      },
+      {
+        name: "second",
+        condition: () => true,
+        then: (api, fact) => {
+          secondRan = true;
+          fact.second = true;
+        },
+      },
+    ]);
+
+    const res = await new Promise((resolve) => {
+      engine.execute({}, (session) => resolve(session));
+    });
+    expect(res.first).toBe(true);
+    expect(secondRan).toBe(false);
+    expect(res.second).toBeUndefined();
+  });
+
+  test("infinite restart terminates at MAX_CYCLES limit without hanging", async () => {
+    const { RuleEngine } = await import("../../packages/rule-engine/index.js");
+    const engine = new RuleEngine();
+    let count = 0;
+    engine.register({
+      name: "loop",
+      condition: () => true,
+      then: (api) => {
+        count++;
+        api.restart();
+      },
+    });
+
+    await new Promise((resolve) => {
+      engine.execute({}, () => resolve());
+    });
+    expect(count).toBeGreaterThan(500);
+  });
 });

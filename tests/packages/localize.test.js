@@ -32,4 +32,18 @@ describe("localize", () => {
   test("translate('greeting') reads translate.* keys", () => {
     expect(localize.translate("greeting")).toBe("Hello");
   });
+
+  test("get('nullProp.child') safely returns undefined when intermediate is null", () => {
+    globalThis.WPDevLoc.nullProp = null;
+    expect(() => localize.get("nullProp.child")).not.toThrow();
+    expect(localize.get("nullProp.child")).toBeUndefined();
+  });
+
+  test("blocks prototype pollution keys", () => {
+    expect(localize.get("__proto__")).toBeUndefined();
+    expect(localize.get("constructor")).toBeUndefined();
+    expect(localize.get("prototype")).toBeUndefined();
+    expect(localize.get("__proto__.polluted")).toBeUndefined();
+    expect(localize.get("a.constructor.name")).toBeUndefined();
+  });
 });

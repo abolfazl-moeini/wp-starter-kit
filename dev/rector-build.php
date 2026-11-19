@@ -23,7 +23,10 @@ return static function (RectorConfig $rector_config): void {
     $shared($rector_config, ['auto_vendor_on_nodev' => true]);
 
     $phpMin = '7.4';
-    $root = dirname(__DIR__);
+    $rectorRoot = getenv('WPDEV_RECTOR_ROOT');
+    $root = ($rectorRoot !== false && $rectorRoot !== '' && is_dir($rectorRoot))
+        ? (realpath($rectorRoot) ?: $rectorRoot)
+        : (is_file(getcwd() . '/wpdev.json') ? getcwd() : dirname(__DIR__));
     $cfgPath = $root . '/wpdev.json';
     if (! is_readable($cfgPath)) {
         $cfgPath = $root . '/project.config.json';

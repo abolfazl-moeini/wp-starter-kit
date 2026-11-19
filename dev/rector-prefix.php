@@ -74,17 +74,11 @@ return static function (RectorConfig $rector_config): void {
         return;
     }
 
-    // RenameClassRector is the Rector 1.x replacement for the old
-    // `RenameNamespaceRector` (removed in 1.0). It rewrites all class
-    // references — `use`, type hints, instantiation, FQNs, etc. — using
-    // the supplied `oldClass => newClass` map.
-    //
-    // Note: Rector 1.x does NOT rewrite `namespace OldName;` declarations
-    // themselves (that part of the old RenameNamespaceRector was dropped).
-    // For a full release rebrand the namespace declaration must be edited
-    // by hand or by a custom Rector rule. See deliverable.md "open issues".
-    $rector_config->ruleWithConfiguration(
-        RenameClassRector::class,
-        $namespacePairs
+    // Rector 1.x/2.x removed RenameNamespaceRector; RenameClassRector only renames
+    // exact FQCNs and does NOT rewrite namespace declarations or prefix sub-namespaces.
+    // Fail explicitly rather than silently producing broken partial renames.
+    throw new \RuntimeException(
+        "rector:prefix is deprecated and cannot safely rewrite namespace prefixes in Rector 1.x/2.x. "
+        . "Use Strauss via `composer release:dist` (or `wpdev release`) for full vendor/namespace scoping."
     );
 };

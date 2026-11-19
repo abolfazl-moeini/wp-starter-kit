@@ -51,6 +51,15 @@ jobs:
   php-test:
     name: PHP Tests (PHP ${{ matrix.php }})
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mariadb:10.5
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wp_tests
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     strategy:
       fail-fast: false
       matrix:
@@ -73,10 +82,18 @@ jobs:
           restore-keys: ${{ runner.os }}-php-${{ matrix.php }}-
 
       - name: Install Composer dependencies
-        run: composer install --prefer-dist --no-progress --ignore-platform-req=php --no-scripts --ignore-platform-req=php --no-scripts
+        run: composer install --prefer-dist --no-progress --ignore-platform-req=php --no-scripts
+
+      - name: Install WordPress test library
+        run: |
+          bash vendor/wp-cli/scaffold-command/templates/install-wp-tests.sh wp_tests root root 127.0.0.1:3306 latest true
+        env:
+          WP_TESTS_DIR: /tmp/wordpress-tests-lib
 
       - name: Run PHPUnit
         run: composer test
+        env:
+          WP_TESTS_DIR: /tmp/wordpress-tests-lib
 
       - name: Upload coverage to Codecov
         if: matrix.php == '8.2' && github.event_name == 'push'
@@ -149,10 +166,10 @@ jobs:
         run: composer install --prefer-dist --no-progress --ignore-platform-req=php --no-scripts
 
       - name: Build distribution tree
-        run: composer release:dist
+        run: composer release:dist -- --skip-freshness
 
-      - name: Verify vendor scoping integration tests
-        run: composer test -- --filter VendorScopingIntegrationTest
+      - name: Verify distribution scoping and runtime boot
+        run: php dev/release/verify-dist.php
 
   # ============================================================
   # Job 5: Build (esbuild + assets + translation)
@@ -296,6 +313,24 @@ jobs:
           ! grep -qE 'class [A-Za-z0-9_]+ extends ' /tmp/wpdev-fw/src/Modules/WpdevDemo/Module.php
 
   # ============================================================
+  # Job: Go unit tests for packages/build-go
+  # ============================================================
+  go-test:
+    name: Go Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Run Go tests
+        working-directory: packages/build-go
+        run: go test -race -v ./...
+
+  # ============================================================
   # Job 8: Status check (fails if any required job failed)
   # ============================================================
   ci-pass:
@@ -305,6 +340,7 @@ jobs:
       [
         js-test,
         php-test,
+        go-test,
         lint,
         release-dist,
         build,
@@ -320,6 +356,9 @@ jobs:
           fi
           if [ "${{ needs.php-test.result }}" != "success" ]; then
             echo "PHP tests failed"; exit 1
+          fi
+          if [ "${{ needs.go-test.result }}" != "success" ]; then
+            echo "Go tests failed"; exit 1
           fi
           if [ "${{ needs.lint.result }}" != "success" ]; then
             echo "Lint failed"; exit 1

@@ -10,7 +10,7 @@ class Setup {
 	protected $setup_callback;
 
 
-	public function __construct( callable $setup = null ) {
+	public function __construct( ?callable $setup = null ) {
 
 		$this->setup_callback = $setup;
 	}

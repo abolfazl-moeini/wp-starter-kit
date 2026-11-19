@@ -73,10 +73,18 @@ const MODULE_ENTRY_GLOBS = [
 const LEGACY_SCRIPT_GLOB = "**/script.js";
 const COMPONENT_ENTRY_IGNORE = [
   "**/node_modules/**",
+  "**/vendor/**",
+  "**/vendor-prefixed/**",
   "assets/**",
+  "build/**",
+  "core/**",
+  "dev/**",
   "dist/**",
   "examples/**",
+  "packages/**",
   "tests/**",
+  "wp-content/**",
+  ".git/**",
 ];
 
 function bundleNameForEntry(cwd, sourceFile) {
@@ -175,7 +183,7 @@ async function buildSingleComponent({
 
   if (!projectConfig.depsBundle) {
     throw new Error(
-      "project.config.json is missing 'depsBundle' (required for component builds)",
+      "wpdev.json is missing 'depsBundle' (required for component builds)",
     );
   }
   const depsHandle = projectConfig.depsBundle.replace(/\.js$/, "");
@@ -228,6 +236,18 @@ export async function buildComponents(options = {}) {
   const watch = options.watch ?? false;
 
   const jsfiles = await discoverComponentEntries(cwd);
+
+  // Guard against distinct entry points mapping to identical bundle names
+  const bundleMap = new Map();
+  for (const file of jsfiles) {
+    const bundleName = bundleNameForEntry(cwd, file);
+    if (bundleMap.has(bundleName)) {
+      throw new Error(
+        `Bundle name collision: "${file}" and "${bundleMap.get(bundleName)}" both map to "${bundleName}". Rename one entry to avoid clobbering output.`,
+      );
+    }
+    bundleMap.set(bundleName, file);
+  }
 
   if (watch) {
     const contexts = [];

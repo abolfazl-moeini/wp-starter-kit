@@ -246,7 +246,9 @@ final class Assets {
 		array $extra_deps = []
 	): bool {
 		if ( '' !== $rel_path ) {
-			self::register_bundle_script( $handle, $rel_path, $extra_deps );
+			if ( ! self::register_bundle_script( $handle, $rel_path, $extra_deps ) ) {
+				return false;
+			}
 		}
 
 		wp_enqueue_script( $handle );
@@ -275,6 +277,9 @@ final class Assets {
 		$deps    = array_merge( $extra_deps, $info['dependencies'] ?? [] );
 
 		$url = self::resolve_asset_url( $rel_path );
+		if ( '' === $url ) {
+			return false;
+		}
 		if ($version) {
 			$url = add_query_arg( 'id', $version, $url );
 		}
@@ -298,6 +303,7 @@ final class Assets {
 		$config      = self::read_project_config();
 		$slug        = $config['slug'] ?? 'wpdev-starter';
 		$hook_prefix = $config['hookPrefix'] ?? 'wpdev';
+		$namespace   = $config['restNamespace'] ?? ( $slug . '/v1' );
 
 		return [
 			'api'   => [
@@ -305,7 +311,7 @@ final class Assets {
 				'nonce' => wp_create_nonce( 'wp_rest' ),
 			],
 			'api_x' => [
-				'url'   => sanitize_url( rest_url( $slug . '/v1/' ) ),
+				'url'   => sanitize_url( rest_url( trim( $namespace, '/' ) . '/' ) ),
 				'nonce' => wp_create_nonce( $hook_prefix . '_rest' ),
 			],
 		];
@@ -352,6 +358,9 @@ final class Assets {
 		$deps    = array_merge( $extra_deps, $info['dependencies'] ?? [] );
 
 		$url = self::resolve_asset_url( $abs_path );
+		if ( '' === $url ) {
+			return false;
+		}
 		if ($version) {
 			$url = add_query_arg( 'id', $version, $url );
 		}
@@ -377,6 +386,9 @@ final class Assets {
 		$deps    = array_merge( $extra_deps, $info['dependencies'] ?? [] );
 
 		$url = self::resolve_asset_url( $abs_path );
+		if ( '' === $url ) {
+			return false;
+		}
 		if ($version) {
 			$url = add_query_arg( 'id', $version, $url );
 		}
@@ -406,9 +418,13 @@ final class Assets {
 		$real_abs  = realpath( $abs_path );
 		$real_root = realpath( $base_path );
 
-		if ( $real_abs && $real_root && strpos( $real_abs, $real_root ) === 0 ) {
-			$relative = ltrim( substr( $real_abs, strlen( $real_root ) ), '/' );
-			return $base_url . $relative;
+		if ( $real_abs && $real_root ) {
+			$norm_abs  = str_replace( '\\', '/', $real_abs );
+			$norm_root = rtrim( str_replace( '\\', '/', $real_root ), '/' ) . '/';
+			if ( strpos( $norm_abs . '/', $norm_root ) === 0 ) {
+				$relative = ltrim( substr( $norm_abs, strlen( $norm_root ) - 1 ), '/' );
+				return $base_url . $relative;
+			}
 		}
 
 		// Multi-plugin caveat: Assets::$plugin_dir is process-wide. When another
@@ -421,9 +437,13 @@ final class Assets {
 			&& function_exists( 'content_url' )
 		) {
 			$content_dir = realpath( WP_CONTENT_DIR );
-			if ( $content_dir && strpos( $real_abs, $content_dir ) === 0 ) {
-				$relative = ltrim( str_replace( '\\', '/', substr( $real_abs, strlen( $content_dir ) ) ), '/' );
-				return content_url( $relative );
+			if ( $content_dir ) {
+				$norm_abs     = str_replace( '\\', '/', $real_abs );
+				$norm_content = rtrim( str_replace( '\\', '/', $content_dir ), '/' ) . '/';
+				if ( strpos( $norm_abs . '/', $norm_content ) === 0 ) {
+					$relative = ltrim( substr( $norm_abs, strlen( $norm_content ) - 1 ), '/' );
+					return content_url( $relative );
+				}
 			}
 		}
 
@@ -453,11 +473,15 @@ final class Assets {
 
 		$real_dir  = realpath( $dir );
 		$real_root = realpath( rtrim( $base_path, '/\\' ) );
-		if ($real_dir && $real_root && strpos( $real_dir, $real_root ) === 0) {
-			// Walk up until we find a `languages` directory inside the plugin.
-			$candidate = $real_root . '/languages';
-			if (is_dir( $candidate )) {
-				return $candidate;
+		if ($real_dir && $real_root) {
+			$norm_dir  = str_replace( '\\', '/', $real_dir );
+			$norm_root = rtrim( str_replace( '\\', '/', $real_root ), '/' ) . '/';
+			if (strpos( $norm_dir . '/', $norm_root ) === 0) {
+				// Walk up until we find a `languages` directory inside the plugin.
+				$candidate = rtrim( $norm_root, '/' ) . '/languages';
+				if (is_dir( $candidate )) {
+					return $candidate;
+				}
 			}
 		}
 

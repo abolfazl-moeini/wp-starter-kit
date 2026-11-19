@@ -18,6 +18,14 @@ export function importAsGlobals(mapping, collectInternalScripts) {
   return {
     name: "global-imports",
     setup(build) {
+      if (typeof build.onStart === "function") {
+        build.onStart(() => {
+          if (collectInternalScripts && Array.isArray(collectInternalScripts)) {
+            collectInternalScripts.length = 0;
+          }
+        });
+      }
+
       build.onResolve({ filter: /.*/ }, (args) => {
         if (defaultRequestToHandle(args.path)) {
           // is WordPress global script
@@ -36,7 +44,11 @@ export function importAsGlobals(mapping, collectInternalScripts) {
           }
         }
 
-        if (mapping && mapping[args.path]) {
+        if (
+          mapping &&
+          Object.prototype.hasOwnProperty.call(mapping, args.path) &&
+          mapping[args.path]
+        ) {
           return {
             path: args.path,
             namespace: "external-global-custom",
@@ -112,7 +124,7 @@ export function assetFileInfo(
 ) {
   const generatedHandles = generateWordPressScriptHandles(buildResponse);
   const handles = forceAssets.length
-    ? generatedHandles.concat(forceAssets)
+    ? generatedHandles.concat(forceAssets).filter(onlyUnique)
     : generatedHandles;
 
   return {
@@ -151,7 +163,7 @@ export function phpFileContent(theObject) {
 
 export function bundleFilePath(buildResponse) {
   return Object.keys(buildResponse.metafile.outputs).find(
-    (file) => !!file.match(/.jsx?$/i),
+    (file) => !!file.match(/\.jsx?$/i),
   );
 }
 

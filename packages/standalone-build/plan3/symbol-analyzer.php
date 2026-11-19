@@ -230,9 +230,9 @@ class Plan3_Symbol_Analyzer {
 				public function enterNode( Node $node ) {
 					if ( $node instanceof Node\Stmt\ClassLike ) {
 						$fqcn = '';
-						if ( isset( $node->namespacedName ) && $node->namespacedName instanceof Node\Name ) {
+						if ( isset( $node->namespacedName ) ) {
 							$fqcn = $node->namespacedName->toString();
-						} elseif ( isset( $node->name ) && $node->name instanceof Node\Identifier ) {
+						} elseif ( isset( $node->name ) ) {
 							$fqcn = $node->name->toString();
 						} else {
 							$fqcn = 'anonymous@' . spl_object_hash( $node );
@@ -613,6 +613,8 @@ class Plan3_Symbol_Analyzer {
 							);
 						}
 					}
+
+					return null;
 				}
 
 				public function leaveNode( Node $node ) {
@@ -630,6 +632,8 @@ class Plan3_Symbol_Analyzer {
 							$this->current_scope = $this->current_scope->parent;
 						}
 					}
+
+					return null;
 				}
 
 				public function process_scope_decisions() {

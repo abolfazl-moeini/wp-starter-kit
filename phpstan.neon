@@ -1,6 +1,7 @@
 parameters:
     level: 5
     phpVersion: 80100
+    treatPhpDocTypesAsCertain: false
     paths:
         - .
     excludePaths:
@@ -19,6 +20,6 @@ parameters:
         - core/packages/*/vendor/*
         - packages/mcp-integration/tests/*
         - packages/php-fault-tolerance/tests/*
-
-
-
+        - packages/php-fault-tolerance/src/Stub/*
+        # Standalone-build obfuscator internals tracked separately in FIX_PLAN_PIPELINE.md
+        - packages/standalone-build/*

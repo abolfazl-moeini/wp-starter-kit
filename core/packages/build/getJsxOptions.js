@@ -42,11 +42,23 @@ export function getReactAliases(uiFramework = "preact") {
  * @param {string} [cwd=process.cwd()]
  * @returns {Record<string, string>}
  */
+function resolvePolarisRoot(cwd = process.cwd()) {
+  const localPolaris = path.join(cwd, "src", "polaris");
+  if (existsSync(localPolaris)) {
+    return localPolaris;
+  }
+  const monorepoPolaris = path.join(cwd, "packages", "polaris-stack", "src");
+  if (existsSync(path.join(monorepoPolaris, "index.ts"))) {
+    return monorepoPolaris;
+  }
+  return null;
+}
+
 export function getProjectAliases(cwd = process.cwd()) {
   /** @type {Record<string, string>} */
   const aliases = {};
-  const polarisRoot = path.join(cwd, "src", "polaris");
-  if (existsSync(polarisRoot)) {
+  const polarisRoot = resolvePolarisRoot(cwd);
+  if (polarisRoot) {
     const indexTs = path.join(polarisRoot, "index.ts");
     const indexJs = path.join(polarisRoot, "index.js");
     aliases["@wpdev/polaris-stack"] = existsSync(indexTs)
@@ -97,5 +109,5 @@ export function getBuildAliases(
  * @returns {boolean}
  */
 export function hasPolarisSource(cwd = process.cwd()) {
-  return existsSync(path.join(cwd, "src", "polaris"));
+  return resolvePolarisRoot(cwd) !== null;
 }

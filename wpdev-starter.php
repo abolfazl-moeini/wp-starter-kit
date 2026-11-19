@@ -3,7 +3,7 @@
  * Plugin Name:       WPDev Starter
  * Plugin URI:        https://github.com/abolfazl-moeini/wp-plugin-starter-kit
  * Description:       WordPress plugin starter kit — modular monolith reference implementation.
- * Version:           1.1.0
+ * Version:           1.1.1
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Author:            wp-starter-kit
@@ -24,7 +24,7 @@ if ( defined( 'WPDEV_STARTER_LOADED' ) ) {
 define( 'WPDEV_STARTER_LOADED', true );
 
 if ( ! defined( 'WPDEV_STARTER_VERSION' )) {
-	define( 'WPDEV_STARTER_VERSION', '1.1.0' );
+	define( 'WPDEV_STARTER_VERSION', '1.1.1' );
 }
 if ( ! defined( 'WPDEV_STARTER_PLUGIN_FILE' )) {
 	define( 'WPDEV_STARTER_PLUGIN_FILE', __FILE__ );
@@ -47,23 +47,23 @@ foreach ($autoloadCandidates as $autoload) {
 // Inform Assets of the plugin root so path/URL resolution works correctly
 // regardless of whether the framework lives in packages/ (dev) or vendor/ (Composer).
 if ( class_exists( 'WPDev\\Support\\Assets' ) ) {
-	if ( method_exists( 'WPDev\\Support\\Assets', 'set_plugin_dir' ) ) {
-		\WPDev\Support\Assets::set_plugin_dir(
-			WPDEV_STARTER_PLUGIN_DIR,
-			plugins_url( '', WPDEV_STARTER_PLUGIN_FILE )
-		);
-	}
+	\WPDev\Support\Assets::set_plugin_dir(
+		WPDEV_STARTER_PLUGIN_DIR,
+		plugins_url( '', WPDEV_STARTER_PLUGIN_FILE )
+	);
 	// Shared vendors (handle: preact) — first registrant wins across plugins.
 	add_action(
 		'init',
 		static function (): void {
-			if ( method_exists( 'WPDev\\Support\\Assets', 'register_vendor_scripts' ) ) {
-				\WPDev\Support\Assets::register_vendor_scripts();
-			}
+			\WPDev\Support\Assets::register_vendor_scripts();
 		},
 		1,
 		0
 	);
+}
+
+if ( class_exists( 'WPDev\\Core\\Plugin' ) ) {
+	\WPDev\Core\Plugin::set_plugin_dir( WPDEV_STARTER_PLUGIN_DIR );
 }
 
 if ( ! class_exists( 'WPDev\\Core\\Plugin' )) {
@@ -126,23 +126,28 @@ if ( ! function_exists( 'wpdev_starter_load_textdomain' ) ) {
  */
 if ( ! function_exists( 'wpdev_starter_register_modules' ) ) {
 	function wpdev_starter_register_modules(): void {
-		if ( ! class_exists( 'WPDev\\Core\\Plugin' ) || ! method_exists( 'WPDev\\Core\\Plugin', 'loader' ) ) {
+		if ( ! class_exists( 'WPDev\\Core\\Plugin' ) ) {
 			return;
 		}
 		$loader = WPDev\Core\Plugin::loader();
-		if ( is_object( $loader ) && method_exists( $loader, 'register' ) ) {
-			if ( class_exists( 'WPDev\\Modules\\ExampleFeature\\Module' ) ) {
-				$loader->register( new WPDev\Modules\ExampleFeature\Module() );
-			}
-			if ( class_exists( 'WPDev\\Modules\\McpAbilities\\Module' ) ) {
-				$loader->register( new WPDev\Modules\McpAbilities\Module() );
-			}
+		if ( class_exists( 'WPDev\\Modules\\ExampleFeature\\Module' ) ) {
+			$loader->register( new WPDev\Modules\ExampleFeature\Module() );
+		}
+		if ( class_exists( 'WPDev\\Modules\\McpAbilities\\Module' ) ) {
+			$loader->register( new WPDev\Modules\McpAbilities\Module() );
 		}
 	}
 }
 
 add_action( 'plugins_loaded', 'wpdev_starter_register_modules', 5 );
-add_action( 'plugins_loaded', 'WPDev\\Core\\Plugin::boot', 10, 0 );
+add_action(
+	'plugins_loaded',
+	static function (): void {
+		\WPDev\Core\Plugin::boot( WPDEV_STARTER_PLUGIN_DIR . 'wpdev.json' );
+	},
+	10,
+	0
+);
 
 if (
 	did_action( 'plugins_loaded' )
@@ -151,20 +156,9 @@ if (
 	// Late load: wpdev-starter.php was included after `plugins_loaded`
 	// already fired, so the add_action() calls above are too late to
 	// run. Re-run both halves of the normal flow so the plugin still
-	// boots: register the modules, run Plugin::boot() (which is
-	// idempotent and preserves the pre-existing loader — see the
-	// boot() implementation), then explicitly call boot_all() on
-	// the loader. boot_all() fires the `_modules_loaded` action
-	// internally, so third-party listeners still see the signal
-	// even though `on_plugins_loaded` will not fire on this request.
-	if ( method_exists( 'WPDev\\Core\\Plugin', 'boot' ) ) {
-		WPDev\Core\Plugin::boot();
-	}
+	// boots: register the modules FIRST, then run Plugin::boot()
+	// (which will trigger on_plugins_loaded and boot all registered modules).
+	\WPDev\Core\Plugin::set_plugin_dir( WPDEV_STARTER_PLUGIN_DIR );
 	wpdev_starter_register_modules();
-	if ( method_exists( 'WPDev\\Core\\Plugin', 'loader' ) ) {
-		$loader = WPDev\Core\Plugin::loader();
-		if ( is_object( $loader ) && method_exists( $loader, 'boot_all' ) ) {
-			$loader->boot_all();
-		}
-	}
+	\WPDev\Core\Plugin::boot( WPDEV_STARTER_PLUGIN_DIR . 'wpdev.json' );
 }

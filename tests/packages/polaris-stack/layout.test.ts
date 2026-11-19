@@ -191,7 +191,7 @@ describe("polaris-stack layout render", () => {
   test("Switcher sets data-limit attribute and --ps-limit style", () => {
     const root = document.createElement("div");
     render(h(Switcher, { limit: 4 }, "items"), root);
-    const el = root.querySelector(".ps-switcher");
+    const el = root.querySelector(".ps-switcher") as HTMLElement | null;
     expect(el?.getAttribute("data-limit")).toBe("4");
     expect(el?.style.getPropertyValue("--ps-limit")).toBe("4");
   });

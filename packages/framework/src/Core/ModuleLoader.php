@@ -95,7 +95,9 @@ final class ModuleLoader {
 			if ( method_exists( $module, 'should_boot' ) && ! $module->should_boot() ) {
 				continue;
 			}
-			$module->boot();
+			if ( method_exists( $module, 'boot' ) ) {
+				$module->boot();
+			}
 		}
 
 		$this->fire_loaded_action();
@@ -106,7 +108,7 @@ final class ModuleLoader {
      *
      * @param string $slug The module slug.
      */
-    public function get( string $slug ): ?ModuleInterface {
+    public function get( string $slug ): ?object {
 		return $this->modules[ $slug ] ?? null;
 	}
 
@@ -122,7 +124,7 @@ final class ModuleLoader {
 	/**
 	 * The full module map keyed by slug, in registration order.
 	 *
-	 * @return array<string, ModuleInterface>
+	 * @return array<string, object>
 	 */
 	public function all(): array {
 		return $this->modules;
@@ -134,10 +136,9 @@ final class ModuleLoader {
 	 * the loader implementation before boot. Falls through silently
 	 * in non-WordPress environments (CLI, unit tests).
 	 *
-	 * @param array<string, ModuleInterface> $modules The currently
-	 *                                                 registered modules.
+	 * @param array<string, object> $modules The currently registered modules.
 	 *
-	 * @return array<string, ModuleInterface>
+	 * @return array<string, object>
 	 */
 	private function filter_modules( array $modules ): array {
 		if ( ! function_exists( 'apply_filters' ) ) {

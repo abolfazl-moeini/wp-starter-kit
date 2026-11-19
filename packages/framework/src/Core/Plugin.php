@@ -175,7 +175,7 @@ final class Plugin {
 		// `plugins_loaded` closure, or in a mu-plugin / wp-cli /
 		// test-bootstrap include order). Replacing it would silently
 		// drop every module the caller already registered.
-		$loader = self::$loaders[ $slug ] ?? ( null === self::$loader ? new ModuleLoader( $hook_prefix ) : self::$loader );
+		$loader = self::$loaders[ $slug ] ?? ( ( empty( self::$loaders ) && null !== self::$loader ) ? self::$loader : new ModuleLoader( $hook_prefix ) );
 		self::$loaders[ $slug ] = $loader;
 		if ( null === self::$loader ) {
 			self::$loader = $loader;
@@ -250,8 +250,16 @@ final class Plugin {
 	 * Return the module loader, creating it on demand if {@see
 	 * Plugin::boot()} has not run yet. Useful for code that needs
 	 * to register a module before boot() finishes.
+	 *
+	 * @param string|null $slug Optional plugin slug to retrieve specific loader.
 	 */
-	public static function loader(): ModuleLoader {
+	public static function loader( ?string $slug = null ): ModuleLoader {
+		if ( null !== $slug ) {
+			if ( ! isset( self::$loaders[ $slug ] ) ) {
+				self::$loaders[ $slug ] = new ModuleLoader( $slug );
+			}
+			return self::$loaders[ $slug ];
+		}
 		if ( null === self::$loader ) {
 			self::$loader = new ModuleLoader( 'wpdev' );
 		}
@@ -493,17 +501,26 @@ final class Plugin {
 
 		$dist_url = '';
 		if ( class_exists( \WPDev\Support\Assets::class ) ) {
-			$paths     = \WPDev\Support\Assets::resolve_paths();
-			$base_path = rtrim( $paths['base_path'], '/\\' );
-			$base_url  = rtrim( $paths['base_url'], '/' );
-			if ( '' !== $base_path && strpos( $dist_path, $base_path ) === 0 ) {
-				$rel      = substr( $dist_path, strlen( $base_path ) );
-				$dist_url = $base_url . '/' . ltrim( str_replace( '\\', '/', $rel ), '/' );
+			$paths      = \WPDev\Support\Assets::resolve_paths();
+			$base_path  = rtrim( $paths['base_path'], '/\\' );
+			$base_url   = rtrim( $paths['base_url'], '/' );
+			$base_clean = rtrim( str_replace( '\\', '/', $base_path ), '/' ) . '/';
+			$dist_clean = str_replace( '\\', '/', $dist_path );
+			if ( '' !== $base_path && ( strpos( $dist_clean . '/', $base_clean ) === 0 ) ) {
+				$rel      = substr( $dist_clean, strlen( $base_clean ) - 1 );
+				$dist_url = $base_url . '/' . ltrim( $rel, '/' );
 			}
 		}
 
 		if ( '' === $dist_url && function_exists( 'plugins_url' ) ) {
-			$dist_url = \plugins_url( 'assets/polaris', $root . '/plugin.php' );
+			$root_clean = rtrim( str_replace( '\\', '/', $root ), '/' );
+			$dist_clean = str_replace( '\\', '/', $dist_path );
+			if ( strpos( $dist_clean . '/', $root_clean . '/' ) === 0 ) {
+				$rel      = ltrim( substr( $dist_clean, strlen( $root_clean ) ), '/' );
+				$dist_url = \plugins_url( $rel, $root_clean . '/wpdev-starter.php' );
+			} else {
+				$dist_url = \plugins_url( 'assets/polaris', $root_clean . '/wpdev-starter.php' );
+			}
 		}
 
 		if ( function_exists( 'apply_filters' ) ) {
